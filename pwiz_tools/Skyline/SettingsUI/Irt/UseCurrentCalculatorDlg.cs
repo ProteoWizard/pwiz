@@ -63,7 +63,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
                 else if (_existing.Contains(name))
                 {
-                    helper.ShowTextBoxError(textName, Resources.CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_, name);
+                    helper.ShowTextBoxError(textName, IrtResources.CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_, name);
                     return;
                 }
                 StandardName = name;

@@ -73,10 +73,10 @@ namespace pwiz.Skyline.FileUI
             }
             using (var dlg = new SaveFileDialog
                 {
-                    Title = Resources.ExportChromatogramDlg_OkDialog_Export_Chromatogram,
+                    Title = FileUIResources.ExportChromatogramDlg_OkDialog_Export_Chromatogram,
                     OverwritePrompt = true,
                     DefaultExt = EXT,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files, EXT),
+                    Filter = TextUtil.FileDialogFilterAll(FileUIResources.ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files, EXT),
                 })
             {
                 if (!string.IsNullOrEmpty(DocumentFilePath))
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI
 
             using (var longWaitDlg = new LongWaitDlg
             {
-                Text = Resources.ExportChromatogramDlg_OkDialog_Exporting_Chromatograms,
+                Text = FileUIResources.ExportChromatogramDlg_OkDialog_Exporting_Chromatograms,
             })
             {
                 try
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
-                    var message = TextUtil.LineSeparate(string.Format(Resources.ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__, filePath),
+                    var message = TextUtil.LineSeparate(string.Format(FileUIResources.ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__, filePath),
                                                         x.Message);
                     MessageDlg.ShowWithException(this, message, x);
                 }

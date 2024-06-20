@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
+            get { return ScoringResources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
         }
 
         protected override double MassErrorFunction(double massError)
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenStandardProductMassErrorCalc_Name_Standard_product_mass_error; }
+            get { return ScoringResources.NextGenStandardProductMassErrorCalc_Name_Standard_product_mass_error; }
         }
 
         protected override double MassErrorFunction(double massError)
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
+            get { return ScoringResources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
         }
 
         protected override double MassErrorFunction(double massError)
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error; }
+            get { return ScoringResources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error; }
         }
 
         protected override double MassErrorFunction(double massError)
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product; }
+            get { return ScoringResources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product; }
         }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score; }
+            get { return ScoringResources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score; }
         }
 
         public override bool IsMs1Score { get { return true; } }
@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise; }
+            get { return ScoringResources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise; }
+            get { return ScoringResources.NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(

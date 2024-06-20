@@ -47,7 +47,7 @@ namespace pwiz.Skyline.SettingsUI
                 radioBtnQuant.Checked = true;
 
             integrateAllOffText = labelIntegrateAll.Text;
-            integrateAllOnText = Resources.StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on;
+            integrateAllOnText = SettingsUIResources.StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on;
         }
 
         public bool IsIntegrateAll 
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _skylineWindow.ResetDefaultSettings();
             MessageDlg.Show(this,
-                Resources.StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_);
+                SettingsUIResources.StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_);
         }
 
         private void radioBtnQuant_CheckedChanged(object sender, EventArgs e)

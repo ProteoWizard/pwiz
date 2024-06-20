@@ -140,9 +140,9 @@ namespace pwiz.Skyline.EditUI
                 gbParsimonyOptions.Location = FormUtil.Offset(gbParsimonyOptions.Location, 0, -proteinSourcePanel.Height);
                 MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height - proteinSourcePanel.Height);
                 Height -= proteinSourcePanel.Height;
-                lblDescription.Text = Resources.AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups;
+                lblDescription.Text = EditUIResources.AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups;
                 if (_hasExistingProteinAssociations)
-                    lblDescription.Text += @" " + Resources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
+                    lblDescription.Text += @" " + EditUIResources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
             }
 
             if (_document.PeptideCount == 0)
@@ -291,9 +291,9 @@ namespace pwiz.Skyline.EditUI
 
             if (GroupProteins)
             {
-                lblMinimalProteinList.Text = Resources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
-                lblRemoveSubsetProteins.Text = Resources.AssociateProteinsDlg_Remove_subset_protein_groups;
-                lblMinPeptides.Text = Resources.AssociateProteinsDlg_Min_peptides_per_protein_group;
+                lblMinimalProteinList.Text = EditUIResources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
+                lblRemoveSubsetProteins.Text = EditUIResources.AssociateProteinsDlg_Remove_subset_protein_groups;
+                lblMinPeptides.Text = EditUIResources.AssociateProteinsDlg_Min_peptides_per_protein_group;
             }
             else
             {
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             if (Results.PeptidesMapped == 0)
-                MessageDlg.Show(this, Resources.AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_);
+                MessageDlg.Show(this, EditUIResources.AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_);
             UpdateParsimonyResults();
             btnOk.Enabled = true;
         }
@@ -397,7 +397,7 @@ namespace pwiz.Skyline.EditUI
                 Title = Resources.SkylineWindow_ImportFastaFile_Import_FASTA,
                 InitialDirectory = Settings.Default.FastaDirectory,
                 CheckPathExists = true,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA))
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(EditUIResources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA))
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -439,7 +439,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             if (Results.PeptidesMapped == 0)
-                MessageDlg.Show(this, Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
+                MessageDlg.Show(this, EditUIResources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
             UpdateParsimonyResults();
             btnOk.Enabled = true;
         }
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.EditUI
                 else if (e.RowIndex == peptideRowIndex)
                     e.Value = Resources.AnnotationDef_AnnotationTarget_Peptides;
                 else if (e.RowIndex == sharedRowIndex)
-                    e.Value = Resources.AssociateProteinsDlg_CellValueNeeded_Shared_Peptides;
+                    e.Value = EditUIResources.AssociateProteinsDlg_CellValueNeeded_Shared_Peptides;
             }
             else if (e.ColumnIndex == mappedColumn.Index)
             {

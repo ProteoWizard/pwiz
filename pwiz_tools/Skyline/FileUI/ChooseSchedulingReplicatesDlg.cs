@@ -79,7 +79,7 @@ namespace pwiz.Skyline.FileUI
                 var prediction = SkylineWindow.DocumentUI.Settings.PeptideSettings.Prediction;
                 if (prediction.RetentionTime == null || !prediction.RetentionTime.IsUsable)
                 {
-                    MessageDlg.Show(this, Resources.ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate);
+                    MessageDlg.Show(this, FileUIResources.ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate);
                     return;
                 }
             }
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.FileUI
                         !document.Settings.MeasuredResults.Chromatograms.Any(
                             chromSetCompare => ReferenceEquals(chromSetCompare, replicateReference)))
                     {
-                        throw new InvalidDataException(Resources.ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_);
+                        throw new InvalidDataException(FileUIResources.ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_);
                     }
                 }
 

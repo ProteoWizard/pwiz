@@ -1115,7 +1115,7 @@ namespace pwiz.Skyline.Model.Results
                 elements.Add(new ChromInfoList<TItem>(chromInfoList));
             }
             if (!found)
-                throw new InvalidOperationException(Resources.ResultsGrid_ChangeChromInfo_Element_not_found);
+                throw new InvalidOperationException(ResultsResources.ResultsGrid_ChangeChromInfo_Element_not_found);
             return new Results<TItem>(elements);
         }
 
@@ -1210,7 +1210,7 @@ namespace pwiz.Skyline.Model.Results
             if (chromatogramSets.Count != Count)
             {
                 throw new InvalidDataException(
-                    string.Format(Resources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
+                    string.Format(ResultsResources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
                                   Count, chromatogramSets.Count));
             }
 
@@ -1224,7 +1224,7 @@ namespace pwiz.Skyline.Model.Results
                 if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
+                        string.Format(ResultsResources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
                 }
             }
         }

@@ -1396,9 +1396,9 @@ namespace pwiz.Skyline.Properties
             return (Enzyme) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.EnzymeList_Title_Edit_Enzymes; } }
+        public override string Title { get { return PropertiesResources.EnzymeList_Title_Edit_Enzymes; } }
 
-        public override string Label { get { return Resources.EnzymeList_Label_Enzymes; } }
+        public override string Label { get { return PropertiesResources.EnzymeList_Label_Enzymes; } }
     }
 
     public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>
@@ -1434,9 +1434,9 @@ namespace pwiz.Skyline.Properties
             return (PeptideExcludeRegex) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.PeptideExcludeList_Title_Edit_Exclusions; } }
+        public override string Title { get { return PropertiesResources.PeptideExcludeList_Title_Edit_Exclusions; } }
 
-        public override string Label { get { return Resources.PeptideExcludeList_Label_Exclusions; } }
+        public override string Label { get { return PropertiesResources.PeptideExcludeList_Label_Exclusions; } }
     }
 
     public sealed class ServerList : SettingsList<Server>
@@ -1446,9 +1446,9 @@ namespace pwiz.Skyline.Properties
             yield break;
         }
 
-        public override string Title { get { return Resources.ServerList_Title_Edit_Servers; } }
+        public override string Title { get { return PropertiesResources.ServerList_Title_Edit_Servers; } }
 
-        public override string Label { get { return Resources.ServerList_Label__Servers; } }
+        public override string Label { get { return PropertiesResources.ServerList_Label__Servers; } }
 
         public override Server EditItem(Control owner, Server item, IEnumerable<Server> existing, object tag)
         {
@@ -1516,9 +1516,9 @@ namespace pwiz.Skyline.Properties
             }            
         }
 
-        public override string Title { get { return Resources.SpectralLibraryList_Title_Edit_Libraries; } }
+        public override string Title { get { return PropertiesResources.SpectralLibraryList_Title_Edit_Libraries; } }
 
-        public override string Label { get { return Resources.SpectralLibraryList_Label_Libraries; } }
+        public override string Label { get { return PropertiesResources.SpectralLibraryList_Label_Libraries; } }
 
         protected override IXmlElementHelper<LibrarySpec>[] GetXmlElementHelpers()
         {
@@ -1572,8 +1572,8 @@ namespace pwiz.Skyline.Properties
             return (BackgroundProteomeSpec) item.ChangeName(string.Empty);
         }
 
-        public override String Title { get { return Resources.BackgroundProteomeList_Title_Edit_Background_Proteomes; } }
-        public override String Label { get { return Resources.BackgroundProteomeList_Label_Background_Proteomes; } }
+        public override String Title { get { return PropertiesResources.BackgroundProteomeList_Title_Edit_Background_Proteomes; } }
+        public override String Label { get { return PropertiesResources.BackgroundProteomeList_Label_Background_Proteomes; } }
 
         protected override IXmlElementHelper<BackgroundProteomeSpec>[] GetXmlElementHelpers()
         {
@@ -1634,9 +1634,9 @@ namespace pwiz.Skyline.Properties
             return (StaticMod) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.StaticModList_Title_Edit_Structural_Modifications; } }
+        public override string Title { get { return PropertiesResources.StaticModList_Title_Edit_Structural_Modifications; } }
 
-        public override string Label { get { return Resources.StaticModList_Label_Modifications; } }
+        public override string Label { get { return PropertiesResources.StaticModList_Label_Modifications; } }
     }
 
     public sealed class HeavyModList : SettingsList<StaticMod>
@@ -1656,7 +1656,7 @@ namespace pwiz.Skyline.Properties
         {
             using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
                                            {
-                                               Text = Resources.HeavyModList_EditItem_Edit_Isotope_Modification
+                                               Text = PropertiesResources.HeavyModList_EditItem_Edit_Isotope_Modification
                                            })
             {
                 if (editMod.ShowDialog(owner) == DialogResult.OK)
@@ -1671,9 +1671,9 @@ namespace pwiz.Skyline.Properties
             return (StaticMod) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.HeavyModList_Title_Edit_Isotope_Modifications; } }
+        public override string Title { get { return PropertiesResources.HeavyModList_Title_Edit_Isotope_Modifications; } }
 
-        public override string Label { get { return Resources.StaticModList_Label_Modifications; } }
+        public override string Label { get { return PropertiesResources.StaticModList_Label_Modifications; } }
     }
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
@@ -1928,9 +1928,9 @@ namespace pwiz.Skyline.Properties
             return (CollisionEnergyRegression) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.CollisionEnergyList_Title_Edit_Collision_Energy_Regressions; } }
+        public override string Title { get { return PropertiesResources.CollisionEnergyList_Title_Edit_Collision_Energy_Regressions; } }
 
-        public override string Label { get { return Resources.CollisionEnergyList_Label_Collision_Energy_Regression; } }
+        public override string Label { get { return PropertiesResources.CollisionEnergyList_Label_Collision_Energy_Regression; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }
@@ -1975,9 +1975,9 @@ namespace pwiz.Skyline.Properties
                 Insert(0, defaultElement);
         }
 
-        public override string Title { get { return Resources.OptimizationLibraryList_Title_Edit_Optimization_Databases; } }
+        public override string Title { get { return PropertiesResources.OptimizationLibraryList_Title_Edit_Optimization_Databases; } }
 
-        public override string Label { get { return Resources.OptimizationLibraryList_Label_Optimization_Database; } }
+        public override string Label { get { return PropertiesResources.OptimizationLibraryList_Label_Optimization_Database; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }
@@ -2044,9 +2044,9 @@ namespace pwiz.Skyline.Properties
             return (DeclusteringPotentialRegression) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.DeclusterPotentialList_Title_Edit_Declustering_Potential_Regressions; } }
+        public override string Title { get { return PropertiesResources.DeclusterPotentialList_Title_Edit_Declustering_Potential_Regressions; } }
 
-        public override string Label { get { return Resources.DeclusterPotentialList_Label_Declustering_Potential_Regressions; } }
+        public override string Label { get { return PropertiesResources.DeclusterPotentialList_Label_Declustering_Potential_Regressions; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }
@@ -2109,8 +2109,8 @@ namespace pwiz.Skyline.Properties
             return (CompensationVoltageParameters)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets; } }
-        public override string Label { get { return Resources.CompensationVoltageList_Label_Compensation__Voltage_Parameters_; } }
+        public override string Title { get { return PropertiesResources.CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets; } }
+        public override string Label { get { return PropertiesResources.CompensationVoltageList_Label_Compensation__Voltage_Parameters_; } }
         public override int ExcludeDefaults { get { return 1; } }
     }
     
@@ -2153,9 +2153,9 @@ namespace pwiz.Skyline.Properties
 
             if (listMissingCalc.Count > 0)
             {
-                var message = TextUtil.LineSeparate(Resources.RTScoreCalculatorList_AcceptList_The_regressions,
+                var message = TextUtil.LineSeparate(PropertiesResources.RTScoreCalculatorList_AcceptList_The_regressions,
                                                     TextUtil.LineSeparate(listMissingCalc.Select(reg => reg.Name)),
-                                                    Resources.RTScoreCalculatorList_AcceptList_will_be_deleted_because_the_calculators_they_depend_on_have_changed_Do_you_want_to_continue);
+                                                    PropertiesResources.RTScoreCalculatorList_AcceptList_will_be_deleted_because_the_calculators_they_depend_on_have_changed_Do_you_want_to_continue);
                 if (DialogResult.Yes != MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
                     return false;
@@ -2242,9 +2242,9 @@ namespace pwiz.Skyline.Properties
             return calc;
         }
 
-        public override string Title { get { return Resources.RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators; } }
+        public override string Title { get { return PropertiesResources.RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators; } }
 
-        public override string Label { get { return Resources.RTScoreCalculatorList_Label_Retention_Time_Calculators; } }
+        public override string Label { get { return PropertiesResources.RTScoreCalculatorList_Label_Retention_Time_Calculators; } }
 
         public override int ExcludeDefaults { get { return DEFAULTS.Length; } }
 
@@ -2291,9 +2291,9 @@ namespace pwiz.Skyline.Properties
             return IrtStandard.ALL;
         }
 
-        public override string Title => Resources.IrtStandardList_Title_Edit_iRT_Standards;
+        public override string Title => PropertiesResources.IrtStandardList_Title_Edit_iRT_Standards;
 
-        public override string Label => Resources.IrtStandardList_Label_iRT_Standards;
+        public override string Label => PropertiesResources.IrtStandardList_Label_iRT_Standards;
 
         public override int ExcludeDefaults => 1;
     }
@@ -2360,9 +2360,9 @@ namespace pwiz.Skyline.Properties
             return ION_MOBILITY_LIB_HELPERS;
         }
 
-        public override string Title { get { return Resources.IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries; } }
+        public override string Title { get { return PropertiesResources.IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries; } }
 
-        public override string Label { get { return Resources.IonMobilityLibraryList_Label_Ion_Mobility_Libraries_; } }
+        public override string Label { get { return PropertiesResources.IonMobilityLibraryList_Label_Ion_Mobility_Libraries_; } }
 
         public bool CanEditItem(IonMobilityLibrary item)
         {
@@ -2433,9 +2433,9 @@ namespace pwiz.Skyline.Properties
             return DEFAULTS;
         }
 
-        public override string Title { get { return Resources.PeakScoringModelList_Title_Edit_Peak_Scoring_Models; } }
+        public override string Title { get { return PropertiesResources.PeakScoringModelList_Title_Edit_Peak_Scoring_Models; } }
 
-        public override string Label { get { return Resources.PeakScoringModelList_Label_Peak_Scoring_Models; } }
+        public override string Label { get { return PropertiesResources.PeakScoringModelList_Label_Peak_Scoring_Models; } }
 
         public override int ExcludeDefaults { get { return DEFAULTS.Length; } }
     }
@@ -2486,9 +2486,9 @@ namespace pwiz.Skyline.Properties
             return (RetentionTimeRegression) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.RetentionTimeList_Title_Edit_Retention_Time_Regressions; } }
+        public override string Title { get { return PropertiesResources.RetentionTimeList_Title_Edit_Retention_Time_Regressions; } }
 
-        public override string Label { get { return Resources.RetentionTimeList_Label_Retention_Time_Regression; } }
+        public override string Label { get { return PropertiesResources.RetentionTimeList_Label_Retention_Time_Regression; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }
@@ -2559,9 +2559,9 @@ namespace pwiz.Skyline.Properties
             return (MeasuredIon)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.MeasuredIonList_Title_Edit_Special_Ions; } }
+        public override string Title { get { return PropertiesResources.MeasuredIonList_Title_Edit_Special_Ions; } }
 
-        public override string Label { get { return Resources.MeasuredIonList_Label_Special_ion; } }
+        public override string Label { get { return PropertiesResources.MeasuredIonList_Label_Special_ion; } }
     }
 
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
@@ -2587,7 +2587,7 @@ namespace pwiz.Skyline.Properties
         public static string GetDisplayText(IsotopeEnrichments item)
         {
             // Use the localized text in the UI
-            return ReferenceEquals(item, DEFAULT) ? Resources.IsotopeEnrichments_DEFAULT_Default : item.GetKey();
+            return ReferenceEquals(item, DEFAULT) ? PropertiesResources.IsotopeEnrichments_DEFAULT_Default : item.GetKey();
         }
 
         public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,
@@ -2607,9 +2607,9 @@ namespace pwiz.Skyline.Properties
             return (IsotopeEnrichments)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments; } }
+        public override string Title { get { return PropertiesResources.IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments; } }
 
-        public override string Label { get { return Resources.IsotopeEnrichmentsList_Label_Isotope_labeling_entrichment; } }        
+        public override string Label { get { return PropertiesResources.IsotopeEnrichmentsList_Label_Isotope_labeling_entrichment; } }        
     }
 
     public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
@@ -2628,8 +2628,8 @@ namespace pwiz.Skyline.Properties
 
             if (revisionIndex > 1)
             {
-                isolationSchemeList.Add(new IsolationScheme(Resources.IsolationSchemeList_GetDefaults_Results_only));
-                isolationSchemeList.Add(new IsolationScheme(Resources.IsolationSchemeList_GetDefaults_Results__0_5_margin_, 0.5, null, true));
+                isolationSchemeList.Add(new IsolationScheme(PropertiesResources.IsolationSchemeList_GetDefaults_Results_only));
+                isolationSchemeList.Add(new IsolationScheme(PropertiesResources.IsolationSchemeList_GetDefaults_Results__0_5_margin_, 0.5, null, true));
             }
 
             AddScheme(isolationSchemeList, Resources.IsolationSchemeList_GetDefaults_SWATH__15_m_z_, 0.5,
@@ -2922,9 +2922,9 @@ namespace pwiz.Skyline.Properties
             return (IsolationScheme)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.IsolationSchemeList_Title_Edit_Isolation_Scheme; } }
+        public override string Title { get { return PropertiesResources.IsolationSchemeList_Title_Edit_Isolation_Scheme; } }
 
-        public override string Label { get { return Resources.IsolationSchemeList_Label_Isolation_scheme; } }
+        public override string Label { get { return PropertiesResources.IsolationSchemeList_Label_Isolation_scheme; } }
 
         private void AddScheme(IList<IsolationScheme> isolationSchemeList, string name, double margin,
             params double[] values)
@@ -3035,7 +3035,7 @@ namespace pwiz.Skyline.Properties
 
         public static string DefaultName
         {
-            get { return Resources.SrmSettingsList_DefaultName_Default; }
+            get { return PropertiesResources.SrmSettingsList_DefaultName_Default; }
         }
 
         /// <summary>
@@ -3059,9 +3059,9 @@ namespace pwiz.Skyline.Properties
 
         public override int ExcludeDefaults { get { return 1; } }
 
-        public override string Title { get { return Resources.SrmSettingsList_Title_Edit_Settings; } }
+        public override string Title { get { return PropertiesResources.SrmSettingsList_Title_Edit_Settings; } }
 
-        public override string Label { get { return Resources.SrmSettingsList_Label_Saved_Settings; } }
+        public override string Label { get { return PropertiesResources.SrmSettingsList_Label_Saved_Settings; } }
 
         public override Type SerialType { get { return typeof(SrmSettingsList); } }
 
@@ -3273,9 +3273,9 @@ namespace pwiz.Skyline.Properties
             return (AnnotationDef)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.AnnotationDefList_Title_Define_Annotations; } }
+        public override string Title { get { return PropertiesResources.AnnotationDefList_Title_Define_Annotations; } }
 
-        public override string Label { get { return Resources.AnnotationDefList_Label_Annotations; } }
+        public override string Label { get { return PropertiesResources.AnnotationDefList_Label_Annotations; } }
 
         public Type SerialType { get { return typeof(AnnotationDef); } }
 
@@ -3292,7 +3292,7 @@ namespace pwiz.Skyline.Properties
         // Great websites for generating/finding schemes
         // http://vrl.cs.brown.edu/color
         // http://colorbrewer2.org
-        public static readonly ColorScheme DEFAULT = new ColorScheme(Resources.ColorSchemeList_DEFAULT_Skyline_classic).ChangePrecursorColors(new[]
+        public static readonly ColorScheme DEFAULT = new ColorScheme(PropertiesResources.ColorSchemeList_DEFAULT_Skyline_classic).ChangePrecursorColors(new[]
             {
                 Color.Red,
                 Color.Blue,
@@ -3325,7 +3325,7 @@ namespace pwiz.Skyline.Properties
         public override IEnumerable<ColorScheme> GetDefaults(int revisionIndex)
         {
             yield return DEFAULT;
-            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_Eggplant_lemonade).ChangePrecursorColors(new[]
+            yield return DEFAULT.ChangeName(PropertiesResources.ColorSchemeList_GetDefaults_Eggplant_lemonade).ChangePrecursorColors(new[]
             {
                 Color.FromArgb(213,62,79),
                 Color.FromArgb(102,194,165),
@@ -3373,7 +3373,7 @@ namespace pwiz.Skyline.Properties
                 Color.FromArgb(239, 233, 57),
                 Color.FromArgb(133, 211, 116)
             });
-            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_High_contrast).ChangePrecursorColors(new[]
+            yield return DEFAULT.ChangeName(PropertiesResources.ColorSchemeList_GetDefaults_High_contrast).ChangePrecursorColors(new[]
             {
                 Color.FromArgb(179,70,126),
                 Color.FromArgb(146,181,64),

@@ -1,0 +1,396 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="23.1" software_version="Skyline (64-bit) 23.1.0.455 (599e74ad2)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="5" />
+      <peptide_filter start="2" min_length="6" max_length="30">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="filter">
+        <bibliospec_lite_library name="Rat (NIST) (Rat_plasma2) (Rat_plasma) (ShapeCorrelationTest)" file_name_hint="rat_consensus_final_true_lib.blib" lsid="urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:minimal:Rat (NIST) (Rat_plasma2) (Rat_plasma):f0f6c3fd-4dad-4c11-ab60-243b772d86bf:1.0" revision="1" />
+      </peptide_libraries>
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Thermo" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.034" intercept="3.314" />
+          <regression_ce charge="3" slope="0.044" intercept="3.314" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" precursor_adducts="[M-3H],[M-2H],[M-H],[M-],[M+H],[M+],[M+2H],[M+3H]" product_adducts="[M-3],[M-2],[M-],[M+],[M+2],[M+3]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="ion 3" fragment_range_last="last ion - 1" precursor_mz_window="0" />
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="4" pick_from="none" />
+      <transition_integration integrate_all="true" />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings document_guid="6f6c9939-46b5-483a-acc1-18bf3d6c7afa">
+      <annotation name="SubjectId" targets="replicate" type="text" />
+      <annotation name="BioReplicate" targets="replicate" type="text" />
+      <annotation name="Condition" targets="replicate" type="value_list">
+        <value>Healthy</value>
+        <value>Diseased</value>
+      </annotation>
+      <annotation name="MissingData" targets="peptide" type="true_false" />
+    </data_settings>
+    <measured_results time_normal_area="true">
+      <replicate name="D_102_REP1">
+        <sample_file id="D_102_REP1_f0" file_path="C:\Users\Brendan\Downloads\Tutorials\GroupedStudies\Heart Failure\raw\D_102_REP1.raw" sample_name="D_102_REP1" acquired_time="2009-11-02T12:45:14" modified_time="2011-01-16T20:51:02" import_time="2024-06-14T22:01:10.1714082Z">
+          <instrument_info_list>
+            <instrument_info>
+              <model>TSQ Vantage</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/quadrupole/quadrupole</analyzer>
+              <detector>electron multiplier</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+        <annotation name="SubjectId">D102</annotation>
+        <annotation name="BioReplicate">102</annotation>
+        <annotation name="Condition">Diseased</annotation>
+      </replicate>
+      <replicate name="H_146_REP1">
+        <sample_file id="H_146_REP1_f0" file_path="C:\Users\Brendan\Downloads\Tutorials\GroupedStudies\Heart Failure\raw\H_146_REP1.raw" sample_name="H_146_REP1" acquired_time="2009-11-03T08:10:21" modified_time="2011-01-16T20:51:05" import_time="2024-06-14T22:01:10.1714082Z">
+          <instrument_info_list>
+            <instrument_info>
+              <model>TSQ Vantage</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/quadrupole/quadrupole</analyzer>
+              <detector>electron multiplier</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+        <annotation name="SubjectId">H146</annotation>
+        <annotation name="BioReplicate">146</annotation>
+        <annotation name="Condition">Healthy</annotation>
+      </replicate>
+    </measured_results>
+  </settings_summary>
+  <protein name="IPI:IPI00231736.9|SWISS-PROT:P09117|ENSEMBL:ENSRNOP00000015535|REFSEQ:NP_036629" description="Tax_Id=10116 Gene_Symbol=Aldoc Fructose-bisphosphate aldolase C" label_name="NP_036629" accession="P09117" gene="Aldoc" species="Rattus norvegicus (Rat)" preferred_name="ALDOC_RAT" websearch_status="X#UNP_036629" auto_manage_children="false">
+    <sequence>
+        MPHSYPALSA EQKKELSDIA LRIVAPGKGI LAADESVGSM AKRLSQIGVE
+        NTEENRRLYR QVLFSADDRV KKCIGGVIFF HETLYQKDDN GVPFVRTIQE
+        KGILVGIKVD KGVVPLAGTD GETTTQGLDG LLERCAQYKK DGADFAKWRC
+        VLKISDRTPS ALAILENANV LARYASICQQ NGIVPIVEPE ILPDGDHDLK
+        RCQFVTEKVL AAVYKALSDH HVYLEGTLLK PNMVTPGHAC PIKYSPEEIA
+        MATVTALRRT VPPAVPGVTF LSGGQSEEEA SLNLNAINRC SLPRPWALTF
+        SYGRALQASA LSAWRGQRDN AGAATEEFIK RAEMNGLAAQ GKYEGSGDGG
+        AAAQSLYVAN HAY</sequence>
+    <peptide sequence="CSLPRPWALTFSYGR" modified_sequence="C[+57.021464]SLPRPWALTFSYGR" start="289" end="304" prev_aa="R" next_aa="A" calc_neutral_pep_mass="1809.89846" num_missed_cleavages="0" avg_measured_retention_time="31.0995827">
+      <annotation name="MissingData">MissingData</annotation>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="0" modification_name="Carbamidomethyl Cysteine" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="30.81735" />
+        <peptide_result replicate="H_146_REP1" peak_count_ratio="1" retention_time="31.3818169" />
+      </peptide_results>
+      <precursor charge="2" calc_neutral_mass="1809.89846" precursor_mz="905.956506" collision_energy="34.116521" modified_sequence="C[+57.0]SLPRPWALTFSYGR">
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="30.81735" start_time="30.3883514" end_time="31.28535" fwhm="0.298884451" area="137461.344" background="271.050323" height="2770.99585" truncated="0" identified="false" qvalue="0" zscore="12.2829247" user_set="FALSE" />
+          <precursor_peak replicate="H_146_REP1" peak_count_ratio="1" retention_time="31.3818169" start_time="30.8274155" end_time="31.7382164" fwhm="0.3401941" area="75290.1953" background="381.116974" height="1546.42542" truncated="0" identified="false" qvalue="0" zscore="12.1228361" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1196.597844" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>905.956506</precursor_mz>
+          <product_mz>1197.60512</product_mz>
+          <collision_energy>34.116521</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="30.85635" start_time="30.3883514" end_time="31.28535" area="14516.4619" background="44.2312737" height="1222.13208" fwhm="0.130917579" truncated="false" identified="false" rank="4" std_dev="0.136143044" skewness="0.209203541" kurtosis="0.861425042" shape_correlation="0.9113532" points_across="24" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="31.3818169" start_time="30.8274155" end_time="31.7382164" area="7891.356" background="58.760376" height="633.928833" fwhm="0.166243121" truncated="false" identified="false" rank="4" std_dev="0.130393088" skewness="-0.501136661" kurtosis="0.9871629" shape_correlation="0.915505052" points_across="24" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1099.54508" product_charge="1" cleavage_aa="W" loss_neutral_mass="0">
+          <precursor_mz>905.956506</precursor_mz>
+          <product_mz>1100.552356</product_mz>
+          <collision_energy>34.116521</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="30.8953514" start_time="30.3883514" end_time="31.28535" area="3220.02686" background="39.72671" height="310.594" fwhm="0.148559809" truncated="false" identified="false" rank="6" std_dev="0.132339522" skewness="-0.561086059" kurtosis="-0.306115955" shape_correlation="0.7622653" points_across="24" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="31.2234173" start_time="30.8274155" end_time="31.7382164" area="1836.1593" background="46.1713257" height="128.697342" fwhm="0.161398292" truncated="false" identified="false" rank="6" std_dev="0.16810824" skewness="0.6541296" kurtosis="0.359833837" shape_correlation="0.6833597" points_across="24" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="729.344589" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
+          <precursor_mz>905.956506</precursor_mz>
+          <product_mz>730.351865</product_mz>
+          <collision_energy>34.116521</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="30.81735" start_time="30.3883514" end_time="31.28535" area="49631.0664" background="48.4990273" height="2770.99585" fwhm="0.254513651" truncated="false" identified="false" rank="1" std_dev="0.142646164" skewness="-0.14661184" kurtosis="0.09284153" shape_correlation="0.966508269" points_across="24" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="31.3818169" start_time="30.8274155" end_time="31.7382164" area="29615.54" background="56.3485222" height="1546.42542" fwhm="0.299279839" truncated="false" identified="false" rank="1" std_dev="0.129884318" skewness="0.04313104" kurtosis="-0.0233360566" shape_correlation="0.9581184" points_across="24" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="628.29691" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
+          <precursor_mz>905.956506</precursor_mz>
+          <product_mz>629.304186</product_mz>
+          <collision_energy>34.116521</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="30.81735" start_time="30.3883514" end_time="31.28535" area="13695.4922" background="40.531517" height="731.8427" fwhm="0.296678871" truncated="false" identified="false" rank="5" std_dev="0.1419004" skewness="0.108717985" kurtosis="-0.383733749" shape_correlation="0.9353127" points_across="24" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="31.3818169" start_time="30.8274155" end_time="31.7382164" area="6248.689" background="55.72598" height="466.12915" fwhm="0.232714117" truncated="false" identified="false" rank="5" std_dev="0.150931552" skewness="-0.00720871659" kurtosis="0.5262385" shape_correlation="0.9240853" points_across="24" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="481.228496" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
+          <precursor_mz>905.956506</precursor_mz>
+          <product_mz>482.235772</product_mz>
+          <collision_energy>34.116521</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="30.77835" start_time="30.3883514" end_time="31.28535" area="33330.9961" background="49.4573479" height="1761.641" fwhm="0.298884451" truncated="false" identified="false" rank="2" std_dev="0.1644356" skewness="0.2427619" kurtosis="0.170673981" shape_correlation="0.9252939" points_across="24" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="31.3818169" start_time="30.8274155" end_time="31.7382164" area="16536.5918" background="56.7578" height="1130.80383" fwhm="0.180048808" truncated="false" identified="false" rank="2" std_dev="0.149538055" skewness="-0.2950147" kurtosis="0.453212559" shape_correlation="0.9161601" points_across="24" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="394.196468" product_charge="1" cleavage_aa="Y" loss_neutral_mass="0">
+          <precursor_mz>905.956506</precursor_mz>
+          <product_mz>395.203744</product_mz>
+          <collision_energy>34.116521</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="30.81735" start_time="30.3883514" end_time="31.28535" area="23067.291" background="48.60445" height="2190.949" fwhm="0.110834137" truncated="false" identified="false" rank="3" std_dev="0.134943172" skewness="0.202848092" kurtosis="0.8647468" shape_correlation="0.9262118" points_across="24" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="31.3422165" start_time="30.8274155" end_time="31.7382164" area="13161.8594" background="107.352966" height="669.664734" fwhm="0.3401941" truncated="false" identified="false" rank="3" std_dev="0.149412736" skewness="0.333981335" kurtosis="-0.129915714" shape_correlation="0.9468875" points_across="24" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+  </protein>
+  <protein name="IPI:IPI00327469.1|SWISS-PROT:P24090|ENSEMBL:ENSRNOP00000055223|REFSEQ:NP_037030" description="Tax_Id=10116 Gene_Symbol=Ahsg Alpha-2-HS-glycoprotein" label_name="NP_037030" accession="P24090" gene="Ahsg Fetua" species="Rattus norvegicus (Rat)" preferred_name="FETUA_RAT" websearch_status="X#UNP_037030">
+    <sequence>
+        MKSLVLLLCF AQLWSCQSAP QGAGLGFREL ACDDPETEHV ALIAVDYLNK
+        HLLQGFRQIL NQIDKVKVWS RRPFGEVYEL EIDTLETTCH ALDPTPLANC
+        SVRQQAEHAV EGDCDFHILK QDGQFRVLHA QCHSTPDSAE DVRKFCPRCP
+        ILIRFNDTNV VHTVKTALAA FNAQNNGTYF KLVEISRAQN VPFPVSTLVE
+        FVIAATDCTG QEVTDPAKCN LLAEKQYGFC KATLIHRLGG EEVSVACKLF
+        QTQPQPANAN PAGPAPTVGQ AAPVAPPAGP PESVVVGPVA VPLGLPDHRT
+        HHDLRHAFSP VASVESASGE VLHSPKVGQP GDAGAAGPVA PLCPGRVRYF
+        KI</sequence>
+    <peptide sequence="LGGEEVSVACK" modified_sequence="LGGEEVSVAC[+57.021464]K" start="237" end="248" prev_aa="R" next_aa="L" calc_neutral_pep_mass="1147.554324" num_missed_cleavages="0" avg_measured_retention_time="13.4461584">
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="9" modification_name="Carbamidomethyl Cysteine" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" />
+        <peptide_result replicate="H_146_REP1" peak_count_ratio="1" retention_time="13.4633837" />
+      </peptide_results>
+      <precursor charge="2" calc_neutral_mass="1147.554324" precursor_mz="574.784438" collision_energy="22.856671" modified_sequence="LGGEEVSVAC[+57.0]K">
+        <nist_spectrum_info library_name="Rat (NIST) (Rat_plasma2) (Rat_plasma) (ShapeCorrelationTest)" count_measured="93" total_intensity="100710" tfratio="660000" />
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" fwhm="0.08127014" area="47426.0039" background="1568.20752" height="3710.823" truncated="0" identified="false" library_dotp="0.9007299" qvalue="0" zscore="15.123127" user_set="FALSE" />
+          <precursor_peak replicate="H_146_REP1" peak_count_ratio="1" retention_time="13.4633837" start_time="13.3293839" end_time="13.764883" fwhm="0.0465405621" area="52463.2031" background="283.126129" height="5423.22852" truncated="0" identified="false" library_dotp="0.902352" qvalue="0" zscore="15.3298464" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="977.448796" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>978.456072</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="6" intensity="1846" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" std_dev="0.0614241026" skewness="1.17191553" kurtosis="0.675818264" shape_correlation="0.9975273" points_across="12" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="13.4633837" start_time="13.3293839" end_time="13.764883" area="5241.50146" background="23.6142082" height="1585.52881" fwhm="0.04056402" truncated="false" identified="false" rank="5" std_dev="0.0538462959" skewness="1.68271017" kurtosis="2.846449" shape_correlation="0.999713" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="791.38474" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>792.392016</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="3" intensity="4185" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="7571.708" background="33.80324" height="1145.53735" fwhm="0.08127014" truncated="false" identified="false" rank="4" std_dev="0.06898146" skewness="0.8455852" kurtosis="-0.000240344976" shape_correlation="0.9933253" points_across="12" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="13.4633837" start_time="13.3293839" end_time="13.764883" area="7456.89063" background="183.0439" height="2603.14917" fwhm="0.03916394" truncated="false" identified="false" rank="4" std_dev="0.0458764136" skewness="2.05429077" kurtosis="5.776643" shape_correlation="0.9949533" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="662.342146" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>663.349422</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="2" intensity="4487" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="11148.291" background="422.479858" height="1876.15" fwhm="0.07419588" truncated="false" identified="false" rank="2" std_dev="0.0624837652" skewness="0.257784128" kurtosis="0.49557367" shape_correlation="0.9271442" points_across="12" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="13.4633837" start_time="13.3293839" end_time="13.764883" area="13491.832" background="28.9878731" height="3236.37" fwhm="0.0465405621" truncated="false" identified="false" rank="2" std_dev="0.05208585" skewness="0.9836021" kurtosis="2.02366924" shape_correlation="0.966733754" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="563.273732" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>564.281008</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="1" intensity="10000" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="16608.2227" background="250.575562" height="3710.823" fwhm="0.06260111" truncated="false" identified="false" rank="1" std_dev="0.04723714" skewness="0.115930267" kurtosis="2.16459036" shape_correlation="0.951064467" points_across="12" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="13.4633837" start_time="13.3293839" end_time="13.764883" area="18271.8652" background="23.403965" height="5423.22852" fwhm="0.0413379222" truncated="false" identified="false" rank="1" std_dev="0.05690228" skewness="1.512915" kurtosis="3.71634316" shape_correlation="0.9969446" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="476.241704" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>574.784438</precursor_mz>
+          <product_mz>477.24898</product_mz>
+          <collision_energy>22.856671</collision_energy>
+          <transition_lib_info rank="5" intensity="1893" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="13.4289331" start_time="13.2614336" end_time="13.6299334" area="8250.773" background="590.1016" height="1328.91931" fwhm="0.0802812949" truncated="false" identified="false" rank="3" std_dev="0.0607163832" skewness="0.734212637" kurtosis="1.16372526" shape_correlation="0.9901527" points_across="12" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="13.4633837" start_time="13.3293839" end_time="13.764883" area="8001.11426" background="24.0761738" height="1868.3302" fwhm="0.04335345" truncated="false" identified="false" rank="3" std_dev="0.07736272" skewness="1.20124912" kurtosis="1.47474611" shape_correlation="0.9845416" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="VGQPGDAGAAGPVAPLCPGR" modified_sequence="VGQPGDAGAAGPVAPLC[+57.021464]PGR" start="326" end="346" prev_aa="K" next_aa="V" calc_neutral_pep_mass="1845.915566" num_missed_cleavages="0" avg_measured_retention_time="16.51565">
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="16" modification_name="Carbamidomethyl Cysteine" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="16.3637333" />
+        <peptide_result replicate="H_146_REP1" peak_count_ratio="1" retention_time="16.6675663" />
+      </peptide_results>
+      <precursor charge="2" calc_neutral_mass="1845.915566" precursor_mz="923.965059" collision_energy="34.728812" modified_sequence="VGQPGDAGAAGPVAPLC[+57.0]PGR">
+        <nist_spectrum_info library_name="Rat (NIST) (Rat_plasma2) (Rat_plasma) (ShapeCorrelationTest)" count_measured="22" total_intensity="117412" tfratio="4400000" />
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" fwhm="0.146319523" area="9616149" background="24240.1484" height="282273.3" truncated="0" identified="false" library_dotp="0.8399756" qvalue="0" zscore="17.4857254" user_set="FALSE" />
+          <precursor_peak replicate="H_146_REP1" peak_count_ratio="1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" fwhm="0.145690084" area="10715946" background="54599.4141" height="307107.875" truncated="0" identified="false" library_dotp="0.844212353" qvalue="0" zscore="17.5490131" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="13" calc_neutral_mass="1221.628826" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>1222.636102</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="6" intensity="1650" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="656965.438" background="3318.95215" height="71459.19" fwhm="0.140528947" truncated="false" identified="false" rank="7" std_dev="0.0603989" skewness="-0.462265521" kurtosis="0.3189267" shape_correlation="0.998075962" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" area="796307" background="1525.03467" height="87934.4453" fwhm="0.140721276" truncated="false" identified="false" rank="7" std_dev="0.06284054" skewness="-0.430085182" kurtosis="0.566174269" shape_correlation="0.998890162" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1093.570249" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>1094.577525</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="5" intensity="2187" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="985217.75" background="386.853851" height="120605.383" fwhm="0.1236606" truncated="false" identified="false" rank="5" std_dev="0.06175402" skewness="-0.5100952" kurtosis="0.3687845" shape_correlation="0.9977787" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" area="1096497.13" background="251.525253" height="118732.57" fwhm="0.140529066" truncated="false" identified="false" rank="5" std_dev="0.06621354" skewness="-0.444295883" kurtosis="0.451816678" shape_correlation="0.9991407" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1022.533135" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>1023.540411</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="2" intensity="4307" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="1613960.5" background="3448.618" height="184404.859" fwhm="0.135996521" truncated="false" identified="false" rank="3" std_dev="0.0624416657" skewness="-0.42112276" kurtosis="0.260136455" shape_correlation="0.9984553" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" area="1816925.88" background="516.8536" height="202201.516" fwhm="0.142398119" truncated="false" identified="false" rank="3" std_dev="0.06583786" skewness="-0.42314586" kurtosis="0.228012264" shape_correlation="0.9983224" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="965.511671" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>966.518947</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="4" intensity="2432" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="1107962.13" background="391.78595" height="120473.922" fwhm="0.142385691" truncated="false" identified="false" rank="4" std_dev="0.06192333" skewness="-0.3883444" kurtosis="0.0248612836" shape_correlation="0.9992166" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" area="1200731.13" background="12699.5449" height="134859.531" fwhm="0.1374818" truncated="false" identified="false" rank="4" std_dev="0.06458315" skewness="-0.41160363" kurtosis="0.243256837" shape_correlation="0.999578834" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="769.390494" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>770.39777</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="3" intensity="2784" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="881821.3" background="18.2761612" height="105027.422" fwhm="0.131576434" truncated="false" identified="false" rank="6" std_dev="0.0592588671" skewness="-0.4632123" kurtosis="0.138819531" shape_correlation="0.998054743" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" area="1008126.56" background="459.478851" height="107375.6" fwhm="0.144191042" truncated="false" identified="false" rank="6" std_dev="0.0665783659" skewness="-0.414554119" kurtosis="0.47994718" shape_correlation="0.9994492" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="698.35338" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>699.360656</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="1" intensity="7469" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="2593956.25" background="11539.9619" height="282273.3" fwhm="0.142455056" truncated="false" identified="false" rank="1" std_dev="0.06149335" skewness="-0.4217603" kurtosis="0.127740726" shape_correlation="0.9996287" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6675663" start_time="16.3651676" end_time="16.8565674" area="2872155.25" background="22369.5156" height="307107.875" fwhm="0.145690084" truncated="false" identified="false" rank="1" std_dev="0.06602153" skewness="-0.440268427" kurtosis="0.3118629" shape_correlation="0.9989913" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="328.185903" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>923.965059</precursor_mz>
+          <product_mz>329.193179</product_mz>
+          <collision_energy>34.728812</collision_energy>
+          <transition_lib_info rank="9" intensity="851" />
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="16.3637333" start_time="16.0991325" end_time="16.5527325" area="1776265" background="5135.69873" height="199517.563" fwhm="0.146319523" truncated="false" identified="false" rank="2" std_dev="0.06209734" skewness="-0.392090321" kurtosis="0.0115439547" shape_correlation="0.9984618" points_across="13" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="16.6297665" start_time="16.3651676" end_time="16.8565674" area="1925203" background="16777.4629" height="204896.984" fwhm="0.144600257" truncated="false" identified="false" rank="2" std_dev="0.0653707162" skewness="-0.3842228" kurtosis="0.148993343" shape_correlation="0.998825133" points_across="14" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+  </protein>
+  <peptide_list label_name="S" websearch_status="X" auto_manage_children="false">
+    <peptide standard_type="Normalization" sequence="VVLSGSDATLAYSAFK" modified_sequence="VVLSGSDATLAYSAFK" calc_neutral_pep_mass="1627.845738" num_missed_cleavages="0" avg_measured_retention_time="28.2208328">
+      <peptide_results>
+        <peptide_result replicate="D_102_REP1" peak_count_ratio="1" retention_time="27.91885" />
+        <peptide_result replicate="H_146_REP1" peak_count_ratio="1" retention_time="28.5228176" />
+      </peptide_results>
+      <precursor charge="2" calc_neutral_mass="1627.845738" precursor_mz="814.930145" collision_energy="31.021625" modified_sequence="VVLSGSDATLAYSAFK">
+        <precursor_results>
+          <precursor_peak replicate="D_102_REP1" peak_count_ratio="1" retention_time="27.91885" start_time="27.64795" end_time="28.61545" fwhm="0.199917376" area="2301998" background="7823.271" height="35084.4531" truncated="0" identified="false" user_set="FALSE" />
+          <precursor_peak replicate="H_146_REP1" peak_count_ratio="1" retention_time="28.5228176" start_time="28.2188168" end_time="29.2068176" fwhm="0.242056429" area="2075684" background="12087.1123" height="31396.8984" truncated="0" identified="false" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="y" fragment_ordinal="13" calc_neutral_mass="1316.624846" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
+          <precursor_mz>814.930145</precursor_mz>
+          <product_mz>1317.632122</product_mz>
+          <collision_energy>31.021625</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="27.95755" start_time="27.64795" end_time="28.61545" area="397784.4" background="2946.14087" height="29280.834" fwhm="0.186544523" truncated="false" identified="false" rank="3" std_dev="0.136896268" skewness="1.5288372" kurtosis="3.67278242" shape_correlation="0.9985" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="28.5228176" start_time="28.2188168" end_time="29.2068176" area="340838.9" background="108.297249" height="22947.9727" fwhm="0.2256642" truncated="false" identified="false" rank="4" std_dev="0.138403013" skewness="1.50522661" kurtosis="3.936708" shape_correlation="0.995319068" points_across="27" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="899.475269" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
+          <precursor_mz>814.930145</precursor_mz>
+          <product_mz>900.482545</product_mz>
+          <collision_energy>31.021625</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="27.91885" start_time="27.64795" end_time="28.61545" area="333417.344" background="1289.59851" height="25064.52" fwhm="0.192774773" truncated="false" identified="false" rank="5" std_dev="0.124195568" skewness="1.14033258" kurtosis="2.557113" shape_correlation="0.997702956" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="28.5608177" start_time="28.2188168" end_time="29.2068176" area="298397.125" background="56.49377" height="19823.0781" fwhm="0.238154724" truncated="false" identified="false" rank="5" std_dev="0.120423578" skewness="1.36625242" kurtosis="3.99292469" shape_correlation="0.995736" points_across="27" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="798.42759" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
+          <precursor_mz>814.930145</precursor_mz>
+          <product_mz>799.434866</product_mz>
+          <collision_energy>31.021625</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="27.91885" start_time="27.64795" end_time="28.61545" area="289613.1" background="647.0338" height="21508.5" fwhm="0.197610959" truncated="false" identified="false" rank="6" std_dev="0.127453834" skewness="1.6498394" kurtosis="4.78018475" shape_correlation="0.9978054" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="28.5228176" start_time="28.2188168" end_time="29.2068176" area="249440.266" background="5276.22949" height="16730.1855" fwhm="0.2229062" truncated="false" identified="false" rank="6" std_dev="0.123769306" skewness="1.30446136" kurtosis="3.45087647" shape_correlation="0.9979008" points_across="27" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="685.343526" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
+          <precursor_mz>814.930145</precursor_mz>
+          <product_mz>686.350802</product_mz>
+          <collision_energy>31.021625</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="27.91885" start_time="27.64795" end_time="28.61545" area="465787.8" background="1943.98181" height="35084.4531" fwhm="0.187812656" truncated="false" identified="false" rank="1" std_dev="0.137746677" skewness="1.59534037" kurtosis="3.91860151" shape_correlation="0.998273253" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="28.5228176" start_time="28.2188168" end_time="29.2068176" area="433075.063" background="972.60614" height="31396.8984" fwhm="0.215087116" truncated="false" identified="false" rank="1" std_dev="0.125383854" skewness="1.34211314" kurtosis="3.6102066" shape_correlation="0.996270537" points_across="27" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="614.306413" product_charge="1" cleavage_aa="Y" loss_neutral_mass="0">
+          <precursor_mz>814.930145</precursor_mz>
+          <product_mz>615.313689</product_mz>
+          <collision_energy>31.021625</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="27.91885" start_time="27.64795" end_time="28.61545" area="395357.719" background="613.453552" height="29208.252" fwhm="0.179534361" truncated="false" identified="false" rank="4" std_dev="0.132505789" skewness="1.477044" kurtosis="3.71263218" shape_correlation="0.9976329" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="28.5228176" start_time="28.2188168" end_time="29.2068176" area="360761.469" background="1567.86218" height="24488.77" fwhm="0.223650128" truncated="false" identified="false" rank="3" std_dev="0.127526283" skewness="1.27816474" kurtosis="3.05001116" shape_correlation="0.994514" points_across="27" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="451.243084" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
+          <precursor_mz>814.930145</precursor_mz>
+          <product_mz>452.25036</product_mz>
+          <collision_energy>31.021625</collision_energy>
+          <transition_results>
+            <transition_peak replicate="D_102_REP1" retention_time="27.99625" start_time="27.64795" end_time="28.61545" area="420037.5" background="383.062622" height="28869.0234" fwhm="0.199917376" truncated="false" identified="false" rank="2" std_dev="0.136704147" skewness="1.56338918" kurtosis="3.92010021" shape_correlation="0.9936875" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="H_146_REP1" retention_time="28.5608177" start_time="28.2188168" end_time="29.2068176" area="393171.281" background="4105.62354" height="25112.5449" fwhm="0.242056429" truncated="false" identified="false" rank="2" std_dev="0.137487113" skewness="1.43254793" kurtosis="3.24408841" shape_correlation="0.9984481" points_across="27" user_set="FALSE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

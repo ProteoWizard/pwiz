@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(Resources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
+                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(ModelResources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model
                             if (equivalentConfig)
                             {
                                 progressMonitor?.UpdateProgress(status.ChangeMessage(
-                                    string.Format(Resources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
+                                    string.Format(ModelResources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
                                         spectrumSource.GetSampleOrFileName())));
                                 continue;
                             }

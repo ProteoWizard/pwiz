@@ -37,7 +37,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception e)
             {
-                var message = TextUtil.LineSeparate(Resources.SkypSupport_Open_Failure_opening_skyp_file_, e.Message);
+                var message = TextUtil.LineSeparate(FileUIResources.SkypSupport_Open_Failure_opening_skyp_file_, e.Message);
                 MessageDlg.ShowWithException(parentWindow ?? _skyline, message, e);
                 return false;
             }
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI
             {
                 using (var longWaitDlg = new LongWaitDlg
                 {
-                    Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
+                    Text = FileUIResources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
                 })
                 {
                     var progressStaus = longWaitDlg.PerformWork(parentWindow ?? _skyline, 1000, progressMonitor => Download(skyp, progressMonitor));
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.FileUI
         {
             var message = TextUtil.LineSeparate(
                 string.Format(
-                    Resources
+                    FileUIResources
                         .SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
                     skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
                 exception.Message);
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.FileUI
         private void Download(SkypFile skyp, IProgressMonitor progressMonitor)
         {
             var progressStatus =
-                new ProgressStatus(string.Format(Resources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
+                new ProgressStatus(string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
             progressMonitor.UpdateProgress(progressStatus);
 
             var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.FileUI
         {
             var message =
                 string.Format(
-                    Resources.SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
+                    FileUIResources.SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
                     skyp.GetSkylineDocName(), skyp.GetDocUrlNoName());
 
             if (ex != null)
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.FileUI
 
                     var downloaded = e.BytesReceived;
                     var message = TextUtil.LineSeparate(
-                        string.Format(Resources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
+                        string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
                         string.Empty,
                         GetDownloadedSize(downloaded, skyp.HasSize() ? (long)skyp.Size : 0));
                     ProgressStatus = ProgressStatus.ChangeMessage(message);

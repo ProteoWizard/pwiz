@@ -182,16 +182,16 @@ namespace pwiz.Skyline.Util
                 _modeUIToolBarDropDownButton = modeUIToolBarDropDownButton;
                 var dropDown = new ToolStripDropDown();
                 dropDown.Items.Add(NewButton(Resources.UIModeProteomic,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis,
                     handler, SrmDocument.DOCUMENT_TYPE.proteomic));
                 dropDown.Items.Add(NewButton(Resources.UIModeSmallMolecules,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis,
                     handler, SrmDocument.DOCUMENT_TYPE.small_molecules));
                 dropDown.Items.Add(NewButton(Resources.UIModeMixed,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls,
                     handler, SrmDocument.DOCUMENT_TYPE.mixed));
                 _modeUIToolBarDropDownButton.DropDown = dropDown;
             }
@@ -340,16 +340,16 @@ namespace pwiz.Skyline.Util
                 string message = null;
                 if (new_uimode == SrmDocument.DOCUMENT_TYPE.proteomic && hasSmallMolecules)
                 {
-                    message = Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_;
+                    message = UtilResources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_;
                 }
                 else if (new_uimode == SrmDocument.DOCUMENT_TYPE.small_molecules && hasPeptides)
                 {
-                    message = Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_;
+                    message = UtilResources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_;
                 }
 
                 if (message != null)
                 {
-                    message = TextUtil.LineSeparate(message,@" ", Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_);
+                    message = TextUtil.LineSeparate(message,@" ", UtilResources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_);
                     using (var alert = new AlertDlg(message, MessageBoxButtons.YesNo))
                     {
                         if (alert.ShowAndDispose(_modeUIToolBarDropDownButton.GetCurrentParent()) == DialogResult.Yes)

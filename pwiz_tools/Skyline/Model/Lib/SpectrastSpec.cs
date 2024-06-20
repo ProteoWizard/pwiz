@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_SPTXT
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.SpectrastLibrary_SpecFilter_SpectraST_Library, EXT); }            
+            get { return TextUtil.FileDialogFilterAll(LibResources.SpectrastLibrary_SpecFilter_SpectraST_Library, EXT); }            
         }
 
         public SpectrastSpec(string name, string path)
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.SpectrastLibrary_SpecFilter_SpectraST_Library;
+            return LibResources.SpectrastLibrary_SpecFilter_SpectraST_Library;
         }
 
         #region Implementation of IXmlSerializable

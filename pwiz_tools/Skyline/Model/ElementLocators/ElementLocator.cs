@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.ElementLocators
             int ichColon = str.IndexOf(':');
             if (ichColon < 0)
             {
-                string message = string.Format(Resources.ElementLocator_Parse__0__is_not_a_valid_element_locator_, str);
+                string message = string.Format(ElementLocatorsResources.ElementLocator_Parse__0__is_not_a_valid_element_locator_, str);
                 throw new FormatException(message);
             }
             var type = str.Substring(0, ichColon);
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model.ElementLocators
             }
             if (result == null)
             {
-                string message = string.Format(Resources.ElementLocator_Parse__0__is_not_a_valid_element_locator_, str);
+                string message = string.Format(ElementLocatorsResources.ElementLocator_Parse__0__is_not_a_valid_element_locator_, str);
                 throw new FormatException(message);
             }
             result = result.ChangeType(type);
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model.ElementLocators
                 int chInt = reader.Read();
                 if (chInt < 0)
                 {
-                    throw UnexpectedException(reader, Resources.ElementLocator_ReadQuotedString_End_of_text);
+                    throw UnexpectedException(reader, ElementLocatorsResources.ElementLocator_ReadQuotedString_End_of_text);
                 }
                 char ch = (char)chInt;
                 if (ch == chEndQuote)
@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.ElementLocators
             // ReSharper disable PossibleNullReferenceException
             int position = fullText.Length - remainder.Length;
             // ReSharper restore PossibleNullReferenceException
-            string fullMessage = TextUtil.LineSeparate(string.Format(Resources.ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__, unexpected, fullText, position));
+            string fullMessage = TextUtil.LineSeparate(string.Format(ElementLocatorsResources.ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__, unexpected, fullText, position));
             return new FormatException(fullMessage);
         }
 

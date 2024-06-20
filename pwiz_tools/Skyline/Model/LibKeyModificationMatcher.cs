@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model
                             else if (!Equals(@"?", massString))
                             {
                                 // Get more information on a failure that was posted to the exception web page
-                                throw new FormatException(string.Format(Resources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
+                                throw new FormatException(string.Format(ModelResources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
                             }
                         }
                     }

@@ -477,7 +477,7 @@ namespace pwiz.Skyline.EditUI
                         // ignore the last row if it is blank
                         continue;
                     }
-                    MessageDlg.Show(this, Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank);
+                    MessageDlg.Show(this, EditUIResources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank);
                     SetGridFocus(dataGridViewLinkedPeptides, i, colPeptideSequence);
                     return;
                 }
@@ -748,7 +748,7 @@ namespace pwiz.Skyline.EditUI
             _crosslinkers.TryGetValue(crosslinkRow.Crosslinker, out crosslinker);
             if (crosslinker == null)
             {
-                errors.Add(new ColumnMessage(colCrosslinker, Resources.EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker));
+                errors.Add(new ColumnMessage(colCrosslinker, EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker));
             }
 
             var siteTuples = new[]
@@ -765,7 +765,7 @@ namespace pwiz.Skyline.EditUI
                 int peptideIndex = singlePeptide ? 0 : siteTuple.Item1.Key;
                 if (peptideIndex < 0 || peptideIndex >= peptideSequences.Count)
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item2, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_));
+                    errors.Add(new ColumnMessage(siteTuple.Item2, EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_));
                     continue;
                 }
 
@@ -773,18 +773,18 @@ namespace pwiz.Skyline.EditUI
                 int aaIndex = siteTuple.Item1.Value;
                 if (aaIndex < 0)
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_));
+                    errors.Add(new ColumnMessage(siteTuple.Item3, EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_));
                     continue;
                 }
                 if (aaIndex >= peptideSequence.Length)
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_));
+                    errors.Add(new ColumnMessage(siteTuple.Item3, EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_));
                     continue;
                 }
 
                 if (crosslinker != null && !crosslinker.IsApplicableCrosslink(peptideSequence, aaIndex))
                 {
-                    errors.Add(new ColumnMessage(siteTuple.Item3, string.Format(Resources.EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_, crosslinker.Name)));
+                    errors.Add(new ColumnMessage(siteTuple.Item3, string.Format(EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_, crosslinker.Name)));
                 }
 
                 if (errors.Count == 0)
@@ -792,12 +792,12 @@ namespace pwiz.Skyline.EditUI
                     var site = new CrosslinkSite(peptideIndex, aaIndex);
                     if (sites.Contains(site))
                     {
-                        errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_));
+                        errors.Add(new ColumnMessage(siteTuple.Item3, EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_));
                     }
                     sites.Add(site);
                     if (!allSites.Add(site))
                     {
-                        errors.Add(new ColumnMessage(siteTuple.Item3, Resources.EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_));
+                        errors.Add(new ColumnMessage(siteTuple.Item3, EditUIResources.EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_));
                     }
                 }
             }
@@ -866,7 +866,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (e.ColumnIndex == colModificationsButton.Index)
             {
-                e.ToolTipText = Resources.EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications;
+                e.ToolTipText = EditUIResources.EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications;
             }
         }
     }

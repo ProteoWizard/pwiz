@@ -105,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(en => !ReferenceEquals(_enrichments, en) && Equals(name, en.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditIsotopeEnrichmentDlg_OkDialog_The_isotope_enrichments_named__0__already_exist, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditIsotopeEnrichmentDlg_OkDialog_The_isotope_enrichments_named__0__already_exist, name);
                 return;
             }
 
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.SettingsUI
             const double max = IsotopeEnrichmentItem.MAX_ATOM_PERCENT_ENRICHMENT*100;
             if (min > enrichment || enrichment > max)
             {
-                InvalidCell(cell, Resources.EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__, min, max);
+                InvalidCell(cell, SettingsUIResources.EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__, min, max);
                 return false;
             }
 
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                InvalidCell(cell, Resources.EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid, value);
+                InvalidCell(cell, SettingsUIResources.EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid, value);
                 return false;
             }
 

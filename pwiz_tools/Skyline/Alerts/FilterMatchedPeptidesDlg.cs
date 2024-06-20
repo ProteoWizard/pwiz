@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,8 +38,8 @@ namespace pwiz.Skyline.Alerts
             HasSmallMolecules = hasSmallMolecules;
             if (HasSmallMolecules)
             {
-                Text = Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules;
-                radioKeepFiltered.Text = Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules;
+                Text = AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules;
+                radioKeepFiltered.Text = AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules;
             }
 
             UnmatchedCount = numUnmatched;
@@ -62,10 +62,10 @@ namespace pwiz.Skyline.Alerts
             if (numWithDuplicates != 0)
             {
                 msgDuplicatePeptides.Text = single
-                                                ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_matches_multiple_proteins
+                                                ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_matches_multiple_proteins
                                                 : (numWithDuplicates == 1
-                                                       ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_matching_multiple_proteins
-                                                       : string.Format(Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_matching_multiple_proteins,
+                                                       ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_matching_multiple_proteins
+                                                       : string.Format(AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_matching_multiple_proteins,
                                                            numWithDuplicates));
             }
             else
@@ -79,10 +79,10 @@ namespace pwiz.Skyline.Alerts
             if (numUnmatched != 0)
             {
                 msgUnmatchedPeptides.Text = single
-                                                ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_have_a_matching_protein
+                                                ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_have_a_matching_protein
                                                 : (numUnmatched == 1
-                                                       ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_without_a_matching_protein
-                                                       : string.Format(Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_without_matching_proteins,
+                                                       ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_without_a_matching_protein
+                                                       : string.Format(AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_without_matching_proteins,
                                                            numUnmatched));
             }
             else
@@ -96,16 +96,16 @@ namespace pwiz.Skyline.Alerts
             {
                 var filterMatchedPeptidesDlgFilterMatchedPeptidesDlgThisPeptideDoesNotMatchTheCurrentFilterSettings = 
                     hasSmallMolecules
-                    ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_the_current_filter_settings
-                    : Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_match_the_current_filter_settings;
+                    ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_the_current_filter_settings
+                    : AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_match_the_current_filter_settings;
                 var filterMatchedPeptidesDlgFilterMatchedPeptidesDlg1PeptideNotMatchingTheCurrentFilterSettings = 
                     hasSmallMolecules
-                        ?  Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_current_filter_settings
-                    : Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_not_matching_the_current_filter_settings;
+                        ?  AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_current_filter_settings
+                    : AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_not_matching_the_current_filter_settings;
                 var filterMatchedPeptidesDlgFilterMatchedPeptidesDlg0PeptidesNotMatchingTheCurrentFilterSettings = 
                     hasSmallMolecules
-                        ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings
-                    : Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings;
+                        ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings
+                    : AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings;
                 msgFilteredPeptides.Text = single
                                                ? filterMatchedPeptidesDlgFilterMatchedPeptidesDlgThisPeptideDoesNotMatchTheCurrentFilterSettings
                                                : (numFiltered == 1

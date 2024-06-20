@@ -91,11 +91,11 @@ namespace pwiz.Skyline.Model.IonMobility
             if ((result = ValidateAdduct(Precursor.Adduct)) != null)
                 messages.Add(result);
             if (CollisionalCrossSectionSqA == 0 && (IonMobilityNullable == null || IonMobility == 0))
-                messages.Add(Resources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);
+                messages.Add(IonMobilityResources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);
             if (CollisionalCrossSectionSqA < 0)
                 messages.Add(Resources.ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_);
             if (IonMobility!= 0 && IonMobilityUnits == eIonMobilityUnits.none)
-                messages.Add(Resources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_units_found);
+                messages.Add(IonMobilityResources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_units_found);
             return messages.Count > 0 ? TextUtil.LineSeparate(messages) : null;
         }
 
@@ -187,15 +187,15 @@ namespace pwiz.Skyline.Model.IonMobility
             if ((result = ValidateAdduct(Precursor.Adduct)) != null)
                 messages.Add(result);
             if (IonMobilities == null || IonMobilities.Count == 0)
-                messages.Add(Resources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);
+                messages.Add(IonMobilityResources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);
             else foreach(var im in IonMobilities)
             {
                 if ((im.CollisionalCrossSectionSqA??0) == 0 && (im.IonMobility.Mobility??0) == 0)
-                    messages.Add(Resources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);
+                    messages.Add(IonMobilityResources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);
                 if ((im.CollisionalCrossSectionSqA ?? 0) < 0)
                     messages.Add(Resources.ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_);
                 if ((im.IonMobility.Mobility ?? 0) != 0 && im.IonMobility.Units == eIonMobilityUnits.none)
-                    messages.Add(Resources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_units_found);
+                    messages.Add(IonMobilityResources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_units_found);
             }
             return messages.Count > 0 ? TextUtil.LineSeparate(messages) : null;
         }

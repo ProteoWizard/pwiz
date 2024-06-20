@@ -173,12 +173,12 @@ namespace pwiz.Skyline.Controls
             if (index == 0)
             {
                 return _undo
-                           ? Resources.UndoRedoList_GetLabelText_Undo_1_Action
-                           : Resources.UndoRedoList_GetLabelText_Redo_1_Action;
+                           ? ControlsResources.UndoRedoList_GetLabelText_Undo_1_Action
+                           : ControlsResources.UndoRedoList_GetLabelText_Redo_1_Action;
             }
             return string.Format(_undo 
-                ? Resources.UndoRedoList_GetLabelText_Undo__0__Actions
-                : Resources.UndoRedoList_GetLabelText_Redo__0__Actions,
+                ? ControlsResources.UndoRedoList_GetLabelText_Undo__0__Actions
+                : ControlsResources.UndoRedoList_GetLabelText_Redo__0__Actions,
                 (index + 1));
         }
 

@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AnnotationDef_AnnotationTarget_PrecursorResults" xml:space="preserve">
+    <value>プリカーサー結果</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTarget_Replicates" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
+    <value>トランジション結果</value>
+  </data>
+  <data name="AnnotationDef_ValidationErrorMessage_Invalid_value" xml:space="preserve">
+    <value>無効な値</value>
+  </data>
+  <data name="AnnotationDef_ValidationErrorMessage_Value_must_be_a_number" xml:space="preserve">
+    <value>値は数値でなければなりません</value>
+  </data>
+  <data name="CollisionEnergyRegression_Validate_Collision_energy_regression_contains_multiple_coefficients_for_charge__0__" xml:space="preserve">
+    <value>衝突エネルギー回帰には、電荷係数{0}が複数含まれています。</value>
+  </data>
+  <data name="CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
+    <value>衝突エネルギー回帰には、最低1つの回帰関数が必要です。</value>
+  </data>
+  <data name="DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_" xml:space="preserve">
+    <value>URI {0}は整形式ではありません。</value>
+  </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>計算された注釈を更新中</value>
+  </data>
+  <data name="DriftTimeWindowWidthCalculator_Validate_Fixed window_width_must_be_non_negative_" xml:space="preserve">
+    <value>固定ウィンドウ幅は、正である必要があります。</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_" xml:space="preserve">
+    <value>C末端に制限を持たせるには、酵素にC末端開裂が必要です。</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_" xml:space="preserve">
+    <value>N末端に制限を持たせるには、酵素にN末端開裂が必要です。</value>
+  </data>
+  <data name="Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point" xml:space="preserve">
+    <value>酵素には最低1つの開裂が必要です。</value>
+  </data>
+  <data name="ExplicitMods_ChangeModifications_Modification_type__0__not_found" xml:space="preserve">
+    <value>修飾タイプ{0}が見つかりません。</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+    <value>デフォルトで含まれる</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>ニュートラルロスは{0}以上でなければなりません。</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>ニュートラルロスは{0}以下でなければなりません。</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>ニュートラルロスでは、式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
+  </data>
+  <data name="FullScanAcquisitionExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
+    <value>データ依存性取得：MS2クロマトグラムは抽出されますが、定量化には使用されません。</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
+    <value>データ非依存性取得：MS2スペクトルは、m/z値が単離ウィンドウ内にあるすべてのプリカーサーのクロマトグラムに寄与します。</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0}は有効なフルスキャン取得メソッドではありません</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP" xml:space="preserve">
+    <value>並列反応モニタリング：MS2スペクトルは、m/zが選択されたイオンの「メソッド許容範囲」内にあるプリカーサーに寄与します。</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP" xml:space="preserve">
+    <value>「PRM」に類似していますが、Thermo SureQuandメソッドに適した「トリガー取得」と「メソッド許容範囲」設定を使用します。</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP" xml:space="preserve">
+    <value>MS2スペクトルは、m/zが選択イオンに最も近い1つのプリカーサーのクロマトグラムに寄与します。</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count" xml:space="preserve">
+    <value>数</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent" xml:space="preserve">
+    <value>パーセント</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_" xml:space="preserve">
+    <value>1/K0 (Vs/cm^2)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>補償電圧(V)</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_can_specify_multiplexed_windows_only_for_prespecified_isolation_windows" xml:space="preserve">
+    <value>単離スキームでは、事前指定の単離ウィンドウに対してのみ多重化ウィンドウを指定できます</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_filter_and_a_prespecifed_isolation_window" xml:space="preserve">
+    <value>単離スキームでは、フィルタと事前指定の単離ウィンドウを持つことはできません</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_right_filter_without_a_left_filter" xml:space="preserve">
+    <value>単離スキームでは、左フィルタなしでは右フィルタを持つことはできません</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows" xml:space="preserve">
+    <value>すべてのイオンの単離スキームには、単離ウィンドウを含むことができません</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
+    <value>多重化ウィンドウでは、各スキャンにつき最低1つのウィンドウが必要です</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_The_number_of_prespecified_isolation_windows_must_be_a_multiple_of_the_windows_per_scan_in_multiplexed_sampling" xml:space="preserve">
+    <value>事前指定の単離ウィンドウ数は、多重化サンプリングにおけるスキャン毎のウィンドウ数の倍数でなければなりません。</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_" xml:space="preserve">
+    <value>プリカーサーm/zフィルタは{0}から{1}の間でなければなりません</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Windows_per_scan_requires_multiplexed_isolation_windows" xml:space="preserve">
+    <value>スキャン毎のウィンドウでは、多重化単離ウィンドウが必要です</value>
+  </data>
+  <data name="IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value" xml:space="preserve">
+    <value>単離ウィンドウの開始値が終値より大きくなっています。</value>
+  </data>
+  <data name="IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window" xml:space="preserve">
+    <value>目標値が単離ウィンドウの範囲内にありません。</value>
+  </data>
+  <data name="IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value" xml:space="preserve">
+    <value>単離ウィンドウには目標値が必要です。</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_DoValidate_Atom_percent_enrichment__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>原子濃縮度{0}は{1}と{2}の間でなければなりません</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__" xml:space="preserve">
+    <value>同位体濃縮は記号{0}に対しサポートされていません</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_ToString__0__1__Percent" xml:space="preserve">
+    <value>{0} = {1}%</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>数字</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>True/False</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>値のリスト</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>ルックアップ： </value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+    <value>(不明)</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Always" xml:space="preserve">
+    <value>常に行う</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Matching_Library" xml:space="preserve">
+    <value>一致するライブラリ</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Never" xml:space="preserve">
+    <value>決して行わない</value>
+  </data>
+  <data name="MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_" xml:space="preserve">
+    <value>カスタムイオンの複数の電荷状態は今後サポートされません。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>レポーターイオン質量は{0}以上でなければなりません。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ion_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>レポーターイオン質量は{0}以下でなければなりません。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>レポーターイオンでは、式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
+    <value>特殊断片イオンでは、断片化の残基が最低1つ以上必要です。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
+    <value>特別断片イオンは、断片化が発生したアミノ酸残基の末端側を指定する必要があります。</value>
+  </data>
+  <data name="MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最短長さ{0}は{1}から{2}の間でなければなりません。</value>
+  </data>
+  <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
+    <value>測定された保持時間は正の値でなければなりません。</value>
+  </data>
+  <data name="MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
+    <value>シークエンス{0}は有効なペプチドではありません。</value>
+  </data>
+  <data name="ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup" xml:space="preserve">
+    <value>完了したMassLookupへのデータの追加は無効です。</value>
+  </data>
+  <data name="ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup" xml:space="preserve">
+    <value>未完了のMassLookupへのアクセスは無効です。</value>
+  </data>
+  <data name="OptimizableRegression_Validate_The_number_of_optimization_steps__0__is_not_between__1__and__2__" xml:space="preserve">
+    <value>最適化ステップ数{0}が{1}と{2}の間にありません。</value>
+  </data>
+  <data name="OptimizableRegression_Validate_The_optimization_step_size__0__is_not_greater_than_zero" xml:space="preserve">
+    <value>最適化ステップサイズ{0}が正の値ではありません。</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition" xml:space="preserve">
+    <value>トランジション</value>
+  </data>
+  <data name="PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression" xml:space="preserve">
+    <value>ペプチド排除は、正規表現が必要です。</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_excluded_n_terminal_amino_acids" xml:space="preserve">
+    <value>n末端アミノ酸を排除</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
+    <value>最長ペプチド長さ</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_minimum_peptide_length" xml:space="preserve">
+    <value>最短ペプチド長さ</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_The_peptide_exclusion__0__has_an_invalid_regular_expression__1__" xml:space="preserve">
+    <value>ペプチド排除{0}に無効な正規表現「{1}」があります。</value>
+  </data>
+  <data name="PeptideFilter_ExcludeExprToRegEx_Invalid_exclusion_list" xml:space="preserve">
+    <value>無効な排除リストです。</value>
+  </data>
+  <data name="PeptideFilter_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__" xml:space="preserve">
+    <value>{0}に対する値{1}は、{2}と{3}の間でなければなりません。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_" xml:space="preserve">
+    <value>ライブラリとライブラリ仕様が一致しません。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>ライブラリ選択ペプチド数{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Limiting_peptides_per_protein_requires_a_ranking_method_to_be_specified" xml:space="preserve">
+    <value>タンパク質毎にペプチドを制限するには、ランクメソッドを指定する必要があります。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_The_specified_method_of_matching_library_spectra_does_not_support_peptide_ranking" xml:space="preserve">
+    <value>指定した一致ライブラリスペクトルメソッドは、ペプチドランクをサポートしていません。</value>
+  </data>
+  <data name="PeptideLibraries_EnsureRankId_Specified_libraries_do_not_support_the___0___peptide_ranking" xml:space="preserve">
+    <value>指定したライブラリは「{0}」ペプチドランクをサポートしていません。</value>
+  </data>
+  <data name="PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type" xml:space="preserve">
+    <value>無効なタイプを含むリストを直列化しようとしています。</value>
+  </data>
+  <data name="PeptideModifications_ChangeModifications_Modification_type__0__not_found" xml:space="preserve">
+    <value>修飾タイプ{0}が見つかりません。</value>
+  </data>
+  <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最大ニュートラルロス数{0}は{1}と{2}の間でなければなりません</value>
+  </data>
+  <data name="PeptideModifications_DoValidate_Maximum_variable_modifications__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最大変数修飾{0}は{1}と{2}の間でなければなりません</value>
+  </data>
+  <data name="PeptideModifications_ReadXml_Heavy_modifications_found_without__0__attribute" xml:space="preserve">
+    <value>「{0}」属性のない重い修飾が見つかりました。</value>
+  </data>
+  <data name="PeptideModifications_ReadXml_Internal_standard_type__0__not_found" xml:space="preserve">
+    <value>内部標準タイプ{0}が見つかりません。</value>
+  </data>
+  <data name="PeptidePrediction_CalcMaxTrendReplicates_Calculating_scheduling_from_trends_requires_a_retention_time_window_for_measured_data" xml:space="preserve">
+    <value>トレンドからスケジュールを計算するには、測定データの保持時間ウィンドウが必要です。</value>
+  </data>
+  <data name="PeptidePrediction_DoValidate_The_retention_time_window__0__for_a_scheduled_method_based_on_measured_results_must_be_between__1__and__2__" xml:space="preserve">
+    <value>測定結果に基づくスケジュールメソッドの保持時間ウィンドウ{0}は{1}から{2}まででなければなりません。</value>
+  </data>
+  <data name="PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions" xml:space="preserve">
+    <value>区分線形関数</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Matching" xml:space="preserve">
+    <value>一致</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Overlapping" xml:space="preserve">
+    <value>重複</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Preceding" xml:space="preserve">
+    <value>先行</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
+    <value>「{0}」という名前は有効な表名ではありません。</value>
+  </data>
+  <data name="ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__" xml:space="preserve">
+    <value>{0}列を持つ表の検索に失敗しました。</value>
+  </data>
+  <data name="ReportSpec_ReadXml_Missing_table_name" xml:space="preserve">
+    <value>欠損している表名。</value>
+  </data>
+  <data name="ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
+    <value>「{0}」という名前は有効な表名ではありません。</value>
+  </data>
+  <data name="RetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid" xml:space="preserve">
+    <value>保持時間カルキュレータ{0}が無効です。</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>閾値を検索中</value>
+  </data>
+  <data name="RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values" xml:space="preserve">
+    <value>勾配と切片は、共に値を持つか、共に値を持たないようにしなければなりません</value>
+  </data>
+  <data name="RetentionTimeRegression_Validate_Invalid_negative_retention_time_window__0__" xml:space="preserve">
+    <value>無効な負の保持時間ウィンドウ{0}です。</value>
+  </data>
+  <data name="RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator" xml:space="preserve">
+    <value>保持時間回帰では、スコアカルキュレータに対するシークエンスを指定する必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential" xml:space="preserve">
+    <value>デクラスタリングポテンシャルに対する最適化をインポートするために、トランジション設定の予測タブでデクラスタリングポテンシャルに対する回帰を選択しなければなりません。</value>
+  </data>
+  <data name="SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling" xml:space="preserve">
+    <value>｢{0}｣はフルスキャン特殊処理に有効な設定ではありません</value>
+  </data>
+  <data name="SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec" xml:space="preserve">
+    <value>設定にライブラリ指定がありません。</value>
+  </data>
+  <data name="SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition" xml:space="preserve">
+    <value>修飾「{0}」は、既に別の定義とともに存在しています。</value>
+  </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+    <value>({0} Da)</value>
+    <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+    <value>質量</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+    <value>未知の質量</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+    <value>{0}個のロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+    <value>{0}個のニュートラルロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+    <value>ロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+    <value>ロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+    <value>ニュートラルロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+    <value>ニュートラルロス</value>
+  </data>
+  <data name="StaticMod_ToModTerminus_Invalid_terminus__0__" xml:space="preserve">
+    <value>無効な末端「{0}」です。</value>
+  </data>
+  <data name="StaticMod_Validate_Formula_not_allowed_with_labeled_atoms" xml:space="preserve">
+    <value>標識原子を使った式を使用できません。</value>
+  </data>
+  <data name="StaticMod_Validate_Invalid_amino_acid___0___" xml:space="preserve">
+    <value>「{0}」は無効なアミノ酸です。</value>
+  </data>
+  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_variable" xml:space="preserve">
+    <value>ロスのみの調整を変数にはできません。</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_formula_may_not_be_empty" xml:space="preserve">
+    <value>修飾式は空にはできません。</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>修飾では、式、標識原子、または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses" xml:space="preserve">
+    <value>式を使った修飾では、修飾質量を指定できません。</value>
+  </data>
+  <data name="StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed" xml:space="preserve">
+    <value>標識原子での末端修飾はできません。</value>
+  </data>
+  <data name="StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus" xml:space="preserve">
+    <value>変数修飾では、アミノ酸または末端を指定する必要があります。</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_1_ion" xml:space="preserve">
+    <value>1個のイオン</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_2_ions" xml:space="preserve">
+    <value>2個のイオン</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_5_ions" xml:space="preserve">
+    <value>5個のイオン</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_6_ions" xml:space="preserve">
+    <value>6個のイオン</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_last_ion_minus_2" xml:space="preserve">
+    <value>最後のイオン - 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_last_ion_minus_3" xml:space="preserve">
+    <value>最後のイオン - 3</value>
+  </data>
+  <data name="TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__" xml:space="preserve">
+    <value>最初の断片名{0}はサポートされていません。</value>
+  </data>
+  <data name="TransitionFilter_FragmentRangeLastName_Unsupported_last_fragment_name__0__" xml:space="preserve">
+    <value>最後の断片名{0}はサポートされていません。</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_ion_2" xml:space="preserve">
+    <value>イオン2</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
+    <value>イオン4</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor" xml:space="preserve">
+    <value>m/z &gt;プリカーサー</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1" xml:space="preserve">
+    <value>（m/z &gt;プリカーサー） - 1</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2" xml:space="preserve">
+    <value>（m/z &gt;プリカーサー） - 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1" xml:space="preserve">
+    <value>（m/z &gt;プリカーサー） + 1</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2" xml:space="preserve">
+    <value>（m/z &gt;プリカーサー） + 2</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__" xml:space="preserve">
+    <value>トランジション設定「{0}」内の不明な断片名</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
+    <value>標識{0}は有効な終了断片フィルタではありません。</value>
+  </data>
+  <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
+    <value>標識{0}は有効な開始断片フィルタではありません。</value>
+  </data>
+  <data name="TransitionFilter_IonTypes_At_least_one_ion_type_is_required" xml:space="preserve">
+    <value>最低1つのイオンタイプが必要です。</value>
+  </data>
+  <data name="TransitionFilter_PrecursorCharges_Precursor_charges" xml:space="preserve">
+    <value>プリカーサー電荷</value>
+  </data>
+  <data name="TransitionFilter_ProductCharges_Product_ion_charges" xml:space="preserve">
+    <value>プロダクトイオン電荷</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
+    <value>分子プリカーサー付加イオン</value>
+  </data>
+  <data name="TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__" xml:space="preserve">
+    <value>プリカーサー排除ウィンドウは、{0}と{1}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
+    <value>{0}は空にできません。</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__" xml:space="preserve">
+    <value>無効な電荷{1}が見つかりました。{0}は{2}と{3}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once" xml:space="preserve">
+    <value>プリカーサー電荷に電荷{0}が1回以上指定されています。</value>
+  </data>
+  <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode" xml:space="preserve">
+    <value>非DIAモードの単離スキームを作成しようとしました</value>
+  </data>
+  <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter" xml:space="preserve">
+    <value>プリカーサーフィルタなしで単離スキームを作成しようとしました</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
+    <value>QIT質量アナライザーによるMS1フィルタリングでサポートされるのは、同位体ピーク1つのみです。</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included" xml:space="preserve">
+    <value>プリカーサー同位体が含まれていない場合、他のフルスキャンMS1フィルタ設定は使用できません。</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_The_precursor_isotope_count_for_MS1_filtering_must_be_between__0__and__1__peaks" xml:space="preserve">
+    <value>MS1フィルタリングのプリカーサー同位体数は{0}と{1}の間のピークでなければなりません。</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_The_precursor_isotope_percent_for_MS1_filtering_must_be_between__0___and__1___of_the_base_peak" xml:space="preserve">
+    <value>MS1フィルタリングのプリカーサー同位体のパーセントは、ベースピークの{0}%と{1}%の間でなければなりません。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_" xml:space="preserve">
+    <value>QITの分解能は{0}と{1}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
+    <value>{2}のプリカーサー分解能は{0}と{1}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
+    <value>{0}に対し、分解能を校正するm/z値が必要です。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Unexpected_resolving_power_mz_value_for__0__" xml:space="preserve">
+    <value>{0}に対する予期しない分解能m/z値</value>
+  </data>
+  <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th" xml:space="preserve">
+    <value>結果{0:0.##}、{1:0.##}m/z</value>
+  </data>
+  <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th" xml:space="preserve">
+    <value>結果{0:0.##}m/z</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_maximum_m_z_value__0__is_less_than__1__from_minimum__2__" xml:space="preserve">
+    <value>装置の最大m/z値{0}は最小{1}より{2}低い値です。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_maximum_mz_exceeds_allowable_maximum__0__" xml:space="preserve">
+    <value>装置の最大m/z値は最大許容値{0}を超えています。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_minimum_mz_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>装置の最小m/z値{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_No_other_full_scan_MS_MS_filter_settings_are_allowed_when_precursor_filter_is_none" xml:space="preserve">
+    <value>プリカーサーフィルタがない場合、他のフルスキャンMS/MSフィルタ設定は使用できません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart_" xml:space="preserve">
+    <value>許容保持時間範囲{0}から{1}までの間隔は{2}分以上でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_number_of_inclusions__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>包含{0}の最大数は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_number_of_transitions__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>トランジション{0}の最大数は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_retention_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最大保持時間{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_minimum_retention_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最小保持時間{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_mz_match_tolerance__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>m/z一致許容誤差値{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_precursor_mz_filter_must_be_between__0__and__1__" xml:space="preserve">
+    <value>プリカーサーm/zフィルタは{0}から{1}の間でなければなりません</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>ライブラリイオン数値{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>ライブラリイオン許容誤差値{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>ライブラリの最小イオン数値{0}は{1}～{2}でなければなりません。</value>
+  </data>
+  <data name="TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_" xml:space="preserve">
+    <value>予期されるロス{0}が修飾{1}にありません</value>
+  </data>
+  <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
+    <value>トランジション予測には、衝突エネルギー回帰関数が必要です。</value>
+  </data>
+  <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
+    <value>補償電圧に対する最適化データをインポートするために、トランジション設定の予測タブで補償電圧パラメータを選択しなければなりません</value>
+  </data>
+  <data name="TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
+    <value>高分解能MS1フィルタリングでは、モノアイソトピックプリカーサー質量を使用する必要があります。</value>
+  </data>
+  <data name="TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan" xml:space="preserve">
+    <value>多重化DIAスキャンを行う前に装置のファームウェア包含制限を指定する必要があります。</value>
+  </data>
+  <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type" xml:space="preserve">
+    <value>この重いタイプには、既に静的修飾質量が追加されています。</value>
+  </data>
+  <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
+    <value>軽いタイプには、静的修飾質量を追加できません。</value>
+  </data>
+  <data name="XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty" xml:space="preserve">
+    <value>名前のプロパティが欠落している、または空にしておくことはできません。</value>
+  </data>
+</root>

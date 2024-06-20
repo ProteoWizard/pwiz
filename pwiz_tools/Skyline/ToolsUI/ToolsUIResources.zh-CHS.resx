@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ConfigureToolsDlg_AddFromFile_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_" xml:space="preserve">
+    <value>您必须在安装工具前保存更改。您是否想要保存更改？</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_Zip_Files" xml:space="preserve">
+    <value>压缩文件</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
+    <value>联络服务器</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store" xml:space="preserve">
+    <value>连接至工具商店出现未知错误</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_All_Executables" xml:space="preserve">
+    <value>所有可执行的</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Batch_Files" xml:space="preserve">
+    <value>批处理文件</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Command_Files" xml:space="preserve">
+    <value>命令文件</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Information_Files" xml:space="preserve">
+    <value>信息文件</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts" xml:space="preserve">
+    <value>Perl 脚本</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts" xml:space="preserve">
+    <value>Python 脚本</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
+    <value>注：如果您想要此命令来启动一个链接，请确保包含 http:// 或 https://</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_" xml:space="preserve">
+    <value>请选择一个报告或从参数中删除{0}。</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_" xml:space="preserve">
+    <value>请指定有效的 URL。</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_" xml:space="preserve">
+    <value>工具标题必须独特，请针对本工具输入一个独特的标题。</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_" xml:space="preserve">
+    <value>您已经将{0}提供为参数，但并未选择一个报告。</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_" xml:space="preserve">
+    <value>拥有下列名称的注释已经存在：</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_" xml:space="preserve">
+    <value>拥有下列名称的注释已经存在：</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_" xml:space="preserve">
+    <value>您是否想要覆盖或保留现有注释？</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing" xml:space="preserve">
+    <value>保持现有的</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel" xml:space="preserve">
+    <value>并行</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
+    <value>覆盖</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Reinstall" xml:space="preserve">
+    <value>重新安装</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation" xml:space="preserve">
+    <value>工具{0}与新安装发生冲突</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports" xml:space="preserve">
+    <value>此安装将修饰下列报告</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Upgrade" xml:space="preserve">
+    <value>升级</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time" xml:space="preserve">
+    <value>于运行时间采集的参数</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_N_A" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+    <value>命令(&amp;C)：</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+    <value>查询参数(&amp;Q)：</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+    <value>参数(&amp;R)：</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+    <value>U&amp;RL:</value>
+  </data>
+  <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
+    <value>配色方案“{0}”已经存在。</value>
+  </data>
+  <data name="EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_" xml:space="preserve">
+    <value>必须以十六进制或红绿蓝格式输入颜色。</value>
+  </data>
+  <data name="EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_" xml:space="preserve">
+    <value>无法解析颜色“{0}”。使用十六进制或红绿蓝格式。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
+    <value>设置正确</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>在尝试认证时出错。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>尝试获取目录列表时发生异常。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
+    <value>无效的服务器 URL。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
+    <value>服务器不能为空</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
+    <value>服务器 URL 必须以 https:// 或 http:// 开头</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
+    <value>服务器{1}上已经存在针对用户{0}定义的账户</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
+    <value>用户名不能为空</value>
+  </data>
+  <data name="EditServerDlg_OkDialog__0__is_not_a_valid_email_address_" xml:space="preserve">
+    <value>{0} 不是有效的电子邮件地址。</value>
+  </data>
+  <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
+    <value>验证服务器信息。</value>
+  </data>
+  <data name="LibrarySpec_Add_spectral_library" xml:space="preserve">
+    <value>添加谱图库</value>
+  </data>
+  <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
+    <value>在{0}处有未被识别的库类型</value>
+  </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>安装包</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>安装 Pip</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>安装 Python</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>安装</value>
+  </data>
+  <data name="RInstaller_GetPAckages_Installing_Packages" xml:space="preserve">
+    <value>安装包</value>
+  </data>
+  <data name="RInstaller_GetR_Installing_R" xml:space="preserve">
+    <value>安装 R</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>错误：无法连接到网站{0}</value>
+  </data>
+  <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
+    <value>软件包{0}未能安装：</value>
+  </data>
+  <data name="RInstaller_InstallR_Downloading_R" xml:space="preserve">
+    <value>下载 R</value>
+  </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
+    <value>无法找到具有该标识符的文件。</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>运行安装工具{0}出错。方法“{1}”有错误的签名。</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>无法找到任何 CollectArgs 方法来调用类“{0}”。</value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_" xml:space="preserve">
+    <value>工具{0}出错。</value>
+  </data>
+  <data name="ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__" xml:space="preserve">
+    <value>请重新配置该工具，其执行失败。</value>
+  </data>
+  <data name="ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_" xml:space="preserve">
+    <value>服务器返回了一个无效响应。可能会停机维修。请核查 skyline.ms 网站中的工具商店。</value>
+  </data>
+  <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
+    <value>您确定要清除所有已保存的设置吗？这将立即把 {0} 退回到其原始配置，此操作不能撤销。</value>
+  </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
+    <value>默认（{0}）</value>
+    <comment>Example: Default (English)</comment>
+  </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+    <value>不受支持的元素 {0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+    <value>不受支持的元素类型“{0}”</value>
+  </data>
+  <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
+    <value>插入蛋白质</value>
+  </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>从外部工具导入峰边界</value>
+  </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+    <value>从外部工具导入属性</value>
+  </data>
+  <data name="ToolStoreDlg_DownloadSelectedTool_Downloading__0_" xml:space="preserve">
+    <value>下载{0}</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
+    <value>当前已安装并完全更新（版本：{0}）。</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
+    <value>当前未安装。版本：{0} 可用</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_" xml:space="preserve">
+    <value>版本 {0} 当前已安装。版本 {1} 可用。</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Install" xml:space="preserve">
+    <value>安装</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
+    <value>重新安装</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetTools_Downloading_Updates" xml:space="preserve">
+    <value>下载更新</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
+    <value>下载更新</value>
+  </data>
+  <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
+    <value>安装更新至{0}</value>
+  </data>
+</root>

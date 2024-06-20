@@ -57,9 +57,9 @@ namespace pwiz.Skyline.Alerts
 
             // Change the title and intro text of the dialog.
             SetTitleAndIntroText(
-                Resources.ReportShutdownDlg_ReportShutdownDlg_Unexpected_Shutdown,
-                Resources.ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_,
-                Resources.ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_);
+                AlertsResources.ReportShutdownDlg_ReportShutdownDlg_Unexpected_Shutdown,
+                AlertsResources.ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_,
+                AlertsResources.ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_);
             StartPosition = FormStartPosition.CenterScreen;
             // This dialog should be shown in the taskbar because it does not have a parent
             ShowInTaskbar = true;

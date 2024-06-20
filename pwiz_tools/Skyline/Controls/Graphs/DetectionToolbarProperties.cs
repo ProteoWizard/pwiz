@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void tbAtLeastN_ValueChanged(object sender, EventArgs e)
         {
             gbAtLeastN.Text = String.Format(CultureInfo.CurrentCulture,
-                Resources.DetectionToolbarProperties_AtLeastNReplicates, tbAtLeastN.Value);
+                GraphsResources.DetectionToolbarProperties_AtLeastNReplicates, tbAtLeastN.Value);
         }
 
         private void cmbTargetType_SelectedIndexChanged(object sender, EventArgs e)

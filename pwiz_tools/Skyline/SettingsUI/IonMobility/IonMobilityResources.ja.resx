@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_" xml:space="preserve">
+    <value>{0}からイオン移動度データを追加中</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリの追加中</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__" xml:space="preserve">
+    <value>ライブラリファイル{0}を読み込もうとした際にエラーが発生しました。</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_ion_mobility_information_" xml:space="preserve">
+    <value>ライブラリ{0}にはイオン移動度情報が含まれていません。</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__" xml:space="preserve">
+    <value>{0}からイオン移動度データの読み取り中。</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information" xml:space="preserve">
+    <value>イオン移動度情報の読み取り中</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_collisional_cross_section_on_line__1__" xml:space="preserve">
+    <value>{1}行目の衝突断面積に対する無効な数値形式{0}。</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_ion_mobility_on_line__1__" xml:space="preserve">
+    <value>{1}行目のイオン移動度が無効な数値形式{0}です。</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Supported_units_include___0_" xml:space="preserve">
+    <value>サポートされる単位：{0}</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__" xml:space="preserve">
+    <value>{1}行目の衝突断面積{0}は0より大きくなければなりません。</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_ion_mobility_value___0___on_line__1__must_be_greater_than_zero" xml:space="preserve">
+    <value>{1}行目のイオン移動度値「{0}」は0より大きい必要があります</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Unrecognized_ion_mobility_units___0___on_line__1_" xml:space="preserve">
+    <value>{1}行目のイオン移動度単位「{0}」が認識できません</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
+    <value>本当に新しいイオン移動度ライブラリファイルを開きますか？  現在のライブラリへの変更はすべて失われます。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Library" xml:space="preserve">
+    <value>イオン移動度ライブラリを開く</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
+    <value>本当に新しいイオン移動度ライブラリファイルを作成しますか？  現在のライブラリへの変更はすべて失われます。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Library" xml:space="preserve">
+    <value>イオン移動度ライブラリを作成</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_library_file__0__could_not_be_created" xml:space="preserve">
+    <value>イオン移動度ライブラリファイル{0}を作成することができませんでした。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
+    <value>ピークのイオン移動度値を探しています</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_" xml:space="preserve">
+    <value>{0}という名前のイオン移動度ライブラリが既に存在しています。上書きしますか？</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_" xml:space="preserve">
+    <value>作成ボタンをクリックして新しいライブラリを作成するか、開くボタンをクリックして既存のライブラリファイルを開きます。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_" xml:space="preserve">
+    <value>イオン移動度ライブラリ内のペプチドのアップデートに失敗しました。ライブラリが同期していない可能性があります。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_library_" xml:space="preserve">
+    <value>イオン移動度ライブラリの名前を入力してください。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。作成ボタンをクリックして新しいイオン移動度ライブラリを作成するか、開くボタンをクリックして欠損しているファイルを検索します。</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ion" xml:space="preserve">
+    <value>{0}個のプリカーサーイオン</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions" xml:space="preserve">
+    <value>{0}個のプリカーサーイオン</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
+    <value>値{0}は有効な修飾ペプチドシークエンスではありません。</value>
+  </data>
+  <data name="ImportIonMobilityFromSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_" xml:space="preserve">
+    <value>追加するライブラリを選択してください。</value>
+  </data>
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
+    <value>ファイル{0}は非冗長ライブラリのようです。</value>
+  </data>
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。</value>
+  </data>
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_" xml:space="preserve">
+    <value>ファイル{0}はBiblioSpecライブラリではありません。</value>
+  </data>
+  <data name="IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_" xml:space="preserve">
+    <value>固定ウィンドウサイズは、0より大きい必要があります。</value>
+  </data>
+</root>

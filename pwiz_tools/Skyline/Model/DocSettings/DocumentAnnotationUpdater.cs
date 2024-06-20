@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (progressMonitor != null)
             {
-                progressMonitor.UpdateProgress(status.ChangeMessage(Resources.DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations));
+                progressMonitor.UpdateProgress(status.ChangeMessage(DocSettingsResources.DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations));
             }
             DocumentAnnotationUpdater updater = new DocumentAnnotationUpdater(document, progressMonitor);
             return updater.UpdateDocument(document);

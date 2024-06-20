@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(Name))
-                throw new InvalidDataException(Resources.XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty);
+                throw new InvalidDataException(DocSettingsResources.XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty);
         }
 
         public XmlSchema GetSchema()

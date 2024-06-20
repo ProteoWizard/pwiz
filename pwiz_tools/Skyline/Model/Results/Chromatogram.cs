@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Model.Results
                         try
                         {
                             using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(new LoadMonitor(_manager, _container, null),
-                                                                                            Resources.Loader_FinishLoad_Updating_peak_statistics,
+                                                                                            ResultsResources.Loader_FinishLoad_Updating_peak_statistics,
                                                                                             _container, docCurrent))
                             {
                                 // First remove any chromatogram sets that were removed during processing
@@ -831,7 +831,7 @@ namespace pwiz.Skyline.Model.Results
                 IXmlElementHelper<OptimizableRegression> helper = XmlUtil.FindHelper(
                     OptimizationFunction, OPTIMIZATION_HELPERS);
                 if (helper == null)
-                    throw new InvalidOperationException(Resources.ChromatogramSet_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
+                    throw new InvalidOperationException(ResultsResources.ChromatogramSet_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
                 writer.WriteElement(helper.ElementNames[0], OptimizationFunction);                
             }
 
@@ -903,7 +903,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ordinalIndex == -1)
                 throw new ArgumentOutOfRangeException(nameof(ordinalIndex),
-                                                      Resources.ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found);
+                                                      ResultsResources.ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found);
 
             return string.Format(@"{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
         }

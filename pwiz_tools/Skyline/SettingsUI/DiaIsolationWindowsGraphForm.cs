@@ -62,9 +62,9 @@ namespace pwiz.Skyline.SettingsUI
             
 
             //Setup Graph
-            zgIsolationGraph.GraphPane.Title.Text = Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows;
-            zgIsolationGraph.GraphPane.XAxis.Title.Text = Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z;
-            zgIsolationGraph.GraphPane.YAxis.Title.Text = Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle;
+            zgIsolationGraph.GraphPane.Title.Text = SettingsUIResources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows;
+            zgIsolationGraph.GraphPane.XAxis.Title.Text = SettingsUIResources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z;
+            zgIsolationGraph.GraphPane.YAxis.Title.Text = SettingsUIResources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle;
             zgIsolationGraph.GraphPane.IsFontsScaled = false;
             zgIsolationGraph.GraphPane.YAxis.Scale.IsReverse = true;
             zgIsolationGraph.GraphPane.YAxisList[0].MajorTic.IsOpposite = false;
@@ -348,8 +348,8 @@ namespace pwiz.Skyline.SettingsUI
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
             zgIsolationGraph.GraphPane.Title.Text = cbMargin.Checked
-                ? Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows
-                : Resources.DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows;
+                ? SettingsUIResources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows
+                : SettingsUIResources.DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows;
             
             foreach (BoxObj margin in _leftMargins)
             {

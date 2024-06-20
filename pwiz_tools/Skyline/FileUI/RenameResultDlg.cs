@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 if (ExistingNames.Contains(value))
-                    throw new InvalidOperationException(string.Format(Resources.RenameResultDlg_ReplicateName_The_name__0__is_already_in_use, value));
+                    throw new InvalidOperationException(string.Format(FileUIResources.RenameResultDlg_ReplicateName_The_name__0__is_already_in_use, value));
                 textName.Text = value;
             }
         }
@@ -61,8 +61,8 @@ namespace pwiz.Skyline.FileUI
             if (ExistingNames.Contains(textName.Text))
             {
                 var message = TextUtil.LineSeparate(
-                    string.Format(Resources.RenameResultDlg_ReplicateName_The_name__0__is_already_in_use, textName.Text),
-                    Resources.RenameResultDlg_OkDialog_Please_use_a_different_name);
+                    string.Format(FileUIResources.RenameResultDlg_ReplicateName_The_name__0__is_already_in_use, textName.Text),
+                    FileUIResources.RenameResultDlg_OkDialog_Please_use_a_different_name);
                 MessageDlg.Show(this, message);
                 return;
             }

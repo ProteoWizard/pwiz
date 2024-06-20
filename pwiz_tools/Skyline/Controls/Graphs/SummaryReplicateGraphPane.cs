@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            XAxis.Title.Text = Resources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate;
+            XAxis.Title.Text = GraphsResources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate;
             XAxis.Type = AxisType.Text;
             IsRepeatRemovalAllowed = true;
         }

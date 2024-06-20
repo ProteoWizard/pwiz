@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.Optimization
         private void RequireUsable()
         {
             if (!IsUsable)
-                throw new InvalidOperationException(Resources.OptimizationLibrary_RequireUsable_Unexpected_use_of_optimization_library_before_successful_initialization_);
+                throw new InvalidOperationException(OptimizationResources.OptimizationLibrary_RequireUsable_Unexpected_use_of_optimization_library_before_successful_initialization_);
         }
 
         #region Property change methods

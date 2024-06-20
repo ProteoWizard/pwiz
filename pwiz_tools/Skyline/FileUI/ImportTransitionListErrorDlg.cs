@@ -57,8 +57,8 @@ namespace pwiz.Skyline.FileUI
 
             if (isErrorAll)
             {
-                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_and_try_importing_again_ :
-                    string.Format(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_, errorList.Count);
+                errorListMessage = errorList.Count == 1 ? FileUIResources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_and_try_importing_again_ :
+                    string.Format(FileUIResources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_, errorList.Count);
                 HideCancelButton();
                 // In this case, the OK button should close the error dialog but not the column select dialog
                 // Simplest way to do this is to treat it as a cancel button
@@ -66,13 +66,13 @@ namespace pwiz.Skyline.FileUI
             }
             else if (offerCancelButton)
             {
-                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_ :
-                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_, errorList.Count);
+                errorListMessage = errorList.Count == 1 ? FileUIResources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_ :
+                    string.Format(FileUIResources.SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_, errorList.Count);
             }
             else
             {
-                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ :
-                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors_, errorList.Count);
+                errorListMessage = errorList.Count == 1 ? FileUIResources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ :
+                    string.Format(FileUIResources.SkylineWindow_ImportMassList__0__transitions_contained_errors_, errorList.Count);
                 HideCancelButton();
             }
 

@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return Resources.MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions; }
+            get { return FindResources.MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions; }
         }
 
         private Dictionary<Adduct, TransitionMatchInfo> _dictChargeToMatchInfo;

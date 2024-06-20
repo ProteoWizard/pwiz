@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus(string.Format(Resources.ChromatogramLibrary_Load_Loading__0_, Name));
+            ProgressStatus status = new ProgressStatus(string.Format(ChromLibResources.ChromatogramLibrary_Load_Loading__0_, Name));
             loader.UpdateProgress(status);
             if (LoadFromCache(loader, status))
             {
@@ -606,7 +606,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception e)
             {
-                Trace.TraceWarning(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
+                Trace.TraceWarning(ChromLibResources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
                 return false;
             }
         }
@@ -727,7 +727,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(Resources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
+                Trace.TraceWarning(ChromLibResources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
                 return false;
             }
         }
@@ -1008,7 +1008,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 int version = PrimitiveArrays.ReadOneValue<int>(_stream);
                 if (version > CURRENT_VERSION || version < MIN_READABLE_VERSION)
                 {
-                    throw new InvalidDataException(string.Format(Resources.Serializer_ReadHeader_Unsupported_file_version__0_, version));
+                    throw new InvalidDataException(string.Format(ChromLibResources.Serializer_ReadHeader_Unsupported_file_version__0_, version));
                 }
                 _locationEntries = PrimitiveArrays.ReadOneValue<long>(_stream);
                 _library.PanoramaServer = ReadString(_stream);

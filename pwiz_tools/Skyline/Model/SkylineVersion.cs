@@ -130,11 +130,11 @@ namespace pwiz.Skyline.Model
 
         public static String GetCurrentVersionName()
         {
-            String labelFormat = Resources.SkylineVersion_GetCurrentVersionName_Latest___0__;
+            String labelFormat = ModelResources.SkylineVersion_GetCurrentVersionName_Latest___0__;
 
             if (Install.Type == Install.InstallType.developer)
             {
-                return string.Format(labelFormat, Resources.SkylineVersion_GetCurrentVersionName_Developer_Build);
+                return string.Format(labelFormat, ModelResources.SkylineVersion_GetCurrentVersionName_Developer_Build);
             }
             return string.Format(labelFormat, Install.ProgramNameAndVersion);
         }

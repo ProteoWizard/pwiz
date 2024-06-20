@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model
         public IUndoTransaction BeginTransaction(IUndoState undoState = null)
         {
             if (InUndoRedo)
-                throw new InvalidOperationException(Resources.UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo);
+                throw new InvalidOperationException(ModelResources.UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo);
 
             // Inner transactions are ignored, since only the initial record is
             // desired in the undo stack.
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model
         private void Commit(string description)
         {
             if (_pendingRecord == null)
-                throw new InvalidOperationException(Resources.UndoManager_Commit_Commit_called_with_no_pending_undo_record);
+                throw new InvalidOperationException(ModelResources.UndoManager_Commit_Commit_called_with_no_pending_undo_record);
 
             _redoStack.Clear();
             _pendingRecord.Description = description;
@@ -294,9 +294,9 @@ namespace pwiz.Skyline.Model
         private void Restore(int index, Stack<UndoRecord> from, Stack<UndoRecord> to)
         {
             if (_pendingRecord != null)
-                throw new InvalidOperationException(Resources.UndoManager_Restore_Attempting_undo_redo_inside_undo_transaction);
+                throw new InvalidOperationException(ModelResources.UndoManager_Restore_Attempting_undo_redo_inside_undo_transaction);
             if (index >= from.Count)
-                throw new IndexOutOfRangeException(string.Format(Resources.UndoManager_Restore_Attempt_to_index__0__beyond_length__1__, index, from.Count));
+                throw new IndexOutOfRangeException(string.Format(ModelResources.UndoManager_Restore_Attempt_to_index__0__beyond_length__1__, index, from.Count));
 
             try
             {

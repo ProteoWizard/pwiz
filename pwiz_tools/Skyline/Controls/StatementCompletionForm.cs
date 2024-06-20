@@ -291,7 +291,7 @@ namespace pwiz.Skyline.Controls
             if (listViewItem.SubItems.Count != 1)
             {
                 throw new InvalidOperationException(
-                    Resources.StatementCompletionForm_AddDescription_List_view_item_already_has_a_description);
+                    ControlsResources.StatementCompletionForm_AddDescription_List_view_item_already_has_a_description);
             }
             listViewItem.SubItems.Add(new ListViewItem.ListViewSubItem(listViewItem, description)
                                           {

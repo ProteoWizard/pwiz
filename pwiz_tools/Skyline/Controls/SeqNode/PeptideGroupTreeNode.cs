@@ -63,22 +63,22 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (DocNode.IsNonProteomic)
                 {
-                    return Resources.PeptideGroupTreeNode_Heading_Molecule_List;
+                    return SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
                 }
                 return Model.Id is FastaSequence
-                    ? Resources.PeptideGroupTreeNode_Heading_Protein
-                    : Resources.PeptideGroupTreeNode_Heading_Peptide_List;
+                    ? SeqNodeResources.PeptideGroupTreeNode_Heading_Protein
+                    : SeqNodeResources.PeptideGroupTreeNode_Heading_Peptide_List;
             }
         }
 
         public override string ChildHeading
         {
-            get { return string.Format(DocNode.IsNonProteomic ? Resources.PeptideGroupTreeNode_ChildHeading__0__Molecules : Resources.PeptideGroupTreeNode_ChildHeading__0__, Text); }
+            get { return string.Format(DocNode.IsNonProteomic ? SeqNodeResources.PeptideGroupTreeNode_ChildHeading__0__Molecules : SeqNodeResources.PeptideGroupTreeNode_ChildHeading__0__, Text); }
         }
 
         public override string ChildUndoHeading
         {
-            get { return string.Format(DocNode.IsNonProteomic ? Resources.PeptideGroupTreeNode_ChildUndoHeading__0__molecules : Resources.PeptideGroupTreeNode_ChildUndoHeading__0__, Text); }
+            get { return string.Format(DocNode.IsNonProteomic ? SeqNodeResources.PeptideGroupTreeNode_ChildUndoHeading__0__molecules : SeqNodeResources.PeptideGroupTreeNode_ChildUndoHeading__0__, Text); }
         }
 
         protected override void OnModelChanged()
@@ -258,13 +258,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
                 // If current name isn't the original, show that.
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
-                    tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
+                    tableDetails.AddDetailRowLineWrap(g, SeqNodeResources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
                 // Add information about accession, preferred name, gene, etc.
                 AddProteinMetadata(tableDetails, DocNode.ProteinMetadata, rt, g);
                 if (!DocNode.PeptideGroup.Description.IsNullOrEmpty() &&
                     !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
                 {
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description,
+                    tableDetails.AddDetailRow(SeqNodeResources.PeptideGroupTreeNode_RenderTip_Original_Description,
                         DocNode.OriginalDescription, rt);
                 }
 
@@ -363,30 +363,30 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             if (!String.IsNullOrEmpty(metadata.Accession))
             {
-                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Accession, metadata.Accession, rt);
+                tableDetails.AddDetailRowLineWrap(g, SeqNodeResources.PeptideGroupTreeNode_RenderTip_Accession, metadata.Accession, rt);
             }
 
             if (!String.IsNullOrEmpty(metadata.PreferredName))
             {
-                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name,
+                tableDetails.AddDetailRowLineWrap(g, SeqNodeResources.PeptideGroupTreeNode_RenderTip_Preferred_Name,
                     metadata.PreferredName, rt);
             }
             if (!String.IsNullOrEmpty(metadata.Gene))
             {
-                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Gene, metadata.Gene, rt);
+                tableDetails.AddDetailRowLineWrap(g, SeqNodeResources.PeptideGroupTreeNode_RenderTip_Gene, metadata.Gene, rt);
             }
             if (!String.IsNullOrEmpty(metadata.Species))
             {
-                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Species, metadata.Species, rt);
+                tableDetails.AddDetailRowLineWrap(g, SeqNodeResources.PeptideGroupTreeNode_RenderTip_Species, metadata.Species, rt);
             }
             if (!String.IsNullOrEmpty(metadata.DisplaySearchHistory()))
             {
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Searched,
+                tableDetails.AddDetailRow(SeqNodeResources.PeptideGroupTreeNode_RenderTip_Searched,
                     metadata.DisplaySearchHistory(), rt);
             }
             if (!String.IsNullOrEmpty(metadata.Description))
             {
-                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Description,
+                tableDetails.AddDetailRowLineWrap(g, SeqNodeResources.PeptideGroupTreeNode_RenderTip_Description,
                     metadata.Description, rt);
             }
         }

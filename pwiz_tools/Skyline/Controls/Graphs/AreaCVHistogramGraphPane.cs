@@ -198,8 +198,8 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Insert(1, MakeBarItem(selectedPoints, Color.FromArgb(Color.Red.ToArgb() & 0x7FFFFFFF)));
             CurveList.Insert(2, MakeBarItem(otherPoints, Color.FromArgb(180, 220, 255)));
 
-            XAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
-            YAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
+            XAxis.Title.Text = GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
+            YAxis.Title.Text = GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
 
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
@@ -226,11 +226,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_areaCVGraphData == null)
             {
-                Title.Text = Resources.AreaCVHistogramGraphPane_AddLabels_Calculating____;
+                Title.Text = GraphsResources.AreaCVHistogramGraphPane_AddLabels_Calculating____;
             }
             else if (!_areaCVGraphData.IsValid)
             {
-                Title.Text = Resources.AreaCVHistogramGraphPane_AddLabels_Not_enough_data;
+                Title.Text = GraphsResources.AreaCVHistogramGraphPane_AddLabels_Not_enough_data;
             }
             else
             {
@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.AreaCVShowMedianCV)
                 {
                     _stickItems[index++].Points[1].Y = y;
-                    string text = string.Format(Resources.AreaCVHistogramGraphPane_AddLabels_Median___0_,
+                    string text = string.Format(GraphsResources.AreaCVHistogramGraphPane_AddLabels_Median___0_,
                         HistogramHelper.FormatDouble(_areaCVGraphData.MedianCV * factor, _decimals) + unit);
                     GraphObjList.Add(AddLabel(text, _areaCVGraphData.MedianCV * factor, y, Color.Blue));
                     y += height;      
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.AreaCVShowCVCutoff)
                 {
                     _stickItems[index++].Points[1].Y = y;
-                    string text = string.Format(Resources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_,
+                    string text = string.Format(GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_,
                             Settings.Default.AreaCVCVCutoff + unit, HistogramHelper.FormatDouble(_areaCVGraphData.BelowCVCutoff * factor, _decimals) + unit);
                     GraphObjList.Add(AddLabel(text, Settings.Default.AreaCVCVCutoff, y, Color.Red));
                 }

@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         catch (Exception ex)
                         {
-                            throw new NotSupportedException(string.Format(Resources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
+                            throw new NotSupportedException(string.Format(SerializationResources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
                         }
                     }
                 }

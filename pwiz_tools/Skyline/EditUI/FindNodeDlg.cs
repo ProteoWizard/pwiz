@@ -147,12 +147,12 @@ namespace pwiz.Skyline.EditUI
                 if (_advancedVisible)
                 {
                     Height = _fullHeight;
-                    btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Hide_Advanced;
+                    btnShowHideAdvanced.Text = EditUIResources.FindNodeDlg_AdvancedVisible_Hide_Advanced;
                 }
                 else
                 {
                     Height = _fullHeight - (checkedListBoxFinders.Bottom - btnShowHideAdvanced.Bottom);
-                    btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Show_Advanced;
+                    btnShowHideAdvanced.Text = EditUIResources.FindNodeDlg_AdvancedVisible_Show_Advanced;
                 }
             }
         }

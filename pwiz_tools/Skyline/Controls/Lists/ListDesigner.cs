@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls.Lists
             }
             if (name != _listDefOriginal.ListName && _existing.Any(listDef => listDef.Name == name))
             {
-                helper.ShowTextBoxError(tbxListName, string.Format(Resources.ListDesigner_OkDialog_There_is_already_a_list_named___0___, name));
+                helper.ShowTextBoxError(tbxListName, string.Format(ListsResources.ListDesigner_OkDialog_There_is_already_a_list_named___0___, name));
                 return;
             }
             var propertyNames = new HashSet<string>();
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Controls.Lists
             {
                 if (!propertyNames.Add(_listProperties[i].Name))
                 {
-                    MessageDlg.Show(this, Resources.ListDesigner_OkDialog_Duplicate_property_name);
+                    MessageDlg.Show(this, ListsResources.ListDesigner_OkDialog_Duplicate_property_name);
                     dataGridViewProperties.CurrentCell = dataGridViewProperties.Rows[i].Cells[colPropertyName.Index];
                     return;
                 }
@@ -188,14 +188,14 @@ namespace pwiz.Skyline.Controls.Lists
             string idProperty = comboIdProperty.SelectedItem as string;
             if (!string.IsNullOrEmpty(idProperty) && !propertyNames.Contains(idProperty))
             {
-                MessageDlg.Show(this, Resources.ListDesigner_OkDialog_No_such_property);
+                MessageDlg.Show(this, ListsResources.ListDesigner_OkDialog_No_such_property);
                 comboIdProperty.Focus();
                 return;
             }
             string displayProperty = comboDisplayProperty.SelectedItem as string;
             if (!string.IsNullOrEmpty(displayProperty) && !propertyNames.Contains(displayProperty))
             {
-                MessageDlg.Show(this, Resources.ListDesigner_OkDialog_No_such_property);
+                MessageDlg.Show(this, ListsResources.ListDesigner_OkDialog_No_such_property);
                 comboDisplayProperty.Focus();
                 return;
             }
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Controls.Lists
             }
             catch (Exception e)
             {
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_, e.Message), e);
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(ListsResources.ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_, e.Message), e);
                 return;
             }
             

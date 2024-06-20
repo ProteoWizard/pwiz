@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT = ".elib";
         public static string FILTER_ELIB
         {
-            get { return TextUtil.FileDialogFilter(Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library, EXT); }
+            get { return TextUtil.FileDialogFilter(LibResources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library, EXT); }
         }
 
         public EncyclopeDiaSpec(string name, string path)
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library;
+            return LibResources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                return TextUtil.FileDialogFilter(Resources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT);
+                return TextUtil.FileDialogFilter(LibResources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT);
             }
         }
 

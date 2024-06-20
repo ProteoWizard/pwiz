@@ -596,23 +596,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.invalid:
                     return string.Empty;
                 case GraphTypeSummary.replicate:
-                    return Resources.Extensions_CustomToString_Replicate_Comparison;
+                    return GraphsResources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
-                    return Resources.Extensions_CustomToString_Peptide_Comparison;
+                    return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
                 case GraphTypeSummary.score_to_run_regression:
-                    return Resources.Extensions_CustomToString_Score_To_Run_Regression;
+                    return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:
-                    return Resources.Extensions_CustomToString_Scheduling;
+                    return GraphsResources.Extensions_CustomToString_Scheduling;
                 case GraphTypeSummary.run_to_run_regression:
-                    return Resources.Extensions_CustomToString_Run_To_Run_Regression;
+                    return GraphsResources.Extensions_CustomToString_Run_To_Run_Regression;
                 case GraphTypeSummary.histogram:
-                    return Resources.Extensions_CustomToString_Histogram;
+                    return GraphsResources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
-                    return Resources.Extensions_CustomToString__2D_Histogram;
+                    return GraphsResources.Extensions_CustomToString__2D_Histogram;
                 case GraphTypeSummary.detections:
-                    return Resources.Extensions_CustomToString_Detections_Replicates;
+                    return GraphsResources.Extensions_CustomToString_Detections_Replicates;
                 case GraphTypeSummary.detections_histogram:
-                    return Resources.Extensions_CustomToString_Detections_Histogram;
+                    return GraphsResources.Extensions_CustomToString_Detections_Histogram;
                 default:
                     return string.Empty;
             }

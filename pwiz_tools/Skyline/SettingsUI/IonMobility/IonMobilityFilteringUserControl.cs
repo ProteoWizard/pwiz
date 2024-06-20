@@ -445,7 +445,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public string ValidateFixedWindow(double fixedWindow)
         {
             if (fixedWindow < 0)
-                return Resources.IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_;
+                return IonMobilityResources.IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_;
             return null;
         }
 

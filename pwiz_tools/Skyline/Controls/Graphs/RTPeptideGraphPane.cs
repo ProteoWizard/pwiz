@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -77,9 +77,9 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 if (RTValue != RTPeptideValue.All)
-                    text = TextUtil.SpaceSeparate(RTValue.ToString(), Resources.RTPeptideGraphPane_UpdateAxes_Time);
+                    text = TextUtil.SpaceSeparate(RTValue.ToString(), GraphsResources.RTPeptideGraphPane_UpdateAxes_Time);
                 else
-                    text = Resources.RTPeptideGraphPane_UpdateAxes_Retention_Time;
+                    text = GraphsResources.RTPeptideGraphPane_UpdateAxes_Retention_Time;
             }
             YAxis.Title.Text = text;
             UpdateAxes(false);

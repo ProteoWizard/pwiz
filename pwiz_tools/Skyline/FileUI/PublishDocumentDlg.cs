@@ -86,7 +86,7 @@ namespace pwiz.Skyline.FileUI
             {
                 using (var waitDlg = new LongWaitDlg
                     {
-                        Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
+                        Text = FileUIResources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
                     })
                 {
                     waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.FileUI
                         if (error != null && error.Contains(Resources
                                 .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server))
                         {
-                            error = TextUtil.LineSeparate(error, Resources
+                            error = TextUtil.LineSeparate(error, FileUIResources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
 
                         }
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.FileUI
             }
             if (listErrorServers.Count > 0)
             {
-                throw new Exception(TextUtil.LineSeparate(Resources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
+                throw new Exception(TextUtil.LineSeparate(FileUIResources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
                                                           string.Empty,
                                                           ServersToString(listErrorServers)));
             }
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(FileUIResources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
                                                             x.Message), x);
             }
         }
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.FileUI
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
             if (folderInfo == null)
             {
-                MessageDlg.Show(this, Resources.PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information);
+                MessageDlg.Show(this, FileUIResources.PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information);
                 return;
             }
             if (!folderInfo.HasWritePermission)
@@ -309,10 +309,10 @@ namespace pwiz.Skyline.FileUI
                                      DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
                                      Filter =
                                          TextUtil.FileDialogFiltersAll(
-                                             Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
+                                             FileUIResources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
                                              SrmDocumentSharing.EXT),
                                      FileName = tbFilePath.Text,
-                                     Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document
+                                     Title = FileUIResources.PublishDocumentDlg_btnBrowse_Click_Upload_Document
                                  })
             {
                 if (dlg.ShowDialog(Parent) == DialogResult.OK)

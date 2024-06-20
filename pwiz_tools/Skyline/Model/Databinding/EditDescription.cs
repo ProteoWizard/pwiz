@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return _message;
             }
-            string fullMessage = string.Format(Resources.EditDescription_GetUndoText_Set__0__to___1__,
+            string fullMessage = string.Format(DatabindingResources.EditDescription_GetUndoText_Set__0__to___1__,
                 ColumnCaption.GetCaption(dataSchemaLocalizer), Value);
             return TruncateLongMessage(fullMessage);
         }

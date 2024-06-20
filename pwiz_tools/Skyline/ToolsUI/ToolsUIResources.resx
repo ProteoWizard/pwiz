@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ConfigureToolsDlg_AddFromFile_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_" xml:space="preserve">
+    <value>You must save changes before installing tools. Would you like to save changes?</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_Zip_Files" xml:space="preserve">
+    <value>Zip Files</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
+    <value>Contacting the server</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store" xml:space="preserve">
+    <value>Unknown error connecting to the tool store</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_All_Executables" xml:space="preserve">
+    <value>All Executables</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Batch_Files" xml:space="preserve">
+    <value>Batch Files</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Command_Files" xml:space="preserve">
+    <value>Command Files</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Information_Files" xml:space="preserve">
+    <value>Information Files</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts" xml:space="preserve">
+    <value>Perl Scripts</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts" xml:space="preserve">
+    <value>Python Scripts</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
+    <value>Note: if you would like the command to launch a link, make sure to include http:// or https://</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_" xml:space="preserve">
+    <value>Please select a report or remove {0} from arguments.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_" xml:space="preserve">
+    <value>Please specify a valid URL.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_" xml:space="preserve">
+    <value>Tool titles must be unique, please enter a unique title for this tool.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_" xml:space="preserve">
+    <value>You have provided {0} as an argument but have not selected a report.</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_" xml:space="preserve">
+    <value>An annotation with the following name already exists:</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_" xml:space="preserve">
+    <value>Annotations with the following names already exist:</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_" xml:space="preserve">
+    <value>Do you want to overwrite or keep the existing annotations?</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing" xml:space="preserve">
+    <value>Keep Existing</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel" xml:space="preserve">
+    <value>In Parallel</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
+    <value>Overwrite</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Reinstall" xml:space="preserve">
+    <value>Reinstall</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation" xml:space="preserve">
+    <value>The tool {0} is in conflict with the new installation</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports" xml:space="preserve">
+    <value>This installation would modify the following reports</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Upgrade" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time" xml:space="preserve">
+    <value>Arguments collected at run time</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_N_A" xml:space="preserve">
+    <value>N/A</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+    <value>&amp;Command:</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+    <value>&amp;Query params:</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+    <value>A&amp;rguments:</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+    <value>U&amp;RL:</value>
+  </data>
+  <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
+    <value>The color scheme '{0}' already exists.</value>
+  </data>
+  <data name="EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_" xml:space="preserve">
+    <value>Colors must be entered in HEX or RGB format.</value>
+  </data>
+  <data name="EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_" xml:space="preserve">
+    <value>Unable to parse the color '{0}'. Use HEX or RGB format.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
+    <value>Settings are correct</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>An error occurred while trying to authenticate.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>An exception occurred while trying to fetch the directory listing.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
+    <value>Invalid server URL.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
+    <value>Server cannot be blank</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
+    <value>Server URL must start with https:// or http://</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
+    <value>There is already an account defined for the user {0} on the server {1}</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
+    <value>Username cannot be blank</value>
+  </data>
+  <data name="EditServerDlg_OkDialog__0__is_not_a_valid_email_address_" xml:space="preserve">
+    <value>{0} is not a valid email address.</value>
+  </data>
+  <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
+    <value>Verifying server information.</value>
+  </data>
+  <data name="LibrarySpec_Add_spectral_library" xml:space="preserve">
+    <value>Add spectral library</value>
+  </data>
+  <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
+    <value>Unrecognized library type at {0}</value>
+  </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>Installing Packages</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>Installing Pip</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>Installing Python</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="RInstaller_GetPAckages_Installing_Packages" xml:space="preserve">
+    <value>Installing Packages</value>
+  </data>
+  <data name="RInstaller_GetR_Installing_R" xml:space="preserve">
+    <value>Installing R</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>Error: Failed to connect to the website {0}</value>
+  </data>
+  <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
+    <value>The package {0} failed to install:</value>
+  </data>
+  <data name="RInstaller_InstallR_Downloading_R" xml:space="preserve">
+    <value>Downloading R</value>
+  </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
+    <value>Cannot find a file with that identifier.</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>Error running the installed tool {0}. The method '{1}' has the wrong signature.</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>Unable to find any CollectArgs method to call on class '{0}'.</value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_" xml:space="preserve">
+    <value>The tool {0} had an error.</value>
+  </data>
+  <data name="ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__" xml:space="preserve">
+    <value>Please reconfigure that tool, it failed to execute. </value>
+  </data>
+  <data name="ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_" xml:space="preserve">
+    <value>The server returned an invalid response. It might be down for maintenance. Please check the Tool Store on the skyline.ms website.</value>
+  </data>
+  <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
+    <value>Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone.</value>
+  </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
+    <value>Default ({0})</value>
+    <comment>Example: Default (English)</comment>
+  </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+    <value>Unsupported element {0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+    <value>Unsupported element type '{0}'</value>
+  </data>
+  <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
+    <value>Insert proteins</value>
+  </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>Import peak boundaries from external tool</value>
+  </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+    <value>Import Properties from external tool</value>
+  </data>
+  <data name="ToolStoreDlg_DownloadSelectedTool_Downloading__0_" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
+    <value>Currently installed and fully updated (Version: {0}).</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
+    <value>Not currently installed. Version: {0} is available</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_" xml:space="preserve">
+    <value>Version {0} currently installed. Version {1} is available.</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
+    <value>Reinstall</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetTools_Downloading_Updates" xml:space="preserve">
+    <value>Downloading Updates</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
+    <value>Downloading Updates</value>
+  </data>
+  <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
+    <value>Installing updates to {0}</value>
+  </data>
+</root>

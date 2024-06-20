@@ -259,9 +259,9 @@ namespace pwiz.Skyline.Model.Tools
         private void Validate()
         {
             if (string.IsNullOrEmpty(Title))
-                throw new InvalidDataException(Resources.ToolDescription_Validate_Tools_must_have_a_title);
+                throw new InvalidDataException(ToolsResources.ToolDescription_Validate_Tools_must_have_a_title);
             if (string.IsNullOrEmpty(Command))
-                throw new InvalidDataException(Resources.ToolDescription_Validate_Tools_must_have_a_command_line);
+                throw new InvalidDataException(ToolsResources.ToolDescription_Validate_Tools_must_have_a_command_line);
         }
 
         public XmlSchema GetSchema()
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 throw new ToolExecutionException(
                     string.Format(
-                        Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
+                        ToolsResources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
             }
             IProgressStatus status =

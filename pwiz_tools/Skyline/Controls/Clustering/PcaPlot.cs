@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Controls.Clustering
                                          .Sum(series => series.PropertyIndexes.Count);
                 _pcaChoice = _pcaChoice.ConstrainComponents(numberOfDimensions);
                 pointLists = GetRowPointPairLists(_pcaChoice.XComponent, _pcaChoice.YComponent);
-                graphTitle = Resources.PcaPlot_UpdateGraph_PCA_on_rows;
+                graphTitle = ClusteringResources.PcaPlot_UpdateGraph_PCA_on_rows;
             }
             else
             {
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Controls.Clustering
                     valueSeriesList.Select(series => series.SeriesCaption.GetCaption(Localizer)));
                 if (clusteredProperties.RowHeaders.Any())
                 {
-                    graphTitle += Resources.PcaPlot_UpdateGraph__Across_ +
+                    graphTitle += ClusteringResources.PcaPlot_UpdateGraph__Across_ +
                                   TextUtil.SpaceSeparate(
                                       clusteredProperties.RowHeaders.Select(pd => pd.ColumnCaption.GetCaption(Localizer)));
                 }
@@ -258,8 +258,8 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             zedGraphControl1.GraphPane.Title.Text = graphTitle;
-            zedGraphControl1.GraphPane.XAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, _pcaChoice.XComponent + 1);
-            zedGraphControl1.GraphPane.YAxis.Title.Text = string.Format(Resources.PcaPlot_UpdateGraph_Principal_Component__0_, _pcaChoice.YComponent + 1);
+            zedGraphControl1.GraphPane.XAxis.Title.Text = string.Format(ClusteringResources.PcaPlot_UpdateGraph_Principal_Component__0_, _pcaChoice.XComponent + 1);
+            zedGraphControl1.GraphPane.YAxis.Title.Text = string.Format(ClusteringResources.PcaPlot_UpdateGraph_Principal_Component__0_, _pcaChoice.YComponent + 1);
             zedGraphControl1.GraphPane.Legend.IsVisible = zedGraphControl1.GraphPane.CurveList.Count < 16;
             zedGraphControl1.GraphPane.AxisChange();
             zedGraphControl1.Invalidate();

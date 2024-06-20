@@ -105,7 +105,7 @@ namespace pwiz.Skyline.EditUI
             var brukerTemplate = textBrukerTemplate.Text;
             if (!string.IsNullOrEmpty(brukerTemplate) && !File.Exists(brukerTemplate))
             {
-                helper.ShowTextBoxError(textBrukerTemplate, Resources.SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_);
+                helper.ShowTextBoxError(textBrukerTemplate, EditUIResources.SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_);
                 return;
             }
 

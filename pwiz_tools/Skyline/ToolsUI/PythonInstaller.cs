@@ -148,7 +148,7 @@ namespace pwiz.Skyline.ToolsUI
                     // showing progress, except in testing
                     waitDlg.PerformWork(this, 50, DownloadPython);
                 }
-                using (var waitDlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPython_Installing_Python})
+                using (var waitDlg = new LongWaitDlg(null, false) {Message = ToolsUIResources.PythonInstaller_GetPython_Installing_Python})
                 {
                     waitDlg.PerformWork(this, 50, InstallPython);
                 }
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.ToolsUI
                 // first install executable packages, if any
                 if (exePaths.Count != 0)
                 {
-                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    using (var waitDlg = new LongWaitDlg(null, false) { Message = ToolsUIResources.PythonInstaller_GetPackages_Installing_Packages })
                     {
                         waitDlg.PerformWork(this, 500, () => InstallExecutablePackages(exePaths));
                     }   
@@ -245,7 +245,7 @@ namespace pwiz.Skyline.ToolsUI
                         DialogResult result = MultiButtonMsgDlg.Show(
                             this,
                             Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
-                            Resources.PythonInstaller_InstallPackages_Install);
+                            ToolsUIResources.PythonInstaller_InstallPackages_Install);
                         if (result == DialogResult.OK && GetPip())
                         {
                             pipPath = PythonUtil.GetPipPath(_version);
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.ToolsUI
                         }
                     }
 
-                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    using (var waitDlg = new LongWaitDlg(null, false) { Message = ToolsUIResources.PythonInstaller_GetPackages_Installing_Packages })
                     {
                         waitDlg.PerformWork(this, 500, () => InstallSourcePackages(sourcePaths, pipPath));
                     }   
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.ToolsUI
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadPip);
                 }
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPip_Installing_Pip})
+                using (var dlg = new LongWaitDlg(null, false) {Message = ToolsUIResources.PythonInstaller_GetPip_Installing_Pip})
                 {
                     dlg.PerformWork(this, 50, InstallPip);
                 }

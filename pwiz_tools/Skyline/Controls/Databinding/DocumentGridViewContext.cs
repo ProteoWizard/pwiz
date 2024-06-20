@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Controls.Databinding
             if (EnablePreview)
             {
                 viewEditor.PreviewButtonVisible = true;
-                viewEditor.Text = Resources.DocumentGridViewContext_CreateViewEditor_Edit_Report;
+                viewEditor.Text = DatabindingResources.DocumentGridViewContext_CreateViewEditor_Edit_Report;
             }
             return viewEditor;
         }
@@ -63,11 +63,11 @@ namespace pwiz.Skyline.Controls.Databinding
             string title;
             if (string.IsNullOrEmpty(viewInfo.Name))
             {
-                title = Resources.DocumentGridViewContext_Preview_Preview_New_Report;
+                title = DatabindingResources.DocumentGridViewContext_Preview_Preview_New_Report;
             }
             else
             {
-                title = string.Format(Resources.DocumentGridViewContext_Preview_Preview___0_, viewInfo.Name);
+                title = string.Format(DatabindingResources.DocumentGridViewContext_Preview_Preview___0_, viewInfo.Name);
             }
             var dialog = new DocumentGridForm(this)
             {

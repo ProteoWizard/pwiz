@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Alerts
             {
                 ShowNewFolderButton = false,
                 SelectedPath = initialDir,
-                Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_
+                Description = AlertsResources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_
             };
 
             if (searchFolderDialog.ShowDialog() == DialogResult.OK)
@@ -474,12 +474,12 @@ namespace pwiz.Skyline.Alerts
             /// </summary>
             public static string GetStatusText(int includedFilesCount, int totalFilesCount, int missingFilesCount)
             {
-                var labelText = string.Format(Resources.AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_,
+                var labelText = string.Format(AlertsResources.AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_,
                     includedFilesCount, totalFilesCount);
 
                 if (missingFilesCount != 0)
                 {
-                    labelText = TextUtil.SpaceSeparate(labelText, string.Format(Resources.AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_,
+                    labelText = TextUtil.SpaceSeparate(labelText, string.Format(AlertsResources.AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_,
                         missingFilesCount));
                 }
                 return labelText;

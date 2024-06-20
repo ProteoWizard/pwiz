@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public static string GetGenericDeleteConfirmation(int nodeCount)
         {
-            return string.Format(Resources.SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_, nodeCount);
+            return string.Format(EntitiesResources.SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_, nodeCount);
         }
 
         protected abstract NodeRef NodeRefPrototype { get; }

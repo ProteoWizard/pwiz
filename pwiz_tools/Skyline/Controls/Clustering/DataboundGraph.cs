@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 if (GraphControl != null)
                 {
-                    GraphControl.GraphPane.Title.Text = Resources.DataboundGraph_AttachToOwner_Disconnected;
+                    GraphControl.GraphPane.Title.Text = ClusteringResources.DataboundGraph_AttachToOwner_Disconnected;
                 }
                 Close();
                 return;
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             if (GraphControl != null)
             {
-                GraphControl.GraphPane.Title.Text = Resources.DataboundGraph_AttachToOwner_Waiting_for_data;
+                GraphControl.GraphPane.Title.Text = ClusteringResources.DataboundGraph_AttachToOwner_Waiting_for_data;
             }
 
             OwnerGridForm = ownerForm;

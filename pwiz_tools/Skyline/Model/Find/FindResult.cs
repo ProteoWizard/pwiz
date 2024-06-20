@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.Find
             switch (Bookmark.IdentityPath.Depth)
             {
                 case (int)SrmDocument.Level.MoleculeGroups:
-                    nodeType = Resources.BookmarkEnumerator_GetNodeTypeName_Protein;
+                    nodeType = FindResources.BookmarkEnumerator_GetNodeTypeName_Protein;
                     break;
                 case (int)SrmDocument.Level.Molecules:
                     nodeType = PeptideTreeNode.TITLE;
@@ -169,13 +169,13 @@ namespace pwiz.Skyline.Model.Find
                     nodeType = TransitionTreeNode.TITLE;
                     break;
                 default:
-                    nodeType = Resources.BookmarkEnumerator_GetNodeTypeName_Unknown;
+                    nodeType = FindResources.BookmarkEnumerator_GetNodeTypeName_Unknown;
                     break;
             }
 
             if (Bookmark.ReplicateIndex.HasValue)
             {
-                return TextUtil.SpaceSeparate(nodeType + @" " + Resources.BookmarkEnumerator_GetLocationType_Results);
+                return TextUtil.SpaceSeparate(nodeType + @" " + FindResources.BookmarkEnumerator_GetLocationType_Results);
             }
             return nodeType;
         }

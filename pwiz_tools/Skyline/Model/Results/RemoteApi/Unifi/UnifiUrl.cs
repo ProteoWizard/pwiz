@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as UnifiAccount;
             if (account == null)
             {
-                throw new RemoteServerException(string.Format(Resources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
+                throw new RemoteServerException(string.Format(UnifiResources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
                     Username, ServerUrl));
             }
             // ReSharper disable LocalizableElement

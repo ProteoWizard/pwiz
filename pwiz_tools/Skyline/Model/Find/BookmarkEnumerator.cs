@@ -395,11 +395,11 @@ namespace pwiz.Skyline.Model.Find
                 var peptideDocNode = NodePath.OfType<PeptideDocNode>().FirstOrDefault();
                 if (resultsIndex < 0)
                 {
-                    return Resources.BookmarkEnumerator_GetLocationName_UnknownFile;
+                    return FindResources.BookmarkEnumerator_GetLocationName_UnknownFile;
                 }
                 if (peptideDocNode == null)
                 {
-                    return Resources.BookmarkEnumerator_GetLocationName_NoPeptide;
+                    return FindResources.BookmarkEnumerator_GetLocationName_NoPeptide;
                 }
                 var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
                 var chromatogramSet = chromatogramSets[resultsIndex];

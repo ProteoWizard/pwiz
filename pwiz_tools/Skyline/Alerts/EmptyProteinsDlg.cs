@@ -40,8 +40,8 @@ namespace pwiz.Skyline.Alerts
             EmptyProteins = countEmpty;
 
             string message = string.Format(labelMessage.Text, countEmpty == 1
-                ? Resources.EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein 
-                : string.Format(Resources.EmptyProteinsDlg_EmptyProteinsDlg__0__new_proteins, countEmpty));
+                ? AlertsResources.EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein 
+                : string.Format(AlertsResources.EmptyProteinsDlg_EmptyProteinsDlg__0__new_proteins, countEmpty));
             labelMessage.Text = message;
             if (countEmpty < 500)
                 labelPerf.Visible = false;

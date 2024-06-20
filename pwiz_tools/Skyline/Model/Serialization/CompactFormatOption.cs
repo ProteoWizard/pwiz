@@ -27,13 +27,13 @@ namespace pwiz.Skyline.Model.Serialization
     {        
         // ReSharper disable LocalizableElement
         public static readonly CompactFormatOption ALWAYS = new CompactFormatOption("always", 
-            ()=>Resources.CompactFormatOption_ALWAYS_Always, 
+            ()=>SerializationResources.CompactFormatOption_ALWAYS_Always, 
             doc=>true);
         public static readonly CompactFormatOption NEVER = new CompactFormatOption("never", 
-            ()=>Resources.CompactFormatOption_NEVER_Never, 
+            ()=>SerializationResources.CompactFormatOption_NEVER_Never, 
             doc=>false);
         public static readonly CompactFormatOption ONLY_FOR_LARGE_FILES = new CompactFormatOption("largefilesonly", 
-            ()=>Resources.CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files, 
+            ()=>SerializationResources.CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files, 
             doc=>doc.MoleculeTransitionCount > 1000);
         // ReSharper restore LocalizableElement
 

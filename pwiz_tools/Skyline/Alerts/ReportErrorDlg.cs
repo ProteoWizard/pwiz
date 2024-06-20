@@ -84,8 +84,8 @@ namespace pwiz.Skyline.Alerts
                 AcceptButton = btnCancel;
 
                 SetIntroText(
-                    Resources.ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below,
-                    Resources.ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted);
+                    AlertsResources.ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below,
+                    AlertsResources.ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted);
             }
         }
 

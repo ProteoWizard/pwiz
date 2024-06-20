@@ -40,12 +40,12 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static string FILTER_CSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
         }
 
         public static string FILTER_TSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
         }
 
         public const char SEPARATOR_CSV = ',';
@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string AppendColon(string left)
         {
-            return left + Resources.ColonEndOfLine;
+            return left + ExtensionsResources.ColonEndOfLine;
         }
 
         /// <summary>
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string ColonSeparate(string left, string right)
         {
-            return string.Format(Resources.ColonSeparator, left, right);
+            return string.Format(ExtensionsResources.ColonSeparator, left, right);
         }
 
         /// <summary>
@@ -617,7 +617,7 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FileDialogFiltersAll(params string[] filters)
         {
             var listFilters = filters.ToList();
-            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
+            listFilters.Add(FileDialogFilter(ExtensionsResources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
             return string.Join(@"|", listFilters);
         }
 
@@ -967,9 +967,9 @@ namespace pwiz.Skyline.Util.Extensions
         private static string FormatMessage(string message, long lineNum, int colIndex)
         {
             if (colIndex == -1)
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
             else
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
         }
 
         public string PlainMessage { get; private set; }

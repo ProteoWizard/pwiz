@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Util
             DownloadSucceeded = false;
 
             Match file = Regex.Match(address.AbsolutePath, @"[^/]*$");
-            _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
+            _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
             _progressMonitor.UpdateProgress(_progressStatus);
             _webClient.DownloadFileAsync(address, path);
 

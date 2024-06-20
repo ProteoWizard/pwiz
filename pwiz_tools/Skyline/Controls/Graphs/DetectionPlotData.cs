@@ -78,15 +78,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 [CanBeNull] Action<int> progressReport = null)
         {
             if (Document == null || !Document.Settings.HasResults)
-                return Resources.DetectionPlotData_NoDataLoaded_Label;
+                return GraphsResources.DetectionPlotData_NoDataLoaded_Label;
 
             if (QValueCutoff == 0 || QValueCutoff == 1)
-                return Resources.DetectionPlotData_InvalidQValue_Label;
+                return GraphsResources.DetectionPlotData_InvalidQValue_Label;
 
 
             if (Document.MoleculeTransitionGroupCount == 0 || Document.PeptideCount == 0 ||
                 Document.MeasuredResults.Chromatograms.Count == 0)
-                return Resources.DetectionPlotData_NoResults_Label;
+                return GraphsResources.DetectionPlotData_NoResults_Label;
 
             var precursorData = new List<QData>(Document.MoleculeTransitionGroupCount);
             var peptideData = new List<QData>(Document.PeptideCount);
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var precursor in peptide.TransitionGroups)
                 {
                     if (cancellationToken.IsCancellationRequested)
-                        return Resources.DetectionPlotPane_EmptyPlotCanceled_Label;
+                        return GraphsResources.DetectionPlotPane_EmptyPlotCanceled_Label;
 
                     if (precursor.IsDecoy) continue;
                     var qs = new List<float>(ReplicateCount);
@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             if(precursorData.All(p => p.IsEmpty))
-                return Resources.DetectionPlotData_NoQValuesInDocument_Label;
+                return GraphsResources.DetectionPlotData_NoQValuesInDocument_Label;
 
             _data[DetectionsGraphController.TargetType.PRECURSOR] = new DataSet(precursorData, ReplicateCount, QValueCutoff);
             _data[DetectionsGraphController.TargetType.PEPTIDE] = new DataSet(peptideData, ReplicateCount, QValueCutoff);
@@ -377,11 +377,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     if(userCancel)
                         SetCacheStatus(CacheStatus.canceled,
-                            Resources.DetectionPlotData_UsePropertiesDialog_Label);
+                            GraphsResources.DetectionPlotData_UsePropertiesDialog_Label);
                     else
                     {
                         if (!_document.IsLoaded)
-                            SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
+                            SetCacheStatus(CacheStatus.idle, GraphsResources.DetectionPlotData_WaitingForDocumentLoad_Label);
                         else
                             SetCacheStatus(CacheStatus.idle, string.Empty);
                     }
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (!_document.IsLoaded)
                     {
-                        SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
+                        SetCacheStatus(CacheStatus.idle, GraphsResources.DetectionPlotData_WaitingForDocumentLoad_Label);
                         return;
                     }
 
@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (res.IsValid)
                         {
-                            SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_DataRetrieved_Label);
+                            SetCacheStatus(CacheStatus.idle, GraphsResources.DetectionPlotData_DataRetrieved_Label);
                             if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out _);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);

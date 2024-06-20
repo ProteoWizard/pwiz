@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 return Precursors[0].ToString();
             }
-            return string.Format(Resources.MatchingPrecursors_ToString__0__precursors, Precursors.Count);
+            return string.Format(SpectraResources.MatchingPrecursors_ToString__0__precursors, Precursors.Count);
         }
     }
 }

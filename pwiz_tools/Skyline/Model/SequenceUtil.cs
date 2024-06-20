@@ -108,9 +108,9 @@ namespace pwiz.Skyline.Model
             foreach (char c in seq)
             {
                 if (!IsAA(c))
-                    throw new InvalidDataException(string.Format(Resources.AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__, c, seq));
+                    throw new InvalidDataException(string.Format(ModelResources.AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__, c, seq));
                 if (seen.Contains(c))
-                    throw new InvalidDataException(string.Format(Resources.AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__, c, seq));
+                    throw new InvalidDataException(string.Format(ModelResources.AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__, c, seq));
                 seen.Add(c);
             }
         }
@@ -621,7 +621,7 @@ namespace pwiz.Skyline.Model
                 int ichCloseBracket = rawModifiedSequence.IndexOf(']', ichOpenBracket);
                 if (ichCloseBracket < 0)
                 {
-                    throw new ArgumentException(string.Format(Resources.SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_, rawModifiedSequence.Substring(ichOpenBracket)));
+                    throw new ArgumentException(string.Format(ModelResources.SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_, rawModifiedSequence.Substring(ichOpenBracket)));
                 }
                 string strMassDiff = rawModifiedSequence.Substring(ichOpenBracket + 1, ichCloseBracket - ichOpenBracket - 1);
                 double massDiff;
@@ -630,7 +630,7 @@ namespace pwiz.Skyline.Model
                 if (!double.TryParse(strMassDiff, numStyle, CultureInfo.InvariantCulture, out massDiff) &&
                     !double.TryParse(strMassDiff, numStyle, CultureInfo.CurrentCulture, out massDiff))
                 {
-                    throw new ArgumentException(string.Format(Resources.SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_, strMassDiff));
+                    throw new ArgumentException(string.Format(ModelResources.SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_, strMassDiff));
                 }
                 normalizedSeq.Append(rawModifiedSequence.Substring(ichLast, ichOpenBracket - ichLast));
                 // TODO: no precision to 1 decimal; 1+ unchanged
@@ -1010,7 +1010,7 @@ namespace pwiz.Skyline.Model
                     if (0 > i || i >= isotopeDist.CountPeaks)
                     {
                         throw new IndexOutOfRangeException(
-                            string.Format(Resources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
+                            string.Format(ModelResources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
                                             GetMassIDescripion(massIndex), isotopeDist.PeakIndexToMassIndex(0),
                                             isotopeDist.PeakIndexToMassIndex(isotopeDist.CountPeaks - 1)));
                     }
@@ -1080,7 +1080,7 @@ namespace pwiz.Skyline.Model
                     if (0 > i || i >= isotopeDists.CountPeaks)
                     {
                         throw new IndexOutOfRangeException(
-                            string.Format(Resources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
+                            string.Format(ModelResources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
                                           GetMassIDescripion(massIndex), isotopeDists.PeakIndexToMassIndex(0),
                                           isotopeDists.PeakIndexToMassIndex(isotopeDists.CountPeaks - 1)));
                     }
@@ -1227,7 +1227,7 @@ namespace pwiz.Skyline.Model
         {
             var formulaAA = AMINO_FORMULAS[aa];
             if (formulaAA == null)
-                throw new ArgumentOutOfRangeException(string.Format(Resources.SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__, aa));
+                throw new ArgumentOutOfRangeException(string.Format(ModelResources.SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__, aa));
 
             return formulaAA.ChangeMolecule(GetHeavyFormula(formulaAA, labelAtoms).Difference(formulaAA).Molecule);
         }

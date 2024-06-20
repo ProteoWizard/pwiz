@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            DialogResult result = MultiButtonMsgDlg.Show(this, Resources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
+            DialogResult result = MultiButtonMsgDlg.Show(this, SettingsUIResources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
                 MessageBoxButtons.YesNo);
 
             if (result == DialogResult.Yes)

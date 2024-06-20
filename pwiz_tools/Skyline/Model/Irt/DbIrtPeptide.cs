@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model.Irt
             out IList<Conflict> conflicts)
         {
             var progressPercent = 0;
-            IProgressStatus status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
+            IProgressStatus status = new ProgressStatus(IrtResources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
             progressMonitor?.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Conflict>();

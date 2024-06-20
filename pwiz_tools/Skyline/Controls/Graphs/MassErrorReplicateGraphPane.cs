@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (!document.Settings.HasResults)
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
+                Title.Text = GraphsResources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -75,8 +75,8 @@ namespace pwiz.Skyline.Controls.Graphs
             Title.Text = null;
             var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
             YAxis.Title.Text = aggregateOp.Cv
-                ? aggregateOp.AnnotateTitle(Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm)
-                : Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+                ? aggregateOp.AnnotateTitle(GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm)
+                : GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
             DocNode selectedNode = selectedTreeNode.Model;
             DocNode parentNode = selectedNode;
             IdentityPath identityPath = selectedTreeNode.Path;
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
+                        label = string.Format(GraphsResources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     BarItem curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
 
                     if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static string FILTER_IONMOBILITYLIBRARY
         {
-            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
+            get { return TextUtil.FileDialogFilter(IonMobilityResources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
         }
 
         public IonMobilityLibrarySpec(string name, string path) : base(name)

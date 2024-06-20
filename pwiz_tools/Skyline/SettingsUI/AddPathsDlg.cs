@@ -57,7 +57,7 @@ namespace pwiz.Skyline.SettingsUI
             List<string> badFiles = CheckFileExistence(fileNames);
             if (badFiles.Count != 0)
             {
-                return string.Format(TextUtil.LineSeparate(Resources.AddPathsDlg_OkDialog_The_following_files_could_not_be_found_, string.Empty, @"    {0}"),
+                return string.Format(TextUtil.LineSeparate(SettingsUIResources.AddPathsDlg_OkDialog_The_following_files_could_not_be_found_, string.Empty, @"    {0}"),
                        // ReSharper disable once LocalizableElement
                        string.Join("\n    ", badFiles.ToArray()));
             }
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.SettingsUI
             badFiles = CheckFileTypes(fileNames);
             if (badFiles.Count != 0)
             {
-                return string.Format(TextUtil.LineSeparate(Resources.AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_, string.Empty, @"    {0}"),
+                return string.Format(TextUtil.LineSeparate(SettingsUIResources.AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_, string.Empty, @"    {0}"),
                        // ReSharper disable once LocalizableElement
                        string.Join("\n    ", badFiles.ToArray()));
             }

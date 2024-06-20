@@ -71,17 +71,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (string.IsNullOrEmpty(LibraryName))
             {
-                MessageDlg.Show(this, Resources.FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_);
+                MessageDlg.Show(this, SettingsUIResources.FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_);
                 return;
             }
             else if (_libSpecs.Any(libSpec => txtName.Text.Equals(libSpec.Name)))
             {
-                MessageDlg.Show(this, Resources.FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_);
+                MessageDlg.Show(this, SettingsUIResources.FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_);
                 return;
             }
             else if (string.IsNullOrEmpty(FileName))
             {
-                MessageDlg.Show(this, Resources.FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_);
+                MessageDlg.Show(this, SettingsUIResources.FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_);
             }
 
             DialogResult = DialogResult.OK;
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             using (var saveDlg = new SaveFileDialog
             {
-                Title = Resources.FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library,
+                Title = SettingsUIResources.FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library,
                 OverwritePrompt = true,
                 DefaultExt = BiblioSpecLiteSpec.EXT,
                 Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)

@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     if (!EnzymeInfo.SupportedEnzymes.Contains(value))
                         throw new ArgumentOutOfRangeException(string.Format(
-                            Resources.FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_, value,
+                            LibResources.FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_, value,
                             string.Join(@", ", EnzymeInfo.SupportedEnzymes)));
                     _enzyme = value;
                 }
@@ -162,11 +162,11 @@ namespace pwiz.Skyline.Model.Lib
                 UseShellExecute = false
             };
 
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input);
+            status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input);
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
-            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+            status = status.ChangeMessage(String.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
                 psi.FileName, psi.Arguments));
             progressMonitor.UpdateProgress(status);
             pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
@@ -191,11 +191,11 @@ namespace pwiz.Skyline.Model.Lib
                 UseShellExecute = false
             };
 
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library);
+            status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library);
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
-            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+            status = status.ChangeMessage(String.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
                 psi.FileName, psi.Arguments));
             progressMonitor.UpdateProgress(status);
             pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.Lib
 
             const string MSCONVERT_EXE = "msconvert";
             
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
+            status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
             progressMonitor.UpdateProgress(status);
 
             var pr = new ProcessRunner();
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.Lib
 
             try
             {
-                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                status = status.ChangeMessage(String.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
                     psi.FileName, psi.Arguments));
                 progressMonitor.UpdateProgress(status);
                 pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
@@ -582,8 +582,8 @@ namespace pwiz.Skyline.Model.Lib
                 string diaDataFilepath = GetConvertedDiaDataFile(diaDataFile, diaDataPath, progressMonitor, ref status);
 
                 status = status.ChangeMessage(String.Format(quantLibrary
-                        ? Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
-                        : Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                        ? LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
+                        : LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
                     step + 1, stepCount, Path.GetFileName(diaDataFilepath)));
                 status = status.ChangeWarningMessage(status.Message);
                 if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
@@ -596,7 +596,7 @@ namespace pwiz.Skyline.Model.Lib
                     CreateNoWindow = true,
                     UseShellExecute = false
                 };
-                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                status = status.ChangeMessage(String.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
                     psi.FileName, psi.Arguments));
                 progressMonitor.UpdateProgress(status);
                 pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
@@ -604,8 +604,8 @@ namespace pwiz.Skyline.Model.Lib
 
             status = status.ChangePercentComplete(100 * step / stepCount);
             status = status.ChangeMessage(String.Format(quantLibrary
-                    ? Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
-                    : Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                    ? LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
+                    : LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
                 step + 1, stepCount, Path.GetFileName(encyclopeDiaElibOutputFilepath)));
             status = status.ChangeWarningMessage(status.Message);
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
@@ -621,7 +621,7 @@ namespace pwiz.Skyline.Model.Lib
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
-            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+            status = status.ChangeMessage(String.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
                 psiMerge.FileName, psiMerge.Arguments));
             progressMonitor.UpdateProgress(status);
             prMerge.Run(psiMerge, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);

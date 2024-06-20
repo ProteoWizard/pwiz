@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model
                                 SrmDocument.MaxTransitionCount));
                         if (countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
                             throw new InvalidDataException(String.Format(
-                                Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
+                                ModelResources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
                                 SrmDocument.MAX_PEPTIDE_COUNT));
                     }
                 }

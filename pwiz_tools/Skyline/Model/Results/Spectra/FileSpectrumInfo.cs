@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public override string ToString()
         {
-            return string.Format(Resources.FileSpectrumInfo_ToString__0__Spectra, SpectrumCount);
+            return string.Format(SpectraResources.FileSpectrumInfo_ToString__0__Spectra, SpectrumCount);
         }
 
         public ImmutableList<SpectrumMetadata> GetSpectra()

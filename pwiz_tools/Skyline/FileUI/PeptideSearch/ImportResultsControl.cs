@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             MsDataFileUri[] dataSources;
             using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
             {
-                Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
+                Text = PeptideSearchResources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
                 InitialDirectory = new MsDataFilePath(DocumentDirectory)
             })
             {
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Ask the user for the directory to search
             using (var dlg = new FolderBrowserDialog
             {
-                Description = Resources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory,
+                Description = PeptideSearchResources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory,
                 ShowNewFolderButton = false,
                 SelectedPath = Path.GetDirectoryName(DocumentDirectory)
             })
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 dirsToSearch.AddRange(ImportPeptideSearch.GetSubdirectories(dlg.SelectedPath));
                 if (!UpdateResultsFiles(dirsToSearch, true))
                 {
-                    MessageDlg.Show(WizardForm, Resources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
+                    MessageDlg.Show(WizardForm, PeptideSearchResources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
                 }
             }
         }

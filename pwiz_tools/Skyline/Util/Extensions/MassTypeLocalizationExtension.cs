@@ -29,8 +29,8 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 return new[]
                 {
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Average
+                    ExtensionsResources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
+                    ExtensionsResources.ExportStrategyExtension_LOCALIZED_VALUES_Average
                 };
             }
         }

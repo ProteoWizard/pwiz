@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeaks(IProgressMonitor progressMonitor = null)
         {
             var settingsChangeMonitor = progressMonitor != null
-                ? new SrmSettingsChangeMonitor(progressMonitor, Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
+                ? new SrmSettingsChangeMonitor(progressMonitor, ModelResources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
                 : null;
             using (settingsChangeMonitor)
             {

@@ -83,7 +83,7 @@ namespace pwiz.Skyline.EditUI
             if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
             {
                 helper.ShowTextBoxError(textNumberOfDecoys,
-                                        Resources.GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_,
+                                        EditUIResources.GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_,
                                         null, numComparableGroups, DecoyGeneration.SHUFFLE_SEQUENCE);
                 return;
             }

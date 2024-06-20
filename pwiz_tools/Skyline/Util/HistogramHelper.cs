@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Util
             var count = peptideAnnotationPairs.Count;
             if (results.Count != count)
             {
-                MessageDlg.Show(sender, string.Format(Resources.HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides, MAX_FINDRESULTS_PEPTIDES, count));
+                MessageDlg.Show(sender, string.Format(UtilResources.HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides, MAX_FINDRESULTS_PEPTIDES, count));
                 results = results.GetRange(0, MAX_FINDRESULTS_PEPTIDES);
             }
 

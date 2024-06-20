@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.V01
         public IEnumerable<PepV01> GetPeptideList(Enzyme enzyme)
         {
             if (!PeptideList)
-                throw new InvalidOperationException(Resources.FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence);
+                throw new InvalidOperationException(V01Resources.FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence);
 
             int begin = 1;
             int end = begin;

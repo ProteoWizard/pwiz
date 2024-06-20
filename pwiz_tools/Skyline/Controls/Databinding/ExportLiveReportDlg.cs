@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Databinding
             Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
             comboLanguage.Items.Add(CultureInfo.CurrentUICulture.DisplayName);
             Debug.Assert(indexInvariantLanguage == comboLanguage.Items.Count);
-            comboLanguage.Items.Add(Resources.ExportLiveReportDlg_ExportLiveReportDlg_Invariant);
+            comboLanguage.Items.Add(DatabindingResources.ExportLiveReportDlg_ExportLiveReportDlg_Invariant);
             comboLanguage.SelectedIndex = 0;
         }
 
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var viewInfo = viewContext.GetViewInfo(SelectedViewName);
             var form = new DocumentGridForm(viewContext)
             {
-                Text = Resources.ExportLiveReportDlg_ShowPreview_Preview__ + viewInfo.Name,
+                Text = DatabindingResources.ExportLiveReportDlg_ShowPreview_Preview__ + viewInfo.Name,
                 ShowViewsMenu = false,
             };
             form.GetModeUIHelper().IgnoreModeUI = true; // Don't want any "peptide"=>"molecule" translation in title etc

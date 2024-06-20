@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override string Label
             {
-                get { return Resources.Unifi_Label_Unifi; }
+                get { return RemoteApiResources.Unifi_Label_Unifi; }
             }
 
             public override string Name

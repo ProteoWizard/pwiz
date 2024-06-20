@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string DisplayName
         {
-            get { return Resources.PeptideAnnotationPairFinder_DisplayName_Peptides; }
+            get { return GraphsResources.PeptideAnnotationPairFinder_DisplayName_Peptides; }
         }
 
         public override FindMatch Match(BookmarkEnumerator bookmarkEnumerator)
@@ -65,9 +65,9 @@ namespace pwiz.Skyline.Controls.Graphs
             var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%");
             // ReSharper restore LocalizableElement
             if (annotation != null)
-                return string.Format(Resources.PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_, cvString, annotation);
+                return string.Format(GraphsResources.PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_, cvString, annotation);
             else
-                return string.Format(Resources.PeptideAnnotationPairFinder_GetDisplayText__0__CV, cvString);
+                return string.Format(GraphsResources.PeptideAnnotationPairFinder_GetDisplayText__0__CV, cvString);
         }
     }
 }

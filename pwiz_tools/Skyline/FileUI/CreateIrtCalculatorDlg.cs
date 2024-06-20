@@ -126,7 +126,7 @@ namespace pwiz.Skyline.FileUI
                     var db = IrtDb.GetIrtDb(textOpenDatabase.Text, null);
                     if (db == null)
                     {
-                        throw new DatabaseOpeningException(string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_, textOpenDatabase.Text));
+                        throw new DatabaseOpeningException(string.Format(FileUIResources.CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_, textOpenDatabase.Text));
                     }
                 }
                 catch (Exception x)
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 if (comboBoxProteins.SelectedIndex == -1)
                 {
-                    MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
+                    MessageDlg.Show(this, FileUIResources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
                     comboBoxProteins.Focus();
                     return;
                 }

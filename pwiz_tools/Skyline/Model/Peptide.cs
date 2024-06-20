@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model
             else if (_fastaSequence == null)
             {
                 if (Begin.HasValue || End.HasValue)
-                    throw new InvalidDataException(Resources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
+                    throw new InvalidDataException(ModelResources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
 
                 // No FastaSequence checked the sequence, so check it here.
                 FastaSequence.ValidateSequence(Target.Sequence);
@@ -368,9 +368,9 @@ namespace pwiz.Skyline.Model
             {
                 // Otherwise, validate the peptide sequence against the group sequence
                 if (!Begin.HasValue || !End.HasValue)
-                    throw new InvalidDataException(Resources.Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values);
+                    throw new InvalidDataException(ModelResources.Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values);
                 if (0 > Begin.Value || End.Value > _fastaSequence.Sequence.Length)
-                    throw new InvalidDataException(Resources.Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence);
+                    throw new InvalidDataException(ModelResources.Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence);
 
                 var j = 0;
                 for (var i = Begin.Value; i < End.Value;)
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model
                     {
                         string sequenceCheck = _fastaSequence.Sequence.Substring(Begin.Value, End.Value - Begin.Value);
                         throw new InvalidDataException(
-                            string.Format(Resources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
+                            string.Format(ModelResources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
                                 Target, sequenceCheck, Begin.Value, End.Value));
                     }
                 }
@@ -436,7 +436,7 @@ namespace pwiz.Skyline.Model
                 if (MissedCleavages == 0)
                     return Target.Sequence;
                 else
-                    return string.Format(TextUtil.SpaceSeparate(Target.Sequence, Resources.Peptide_ToString_missed__0__), MissedCleavages);
+                    return string.Format(TextUtil.SpaceSeparate(Target.Sequence, ModelResources.Peptide_ToString_missed__0__), MissedCleavages);
             }
             else
             {

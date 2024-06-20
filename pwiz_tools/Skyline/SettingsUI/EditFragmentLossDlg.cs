@@ -43,9 +43,9 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             _existing = existing;
-            _formulaBox = new FormulaBox(Resources.EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_,
-                Resources.EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_,
-                Resources.EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_)
+            _formulaBox = new FormulaBox(SettingsUIResources.EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_,
+                SettingsUIResources.EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_,
+                SettingsUIResources.EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_)
             {
                 Location = new Point(12,9),
                 TabIndex = 0
@@ -108,13 +108,13 @@ namespace pwiz.Skyline.SettingsUI
                     double massAverage = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, formulaLoss, SequenceMassCalc.MassPrecision);
                     if (FragmentLoss.MIN_LOSS_MASS > massMono || FragmentLoss.MIN_LOSS_MASS > massAverage)
                     {
-                        _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,
+                        _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(SettingsUIResources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,
                                                               FragmentLoss.MIN_LOSS_MASS));
                         return;
                     }
                     if (massMono > FragmentLoss.MAX_LOSS_MASS || massAverage > FragmentLoss.MAX_LOSS_MASS)
                     {
-                        _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__,
+                        _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(SettingsUIResources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__,
                                                               FragmentLoss.MAX_LOSS_MASS));
                         return;
                     }
@@ -139,7 +139,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                _formulaBox.ShowTextBoxErrorFormula(helper,Resources.EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
+                _formulaBox.ShowTextBoxErrorFormula(helper,SettingsUIResources.EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
                 return;
             }
 
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.SettingsUI
             loss = loss.ChangeCharge(charge);
             if (_existing.Contains(loss))
             {
-                MessageDlg.Show(this, string.Format(Resources.EditFragmentLossDlg_OkDialog_The_loss__0__already_exists, loss));
+                MessageDlg.Show(this, string.Format(SettingsUIResources.EditFragmentLossDlg_OkDialog_The_loss__0__already_exists, loss));
                 return;
             }
 

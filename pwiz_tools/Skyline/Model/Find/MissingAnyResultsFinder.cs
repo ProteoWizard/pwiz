@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return Resources.MissingAnyResultsFinder_DisplayName_Missing_any_results; }
+            get { return FindResources.MissingAnyResultsFinder_DisplayName_Missing_any_results; }
         }
 
         protected override bool IsMatch(PeptideDocNode nodePep)

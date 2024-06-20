@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                string message = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml, Path.GetFileName(inputFile));
+                string message = string.Format(ResultsResources.VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml, Path.GetFileName(inputFile));
                 int percent = index * 100 / inputFiles.Count;
                 progress.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(percent));
 
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                                 else
                                 {
-                                    string errorMessage = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_,
+                                    string errorMessage = string.Format(ResultsResources.VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_,
                                         EXE_GROUP_FILE_EXTRACTOR, EXE_GROUP2_XML, path);
                                     throw new IOException(errorMessage);
                                 }
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
 
                     if (groupConverterExePath == null)
                     {
-                        throw new IOException(Resources.VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_);
+                        throw new IOException(ResultsResources.VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_);
                     }                    
                 }
 
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (proc.ExitCode != 0)
                 {
-                    throw new IOException(TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_,
+                    throw new IOException(TextUtil.LineSeparate(string.Format(ResultsResources.VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_,
                                                         inputFile), string.Empty, sbOut.ToString()));
                 }
 

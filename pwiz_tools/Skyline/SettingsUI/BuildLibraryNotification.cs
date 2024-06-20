@@ -63,7 +63,7 @@ namespace pwiz.Skyline.SettingsUI
             ShowInTaskbar = Program.FunctionalTest;
 
             _libraryName = libraryName;
-            LibraryNameLabel.Text = string.Format(Resources.BuildLibraryNotification_BuildLibraryNotification_Library__0__, _libraryName);
+            LibraryNameLabel.Text = string.Format(SettingsUIResources.BuildLibraryNotification_BuildLibraryNotification_Library__0__, _libraryName);
 
             var showParams = new FormAnimator.AnimationParams(
                                     FormAnimator.AnimationMethod.slide, 
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 // Load library
                                 Library lib = null;
-                                using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_library})
+                                using (var longWait = new LongWaitDlg {Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_library})
                                 {
                                     var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
                                     {
@@ -429,7 +429,7 @@ namespace pwiz.Skyline.SettingsUI
             List<IrtStandard> autoStandards = null;
             var cirtPeptides = new DbIrtPeptide[0];
 
-            using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers})
+            using (var longWait = new LongWaitDlg {Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers})
             {
                 var standard1 = standard;
                 var status = longWait.PerformWork(GetParent(), 800, monitor =>
@@ -477,7 +477,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             ProcessedIrtAverages processed = null;
-            using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times})
+            using (var longWait = new LongWaitDlg {Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times})
             {
                 try
                 {
@@ -527,7 +527,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!processed.DbIrtPeptides.Any())
                 return false;
 
-            using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library})
+            using (var longWait = new LongWaitDlg {Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library})
             {
                 try
                 {
@@ -542,7 +542,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     MessageDlg.ShowWithException(GetParent(),
                         TextUtil.LineSeparate(
-                            Resources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
+                            SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
                             x.Message), x);
                     return false;
                 }
@@ -560,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
                     Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
-                    NotificationContainer.ModifyDocument(Resources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
+                    NotificationContainer.ModifyDocument(SettingsUIResources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
                         doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
                             predict.ChangeRetentionTime(addPredictorDlg.Regression))), AuditLogEntry.SettingsLogFunction);
                 }

@@ -27,20 +27,20 @@ namespace pwiz.Skyline.Model
     public class DisplayModificationOption
     {
         public static readonly DisplayModificationOption NOT_SHOWN 
-            = new DisplayModificationOption(@"not_shown", ()=>Resources.DisplayModificationOption_NOT_SHOWN_Not_Shown, (settings, mod) => string.Empty, modSeq=>modSeq.ToString());
+            = new DisplayModificationOption(@"not_shown", ()=>ModelResources.DisplayModificationOption_NOT_SHOWN_Not_Shown, (settings, mod) => string.Empty, modSeq=>modSeq.ToString());
 
         public static readonly DisplayModificationOption MASS_DELTA =
-            new DisplayModificationOption(@"mass_delta", () => Resources.DisplayModificationOption_MASS_DELTA_Mass_Difference,
+            new DisplayModificationOption(@"mass_delta", () => ModelResources.DisplayModificationOption_MASS_DELTA_Mass_Difference,
                 FormatMassDelta, modSeq=>modSeq.ToString());
 
         public static readonly DisplayModificationOption THREE_LETTER_CODE =
-            new DisplayModificationOption(@"three_letter_code", () => Resources.DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code,
+            new DisplayModificationOption(@"three_letter_code", () => ModelResources.DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code,
                 FormatThreeLetterCode, modSeq=>modSeq.ThreeLetterCodes);
         public static readonly DisplayModificationOption FULL_NAME =
-            new DisplayModificationOption(@"full_name", () =>Resources.DisplayModificationOption_FULL_NAME_Full_Name, 
+            new DisplayModificationOption(@"full_name", () =>ModelResources.DisplayModificationOption_FULL_NAME_Full_Name, 
                 FormatFullName, modSeq=>modSeq.FullNames);
         public static readonly DisplayModificationOption UNIMOD_ID =
-            new DisplayModificationOption(@"unimod_id", ()=>Resources.DisplayModificationOption_UNIMOD_ID_Unimod_ID, FormatUnimodId, modSeq=>modSeq.UnimodIds);
+            new DisplayModificationOption(@"unimod_id", ()=>ModelResources.DisplayModificationOption_UNIMOD_ID_Unimod_ID, FormatUnimodId, modSeq=>modSeq.UnimodIds);
         private Func<String> _menuItemText;
         private ModificationFormatter _modificationFormatter;
         private Func<ModifiedSequence, string> _modifiedSequenceFormatter;

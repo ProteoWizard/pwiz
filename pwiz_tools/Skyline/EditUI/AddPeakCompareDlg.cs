@@ -111,7 +111,7 @@ namespace pwiz.Skyline.EditUI
                 var model = _driverPeakScoringModel.SelectedItem;
                 if (model == null)
                 {
-                    MessageDlg.Show(this, Resources.PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_);
+                    MessageDlg.Show(this, EditUIResources.PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_);
                     return;
                 }
                 if (!model.IsTrained)
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.EditUI
             }
             using (var longWaitDlg = new LongWaitDlg
             {
-                Text = isModel ? Resources.AddPeakCompareDlg_OkDialog_Comparing_Models : Resources.AddPeakCompareDlg_OkDialog_Comparing_Imported_Files
+                Text = isModel ? EditUIResources.AddPeakCompareDlg_OkDialog_Comparing_Models : EditUIResources.AddPeakCompareDlg_OkDialog_Comparing_Imported_Files
             })
             {
                 try
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.EditUI
 
                     if (BoundaryComparer.Matches.Count == 0)
                     {
-                        throw new IOException(Resources.AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_);
+                        throw new IOException(EditUIResources.AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_);
                     }
                     if (BoundaryComparer.Matches.All(match => match.IsMissingPickedPeak))
                     {
@@ -191,7 +191,7 @@ namespace pwiz.Skyline.EditUI
                 catch (Exception x)
                 {
                     string initMessage = isModel
-                        ? Resources.AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_
+                        ? EditUIResources.AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_
                         : Resources.AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_;
                     MessageDlg.ShowWithException(this, string.Format(initMessage, x.Message), x);
                     return;

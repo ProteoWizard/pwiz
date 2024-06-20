@@ -353,9 +353,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (nodeCount == 1)
             {
-                return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___, this);
+                return string.Format(EntitiesResources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___, this);
             }
-            return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_, nodeCount);
+            return string.Format(EntitiesResources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_, nodeCount);
         }
 
         [InvariantDisplayName("TransitionLocator")]

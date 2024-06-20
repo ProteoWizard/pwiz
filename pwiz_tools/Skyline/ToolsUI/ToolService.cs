@@ -300,7 +300,7 @@ namespace pwiz.Skyline.ToolsUI
             Program.MainWindow.Invoke(new Action(() =>
             {
                 _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                    false, Resources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
+                    false, ToolsUIResources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
             }));
         }
 
@@ -319,13 +319,13 @@ namespace pwiz.Skyline.ToolsUI
             if (librarySpec == null)
             {
                 // ReSharper disable once LocalizableElement
-                throw new ArgumentException(Resources.LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_, libraryPath);
+                throw new ArgumentException(ToolsUIResources.LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_, libraryPath);
             }
 
             // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
             Program.MainWindow.Invoke(new Action(() =>
             {
-                _skylineWindow.ModifyDocument(Resources.LibrarySpec_Add_spectral_library, doc =>
+                _skylineWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
                         lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
@@ -498,7 +498,7 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     else
                     {
-                        throw new ArgumentException(string.Format(Resources.ToolService_DeleteElementsNow_Unsupported_element__0_, elementLocator));
+                        throw new ArgumentException(string.Format(ToolsUIResources.ToolService_DeleteElementsNow_Unsupported_element__0_, elementLocator));
                     }
                 }
 
@@ -519,7 +519,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 _skylineWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
-                        Resources.ToolService_ImportProperties_Import_Properties_from_external_tool));
+                        ToolsUIResources.ToolService_ImportProperties_Import_Properties_from_external_tool));
             }));
         }
 
@@ -548,7 +548,7 @@ namespace pwiz.Skyline.ToolsUI
                         }
                     }
                     _skylineWindow.ModifyDocument(
-                        Resources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool,
+                        ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool,
                         doc =>
                         {
                             if (!ReferenceEquals(doc, originalDocument))
@@ -561,7 +561,7 @@ namespace pwiz.Skyline.ToolsUI
                         }, docPair =>
                             AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_peak_boundaries,
                                 _skylineWindow.DocumentUI.DocumentType,
-                                Resources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
+                                ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
                 }
             }));
         }
@@ -622,7 +622,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                throw new ArgumentException(string.Format(Resources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
+                throw new ArgumentException(string.Format(ToolsUIResources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
             }
 
             var selectedPath = _skylineWindow.SelectedPath;

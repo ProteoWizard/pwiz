@@ -99,9 +99,9 @@ namespace pwiz.Skyline.Controls
 
             bool valid = false;
             if (min.HasValue && (includeMin ? val < min.Value : val <= min.Value))
-                ShowTextBoxError(control, includeMin ? Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__ : Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__, null, min);
+                ShowTextBoxError(control, includeMin ? Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__ : ControlsResources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__, null, min);
             else if (max.HasValue && (includeMax ? val > max.Value : val >= max.Value))
-                ShowTextBoxError(control, includeMax ? Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__ : Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__, null, max);
+                ShowTextBoxError(control, includeMax ? Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__ : ControlsResources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__, null, max);
             else
                 valid = true;
             return valid;
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Controls
             if (val.Length > 0 && !val.Contains(i => (min.HasValue && min.Value > i) || (max.HasValue && i > max.Value)))
                 return true;
 
-            ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__,
+            ShowTextBoxError(control, ControlsResources.MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__,
                              null, min, max);
             return false;
         }
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Controls
             if (val.Length > 0 && !val.Contains(i => min > i || i > max))
                 return true;
 
-            ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__,
+            ShowTextBoxError(control, ControlsResources.MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__,
                              null, min, max);
 
             return false;
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Controls
             Control label = control;
             while(label != null && !(label is Label && label.Visible))
                 label = _parent.GetNextControl(label, false);
-            string message = (label == null ? Resources.MessageBoxHelper_GetControlMessage_Field : label.Text);
+            string message = (label == null ? ControlsResources.MessageBoxHelper_GetControlMessage_Field : label.Text);
             int ampIndex = message.IndexOf('&');
             // Chinese and Japanese use the mnemonic format <label>(&A):
             if (ampIndex > 0 && message[ampIndex - 1] == '(' &&

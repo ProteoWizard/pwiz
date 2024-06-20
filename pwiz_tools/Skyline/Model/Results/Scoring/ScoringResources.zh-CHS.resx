@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AlignedFile_AlignLibraryRetentionTimes__0__1__" xml:space="preserve">
+    <value>{0}：{1}</value>
+    <comment>Time to Align name: Target name</comment>
+  </data>
+  <data name="AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_" xml:space="preserve">
+    <value>文档中的诱饵都没有任何色谱图。</value>
+  </data>
+  <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
+    <value>文档中的目标都没有任何色谱图。</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_" xml:space="preserve">
+    <value>训练峰得分模型时出错： {0}</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_" xml:space="preserve">
+    <value>如果您将诱饵重新添加到此文档，可以手动添加和训练峰得分模型。</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_" xml:space="preserve">
+    <value>已从文档中删除诱饵，因此不会自动训练峰得分模型。</value>
+  </data>
+  <data name="LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count" xml:space="preserve">
+    <value>已确认的计数</value>
+  </data>
+  <data name="LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area" xml:space="preserve">
+    <value>对数共洗脱面积</value>
+  </data>
+  <data name="LegacyScoringModel_DEFAULT_NAME_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_" xml:space="preserve">
+    <value>遗留得分模型未被训练。</value>
+  </data>
+  <data name="LegacyScoringModel_ReadXml_Invalid_legacy_model_" xml:space="preserve">
+    <value>无效的遗留模型。</value>
+  </data>
+  <data name="LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count" xml:space="preserve">
+    <value>共洗脱计数</value>
+  </data>
+  <data name="LegacyUnforcedCountScoreDefaultCalc_Name_Default_co_elution_count" xml:space="preserve">
+    <value>默认共洗脱计数</value>
+  </data>
+  <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
+    <value>参考共洗脱计数</value>
+  </data>
+  <data name="LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_" xml:space="preserve">
+    <value>模型中的每个计算器或是拥有未知值，或是仅采用一个值。</value>
+  </data>
+  <data name="LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
+    <value>尝试使用具有{1}训练得分的模型以计分带有{0}特性的峰。</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_" xml:space="preserve">
+    <value>诱饵峰的数量（{0} 带 {1} 个目标）不足以继续训练。</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_" xml:space="preserve">
+    <value>在 {2}% FDR 检测到的目标峰的数量（{0} 带 {1} 个诱饵）不足以继续训练。</value>
+  </data>
+  <data name="MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value" xml:space="preserve">
+    <value>MProphetPeakScoringModel 至少需要一个带有权值的峰特性计算器</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
+    <value>得分模型已汇集 (迭代 {0} - {1:#,#} 个峰位于 {2:0.##%} FDR)</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model" xml:space="preserve">
+    <value>正在训练峰得分模型</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
+    <value>正在训练得分模型（迭代 {0} 个，共 {1} 个）</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
+    <value>正在训练得分模型（迭代 {0}/{1} - {2:#,#} 个峰位于 {3:0.##%} FDR）</value>
+  </data>
+  <data name="MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution" xml:space="preserve">
+    <value>共洗脱</value>
+  </data>
+  <data name="MQuestDefaultIntensityCalc_Name_Default_Intensity" xml:space="preserve">
+    <value>默认强度</value>
+  </data>
+  <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
+    <value>默认点积或同位素点积</value>
+  </data>
+  <data name="MQuestDefaultWeightedCoElutionCalc_Name_Default_co_elution__weighted_" xml:space="preserve">
+    <value>默认共洗脱（权重）</value>
+  </data>
+  <data name="MQuestDefaultWeightedShapeCalc_Name_Default_shape__weighted_" xml:space="preserve">
+    <value>默认形状（权重）</value>
+  </data>
+  <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
+    <value>强度</value>
+  </data>
+  <data name="MQuestIntensityCorrelationCalc_Name_Library_intensity_dot_product" xml:space="preserve">
+    <value>库强度点积</value>
+  </data>
+  <data name="MQuestIntensityStandardCorrelationCalc_Name_Standard_library_dot_product" xml:space="preserve">
+    <value>标准库点积</value>
+  </data>
+  <data name="MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution" xml:space="preserve">
+    <value>参考共洗脱</value>
+  </data>
+  <data name="MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation" xml:space="preserve">
+    <value>参考强度点积</value>
+  </data>
+  <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape" xml:space="preserve">
+    <value>参考形状</value>
+  </data>
+  <data name="MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference" xml:space="preserve">
+    <value>保留时间差异</value>
+  </data>
+  <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
+    <value>保留时间差异求平方</value>
+  </data>
+  <data name="MQuestShapeCalc_MQuestShapeCalc_Shape" xml:space="preserve">
+    <value>形状</value>
+  </data>
+  <data name="MQuestStandardIntensityCalc_Name_Standard_Intensity" xml:space="preserve">
+    <value>标准强度</value>
+  </data>
+  <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
+    <value>标准共洗脱（权重）</value>
+  </data>
+  <data name="MQuestStandardWeightedShapeCalc_Name_Standard_shape__weighted_" xml:space="preserve">
+    <value>标准形状（权重）</value>
+  </data>
+  <data name="MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution" xml:space="preserve">
+    <value>共洗脱（权重）</value>
+  </data>
+  <data name="MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution" xml:space="preserve">
+    <value>参考共洗脱（权重）</value>
+  </data>
+  <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape" xml:space="preserve">
+    <value>参考形状（权重）</value>
+  </data>
+  <data name="MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape" xml:space="preserve">
+    <value>形状（权重）</value>
+  </data>
+  <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score" xml:space="preserve">
+    <value>母离子-子离子形状得分</value>
+  </data>
+  <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product" xml:space="preserve">
+    <value>母离子同位素点积</value>
+  </data>
+  <data name="NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error" xml:space="preserve">
+    <value>母离子质量误差</value>
+  </data>
+  <data name="NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error" xml:space="preserve">
+    <value>子离子质量误差</value>
+  </data>
+  <data name="NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise" xml:space="preserve">
+    <value>噪声信号</value>
+  </data>
+  <data name="NextGenStandardProductMassErrorCalc_Name_Standard_product_mass_error" xml:space="preserve">
+    <value>标准子离子质量误差</value>
+  </data>
+  <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
+    <value>标准信号噪声</value>
+  </data>
+  <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores" xml:space="preserve">
+    <value>正在计算峰组得分</value>
+  </data>
+</root>

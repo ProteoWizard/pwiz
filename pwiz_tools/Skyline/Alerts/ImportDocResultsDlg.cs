@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (!CanImportResults && Action != MeasuredResults.MergeAction.remove)
             {
-                MessageDlg.Show(this, Resources.ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported);
+                MessageDlg.Show(this, AlertsResources.ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported);
                 Action = MeasuredResults.MergeAction.remove;
                 return;
             }

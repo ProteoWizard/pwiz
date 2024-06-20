@@ -225,8 +225,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 bar.Bar.Fill.Type = FillType.Solid;
                 graphPane.CurveList.Add(bar);
 
-                graphPane.XAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
-                graphPane.YAxis.Title.Text = Resources.MassErrorHistogramGraphPane_UpdateGraph_Count;
+                graphPane.XAxis.Title.Text = GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+                graphPane.YAxis.Title.Text = GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count;
 
                 graphPane.XAxis.Scale.MaxAuto = graphPane.XAxis.Scale.MinAuto = true;
                 graphPane.YAxis.Scale.MaxAuto = true;
@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (_bins.Length == 0)
                 {
-                    graphPane.Title.Text = Resources.MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable;
+                    graphPane.Title.Text = GraphsResources.MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable;
                     return;
                 }
                 graphPane.Title.Text = String.Empty;
@@ -265,8 +265,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 // ReSharper disable LocalizableElement
                 var label = string.Format("{0} = {1:F01},\n" + "{2} = {3:F01}\n",
                 // ReSharper restore LocalizableElement
-                Resources.MassErrorHistogramGraphPane_AddLabels_mean, _mean,
-                Resources.MassErrorHistogramGraphPane_AddLabels_standard_deviation, _stdDev);
+                GraphsResources.MassErrorHistogramGraphPane_AddLabels_mean, _mean,
+                GraphsResources.MassErrorHistogramGraphPane_AddLabels_standard_deviation, _stdDev);
 
                 var text = new TextObj(label, scoreLeft, timeTop, CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
                 {

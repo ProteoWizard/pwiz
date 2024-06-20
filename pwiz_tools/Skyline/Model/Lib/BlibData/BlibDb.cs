@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             Library library, SrmDocument document,
             IDictionary<LibKey, LibKey> smallMoleculeConversionMap)
         {
-            if (!UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
+            if (!UpdateProgressMessage(string.Format(BlibDataResources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
                 return null;
 
             string libAuthority = @"unknown.org";
@@ -974,7 +974,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     if(foundBestSpectrum)
                     {
                         throw new InvalidDataException(
-                            string.Format(Resources.BlibDb_BuildRefSpectra_Multiple_reference_spectra_found_for_peptide__0__in_the_library__1__,
+                            string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Multiple_reference_spectra_found_for_peptide__0__in_the_library__1__,
                                           refSpectra.PeptideModSeq, FilePath));
                     }
                     
@@ -1118,7 +1118,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 spectrumSourceId = SaveSourceFile(session, filePath);
                 if (spectrumSourceId == 0)
                 {
-                    throw new SQLiteException(string.Format(Resources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
+                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
                 }
                 dictFiles.Add(filePath, spectrumSourceId);
             }
@@ -1132,7 +1132,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 scoreTypeId = SaveScoreType(session, scoreName);
                 if (scoreTypeId == 0)
                 {
-                    throw new SQLiteException(string.Format(Resources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreName));
+                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreName));
                 }
                 dictScoreTypes.Add(scoreName, scoreTypeId);
             }
@@ -1270,7 +1270,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             if (!pepLibraries.HasLibraries)
                 return document;
             if (!pepLibraries.IsLoaded)
-                throw new InvalidOperationException(Resources.BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed);
+                throw new InvalidOperationException(BlibDataResources.BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed);
 
             // Separate group nodes by the libraries to which they refer
             var setUsedLibrarySpecs = new HashSet<LibrarySpec>();

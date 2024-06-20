@@ -179,23 +179,23 @@ namespace pwiz.Skyline.SettingsUI
             string outputPath = textPath.Text;
             if (string.IsNullOrEmpty(outputPath))
             {
-                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
+                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
                 return false;                
             }
             if (Directory.Exists(outputPath))
             {
-                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path, outputPath);
+                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path, outputPath);
                 return false;                
             }
             string outputDir = Path.GetDirectoryName(outputPath);
             if (string.IsNullOrEmpty(outputDir))
             {
-                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
+                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
                 return false;
             }
             if (!Directory.Exists(outputDir))
             {
-                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist, outputDir);
+                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist, outputDir);
                 return false;
             }
             if (!outputPath.EndsWith(BiblioSpecLiteSpec.EXT))
@@ -214,14 +214,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (UnauthorizedAccessException)
             {
-                _helper.ShowTextBoxError(textPath, TextUtil.LineSeparate(Resources.BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__,
-                                                                         Resources.BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_), outputDir);
+                _helper.ShowTextBoxError(textPath, TextUtil.LineSeparate(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__,
+                                                                         SettingsUIResources.BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_), outputDir);
                 return false;
             }
             catch (IOException)
             {
-                _helper.ShowTextBoxError(textPath, TextUtil.LineSeparate(Resources.BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__,
-                                                                         Resources.BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_), outputDir);
+                _helper.ShowTextBoxError(textPath, TextUtil.LineSeparate(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__,
+                                                                         SettingsUIResources.BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_), outputDir);
                 return false;
             }
 
@@ -416,11 +416,11 @@ namespace pwiz.Skyline.SettingsUI
 
             // Adjust the button text for small molecule UI
             var buttonText = parent is FormEx formEx ?
-                formEx.GetModeUIHelper().Translate(Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides) :
-                Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides;
+                formEx.GetModeUIHelper().Translate(SettingsUIResources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides) :
+                SettingsUIResources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides;
             using (var dlg = new OpenFileDialog
                 {
-                    Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
+                    Title = SettingsUIResources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
                     InitialDirectory = initialDirectory,
                     CheckPathExists = true,
                     SupportMultiDottedExtensions = true,
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             using (var dlg = new FolderBrowserDialog
                 {
-                    Description = Resources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory,
+                    Description = SettingsUIResources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory,
                     ShowNewFolderButton = false,
                     SelectedPath = Settings.Default.LibraryResultsDirectory
                 })
@@ -464,7 +464,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             using (var longWaitDlg = new LongWaitDlg
                 {
-                    Text = Resources.BuildLibraryDlg_AddDirectory_Find_Input_Files,
+                    Text = SettingsUIResources.BuildLibraryDlg_AddDirectory_Find_Input_Files,
                 })
             {
                 try
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (Exception x)
                 {
-                    var message = TextUtil.LineSeparate(string.Format(Resources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
+                    var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
                                                                       dirPath),
                                                         x.Message);
                     MessageDlg.ShowWithException(this, message, x);
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.SettingsUI
         private static void FindInputFiles(string dir, ICollection<string> inputFiles,
             ILongWaitBroker broker, double start, double stop)
         {
-            broker.Message = TextUtil.LineSeparate(Resources.BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in,
+            broker.Message = TextUtil.LineSeparate(SettingsUIResources.BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in,
                                                    PathEx.ShortenPathForDisplay(dir));
 
             string[] fileNames = Directory.GetFiles(dir);
@@ -588,7 +588,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (filesLib.Length == 1)
                     {
                         using (var dlg = new MultiButtonMsgDlg(
-                            string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_,
+                            string.Format(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_,
                                 filesLib[0]), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                         {
                             if (dlg.ShowDialog(parent) == DialogResult.Yes)
@@ -600,16 +600,16 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                        MessageDlg.Show(parent, Resources.BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_);
+                        MessageDlg.Show(parent, SettingsUIResources.BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_);
                     }
                 }
                 else if (filesError.Count == 1)
                 {
-                    MessageDlg.Show(parent, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
+                    MessageDlg.Show(parent, string.Format(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
                 }
                 else
                 {
-                    var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
+                    var message = TextUtil.SpaceSeparate(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
                                   string.Empty,
                                   // ReSharper disable LocalizableElement
                                   "\t" + string.Join("\n\t", filesError.ToArray()));
@@ -627,11 +627,11 @@ namespace pwiz.Skyline.SettingsUI
 
             if (filesError.Count == 1)
             {
-                MessageDlg.Show(parent, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
+                MessageDlg.Show(parent, string.Format(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
             }
             else if (filesError.Count > 1)
             {
-                var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
+                var message = TextUtil.SpaceSeparate(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
                               string.Empty,
                               // ReSharper disable LocalizableElement
                               "\t" + string.Join("\n\t", filesError.ToArray()));

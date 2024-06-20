@@ -1047,14 +1047,14 @@ namespace pwiz.Skyline.Model.Results
                             if (!nextSpectrum.RetentionTime.HasValue)
                             {
                                 throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
+                                string.Format(ResultsResources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
                                     _dataFile.GetSpectrumId(i)));
                             }
                             var precursors = nextSpectrum.Precursors;
                             if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
                             {
                             throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
+                                string.Format(ResultsResources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
                                     _dataFile.GetSpectrumId(i)));
                             }
                             return new SpectrumInfo(i, new[] {nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);

@@ -179,7 +179,7 @@ namespace pwiz.Skyline
             {
                 if (!Directory.Exists(p.Value))
                 {
-                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_, p.Value);
+                    c.WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_, p.Value);
                     return false;
                 }
                 Directory.SetCurrentDirectory(p.Value);
@@ -437,7 +437,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_,
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_,
                     importNamingPatternVal);
                 WriteLine(e.Message);
                 return false;
@@ -714,7 +714,7 @@ namespace pwiz.Skyline
         {
             if (ReintegrateModelType != ScoringModelType.mProphet && ExcludeFeatures.Count > 0)
             {
-                WriteLine(Resources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
+                WriteLine(SkylineResources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
                 return false;
             }
 
@@ -722,14 +722,14 @@ namespace pwiz.Skyline
             {
                 if (ReintegrateModelType == ScoringModelType.Skyline)
                 {
-                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_);
+                    WriteLine(SkylineResources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_);
                     return false;
                 }
 
                 double maxCutoff = MProphetPeakScoringModel.DEFAULT_CUTOFFS[0];
                 if (MonotonicallyDecreasing(ReintegrateModelCutoffs, maxCutoff))
                 {
-                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__, string.Join(
+                    WriteLine(SkylineResources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__, string.Join(
                         CultureInfo.CurrentCulture.TextInfo.ListSeparator, ReintegrateModelCutoffs.Select(c => c.ToString(CultureInfo.CurrentCulture))), maxCutoff);
                 }
             }
@@ -794,7 +794,7 @@ namespace pwiz.Skyline
             if (calc == null)
             {
                 WriteLine(
-                    Resources
+                    SkylineResources
                         .CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_,
                     featureName);
                 foreach (var featureCalculator in PeakFeatureCalculator.Calculators)
@@ -802,7 +802,7 @@ namespace pwiz.Skyline
                     if (Equals(featureCalculator.HeaderName, featureCalculator.Name))
                         WriteLine(@"    {0}", featureCalculator.HeaderName);
                     else
-                        WriteLine(Resources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName,
+                        WriteLine(SkylineResources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName,
                             featureCalculator.Name);
                 }
 
@@ -1138,7 +1138,7 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
+                    _statusWriter.WriteLine(SkylineResources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
@@ -1157,12 +1157,12 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
+                    _statusWriter.WriteLine(SkylineResources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_Exception_,
+                        SkylineResources.PanoramaHelper_ValidateFolder_Exception_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1620,7 +1620,7 @@ namespace pwiz.Skyline
             var spliced = pair.Value.Split(',');
             if (spliced.Length > 2)
             {
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_);
             }
             else
             {
@@ -1662,13 +1662,13 @@ namespace pwiz.Skyline
             }
         }
 
-        private static readonly ArgumentGroup GROUP_TOOLS = new ArgumentGroup(() => Resources.CommandArgs_GROUP_TOOLS_Tools_Installation, false,
+        private static readonly ArgumentGroup GROUP_TOOLS = new ArgumentGroup(() => SkylineResources.CommandArgs_GROUP_TOOLS_Tools_Installation, false,
             ARG_TOOL_ADD, ARG_TOOL_COMMAND, ARG_TOOL_ARGUMENTS, ARG_TOOL_INITIAL_DIR, ARG_TOOL_CONFLICT_RESOLUTION,
             ARG_TOOL_REPORT, ARG_TOOL_OUTPUT_TO_IMMEDIATE_WINDOW, ARG_TOOL_ADD_ZIP, ARG_TOOL_ZIP_CONFLICT_RESOLUTION,
             ARG_TOOL_ZIP_OVERWRITE_ANNOTATIONS, ARG_TOOL_PROGRAM_MACRO, ARG_TOOL_PROGRAM_PATH,
             ARG_TOOL_IGNORE_REQUIRED_PACKAGES, ARG_TOOL_LIST_EXPORT)
         {
-            Preamble = () => Resources.CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_,
+            Preamble = () => SkylineResources.CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_,
         };
 
         public bool InstallingToolsFromZip { get; private set; }
@@ -1711,7 +1711,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export, value));
                 }
             }
         }
@@ -1733,7 +1733,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export, value));
                 }
             }
         }
@@ -1752,7 +1752,7 @@ namespace pwiz.Skyline
             catch (ArgumentException)
             {
                 WriteInstrumentValueError(pair, ExportInstrumentType.ISOLATION_LIST_TYPES);
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
             }
         }
 
@@ -1765,13 +1765,13 @@ namespace pwiz.Skyline
             catch (ArgumentException)
             {
                 WriteInstrumentValueError(pair, ExportInstrumentType.TRANSITION_LIST_TYPES);
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
             }
         }
 
         private void WriteInstrumentValueError(NameValuePair pair, string[] listInstrumentTypes)
         {
-            WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
+            WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
                 pair.Value);
             foreach (string str in listInstrumentTypes)
                 WriteLine(str);
@@ -1797,7 +1797,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export, value));
                 }
             }
         }
@@ -1818,7 +1818,7 @@ namespace pwiz.Skyline
             catch (ArgumentException)
             {
                 WriteInstrumentValueError(pair, ExportInstrumentType.METHOD_TYPES);
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
             }
         }
 
@@ -1918,7 +1918,7 @@ namespace pwiz.Skyline
                 case OPT_DP:
                     return ExportOptimize.DP;
                 default:
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_, value));
             }
         }
 
@@ -1948,7 +1948,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.PRIMARY_COUNT_MIN || value > AbstractMassListExporter.PRIMARY_COUNT_MAX)
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__, value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__, value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
                 }
                 _primaryTransitionCount = value;
             }
@@ -1962,7 +1962,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.DWELL_TIME_MIN || value > AbstractMassListExporter.DWELL_TIME_MAX)
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__, value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__, value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
                 }
                 _dwellTime = value;
             }
@@ -1979,7 +1979,7 @@ namespace pwiz.Skyline
                 // Not inclusive of minimum, because it was made zero
                 if (value <= AbstractMassListExporter.RUN_LENGTH_MIN || value > AbstractMassListExporter.RUN_LENGTH_MAX)
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__, value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__, value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
                 }
                 _runLength = value;
             }
@@ -2204,7 +2204,7 @@ namespace pwiz.Skyline
                 }
             }
             // Unmatched argument
-            WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
+            WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
             return false;
         }
 
@@ -2245,7 +2245,7 @@ namespace pwiz.Skyline
             var requiredArgsText = new List<string>()
             {
                 string.Format(
-                    Resources
+                    SkylineResources
                         .CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
                     usedArg.ArgumentText)
             };
@@ -2260,7 +2260,7 @@ namespace pwiz.Skyline
 
         public static string ErrorArgsExclusiveText(Argument arg1, Argument arg2)
         {
-            return string.Format(Resources.CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_,
+            return string.Format(SkylineResources.CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_,
                 arg1.ArgumentText, arg2.ArgumentText);
         }
 

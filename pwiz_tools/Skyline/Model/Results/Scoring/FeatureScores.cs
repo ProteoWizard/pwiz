@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var items = new List<string>();
             foreach (var part in parts.OrderBy(part => part.Key, StringComparer.CurrentCultureIgnoreCase))
             {
-                items.Add(string.Format(Resources.AlignedFile_AlignLibraryRetentionTimes__0__1__, part.Key, part.Value.ToString(format, formatProvider)));
+                items.Add(string.Format(ScoringResources.AlignedFile_AlignLibraryRetentionTimes__0__1__, part.Key, part.Value.ToString(format, formatProvider)));
             }
             return new FormattableList<string>(items).ToString(format, formatProvider);
         }

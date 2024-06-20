@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Results
 
             // If not cancelled, update progress.
             string cacheFilePath = CacheFilePaths[_currentPartIndex];
-            string message = string.Format(Resources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
+            string message = string.Format(ResultsResources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
             int percent = _currentPartIndex * 100 / CacheFilePaths.Count;
             _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
             _loader.UpdateProgress(_status);
@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                Complete(new Exception(String.Format(Resources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
+                Complete(new Exception(String.Format(ResultsResources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
             }
             return false;
         }

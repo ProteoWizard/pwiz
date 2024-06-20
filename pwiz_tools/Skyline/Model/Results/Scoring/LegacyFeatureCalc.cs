@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area; }
+            get { return ScoringResources.LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area; }
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count; }
+            get { return ScoringResources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count; }
         }
 
         protected override IList<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData)
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard; }
+            get { return ScoringResources.LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard; }
         }
 
         protected override IList<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData)
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.LegacyUnforcedCountScoreDefaultCalc_Name_Default_co_elution_count; }
+            get { return ScoringResources.LegacyUnforcedCountScoreDefaultCalc_Name_Default_co_elution_count; }
         }
 
         protected override IList<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData)
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count; }
+            get { return ScoringResources.LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count; }
         }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)

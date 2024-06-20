@@ -313,19 +313,19 @@ namespace pwiz.Skyline.Alerts
             switch (dialogResult)
             {
                 case DialogResult.OK:
-                    return Resources.AlertDlg_GetDefaultButtonText_OK;
+                    return AlertsResources.AlertDlg_GetDefaultButtonText_OK;
                 case DialogResult.Cancel:
-                    return Resources.AlertDlg_GetDefaultButtonText_Cancel;
+                    return AlertsResources.AlertDlg_GetDefaultButtonText_Cancel;
                 case DialogResult.Yes:
-                    return Resources.AlertDlg_GetDefaultButtonText__Yes;
+                    return AlertsResources.AlertDlg_GetDefaultButtonText__Yes;
                 case DialogResult.No:
-                    return Resources.AlertDlg_GetDefaultButtonText__No;
+                    return AlertsResources.AlertDlg_GetDefaultButtonText__No;
                 case DialogResult.Abort:
-                    return Resources.AlertDlg_GetDefaultButtonText__Abort;
+                    return AlertsResources.AlertDlg_GetDefaultButtonText__Abort;
                 case DialogResult.Retry:
                     return Resources.AlertDlg_GetDefaultButtonText__Retry;
                 case DialogResult.Ignore:
-                    return Resources.AlertDlg_GetDefaultButtonText__Ignore;
+                    return AlertsResources.AlertDlg_GetDefaultButtonText__Ignore;
                 default:
                     throw new ArgumentException();
             }
@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Alerts
                 return message;
             }
             return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
-                Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
+                AlertsResources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
         }
 
         private void toolStripButtonCopy_Click(object sender, EventArgs e)

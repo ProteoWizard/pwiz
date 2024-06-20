@@ -66,16 +66,16 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (countDuplicates == 1)
                 {
-                    return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list,
+                    return string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list,
                                          multiplePeptides.First());
                 }
                 if (countDuplicates < 15)
                 {
-                    return TextUtil.LineSeparate(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list,
+                    return TextUtil.LineSeparate(SettingsUIResources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list,
                                                  string.Empty,
                                                  TextUtil.LineSeparate(multiplePeptides.Select(mp => mp.ToString())));
                 }
-                return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times,
+                return string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times,
                                      countDuplicates);
             }
             if (existing != null)
@@ -84,17 +84,17 @@ namespace pwiz.Skyline.SettingsUI
                 countDuplicates = intersectingPeptides.Length;
                 if (countDuplicates == 1)
                 {
-                    return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__already_appears_in_the__1__list,
+                    return string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__already_appears_in_the__1__list,
                                          intersectingPeptides.First(), existingName);
                 }
                 if (countDuplicates < 15)
                 {
-                    return TextUtil.LineSeparate(string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_already_appear_in_the__0__list,
+                    return TextUtil.LineSeparate(string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_already_appear_in_the__0__list,
                                                                existingName),
                                                  string.Empty,
                                                  TextUtil.LineSeparate(multiplePeptides.Select(mp => mp.ToString())));
                 }
-                return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list,
+                return string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list,
                                      countDuplicates, existingName);
             }
             return null;
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (columns.Length != 2)
             {
-                MessageDlg.Show(parent, string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_));
+                MessageDlg.Show(parent, string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_));
                 return false;
             }
 
@@ -123,11 +123,11 @@ namespace pwiz.Skyline.SettingsUI
             string message = null;
             if (string.IsNullOrWhiteSpace(seq))
             {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
+                message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
             }
             else if (!FastaSequence.IsExSequence(seq))
             {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+                message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
             }
             else
             {
@@ -145,15 +145,15 @@ namespace pwiz.Skyline.SettingsUI
                     double dTime;
                     if (string.IsNullOrWhiteSpace(time))
                     {
-                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
+                        message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
                     }
                     else if (!double.TryParse(time, out dTime))
                     {
-                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
+                        message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
                     }
                     else if (postiveTime && dTime <= 0)
                     {
-                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
+                        message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
                     }
                     else
                     {
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target, sequence));
                     if (iExist != -1 && iExist != rowIndex)
-                        errorText = string.Format(Resources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, sequence);
+                        errorText = string.Format(SettingsUIResources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, sequence);
                 }
             }
             else if (columnIndex == COLUMN_TIME && GridView.IsCurrentCellInEditMode)

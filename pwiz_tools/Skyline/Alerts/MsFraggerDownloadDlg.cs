@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2021 University of Washington - Seattle, WA
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Alerts
 
         public void Download()
         {
-            using (var downloadProgressDlg = new LongWaitDlg { Message = string.Format(Resources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION) })
+            using (var downloadProgressDlg = new LongWaitDlg { Message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION) })
             {
                 if (Program.FunctionalTest && !Program.UseOriginalURLs)
                 {

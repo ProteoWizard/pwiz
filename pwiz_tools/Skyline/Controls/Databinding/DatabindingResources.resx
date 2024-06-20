@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="CandidatePeakForm_CandidatePeakForm_Candidate_Peaks" xml:space="preserve">
+    <value>Candidate Peaks</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_Heat_Map" xml:space="preserve">
+    <value>Show Heat Map</value>
+  </data>
+  <data name="DataboundGridControl_DataboundGridControl_Show_PCA_Plot" xml:space="preserve">
+    <value>Show PCA Plot</value>
+  </data>
+  <data name="DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_" xml:space="preserve">
+    <value>An error occured while displaying the data rows:</value>
+  </data>
+  <data name="DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_" xml:space="preserve">
+    <value>Do you want to continue to see these error messages?</value>
+  </data>
+  <data name="DataboundGridControl_DoFillDown_Error_setting_value_" xml:space="preserve">
+    <value>Error setting value:</value>
+  </data>
+  <data name="DataboundGridControl_DoFillDown_Filling__0___1__rows" xml:space="preserve">
+    <value>Filling {0}/{1} rows</value>
+  </data>
+  <data name="DataboundGridControl_FillDown_Fill_Down" xml:space="preserve">
+    <value>Fill Down</value>
+  </data>
+  <data name="DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings" xml:space="preserve">
+    <value>Updating document settings to match edits.</value>
+  </data>
+  <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
+    <value>Edit Report</value>
+  </data>
+  <data name="DocumentGridViewContext_Preview_Preview___0_" xml:space="preserve">
+    <value>Preview: {0}</value>
+  </data>
+  <data name="DocumentGridViewContext_Preview_Preview_New_Report" xml:space="preserve">
+    <value>Preview New Report</value>
+  </data>
+  <data name="ExportLiveReportDlg_ExportLiveReportDlg_Invariant" xml:space="preserve">
+    <value>Invariant</value>
+  </data>
+  <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
+    <value>Preview: </value>
+  </data>
+  <data name="ExportReportDlg_ExportReport_Building_report" xml:space="preserve">
+    <value>Building report...</value>
+  </data>
+  <data name="ExportReportDlg_ExportReport_Failed_exporting_to" xml:space="preserve">
+    <value>Failed exporting to {0}.
+{1}</value>
+  </data>
+  <data name="ExportReportDlg_ExportReport_Generating_Report" xml:space="preserve">
+    <value>Generating Report</value>
+  </data>
+  <data name="ExportReportDlg_ExportReport_Writing_report" xml:space="preserve">
+    <value>Writing report...</value>
+  </data>
+  <data name="ExportReportDlg_ShowShare_Skyline_Reports" xml:space="preserve">
+    <value>Skyline Reports</value>
+  </data>
+  <data name="SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports" xml:space="preserve">
+    <value>Change Document Reports</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists" xml:space="preserve">
+    <value>Molecule Lists</value>
+  </data>
+  <data name="SkylineViewContext_ImportViews_Failure_loading__0__" xml:space="preserve">
+    <value>Failure loading {0}.</value>
+  </data>
+  <data name="SkylineViewContext_ImportViews_No_views_were_found_in_that_file_" xml:space="preserve">
+    <value>No views were found in that file.</value>
+  </data>
+  <data name="SkylineViewContext_SaveViewSpecList_Change_Document_Reports" xml:space="preserve">
+    <value>Change Document Reports</value>
+  </data>
+</root>

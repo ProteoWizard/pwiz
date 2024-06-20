@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             public override string ToString()
             {
-                return string.Format(Resources.Data_ToString__0__points, NumberOfPoints);
+                return string.Format(EntitiesResources.Data_ToString__0__points, NumberOfPoints);
             }
         }
 

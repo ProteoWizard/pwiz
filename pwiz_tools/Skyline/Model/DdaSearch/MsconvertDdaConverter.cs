@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             try
             {
-                UpdateProgress(status => status.ChangeMessage(Resources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
+                UpdateProgress(status => status.ChangeMessage(DdaSearchResources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     // if the same settings were used, we can re-use the file, else regenerate
                     if (MsDataFileImpl.IsValidFile(outputFilepath))
                     {
-                        UpdateProgress(status => status.ChangeMessage(string.Format(Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__, MsConvertOutputExtension, spectrumSource.GetSampleOrFileName())));
+                        UpdateProgress(status => status.ChangeMessage(string.Format(DdaSearchResources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__, MsConvertOutputExtension, spectrumSource.GetSampleOrFileName())));
                         continue;
                     }
 

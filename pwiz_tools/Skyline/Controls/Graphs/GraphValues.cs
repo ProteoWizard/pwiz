@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Controls.Graphs
         [Localizable(true)]
         public static string AnnotateLogAxisTitle(string title)
         {
-            return string.Format(Resources.GraphValues_Log_AxisTitle, title);
+            return string.Format(GraphsResources.GraphValues_Log_AxisTitle, title);
         }
         
         [Localizable(true)]
@@ -52,11 +52,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 case RTPeptideValue.All:
                 case RTPeptideValue.Retention:
-                    return Resources.RtGraphValue_Retention_Time;
+                    return GraphsResources.RtGraphValue_Retention_Time;
                 case RTPeptideValue.FWB:
-                    return Resources.RtGraphValue_FWB_Time;
+                    return GraphsResources.RtGraphValue_FWB_Time;
                 case RTPeptideValue.FWHM:
-                    return Resources.RtGraphValue_FWHM_Time;
+                    return GraphsResources.RtGraphValue_FWHM_Time;
             }
             throw new ArgumentException(rtPeptideValue.ToString());
         }
@@ -109,11 +109,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (CvDecimal)
                     {
-                        title = string.Format(Resources.AggregateOp_AxisTitleCv, title);
+                        title = string.Format(GraphsResources.AggregateOp_AxisTitleCv, title);
                     }
                     else
                     {
-                        title = string.Format(Resources.AggregateOp_AxisTitleCvPercent, title);
+                        title = string.Format(GraphsResources.AggregateOp_AxisTitleCvPercent, title);
                     }
                 }
                 return title;
@@ -155,9 +155,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 string calculatorName = _retentionTimeRegression.Calculator.Name;
                 if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
                 {
-                    return string.Format(Resources.RegressionUnconversion_CalculatorScoreFormat, calculatorName);
+                    return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreFormat, calculatorName);
                 }
-                return string.Format(Resources.RegressionUnconversion_CalculatorScoreValueFormat, calculatorName, ToLocalizedString(rtPeptideValue));
+                return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreValueFormat, calculatorName, ToLocalizedString(rtPeptideValue));
             }
 
             public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction)
@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
             [Localizable(true)]
             public string GetAxisTitle(RTPeptideValue rtPeptideValue)
             {
-                return string.Format(Resources.RtAlignment_AxisTitleAlignedTo, ToLocalizedString(rtPeptideValue), ChromatogramSet.Name);
+                return string.Format(GraphsResources.RtAlignment_AxisTitleAlignedTo, ToLocalizedString(rtPeptideValue), ChromatogramSet.Name);
             }
 
             private class ChromFileIdEqualityComparer : IEqualityComparer<ChromFileInfoId>

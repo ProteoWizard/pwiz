@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides" xml:space="preserve">
+    <value>インポートされたペプチドにiRT値の追加中</value>
+  </data>
+  <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
+    <value>最小または最大標準ペプチドを取得できませんでした。</value>
+  </data>
+  <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
+    <value>カルキュレータ{0}では、回帰を判断するため、標準ペプチドのすべての{1}がターゲットリスト内に入っている必要があります。以下の{2}ペプチドが不足しています。
+
+
+{3}</value>
+  </data>
+  <data name="IrtDb_FILTER_IRTDB_iRT_Database_Files" xml:space="preserve">
+    <value>iRTデータベースファイル</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_Database_path_cannot_be_null" xml:space="preserve">
+    <value>データベースパスは空値にはできません</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_Loading_iRT_database__0_" xml:space="preserve">
+    <value>iRTデータベース{0}の読み込み中</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges" xml:space="preserve">
+    <value>ファイル{0}が作成できませんでした。十分な権限がないようです。</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file" xml:space="preserve">
+    <value>ファイル{0}は有効なiRTデータベースファイルではありません。</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_The_path_containing__0__does_not_exist" xml:space="preserve">
+    <value>{0}を含むパスは存在しません</value>
+  </data>
+  <data name="IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_" xml:space="preserve">
+    <value>ファイル{0}にアクセスする権限がありません</value>
+  </data>
+  <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
+    <value>ペプチドをアップデート中</value>
+  </data>
+  <data name="IrtRegressionType_Linear" xml:space="preserve">
+    <value>線形</value>
+  </data>
+  <data name="IrtRegressionType_Logarithmic" xml:space="preserve">
+    <value>対数</value>
+  </data>
+  <data name="IrtRegressionType_Lowess" xml:space="preserve">
+    <value>ローカル加重回帰</value>
+  </data>
+  <data name="IrtStandard_AUTO_Automatic" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times" xml:space="preserve">
+    <value>保持時間の追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__" xml:space="preserve">
+    <value>{0}からの保持時間の変換中</value>
+  </data>
+  <data name="MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero" xml:space="preserve">
+    <value>測定保持時間は0より大きくなければなりません。</value>
+  </data>
+  <data name="MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers" xml:space="preserve">
+    <value>測定保持時間は有効な十進数でなければいけません。</value>
+  </data>
+  <data name="MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence" xml:space="preserve">
+    <value>シークエンス「{0}」は有効な修飾ペプチドシークエンスではありません。</value>
+  </data>
+  <data name="ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_" xml:space="preserve">
+    <value>再校正しようとしたときに標準ペプチドがありませんでした。</value>
+  </data>
+  <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
+    <value>初期化成功前の予期せぬiRTカルキュレータの使用。</value>
+  </data>
+</root>

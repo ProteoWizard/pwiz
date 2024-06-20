@@ -70,13 +70,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             if ((IonMobilityHighEnergyOffset ?? 0) != 0)
             {
-                parts.Add(Resources.IonMobilityObject_ToString_HEO_); // Compact representation of "HIgh Energy Ion Mobility Offset"
+                parts.Add(EntitiesResources.IonMobilityObject_ToString_HEO_); // Compact representation of "HIgh Energy Ion Mobility Offset"
                 parts.Add(IonMobilityHighEnergyOffset.Value.ToString(Formats.IonMobility));
             }
 
             if ((CollisionCrossSection ?? 0) != 0)
             {
-                parts.Add(Resources.IonMobilityObject_ToString_CCS_); // Compact representation of "Collision Cross Section"
+                parts.Add(EntitiesResources.IonMobilityObject_ToString_CCS_); // Compact representation of "Collision Cross Section"
                 parts.Add(CollisionCrossSection.Value.ToString(Formats.CCS));
             }
 

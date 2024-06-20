@@ -15,7 +15,7 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : XmlNamedElement
     {
-        public static IrtStandard AUTO => new IrtStandard(Resources.IrtStandard_AUTO_Automatic, null, null, Array.Empty<DbIrtPeptide>());
+        public static IrtStandard AUTO => new IrtStandard(IrtResources.IrtStandard_AUTO_Automatic, null, null, Array.Empty<DbIrtPeptide>());
         public static IrtStandard EMPTY => new IrtStandard(AuditLogStrings.None, null, null, Array.Empty<DbIrtPeptide>());
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky", null,

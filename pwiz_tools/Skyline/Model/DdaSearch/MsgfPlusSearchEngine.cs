@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
                 catch (Exception ex)
                 {
-                    _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
+                    _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
                     _success = false;
                 }
                 finally

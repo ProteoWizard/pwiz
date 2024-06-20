@@ -2017,7 +2017,7 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             return Rank.HasValue
-                       ? String.Format(Resources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
+                       ? String.Format(ModelResources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
                        : Peptide.ToString();
         }
 

@@ -430,7 +430,7 @@ namespace pwiz.Skyline.SettingsUI
             if (smallMoleculeIonTypes.Length == 0)
             {
                 helper.ShowTextBoxError(textSmallMoleculeIonTypes,
-                    Resources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
+                    SettingsUIResources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
                 return;
             }
             smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToArray();
@@ -568,7 +568,7 @@ namespace pwiz.Skyline.SettingsUI
             if (minTime.HasValue && maxTime.HasValue && maxTime.Value - minTime.Value < TransitionInstrument.MIN_TIME_RANGE)
             {
                 helper.ShowTextBoxError(textMaxTime,
-                                        string.Format(Resources.TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart,
+                                        string.Format(SettingsUIResources.TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart,
                                                       minTime, maxTime, TransitionInstrument.MIN_TIME_RANGE));
                 return;
             }
@@ -589,7 +589,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!precursorMassType.IsMonoisotopic())
                 {
-                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
+                    MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
                     tabControl1.SelectedIndex = (int)TABS.Prediction;
                     comboPrecursorMass.Focus();
                     return;
@@ -616,7 +616,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (isolationScheme != null && isolationScheme.WindowsPerScan.HasValue && !maxInclusions.HasValue)
             {
-                MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified);
+                MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified);
                 tabControl1.SelectedIndex = (int)TABS.Instrument;
                 textMaxInclusions.Focus();
                 return;
@@ -657,7 +657,7 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
             {
-                if (!_parent.ChangeSettingsMonitored(this, Resources.TransitionSettingsUI_OkDialog_Changing_transition_settings,
+                if (!_parent.ChangeSettingsMonitored(this, SettingsUIResources.TransitionSettingsUI_OkDialog_Changing_transition_settings,
                                                      s => s.ChangeTransitionSettings(settings)))
                 {
                     return;
@@ -1178,8 +1178,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Create a cascading menu item on parent menu
                 var text = charge > 0
-                    ? Resources.TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus
-                    : Resources.TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus;
+                    ? SettingsUIResources.TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus
+                    : SettingsUIResources.TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus;
                 var menuItem = new ToolStripMenuItem()
                 {
                     Text = text.Substring(0, text.Length - (3 - Math.Abs(charge)))  // Trim "Adducts +++" or "Adducts ---" as needed
@@ -1202,7 +1202,7 @@ namespace pwiz.Skyline.SettingsUI
                             // Start another cascade level for the more exotic adducts
                             var menuItemMore = new ToolStripMenuItem()
                             {
-                                Text = Resources.TransitionSettingsUI_PopulateAdductMenu_More
+                                Text = SettingsUIResources.TransitionSettingsUI_PopulateAdductMenu_More
                             };
                             menuItem.DropDownItems.Add(menuItemMore);
                             menuItem = menuItemMore;
@@ -1311,7 +1311,7 @@ namespace pwiz.Skyline.SettingsUI
             if (AcquisitionMethod == FullScanAcquisitionMethod.SureQuant && !cbxTriggeredAcquisition.Checked)
             {
                 var message =
-                    Resources.TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_;
+                    SettingsUIResources.TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_;
                 switch (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK))
                 {
                     case DialogResult.Cancel:

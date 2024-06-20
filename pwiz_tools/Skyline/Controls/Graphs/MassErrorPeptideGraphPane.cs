@@ -43,8 +43,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
             YAxis.Title.Text = aggregateOp.Cv
-                ? Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm
-                : Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+                ? GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm
+                : GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
 
             base.UpdateAxes();
             

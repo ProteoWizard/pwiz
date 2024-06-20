@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public static PrositMS2Spectra PredictBatchesFromPrositCsv(string prositCsvFilePath, IProgressMonitor progressMonitor,
             ref IProgressStatus progressStatus, CancellationToken token)
         {
-            progressStatus = progressStatus.ChangeMessage(Resources.PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input);
+            progressStatus = progressStatus.ChangeMessage(ModelsResources.PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input);
 
             var inputRows = new List<PrositIntensityModel.PrositIntensityInput.PrositPrecursorInput>();
             var peptides = new List<PrositIntensityModel.PeptidePrecursorNCE>();
@@ -438,7 +438,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public static void ExportPrositSpectraToBlib(PrositMS2Spectra spectra, string encyclopediaBlibFilePath, IProgressMonitor progressMonitor,
             ref IProgressStatus progressStatus)
         {
-            progressStatus = progressStatus.ChangeMessage(Resources.PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library);
+            progressStatus = progressStatus.ChangeMessage(ModelsResources.PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library);
             string libraryName = Path.GetFileName(encyclopediaBlibFilePath);
 
             progressMonitor.UpdateProgress(progressStatus);
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 var mzSpecInfo = spectra.Spectra.Select(s => s.SpecMzInfo);
                 var docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, mzSpecInfo.ToList(), libraryName, progressMonitor, ref progressStatus);
                 if (docLibraryNew == null)
-                    throw new InvalidOperationException(Resources.PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib);
+                    throw new InvalidOperationException(ModelsResources.PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib);
             }
         }
 

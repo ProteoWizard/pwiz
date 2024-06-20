@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Single read to get all the points
                 if (stream.Read(scanIdBytes, 0, scanIdBytes.Length) < scanIdBytes.Length)
-                    throw new IOException(Resources
+                    throw new IOException(ResultsResources
                         .ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs);
                 return scanIdBytes;
             });
@@ -665,7 +665,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
         {
-            status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
+            status = status.ChangeMessage(string.Format(ResultsResources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
 
             IPooledStream readStream = null;
@@ -810,7 +810,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (cacheHeader.IsCorrupted(stream.Length))
             {
-                throw new InvalidDataException(Resources.ChromatogramCache_LoadStructs_FileCorrupted);
+                throw new InvalidDataException(ResultsResources.ChromatogramCache_LoadStructs_FileCorrupted);
             }
 
             var formatVersion = cacheHeader.formatVersion;
@@ -1025,7 +1025,7 @@ namespace pwiz.Skyline.Model.Results
         private static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException(Resources.ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted);
+                throw new InvalidDataException(ResultsResources.ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted);
         }
 
         public static CacheHeaderStruct WriteStructs(CacheFormat cacheFormat,
@@ -1801,7 +1801,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Single read to get all the points
                 if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                    throw new IOException(Resources
+                    throw new IOException(ResultsResources
                         .ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
                 return pointsCompressed;
 

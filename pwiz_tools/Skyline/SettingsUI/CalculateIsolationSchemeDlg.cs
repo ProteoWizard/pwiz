@@ -71,9 +71,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public static class WindowMargin
         {
-            public static string NONE { get { return Resources.WindowMargin_NONE_None; } }
-            public static string SYMMETRIC { get { return Resources.WindowMargin_SYMMETRIC_Symmetric; } }
-            public static string ASYMMETRIC { get { return Resources.WindowMargin_ASYMMETRIC_Asymmetric; } }
+            public static string NONE { get { return SettingsUIResources.WindowMargin_NONE_None; } }
+            public static string SYMMETRIC { get { return SettingsUIResources.WindowMargin_SYMMETRIC_Symmetric; } }
+            public static string ASYMMETRIC { get { return SettingsUIResources.WindowMargin_ASYMMETRIC_Asymmetric; } }
         };
 
         public CalculateIsolationSchemeDlg()
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.SettingsUI
             // if given windowWidth is not an integer value
             if (windowWidth % 1 != 0 && OptimizeWindowPlacement)
             {
-                MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer);
+                MessageDlg.Show(this, SettingsUIResources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer);
                 return;
             }
 
@@ -314,7 +314,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Make sure multiplexed window count is a multiple of windows per scan.
                 if (Multiplexed && IsolationWindows.Count % windowsPerScan != 0)
                 {
-                    MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value);
+                    MessageDlg.Show(this, SettingsUIResources.CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value);
                     return;
                 }
             }

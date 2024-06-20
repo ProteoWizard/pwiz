@@ -103,7 +103,7 @@ namespace pwiz.Skyline
                 {
                     // Output the catch-all error only if we are not running tests. We want the test to fail if no error is reported 
                     // and the exit code is not 0.
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
+                    _out.WriteLine(SkylineResources.CommandLine_Run_Error__Failure_occurred__Exiting___);
                 }
             }
 
@@ -126,7 +126,7 @@ namespace pwiz.Skyline
                     // We want to return an exit code of 0 here.
                     return Program.EXIT_CODE_SUCCESS;
                 }
-                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_FAILURE_TO_START;
             }
 
@@ -143,12 +143,12 @@ namespace pwiz.Skyline
                 }
                 catch (Exception)
                 {
-                    oldOut.WriteLine(Resources.CommandLine_Run_Error__Failed_to_open_log_file__0_, commandArgs.LogFile);
+                    oldOut.WriteLine(SkylineResources.CommandLine_Run_Error__Failed_to_open_log_file__0_, commandArgs.LogFile);
                     return Program.EXIT_CODE_FAILURE_TO_START;
                 }
                 using (oldOut)
                 {
-                    oldOut.WriteLine(Resources.CommandLine_Run_Writing_to_log_file__0_, commandArgs.LogFile);
+                    oldOut.WriteLine(SkylineResources.CommandLine_Run_Writing_to_log_file__0_, commandArgs.LogFile);
                 }
             }
 
@@ -203,7 +203,7 @@ namespace pwiz.Skyline
                 (skylineFile != null && (!commandArgs.CreateNewFile && !OpenSkyFile(skylineFile))) ||
                 (skylineFile == null && _doc == null)))
             {
-                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
@@ -282,7 +282,7 @@ namespace pwiz.Skyline
             {
                 if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
+                    _out.WriteLine(SkylineResources.CommandLine_Run_Not_setting_library_);
                     return false;
                 }
             }
@@ -454,7 +454,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
+                _out.WriteLine(SkylineResources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
                     commandArgs.ImportOptimizeType, x.Message);
                 return false;
             }
@@ -559,7 +559,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
+                _out.WriteLine(SkylineResources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -569,7 +569,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_, Path.GetFileName(commandArgs.ImportPeakBoundariesPath));
+                _out.WriteLine(SkylineResources.CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_, Path.GetFileName(commandArgs.ImportPeakBoundariesPath));
                 long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundariesPath);
                 PeakBoundaryImporter importer = new PeakBoundaryImporter(_doc);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
@@ -578,7 +578,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
+                _out.WriteLine(SkylineResources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -639,9 +639,9 @@ namespace pwiz.Skyline
         {
             var libName = commandArgs.ImsDbName ?? Path.GetFileNameWithoutExtension(commandArgs.ImsDbFile);
             var message = string.Format(
-                Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName,
+                SkylineResources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName,
                 commandArgs.ImsDbFile);
-            _out.WriteLine(Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName, commandArgs.ImsDbFile);
+            _out.WriteLine(SkylineResources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName, commandArgs.ImsDbFile);
             try
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIonMobilityFiltering(ionMobilityFiltering =>
@@ -675,8 +675,8 @@ namespace pwiz.Skyline
             var typeMods = mods.GetModificationsByName(label);
             if (typeMods == null)
             {
-                _out.WriteLine(Resources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
-                _out.WriteLine(Resources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
+                _out.WriteLine(SkylineResources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
+                _out.WriteLine(SkylineResources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
                 return null;
             }
 
@@ -722,8 +722,8 @@ namespace pwiz.Skyline
 
         private void LogDocumentDelta(SrmDocument docBefore, SrmDocument docAfter)
         {
-            LogDocumentDelta(Resources.CommandLine_LogDocumentDelta_Removed___0_, docBefore, docAfter);
-            LogDocumentDelta(Resources.CommandLine_LogDocumentDelta_Added___0_, docAfter, docBefore);
+            LogDocumentDelta(SkylineResources.CommandLine_LogDocumentDelta_Removed___0_, docBefore, docAfter);
+            LogDocumentDelta(SkylineResources.CommandLine_LogDocumentDelta_Added___0_, docAfter, docBefore);
         }
 
         private void LogDocumentDelta(string verbText, SrmDocument docBefore, SrmDocument docAfter)
@@ -756,7 +756,7 @@ namespace pwiz.Skyline
             string deltaText = GetDeltaText(prot, prot + list, pep, pep + mol, prec, tran);
             if (deltaText == null)
                 return null;
-            return string.Format(Resources.CommandLine_LogDocumentDelta_Removed___0_, deltaText);
+            return string.Format(SkylineResources.CommandLine_LogDocumentDelta_Removed___0_, deltaText);
         }
 
         public static string AddedText(int prot, int list, int pep, int mol, int prec, int tran)
@@ -764,7 +764,7 @@ namespace pwiz.Skyline
             string deltaText = GetDeltaText(prot, prot + list, pep, pep + mol, prec, tran);
             if (deltaText == null)
                 return null;
-            return string.Format(Resources.CommandLine_LogDocumentDelta_Added___0_, deltaText);
+            return string.Format(SkylineResources.CommandLine_LogDocumentDelta_Added___0_, deltaText);
         }
 
         private static string GetDeltaText(int prot, int allGroup, int pep, int allMol, int prec, int tran)
@@ -812,7 +812,7 @@ namespace pwiz.Skyline
                 (string.IsNullOrEmpty(commandArgs.MethodInstrumentType) ? 0 : 1);
             if (exportTypes > 1)
             {
-                _out.WriteLine(Resources.CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__);
+                _out.WriteLine(SkylineResources.CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__);
                 return false;
             }
             else
@@ -886,7 +886,7 @@ namespace pwiz.Skyline
                     // If we are here it means that ImportingResults was true AND nothing was imported.
                     // This should have already triggered an error message earlier in the process but 
                     // in case it didn't we will report an error and return false
-                    _out.WriteLine(Resources.CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_);
+                    _out.WriteLine(SkylineResources.CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_);
                     return false;
                 }
             }
@@ -950,7 +950,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
+                _out.WriteLine(SkylineResources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -976,7 +976,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
+                _out.WriteLine(SkylineResources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1008,7 +1008,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
+                _out.WriteLine(SkylineResources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1040,7 +1040,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
+                _out.WriteLine(SkylineResources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1057,24 +1057,24 @@ namespace pwiz.Skyline
                     var precursorIsotopes = commandArgs.FullScanPrecursorIsotopes.Value;
                     double? threshold = commandArgs.FullScanPrecursorThreshold;
                     IsotopeEnrichments isotopeEnrichments = null;
-                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_, precursorIsotopes);
+                    _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_, precursorIsotopes);
 
                     if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_COUNT;
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_, threshold);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_, threshold);
                     }
                     else if (precursorIsotopes == FullScanPrecursorIsotopes.Percent)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_PERCENT;
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_, threshold);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_, threshold);
                     }
 
                     if (!string.IsNullOrEmpty(commandArgs.FullScanPrecursorIsotopeEnrichment))
                     {
                         isotopeEnrichments = Settings.Default.IsotopeEnrichmentsList.FirstOrDefault(standard =>
                             Equals(standard.Name, commandArgs.FullScanPrecursorIsotopeEnrichment));
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_, isotopeEnrichments);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_, isotopeEnrichments);
 
                     }
 
@@ -1082,7 +1082,7 @@ namespace pwiz.Skyline
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_, commandArgs.FullScanPrecursorIgnoreSimScans);
+                    _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_, commandArgs.FullScanPrecursorIgnoreSimScans);
                     newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
                 }
 
@@ -1110,10 +1110,10 @@ namespace pwiz.Skyline
                     }
 
                     if (commandArgs.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__,
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__,
                             commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
                     else
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_, commandArgs.FullScanAcquisitionMethod);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_, commandArgs.FullScanAcquisitionMethod);
 
                     newSettings = newSettings.ChangeAcquisitionMethod(commandArgs.FullScanAcquisitionMethod, isolationScheme);
                 }
@@ -1124,16 +1124,16 @@ namespace pwiz.Skyline
                     double? resMz = commandArgs.FullScanPrecursorResMz;
                     var precursorAnalyzer = commandArgs.FullScanPrecursorMassAnalyzerType;
                     if (precursorAnalyzer.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_, precursorAnalyzer);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_, precursorAnalyzer);
 
                     if (commandArgs.FullScanPrecursorRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
                     else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMs)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_, res);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_, res);
                     else if (resMz.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
                     else if (res.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__, res);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__, res);
 
                     newSettings = newSettings.ChangePrecursorResolution(
                         precursorAnalyzer ?? newSettings.PrecursorMassAnalyzer,
@@ -1146,16 +1146,16 @@ namespace pwiz.Skyline
                     double? resMz = commandArgs.FullScanProductResMz;
                     var productAnalyzer = commandArgs.FullScanProductMassAnalyzerType;
                     if (productAnalyzer.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_, productAnalyzer);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_, productAnalyzer);
 
                     if (commandArgs.FullScanProductRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
                     else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMsMs)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_, res);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_, res);
                     else if (resMz.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
                     else if (res.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__, res);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__, res);
 
                     newSettings = newSettings.ChangeProductResolution(
                         productAnalyzer ?? newSettings.ProductMassAnalyzer,
@@ -1173,9 +1173,9 @@ namespace pwiz.Skyline
                 {
                     double rtLen = commandArgs.FullScanRetentionTimeFilterLength.Value;
                     if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_, rtLen);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_, rtLen);
                     else if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_, rtLen);
+                        _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_, rtLen);
 
                     newSettings = newSettings.ChangeRetentionTimeFilter(newSettings.RetentionTimeFilterType, rtLen);
                 }
@@ -1185,7 +1185,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(SkylineResources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1198,12 +1198,12 @@ namespace pwiz.Skyline
                 if (commandArgs.IonMobilityLibraryRes.HasValue)
                 {
                     if (!_doc.Settings.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
-                        _out.WriteLine(Resources.CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_);
+                        _out.WriteLine(SkylineResources.CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_);
                     double rp = commandArgs.IonMobilityLibraryRes.Value;
                     var imsWindowCalcNew = new IonMobilityWindowWidthCalculator(rp);
                     var imsWindowCalc = _doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator;
                     if (!Equals(imsWindowCalc, imsWindowCalcNew))
-                        _out.WriteLine(Resources.CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__, rp);
+                        _out.WriteLine(SkylineResources.CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__, rp);
                     ModifyDocument(d => d.ChangeSettings(d.Settings.ChangeTransitionIonMobilityFiltering(p =>
                         {
                             var result = p;
@@ -1219,7 +1219,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
+                _out.WriteLine(SkylineResources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1418,7 +1418,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__, Path.GetFileName(irtCalc.DatabasePath));
+            _out.WriteLine(SkylineResources.CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__, Path.GetFileName(irtCalc.DatabasePath));
             return null;
         }
 
@@ -1456,7 +1456,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__, Path.GetFileName(optLib.DatabasePath));
+            _out.WriteLine(SkylineResources.CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__, Path.GetFileName(optLib.DatabasePath));
             return null;
         }
 
@@ -1494,7 +1494,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.FilePath));
+            _out.WriteLine(SkylineResources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.FilePath));
             return null;
         }
 
@@ -1527,7 +1527,7 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? string.Empty);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
-            _out.WriteLine(Resources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__, Path.GetFileName(fileName));
+            _out.WriteLine(SkylineResources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__, Path.GetFileName(fileName));
             return BackgroundProteomeList.GetDefault();
         }
 
@@ -1658,7 +1658,7 @@ namespace pwiz.Skyline
 
             if (!ApplyRegex(file.GetSampleName(), regex))
             {
-                _out.WriteLine(Resources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_, file.GetSampleName(), regex, file);
+                _out.WriteLine(SkylineResources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_, file.GetSampleName(), regex, file);
                 return false;
             }
 
@@ -1841,13 +1841,13 @@ namespace pwiz.Skyline
             }
             catch(IOException e)
             {
-                _out.WriteLine(Resources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
+                _out.WriteLine(SkylineResources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
                 _out.WriteLine(e.Message);
                 return null;
             }
             if (!listNamedPaths.Any())
             {
-                _out.WriteLine(Resources.CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__, sourceDir);
+                _out.WriteLine(SkylineResources.CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__, sourceDir);
                 return null;
             }
 
@@ -1882,7 +1882,7 @@ namespace pwiz.Skyline
                     var replNameNew = match.Groups[1].Value;
                     if (string.IsNullOrEmpty(replNameNew))
                     {
-                        _out.WriteLine(Resources.CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__, replName);
+                        _out.WriteLine(SkylineResources.CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__, replName);
                         return false;
                     }                    
                     if (uniqNames.Contains(replNameNew))
@@ -1895,7 +1895,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    _out.WriteLine(Resources.CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_, replName);
+                    _out.WriteLine(SkylineResources.CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_, replName);
                     return false;
                 }
             }
@@ -2008,7 +2008,7 @@ namespace pwiz.Skyline
                         string replicateFileString = replicateFile.ToString();
                         if (chromatogram.MSDataFilePaths.Any(filePath => StringComparer.OrdinalIgnoreCase.Equals(filePath.ToString(), replicateFileString)))
                         {
-                            _out.WriteLine(Resources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
+                            _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
                         }
                         else
                         {
@@ -2038,24 +2038,24 @@ namespace pwiz.Skyline
                 var fileLastWriteTime = replicateFile.GetFileLastWriteTime();
                 if (importBefore != null && importBefore < fileLastWriteTime)
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___,
+                    _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___,
                         fileLastWriteTime, importBefore);
                     return true;
                 }
                 else if (importOnOrAfter != null && importOnOrAfter >= fileLastWriteTime)
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___, fileLastWriteTime, importOnOrAfter);
+                    _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___, fileLastWriteTime, importOnOrAfter);
                     return true;
                 }
             }
             catch (Exception e)
             {
-                _out.WriteLine(Resources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, replicateFile);
+                _out.WriteLine(SkylineResources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, replicateFile);
                 _out.WriteLine(e);
                 return false;
             }
 
-            _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
+            _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile_Adding_results___);
 
             if (disableJoining)
                 ModifyDocument(d => d.ChangeSettingsNoDiff(d.Settings.ChangeIsResultsJoiningDisabled(true)));
@@ -2069,9 +2069,9 @@ namespace pwiz.Skyline
         public void RemoveResults(DateTime? removeBefore)
         {
             if (removeBefore.HasValue)
-                _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.Value.ToShortDateString() + @"...");
+                _out.WriteLine(SkylineResources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.Value.ToShortDateString() + @"...");
             else
-                _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_all_results);
+                _out.WriteLine(SkylineResources.CommandLine_RemoveResults_Removing_all_results);
             var filteredChroms = new List<ChromatogramSet>();
             if (_doc.Settings.MeasuredResults == null)
             {
@@ -2091,7 +2091,7 @@ namespace pwiz.Skyline
                 else
                 {
                     foreach (var fileInfo in chromSet.MSDataFileInfos.Except(listFileInfosRemaining))
-                        _out.WriteLine(Resources.CommandLine_RemoveResults_Removed__0__, fileInfo.FilePath);
+                        _out.WriteLine(SkylineResources.CommandLine_RemoveResults_Removed__0__, fileInfo.FilePath);
                     if (listFileInfosRemaining.Any())
                         filteredChroms.Add(chromSet.ChangeMSDataFileInfos(listFileInfosRemaining));
                 }
@@ -2109,16 +2109,16 @@ namespace pwiz.Skyline
         {
             if (!_doc.Settings.HasResults)
             {
-                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                _out.WriteLine(SkylineResources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
                 return false;
             }
 
             var saveFile = commandArgs.SaveFile ?? _skylineFile;
-            _out.WriteLine(Resources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
+            _out.WriteLine(SkylineResources.CommandLine_MinimizeResults_Minimizing_results_to__0_, saveFile);
             if (commandArgs.ChromatogramsDiscard)
-                _out.WriteLine(Resources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
+                _out.WriteLine(SkylineResources.CommandLine_MinimizeResults_Removing_unused_chromatograms___);
             if (commandArgs.LimitNoise.HasValue)
-                _out.WriteLine(Resources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
+                _out.WriteLine(SkylineResources.CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___, commandArgs.LimitNoise);
 
             var minimizeResults = Model.MinimizeResults.MinimizeResultsFromDocument(Document, ((statistics, sizeCalculator) =>
             {
@@ -2194,7 +2194,7 @@ namespace pwiz.Skyline
                     Equals(standard.Name, commandArgs.IrtStandardName));
                 if (irtStandard == null)
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_,
+                    _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_,
                         commandArgs.IrtStandardName);
                     return null;
                 }
@@ -2229,7 +2229,7 @@ namespace pwiz.Skyline
 
             var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
 
-            _out.WriteLine(Resources.CommandLine_ImportSearch_Loading_library);
+            _out.WriteLine(SkylineResources.CommandLine_ImportSearch_Loading_library);
             var libraryManager = new LibraryManager();
             if (!import.LoadPeptideSearchLibrary(libraryManager, docLibSpec, progressMonitor))
                 return false;
@@ -2264,7 +2264,7 @@ namespace pwiz.Skyline
                             import.IrtStandard = autoStandards[0];
                             break;
                         default:
-                            _out.WriteLine(Resources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
                                 IrtStandard.AUTO.Name);
                             return false;
                     }
@@ -2318,7 +2318,7 @@ namespace pwiz.Skyline
                         if (doc.Settings.HasResults && doc.Settings.MeasuredResults.FindMatchingMSDataFile(new MsDataFilePath(file)) != null)
                             continue;
 
-                        _out.WriteLine(Resources.CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__, Path.GetFileName(file));
+                        _out.WriteLine(SkylineResources.CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__, Path.GetFileName(file));
                     }
                 }
             }
@@ -2336,7 +2336,7 @@ namespace pwiz.Skyline
                     if (foundMods != 1)
                         _out.WriteLine(Resources.CommandLine_ImportSearch_Adding__0__modifications_, foundMods);
                     else
-                        _out.WriteLine(Resources.CommandLine_ImportSearch_Adding_1_modification_);
+                        _out.WriteLine(SkylineResources.CommandLine_ImportSearch_Adding_1_modification_);
                     doc = doc.ChangeSettings(newSettings);
                     doc.Settings.UpdateDefaultModifications(false);
                 }
@@ -2474,7 +2474,7 @@ namespace pwiz.Skyline
         {
             if (!_doc.Settings.HasResults)
             {
-                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                _out.WriteLine(SkylineResources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
                 return false;
             }
             else
@@ -2499,7 +2499,7 @@ namespace pwiz.Skyline
                     PeakScoringModelSpec scoringModel;
                     if (!Settings.Default.PeakScoringModelList.TryGetValue(commandArgs.ReintegrateModelName, out scoringModel))
                     {
-                        _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__);
+                        _out.WriteLine(SkylineResources.CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__);
                         return false;
                     }
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
@@ -2552,7 +2552,7 @@ namespace pwiz.Skyline
                 // If decoy box is checked and no decoys, throw an error
                 if (decoys && decoyTransitionGroups.Count == 0)
                 {
-                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_);
+                    _out.WriteLine(SkylineResources.CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_);
                     return null;
                 }
                 // Use decoys for training only if decoy box is checked
@@ -2591,7 +2591,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_);
+                _out.WriteLine(SkylineResources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_);
                 _out.WriteLine(x);
                 return null;
             }
@@ -2611,11 +2611,11 @@ namespace pwiz.Skyline
             if (excludeFeatures.Count > 0)
             {
                 if (excludeFeatures.Count == 1)
-                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__,
+                    _out.WriteLine(SkylineResources.CommandLine_CreateScoringModel_Excluding_feature_score___0__,
                         excludeFeatures.First().Name);
                 else
                 {
-                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
+                    _out.WriteLine(SkylineResources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
                     foreach (var featureCalculator in excludeFeatures)
                         _out.WriteLine(@"    " + featureCalculator.Name);
                 }
@@ -2648,7 +2648,7 @@ namespace pwiz.Skyline
                 resultsHandler.ScoreFeatures(progressMonitor, true, _out);
                 if (resultsHandler.IsMissingScores())
                 {
-                    _out.WriteLine(Resources.CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
+                    _out.WriteLine(SkylineResources.CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
                     return false;
                 }
                 ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor));
@@ -2657,7 +2657,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
+                _out.WriteLine(SkylineResources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
                 _out.WriteLine(x);
                 return false;
             }
@@ -2723,11 +2723,11 @@ namespace pwiz.Skyline
             if (irtPeptides.Count == 0 || librarySpectra.Count == 0)
             {
                 if (irtPeptides.Any())
-                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_);
+                    _out.WriteLine(SkylineResources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_);
                 else if (librarySpectra.Any())
-                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_);
+                    _out.WriteLine(SkylineResources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_);
                 else
-                    _out.WriteLine(Resources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_);
+                    _out.WriteLine(SkylineResources.CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_);
                 return false;
             }
 
@@ -2762,7 +2762,7 @@ namespace pwiz.Skyline
                         irtDatabasePath = Path.ChangeExtension(destinationPath, IrtDb.EXT);
                     if (!string.IsNullOrEmpty(commandArgs.IrtStandardsPath))
                     {
-                        _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_, commandArgs.IrtStandardsPath);
+                        _out.WriteLine(SkylineResources.CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_, commandArgs.IrtStandardsPath);
                         var irtInputs = new MassListInputs(commandArgs.IrtStandardsPath);
                         try
                         {
@@ -2877,7 +2877,7 @@ namespace pwiz.Skyline
                         var newSettings = docNew.Settings.ChangePeptideLibraries(
                             libs => libs.ChangeLibrary(docLibrary.Reference, docLibrarySpec, indexOldLibrary));
                         docNew = docNew.ChangeSettings(newSettings, new SrmSettingsChangeMonitor(progressMonitor,
-                            Resources.SkylineWindow_ImportMassList_Finishing_up_import));
+                            SkylineResources.SkylineWindow_ImportMassList_Finishing_up_import));
                     }
                 }
             }
@@ -2943,7 +2943,7 @@ namespace pwiz.Skyline
             }
             else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
-                _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_);
+                _out.WriteLine(SkylineResources.CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_);
                 return false;
             }
 
@@ -2980,7 +2980,7 @@ namespace pwiz.Skyline
 
         public bool SaveFile(string saveFile)
         {
-            _out.WriteLine(Resources.CommandLine_SaveFile_Saving_file___);
+            _out.WriteLine(SkylineResources.CommandLine_SaveFile_Saving_file___);
             try
             {
                 SaveDocument(_doc, saveFile, _out);
@@ -3018,10 +3018,10 @@ namespace pwiz.Skyline
             var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             if (null == viewInfo)
             {
-                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
+                _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
                 return false;
             }
-            _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, reportName);
+            _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Exporting_report__0____, reportName);
 
             try
             {
@@ -3029,8 +3029,8 @@ namespace pwiz.Skyline
                 {
                     if (!saver.CanSave())
                     {
-                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, reportName, reportFile);
-                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
+                        _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, reportName, reportFile);
+                        _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
                         return false;
                     }
 
@@ -3045,12 +3045,12 @@ namespace pwiz.Skyline
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
+                    _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
                 }
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
+                _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -3059,7 +3059,7 @@ namespace pwiz.Skyline
 
         public bool ExportChromatograms(string chromatogramsFile, bool precursors, bool products, bool basePeaks, bool tics)
         {
-            _out.WriteLine(Resources.CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____, chromatogramsFile);
+            _out.WriteLine(SkylineResources.CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____, chromatogramsFile);
 
             var chromExtractors = new List<ChromExtractor>();
             if (tics)
@@ -3075,7 +3075,7 @@ namespace pwiz.Skyline
 
             if (chromExtractors.Count == 0 && chromSources.Count == 0)
             {
-                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected);
+                _out.WriteLine(SkylineResources.CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected);
                 return false;
             }
 
@@ -3084,7 +3084,7 @@ namespace pwiz.Skyline
                 : new List<string>();
             if (filesToExport.Count == 0)
             {
-                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results);
+                _out.WriteLine(SkylineResources.CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results);
                 return false;
             }
 
@@ -3100,12 +3100,12 @@ namespace pwiz.Skyline
                     writer.Close();
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_, chromatogramsFile);
+                    _out.WriteLine(SkylineResources.CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_, chromatogramsFile);
                 }
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_, chromatogramsFile);
+                _out.WriteLine(SkylineResources.CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_, chromatogramsFile);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -3124,7 +3124,7 @@ namespace pwiz.Skyline
         {
             if (string.IsNullOrEmpty(path))
             {
-                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_);
+                _out.WriteLine(SkylineResources.CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_);
                 return false;
             }
             if (!File.Exists(path))
@@ -3138,7 +3138,7 @@ namespace pwiz.Skyline
                 return false;
             }
             string filename = Path.GetFileName(path);
-            _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installing_tools_from__0_, filename);
+            _out.WriteLine(SkylineResources.CommandLine_ImportToolsFromZip_Installing_tools_from__0_, filename);
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
@@ -3165,7 +3165,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__, filename);
+                _out.WriteLine(SkylineResources.CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__, filename);
                 return false;
             }
         }
@@ -3179,7 +3179,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_);
+                _out.WriteLine(SkylineResources.CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_);
                 _out.WriteLine(x.Message);
             }
             return false;
@@ -3273,7 +3273,7 @@ namespace pwiz.Skyline
         {
             if (!File.Exists(path))
             {
-                _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
+                _out.WriteLine(SkylineResources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
             else
@@ -3296,7 +3296,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception)
                 {
-                    _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
+                    _out.WriteLine(SkylineResources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
                 }
             }            
             return Program.EXIT_CODE_SUCCESS;
@@ -3395,7 +3395,7 @@ namespace pwiz.Skyline
         {          
             if (!File.Exists(path))
             {
-                _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, path);
+                _out.WriteLine(SkylineResources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, path);
                 return false;
             }
             else
@@ -3408,7 +3408,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportSkyr_, path);
+                    _out.WriteLine(SkylineResources.CommandLine_ImportSkyr_, path);
                     _out.WriteLine(e);
                     return false;
                 }
@@ -3423,7 +3423,7 @@ namespace pwiz.Skyline
                     if (!_out.IsErrorReported)
                     {
                         // Unclear when this would happen, but to be safe, make sure an error is reported
-                        _out.WriteLine(Resources.CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_, path);
+                        _out.WriteLine(SkylineResources.CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_, path);
                     }
                     return false;
                 }
@@ -3445,8 +3445,8 @@ namespace pwiz.Skyline
             internal IList<string> ResolveImportConflicts(IList<string> existing)
             {
                 string messageFormat = existing.Count == 1
-                                           ? Resources.ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_
-                                           : Resources.ImportSkyrHelper_ResolveImportConflicts_;
+                                           ? SkylineResources.ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_
+                                           : SkylineResources.ImportSkyrHelper_ResolveImportConflicts_;
                 // ReSharper disable LocalizableElement
                 _outWriter.WriteLine(messageFormat, string.Join("\n", existing.ToArray()));
                 // ReSharper restore LocalizableElement
@@ -3475,7 +3475,7 @@ namespace pwiz.Skyline
         {
             if (string.IsNullOrEmpty(args.ExportPath))
             {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_);
+                _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_);
                 return false;
             }
 
@@ -3496,20 +3496,20 @@ namespace pwiz.Skyline
                 if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
-                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
+                    _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
                     return false;
                 }
             }
 
             if (!args.ExportStrategySet)
             {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__);
+                _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__);
                 args.ExportStrategy = ExportStrategy.Single;
             }
 
             if (args.AddEnergyRamp && !Equals(args.TransListInstrumentType, ExportInstrumentType.THERMO))
             {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_);
+                _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_);
             }
 
             string instrument;
@@ -3530,7 +3530,7 @@ namespace pwiz.Skyline
             }
             if (!CheckInstrument(instrument, _doc))
             {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___, instrument);
+                _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___, instrument);
             }
 
 
@@ -3542,7 +3542,7 @@ namespace pwiz.Skyline
                 (Equals(args.ExportStrategy, ExportStrategy.Buckets) ||
                  Equals(args.ExportStrategy, ExportStrategy.Protein)))
             {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__, AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans,AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
+                _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__, AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans,AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
 
                 args.MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             }
@@ -3566,7 +3566,7 @@ namespace pwiz.Skyline
                 string extension = Path.GetExtension(args.TemplateFile);
                 if (!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType), extension))
                 {
-                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_, extension,args.MethodInstrumentType);
+                    _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_, extension,args.MethodInstrumentType);
                     return false;
                 }
             }
@@ -3626,12 +3626,12 @@ namespace pwiz.Skyline
                         canTrigger = false;
                         if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO_TSQ))
                         {
-                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_, instrument);
-                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_, ExportInstrumentType.THERMO);
+                            _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_, instrument);
+                            _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_, ExportInstrumentType.THERMO);
                         }
                         else
                         {
-                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_, instrument);
+                            _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_, instrument);
                         }
                     }
                     else if (!_doc.Settings.HasResults && !_doc.Settings.HasLibraries)
@@ -3670,20 +3670,20 @@ namespace pwiz.Skyline
                         }
                         else
                         {
-                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_);
+                            _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_);
                         }
                     }
                     else if (!predictionPep.RetentionTime.Calculator.IsUsable)
                     {
-                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_);
+                        _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_);
                     }
                     else if (!predictionPep.RetentionTime.IsUsable)
                     {
-                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_);
+                        _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_);
                     }
                     else
                     {
-                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_);
+                        _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_);
                     }
                     _out.WriteLine(!Equals(type, ExportFileType.Method)
                                            ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
@@ -3706,7 +3706,7 @@ namespace pwiz.Skyline
                         //check whether the given replicate exists
                         if (!_doc.Settings.MeasuredResults.ContainsChromatogram(args.SchedulingReplicate))
                         {
-                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_,
+                            _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_,
                                            args.SchedulingReplicate);
                             _out.WriteLine(!Equals(type, ExportFileType.Method)
                                                    ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
@@ -3727,7 +3727,7 @@ namespace pwiz.Skyline
             }
             catch (IOException x)
             {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, args.ExportPath);
+                _out.WriteLine(SkylineResources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, args.ExportPath);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -3911,7 +3911,7 @@ namespace pwiz.Skyline
         private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, ShareType shareType, CommandStatusWriter statusWriter)
         {
             var waitBroker = new CommandProgressMonitor(statusWriter,
-                new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
+                new ProgressStatus(SkylineResources.SkylineWindow_ShareDocument_Compressing_Files));
             var sharing = new SrmDocumentSharing(document, documentPath, fileDest, shareType);
             try
             {
@@ -3921,7 +3921,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 statusWriter.WriteLine(Resources.Error___0_,
-                    string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest));
+                    string.Format(SkylineResources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest));
                 statusWriter.WriteLine(x.Message);
             }
             return false;
@@ -3971,7 +3971,7 @@ namespace pwiz.Skyline
             private bool PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
             {
                 var waitBroker = new CommandProgressMonitor(_statusWriter,
-                    new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
+                    new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
                 IPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
                 try
                 {
@@ -3983,22 +3983,22 @@ namespace pwiz.Skyline
                     var panoramaEx = x.InnerException as PanoramaImportErrorException ?? x as PanoramaImportErrorException;
                     if (panoramaEx == null)
                     {
-                        _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_, x.Message);
+                        _statusWriter.WriteLine(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_, x.Message);
                     }
                     else
                     {
                         if (panoramaEx.JobCancelled)
                         {
-                            _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__, panoramaEx.ServerUrl);
-                            _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__, panoramaEx.JobUrl);
+                            _statusWriter.WriteLine(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__, panoramaEx.ServerUrl);
+                            _statusWriter.WriteLine(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__, panoramaEx.JobUrl);
                         }
                         else
                         {
                             _statusWriter.WriteLine(
-                                Resources.PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__,
+                                SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__,
                                 panoramaEx.ServerUrl);
                             _statusWriter.WriteLine(
-                                Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
+                                SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
                                 panoramaEx.JobUrl);
                         }
                     }
@@ -4152,8 +4152,8 @@ namespace pwiz.Skyline
             if (resolveToolsAndReports == CommandLine.ResolveZipToolConflicts.overwrite)
             {
                 string singularToolMessage = Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_;
-                string singularReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_;
-                string plualReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_;
+                string singularReportMessage = SkylineResources.AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_;
+                string plualReportMessage = SkylineResources.AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_;
                 if (reports.Count == 1)
                 {
                     _out.WriteLine(singularReportMessage, reports[0].GetKey());
@@ -4186,15 +4186,15 @@ namespace pwiz.Skyline
                 {
                     if (reports.Count == 1)
                     {
-                        firstpart = Resources.AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report;
+                        firstpart = SkylineResources.AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report;
                     }
                     if (reports.Count > 1)
                     {
-                        firstpart = string.Format(Resources.AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports, reports.Count);
+                        firstpart = string.Format(SkylineResources.AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports, reports.Count);
                     }
                     if (toolCollectionName != null)
                     {                     
-                        secondpart = Resources.AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool;
+                        secondpart = SkylineResources.AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool;
                     }
                 }
                 string message = string.Format(string.Concat(firstpart, secondpart, Resources.AddZipToolHelper_ShouldOverwrite__in_the_file__0_), zipFileName); 
@@ -4202,9 +4202,9 @@ namespace pwiz.Skyline
                 _out.WriteLine(message);
                 _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_);
                 
-                string singularToolMessage = Resources.AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_;
-                string singularReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_;
-                string plualReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_;
+                string singularToolMessage = SkylineResources.AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_;
+                string singularReportMessage = SkylineResources.AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_;
+                string plualReportMessage = SkylineResources.AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_;
                 if (reports.Count == 1)
                 {
                     _out.WriteLine(singularReportMessage, reports[0].GetKey());
@@ -4370,7 +4370,7 @@ namespace pwiz.Skyline
             }
             else if (status.PercentComplete == -1)
             {
-                _out.Write(Resources.CommandWaitBroker_UpdateProgress_Waiting___);
+                _out.Write(SkylineResources.CommandWaitBroker_UpdateProgress_Waiting___);
                 _waiting = true;
                 // Start a thread that will indicate "waiting" progress to the console every few seconds.
                 _waitingThread = new Thread(Wait){IsBackground = true};
@@ -4482,7 +4482,7 @@ namespace pwiz.Skyline
                         ? Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___
                         : Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__,
                         rawPath);
-                    _out.WriteLine(Resources.CommandProgressMonitor_UpdateProgressInternal_Message__ +
+                    _out.WriteLine(SkylineResources.CommandProgressMonitor_UpdateProgressInternal_Message__ +
                                    progressStatus.ErrorException);
                     _out.WriteLine();
                 }
@@ -4496,7 +4496,7 @@ namespace pwiz.Skyline
                 _out.Write(@".");
                 Thread.Sleep(1000);
             }
-            _out.WriteLine(Resources.CommandWaitBroker_Wait_Done);
+            _out.WriteLine(SkylineResources.CommandWaitBroker_Wait_Done);
         }
     }
 }

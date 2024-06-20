@@ -786,7 +786,7 @@ namespace pwiz.Skyline.Model.Results
                     var dataSet = listUnmerged[i];
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
-                        throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
+                        throw new InvalidOperationException(ResultsResources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
                     if (Compare(dataPeakList, dataSet.IsStandard, maxPeak, maxStandard) > 0)
                     {
                         maxPeak = dataPeakList;
@@ -879,7 +879,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     string peptideName = NodePep == null ? string.Empty : NodePep.ModifiedSequenceDisplay;
                     string message = string.Format(
-                        Resources.PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___,
+                        ResultsResources.PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___,
                         peptideName, firstMaxTime, nextMaxTime);
                     throw new InvalidOperationException(message);
                 }

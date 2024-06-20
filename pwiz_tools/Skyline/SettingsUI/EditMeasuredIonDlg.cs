@@ -44,9 +44,9 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             _formulaBox =
-                new FormulaBox(Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
-                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_,
-                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_) // CONSIDER(bspratt) an "ion" that doesn't use adducts?
+                new FormulaBox(SettingsUIResources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
+                    SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_,
+                    SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_) // CONSIDER(bspratt) an "ion" that doesn't use adducts?
                 {
                     Location = new Point(textFragment.Left, radioReporter.Top + 30),
                     Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(m => !ReferenceEquals(_measuredIon, m) && Equals(name, m.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditMeasuredIonDlg_OkDialog_The_special_ion__0__already_exists, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditMeasuredIonDlg_OkDialog_The_special_ion__0__already_exists, name);
                 return;
             }
 
@@ -218,18 +218,18 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // User hasn't fully specified either way
                 _formulaBox.ShowTextBoxErrorFormula(helper,
-                    Resources.EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
+                    SettingsUIResources.EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
                 return null;
             }
             if (MeasuredIon.MIN_REPORTER_MASS > monoMass || MeasuredIon.MIN_REPORTER_MASS > avgMass)
             {
-                _formulaBox.ShowTextBoxErrorMonoMass(helper, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
+                _formulaBox.ShowTextBoxErrorMonoMass(helper, string.Format(SettingsUIResources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
                                                                  MeasuredIon.MAX_REPORTER_MASS));
                 return null;
             }
             if (monoMass > MeasuredIon.MAX_REPORTER_MASS || avgMass > MeasuredIon.MAX_REPORTER_MASS)
             {
-                _formulaBox.ShowTextBoxErrorAverageMass(helper, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
+                _formulaBox.ShowTextBoxErrorAverageMass(helper, string.Format(SettingsUIResources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
                                                                    MeasuredIon.MAX_REPORTER_MASS));
                 return null;
             }
@@ -244,7 +244,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!allowEmpty)
                 {
-                    helper.ShowTextBoxError(control, Resources.EditMeasuredIonDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid);
+                    helper.ShowTextBoxError(control, SettingsUIResources.EditMeasuredIonDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid);
                     return false;
                 }
             }
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!AminoAcid.IsAA(c))
                     {
-                        helper.ShowTextBoxError(control, Resources.EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid, c);
+                        helper.ShowTextBoxError(control, SettingsUIResources.EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid, c);
                         return false;
                     }
                     // Silently strip duplicates.

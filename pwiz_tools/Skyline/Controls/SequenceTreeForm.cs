@@ -86,13 +86,13 @@ namespace pwiz.Skyline.Controls
                     newTitle = _defaultTabText;
                     break;
                 case ProteinMetadataManager.ProteinDisplayMode.ByAccession:
-                    newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Accession;
+                    newTitle = ControlsResources.SequenceTreeForm_UpdateTitle_Targets_by_Accession;
                     break;
                 case ProteinMetadataManager.ProteinDisplayMode.ByPreferredName:
-                    newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name;
+                    newTitle = ControlsResources.SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name;
                     break;
                 case ProteinMetadataManager.ProteinDisplayMode.ByGene:
-                    newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Gene;
+                    newTitle = ControlsResources.SequenceTreeForm_UpdateTitle_Targets_by_Gene;
                     break;
             }
             TabText = newTitle ?? _defaultTabText;

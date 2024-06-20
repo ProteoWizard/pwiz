@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls
 {
     public partial class LongWaitDlg : FormEx, ILongWaitBroker
     {
-        private readonly string _cancelMessage = string.Format(@" ({0})", Resources.LongWaitDlg_PerformWork_canceled);
+        private readonly string _cancelMessage = string.Format(@" ({0})", ControlsResources.LongWaitDlg_PerformWork_canceled);
 
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;

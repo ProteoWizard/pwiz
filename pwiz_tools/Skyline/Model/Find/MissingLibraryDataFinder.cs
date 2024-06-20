@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return Resources.MissingLibraryDataFinder_DisplayName_No_matching_library_data; }
+            get { return FindResources.MissingLibraryDataFinder_DisplayName_No_matching_library_data; }
         }
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup)

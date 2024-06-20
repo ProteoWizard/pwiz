@@ -271,12 +271,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public void Graph(MassErrorHistogram2DGraphPane graphPane, PeptideDocNode nodeSelected)
             {
                 graphPane.Title.Text = string.Empty;
-                graphPane.YAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+                graphPane.YAxis.Title.Text = GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
                 graphPane.XAxis.Title.Text = _xAxis == Histogram2DXAxis.mass_to_charge
-                    ? Resources.MassErrorHistogram2DGraphPane_Graph_Mz
-                    : Resources.MassErrorHistogram2DGraphPane_Graph_Retention_Time;
+                    ? GraphsResources.MassErrorHistogram2DGraphPane_Graph_Mz
+                    : GraphsResources.MassErrorHistogram2DGraphPane_Graph_Retention_Time;
                 if (_maxCount == 0) {
-                    graphPane.Title.Text = Resources.MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable;
+                    graphPane.Title.Text = GraphsResources.MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable;
                     graphPane.CurveList.Clear();
                     return;
                 }
