@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -34,6 +35,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -98,6 +100,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private string _fastaFilepath;
         private string _decoyPrefix;
         private List<string> _intermediateFiles;
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
 
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
@@ -119,6 +122,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string[] Ms2Analyzers => new [] { @"Default" };
         public override string EngineName => @"MSFragger";
         public override Bitmap SearchEngineLogo => null;
+        public override string CutoffScoreName => _cutoffScoreName;
+        public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
+        public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
+
+        public override string SearchEngineBlurb => string.Empty;
         public override event NotificationEventHandler SearchProgressChanged;
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
@@ -771,6 +779,12 @@ add_Nterm_protein = 0.000000
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
             _precursorMzTolerance = mzTolerance;
+        }
+
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            AdditionalSettings[PERCOLATOR_TEST_QVALUE_CUTOFF] =
+                new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, cutoffScore, 0, 1);
         }
 
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)

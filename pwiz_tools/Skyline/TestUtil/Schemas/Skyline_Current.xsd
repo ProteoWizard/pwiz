@@ -589,15 +589,7 @@
       <xs:element name="group_comparison" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="format_detail" minOccurs="0" maxOccurs="unbounded">
-              <xs:complexType>
-                <xs:attribute name="color" type="xs:string"/>
-                <xs:attribute name="expr" type="xs:string"/>
-                <xs:attribute name="labeled" type="xs:boolean"/>
-                <xs:attribute name="symbol_type" type="xs:string"/>
-                <xs:attribute name="point_size" type="xs:string"/>
-              </xs:complexType>
-            </xs:element>
+            <xs:element name="format_detail" type="format_detail_type" minOccurs="0" maxOccurs="unbounded" />
           </xs:sequence>
           <xs:attribute name="name" type="xs:string"/>
           <xs:attribute name="control_annotation" type="xs:string"/>
@@ -762,6 +754,13 @@
               </xs:complexType>
             </xs:element>
           </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="relative_abundance_formatting" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="format_detail" type="format_detail_type" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -1983,4 +1982,11 @@
       <xs:enumeration value="aligned" />
     </xs:restriction>
   </xs:simpleType>
+  <xs:complexType name="format_detail_type">
+    <xs:attribute name="color" type="xs:string"/>
+    <xs:attribute name="expr" type="xs:string"/>
+    <xs:attribute name="labeled" type="xs:boolean"/>
+    <xs:attribute name="symbol_type" type="xs:string"/>
+    <xs:attribute name="point_size" type="xs:string"/>
+  </xs:complexType>
 </xs:schema>

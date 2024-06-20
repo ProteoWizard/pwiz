@@ -544,11 +544,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.spectra_page:
                 {
                     _pagesToSkip.Clear();
-
-                    if (!BuildPepSearchLibControl.ValidateCutoffScore())
-                    {
-                        return;
-                    }
                     ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     if (!BuildPepSearchLibControl.UseExistingLibrary)
@@ -767,7 +762,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
-                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore ?? 0;
+                        ImportPeptideSearch.CutoffScore = SearchSettingsControl.CutoffScore;
 
                         if (!File.Exists(ImportFastaControl.FastaFile))
                         {
@@ -810,9 +805,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
-                    var scoreThreshold = IsFeatureDetectionWorkflow
-                        ? BuildPepSearchLibControl.CutOffScore ?? 0
-                        : (1 - (BuildPepSearchLibControl.CutOffScore ?? 0));
+                    var scoreThreshold = SearchSettingsControl.CutoffScore;
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorIdotp
                         : ScoreType.GenericQValue;

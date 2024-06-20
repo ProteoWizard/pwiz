@@ -37,7 +37,11 @@ namespace pwiz.Skyline.Model
         public abstract string[] FragmentIons { get; }
         public abstract string[] Ms2Analyzers { get; }
         public abstract string EngineName { get; }
+        public abstract string CutoffScoreName { get; }
+        public abstract string CutoffScoreLabel { get; }
+        public abstract double DefaultCutoffScore { get; }
         public abstract Bitmap SearchEngineLogo { get; }
+        public abstract string SearchEngineBlurb { get; } // Text shown below the search engine logo
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
 
@@ -184,6 +188,7 @@ namespace pwiz.Skyline.Model
         public abstract void SetFragmentIons(string ions);
         public abstract void SetMs2Analyzer(string analyzer);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
+        public abstract void SetCutoffScore(double cutoffScore);
 
         public delegate void NotificationEventHandler(object sender, IProgressStatus status);
         public abstract event NotificationEventHandler SearchProgressChanged;
