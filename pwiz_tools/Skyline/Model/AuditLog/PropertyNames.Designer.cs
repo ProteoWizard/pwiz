@@ -673,6 +673,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Formatting.
+        /// </summary>
+        public static string DataSettings_RelativeAbundanceFormatting {
+            get {
+                return ResourceManager.GetString("DataSettings_RelativeAbundanceFormatting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Instrument preset.
         /// </summary>
         public static string DdaConverterSettings_InstrumentPreset {
@@ -3900,6 +3909,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ReintegrateDlgSettings_ReintegrateQCutoff {
             get {
                 return ResourceManager.GetString("ReintegrateDlgSettings_ReintegrateQCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Formatting rows.
+        /// </summary>
+        public static string RelativeAbundanceFormatting_ColorRows {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceFormatting_ColorRows", resourceCulture);
             }
         }
         
