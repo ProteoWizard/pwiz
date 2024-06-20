@@ -103,6 +103,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
+            // Shrink form height to remove empty space introduced by alternative property panels
+            this.Size = new Size(
+                this.Size.Width, this.Size.Height - Math.Min(panelCarafeProperties.Size.Height, panelFilesKoinaProperties.Size.Height));
+
             Icon = Resources.Skyline;
 
             _skylineWindow = skylineWindow;
@@ -180,12 +184,12 @@ namespace pwiz.Skyline.SettingsUI
             if (string.IsNullOrEmpty(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
-                return false;                
+                return false;
             }
             if (Directory.Exists(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path, outputPath);
-                return false;                
+                return false;
             }
             string outputDir = Path.GetDirectoryName(outputPath);
             if (string.IsNullOrEmpty(outputDir))
@@ -255,8 +259,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
                     var doc = _documentUiContainer.DocumentUI;
-                    var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
-                    var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
+                    var peptides = doc.Peptides.Where(pep => !pep.IsDecoy).ToArray();
+                    var precursorCount = peptides.Sum(pep => pep.TransitionGroupCount);
                     var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
                     var precursors = new TransitionGroupDocNode[precursorCount];
                     int index = 0;
@@ -319,7 +323,7 @@ namespace pwiz.Skyline.SettingsUI
                 try
                 {
                     // ReSharper disable once ConstantNullCoalescingCondition
-                    outputPath = Path.GetDirectoryName(outputPath) ?? string.Empty;                
+                    outputPath = Path.GetDirectoryName(outputPath) ?? string.Empty;
                 }
                 catch (Exception)
                 {
@@ -386,7 +390,7 @@ namespace pwiz.Skyline.SettingsUI
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
                 btnNext.Enabled = Grid.IsReady;
-            }            
+            }
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)
@@ -520,7 +524,7 @@ namespace pwiz.Skyline.SettingsUI
             double increment = (stop - start) / (dirs.Length + 1);
 
             const string extPep = BiblioSpecLiteBuilder.EXT_PEP_XML_ONE_DOT;
-            const string extIdp = BiblioSpecLiteBuilder.EXT_IDP_XML;            
+            const string extIdp = BiblioSpecLiteBuilder.EXT_IDP_XML;
             bool hasIdp = fileNames.Contains(f => PathEx.HasExtension(f, extIdp));
 
             foreach (string fileName in fileNames)
@@ -530,14 +534,14 @@ namespace pwiz.Skyline.SettingsUI
                     // If the directory has any .idpXML files, then do not add the
                     // supporting .pepXML files.
                     if (!hasIdp || !PathEx.HasExtension(fileName, extPep))
-                        inputFiles.Add(fileName);                    
+                        inputFiles.Add(fileName);
                 }
                 if (broker.IsCanceled)
                     return;
             }
 
             startSub += increment;
-            broker.ProgressValue = (int) startSub; 
+            broker.ProgressValue = (int)startSub;
 
             foreach (string dirSub in dirs)
             {
@@ -611,7 +615,7 @@ namespace pwiz.Skyline.SettingsUI
                                   string.Empty,
                                   // ReSharper disable LocalizableElement
                                   "\t" + string.Join("\n\t", filesError.ToArray()));
-                                  // ReSharper restore LocalizableElement
+                    // ReSharper restore LocalizableElement
                     MessageDlg.Show(parent, message);
                 }
             }
@@ -633,7 +637,7 @@ namespace pwiz.Skyline.SettingsUI
                               string.Empty,
                               // ReSharper disable LocalizableElement
                               "\t" + string.Join("\n\t", filesError.ToArray()));
-                              // ReSharper restore LocalizableElement
+                // ReSharper restore LocalizableElement
                 MessageDlg.Show(parent, message);
             }
 
@@ -795,6 +799,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
                 }
+                panelCarafeProperties.Hide();
             }
             else
             {
@@ -820,6 +825,21 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return TAB_PAGES[(int)(panelFiles.Visible ? Pages.files : Pages.properties)];
             }
+        }
+
+        private void carafeDataSourceRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            if (carafeDataSourceRadioButton.Checked)
+            {
+                panelFilesKoinaProperties.Hide();
+                panelCarafeProperties.Show();
+            }
+            else
+            {
+                panelFilesKoinaProperties.Show();
+                panelCarafeProperties.Hide();
+            }
+
         }
     }
 }

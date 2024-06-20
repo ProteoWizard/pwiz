@@ -38,6 +38,7 @@
             this.textPath = new System.Windows.Forms.TextBox();
             this.iRTPeptidesLabel = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
+            this.panelPropertyPanels = new System.Windows.Forms.FlowLayoutPanel();
             this.panelFilesKoinaProperties = new System.Windows.Forms.Panel();
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
@@ -48,8 +49,19 @@
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.comboStandards = new System.Windows.Forms.ComboBox();
+            this.panelCarafeProperties = new System.Windows.Forms.Panel();
+            this.lblMzMLFilePath = new System.Windows.Forms.Label();
+            this.textBoxMzMLFilePath = new System.Windows.Forms.TextBox();
+            this.btnMzMLFilePathBrowse = new System.Windows.Forms.Button();
+            this.lblProteinDatabaseFilePath = new System.Windows.Forms.Label();
+            this.textBoxProteinDatabaseFilePath = new System.Windows.Forms.TextBox();
+            this.btnProteinDatabaseFilePath = new System.Windows.Forms.Button();
+            this.lblSpectralLibraryFilePath = new System.Windows.Forms.Label();
+            this.textBoxSpectralLibraryFilePath = new System.Windows.Forms.TextBox();
+            this.btnSpectralLibraryFilePath = new System.Windows.Forms.Button();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
             this.koinaInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
+            this.carafeDataSourceRadioButton = new System.Windows.Forms.RadioButton();
             this.koinaDataSourceRadioButton = new System.Windows.Forms.RadioButton();
             this.dataSourceFilesRadioButton = new System.Windows.Forms.RadioButton();
             this.btnBrowse = new System.Windows.Forms.Button();
@@ -61,12 +73,16 @@
             this.btnAddFile = new System.Windows.Forms.Button();
             this.btnPrevious = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.btnPanel = new System.Windows.Forms.Panel();
             this.panelProperties.SuspendLayout();
+            this.panelPropertyPanels.SuspendLayout();
             this.panelFilesKoinaProperties.SuspendLayout();
             this.panelFilesProps.SuspendLayout();
+            this.panelCarafeProperties.SuspendLayout();
             this.dataSourceGroupBox.SuspendLayout();
             this.panelFiles.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
+            this.btnPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -115,7 +131,8 @@
             // panelProperties
             // 
             resources.ApplyResources(this.panelProperties, "panelProperties");
-            this.panelProperties.Controls.Add(this.panelFilesKoinaProperties);
+            this.panelProperties.BackColor = System.Drawing.SystemColors.Control;
+            this.panelProperties.Controls.Add(this.panelPropertyPanels);
             this.panelProperties.Controls.Add(this.dataSourceGroupBox);
             this.panelProperties.Controls.Add(this.btnBrowse);
             this.panelProperties.Controls.Add(this.label2);
@@ -124,14 +141,21 @@
             this.panelProperties.Controls.Add(this.label4);
             this.panelProperties.Name = "panelProperties";
             // 
+            // panelPropertyPanels
+            // 
+            resources.ApplyResources(this.panelPropertyPanels, "panelPropertyPanels");
+            this.panelPropertyPanels.Controls.Add(this.panelFilesKoinaProperties);
+            this.panelPropertyPanels.Controls.Add(this.panelCarafeProperties);
+            this.panelPropertyPanels.Name = "panelPropertyPanels";
+            // 
             // panelFilesKoinaProperties
             // 
-            resources.ApplyResources(this.panelFilesKoinaProperties, "panelFilesKoinaProperties");
             this.panelFilesKoinaProperties.Controls.Add(this.ceLabel);
             this.panelFilesKoinaProperties.Controls.Add(this.ceCombo);
             this.panelFilesKoinaProperties.Controls.Add(this.panelFilesProps);
             this.panelFilesKoinaProperties.Controls.Add(this.comboStandards);
             this.panelFilesKoinaProperties.Controls.Add(this.iRTPeptidesLabel);
+            resources.ApplyResources(this.panelFilesKoinaProperties, "panelFilesKoinaProperties");
             this.panelFilesKoinaProperties.Name = "panelFilesKoinaProperties";
             // 
             // ceLabel
@@ -201,12 +225,78 @@
             this.comboStandards.Name = "comboStandards";
             this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
+            // panelCarafeProperties
+            // 
+            this.panelCarafeProperties.Controls.Add(this.lblMzMLFilePath);
+            this.panelCarafeProperties.Controls.Add(this.textBoxMzMLFilePath);
+            this.panelCarafeProperties.Controls.Add(this.btnMzMLFilePathBrowse);
+            this.panelCarafeProperties.Controls.Add(this.lblProteinDatabaseFilePath);
+            this.panelCarafeProperties.Controls.Add(this.textBoxProteinDatabaseFilePath);
+            this.panelCarafeProperties.Controls.Add(this.btnProteinDatabaseFilePath);
+            this.panelCarafeProperties.Controls.Add(this.lblSpectralLibraryFilePath);
+            this.panelCarafeProperties.Controls.Add(this.textBoxSpectralLibraryFilePath);
+            this.panelCarafeProperties.Controls.Add(this.btnSpectralLibraryFilePath);
+            resources.ApplyResources(this.panelCarafeProperties, "panelCarafeProperties");
+            this.panelCarafeProperties.Name = "panelCarafeProperties";
+            // 
+            // lblMzMLFilePath
+            // 
+            resources.ApplyResources(this.lblMzMLFilePath, "lblMzMLFilePath");
+            this.lblMzMLFilePath.Name = "lblMzMLFilePath";
+            // 
+            // textBoxMzMLFilePath
+            // 
+            resources.ApplyResources(this.textBoxMzMLFilePath, "textBoxMzMLFilePath");
+            this.textBoxMzMLFilePath.Name = "textBoxMzMLFilePath";
+            this.helpTip.SetToolTip(this.textBoxMzMLFilePath, resources.GetString("textBoxMzMLFilePath.ToolTip"));
+            // 
+            // btnMzMLFilePathBrowse
+            // 
+            resources.ApplyResources(this.btnMzMLFilePathBrowse, "btnMzMLFilePathBrowse");
+            this.btnMzMLFilePathBrowse.Name = "btnMzMLFilePathBrowse";
+            this.btnMzMLFilePathBrowse.UseVisualStyleBackColor = true;
+            // 
+            // lblProteinDatabaseFilePath
+            // 
+            resources.ApplyResources(this.lblProteinDatabaseFilePath, "lblProteinDatabaseFilePath");
+            this.lblProteinDatabaseFilePath.Name = "lblProteinDatabaseFilePath";
+            // 
+            // textBoxProteinDatabaseFilePath
+            // 
+            resources.ApplyResources(this.textBoxProteinDatabaseFilePath, "textBoxProteinDatabaseFilePath");
+            this.textBoxProteinDatabaseFilePath.Name = "textBoxProteinDatabaseFilePath";
+            this.helpTip.SetToolTip(this.textBoxProteinDatabaseFilePath, resources.GetString("textBoxProteinDatabaseFilePath.ToolTip"));
+            // 
+            // btnProteinDatabaseFilePath
+            // 
+            resources.ApplyResources(this.btnProteinDatabaseFilePath, "btnProteinDatabaseFilePath");
+            this.btnProteinDatabaseFilePath.Name = "btnProteinDatabaseFilePath";
+            this.btnProteinDatabaseFilePath.UseVisualStyleBackColor = true;
+            // 
+            // lblSpectralLibraryFilePath
+            // 
+            resources.ApplyResources(this.lblSpectralLibraryFilePath, "lblSpectralLibraryFilePath");
+            this.lblSpectralLibraryFilePath.Name = "lblSpectralLibraryFilePath";
+            // 
+            // textBoxSpectralLibraryFilePath
+            // 
+            resources.ApplyResources(this.textBoxSpectralLibraryFilePath, "textBoxSpectralLibraryFilePath");
+            this.textBoxSpectralLibraryFilePath.Name = "textBoxSpectralLibraryFilePath";
+            this.helpTip.SetToolTip(this.textBoxSpectralLibraryFilePath, resources.GetString("textBoxSpectralLibraryFilePath.ToolTip"));
+            // 
+            // btnSpectralLibraryFilePath
+            // 
+            resources.ApplyResources(this.btnSpectralLibraryFilePath, "btnSpectralLibraryFilePath");
+            this.btnSpectralLibraryFilePath.Name = "btnSpectralLibraryFilePath";
+            this.btnSpectralLibraryFilePath.UseVisualStyleBackColor = true;
+            // 
             // dataSourceGroupBox
             // 
+            resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
+            this.dataSourceGroupBox.Controls.Add(this.carafeDataSourceRadioButton);
             this.dataSourceGroupBox.Controls.Add(this.koinaDataSourceRadioButton);
             this.dataSourceGroupBox.Controls.Add(this.dataSourceFilesRadioButton);
-            resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
             this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
@@ -217,6 +307,13 @@
             this.koinaInfoSettingsBtn.Name = "koinaInfoSettingsBtn";
             this.koinaInfoSettingsBtn.TabStop = true;
             this.koinaInfoSettingsBtn.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.koinaInfoSettingsBtn_LinkClicked);
+            // 
+            // carafeDataSourceRadioButton
+            // 
+            resources.ApplyResources(this.carafeDataSourceRadioButton, "carafeDataSourceRadioButton");
+            this.carafeDataSourceRadioButton.Name = "carafeDataSourceRadioButton";
+            this.carafeDataSourceRadioButton.UseVisualStyleBackColor = true;
+            this.carafeDataSourceRadioButton.CheckedChanged += new System.EventHandler(this.carafeDataSourceRadioButton_CheckedChanged);
             // 
             // koinaDataSourceRadioButton
             // 
@@ -243,6 +340,7 @@
             // panelFiles
             // 
             resources.ApplyResources(this.panelFiles, "panelFiles");
+            this.panelFiles.BackColor = System.Drawing.SystemColors.Control;
             this.panelFiles.Controls.Add(this.gridInputFiles);
             this.panelFiles.Controls.Add(this.btnAddPaths);
             this.panelFiles.Controls.Add(this.label7);
@@ -298,15 +396,23 @@
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
             // 
+            // btnPanel
+            // 
+            this.btnPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.btnPanel.Controls.Add(this.btnNext);
+            this.btnPanel.Controls.Add(this.btnCancel);
+            this.btnPanel.Controls.Add(this.btnPrevious);
+            resources.ApplyResources(this.btnPanel, "btnPanel");
+            this.btnPanel.Name = "btnPanel";
+            // 
             // BuildLibraryDlg
             // 
             this.AcceptButton = this.btnNext;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.btnPrevious);
-            this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnNext);
+            this.Controls.Add(this.btnPanel);
             this.Controls.Add(this.panelProperties);
             this.Controls.Add(this.panelFiles);
             this.MaximizeBox = false;
@@ -316,16 +422,21 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BuildLibraryDlg_FormClosing);
             this.panelProperties.ResumeLayout(false);
             this.panelProperties.PerformLayout();
+            this.panelPropertyPanels.ResumeLayout(false);
             this.panelFilesKoinaProperties.ResumeLayout(false);
             this.panelFilesKoinaProperties.PerformLayout();
             this.panelFilesProps.ResumeLayout(false);
             this.panelFilesProps.PerformLayout();
+            this.panelCarafeProperties.ResumeLayout(false);
+            this.panelCarafeProperties.PerformLayout();
             this.dataSourceGroupBox.ResumeLayout(false);
             this.dataSourceGroupBox.PerformLayout();
             this.panelFiles.ResumeLayout(false);
             this.panelFiles.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).EndInit();
+            this.btnPanel.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -362,5 +473,18 @@
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
         private FileUI.PeptideSearch.BuildLibraryGridView gridInputFiles;
+        private System.Windows.Forms.RadioButton carafeDataSourceRadioButton;
+        private System.Windows.Forms.Panel panelCarafeProperties;
+        private System.Windows.Forms.Label lblMzMLFilePath;
+        private System.Windows.Forms.TextBox textBoxMzMLFilePath;
+        private System.Windows.Forms.Button btnMzMLFilePathBrowse;
+        private System.Windows.Forms.Label lblProteinDatabaseFilePath;
+        private System.Windows.Forms.TextBox textBoxProteinDatabaseFilePath;
+        private System.Windows.Forms.Button btnProteinDatabaseFilePath;
+        private System.Windows.Forms.Label lblSpectralLibraryFilePath;
+        private System.Windows.Forms.TextBox textBoxSpectralLibraryFilePath;
+        private System.Windows.Forms.Button btnSpectralLibraryFilePath;
+        private System.Windows.Forms.Panel btnPanel;
+        private System.Windows.Forms.FlowLayoutPanel panelPropertyPanels;
     }
 }

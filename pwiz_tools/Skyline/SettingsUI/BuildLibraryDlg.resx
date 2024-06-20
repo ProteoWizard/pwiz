@@ -181,7 +181,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 395</value>
+    <value>506, 25</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -199,7 +199,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>btnPanel</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -208,7 +208,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
-    <value>416, 395</value>
+    <value>425, 25</value>
   </data>
   <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -226,10 +226,10 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>btnPanel</value>
   </data>
   <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -265,7 +265,7 @@
     <value>15, 85</value>
   </data>
   <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>456, 20</value>
+    <value>464, 20</value>
   </data>
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -314,10 +314,373 @@ library will be created.</value>
     <value>4</value>
   </data>
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+    <value>Top, Bottom, Left</value>
   </data>
-  <data name="panelFilesKoinaProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="panelProperties.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="panelProperties.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="panelPropertyPanels.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="panelPropertyPanels.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
+    <value>ceLabel</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
+    <value>ceCombo</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
+    <value>comboStandards</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="panelFilesKoinaProperties.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelFilesKoinaProperties.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="panelFilesKoinaProperties.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 178</value>
+  </data>
+  <data name="panelFilesKoinaProperties.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="&gt;&gt;panelFilesKoinaProperties.Name" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesKoinaProperties.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelFilesKoinaProperties.Parent" xml:space="preserve">
+    <value>panelPropertyPanels</value>
+  </data>
+  <data name="&gt;&gt;panelFilesKoinaProperties.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.Name" xml:space="preserve">
+    <value>lblMzMLFilePath</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textBoxMzMLFilePath.Name" xml:space="preserve">
+    <value>textBoxMzMLFilePath</value>
+  </data>
+  <data name="&gt;&gt;textBoxMzMLFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxMzMLFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;textBoxMzMLFilePath.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.Name" xml:space="preserve">
+    <value>btnMzMLFilePathBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.Name" xml:space="preserve">
+    <value>lblProteinDatabaseFilePath</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.Name" xml:space="preserve">
+    <value>textBoxProteinDatabaseFilePath</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.Name" xml:space="preserve">
+    <value>btnProteinDatabaseFilePath</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.Name" xml:space="preserve">
+    <value>lblSpectralLibraryFilePath</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.Name" xml:space="preserve">
+    <value>textBoxSpectralLibraryFilePath</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.Name" xml:space="preserve">
+    <value>btnSpectralLibraryFilePath</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="panelCarafeProperties.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 178</value>
+  </data>
+  <data name="panelCarafeProperties.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="panelCarafeProperties.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 164</value>
+  </data>
+  <data name="panelCarafeProperties.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="panelCarafeProperties.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelCarafeProperties.Name" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;panelCarafeProperties.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelCarafeProperties.Parent" xml:space="preserve">
+    <value>panelPropertyPanels</value>
+  </data>
+  <data name="&gt;&gt;panelCarafeProperties.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelPropertyPanels.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
+    <value>TopDown</value>
+  </data>
+  <data name="panelPropertyPanels.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 229</value>
+  </data>
+  <data name="panelPropertyPanels.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 342</value>
+  </data>
+  <data name="panelPropertyPanels.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;panelPropertyPanels.Name" xml:space="preserve">
+    <value>panelPropertyPanels</value>
+  </data>
+  <data name="&gt;&gt;panelPropertyPanels.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelPropertyPanels.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;panelPropertyPanels.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="dataSourceGroupBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
+    <value>koinaInfoSettingsBtn</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.Name" xml:space="preserve">
+    <value>carafeDataSourceRadioButton</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;koinaDataSourceRadioButton.Name" xml:space="preserve">
+    <value>koinaDataSourceRadioButton</value>
+  </data>
+  <data name="&gt;&gt;koinaDataSourceRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;koinaDataSourceRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;koinaDataSourceRadioButton.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
+    <value>dataSourceFilesRadioButton</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 122</value>
+  </data>
+  <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>270, 105</value>
+  </data>
+  <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="dataSourceGroupBox.Text" xml:space="preserve">
+    <value>Data source</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
+    <value>498, 83</value>
+  </data>
+  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnBrowse.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelProperties.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 60</value>
+  </data>
+  <data name="panelProperties.Size" type="System.Drawing.Size, System.Drawing">
+    <value>587, 634</value>
+  </data>
+  <data name="panelProperties.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.Name" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -375,6 +738,90 @@ library will be created.</value>
   </data>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Name" xml:space="preserve">
+    <value>actionLabel</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
+    <value>comboAction</value>
+  </data>
+  <data name="&gt;&gt;comboAction.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
+    <value>cbIncludeAmbiguousMatches</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
+    <value>cbKeepRedundant</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
+    <value>cbFilter</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="panelFilesProps.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelFilesProps.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="panelFilesProps.Size" type="System.Drawing.Size, System.Drawing">
+    <value>366, 129</value>
+  </data>
+  <data name="panelFilesProps.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="actionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -541,30 +988,6 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="panelFilesProps.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="panelFilesProps.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="panelFilesProps.Size" type="System.Drawing.Size, System.Drawing">
-    <value>366, 129</value>
-  </data>
-  <data name="panelFilesProps.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
-    <value>panelFilesKoinaProperties</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 148</value>
   </data>
@@ -586,134 +1009,260 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="panelFilesKoinaProperties.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 196</value>
+  <data name="lblMzMLFilePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="panelFilesKoinaProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>366, 178</value>
+  <data name="lblMzMLFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="panelFilesKoinaProperties.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+  <data name="lblMzMLFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 7</value>
   </data>
-  <data name="&gt;&gt;panelFilesKoinaProperties.Name" xml:space="preserve">
-    <value>panelFilesKoinaProperties</value>
+  <data name="lblMzMLFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>78, 13</value>
   </data>
-  <data name="&gt;&gt;panelFilesKoinaProperties.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="lblMzMLFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
   </data>
-  <data name="&gt;&gt;panelFilesKoinaProperties.Parent" xml:space="preserve">
-    <value>panelProperties</value>
+  <data name="lblMzMLFilePath.Text" xml:space="preserve">
+    <value>mz&amp;ML file path:</value>
   </data>
-  <data name="&gt;&gt;panelFilesKoinaProperties.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMzMLFilePath.Name" xml:space="preserve">
+    <value>lblMzMLFilePath</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;lblMzMLFilePath.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
-    <value>koinaInfoSettingsBtn</value>
+  <data name="textBoxMzMLFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="textBoxMzMLFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 23</value>
   </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
+  <data name="textBoxMzMLFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>452, 20</value>
   </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="textBoxMzMLFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
   </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.Name" xml:space="preserve">
-    <value>koinaDataSourceRadioButton</value>
+  <data name="textBoxMzMLFilePath.ToolTip" xml:space="preserve">
+    <value>Location on disk at which the final non-redundant
+library will be created.</value>
   </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;textBoxMzMLFilePath.Name" xml:space="preserve">
+    <value>textBoxMzMLFilePath</value>
   </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
+  <data name="&gt;&gt;textBoxMzMLFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxMzMLFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;textBoxMzMLFilePath.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
-    <value>dataSourceFilesRadioButton</value>
+  <data name="btnMzMLFilePathBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="btnMzMLFilePathBrowse.Location" type="System.Drawing.Point, System.Drawing">
+    <value>479, 23</value>
   </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 122</value>
-  </data>
-  <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>264, 68</value>
-  </data>
-  <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="dataSourceGroupBox.Text" xml:space="preserve">
-    <value>Data source</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>495, 83</value>
-  </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnMzMLFilePathBrowse.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="btnMzMLFilePathBrowse.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
   </data>
-  <data name="btnBrowse.Text" xml:space="preserve">
+  <data name="btnMzMLFilePathBrowse.Text" xml:space="preserve">
     <value>&amp;Browse...</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
-    <value>btnBrowse</value>
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.Name" xml:space="preserve">
+    <value>btnMzMLFilePathBrowse</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
-    <value>panelProperties</value>
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnMzMLFilePathBrowse.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
-    <value>2, 2</value>
+  <data name="lblProteinDatabaseFilePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="panelProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>579, 387</value>
+  <data name="lblProteinDatabaseFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="panelProperties.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="lblProteinDatabaseFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 63</value>
   </data>
-  <data name="&gt;&gt;panelProperties.Name" xml:space="preserve">
-    <value>panelProperties</value>
+  <data name="lblProteinDatabaseFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 13</value>
   </data>
-  <data name="&gt;&gt;panelProperties.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="lblProteinDatabaseFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
   </data>
-  <data name="&gt;&gt;panelProperties.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="lblProteinDatabaseFilePath.Text" xml:space="preserve">
+    <value>&amp;Protein database file path:</value>
   </data>
-  <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.Name" xml:space="preserve">
+    <value>lblProteinDatabaseFilePath</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;lblProteinDatabaseFilePath.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="textBoxProteinDatabaseFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textBoxProteinDatabaseFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 79</value>
+  </data>
+  <data name="textBoxProteinDatabaseFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>452, 20</value>
+  </data>
+  <data name="textBoxProteinDatabaseFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="textBoxProteinDatabaseFilePath.ToolTip" xml:space="preserve">
+    <value>Location on disk at which the final non-redundant
+library will be created.</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.Name" xml:space="preserve">
+    <value>textBoxProteinDatabaseFilePath</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;textBoxProteinDatabaseFilePath.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="btnProteinDatabaseFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnProteinDatabaseFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>479, 79</value>
+  </data>
+  <data name="btnProteinDatabaseFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnProteinDatabaseFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="btnProteinDatabaseFilePath.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.Name" xml:space="preserve">
+    <value>btnProteinDatabaseFilePath</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;btnProteinDatabaseFilePath.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="lblSpectralLibraryFilePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSpectralLibraryFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblSpectralLibraryFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 119</value>
+  </data>
+  <data name="lblSpectralLibraryFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 13</value>
+  </data>
+  <data name="lblSpectralLibraryFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="lblSpectralLibraryFilePath.Text" xml:space="preserve">
+    <value>&amp;Spectral library file path:</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.Name" xml:space="preserve">
+    <value>lblSpectralLibraryFilePath</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;lblSpectralLibraryFilePath.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="textBoxSpectralLibraryFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textBoxSpectralLibraryFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 135</value>
+  </data>
+  <data name="textBoxSpectralLibraryFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>452, 20</value>
+  </data>
+  <data name="textBoxSpectralLibraryFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="textBoxSpectralLibraryFilePath.ToolTip" xml:space="preserve">
+    <value>Location on disk at which the final non-redundant
+library will be created.</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.Name" xml:space="preserve">
+    <value>textBoxSpectralLibraryFilePath</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;textBoxSpectralLibraryFilePath.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="btnSpectralLibraryFilePath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnSpectralLibraryFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>479, 135</value>
+  </data>
+  <data name="btnSpectralLibraryFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnSpectralLibraryFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="btnSpectralLibraryFilePath.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.Name" xml:space="preserve">
+    <value>btnSpectralLibraryFilePath</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.Parent" xml:space="preserve">
+    <value>panelCarafeProperties</value>
+  </data>
+  <data name="&gt;&gt;btnSpectralLibraryFilePath.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="koinaInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -741,6 +1290,36 @@ you can append more spectra in the future.</value>
   </data>
   <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="carafeDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="carafeDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="carafeDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 67</value>
+  </data>
+  <data name="carafeDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 17</value>
+  </data>
+  <data name="carafeDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="carafeDataSourceRadioButton.Text" xml:space="preserve">
+    <value>&amp;Carafe</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.Name" xml:space="preserve">
+    <value>carafeDataSourceRadioButton</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;carafeDataSourceRadioButton.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -770,7 +1349,7 @@ you can append more spectra in the future.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;koinaDataSourceRadioButton.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -797,16 +1376,16 @@ you can append more spectra in the future.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+    <value>Top, Bottom, Left</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Name" xml:space="preserve">
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=23.1.1.535, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>panelFiles</value>
@@ -863,10 +1442,13 @@ you can append more spectra in the future.</value>
     <value>4</value>
   </data>
   <data name="panelFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>2, 2</value>
+    <value>0, 0</value>
+  </data>
+  <data name="panelFiles.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 50</value>
   </data>
   <data name="panelFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>579, 387</value>
+    <value>584, 699</value>
   </data>
   <data name="panelFiles.TabIndex" type="System.Int32, mscorlib">
     <value>25</value>
@@ -884,7 +1466,7 @@ you can append more spectra in the future.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelFiles.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="gridInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -892,8 +1474,11 @@ you can append more spectra in the future.</value>
   <data name="gridInputFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 38</value>
   </data>
+  <data name="gridInputFiles.RowHeadersWidth" type="System.Int32, mscorlib">
+    <value>51</value>
+  </data>
   <data name="gridInputFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>460, 336</value>
+    <value>460, 555</value>
   </data>
   <data name="gridInputFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -902,7 +1487,7 @@ you can append more spectra in the future.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=23.1.1.535, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>panelFiles</value>
@@ -1032,7 +1617,7 @@ You can uncheck ones you do not want added to the library.</value>
     <value>False</value>
   </data>
   <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing">
-    <value>335, 395</value>
+    <value>344, 25</value>
   </data>
   <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1050,9 +1635,33 @@ You can uncheck ones you do not want added to the library.</value>
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnPrevious.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>btnPanel</value>
   </data>
   <data name="&gt;&gt;btnPrevious.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="btnPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 639</value>
+  </data>
+  <data name="btnPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>584, 60</value>
+  </data>
+  <data name="btnPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="&gt;&gt;btnPanel.Name" xml:space="preserve">
+    <value>btnPanel</value>
+  </data>
+  <data name="&gt;&gt;btnPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1062,7 +1671,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 430</value>
+    <value>584, 699</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1074,7 +1686,7 @@ You can uncheck ones you do not want added to the library.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.535, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1086,6 +1698,6 @@ You can uncheck ones you do not want added to the library.</value>
     <value>BuildLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.535, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
