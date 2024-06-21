@@ -107,7 +107,7 @@
     <value>The value for this replicate which was used to calculate the fold change. The number depends on the normalization method, and whether the fold change is being calculated at the protein or peptide level.</value>
   </data>
   <data name="Accuracy">
-    <value>Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)</value>
+    <value>Ratio of Calculated Concentration to the specified Analyte Concentration</value>
   </data>
   <data name="AcquiredTime">
     <value>Last time and date at which the mass spectrometer began acquiring this
@@ -207,9 +207,18 @@ containing protein sequence, or #N/A if no protein sequence is available.</value
 maximum intensity for the precursor.</value>
   </data>
   <data name="CalculatedConcentration">
-    <value>The concentration of the analyte is calculated by either:
-    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
-    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
+    <value>The concentration of the analyte calculated using either:
+1. The calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
+  </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>Warning if missing data impacts comparisons of the "Calculated Concentration" between replicates</value>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>Calculated concentration value available even when missing data impacts comparisons between replicates</value>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>Calculated concentration value unavailable when missing data impacts comparisons between replicates</value>
   </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
@@ -591,7 +600,7 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
     <value>The collision cross section for the precursor from the ion mobility library</value>
   </data>
   <data name="LibraryDotProduct">
-    <value>The dot-product between the individual transition peak areas
+    <value>Equivalent to "dotp" displayed in the user interface. The dot-product between the individual transition peak areas
 of the precursor and the intensities of the matching ion peaks in the matched MS/MS
 spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
 is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
@@ -666,7 +675,7 @@ The options for determining this value can be specified on the Quantification ta
     <value>The total mass of all neutral losses from this fragment.</value>
   </data>
   <data name="MassErrorPPM">
-    <value>Mass Error PPM</value>
+    <value>The difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
   </data>
   <data name="MassErrors">
     <value>The mass errors of the chromatogram.</value>
@@ -749,6 +758,9 @@ This median peak area is used when the normalization method is "Equalize Medians
 If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor's label type is an internal standard.
 If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas.</value>
   </data>
+  <data name="Message">
+    <value>Warning, if any, of missing values that might impact comparisons of the "Raw" value between replicates.</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -810,9 +822,22 @@ modified on disk</value>
     <value>A grouping of molecules in a Skyline document.</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
-The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label.</value>
+    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings</value>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>Warning if missing data impacts comparisons of "Molecule List Abundance" between replicates</value>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Average of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Sum of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings</value>
   </data>
   <data name="MoleculeListLocator">
     <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
@@ -875,7 +900,7 @@ The Molecule List Abundance will be blank if any transitions have missing values
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
   <data name="NextAa">
-    <value>Next Aa</value>
+    <value>The amino acid residue found immediately after the peptide in the protein sequence.</value>
   </data>
   <data name="NormalizationDivisor">
     <value>Number which observed values are divided by when using the default normalization method.
@@ -885,8 +910,24 @@ The default normalization method is specified on the Quantification tab of the P
     <value>Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</value>
   </data>
   <data name="NormalizedArea">
-    <value>Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
-    Settings &gt; Peptide Settings &gt; Quantification</value>
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule 
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification</value>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>Warning if missing data impacts of the "Normalized Area" value between replicates</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="NumberOfPoints">
     <value>The number of points in the chromatogram.</value>
@@ -1014,10 +1055,19 @@ Edit menu</value>
   <data name="PrecursorCalculatedConcentration">
     <value>The concentration of the Precursor Result calculated using the isotopolog response curve.</value>
   </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Warning if missing data impacts comparisons of "Precursor Calculated Concentration" between replicates</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
+Unavailable when missing data impacts comparisons between replicates.</value>
+  </data>
   <data name="PrecursorCharge">
-    <value>
-      The charge associated with the precursor ion.
-    </value>
+    <value>The charge associated with the precursor ion.</value>
   </data>
   <data name="PrecursorConcentration">
     <value>The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</value>
@@ -1045,9 +1095,24 @@ Edit menu</value>
     <value>Neutral mass of the precursor in Daltons</value>
   </data>
   <data name="PrecursorNormalizedArea">
-    <value>The normalized area of the Precursor Result.
-This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
-If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.</value>
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If Peptide Normalization Method is "None" or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Warning if missing values impacts comparisons of the "Precursor Normalized Area" value between replicates</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="PrecursorNote">
     <value>A free text note associated with a precursor by clicking Edit Note on
@@ -1121,10 +1186,22 @@ the decoy m/z.</value>
     <value>Protein</value>
   </data>
   <data name="ProteinAbundance">
-    <value>A number representing the abundance of the protein in the particular replicate.
-The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
-The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
-The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label.</value>
+    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>Warning if missing data impacts comparisons of "Protein Abundance" between replicates</value>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Average of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Sum of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
@@ -1206,10 +1283,13 @@ MinRetentionTime, which can be used to gauge the spread of retention times
 measured.</value>
   </data>
   <data name="RatioDotProduct">
-    <value>Ratio Dot Product</value>
+    <value>Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.</value>
   </data>
   <data name="RatioToStandard">
     <value>Peptide area ratio of light to heavy</value>
+  </data>
+  <data name="Raw">
+    <value>Calculated value available even when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="RawData">
     <value>The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points.</value>
@@ -1406,6 +1486,9 @@ file, or the file name again for other file types.</value>
   <data name="StdevTotalAreaRatio">
     <value>Standard deviation of the precursor TotalAreaNormalized
 values.</value>
+  </data>
+  <data name="Strict">
+    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
   </data>
   <data name="SummaryMessage">
     <value>Description of the change</value>

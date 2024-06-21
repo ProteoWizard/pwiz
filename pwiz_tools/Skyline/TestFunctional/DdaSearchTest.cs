@@ -218,35 +218,22 @@ namespace pwiz.SkylineTestFunctional
             PrepareDocument("TestDdaSearch.sky");
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
 
-            var errMsgDlg = ShowDialog<MessageDlg>(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScoreText = @"12%"; // Intentionally bad 
-                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-            OkDialog(errMsgDlg, errMsgDlg.OkDialog); // Expect complaint about bad cutoff score
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page); // Should not have advanced
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-            // With only 1 source, no add/remove prefix/suffix dialog
-
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                // With only 1 source, no add/remove prefix/suffix dialog
+
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 // Test going back and switching workflow to DDA. This used to cause an exception.
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
@@ -260,7 +247,7 @@ namespace pwiz.SkylineTestFunctional
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
             RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
             {
-                editModDlg.SetModification("Oxidation (M)", true); // Not L10N
+                editModDlg.SetModification("Oxidation (M)"); // Not L10N
                 editModDlg.OkDialog();
             });
 
@@ -363,6 +350,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
                 importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
 
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());

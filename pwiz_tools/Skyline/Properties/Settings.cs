@@ -2358,12 +2358,13 @@ namespace pwiz.Skyline.Properties
         public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,
             IEnumerable<IonMobilityLibrary> existing, object tag)
         {
-            using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing))
+            var ionMobilityFilteringUserControl = (owner as IonMobilityFilteringUserControl) ??
+                                                  (owner as TransitionSettingsUI)!.IonMobilityControl;
+            var ionMobilityWindowWidthCalculator = ionMobilityFilteringUserControl!.IonMobilityWindowWidthCalculator;
+            using var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing, ionMobilityWindowWidthCalculator);
+            if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
             {
-                if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
-                {
-                    return editIonMobilityLibraryDlg.IonMobilityLibrary;
-                }
+                return editIonMobilityLibraryDlg.IonMobilityLibrary;
             }
 
             return null;
@@ -2430,16 +2431,8 @@ namespace pwiz.Skyline.Properties
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)
         {
-            using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
-            {
-                if (editModel.SetScoringModel(owner, item, tag as IFeatureScoreProvider))
-                {
-                    if (editModel.ShowDialog(owner) == DialogResult.OK)
-                        return (PeakScoringModelSpec)editModel.PeakScoringModel;
-                }
-
-                return null;
-            }
+            return EditPeakScoringModelDlg.ShowEditPeakScoringModelDlg(owner, item, existing ?? this,
+                tag as IFeatureScoreProvider);
         }
 
         public void EnsureDefault()
