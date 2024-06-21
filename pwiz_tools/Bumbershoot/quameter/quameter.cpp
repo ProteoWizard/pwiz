@@ -1632,6 +1632,9 @@ namespace quameter
                    medianSigNoisMS1 = 0, dynamicRangeOfPeptideSignals = 0, peakPrecursorIntensityMedian = 0,
                    medianSigNoisMS2 = 0, idRatioQ1 = 0, idRatioQ2 = 0, idRatioQ3 = 0, idRatioQ4 = 0,
                    peakPrecursorIntensity95thPercentile = 0, peakPrecursorIntensity5thPercentile = 0;
+            // BEG KEESH MAYO ASYMM METRIC
+            map<double, double> surviving_peaks;  // remaining "good peaks" to cacluate new peak asymmetry ratio metric
+            // END KEESH MAYO ASYMM METRIC
 
             if (g_rtConfig->MetricsType == "nistms")
             {
@@ -1961,8 +1964,22 @@ namespace quameter
                     accs::accumulator_set<double, accs::stats<accs::tag::percentile> > identifiedPeakWidths;
                     BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
                         if (distinctMatch.bestPeak)
-                            for (size_t i=0; i < distinctMatch.PSMs.size(); ++i) // the best peak is shared between all PSMs
+                            // BEG KEESH MAYO ASYMM METRIC
+                            for (size_t i = 0; i < distinctMatch.PSMs.size(); ++i) // the best peak is shared between all PSMs
+                            {  
                                 identifiedPeakWidths(distinctMatch.bestPeak->fwhm);
+                                // TODO-- Make sure that we have the right peaks 
+                                double startTime = distinctMatch.bestPeak->startTime / 60.0;  // convert seconds to minutes
+                                double peakTime = distinctMatch.bestPeak->peakTime / 60.0;
+                                double endTime = distinctMatch.bestPeak->endTime / 60.0;
+                                double a = peakTime - startTime;
+                                double b = endTime - peakTime;
+                                double epsilon = boost::math::tools::epsilon<double>();
+                                // Perform the division safely
+                                double As = b / (a + epsilon);
+                                surviving_peaks[peakTime] = As;
+                            }
+                            // END KEESH MAYO ASYMM METRIC
                     identifiedPeakWidthMedian = accs::percentile(identifiedPeakWidths, accs::percentile_number = 50);
                     identifiedPeakWidthIQR = accs::percentile(identifiedPeakWidths, accs::percentile_number = 75) -
                                              accs::percentile(identifiedPeakWidths, accs::percentile_number = 25);
@@ -2138,12 +2155,23 @@ namespace quameter
             if (outputFilepath.empty())
                 outputFilepath = bfs::change_extension(sourceFilename, ".qual.tsv").string();
             
+            // BEG KEESH MAYO ASYMM METRIC
+            string outputFilepath2 = append_to_filename_before_extension(outputFilepath, "2");
+            // END KEESH MAYO ASYMM METRIC
+
             guard.lock();
 
             bool needsHeader = !bfs::exists(outputFilepath);
+            // BEG KEESH MAYO ASYMM METRIC
+            // We use the same mutex here for our new output file.
+            bool needsHeader2 = !bfs::exists(outputFilepath2);
 
             ofstream qout;
             qout.open(outputFilepath.c_str(), ios::out | ios::app);
+            
+            ofstream qout2;
+            qout2.open(outputFilepath2.c_str(), ios::out | ios::app);
+            // END KEESH MAYO ASYMM METRIC
 
             // Tab delimited output header
             if (needsHeader)
@@ -2155,6 +2183,19 @@ namespace quameter
                 qout << "\tMS2-1\tMS2-2\tMS2-3\tMS2-4A\tMS2-4B\tMS2-4C\tMS2-4D";
                 qout << "\tP-1\tP-2A\tP-2B\tP-2C\tP-3" << endl;
             }
+
+            // BEG KEESH MAYO ASYMM METRIC
+            if (needsHeader2)
+            {
+                qout2 << "Filename\tStartTimeStamp\tPeakTime min\tAsymmetry Ratio" << endl;    
+            }
+            for (const std::pair<const double, double>& pair : surviving_peaks) 
+            {
+                qout2 << sourceFilename << "\t" << startTimeStamp << "\t" 
+                    << pair.first << "\t" << pair.second << endl;
+            }
+            // END KEESH MAYO ASYMM METRIC
+
 
             // Tab delimited metrics
             qout << sourceFilename;
@@ -2193,6 +2234,18 @@ namespace quameter
         }
         return;
     }
+
+    // BEG KEESH MAYO ASYMM METRIC
+    // Function to modify the filename
+    string append_to_filename_before_extension(const string& filepath, const string& append_str) {
+        bfs::path p(filepath);
+        std::string stem = p.stem().string(); // Get the stem (filename without extension)
+        std::string extension = p.extension().string(); // Get the extension
+        stem += append_str; // Append the desired string
+        return (p.parent_path() / (stem + extension)).string(); // Reconstruct the path
+    }
+    // END KEESH MAYO ASYMM METRIC
+
 }
 }
 
