@@ -519,15 +519,16 @@ namespace pwiz.Skyline.Model
                         return ExportThermoMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_QUANTIVA:
                 case ExportInstrumentType.THERMO_ALTIS:
-                case ExportInstrumentType.THERMO_STELLAR:
                     if (type == ExportFileType.List)
                         return ExportThermoQuantivaCsv(doc, path);
                     else
-                    {
-                        if(type == ExportFileType.IsolationList && ExportInstrumentType.THERMO_STELLAR == instrumentType)
-                            return ExportThermoStellarIsolationList(doc, path, template, instrumentType);
                         return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
-                    }
+                case ExportInstrumentType.THERMO_STELLAR:
+                    if (type == ExportFileType.IsolationList)
+                        return ExportThermoStellarIsolationList(doc, path, template, instrumentType);
+                    else
+                        return ExportThermoStellarMethod(doc, path, template, instrumentType);
+
                 case ExportInstrumentType.THERMO_FUSION:
                     if (type == ExportFileType.IsolationList)
                     {
@@ -860,6 +861,19 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
+        public AbstractMassListExporter ExportThermoStellarMethod(SrmDocument document, string fileName,
+            string templateName, string instrumentType)
+        {
+            var exporter = InitExporter(new ThermoStellarMethodExporter(document));
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+
         public void ExportThermoFusionDiaList(IsolationScheme isolationScheme, int? maxInclusions, string fileName,
             int calculationTime, bool debugCycles)
         {
@@ -1022,8 +1036,11 @@ namespace pwiz.Skyline.Model
             // Start Time and End Time
             if (predictedRT.HasValue)
             {
-                start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT / 2) ?? 0).ToString(CultureInfo);
-                end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
+                var startNum = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT / 2) ?? 0;
+                var endNum = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0;
+                // Make sure start and end times are not negative
+                start = Math.Max(startNum, 0).ToString(CultureInfo);
+                end = Math.Max(endNum, 0).ToString(CultureInfo);
             }
          }
         protected override void WriteTransition(TextWriter writer,
@@ -1927,10 +1944,24 @@ namespace pwiz.Skyline.Model
             {
                 argv.Add(@"-a");
             }
-            else if (instrumentType.Equals(ExportInstrumentType.THERMO_STELLAR))
-            {
-                argv.Add(@"-t");
-            }
+            MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
+        }
+    }
+
+    public class ThermoStellarMethodExporter : ThermoStellarMassListExporter
+    {
+        public ThermoStellarMethodExporter(SrmDocument document) : base(document){ }
+
+        public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (fileName != null)
+                EnsureLibraries();
+
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            var argv = new List<string>();
+            argv.Add(@"-t");
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -3167,16 +3198,23 @@ namespace pwiz.Skyline.Model
         });
 
         public TransitionField TRIGGER_THRESHOLD_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
+
+        // Acquisition on Agilent instruments should not begin before 0.1 min
+        public const float AGILENT_MIN_START_ACQUISITION_TIME = 0.1f;
         // This one returns both RT and RT window in one go to avoid calling PredictRetentionTime multiple times
         public TransitionField RT_FIELD = new TransitionField(c =>
         {
             var prediction = c.parent.Document.Settings.PeptideSettings.Prediction;
             double? predictedRT = prediction.PredictRetentionTime(c.parent.Document, c.nodePep, c.nodeTranGroup,
                 c.parent.SchedulingReplicateIndex, c.parent.SchedulingAlgorithm, false, out var windowRT);
+            if (predictedRT.HasValue)
+            {
+                predictedRT = Math.Max(predictedRT.Value, windowRT.Window/2 + AGILENT_MIN_START_ACQUISITION_TIME);
+            }
 
             return predictedRT.HasValue
                 ? (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(c.parent.CultureInfo) +
-                  c.parent.FieldSeparator + Math.Round(windowRT, 1).ToString(c.parent.CultureInfo)
+                  c.parent.FieldSeparator + Math.Round(windowRT/2, 1).ToString(c.parent.CultureInfo)
                 : c.parent.FieldSeparator.ToString();
         });
         public TransitionField FRAGMENTOR_FIELD = new TransitionField(c => c.parent.Fragmentor.ToString(c.parent.CultureInfo));
@@ -3504,8 +3542,9 @@ namespace pwiz.Skyline.Model
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 if (predictedRT.HasValue)
                 {
+                    predictedRT = Math.Max(predictedRT.Value, windowRT.Window/2 + AGILENT_MIN_START_ACQUISITION_TIME);
                     retentionTime = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);  // Ret. Time (min)
-                    deltaRetentionTime = Math.Round(windowRT, 1).ToString(CultureInfo); // Delta Ret. Time (min)
+                    deltaRetentionTime = Math.Round(windowRT.Window/2, 1).ToString(CultureInfo); // Delta Ret. Time (min)
                 }
             }
             string isolationWidth = string.Format(CultureInfo, @"Narrow (~{0:0.0} m/z)", 1.3);
@@ -4317,17 +4356,14 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = new StringBuilder(!Tune3Columns
-                ? @"m/z,z,t start (min),t end (min)"
-                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min)");
-            
-            hdr.Append(@",CID Collision Energy (%)");
-
+            var hdr = !Tune3Columns
+                ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
+                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
-                hdr.Append(@",S-lens");
+                hdr += @",S-lens";
             if (WriteFaimsCv)
-                hdr.Append(@",FAIMS CV (V)");
-            return hdr.ToString().Replace(',', fieldSeparator);
+                hdr += @",FAIMS CV (V)";
+            return hdr.Replace(',', fieldSeparator);
         }
 
         protected override void WriteHeaders(TextWriter writer)
@@ -5039,7 +5075,7 @@ namespace pwiz.Skyline.Model
                     stdinBuilder.Append(pair.Value);
                 }
 
-                string dirWork = (Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory) + @"\\";
+                string dirWork = (Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory);
                 using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, PathEx.GetRandomFileName()))) // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
                 {
                     var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
@@ -5049,12 +5085,12 @@ namespace pwiz.Skyline.Model
                     argv.AddRange(new[] { "-m", templateName.Quote(), transitionsFile.Quote() });  // Read from stdin, multi-file format
                     // Resharper restore LocalizableElement
 
-                     var psiExporter = new ProcessStartInfo(exeName)
+                    var psiExporter = new ProcessStartInfo(exeName)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         // Common directory includes the directory separator
-                        WorkingDirectory = dirWork,
+                        WorkingDirectory = dirWork + @"\\",
                         Arguments = string.Join(@" ", argv.ToArray()),
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,

@@ -124,20 +124,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
-        public class LabeledPoint
-        {
-            public LabeledPoint(PointPair point, TextObj label, bool isSelected)
-            {
-                Point = point;
-                Label = label;
-                IsSelected = isSelected;
-            }
-
-            public PointPair Point { get; private set; }
-            public TextObj Label { get; private set; }
-
-            public bool IsSelected { get; private set; }
-        }
 
         public static bool IsPathSelected(IdentityPath selectedPath, IdentityPath identityPath)
         {

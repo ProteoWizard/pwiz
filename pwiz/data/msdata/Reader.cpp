@@ -76,6 +76,13 @@ Reader::Config::Config(const Config& rhs)
     globalChromatogramsAreMs1Only = rhs.globalChromatogramsAreMs1Only;
 }
 
+void Reader::Config::instrumentMetadataError(const std::string& msg) const
+{
+    if (unknownInstrumentIsError)
+        throw runtime_error(msg + string("; if want to convert the file anyway, use the ignoreUnknownInstrumentError flag"));
+    cerr << msg << endl;
+}
+
 // default implementation; most Readers don't need to worry about multi-run input files
 PWIZ_API_DECL void Reader::readIds(const string& filename, const string& head, vector<string>& results, const Config& config) const
 {
