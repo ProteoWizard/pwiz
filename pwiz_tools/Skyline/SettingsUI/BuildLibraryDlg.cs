@@ -18,11 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -78,26 +78,26 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
-        public enum Pages { properties, files }
+        public enum Pages { properties, files, learning }
 
         public class PropertiesPage : IFormView { }
         public class FilesPage : IFormView { }
+        public class LearningPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PropertiesPage(), new FilesPage(),
+            new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
+
+        public enum DataSourcePages { files, carafe, koina }
+        public enum LearningOptions { none, libraries, document }
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly SkylineWindow _skylineWindow;
 
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
-
-        private readonly Point _actionLabelPos;
-        private readonly Point _actionComboPos;
-        private readonly Point _iRTLabelPos;
-        private readonly Point _iRTComboPos;
+        private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -108,13 +108,6 @@ namespace pwiz.Skyline.SettingsUI
             _skylineWindow = skylineWindow;
             _documentUiContainer = skylineWindow;
 
-            // Store locations of those controls since we move the irt label/combo around
-            _actionLabelPos = actionLabel.Location;
-            _actionComboPos = comboAction.Location;
-            _iRTLabelPos = iRTPeptidesLabel.Location;
-            _iRTComboPos = comboStandards.Location;
-
-            panelFiles.Visible = false;
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
             comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
@@ -139,7 +132,7 @@ namespace pwiz.Skyline.SettingsUI
             Grid = gridInputFiles;
             Grid.FilesChanged += (sender, e) =>
             {
-                btnNext.Enabled = panelProperties.Visible || Grid.IsReady;
+                btnNext.Enabled = tabControlMain.SelectedIndex == (int)Pages.files || Grid.IsReady;
             };
 
             // Reposition checkboxes
@@ -229,29 +222,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (validateInputFiles)
             {
-                List<Target> targetPeptidesChosen = null;
-                if (cbFilter.Checked)
-                {
-                    targetPeptidesChosen = new List<Target>();
-                    var doc = _documentUiContainer.Document;
-                    foreach (PeptideDocNode nodePep in doc.Peptides)
-                    {
-                        // Add light modified sequences
-                        targetPeptidesChosen.Add(nodePep.ModifiedTarget);
-                        // Add heavy modified sequences
-                        foreach (var nodeGroup in nodePep.TransitionGroups)
-                        {
-                            if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                                continue;
-                            targetPeptidesChosen.Add(doc.Settings.GetModifiedSequence(nodePep.Peptide.Target,
-                                                                                      nodeGroup.TransitionGroup.LabelType,
-                                                                                      nodePep.ExplicitMods,
-                                                                                      SequenceModFormatType.lib_precision));
-                        }
-                    }
-                }
-
-                if (koinaDataSourceRadioButton.Checked)
+                if (radioKoinaSource.Checked)
                 {
                     // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
                     var doc = _documentUiContainer.DocumentUI;
@@ -290,10 +261,58 @@ namespace pwiz.Skyline.SettingsUI
                         return false;
                     }
                 }
+                else if (radioCarafeSource.Checked)
+                {
+                    string learningDocPath = string.Empty;
+                    IList<LibrarySpec> learningLibraries = new List<LibrarySpec>();
+                    if (comboLearnFrom.SelectedIndex == (int)LearningOptions.document)
+                    {
+                        learningDocPath = textLearningDoc.Text;
+                        if (!PathEx.HasExtension(learningDocPath, SrmDocument.EXT) || !File.Exists(learningDocPath))
+                        {
+                            _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_, learningDocPath);
+                            return false;
+                        }
+                        
+                        // CONSIDER: Could also check for the ChromatogramCache.EXT file as a short-cut for full results checking
+
+                        // TODO: Probably need to load the document int memory with progress UI and validate that it has results
+                    }
+                    else if (comboLearnFrom.SelectedIndex == (int)LearningOptions.libraries)
+                    {
+                        learningLibraries.AddRange(_driverLibrary.GetChosen(null));
+
+                        // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
+                    }
+
+                    // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
+                }
                 else
                 {
                     if (!Grid.Validate(this, null, true, out var thresholdsByFile))
                         return false;
+
+                    List<Target> targetPeptidesChosen = null;
+                    if (cbFilter.Checked)
+                    {
+                        targetPeptidesChosen = new List<Target>();
+                        var doc = _documentUiContainer.Document;
+                        foreach (PeptideDocNode nodePep in doc.Peptides)
+                        {
+                            // Add light modified sequences
+                            targetPeptidesChosen.Add(nodePep.ModifiedTarget);
+                            // Add heavy modified sequences
+                            foreach (var nodeGroup in nodePep.TransitionGroups)
+                            {
+                                if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                                    continue;
+                                targetPeptidesChosen.Add(doc.Settings.GetModifiedSequence(nodePep.Peptide.Target,
+                                    nodeGroup.TransitionGroup.LabelType,
+                                    nodePep.ExplicitMods,
+                                    SequenceModFormatType.lib_precision));
+                            }
+                        }
+                    }
 
                     Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
                     {
@@ -367,7 +386,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (!panelProperties.Visible || koinaDataSourceRadioButton.Checked)
+            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioKoinaSource.Checked)
             {
                 if (ValidateBuilder(true))
                 {
@@ -380,21 +399,24 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
-                panelProperties.Visible = false;
-                panelFiles.Visible = true;
+                tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
+                    ? Pages.files
+                    : Pages.learning);
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
-                btnNext.Enabled = Grid.IsReady;
+                if (radioFilesSource.Checked)
+                    btnNext.Enabled = Grid.IsReady;
+                else
+                    btnNext.Enabled = true;
             }            
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)
         {
-            if (panelFiles.Visible)
+            if (tabControlMain.SelectedIndex != (int)Pages.properties)
             {
-                panelFiles.Visible = false;
-                panelProperties.Visible = true;
+                tabControlMain.SelectedIndex = (int)Pages.properties;
                 btnNext.Text = Resources.BuildLibraryDlg_btnPrevious_Click__Next__;
                 btnNext.Enabled = true;
                 btnNext.DialogResult = DialogResult.None;
@@ -707,8 +729,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool Koina
         {
-            get { return koinaDataSourceRadioButton.Checked; }
-            set { koinaDataSourceRadioButton.Checked = value; }
+            get { return radioKoinaSource.Checked; }
+            set { radioKoinaSource.Checked = value; }
         }
 
         public int NCE
@@ -779,18 +801,19 @@ namespace pwiz.Skyline.SettingsUI
             _driverStandards.SelectedIndexChangedEvent(sender, e);
         }
 
-        private void dataSourceFilesRadioButton_CheckedChanged(object sender, EventArgs e)
+        private void dataSourceRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            panelFilesProps.Visible = dataSourceFilesRadioButton.Checked;
+            // Only respond to the checking event, or this will happen
+            // twice for every change.
+            var radioSender = (RadioButton)sender;
+            if (!radioSender.Checked)
+                return;
 
-            var useFiles = dataSourceFilesRadioButton.Checked;
-            ceCombo.Visible = !useFiles;
-            ceLabel.Visible = !useFiles;
-
-            if (useFiles)
+            var selectedStandard = _driverStandards.SelectedItem;
+            string nextText = Resources.BuildLibraryDlg_btnPrevious_Click__Next__;
+            if (radioFilesSource.Checked)
             {
-                iRTPeptidesLabel.Location = _iRTLabelPos;
-                comboStandards.Location = _iRTComboPos;
+                tabControlDataSource.SelectedIndex = (int)DataSourcePages.files;
                 if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
                 {
                     Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
@@ -798,15 +821,21 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                iRTPeptidesLabel.Location = _actionLabelPos;
-                comboStandards.Location = _actionComboPos;
                 Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
-                KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
+                if (radioCarafeSource.Checked)
+                    tabControlDataSource.SelectedIndex = (int)DataSourcePages.carafe;
+                else // must be Koina
+                {
+                    tabControlDataSource.SelectedIndex = (int)DataSourcePages.koina;
+                    KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
+                    nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                }
             }
-            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
+            _driverStandards.LoadList(selectedStandard.GetKey());
 
-            btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
+            if (!Equals(btnNext.Text, nextText))
+                btnNext.Text = nextText;
         }
 
         private void koinaInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -818,8 +847,48 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return TAB_PAGES[(int)(panelFiles.Visible ? Pages.files : Pages.properties)];
+                return TAB_PAGES[tabControlMain.SelectedIndex];
             }
+        }
+
+        private void comboLearnFrom_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var learningOption = (LearningOptions)comboLearnFrom.SelectedIndex;
+            tabControlLearning.SelectedIndex = (int)learningOption;
+            switch (learningOption)
+            {
+                case LearningOptions.libraries:
+                    PopulateLibraries();
+                    break;
+            }
+        }
+
+        private void PopulateLibraries()
+        {
+            if (_driverLibrary == null)
+            {
+                _driverLibrary = new SettingsListBoxDriver<LibrarySpec>(listLibraries, Settings.Default.SpectralLibraryList);
+                _driverLibrary.LoadList(null, Array.Empty<LibrarySpec>());
+            }
+        }
+
+        private void btnLearningDocBrowse_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.CheckPathExists = true;
+                dlg.Multiselect = false;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.DefaultExt = SrmDocument.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    textLearningDoc.Text = dlg.FileName;
+                }
+            }
+
         }
     }
 }

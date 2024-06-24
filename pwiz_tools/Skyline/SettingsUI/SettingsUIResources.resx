@@ -1187,4 +1187,7 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
     <value>Train Model</value>
   </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
+      <value>You must specify a valid path to a Skyline document to learn from.</value>
+  </data>
 </root>
