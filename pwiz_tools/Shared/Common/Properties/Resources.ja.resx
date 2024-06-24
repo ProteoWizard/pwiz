@@ -552,7 +552,7 @@
     <value>..\Resources\DropImageNoBackground.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
-      <value>{0}バイトの読み込みに失敗しました。ソースが壊れている可能性があります。</value>
+    <value>{0}バイトの読み込みに失敗しました。ソースが壊れている可能性があります。</value>
   </data>
   <data name="FilterClause_MakePredicate_Invalid_filter_column___0__" xml:space="preserve">
     <value>フィルタ列「{0}」が無効です</value>

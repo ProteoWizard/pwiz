@@ -1,103 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-	<!-- 
-		Microsoft ResX Schema
+  <!-- 
+    Microsoft ResX Schema
 
-		Version 1.3
+    Version 1.3
 
-		The primary goals of this format is to allow a simple XML format 
-		that is mostly human readable. The generation and parsing of the 
-		various data types are done through the TypeConverter classes 
-		associated with the data types.
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
 
-		Example:
+    Example:
 
-		... ado.net/XML headers & schema ...
-		<resheader name="resmimetype">text/microsoft-resx</resheader>
-		<resheader name="version">1.3</resheader>
-		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-		<data name="Name1">this is my long string</data>
-		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-			[base64 mime encoded serialized .NET Framework object]
-		</data>
-		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-			[base64 mime encoded string representing a byte array form of the .NET Framework object]
-		</data>
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">1.3</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1">this is my long string</data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+      [base64 mime encoded serialized .NET Framework object]
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+      [base64 mime encoded string representing a byte array form of the .NET Framework object]
+    </data>
 
-		There are any number of "resheader" rows that contain simple 
-		name/value pairs.
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
 
-		Each data row contains a name, and value. The row also contains a 
-		type or mimetype. Type corresponds to a .NET class that support 
-		text/value conversion through the TypeConverter architecture. 
-		Classes that don't support this are serialized and stored with the 
-		mimetype set.
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
 
-		The mimetype is used for serialized objects, and tells the 
-		ResXResourceReader how to depersist the object. This is currently not 
-		extensible. For a given mimetype the value must be set accordingly:
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
 
-		Note - application/x-microsoft.net.object.binary.base64 is the format 
-		that the ResXResourceWriter will generate, however the reader can 
-		read any of the formats listed below.
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
 
-		mimetype: application/x-microsoft.net.object.binary.base64
-		value   : The object must be serialized with 
-			: System.Serialization.Formatters.Binary.BinaryFormatter
-			: and then encoded with base64 encoding.
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+      : System.Serialization.Formatters.Binary.BinaryFormatter
+      : and then encoded with base64 encoding.
 
-		mimetype: application/x-microsoft.net.object.soap.base64
-		value   : The object must be serialized with 
-			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-			: and then encoded with base64 encoding.
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+      : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+      : and then encoded with base64 encoding.
 
-		mimetype: application/x-microsoft.net.object.bytearray.base64
-		value   : The object must be serialized into a byte array 
-			: using a System.ComponentModel.TypeConverter
-			: and then encoded with base64 encoding.
-	-->
-	
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>1.3</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+      : using a System.ComponentModel.TypeConverter
+      : and then encoded with base64 encoding.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <data name="LibraryBuildActionExtension_LOCALIZED_VALUES_Create">
     <value xml:space="preserve">作成</value>
   </data>
@@ -108,66 +107,66 @@
     <value>文字列'{0}'がenum値と一致しません</value>
   </data>
   <data name="BiblioSpecScoreType_DisplayName_Percolator_q_value" xml:space="preserve">
-		<value>パーコレーターのQ値</value>
-	</data>
+    <value>パーコレーターのQ値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_PeptideProphet_confidence" xml:space="preserve">
-		<value>PeptideProphet信頼度</value>
-	</data>
+    <value>PeptideProphet信頼度</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_Spectrum_Mill" xml:space="preserve">
-		<value>スペクトルミル</value>
-	</data>
+    <value>スペクトルミル</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_IDPicker_FDR" xml:space="preserve">
-		<value>IDPicker FDR</value>
-	</data>
+    <value>IDPicker FDR</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_Mascot_expectation" xml:space="preserve">
-		<value>マスコット期待値</value>
-	</data>
+    <value>マスコット期待値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_X__Tandem_expectation" xml:space="preserve">
-		<value>X! タンデム期待値</value>
-	</data>
+    <value>X! タンデム期待値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_ProteinPilot_confidence" xml:space="preserve">
-		<value>ProteinPilot信頼度</value>
-	</data>
+    <value>ProteinPilot信頼度</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_Scaffold_confidence" xml:space="preserve">
-		<value>スキャフォールド信頼度</value>
-	</data>
+    <value>スキャフォールド信頼度</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score" xml:space="preserve">
-		<value>Waters MSEペプチドスコア</value>
-	</data>
+    <value>Waters MSEペプチドスコア</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_OMSSA_expectation" xml:space="preserve">
-		<value>OMSSA期待値</value>
-	</data>
+    <value>OMSSA期待値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_ProteinProspector_expectation" xml:space="preserve">
-		<value>ProteinProspector期待値</value>
-	</data>
+    <value>ProteinProspector期待値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_q_value" xml:space="preserve">
-		<value>Q値</value>
-	</data>
+    <value>Q値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_MaxQuant_PEP" xml:space="preserve">
-		<value>MaxQuant PEP</value>
-	</data>
+    <value>MaxQuant PEP</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_Morpheus_q_value" xml:space="preserve">
-		<value>Morpheus Q値</value>
-	</data>
+    <value>Morpheus Q値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_MSGF__q_value" xml:space="preserve">
-		<value>MSGF+ Q値</value>
-	</data>
+    <value>MSGF+ Q値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_PEAKS_confidence" xml:space="preserve">
-		<value>PEAKS期待値</value>
-	</data>
+    <value>PEAKS期待値</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_Byonic_PEP" xml:space="preserve">
-		<value>Byonic PEP</value>
-	</data>
+    <value>Byonic PEP</value>
+  </data>
   <data name="BiblioSpecScoreType_DisplayName_PeptideShaker_confidence" xml:space="preserve">
-		<value>PeptideShaker期待値</value>
-	</data>
+    <value>PeptideShaker期待値</value>
+  </data>
   <data name="BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_" xml:space="preserve">
-	  <value>スコアタイプの数はグリッドの行数と等しくありません。</value>
+    <value>スコアタイプの数はグリッドの行数と等しくありません。</value>
   </data>
   <data name="ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability_that_identification_is_correct_" xml:space="preserve">
-        <value>最小スコア閾値（スコアは同定が正しいという確率）</value>
-    </data>
+    <value>最小スコア閾値（スコアは同定が正しいという確率）</value>
+  </data>
   <data name="ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_" xml:space="preserve">
-        <value>最大スコア閾値（スコアは同定が正しくないという確率）</value>
+    <value>最大スコア閾値（スコアは同定が正しくないという確率）</value>
   </data>
 </root>
