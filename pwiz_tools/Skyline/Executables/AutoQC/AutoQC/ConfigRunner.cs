@@ -83,11 +83,15 @@ namespace AutoQC
         private bool _annotationsImportError;
 
         public DateTime LastAcquiredFileDate;
-        public DateTime LastArchivalDate; 
+        public DateTime LastArchivalDate;
 
-        public ConfigRunner(AutoQcConfig config, Logger logger, IMainUiControl uiControl = null)
+        public ConfigRunner(AutoQcConfig config, Logger logger, IMainUiControl uiControl = null) : this(config, logger, RunnerStatus.Stopped, uiControl)
         {
-            _runnerStatus = RunnerStatus.Stopped;
+        }
+
+        public ConfigRunner(AutoQcConfig config, Logger logger, RunnerStatus runnerStatus, IMainUiControl uiControl = null)
+        {
+            _runnerStatus = runnerStatus;
 
             Config = config;
 
@@ -198,7 +202,6 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                // TODO: revisit DisableConfig
                 if (IsStopped() && updateUi) 
                 {
                     ((MainForm)_uiControl)?.DisableConfig(Config, _runnerStatus);
@@ -376,11 +379,11 @@ namespace AutoQC
                             UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
                         }
 
-                        // If we haven't been able to upload to Panorama for 24 hours, stop with an error
+                        // If we haven't been able to upload to Panorama for 12 hours, stop with an error
                         if (!DateTime.MinValue.Equals(_panoramaErrorOccurred) && // _panoramaErrorOccurred.AddMinutes(5) < DateTime.Now)
-                            _panoramaErrorOccurred.AddHours(24) < DateTime.Now)
+                            _panoramaErrorOccurred.AddHours(12) < DateTime.Now)
                         {
-                            LogError("Uploads to Panorama have not been successful in over 24 hours. Stopping configuration.");
+                            LogError("Uploads to Panorama have not been successful in over 12 hours. Stopping configuration.");
                             break;
                         }
                     }
@@ -761,10 +764,10 @@ namespace AutoQC
                 }
                 else if(_runnerStatus != RunnerStatus.Error)
                 {
-                    ChangeStatus(RunnerStatus.Stopped);
+                    ChangeStatus(_panoramaUploadError || _panoramaFatalError ? RunnerStatus.Error : RunnerStatus.Stopped);
                 }
 
-                if (_runnerStatus == RunnerStatus.Stopped && _panoramaUploadError)
+                if (_runnerStatus == RunnerStatus.Stopped && (_panoramaUploadError || _panoramaFatalError))
                 {
                     ChangeStatus(RunnerStatus.Error);
                 }

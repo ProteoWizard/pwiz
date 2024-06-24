@@ -184,14 +184,14 @@ namespace AutoQC
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
-            DoImport(dialog.FileName);
+            DoImport(dialog.FileName, true);
         }
 
-        public void DoImport(string filePath)
+        public void DoImport(string filePath, bool setConfigsDisabled = false)
         {
             // AutoQC Loader .qcfg files can be imported from the Downloads folder. Pass null for showDownloadedFileForm
             // so that we don't see the dialog to "...specify a root folder for the configurations".
-            _configManager.Import(filePath, null);
+            _configManager.Import(filePath, setConfigsDisabled);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
         }
@@ -223,10 +223,10 @@ namespace AutoQC
 
             var state = initialState.Copy();
             state.DisableConfig(initialState.BaseState.GetConfigIndex(iconfig.GetName()), this);
-            if (runnerStatus != RunnerStatus.Stopped && state.ConfigRunners.TryGetValue(iconfig.GetName(), out var configRunner))
-            {
-                ((ConfigRunner)configRunner).ChangeStatus(runnerStatus, false);
-            }
+            // if (runnerStatus != RunnerStatus.Stopped && state.ConfigRunners.TryGetValue(iconfig.GetName(), out var configRunner))
+            // {
+            //     ((ConfigRunner)configRunner).ChangeStatus(runnerStatus, false);
+            // }
             // Do not update the selected log file
             // Trying to update the log files in MainForm.UpdateUiLogFiles() results in a UI freeze since AutoQcConfigManager.SetState() 
             // holds the lock that the Main thread tries to acquire in SelectLog (via event comboConfigs_SelectedIndexChanged that gets
@@ -344,7 +344,7 @@ namespace AutoQC
             {
                 btnDelete.Enabled = configSelected;
                 btnOpenResults.Enabled = configSelected;
-                btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
+                btnOpenPanoramaFolder.Enabled = configSelected && config != null && config.PanoramaSettings.PublishToPanorama;
                 btnOpenFolder.Enabled = configSelected;
                 
 

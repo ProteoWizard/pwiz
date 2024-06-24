@@ -204,7 +204,7 @@ namespace AutoQCTest
         {
             TestUtils.InitializeSettingsImportExport();
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.Import(TestUtils.GetTestFilePath("bad.qcfg"), null);
+            configManager.Import(TestUtils.GetTestFilePath("bad.qcfg"));
             configManager.SelectConfig(3);
             configManager.UpdateSelectedEnabled(true);
 
@@ -241,12 +241,12 @@ namespace AutoQCTest
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
 
             var testingConfigs = TestUtils.ConfigListFromNames(new[] { "one", "two", "three" });
-            configManager.Import(configsXmlPath, null);
+            configManager.Import(configsXmlPath);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
             configManager.SetState(configManager.AutoQcState, configManager.AutoQcState.UserRemoveSelected(null, out _));
-            configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
+            configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             File.Delete(configsXmlPath);
@@ -262,7 +262,7 @@ namespace AutoQCTest
             configManager.Close();
             var testConfigManager = new AutoQcConfigManager();
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
+            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
             var version = AutoQC.Properties.Settings.Default.XmlVersion;
             Assert.AreEqual(version, ConfigList.XmlVersion, $"Expected ConfigList version '{version}. But it was '{ConfigList.XmlVersion}.'");

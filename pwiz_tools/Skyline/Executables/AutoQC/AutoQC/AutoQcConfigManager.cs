@@ -168,14 +168,22 @@ namespace AutoQC
 
         #region Import
 
-        public void Import(string filePath, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm)
+        public void Import(string filePath, bool setConfigsDisabled = false)
         {
             var initialState = AutoQcState;
             var state = initialState.Copy();
-            state.Import(filePath, _uiControl, showDownloadedFileForm, out List<int> addedIndicies);
+            state.Import(filePath, _uiControl, out List<int> addedIndicies);
             var addedConfigs = new List<IConfig>();
             foreach (var index in addedIndicies)
+            {
+                var config = (AutoQcConfig)state.BaseState.ConfigList[index];
+                if (setConfigsDisabled && config.IsEnabled)
+                {
+                    state.DisableConfig(index, _uiControl);
+                }
                 addedConfigs.Add(state.BaseState.ConfigList[index]);
+            }
+
             if (SetState(initialState, state))
                 // Do server validation
                 DoServerValidation(state.BaseState, addedConfigs.ToImmutableList());
@@ -541,7 +549,7 @@ namespace AutoQC
             ProgramaticallyRemoveAt(index);
             ProgramaticallyInsertConfig(index,
                 new AutoQcConfig(config.Name, enabled, config.Created, config.Modified, config.MainSettings,
-                    config.PanoramaSettings, config.SkylineSettings), uiControl);
+                    config.PanoramaSettings, config.SkylineSettings), uiControl, configRunner.GetStatus());
             BaseState.ModelHasChanged();
             return this;
         }
@@ -600,13 +608,14 @@ namespace AutoQC
             return this;
         }
 
-        protected AutoQcConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
+        protected AutoQcConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl, 
+            RunnerStatus runnerStatus)
         {
             BaseState.ProgramaticallyInsertConfig(index, iconfig);
-            return AddConfig(iconfig, uiControl);
+            return AddConfig(iconfig, uiControl, runnerStatus);
         }
 
-        private AutoQcConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl)
+        private AutoQcConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl, RunnerStatus runnerStatus = RunnerStatus.Stopped)
         {
             var config = (AutoQcConfig)iconfig;
             if (ConfigRunners.ContainsKey(config.Name))
@@ -622,7 +631,7 @@ namespace AutoQC
 
             var logger = new Logger(logFile, config.Name, false);  // Do not initialize the logger in the constructor; it will be initialized when we start the config.
             LogList = LogList.Add(logger);
-            var runner = new ConfigRunner(config, logger, uiControl);
+            var runner = new ConfigRunner(config, logger, runnerStatus, uiControl);
             ConfigRunners = ConfigRunners.Add(config.Name, runner);
             return this;
         }
@@ -903,9 +912,9 @@ namespace AutoQC
 
         #region Import/Export
 
-        public AutoQcConfigManagerState Import(string filePath, IMainUiControl uiControl, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm, out List<int> addedIndicies)
+        public AutoQcConfigManagerState Import(string filePath, IMainUiControl uiControl, out List<int> addedIndicies)
         {
-            BaseState.ImportFrom(AutoQcConfig.ReadXml, filePath, Settings.Default.XmlVersion, uiControl, showDownloadedFileForm, out addedIndicies);
+            BaseState.ImportFrom(AutoQcConfig.ReadXml, filePath, Settings.Default.XmlVersion, uiControl, null, out addedIndicies);
             UpdateFromBaseState(uiControl);
             return this;
         }
