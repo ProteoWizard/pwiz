@@ -630,7 +630,7 @@
     <value>25</value>
   </data>
   <data name="textBoxError.Text" xml:space="preserve">
-    <value />
+    <value></value>
   </data>
   <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
     <value>textBoxError</value>
