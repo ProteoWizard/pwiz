@@ -17,23 +17,20 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaRelativeAbundanceGraphPane : SummaryRelativeAbundanceGraphPane
     {
-        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary, IList<MatchRgbHexColor> colorRows)
-            : base(graphSummary, colorRows)
+        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary)
+            : base(graphSummary)
         {
         }
-        protected override GraphData CreateGraphData(SkylineDataSchema dataSchema)
+        protected override GraphData CreateGraphData(SrmDocument document, GraphSettings graphSettings)
         {
-            return new AreaGraphData(Document, dataSchema, AnyMolecules);
+            return new AreaGraphData(document, graphSettings);
         }
 
         protected override void UpdateAxes()
@@ -46,9 +43,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document, SkylineDataSchema schema,
-                bool anyMolecules)
-                : base(document, schema, anyMolecules)
+            public AreaGraphData(SrmDocument document, GraphSettings graphSettings)
+                : base(document, graphSettings)
             {
             }
 
