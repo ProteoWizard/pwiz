@@ -362,4 +362,22 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
     <value>Adding detected features to document</value>
   </data>
+  <data name="ParallelFeatureFinder_Generate_done" xml:space="preserve">
+    <value>done</value>
+  </data>
+  <data name="ParallelFeatureFinder_Generate_Performing_RT_alignments" xml:space="preserve">
+    <value>Performing RT alignments</value>
+  </data>
+  <data name="ParallelFeatureFinder_Generate_Preparing__0__for_RT_alignment" xml:space="preserve">
+    <value>Preparing {0} for RT alignment</value>
+  </data>
+  <data name="ParallelFeatureFinder_Generate_Reading__0_" xml:space="preserve">
+    <value>Reading {0}</value>
+  </data>
+  <data name="ParallelFeatureFinder_Generate_RT_Alignment" xml:space="preserve">
+    <value>RT Alignment</value>
+  </data>
+  <data name="ParallelFeatureFinder_Generate_Searching_for_common_features_across_replicates" xml:space="preserve">
+    <value>Searching for common features across replicates</value>
+  </data>
 </root>

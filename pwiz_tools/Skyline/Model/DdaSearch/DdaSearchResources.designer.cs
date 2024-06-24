@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retention time alignment: {0} vs {1}.
+        ///   Looks up a localized string similar to {0} vs {1}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_ {
             get {
@@ -268,21 +268,20 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for peptide-like features with {0}.
+        ///   Looks up a localized string similar to Searching for peptide-like features.
         /// </summary>
-        public static string HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_ {
+        public static string HardklorSearchEngine_Run_Searching_for_peptide_like_features {
             get {
-                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_", resourceCulture);
+                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_peptide_like_features", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for persistent features in Hardklor results with {0}.
+        ///   Looks up a localized string similar to Searching for persistent features in Hardklor results.
         /// </summary>
-        public static string HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_ {
+        public static string HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results {
             get {
-                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_wi" +
-                        "th__0_", resourceCulture);
+                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results", resourceCulture);
             }
         }
         
