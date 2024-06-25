@@ -8,11 +8,13 @@ namespace ResourcesOrganizer.DataModel
         [Property]
         public string? Name { get; set; }
         [Property]
+        public string? Comment { get; set; }
+        [Property]
+        public string? File { get; set; }
+        [Property]
         public string? Type { get; set; }
         [Property]
         public string? Value { get; set; }
-        [Property]
-        public string? Comment { get; set; }
         [Property]
         public string? MimeType { get; set; }
         [Property]

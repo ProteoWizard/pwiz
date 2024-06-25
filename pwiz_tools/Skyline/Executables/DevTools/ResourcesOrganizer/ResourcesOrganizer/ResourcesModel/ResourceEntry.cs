@@ -20,5 +20,34 @@ namespace ResourcesOrganizer.ResourcesModel
             LocalizedValues.TryGetValue(language, out var localizedValue);
             return localizedValue;
         }
+
+        public object GetContentKey()
+        {
+            return this with { Position = 0 };
+        }
+
+        public virtual bool Equals(ResourceEntry? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (Name == other.Name && Invariant.Equals(other.Invariant) && MimeType == other.MimeType &&
+                XmlSpace == other.XmlSpace && Position == other.Position &&
+                LocalizedValues.OrderBy(kvp=>kvp.Key).SequenceEqual(other.LocalizedValues.OrderBy(kvp=>kvp.Key)))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = HashCode.Combine(Name, Invariant, MimeType, XmlSpace, Position);
+            foreach (var kvp in LocalizedValues)
+            {
+                hashCode ^= kvp.GetHashCode();
+            }
+
+            return hashCode;
+        }
     }
 }

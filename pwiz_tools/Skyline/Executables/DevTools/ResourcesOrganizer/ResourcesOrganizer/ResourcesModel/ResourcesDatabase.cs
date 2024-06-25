@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using NHibernate;
 using ResourcesOrganizer.DataModel;
 
@@ -8,7 +9,7 @@ namespace ResourcesOrganizer.ResourcesModel
 {
     public record ResourcesDatabase
     {
-        public static readonly ResourcesDatabase EMPTY = new();
+        public static readonly ResourcesDatabase Empty = new();
         public ImmutableDictionary<string, ResourcesFile> ResourcesFiles { get; init; }
             = ImmutableDictionary<string, ResourcesFile>.Empty;
 
@@ -120,7 +121,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 };
                 session.Insert(resxFile);
 
-                SaveResourcesFile(session, invariantResources, resxFile.Id!.Value, resourceFile.Value);
+                SaveResourcesFile(session, invariantResources, resxFile.Id!.Value, resourceFile.Key, resourceFile.Value);
             }
             transaction.Commit();
         }
@@ -148,25 +149,23 @@ namespace ResourcesOrganizer.ResourcesModel
             }
         }
 
-        private Dictionary<InvariantResourceKey, long> SaveInvariantResources(IStatelessSession session)
+        private IDictionary<InvariantResourceKey, long> SaveInvariantResources(IStatelessSession session)
         {
             var result = new Dictionary<InvariantResourceKey, long>();
-            foreach (var group in GetInvariantResources().OrderBy(group=>group.Key))
+            foreach ((InvariantResourceKey key, List<ResourceEntry> entries) in GetInvariantResources().OrderBy(kvp=>kvp.Key))
             {
-                var key = group.Key;
-                var mimeTypes = group.Select(entry => entry.MimeType).Distinct().ToList();
-                mimeTypes.Sort();
-                var xmlSpaces = group.Select(entry => entry.XmlSpace).Distinct().ToList();
-                xmlSpaces.Sort();
+                var mimeType = entries.Select(entry => entry.MimeType).Distinct().Single();
+                var xmlSpace = entries.Select(entry => entry.XmlSpace).Distinct().Single();
 
                 var invariantResource = new InvariantResource
                 {
                     Comment = key.Comment,
                     Name = key.Name,
+                    File = key.File,
                     Type = key.Type,
                     Value = key.Value,
-                    MimeType = mimeTypes.Last(),
-                    XmlSpace = xmlSpaces.Last()
+                    MimeType = mimeType,
+                    XmlSpace = xmlSpace
                 };
 
                 session.Insert(invariantResource);
@@ -179,12 +178,10 @@ namespace ResourcesOrganizer.ResourcesModel
         private void SaveLocalizedResources(IStatelessSession session,
             IDictionary<InvariantResourceKey, long> invariantResources)
         {
-            foreach (var entryGroup in ResourcesFiles.Values
-                         .SelectMany(resources => resources.Entries)
-                         .GroupBy(entry => entry.Invariant))
+            foreach (var entryGroup in GetInvariantResources())
             {
                 var invariantResourceId = invariantResources[entryGroup.Key];
-                foreach (var localizedEntryGroup in entryGroup.SelectMany(entry => entry.LocalizedValues).GroupBy(kvp => kvp.Key))
+                foreach (var localizedEntryGroup in entryGroup.Value.SelectMany(entry => entry.LocalizedValues).GroupBy(kvp => kvp.Key))
                 {
                     var translations = localizedEntryGroup.Select(kvp => kvp.Value).Distinct().ToList();
                     if (translations.Count > 1)
@@ -205,15 +202,21 @@ namespace ResourcesOrganizer.ResourcesModel
             }
         }
 
-        private void SaveResourcesFile(IStatelessSession session, Dictionary<InvariantResourceKey, long> invariantResources, long resxFileId, ResourcesFile resourcesFile)
+        private void SaveResourcesFile(IStatelessSession session, IDictionary<InvariantResourceKey, long> invariantResources, long resxFileId, string filePath, ResourcesFile resourcesFile)
         {
             int sortIndex = 0;
             foreach (var entry in resourcesFile.Entries)
             {
+                long invariantResourceId;
+                if (!invariantResources.TryGetValue(entry.Invariant.FileQualified(filePath), out invariantResourceId) &&
+                    !invariantResources.TryGetValue(entry.Invariant, out invariantResourceId))
+                {
+                    throw new KeyNotFoundException();
+                }
                 var resourceLocation = new ResourceLocation
                 {
                     ResxFileId = resxFileId,
-                    InvariantResourceId = invariantResources[entry.Invariant],
+                    InvariantResourceId = invariantResourceId,
                     Name = entry.Name,
                     SortIndex= ++sortIndex,
                     Position = entry.Position
@@ -222,9 +225,34 @@ namespace ResourcesOrganizer.ResourcesModel
             }
         }
 
-        public IEnumerable<IGrouping<InvariantResourceKey, ResourceEntry>> GetInvariantResources()
+        public IDictionary<InvariantResourceKey, List<ResourceEntry>> GetInvariantResources()
         {
-            return ResourcesFiles.Values.SelectMany(resources => resources.Entries).GroupBy(entry => entry.Invariant);
+            var dictionary = new Dictionary<InvariantResourceKey, List<ResourceEntry>>();
+            foreach (var group in ResourcesFiles.SelectMany(resourcesKvp => resourcesKvp.Value.Entries.Select(entry=>Tuple.Create(resourcesKvp.Key, entry)))
+                         .GroupBy(tuple => tuple.Item2.Invariant))
+            {
+                var totalCount = group.Count();
+                var groups = group.GroupBy(tuple => tuple.Item2.GetContentKey()).ToList();
+                foreach (var compatibleGroup in groups)
+                {
+                    var entries = compatibleGroup.Select(tuple => tuple.Item2).ToList();
+                    if (entries.Count > totalCount / 2)
+                    {
+                        dictionary.Add(group.Key, entries);
+                    }
+                    else
+                    {
+                        foreach (var tuple in compatibleGroup)
+                        {
+                            var key = tuple.Item2.Invariant.FileQualified(tuple.Item1);
+                            dictionary.Add(key, [tuple.Item2]);
+                        }
+
+                    }
+                }
+            }
+
+            return dictionary;
         }
 
         [Pure]
@@ -250,10 +278,9 @@ namespace ResourcesOrganizer.ResourcesModel
         [Pure]
         public ResourcesDatabase ImportTranslations(ResourcesDatabase oldDb, IList<string> languages)
         {
-            var oldResources = oldDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
-                .ToLookup(entry => entry.Invariant);
+            var oldResources = oldDb.GetInvariantResources();
             var oldResourcesWithoutText = oldDb.ResourcesFiles.Values.SelectMany(file=>file.Entries)
-                .ToLookup(entry => entry.Invariant with {Value = string.Empty});
+                .ToLookup(entry => entry.Invariant with {Value = string.Empty, File = null});
             var newFiles = new Dictionary<string, ResourcesFile>();
             foreach (var resourcesEntry in ResourcesFiles.ToList())
             {
@@ -263,8 +290,17 @@ namespace ResourcesOrganizer.ResourcesModel
                     var localizedValues = new Dictionary<string, LocalizedValue>();
                     foreach (var language in languages)
                     {
-                        var oldTranslations = oldResources[entry.Invariant]
-                            .Select(oldEntry => oldEntry.GetTranslation(language)?.Value).OfType<string>().Distinct().ToList();
+                        var fileQualifiedKey = entry.Invariant.FileQualified(resourcesEntry.Key);
+                        if (!oldResources.TryGetValue(fileQualifiedKey, out var oldEntries))
+                        {
+                            if (!oldResources.TryGetValue(entry.Invariant, out oldEntries))
+                            {
+                                oldEntries = [];
+                            }
+                        }
+
+                        var oldTranslations = oldEntries.Select(oldEntry => oldEntry.GetTranslation(language)?.Value)
+                            .OfType<string>().Distinct().ToList();
 
                         if (oldTranslations.Count == 1)
                         {
@@ -287,7 +323,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         {
                             problem = LocalizationComments.InconsistentTranslation;
                         }
-                        else if (oldResources[entry.Invariant].Any())
+                        else if (oldEntries.Any())
                         {
                             problem = LocalizationComments.MissingTranslation;
                         }

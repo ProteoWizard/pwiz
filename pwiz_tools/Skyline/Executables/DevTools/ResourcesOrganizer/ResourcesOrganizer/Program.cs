@@ -36,7 +36,7 @@ namespace ResourcesOrganizer
             ResourcesDatabase database;
             if (options.CreateNew)
             {
-                database = ResourcesDatabase.EMPTY;
+                database = ResourcesDatabase.Empty;
             }
             else
             {
@@ -84,7 +84,7 @@ namespace ResourcesOrganizer
             {
                 return ResourcesDatabase.ReadDatabase(path);
             }
-            return ResourcesDatabase.EMPTY;
+            return ResourcesDatabase.Empty;
         }
     }
 }
