@@ -478,7 +478,7 @@
     <value>20</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>デフォルト&amp;NCE：</value>
+    <value>デフォルトNCE(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -616,7 +616,7 @@
     <value>0</value>
   </data>
   <data name="lblKoinaPrediction.Text" xml:space="preserve">
-    <value>Koina設定</value>
+    <value>Koina Settings</value>
   </data>
   <data name="&gt;&gt;lblKoinaPrediction.Name" xml:space="preserve">
     <value>lblKoinaPrediction</value>
@@ -667,7 +667,7 @@
     <value>1</value>
   </data>
   <data name="koinaPage.Text" xml:space="preserve">
-    <value>Koina予測</value>
+    <value>Koina Prediction</value>
   </data>
   <data name="&gt;&gt;koinaPage.Name" xml:space="preserve">
     <value>koinaPage</value>

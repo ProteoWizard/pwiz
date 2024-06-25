@@ -107,7 +107,7 @@
     <value>倍率変化の計算に使用されたこの繰り返し測定の値です。数値は正規化メソッドの他、倍率変化がタンパク質レベルで計算されているかペプチドレベルで計算されているかに依存します。</value>
   </data>
   <data name="Accuracy">
-    <value>アナライトの濃度と算出される濃度の比率（繰り返し測定で指定）</value>
+    <value>Ratio of Calculated Concentration to the specified Analyte Concentration</value>
   </data>
   <data name="AcquiredTime">
     <value>質量分析計が前回この繰り返し測定データの取得を開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</value>
@@ -198,9 +198,18 @@
     <value>プリカーサーに対し、最も強度が高いトランジションの 保持時間の値です。</value>
   </data>
   <data name="CalculatedConcentration">
-    <value>アナライト濃度は、以下のいずれかによって計算されます：  
-1. 校正曲線を使用する（[ペプチド設定] &gt; [定量]に[回帰式に合わせる]が指定されている場合）  
-2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</value>
+    <value>The concentration of the analyte calculated using either:
+1. The calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
+  </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>Warning if missing data impacts comparisons of the "Calculated Concentration" between replicates</value>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>Calculated concentration value available even when missing data impacts comparisons between replicates</value>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>Calculated concentration value unavailable when missing data impacts comparisons between replicates</value>
   </data>
   <data name="CalibrationCurve">
     <value>試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</value>
@@ -557,7 +566,13 @@
     <value>イオン移動度ライブラリからのプリカーサーの衝突断面積</value>
   </data>
   <data name="LibraryDotProduct">
-    <value>プリカーサーの各トランジションのピーク面積と一致したMS/MSスペクトルライブラリスペクトルにおける一致するイオンピークの強度との内積です（注：v1.4同様、 これは現在1 – Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。プリカーサーに一致するライブラリスペクトルがない 場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、 メソッドの最適化に使用します。トランジションが6個以上ある場合に最もうまく機能します。</value>
+    <value>Equivalent to "dotp" displayed in the user interface. The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.</value>
   </data>
   <data name="LibraryIntensity">
     <value>一致するライブラリスペクトルでトランジションのプロダクトイオンに該当するMS/MSのピーク強度です。</value>
@@ -617,7 +632,7 @@
     <value>このフラグメントからのすべてのニュートラルロスの合計質量</value>
   </data>
   <data name="MassErrorPPM">
-    <value>質量誤差（ppm）</value>
+    <value>The difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
   </data>
   <data name="MassErrors">
     <value>クロマトグラムの質量誤差です。</value>
@@ -697,6 +712,9 @@
 内標準標識タイプがある場合、ピーク面積の中央値はプリカーサー標識タイプが内標準のトランジションで示されるピーク面積のみを使って計算されます。
 内標準ピーク面積がない場合はすべてのトランジションピーク面積からトランジションピーク面積の中央値が計算されます。</value>
   </data>
+  <data name="Message">
+    <value>Warning, if any, of missing values that might impact comparisons of the "Raw" value between replicates.</value>
+  </data>
   <data name="Min">
     <value>最小値</value>
   </data>
@@ -755,9 +773,22 @@
     <value>Skylineドキュメントにある分子のグループ化です。</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>分子リストの存在量を表す数値です。この数値は、分子リストの下にある正規化面積を平均して得られます。
-面積は分子定量化設定で指定される正規化メソッドに従って正規化されます。
-この繰り返し測定中に値のないトランジションがある場合には、正規化メソッドが標識に対する比率でない限り、分子リスト存在量は空白となります。</value>
+    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings</value>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>Warning if missing data impacts comparisons of "Molecule List Abundance" between replicates</value>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Average of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Sum of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings</value>
   </data>
   <data name="MoleculeListLocator">
     <value>ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</value>
@@ -820,7 +851,7 @@
     <value>プリカーサーの強度（MS1レベル）かプロダクトの強度（MS2レベル）のみを使用して結果を取得したかを示します。</value>
   </data>
   <data name="NextAa">
-    <value>次のAa</value>
+    <value>The amino acid residue found immediately after the peptide in the protein sequence.</value>
   </data>
   <data name="NormalizationDivisor">
     <value>デフォルトの正規化メソッドの使用時に観測値を割った数字。
@@ -830,7 +861,24 @@
     <value>絶対定量とグループ比較のために、特定の分子で使用する正規化のメソッドを無効にします。</value>
   </data>
   <data name="NormalizedArea">
-    <value>そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</value>
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule 
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification</value>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>Warning if missing data impacts of the "Normalized Area" value between replicates</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="NumberOfPoints">
     <value>クロマトグラムにある点の数です。</value>
@@ -930,6 +978,9 @@
   <data name="PeptideSequenceLength">
     <value>ペプチドシークエンスのアミノ酸数です。</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>Number of spectra in the spectral library which match the peptide and result file.</value>
+  </data>
   <data name="PointCount">
     <value>曲線のフィッティングで使用されたデータポイント数です。</value>
   </data>
@@ -948,8 +999,19 @@
   <data name="PrecursorCalculatedConcentration">
     <value>アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。</value>
   </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Warning if missing data impacts comparisons of "Precursor Calculated Concentration" between replicates</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
+Unavailable when missing data impacts comparisons between replicates.</value>
+  </data>
   <data name="PrecursorCharge">
-    <value>  プリカーサーイオンと関連付けられた電荷。</value>
+    <value>The charge associated with the precursor ion.</value>
   </data>
   <data name="PrecursorConcentration">
     <value>このプリカーサーが試料にスパイクされた濃度です。これを使用してアイソトポログ反応曲線を作成します。</value>
@@ -977,9 +1039,24 @@
     <value>プリカーサーのニュートラルな質量（Da）</value>
   </data>
   <data name="PrecursorNormalizedArea">
-    <value>プリカーサー結果の正規化面積。
-これはペプチドの正規化メソッドに従い正規化されたプリカーサー結果の合計面積と同じです。
-ペプチド正規化メソッドが「なし」または標識に対する比率である場合、プリカーサー正規化面積はプリカーサー合計面積と同じです。</value>
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If Peptide Normalization Method is "None" or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Warning if missing values impacts comparisons of the "Precursor Normalized Area" value between replicates</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="PrecursorNote">
     <value>編集メニューで[メモを編集]をクリックすると表示される、プリカーサーに関連付けられるフリーテキストのメモ</value>
@@ -1046,10 +1123,22 @@
     <value>タンパク質</value>
   </data>
   <data name="ProteinAbundance">
-    <value>特定の繰り返し測定のタンパク質の存在量を表す数値です。
-タンパク質存在量は、タンパク質に帰属するすべてのトランジションの正規化面積の平均を使用して計算されます。
-トランジション面積はペプチド定量設定で指定される正規化メソッドに従って正規化されます。
-この繰り返し測定中にピーク面積のないトランジションがある場合、又は正規化メソッドが標識に対する比率でない限り、タンパク質リスト存在量は空白となります。</value>
+    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>Warning if missing data impacts comparisons of "Protein Abundance" between replicates</value>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Average of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Sum of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション番号</value>
@@ -1121,10 +1210,13 @@
     <value>MaxRetentionTimeとMinRetentionTime との差です。これを使用すると測定された保持時間の広がりの幅を評価できます。</value>
   </data>
   <data name="RatioDotProduct">
-    <value>内積比率</value>
+    <value>Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.</value>
   </data>
   <data name="RatioToStandard">
     <value>LightのHeavyに対するペプチドの面積比</value>
+  </data>
+  <data name="Raw">
+    <value>Calculated value available even when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="RawData">
     <value>生（未補間）のクロマトグラムデータです。クロマトグラムの間隔が均一でなく、各トランジションのクロマトグラムにはそれぞれ異なる点の数があります。</value>
@@ -1317,8 +1409,14 @@ Double Blank（ダブルブランク）</value>
   <data name="StdevTotalAreaRatio">
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
+  <data name="Strict">
+    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
+  </data>
   <data name="SummaryMessage">
     <value>変更の説明</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>校正から除外されていない外部標準繰り返し測定全体での定性イオン比の平均値です。</value>

@@ -98,22 +98,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__" xml:space="preserve">
-    <value>肽段序列'{0}' ({1}) 长于 Koina ({2}) 所支持的最大长度</value>
+    <value>Peptide Sequence '{0}' ({1}) is longer than the maximum supported length by Koina ({2})</value>
   </data>
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
-    <value>Koina 不支持“{1}” 中氨基酸“{0}”</value>
+    <value>Amino acid '{0}' in '{1}' is not supported by Koina</value>
   </data>
   <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
-    <value>Koina 不支持“{2}” 中指数“{1}”内的修改“{0}”</value>
+    <value>Modifcation '{0}' at index '{1}' in '{2}' is not supported by Koina</value>
   </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
-    <value>构建 Koina 输入</value>
+    <value>Constructing Koina inputs</value>
   </data>
   <data name="KoinaModel_BatchPredict_Requesting_predictions_from_Koina" xml:space="preserve">
-    <value>向 Koina 请求预测</value>
+    <value>Requesting predictions from Koina</value>
   </data>
   <data name="KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist" xml:space="preserve">
-    <value>强度模型“{0}”不存在</value>
+    <value>Intensity model '{0}' does not exist</value>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_Server_online" xml:space="preserve">
     <value>在线服务器</value>
@@ -122,28 +122,28 @@
     <value>离线服务器</value>
   </data>
   <data name="KoinaPredictionClient_Current_No_Koina_server_set" xml:space="preserve">
-    <value>无 Koina 服务器设定</value>
+    <value>No Koina server set</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Server_unavailable" xml:space="preserve">
     <value>服务器不可用</value>
   </data>
   <data name="KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
-    <value>Koina 仅支持肽段。“{0}” 是一个小分子。</value>
+    <value>Koina only supports peptides. '{0}' is a small molecule.</value>
   </data>
   <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
-    <value>Koina 配置不正确。您现在是否想要更改 Koina 设置？</value>
+    <value>Koina is not properly configured. Would you like to change Koina settings now?</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_Some_Koina_settings_are_not_set_" xml:space="preserve">
-    <value>Koina 配置不正确。</value>
+    <value>Koina is not properly configured.</value>
   </data>
   <data name="GraphSpectrum_UpdateUI__0__vs___1_" xml:space="preserve">
     <value>{0} 与 {1}</value>
   </data>
   <data name="KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist" xml:space="preserve">
-    <value>保留时间模型“{0}”不存在</value>
+    <value>Retention time model '{0}' does not exist</value>
   </data>
   <data name="KoinaPredictingException_KoinaPredictingException_Making_predictions___" xml:space="preserve">
-    <value>进行预测...</value>
+    <value>Making predictions...</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
     <value>查询服务器...</value>
@@ -155,7 +155,7 @@
     <value>选择一个服务器</value>
   </data>
   <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
-    <value>选择两个模型</value>
+    <value>Select both models to connect</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_No_spectral_library_match" xml:space="preserve">
     <value>无谱图库匹配</value>

@@ -98,22 +98,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__" xml:space="preserve">
-    <value>ペプチドシークエンス「{0}」({1})はKoina ({2})でサポートされる最大長より長くなります</value>
+    <value>Peptide Sequence '{0}' ({1}) is longer than the maximum supported length by Koina ({2})</value>
   </data>
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
-    <value>「{1}」内のアミノ酸「{0}」はKoinaでサポートされません</value>
+    <value>Amino acid '{0}' in '{1}' is not supported by Koina</value>
   </data>
   <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
-    <value>「{2}」内のインデックス「{1}」における修飾「{0}」はKoinaでサポートされません。</value>
+    <value>Modifcation '{0}' at index '{1}' in '{2}' is not supported by Koina</value>
   </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
-    <value>Koina入力を構築しています</value>
+    <value>Constructing Koina inputs</value>
   </data>
   <data name="KoinaModel_BatchPredict_Requesting_predictions_from_Koina" xml:space="preserve">
-    <value>Koinaから予測を要求しています</value>
+    <value>Requesting predictions from Koina</value>
   </data>
   <data name="KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist" xml:space="preserve">
-    <value>強度モデル「{0}」が存在しません</value>
+    <value>Intensity model '{0}' does not exist</value>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_Server_online" xml:space="preserve">
     <value>サーバーオンライン</value>
@@ -122,28 +122,28 @@
     <value>サーバーオフライン</value>
   </data>
   <data name="KoinaPredictionClient_Current_No_Koina_server_set" xml:space="preserve">
-    <value>Koinaサーバーが設定されていません</value>
+    <value>No Koina server set</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Server_unavailable" xml:space="preserve">
     <value>サーバーが利用できません</value>
   </data>
   <data name="KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
-    <value>Koinaはペプチドのみをサポートします。「{0}」は小さい分子です。</value>
+    <value>Koina only supports peptides. '{0}' is a small molecule.</value>
   </data>
   <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
-    <value>Koinaが正しく設定されていません。今すぐKoinaの設定を変更しますか？</value>
+    <value>Koina is not properly configured. Would you like to change Koina settings now?</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_Some_Koina_settings_are_not_set_" xml:space="preserve">
-    <value>Koinaが正しく設定されていません。</value>
+    <value>Koina is not properly configured.</value>
   </data>
   <data name="GraphSpectrum_UpdateUI__0__vs___1_" xml:space="preserve">
     <value>{0}対{1}</value>
   </data>
   <data name="KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist" xml:space="preserve">
-    <value>保持時間モデル「{0}」は存在しません</value>
+    <value>Retention time model '{0}' does not exist</value>
   </data>
   <data name="KoinaPredictingException_KoinaPredictingException_Making_predictions___" xml:space="preserve">
-    <value>予測を作成中...</value>
+    <value>Making predictions...</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
     <value>サーバーをクエリ中...</value>
@@ -155,7 +155,7 @@
     <value>サーバーを選択</value>
   </data>
   <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
-    <value>両方のモデルを選択</value>
+    <value>Select both models to connect</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_No_spectral_library_match" xml:space="preserve">
     <value>スペクトルライブラリの一致がありません</value>
