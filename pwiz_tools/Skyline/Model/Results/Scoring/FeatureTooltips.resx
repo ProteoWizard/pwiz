@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema
@@ -58,7 +58,6 @@
       : using a System.ComponentModel.TypeConverter
       : and then encoded with base64 encoding.
   -->
-
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -99,102 +98,102 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc" xml:space="preserve">
-        <value>A score of 1 or 0 depending on whether the peak overlaps with the retention time of an MS/MS identification.</value>
-    </data>
+    <value>A score of 1 or 0 depending on whether the peak overlaps with the retention time of an MS/MS identification.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc" xml:space="preserve">
-        <value>Fraction of transition peaks across all precursors for which "Coeluting" is true</value>
-    </data>
+    <value>Fraction of transition peaks across all precursors for which "Coeluting" is true</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreDefaultCalc" xml:space="preserve">
-        <value>Fraction of transition peaks for which "Coeluting" is true.
+    <value>Fraction of transition peaks for which "Coeluting" is true.
 Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc" xml:space="preserve">
-        <value>Fraction of transitions across internal standard precursors for which "Coeluting" is true.</value>
-    </data>
+    <value>Fraction of transitions across internal standard precursors for which "Coeluting" is true.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCalc" xml:space="preserve">
-        <value>Log10 of the sum of the transition peak areas.
+    <value>Log10 of the sum of the transition peak areas.
 Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCorrelationCalc" xml:space="preserve">
-        <value>Normalized contrast angle of MS2 transition areas against library intensities, if that exist.
+    <value>Normalized contrast angle of MS2 transition areas against library intensities, if that exist.
 Otherwise, dot product of MS1 transition areas against predicted isotope distribution.
 Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedCoElutionCalc" xml:space="preserve">
-        <value>MQuest co-elution score weighted by the sum of the transition areas.
+    <value>MQuest co-elution score weighted by the sum of the transition areas.
 Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedShapeCalc" xml:space="preserve">
-        <value>MQuest shape score, weighted by the sum of the transition peak areas.
+    <value>MQuest shape score, weighted by the sum of the transition peak areas.
 Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCalc" xml:space="preserve">
-        <value>Log10 of the sum of the transition peak areas across analyte precursors.</value>
-    </data>
+    <value>Log10 of the sum of the transition peak areas across analyte precursors.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc" xml:space="preserve">
-        <value>Normalized contrast angle of MS2 transition areas against library intensities.
+    <value>Normalized contrast angle of MS2 transition areas against library intensities.
 Calculated using analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestReferenceCorrelationCalc" xml:space="preserve">
-        <value>Normalized contrast angle of the correlation between analyte and internal standard transition peak areas.</value>
-    </data>
+    <value>Normalized contrast angle of the correlation between analyte and internal standard transition peak areas.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimePredictionCalc" xml:space="preserve">
-        <value>Difference between predicted retention time and peak apex time.</value>
-    </data>
+    <value>Difference between predicted retention time and peak apex time.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimeSquaredPredictionCalc" xml:space="preserve">
-        <value>Square of difference between predicted retention time and peak apex time.</value>
-    </data>
+    <value>Square of difference between predicted retention time and peak apex time.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCalc" xml:space="preserve">
-        <value>Log10 of the sum of the transition peak areas across internal standard precursors.</value>
-    </data>
+    <value>Log10 of the sum of the transition peak areas across internal standard precursors.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCorrelationCalc" xml:space="preserve">
-        <value>Normalized contrast angle of MS2 transition areas against library intensities.
+    <value>Normalized contrast angle of MS2 transition areas against library intensities.
 Calculated using internal standard precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedCoElutionCalc" xml:space="preserve">
-        <value>MQuest co elution score, weighted by the sum of the transition peak areas.
+    <value>MQuest co elution score, weighted by the sum of the transition peak areas.
 Calculated using internal standard precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedShapeCalc" xml:space="preserve">
-        <value>MQuest shape score, weighted by the sum of the transition peak areas.
+    <value>MQuest shape score, weighted by the sum of the transition peak areas.
 Calculated using internal standard precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc" xml:space="preserve">
-        <value>MQuest co-elution score of analyte precursors weighted by the sum of the transition areas</value>
-    </data>
+    <value>MQuest co-elution score of analyte precursors weighted by the sum of the transition areas</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedReferenceCoElutionCalc" xml:space="preserve">
-        <value>MQuest co elution score, weighted by the sum of the transition peak areas.</value>
-    </data>
+    <value>MQuest co elution score, weighted by the sum of the transition peak areas.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedReferenceShapeCalc" xml:space="preserve">
-        <value>MQuest shape score, weighted by the sum of the transition peak areas.</value>
-    </data>
+    <value>MQuest shape score, weighted by the sum of the transition peak areas.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc" xml:space="preserve">
-        <value>MQuest shape score, weighted by the sum of the transition peak areas.
+    <value>MQuest shape score, weighted by the sum of the transition peak areas.
 Calculated using analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenCrossWeightedShapeCalc" xml:space="preserve">
-        <value>The shape correlation score between MS1 ions and MS2 ions.
+    <value>The shape correlation score between MS1 ions and MS2 ions.
 Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenIsotopeDotProductCalc" xml:space="preserve">
-        <value>Normalized contrast angle of the MS1 transition areas against the predicted isotope distribution.
+    <value>Normalized contrast angle of the MS1 transition areas against the predicted isotope distribution.
 Calculated using analyte precursor with the highest score.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenPrecursorMassErrorCalc" xml:space="preserve">
-        <value>Average mass error across analyte MS1 transitions weighted by transition area.</value>
-    </data>
+    <value>Average mass error across analyte MS1 transitions weighted by transition area.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenProductMassErrorCalc" xml:space="preserve">
-        <value>Average mass error across analyte MS2 transitions weighted by transition area.</value>
-    </data>
+    <value>Average mass error across analyte MS2 transitions weighted by transition area.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenSignalNoiseCalc" xml:space="preserve">
-        <value>Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
+    <value>Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
 Calculated using analyte precursors.</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenStandardProductMassErrorCalc" xml:space="preserve">
-        <value>Average mass error across internal standard MS2 transitions weighted by transition area.</value>
-    </data>
+    <value>Average mass error across internal standard MS2 transitions weighted by transition area.</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenStandardSignalNoiseCalc" xml:space="preserve">
-        <value>Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
+    <value>Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
 Calculated using internal standard precursors.</value>
-    </data>
+  </data>
 </root>
