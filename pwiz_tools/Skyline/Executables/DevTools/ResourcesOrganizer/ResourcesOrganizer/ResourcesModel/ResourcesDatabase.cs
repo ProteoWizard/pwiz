@@ -1,7 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using NHibernate;
 using ResourcesOrganizer.DataModel;
 
@@ -232,7 +231,7 @@ namespace ResourcesOrganizer.ResourcesModel
                          .GroupBy(tuple => tuple.Item2.Invariant))
             {
                 var totalCount = group.Count();
-                var groups = group.GroupBy(tuple => tuple.Item2.GetContentKey()).ToList();
+                var groups = group.GroupBy(tuple => tuple.Item2.Normalize()).ToList();
                 foreach (var compatibleGroup in groups)
                 {
                     var entries = compatibleGroup.Select(tuple => tuple.Item2).ToList();
@@ -400,13 +399,18 @@ namespace ResourcesOrganizer.ResourcesModel
             var directoryInfo = new DirectoryInfo(fullPath);
             foreach (var file in directoryInfo.GetFiles())
             {
+                var filePath = Path.Combine(relativePath, file.Name);
+                if (exclude.Contains(filePath))
+                {
+                    continue;
+                }
                 if (!ResourcesFile.IsInvariantResourceFile(file.FullName))
                 {
                     continue;
                 }
 
                 var resourcesFile = ResourcesFile.Read(file.FullName);
-                files[Path.Combine(relativePath, file.Name)] = resourcesFile;
+                files[filePath] = resourcesFile;
             }
 
             foreach (var folder in directoryInfo.GetDirectories())

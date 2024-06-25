@@ -21,9 +21,16 @@ namespace ResourcesOrganizer.ResourcesModel
             return localizedValue;
         }
 
-        public object GetContentKey()
+        public ResourceEntry Normalize()
         {
-            return this with { Position = 0 };
+            var localizedValues = LocalizedValues
+                .Where(kvp => kvp.Value.Value != Invariant.Value)
+                .ToImmutableDictionary(kvp => kvp.Key, kvp => new LocalizedValue() { Value = kvp.Value.Value });
+            return this with
+            {
+                Position = 0,
+                LocalizedValues = localizedValues
+            };
         }
 
         public virtual bool Equals(ResourceEntry? other)
@@ -32,7 +39,7 @@ namespace ResourcesOrganizer.ResourcesModel
             if (ReferenceEquals(this, other)) return true;
             if (Name == other.Name && Invariant.Equals(other.Invariant) && MimeType == other.MimeType &&
                 XmlSpace == other.XmlSpace && Position == other.Position &&
-                LocalizedValues.OrderBy(kvp=>kvp.Key).SequenceEqual(other.LocalizedValues.OrderBy(kvp=>kvp.Key)))
+                LocalizedValues.ToHashSet().SetEquals(other.LocalizedValues))
             {
                 return true;
             }
