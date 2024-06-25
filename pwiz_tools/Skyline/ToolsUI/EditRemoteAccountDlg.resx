@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblServerUrl.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -127,13 +130,16 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblServerUrl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 138</value>
+    <value>13, 173</value>
+  </data>
+  <data name="lblServerUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 6, 3, 0</value>
   </data>
   <data name="lblServerUrl.Size" type="System.Drawing.Size, System.Drawing">
     <value>63, 13</value>
   </data>
   <data name="lblServerUrl.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="lblServerUrl.Text" xml:space="preserve">
     <value>&amp;Server URL</value>
@@ -145,7 +151,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblServerUrl.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;lblServerUrl.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -157,7 +163,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>199, 355</value>
+    <value>327, 471</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -178,7 +184,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -187,7 +193,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 355</value>
+    <value>246, 471</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -208,19 +214,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="textServerURL.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textServerURL.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 154</value>
+    <value>13, 196</value>
   </data>
   <data name="textServerURL.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
     <value>Vertical</value>
   </data>
   <data name="textServerURL.Size" type="System.Drawing.Size, System.Drawing">
-    <value>259, 20</value>
+    <value>380, 20</value>
   </data>
   <data name="textServerURL.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -232,22 +238,22 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textServerURL.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>2</value>
   </data>
   <data name="textPassword.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 111</value>
+    <value>13, 144</value>
   </data>
   <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
     <value>*</value>
   </data>
   <data name="textPassword.Size" type="System.Drawing.Size, System.Drawing">
-    <value>259, 20</value>
+    <value>380, 20</value>
   </data>
   <data name="textPassword.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -259,10 +265,10 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -271,7 +277,10 @@
     <value>NoControl</value>
   </data>
   <data name="lblPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 91</value>
+    <value>13, 121</value>
+  </data>
+  <data name="lblPassword.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 6, 3, 0</value>
   </data>
   <data name="lblPassword.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -289,10 +298,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblPassword.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -301,7 +310,10 @@
     <value>NoControl</value>
   </data>
   <data name="lblUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 50</value>
+    <value>13, 69</value>
+  </data>
+  <data name="lblUsername.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 6, 3, 0</value>
   </data>
   <data name="lblUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>58, 13</value>
@@ -319,19 +331,19 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblUsername.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>3</value>
   </data>
   <data name="textUsername.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 68</value>
+    <value>13, 92</value>
   </data>
   <data name="textUsername.Size" type="System.Drawing.Size, System.Drawing">
-    <value>259, 20</value>
+    <value>380, 20</value>
   </data>
   <data name="textUsername.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -343,16 +355,16 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textUsername.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>5</value>
   </data>
   <data name="btnTest.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnTest.Location" type="System.Drawing.Point, System.Drawing">
-    <value>37, 355</value>
+    <value>165, 471</value>
   </data>
   <data name="btnTest.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -373,13 +385,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnTest.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
+  </data>
+  <data name="comboAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="comboAccountType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 25</value>
+    <value>13, 42</value>
+  </data>
+  <data name="comboAccountType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 0, 3, 0</value>
   </data>
   <data name="comboAccountType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>145, 21</value>
+    <value>140, 21</value>
   </data>
   <data name="comboAccountType.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -391,16 +409,16 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAccountType.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;comboAccountType.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
+    <value>13, 21</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>73, 13</value>
@@ -418,10 +436,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>pnlCommonSettings</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="groupBoxUnifi.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -436,7 +454,7 @@
     <value>*</value>
   </data>
   <data name="tbxClientSecret.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 20</value>
+    <value>384, 20</value>
   </data>
   <data name="tbxClientSecret.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -487,7 +505,7 @@
     <value>6, 74</value>
   </data>
   <data name="tbxClientScope.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 20</value>
+    <value>384, 20</value>
   </data>
   <data name="tbxClientScope.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -538,7 +556,7 @@
     <value>6, 35</value>
   </data>
   <data name="tbxIdentityServer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 20</value>
+    <value>384, 20</value>
   </data>
   <data name="tbxIdentityServer.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -582,11 +600,134 @@
   <data name="&gt;&gt;lblIdentityServer.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="flowLayoutPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="pnlCommonSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="pnlCommonSettings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="pnlCommonSettings.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="pnlCommonSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 0</value>
+  </data>
+  <data name="pnlCommonSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="pnlCommonSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>407, 219</value>
+  </data>
+  <data name="pnlCommonSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;pnlCommonSettings.Name" xml:space="preserve">
+    <value>pnlCommonSettings</value>
+  </data>
+  <data name="&gt;&gt;pnlCommonSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pnlCommonSettings.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;pnlCommonSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="pnlArdiaSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.Name" xml:space="preserve">
+    <value>cbDeleteRawAfterImport</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.Parent" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.Name" xml:space="preserve">
+    <value>tbxRole</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.Parent" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;lblRole.Name" xml:space="preserve">
+    <value>lblRole</value>
+  </data>
+  <data name="&gt;&gt;lblRole.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRole.Parent" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;lblRole.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="pnlArdiaSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 219</value>
+  </data>
+  <data name="pnlArdiaSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="pnlArdiaSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>407, 88</value>
+  </data>
+  <data name="pnlArdiaSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;pnlArdiaSettings.Name" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;pnlArdiaSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pnlArdiaSettings.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;pnlArdiaSettings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="flowLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="flowLayoutPanel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>8, 0, 0, 0</value>
+  </data>
+  <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>415, 465</value>
+  </data>
+  <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Name" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="groupBoxUnifi.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 190</value>
+    <value>11, 310</value>
   </data>
   <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
-    <value>262, 144</value>
+    <value>397, 144</value>
   </data>
   <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -601,9 +742,90 @@
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxUnifi.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;groupBoxUnifi.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tbxRole.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxRole.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 24</value>
+  </data>
+  <data name="tbxRole.Size" type="System.Drawing.Size, System.Drawing">
+    <value>380, 20</value>
+  </data>
+  <data name="tbxRole.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.Name" xml:space="preserve">
+    <value>tbxRole</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.Parent" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;tbxRole.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblRole.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblRole.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblRole.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 8</value>
+  </data>
+  <data name="lblRole.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="lblRole.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblRole.Text" xml:space="preserve">
+    <value>&amp;Role:</value>
+  </data>
+  <data name="&gt;&gt;lblRole.Name" xml:space="preserve">
+    <value>lblRole</value>
+  </data>
+  <data name="&gt;&gt;lblRole.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRole.Parent" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;lblRole.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="cbDeleteRawAfterImport.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbDeleteRawAfterImport.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 59</value>
+  </data>
+  <data name="cbDeleteRawAfterImport.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 17</value>
+  </data>
+  <data name="cbDeleteRawAfterImport.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="cbDeleteRawAfterImport.Text" xml:space="preserve">
+    <value>Delete RAW files after importing</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.Name" xml:space="preserve">
+    <value>cbDeleteRawAfterImport</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.Parent" xml:space="preserve">
+    <value>pnlArdiaSettings</value>
+  </data>
+  <data name="&gt;&gt;cbDeleteRawAfterImport.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -613,7 +835,10 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>286, 390</value>
+    <value>414, 506</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>376, 493</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -621,10 +846,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Remote Account Details</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.429, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditRemoteAccountDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.429, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

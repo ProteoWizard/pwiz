@@ -50,13 +50,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public abstract RemoteAccountType AccountType { get; }
         public string ServerUrl { get; protected set; }
 
-        public RemoteAccount ChangeServerUrl(string serverUrl)
+        public virtual RemoteAccount ChangeServerUrl(string serverUrl)
         {
             return ChangeProp(ImClone(this), im => im.ServerUrl = serverUrl);
         }
         public string Username { get; protected set; }
 
-        public RemoteAccount ChangeUsername(string username)
+        public virtual RemoteAccount ChangeUsername(string username)
         {
             return ChangeProp(ImClone(this), im => im.Username = username);
         }

@@ -47,7 +47,16 @@
             this.lblClientScope = new System.Windows.Forms.Label();
             this.tbxIdentityServer = new System.Windows.Forms.TextBox();
             this.lblIdentityServer = new System.Windows.Forms.Label();
+            this.tbxRole = new System.Windows.Forms.TextBox();
+            this.lblRole = new System.Windows.Forms.Label();
+            this.pnlArdiaSettings = new System.Windows.Forms.Panel();
+            this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.pnlCommonSettings = new System.Windows.Forms.Panel();
+            this.cbDeleteRawAfterImport = new System.Windows.Forms.CheckBox();
             this.groupBoxUnifi.SuspendLayout();
+            this.pnlArdiaSettings.SuspendLayout();
+            this.flowLayoutPanel.SuspendLayout();
+            this.pnlCommonSettings.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblServerUrl
@@ -104,9 +113,9 @@
             // 
             // comboAccountType
             // 
+            resources.ApplyResources(this.comboAccountType, "comboAccountType");
             this.comboAccountType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAccountType.FormattingEnabled = true;
-            resources.ApplyResources(this.comboAccountType, "comboAccountType");
             this.comboAccountType.Name = "comboAccountType";
             this.comboAccountType.SelectedIndexChanged += new System.EventHandler(this.comboAccountType_SelectedIndexChanged);
             // 
@@ -124,6 +133,7 @@
             this.groupBoxUnifi.Controls.Add(this.lblClientScope);
             this.groupBoxUnifi.Controls.Add(this.tbxIdentityServer);
             this.groupBoxUnifi.Controls.Add(this.lblIdentityServer);
+            this.flowLayoutPanel.SetFlowBreak(this.groupBoxUnifi, true);
             this.groupBoxUnifi.Name = "groupBoxUnifi";
             this.groupBoxUnifi.TabStop = false;
             // 
@@ -157,24 +167,64 @@
             resources.ApplyResources(this.lblIdentityServer, "lblIdentityServer");
             this.lblIdentityServer.Name = "lblIdentityServer";
             // 
+            // tbxRole
+            // 
+            resources.ApplyResources(this.tbxRole, "tbxRole");
+            this.tbxRole.Name = "tbxRole";
+            // 
+            // lblRole
+            // 
+            resources.ApplyResources(this.lblRole, "lblRole");
+            this.lblRole.Name = "lblRole";
+            // 
+            // pnlArdiaSettings
+            // 
+            resources.ApplyResources(this.pnlArdiaSettings, "pnlArdiaSettings");
+            this.pnlArdiaSettings.Controls.Add(this.cbDeleteRawAfterImport);
+            this.pnlArdiaSettings.Controls.Add(this.tbxRole);
+            this.pnlArdiaSettings.Controls.Add(this.lblRole);
+            this.flowLayoutPanel.SetFlowBreak(this.pnlArdiaSettings, true);
+            this.pnlArdiaSettings.Name = "pnlArdiaSettings";
+            // 
+            // flowLayoutPanel
+            // 
+            resources.ApplyResources(this.flowLayoutPanel, "flowLayoutPanel");
+            this.flowLayoutPanel.Controls.Add(this.pnlCommonSettings);
+            this.flowLayoutPanel.Controls.Add(this.pnlArdiaSettings);
+            this.flowLayoutPanel.Controls.Add(this.groupBoxUnifi);
+            this.flowLayoutPanel.Name = "flowLayoutPanel";
+            this.flowLayoutPanel.Resize += new System.EventHandler(this.flowLayoutPanel_Resize);
+            // 
+            // pnlCommonSettings
+            // 
+            resources.ApplyResources(this.pnlCommonSettings, "pnlCommonSettings");
+            this.pnlCommonSettings.Controls.Add(this.label1);
+            this.pnlCommonSettings.Controls.Add(this.comboAccountType);
+            this.pnlCommonSettings.Controls.Add(this.textServerURL);
+            this.pnlCommonSettings.Controls.Add(this.lblUsername);
+            this.pnlCommonSettings.Controls.Add(this.lblServerUrl);
+            this.pnlCommonSettings.Controls.Add(this.textUsername);
+            this.pnlCommonSettings.Controls.Add(this.textPassword);
+            this.pnlCommonSettings.Controls.Add(this.lblPassword);
+            this.flowLayoutPanel.SetFlowBreak(this.pnlCommonSettings, true);
+            this.pnlCommonSettings.Name = "pnlCommonSettings";
+            // 
+            // cbDeleteRawAfterImport
+            // 
+            resources.ApplyResources(this.cbDeleteRawAfterImport, "cbDeleteRawAfterImport");
+            this.cbDeleteRawAfterImport.Name = "cbDeleteRawAfterImport";
+            this.cbDeleteRawAfterImport.UseVisualStyleBackColor = true;
+            // 
             // EditRemoteAccountDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.groupBoxUnifi);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.comboAccountType);
+            this.Controls.Add(this.flowLayoutPanel);
             this.Controls.Add(this.btnTest);
-            this.Controls.Add(this.lblServerUrl);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.textServerURL);
-            this.Controls.Add(this.textPassword);
-            this.Controls.Add(this.lblPassword);
-            this.Controls.Add(this.lblUsername);
-            this.Controls.Add(this.textUsername);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditRemoteAccountDlg";
@@ -182,8 +232,13 @@
             this.ShowInTaskbar = false;
             this.groupBoxUnifi.ResumeLayout(false);
             this.groupBoxUnifi.PerformLayout();
+            this.pnlArdiaSettings.ResumeLayout(false);
+            this.pnlArdiaSettings.PerformLayout();
+            this.flowLayoutPanel.ResumeLayout(false);
+            this.flowLayoutPanel.PerformLayout();
+            this.pnlCommonSettings.ResumeLayout(false);
+            this.pnlCommonSettings.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -207,5 +262,11 @@
         private System.Windows.Forms.TextBox tbxClientScope;
         private System.Windows.Forms.Label lblClientScope;
         private System.Windows.Forms.TextBox tbxIdentityServer;
+        private System.Windows.Forms.TextBox tbxRole;
+        private System.Windows.Forms.Label lblRole;
+        private System.Windows.Forms.Panel pnlArdiaSettings;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
+        private System.Windows.Forms.Panel pnlCommonSettings;
+        private System.Windows.Forms.CheckBox cbDeleteRawAfterImport;
     }
 }
