@@ -151,14 +151,21 @@ namespace pwiz.SkylineTestConnected
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+
+            // PauseTest();
+
             RunUI(() => editAccountDlg.SetRemoteAccount(_account));
+
+            // PauseTest();
 
             // Click test button
             var testSuccessfulDlg = ShowDialog<MessageDlg>(() => editAccountDlg.TestSettings());
             OkDialog(testSuccessfulDlg, testSuccessfulDlg.OkDialog);
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
 
-            foreach(var paths in _openPaths)
+            // PauseTest();
+
+            foreach (var paths in _openPaths)
                 OpenFile(openDataSourceDialog, paths);
             WaitForDocumentLoaded();
             WaitForClosedAllChromatogramsGraph();

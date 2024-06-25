@@ -18,6 +18,7 @@
 
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -26,6 +27,12 @@ using pwiz.Skyline.Util;
 using Microsoft.Web.WebView2.Core;
 using pwiz.Skyline.Util.Extensions;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using IdentityModel;
+using IdentityModel.Client;
+using Microsoft.Web.WebView2.WinForms;
+using Newtonsoft.Json;
 using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Alerts
@@ -75,6 +82,8 @@ namespace pwiz.Skyline.Alerts
         {
             return () =>
             {
+                var applicationCode = Account.ApplicationCode;
+
                 var cookieContainer = new CookieContainer();
                 var handler = new HttpClientHandler();
                 handler.CookieContainer = cookieContainer;
@@ -83,7 +92,10 @@ namespace pwiz.Skyline.Alerts
                 cookieContainer.Add(new Uri(Account.ServerUrl.Replace(@"https://", @"https://api.")),
                     new Cookie(_bffCookie.Name, _bffCookie.Value));
                 client.DefaultRequestHeaders.Add(@"Accept", @"application/json");
-                client.DefaultRequestHeaders.Add(@"applicationCode", @"z78ja2c2");
+
+                client.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);
+                // client.DefaultRequestHeaders.Add(@"applicationCode", @"z78ja2c2");
+
                 return client;
             };
         }
@@ -126,14 +138,250 @@ namespace pwiz.Skyline.Alerts
             await webView.EnsureCoreWebView2Async(environment);
             webView.CoreWebView2.CookieManager.DeleteAllCookies();
 
+            webView.Focus();
+
             // Wait for the user to login and the source to change
             //webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
             webView.CoreWebView2.DOMContentLoaded += CoreWebView2_NavigationCompleted;
 
+            //   START:  Stuffing in launch Register Device here to see if can get working
+
+            // Account = Account.ChangeApplicationCode("6fFwDy55");
+
+
+            var applicationCode_BeforeRegister = Account.ApplicationCode;
+
+            if (applicationCode_BeforeRegister == null)
+            {
+                try
+                {
+                    await RegisterDevice(webView);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            var applicationCode_AfterRegister = Account.ApplicationCode;
+
+            //   END:  Stuffing in launch Register Device here to see if can get working
+
+            var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+
             // Navigate to the login page
-            webView.CoreWebView2.Navigate($@"{Account.ServerUrl}/login");
-            webView.Focus();
+            var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={Account.ApplicationCode}&returnUrl=https://{_baseUrl}/";
+            webView.CoreWebView2.Navigate(loginUrl);
+
+            //  OLD LOGIN
+
+            // Navigate to the login page
+            // webView.CoreWebView2.Navigate($@"{Account.ServerUrl}/login");
+
         }
+
+        //   START:  Stuffing in launch Register Device here to see if can get working
+
+        // Register the device with the Ardia platform using the WebView2 control to display the registration page
+        public async Task RegisterDevice(WebView2 webView)
+        {
+            if (webView != null && webView.CoreWebView2 != null)
+            {
+                var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+                try
+                {
+                    var authority = $"https://identity.{_baseUrl}";
+                    var discoveryCache = new DiscoveryCache(authority);
+                    var discoveryDocument = await discoveryCache.GetAsync();
+                    if (discoveryDocument.IsError)
+                    {
+                        throw new Exception(discoveryDocument.Error);
+                    }
+                    var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
+                    var verificationUri = $"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
+                    webView.CoreWebView2.Navigate(verificationUri);
+                    var userTokenResponse = await RequestUserTokenAsync(deviceAuthorizationResponse);
+                    var z = 0;
+                    var clientCode = await CreateNewClient(userTokenResponse);
+                    var identityClient = await ActivateClient(clientCode, userTokenResponse);
+
+                    var x = 0;
+                    // StoreClientCredentials(identityClient);
+                }
+                catch (Exception e)
+                {
+                    var z = 0;
+                    // MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //  added throw to code from Thermo
+                    throw e;
+                }
+            }
+        }
+
+        // Request a user token from the Ardia platform using the device code obtained from the device authorization response
+        private async Task<TokenResponse> RequestUserTokenAsync(DeviceAuthorizationResponse deviceAuthorizationResponse)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+                //  Hard coded for initial connection to get device registration
+                var _ardiaDeviceClientId = "ardia.device.client.registration";
+
+                var tokenEndpoint = $"https://identity.{_baseUrl}/connect/token";
+                var response = await httpClient.RequestDeviceTokenAsync(new DeviceTokenRequest
+                {
+                    Address = tokenEndpoint,
+                    ClientId = _ardiaDeviceClientId,
+                    DeviceCode = deviceAuthorizationResponse.DeviceCode
+                });
+
+                if (!response.IsError)
+                {
+                    return response;
+                }
+                // Handle slow down and authorization pending errors
+                if (response.Error == OidcConstants.TokenErrors.AuthorizationPending ||
+                    response.Error == OidcConstants.TokenErrors.SlowDown)
+                {
+                    // Wait for the interval and try again
+                    await Task.Delay(deviceAuthorizationResponse.Interval * 1000);
+                    return await RequestUserTokenAsync(deviceAuthorizationResponse);
+                }
+                else
+                {
+                    throw new Exception(response.Error);
+                }
+            }
+        }
+
+        // Request device authorization from the Ardia platform using the device authorization endpoint and the device client credentials
+        private async Task<DeviceAuthorizationResponse> RequestDeviceAuthorizationAsync()
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+                //  Hard coded for initial connection to get device registration
+                var _ardiaDeviceClientId = "ardia.device.client.registration";
+
+                var deviceAuthorizationEndpoint = $"https://identity.{_baseUrl}/connect/deviceauthorization";
+                var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
+                {
+                    Address = deviceAuthorizationEndpoint,
+                    ClientId = _ardiaDeviceClientId,
+                    Scope = "openid profile Ardia_Client_Registration"
+                });
+                return response;
+            }
+        }
+
+        // Create a new client in the Ardia platform using the user access token obtained from the token response
+        private async Task<string> CreateNewClient(TokenResponse userTokenResponse)
+        {
+            try {
+                var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+                var newClientUri = $"https://api.{_baseUrl}/identity-registration/api/v2/Clients";
+                var accessToken = userTokenResponse.AccessToken;
+                var clientName = $"SkylineSampleApp{Guid.NewGuid().ToString()}";
+                var newClient = new NewClient() { ClientName = clientName };
+                var newClientData = JsonConvert.SerializeObject(newClient);
+
+                using (var httpClient = new HttpClient())
+                using (var request = new HttpRequestMessage(HttpMethod.Post, newClientUri))
+                using (var content = new StringContent(newClientData, Encoding.UTF8, "application/json"))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    request.Content = content;
+                    using (var response = await httpClient.SendAsync(request))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var responseData = await response.Content.ReadAsStringAsync();
+                        var clientCode = JsonConvert.DeserializeObject<ClientCodeDto>(responseData);
+                        return clientCode.Code;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        // Activate the client in the Ardia platform using the client code obtained from the client creation response
+        private async Task<IdentityClient> ActivateClient(string clientCode, TokenResponse userTokenResponse)
+        {
+            var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+            var activateClientUri = $"https://api.{_baseUrl}/identity-registration/api/v2/Clients/activate";
+            var accessToken = userTokenResponse.AccessToken;
+            // Define the client activation input
+            var clientActivationInput = new ClientActivationInput()
+            {
+                ApplicationCode = clientCode,
+                AppName = "SkylineSampleApp",
+                Version = "1.0.0",
+                PCName = Environment.MachineName,
+                RedirectUris = new List<string>() { "http://localhost:5001/signin-oidc" },
+                PostLogoutRedirectUris = new List<string>() { "http://localhost:5001/signout-oidc" },
+                ClientUri = "http://localhost:5001",
+                Scopes = new List<string>() { "openid", "profile", "offline_access", "DataServerApi", "IdentityServerApi" },
+                GrantTypes = new List<string>() { "authorization_code", "urn:ietf:params:oauth:grant-type:token-exchange" },
+            };
+            var clientActivationInputData = JsonConvert.SerializeObject(clientActivationInput);
+
+            using (var httpClient = new HttpClient())
+            using (var clientActivationRequest = new HttpRequestMessage(HttpMethod.Post, activateClientUri))
+            using (var clientActivationContent = new StringContent(clientActivationInputData, Encoding.UTF8, "application/json"))
+            {
+                clientActivationRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                clientActivationRequest.Content = clientActivationContent;
+                using (var clientActivationResponse = await httpClient.SendAsync(clientActivationRequest))
+                {
+                    clientActivationResponse.EnsureSuccessStatusCode();
+                    var clientActivationData = await clientActivationResponse.Content.ReadAsStringAsync();
+                    var clientActivation = JsonConvert.DeserializeObject<ClientApplicationResponse>(clientActivationData);
+                    var clientCredentialsUri =
+                        $"https://api.{_baseUrl}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
+                    using (var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, clientCredentialsUri))
+                    {
+                        clientCredentialsRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                        using (var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest))
+                        {
+                            clientCredentialsResponse.EnsureSuccessStatusCode();
+                            var clientCredentialsResponseData = await clientCredentialsResponse.Content.ReadAsStringAsync();
+                            var clientCredentials = JsonConvert.DeserializeObject<ClientCredentialsResponse>(clientCredentialsResponseData);
+
+                            var ClientId = clientCredentials.ClientId;
+                            var clientSecret = clientCredentials.ClientSecret;
+                            var ApplicationCode = clientCredentials.ApplicationCode;
+                            var Name = clientCredentials.Name;
+
+                            Account = Account.ChangeApplicationCode( clientCredentials.ApplicationCode );
+
+                            await CheckForBffHostCookie();
+
+                            return new IdentityClient
+                            {
+                                ClientId = clientCredentials.ClientId,
+                                ClientSecret = clientCredentials.ClientSecret,
+                                ClientCode = clientCredentials.ApplicationCode,
+                                ClientName = clientCredentials.Name,
+                            };
+
+
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //   END:  Stuffing in launch Register Device here to see if can get working
+
 
         public class CoreWebView2ExceptionWrapper : Exception
         {
@@ -313,5 +561,345 @@ namespace pwiz.Skyline.Alerts
                     Console.Error.WriteLine(ex.ToString());
             }
         }
+
+
+        #region Helper classes
+        // Class to hold the client code
+        private class ClientCodeDto
+        {
+            public string Code { get; set; }
+        }
+        #endregion
+
+
+        /// <summary>
+        /// The New Client model.
+        /// </summary>
+        private class NewClient
+        {
+            /// <summary>
+            /// Gets or sets the client name.
+            /// </summary>
+            public string ClientName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the grant types.
+            /// </summary>
+            public List<string> GrantTypes { get; set; }
+
+            /// <summary>
+            /// Gets or sets the redirect uris.
+            /// </summary>
+            public List<string> RedirectUris { get; set; }
+
+            /// <summary>
+            /// Gets or sets the post logout redirect uris.
+            /// </summary>
+            public List<string> PostLogoutRedirectUris { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client uri.
+            /// </summary>
+            public string ClientUri { get; set; }
+
+            /// <summary>
+            /// Gets or sets the scopes.
+            /// </summary>
+            public List<string> Scopes { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value indicating whether require consent.
+            /// </summary>
+            public bool RequireConsent { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value indicating whether always include user claims in id token.
+            /// </summary>
+            public bool AlwaysIncludeUserClaimsInIdToken { get; set; } = true;
+
+            /// <summary>
+            /// Gets or sets a value indicating whether require pkce.
+            /// </summary>
+            public bool RequirePkce { get; set; } = true;
+
+            /// <summary>
+            /// Gets or sets a value indicating whether client secret is required.
+            /// </summary>
+            public bool RequireClientSecret { get; set; } = true;
+
+            /// <summary>
+            /// Gets or sets the metadata.
+            /// </summary>
+            public Dictionary<string, string> MetaData { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client id.
+            /// </summary>
+            public string ClientId { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client secret.
+            /// </summary>
+            public string ClientSecret { get; set; }
+
+            /// <summary>
+            /// Gets or sets the identity token lifetime, defaulted to 300 seconds.
+            /// </summary>
+            public ushort IdentityTokenLifetime { get; set; } = 300;
+
+            /// <summary>
+            /// Gets or sets the access token lifetime, defaulted to 1200 seconds.
+            /// </summary>
+            public ushort AccessTokenLifetime { get; set; } = 1200;
+
+            /// <summary>
+            /// Gets or sets the absolute refresh token lifetime, defaulted to 2592000 seconds.
+            /// </summary>
+            public uint AbsoluteRefreshTokenLifetime { get; set; } = 2592000u;
+
+            /// <summary>
+            /// Gets or sets the sliding refresh token lifetime, defaulted to 1296000 seconds.
+            /// </summary>
+            public uint SlidingRefreshTokenLifetime { get; set; } = 1296000u;
+
+            /// <summary>
+            /// Gets or sets the refresh token usage.
+            /// Defaulted to 0 reuse.
+            /// </summary>
+            public int RefreshTokenUsage { get; set; }
+
+            /// <summary>
+            /// Gets or sets the refresh token expiration.
+            /// The refresh token will expire on a fixed point in time (specified by the AbsoluteRefreshTokenLifetime).
+            /// This is the default.
+            /// </summary>
+            public int RefreshTokenExpiration { get; set; } = 1;
+
+            /// <summary>
+            /// Gets or sets a value indicating whether allow offline access.
+            /// </summary>
+            public bool AllowOfflineAccess { get; set; }
+
+            /// <summary>
+            /// Gets or sets the device code lifetime defaulted to 300 seconds.
+            /// </summary>
+            public ushort DeviceCodeLifetime { get; set; } = 300;
+        }
+
+
+        /// <summary>
+        /// Represents an identity client.
+        /// </summary>
+        private class IdentityClient
+        {
+            /// <summary>
+            /// Gets or sets the client ID.
+            /// </summary>
+            public string ClientId { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client secret.
+            /// </summary>
+            public string ClientSecret { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client name.
+            /// </summary>
+            public string ClientName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client code.
+            /// </summary>
+            public string ClientCode { get; set; }
+
+        }
+
+
+        /// <summary>
+        /// The model used to activate a client.
+        /// </summary>
+        private class ClientActivationInput
+        {
+            /// <summary>
+            /// Code to lookup row to update.
+            /// </summary>
+            public string ApplicationCode { get; set; }
+
+            /// <summary>
+            /// Application Name.
+            /// </summary>
+            public string AppName { get; set; }
+
+            /// <summary>
+            /// IP Address that is activating the code.
+            /// </summary>
+            public string IPAddress { get; set; }
+
+            /// <summary>
+            /// Version.
+            /// </summary>
+            public string Version { get; set; }
+
+            /// <summary>
+            /// PC name that is activating the code.
+            /// </summary>
+            public string PCName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the redirect uris.
+            /// </summary>
+            public List<string> RedirectUris { get; set; }
+
+            /// <summary>
+            /// Gets or sets the post logout redirect uris.
+            /// </summary>
+            public List<string> PostLogoutRedirectUris { get; set; }
+
+            /// <summary>
+            /// Gets or sets the client uri.
+            /// </summary>
+            public string ClientUri { get; set; }
+
+            /// <summary>
+            /// Gets or sets the scopes.
+            /// </summary>
+            public List<string> Scopes { get; set; }
+
+            /// <summary>
+            /// Gets or sets the grant types.
+            /// </summary>
+            public List<string> GrantTypes { get; set; }
+
+            /// <summary>
+            /// The access token lifetime in seconds.
+            /// </summary>
+            public int AccessTokenLifetime { get; set; }
+        }
+
+
+        /// <summary>
+        /// Represents the response from the client application.
+        /// </summary>
+        public class ClientApplicationResponse
+        {
+            /// <summary>
+            /// Gets or sets the registration code.
+            /// </summary>
+            public string RegistrationCode { get; set; }
+
+            /// <summary>
+            /// Gets or sets the application name.
+            /// </summary>
+            public string AppName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the IP address.
+            /// </summary>
+            public string IPAddress { get; set; }
+
+            /// <summary>
+            /// Gets or sets the version of the application.
+            /// </summary>
+            public string Version { get; set; }
+
+            /// <summary>
+            /// Gets or sets the PC name.
+            /// </summary>
+            public string PCName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the registration status of the client application.
+            /// </summary>
+            public ClientRegistrationStatus Status { get; set; }
+
+            /// <summary>
+            /// Gets or sets the date when the registration code was generated.
+            /// </summary>
+            public DateTime? CodeDate { get; set; }
+
+            /// <summary>
+            /// Gets or sets the age of the registration code.
+            /// </summary>
+            public TimeSpan? CodeAge { get; set; }
+
+            /// <summary>
+            /// Gets or sets the date when the client application was activated.
+            /// </summary>
+            public DateTime? ActivationDate { get; set; }
+        }
+
+        /// <summary>
+        /// Represents the status of a client registration.
+        /// </summary>
+        public enum ClientRegistrationStatus
+        {
+            /// <summary>
+            /// Indicates a new client registration.
+            /// </summary>
+            New,
+
+            /// <summary>
+            /// Indicates an active client registration.
+            /// </summary>
+            Active,
+
+            /// <summary>
+            /// Indicates an unused client registration.
+            /// </summary>
+            Unused,
+
+            /// <summary>
+            /// Indicates a disabled client registration.
+            /// </summary>
+            Disabled
+        }
+
+
+        /// <summary>
+        /// Client credentials.
+        /// </summary>
+        public class ClientCredentialsResponse
+        {
+            /// <summary>
+            /// Gets or sets the Client Name.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Gets or sets the Client Id.
+            /// </summary>
+            public string ClientId { get; set; }
+
+            /// <summary>
+            /// Gets or sets the Client Secret.
+            /// </summary>
+            public string ClientSecret { get; set; }
+
+            /// <summary>
+            /// Gets or sets list of supported Client scopes.
+            /// </summary>
+            public string[] ClientScopes { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value indicating whether the client is activate or not.
+            /// </summary>
+            public bool Activated { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value for the Application Code.
+            /// </summary>
+            public string ApplicationCode { get; set; }
+
+            /// <summary>
+            /// Gets or sets the name of the application.
+            /// </summary>
+            public string ApplicationName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the name of the application version.
+            /// </summary>
+            public string ApplicationVersion { get; set; }
+        }
     }
+
 }

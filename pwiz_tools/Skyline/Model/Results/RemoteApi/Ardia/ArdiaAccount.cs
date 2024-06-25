@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public string Role { get; private set; }
         public bool DeleteRawAfterImport { get; private set; }
         public string BffHostCookie { get; private set; }
+        public string ApplicationCode { get; private set; }
 
         public ArdiaAccount(string serverUrl, string username, string password)
         {
@@ -142,6 +143,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         {
             return ChangeProp(ImClone(this), im => im.BffHostCookie = bffHostCookie);
         }
+        public ArdiaAccount ChangeApplicationCode(string applicationCode)
+        {
+            return ChangeProp(ImClone(this), im => im.ApplicationCode = applicationCode);
+        }
 
         public ArdiaUrl GetRootArdiaUrl()
         {
@@ -166,7 +171,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return base.Equals(other) &&
                    Equals(Role, other.Role) &&
                    DeleteRawAfterImport == other.DeleteRawAfterImport &&
-                   Equals(BffHostCookie, other.BffHostCookie);
+                   Equals(BffHostCookie, other.BffHostCookie) &&
+                   Equals(ApplicationCode, other.ApplicationCode);
         }
 
         public override int GetHashCode()
@@ -177,6 +183,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                 hashCode = (hashCode * 397) ^ (Role?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ DeleteRawAfterImport.GetHashCode();
                 hashCode = (hashCode * 397) ^ (BffHostCookie?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (ApplicationCode?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

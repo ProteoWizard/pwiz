@@ -52,7 +52,14 @@ namespace pwiz.SkylineTestUtil
 
                 case AccountType.SingleRole:
                     return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeServerUrl(_baseUrl)
+
                         .ChangeUsername("chambem2@uw.edu")
+
+                        //  The Client Registration will fail with HTTP Status 403 due to Role configuration where NOT Enabled: "Generate an activation code and/or directly register client"
+                        //  Role SkylineTeser_NoClientRegist - No Client Registration
+                        // .ChangeUsername("djaschob@u.washington.edu")
+
+
                         .ChangePassword(password);
 
                 default:
