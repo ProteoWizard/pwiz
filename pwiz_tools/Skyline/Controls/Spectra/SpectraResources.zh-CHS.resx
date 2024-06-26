@@ -140,7 +140,7 @@
     <value>所选行没有任何过滤器</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_" xml:space="preserve">
-    <value>没有匹配的母离子可添加任何过滤器。</value>
+    <value>没有匹配的母离子来使用任何过滤器。</value>
   </data>
   <data name="SpectraGridForm_GetDefaultViewSpec_Default" xml:space="preserve">
     <value>默认</value>
@@ -149,7 +149,7 @@
     <value>显示所有谱图</value>
   </data>
   <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_" xml:space="preserve">
-    <value>显示 {1} 和 {2} 之间靠近 {0} 母离子的谱图</value>
+    <value>显示 {1} 和 {2} 之间并靠近 {0} 母离子的谱图</value>
   </data>
   <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_" xml:space="preserve">
     <value>显示接近母离子质荷比 {0} 的谱图</value>

@@ -322,7 +322,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelSpecLibLinks.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="linkPeptideAtlas.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -349,7 +349,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;linkPeptideAtlas.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="linkNIST.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -376,7 +376,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;linkNIST.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="cbxUseExplicitPeakBounds.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

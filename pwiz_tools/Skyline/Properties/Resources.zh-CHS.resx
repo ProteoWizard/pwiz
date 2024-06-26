@@ -426,7 +426,7 @@
     <value>肽段{1}在母离子{0}上的无效库强度。</value>
   </data>
   <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
-    <value>{0} 值对于参数 {1} 无效，该参数需要的是值和单位。例如: {2}。</value>
+    <value>{0} 值对于参数 {1} 无效，该参数需要的是一个值和一个单位。例如: {2}。</value>
   </data>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Margin" xml:space="preserve">
     <value>边距</value>
@@ -456,7 +456,7 @@
     <value>文档仅包括这些 iRT 标准肽段中的 {0} 个。</value>
   </data>
   <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
-    <value>该 skyp 文件由用户 {0} 下载。Skyline 中保存的此服务器的凭据适用于用户 {1}。</value>
+    <value>该 skyp 文件由用户 {0} 下载。Skyline 中保存的此服务器凭据仅适用于用户 {1}。</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Product_Neutral_Loss" xml:space="preserve">
     <value>子离子中性丢失</value>
@@ -487,6 +487,24 @@
   </data>
   <data name="Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__" xml:space="preserve">
     <value>子离子电荷{0}必须非零且在{1}和{2}之间。</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
+    <value>已经存在名为“{0}”的已定义注释。</value>
+  </data>
+  <data name="NistLibraryBase_Load_Loading__0__library" xml:space="preserve">
+    <value>加载{0}库</value>
+  </data>
+  <data name="SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
+    <value>导出分离列表</value>
+  </data>
+  <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
+    <value>FASTA 序列不同的肽段不可比较。</value>
+  </data>
+  <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
+    <value>遗留库</value>
   </data>
   <data name="CompareElement_CompareElement__Compare____" xml:space="preserve">
     <value>&lt;比较…&gt;</value>
@@ -814,6 +832,10 @@
   </data>
   <data name="MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators" xml:space="preserve">
     <value>MProphetScoringModel 被赋予带有{0}特征的峰，但它拥有 {1} 个峰特征计算器</value>
+  </data>
+  <data name="SkylineWindow_GetDownloadName__0___1__" xml:space="preserve">
+    <value>{0}({1})</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AlertDlg_GetDefaultButtonText__Ignore" xml:space="preserve">
     <value>忽略(&amp;I)</value>
@@ -1177,6 +1199,14 @@
   <data name="ReportSpecList_GetDefaults_Peptide_RT_Results" xml:space="preserve">
     <value>肽段RT 结果</value>
   </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_RT_Results" xml:space="preserve">
+    <value>Molecule RT Results</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Transition_Results" xml:space="preserve">
+    <value>Molecule Transition Results</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
     <value>{0}不能为空。</value>
   </data>
@@ -1336,7 +1366,11 @@
     <value>无效的模型选择。</value>
   </data>
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>NCE：</value>
+    <value>CE：</value>
+    <comment>Needs Review:English text changed
+Old English:CE:
+Current English:NCE:
+Old Localized:CE：</comment>
   </data>
   <data name="WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_" xml:space="preserve">
     <value>从{0}检索文件夹信息失败</value>
@@ -2007,7 +2041,7 @@
     <value>具有 iRT 库值的导入肽段{0}已经用作 iRT 标准。</value>
   </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
-    <value>错误：必须先导入 FASTA 文件，然后才能关联蛋白质</value>
+    <value>错误：必须先导入 FASTA 文件才能关联蛋白质</value>
   </data>
   <data name="RenameProteinsDlg_OkDialog__0__is_not_a_current_protein" xml:space="preserve">
     <value>{0}不是当前的蛋白质</value>
@@ -2089,7 +2123,7 @@
 
 禁用自动选择: {2} 个母离子和 {3} 个碎片离子对将添加到当前文档。
 
-如果选择“禁用”，则可以稍后使用“细化 &gt; 高级”菜单项启用自动选择。</value>
+如果选择“禁用”，则可以稍后使用“细化 &gt; 高级”菜单项来启用自动选择。</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_" xml:space="preserve">
     <value>无效保留时间窗口值{0}</value>
@@ -2609,7 +2643,7 @@
     <value>警告：无效的每次进样参数最大离子对数目({0})。</value>
   </data>
   <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
-    <value>Skyline 中保存的 Panorama 服务器 {0} 的凭据适用于用户 {1}。该用户不具备下载该文件的权限。该 skyp 文件由 {2} 下载。</value>
+    <value>Skyline 中保存的 Panorama 服务器 {0} 的凭据仅适用于用户 {1}。该用户不具备下载该文件的权限。该 skyp 文件由 {2} 下载。</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_ion_mobility_value_on_line__0__" xml:space="preserve">
     <value>第 {0} 行缺少离子迁移值。</value>
@@ -2898,7 +2932,7 @@
     <value>样品名称</value>
   </data>
   <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
-    <value>无法确定分隔符分隔的值文件的格式</value>
+    <value>无法识别分隔符分隔值文件的格式</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__" xml:space="preserve">
     <value>第 {0} 行上缺失碰撞横截面值。</value>
@@ -3293,7 +3327,7 @@
     <value>错误：肽段数目 {0} 必须小于针对诱饵 {1} 的肽段母离子模型数目，或使用 {2}={3} 诱饵生成方法。</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__" xml:space="preserve">
-    <value>应提供共享的 Skyline 文档存档文件 ({0}) 的 URL。但在 URL {2} 中找到的文件名为 {1}。</value>
+    <value>应有共享 Skyline 存档文件({0})的 URL。但在 URL {2} 中找到的文件名为 {1}。</value>
   </data>
   <data name="AbstractSpectrumGraphItem_AddAnnotations_" xml:space="preserve">
     <value>得分= {0:F06}</value>
@@ -3620,6 +3654,9 @@
   <data name="RefineListDlgProtein_OkDialog_Of_the_specified__0__proteins__1__are_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
     <value>指定的 {0} 个蛋白质{1}不存在于文档中。您是否想要继续？</value>
   </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>搜索失败：{0}</value>
+  </data>
   <data name="RefineListDlgProtein_OkDialog_The_protein___0___is_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
     <value>蛋白质“{0}”不存在于文档中。您是否想要继续？</value>
   </data>
@@ -3765,7 +3802,7 @@
     <value>您必须导出一个{0}离子对列表并使用供应商软件来将其手动导入方法文件。</value>
   </data>
   <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
-    <value>当前所选版本不支持包含数据文件夹。</value>
+    <value>当前所选版本不支持包含数据的文件夹。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
     <value>母离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值，或留空来让Skyline 为您进行计算。</value>
@@ -3813,10 +3850,10 @@
     <value>它必须以“&gt;”开始</value>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
-    <value>无法验证用户身份。从服务器收到的响应:{0} {1}</value>
+    <value>无法验证用户身份。服务器的反馈:{0} {1}</value>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
-    <value>服务器 {0} 的响应异常</value>
+    <value>服务器 {0} 的JSON响应异常</value>
   </data>
   <data name="UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
     <value>验证服务器 {0} 上的用户凭据时出错。</value>
@@ -3835,6 +3872,7 @@
   </data>
   <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
     <value>找不到 EncyclopeDIA</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
     <value>正在组合定量库</value>
@@ -3854,5 +3892,129 @@
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>正在运行命令:{0} {1}</value>
+  </data>
+  <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
+    <value>File does not exist. It may have been deleted on the server.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_" xml:space="preserve">
+    <value>There are no Panorama servers with a user account. To upload documents to a server a user account is required.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
+    <value>Unmapped Peptides</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_" xml:space="preserve">
+    <value>Spectral library file {0} exported successfully.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_" xml:space="preserve">
+    <value>Error: The document must contain at least one precursor to export a spectral library.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
+    <value>Error: The document must contain results to export a spectral library.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_" xml:space="preserve">
+    <value>mProphet features file {0} exported successfully.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
+    <value>Error: The document must contain targets for which to export mProphet features.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
+    <value>Error: The document must contain results to export mProphet features.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
+    <value>Annotations successfully defined from file {0}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
+    <value>Protein Expression</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
+    <value>Annotations file {0} exported successfully.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__" xml:space="preserve">
+    <value>Error: Unable to read annotations from file {0}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation type '{0}'. Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
+    <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
+    <value>Warning: Overwriting existing annotation '{0}' due to a name conflict.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
+    <value>Error: Cannot add a {0} type annotation without providing a list of values through {1}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
+    <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
+    <value>Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_" xml:space="preserve">
+    <value>Error: The document must contain annotations in order to export annotations.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
+    <value>Error: Could not find background proteome file {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
+    <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
+    <value>Importing peptide list {0} from file {1}...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
+    <value>Importing peptide lists from file {0}...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
+    <value>Warning: peptide list file contains lines with &gt;&gt;. Ignoring provided list name.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_" xml:space="preserve">
+    <value>Associating peptides with proteins from FASTA file {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_" xml:space="preserve">
+    <value>Add peptide precursors to the document to build a library from Koina predictions.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_" xml:space="preserve">
+    <value>Using the Unimod definitions for the following modifications:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
+    <value>A peptide modification must be added before assigning its variable status.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

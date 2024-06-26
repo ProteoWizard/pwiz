@@ -642,6 +642,10 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>436, 17</value>
   </metadata>
+  <data name="textPeptide.ToolTip" xml:space="preserve">
+    <value>Filters beginning with * search within descriptions, e.g. *PEET will match PEETID and AAPEETB</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
   </data>

@@ -406,7 +406,7 @@
     <value>398, 126</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterScreen</value>
+    <value>CenterParent</value>
   </data>
   <data name="&gt;&gt;toolStripButtonCopy.Name" xml:space="preserve">
     <value>toolStripButtonCopy</value>

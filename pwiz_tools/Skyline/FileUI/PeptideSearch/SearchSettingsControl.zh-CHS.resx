@@ -126,7 +126,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbMS1TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Name" xml:space="preserve">
     <value>cbMS1TolUnit</value>
@@ -138,7 +138,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>21</value>
   </data>
   <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -150,7 +150,7 @@
     <value>79, 13</value>
   </data>
   <data name="lblMs1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="lblMs1Tolerance.Text" xml:space="preserve">
     <value>MS1 耐受性(&amp;)：</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>20</value>
   </data>
   <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 106</value>
@@ -174,7 +174,7 @@
     <value>121, 20</value>
   </data>
   <data name="txtMS1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.Name" xml:space="preserve">
     <value>txtMS1Tolerance</value>
@@ -186,7 +186,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>19</value>
   </data>
   <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 146</value>
@@ -195,7 +195,7 @@
     <value>121, 20</value>
   </data>
   <data name="txtMS2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.Name" xml:space="preserve">
     <value>txtMS2Tolerance</value>
@@ -207,7 +207,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>16</value>
   </data>
   <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -219,7 +219,7 @@
     <value>79, 13</value>
   </data>
   <data name="lblMs2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="lblMs2Tolerance.Text" xml:space="preserve">
     <value>MS2 耐受性(&amp;2)：</value>
@@ -234,7 +234,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>17</value>
   </data>
   <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
     <value>153, 146</value>
@@ -243,7 +243,7 @@
     <value>70, 21</value>
   </data>
   <data name="cbMS2TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.Name" xml:space="preserve">
     <value>cbMS2TolUnit</value>
@@ -255,7 +255,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>18</value>
   </data>
   <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -316,7 +316,7 @@
     <value>107, 23</value>
   </data>
   <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>19</value>
   </data>
   <data name="btnAdditionalSettings.Text" xml:space="preserve">
     <value>其他设置(&amp;D)</value>
@@ -331,7 +331,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>13</value>
   </data>
   <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -367,7 +367,7 @@
     <value>29, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
+    <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>单位：</value>
@@ -382,7 +382,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>11</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -394,7 +394,7 @@
     <value>29, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>单位：</value>
@@ -409,7 +409,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>10</value>
   </data>
   <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -535,7 +535,7 @@
     <value>79, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>29</value>
+    <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>搜索引擎(&amp;S)：</value>
@@ -550,7 +550,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>6</value>
   </data>
   <data name="cbMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 239</value>
@@ -602,6 +602,59 @@
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="labelPPM.Text" xml:space="preserve">
+    <value>PPM</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
+    <value>Ignore features whose intensity relative to the sum of all detected feature intensities in a sample is less than this</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="labelMinIntensityPPM.Text" xml:space="preserve">
+    <value>Min &amp;intensity proportion:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="labelHardklorMinIdotP.Text" xml:space="preserve">
+    <value>Min isotope &amp;dot product:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
+    <value>Sets Hardklor configuration's signal-to-noise threshold, i.e. the relative abundance a peak must exceed in the spectrum window to be considered in the scoring algorithm.
+Note that this is a local noise threshold for the area of the spectrum that the peptide was identified in.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
+    <value>Min &amp;signal to noise:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="groupBoxHardklor.Text" xml:space="preserve">
+    <value>Search parameters</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="textCutoff.ToolTip" xml:space="preserve">
+    <value>A score from 1.0 - 0, with 1.0 most likely to be correct,
+used to provide a cut-off for spectra in the results that will
+be included in the library.
+
+For TPP pepXML this is the minimum PeptideProphet probability.
+For Mascot this is 1 - the maximum expectation value.
+For SEQUEST SQT this is 1 - the maximum FDR.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="labelCutoff.Text" xml:space="preserve">
+    <value>Q 值截止：</value>
+    <comment>Needs Review:English text changed
+Old English:Q value cutoff:
+Current English:&amp;Cut-off score:
+Old Localized:Q 值截止：</comment>
+  </data>
+  <data name="lblSearchEngineBlurb.Text" xml:space="preserve">
+    <value>(blurb)</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

@@ -409,7 +409,7 @@
     <value>214, 17</value>
   </data>
   <data name="cbExclusionUseDIAWindow.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="cbExclusionUseDIAWindow.Text" xml:space="preserve">
     <value>使用 DIA 母离子窗口进行排除(&amp;U)</value>
@@ -799,7 +799,7 @@
     <value>124, 13</value>
   </data>
   <data name="label7.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>10</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>离子匹配耐受性单位(&amp;C)：</value>

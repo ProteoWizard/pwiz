@@ -164,6 +164,10 @@
   </data>
   <data name="lblServers.Text" xml:space="preserve">
     <value>服务器：</value>
+    <comment>Needs Review:English text changed
+Old English:Servers:
+Current English:&amp;Servers:
+Old Localized:服务器：</comment>
   </data>
   <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
     <value>lblServers</value>
@@ -272,6 +276,10 @@
   </data>
   <data name="lblRemoteAccounts.Text" xml:space="preserve">
     <value>远程账户：</value>
+    <comment>Needs Review:English text changed
+Old English:Remote accounts:
+Current English:&amp;Remote accounts:
+Old Localized:远程账户：</comment>
   </data>
   <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
     <value>lblRemoteAccounts</value>
@@ -346,10 +354,10 @@
     <value>13, 108</value>
   </data>
   <data name="tbxKoinaServer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 20</value>
+    <value>175, 20</value>
   </data>
   <data name="tbxKoinaServer.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;tbxKoinaServer.Name" xml:space="preserve">
     <value>tbxKoinaServer</value>
@@ -376,10 +384,10 @@
     <value>32, 13</value>
   </data>
   <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>8</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>N&amp;CE:</value>
+    <value>N&amp;CE：</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -394,13 +402,13 @@
     <value>1</value>
   </data>
   <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>237, 110</value>
+    <value>237, 108</value>
   </data>
   <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 21</value>
   </data>
   <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
     <value>ceCombo</value>
@@ -418,7 +426,7 @@
     <value>True</value>
   </data>
   <data name="koinaServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>137, 111</value>
+    <value>10, 131</value>
   </data>
   <data name="koinaServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 0, 1, 0</value>
@@ -427,10 +435,11 @@
     <value>97, 13</value>
   </data>
   <data name="koinaServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>3</value>
   </data>
   <data name="koinaServerStatusLabel.Text" xml:space="preserve">
     <value>服务器状态</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerStatusLabel.Name" xml:space="preserve">
     <value>koinaServerStatusLabel</value>
@@ -451,16 +460,17 @@
     <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 172</value>
+    <value>10, 196</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>58, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>iRT 模型：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -490,7 +500,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.Parent" xml:space="preserve">
-    <value>tabKoina</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.ZOrder" xml:space="preserve">
     <value>5</value>
@@ -502,16 +512,17 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 133</value>
+    <value>10, 154</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>强度模型：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -541,7 +552,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.Parent" xml:space="preserve">
-    <value>tabKoina</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.ZOrder" xml:space="preserve">
     <value>7</value>
@@ -559,10 +570,11 @@
     <value>41, 13</value>
   </data>
   <data name="koinaServerLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
     <value>&amp;服务器：</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
     <value>koinaServerLabel</value>
@@ -592,13 +604,14 @@
     <value>322, 55</value>
   </data>
   <data name="koinaDescrLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="koinaDescrLabel.Text" xml:space="preserve">
     <value>Koina 是一个深度学习框架，
 可使用任何物种和蛋白质的
 预测的高质量 HCD MS2 谱图以及 iRT预测，
 免费且轻松地生成自定义谱图库。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaDescrLabel.Name" xml:space="preserve">
     <value>koinaDescrLabel</value>
@@ -616,7 +629,7 @@
     <value>NoControl</value>
   </data>
   <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>2, 3</value>
+    <value>13, 2</value>
   </data>
   <data name="pictureBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
@@ -659,6 +672,7 @@
   </data>
   <data name="tabKoina.Text" xml:space="preserve">
     <value>Koina</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;tabKoina.Name" xml:space="preserve">
     <value>tabKoina</value>
@@ -749,6 +763,10 @@
   </data>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="lblSettingsPath.Text" xml:space="preserve">
+    <value>Settings are stored in:</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>134, 165</value>
@@ -1075,7 +1093,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
