@@ -46,12 +46,12 @@ namespace pwiz.Skyline.Model.DdaSearch
     public class HardklorSearchEngine : AbstractDdaSearchEngine, IProgressMonitor
     {
         private ImportPeptideSearch _searchSettings;
+        private List<MsDataFileUri> _convertedFileNames; // The mzML files Hardklor operates on
 
         internal bool _keepIntermediateFiles;
         // Temp files we'll need to clean up at the end the end if !_keepIntermediateFiles
         private ConcurrentDictionary<MsDataFileUri, string> _inputsAndOutputs; // Maps mzml to  .hk.bs.kro results files
-        private string _isotopesFilename;
-        public Dictionary<MsDataFileUri, SpectrumSummaryList> SpectrumSummaryLists = new Dictionary<MsDataFileUri, SpectrumSummaryList>();
+        public Dictionary<MsDataFileUri, SpectrumSummaryList> AlignmentSpectrumSummaryLists = new Dictionary<MsDataFileUri, SpectrumSummaryList>();
 
         private Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner> _alignments =
             new Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner>();
@@ -59,20 +59,20 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
             SpectrumFileNames = searchFilenames;
-            _isotopesFilename = string.Empty;
+            _convertedFileNames = SpectrumFileNames.Select(HardklorSearchEngine.GetMzmlFilePath).ToList();
+
             _searchSettings.RemainingStepsInSearch = 1; // Everything runs in a parallel step
         }
         public HardklorSearchEngine(ImportPeptideSearch searchSettings)
         {
             _searchSettings = searchSettings;
-            _keepIntermediateFiles = false;
+            _keepIntermediateFiles = true;
             _inputsAndOutputs = new ConcurrentDictionary<MsDataFileUri, string>();
         }
 
         public void SetCancelToken(CancellationTokenSource cancelToken) => _cancelToken = cancelToken;
 
         private CancellationTokenSource _cancelToken;
-        private IProgressStatus _progressStatus;
         private bool _success;
 
         public override string[] FragmentIons => Array.Empty<string>();
@@ -93,9 +93,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
-        internal IProgressStatus RunFeatureFinderStep(IProgressMonitor progressMonitor, HardklorSearchControl searchControl, IProgressStatus status, MsDataFilePath input, bool bullseye)
+        internal IProgressStatus RunFeatureFinderStep(IProgressMonitor progressMonitor, string workingDirectory, HardklorSearchControl searchControl, IProgressStatus status, MsDataFilePath input, bool bullseye)
         {
-            _progressStatus = status;
             // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
             Func<string> RunHardklorStep = () =>
             {
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 if (!bullseye)
                 {
                     // First pass - run Hardklor
-                    exeName = PrepareHardklorProcess(null, input, out args, out stepDescription);
+                    exeName = PrepareHardklorProcess(workingDirectory, input, out args, out stepDescription);
                 }
                 else
                 {
@@ -113,7 +112,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     exeName = PrepareBullseyeProcess(input, out args, out stepDescription);
                 }
 
-                progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeSegmentName(exeName)); // Update progress bar
+                progressMonitor.UpdateProgress(status = status.ChangeSegmentName(exeName)); // Update progress bar
                 searchControl.AnnounceStep($@"{stepDescription}: {exeName} {string.Join(@" ", args)}"); // Update master log
 
 
@@ -129,11 +128,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                     StandardErrorEncoding = Encoding.UTF8
                 };
                 pr.ShowCommandAndArgs = true; // Show the commandline
-                pr.Run(psi, string.Empty, progressMonitor, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                pr.Run(psi, string.Empty, progressMonitor, ref status, ProcessPriorityClass.BelowNormal);
                 return exeName;
             };
             LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, RunHardklorStep);
-            return _progressStatus;
+            return status;
         }
 
         private string PrepareBullseyeProcess(MsDataFilePath input, out string args, out string description)
@@ -245,7 +244,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         internal bool AlignReplicates(IProgressMonitor progressMonitor)
         {
-            if (SpectrumSummaryLists.Count == 0)
+            if (AlignmentSpectrumSummaryLists.Count == 0)
             {
                 return false; // Nothing to do
             }
@@ -266,7 +265,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 return false;
             }
 
-            UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates)));
             // Parse all the Bullseye output files
             ReadFeatures();
 
@@ -516,8 +514,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                             // Isotope envelopes agree, masses are similar - does RT agree?
                             if (hkFeatureDetailI.fileIndex != hkFeatureDetailJ.fileIndex)
                             {
-                                var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
-                                var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
+                                var fileI = _convertedFileNames[hkFeatureDetailI.fileIndex];
+                                var fileJ = _convertedFileNames[hkFeatureDetailJ.fileIndex];
                                 if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignmentI) &&
                                     _alignments.TryGetValue(Tuple.Create(fileJ, fileI), out var alignmentJ))
                                 {
@@ -663,6 +661,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
 
+        private static string GetHardlorIsotopesFilename(string hkFile)
+        {
+            return hkFile + @".isotopes";
+        }
+
         private static string GetHardlorConfigurationFilename(string hkFile)
         {
             return hkFile + @".conf";
@@ -755,59 +758,58 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             if (!_keepIntermediateFiles)
             {
-                FileEx.SafeDelete(_isotopesFilename, true);
-                foreach (var hkFile in _inputsAndOutputs.Values)
-                {
-                    FileEx.SafeDelete(hkFile, true); // The hardklor .hk file
-                    FileEx.SafeDelete(GetHardlorConfigurationFilename(hkFile));
-                    var bullseyeKronikFilename = GetBullseyeKronikFilename(hkFile);
-                    FileEx.SafeDelete(bullseyeKronikFilename, true); // The Bullseye result file
-                    FileEx.SafeDelete(GetBullseyeKronikUnalignedFilename(bullseyeKronikFilename), true); // The Bullseye result file before we aligned it
-                    FileEx.SafeDelete(GetBullseyeMatchFilename(hkFile), true); // MS2 stuff
-                    FileEx.SafeDelete(GetBullseyeNoMatchFilename(hkFile), true);  // MS2 stuff
-                }
+                DeleteIntermediateFiles();
+            }
+        }
+
+        public void DeleteIntermediateFiles()
+        {
+            foreach (var hkFile in _inputsAndOutputs.Values)
+            {
+                FileEx.SafeDelete(hkFile, true); // The hardklor .hk file
+                FileEx.SafeDelete(GetHardlorConfigurationFilename(hkFile));
+                FileEx.SafeDelete(GetHardlorIsotopesFilename(hkFile));
+                var bullseyeKronikFilename = GetBullseyeKronikFilename(hkFile);
+                FileEx.SafeDelete(bullseyeKronikFilename, true); // The Bullseye result file
+                FileEx.SafeDelete(GetBullseyeKronikUnalignedFilename(bullseyeKronikFilename), true); // The Bullseye result file before we aligned it
+                FileEx.SafeDelete(GetBullseyeMatchFilename(hkFile), true); // MS2 stuff
+                FileEx.SafeDelete(GetBullseyeNoMatchFilename(hkFile), true);  // MS2 stuff
             }
         }
 
         [Localizable(false)]
-        private void InitializeIsotopes()
+        private string InitializeIsotopes(string hkFile)
         {
             // Make sure Hardklor is working with the same isotope information as Skyline
-            lock (_isotopesFilename)
+
+            var isotopesFilename = GetHardlorIsotopesFilename(hkFile);
+            var isotopeValues = new List<string>
             {
-                if (!string.IsNullOrEmpty(_isotopesFilename))
+                // First few lines are particular to Hardklor
+                "X  2", "1  0.9", "2  0.1", string.Empty
+            };
+            var abundances = IsotopeAbundances.Default; // A map of element -> [ mass,abundance, mass, abundance, ...]
+            // These are the elements listed in  CMercury8::DefaultValues() in pwiz_tools\Skyline\Executables\Hardklor\Hardklor\CMercury8.cpp
+            foreach (var element in new [] { 
+                         // "X", ?? appears in standard file, no Skyline equivalent - see hardcoded values above
+                         "H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar",
+                         "K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr",
+                         "Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm",
+                         "Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po",
+                         "At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr",
+                         "Hx","Cx","Nx", "Ox","Sx"}) // These are just repeats of H, C, N, O, S in the standard file
+            {
+                var massDistribution = abundances[element.EndsWith("x")? element.Substring(0,1) : element];
+                isotopeValues.Add($"{element}  {massDistribution.Values.Count}");
+                for (var i = 0; i < massDistribution.Values.Count; i++)
                 {
-                    return;
+                    isotopeValues.Add($"{massDistribution.Keys[i]}  {massDistribution.Values[i]} ");
                 }
-
-                _isotopesFilename = Path.GetTempFileName();
-                var isotopeValues = new List<string>
-                {
-                    // First few lines are particular to Hardklor
-                    "X  2", "1  0.9", "2  0.1", string.Empty
-                };
-                var abundances = IsotopeAbundances.Default; // A map of element -> [ mass,abundance, mass, abundance, ...]
-                // These are the elements listed in  CMercury8::DefaultValues() in pwiz_tools\Skyline\Executables\Hardklor\Hardklor\CMercury8.cpp
-                foreach (var element in new [] { 
-                             // "X", ?? appears in standard file, no Skyline equivalent - see hardcoded values above
-                             "H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar",
-                             "K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr",
-                             "Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm",
-                             "Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po",
-                             "At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr",
-                             "Hx","Cx","Nx", "Ox","Sx"}) // These are just repeats of H, C, N, O, S in the standard file
-                {
-                    var massDistribution = abundances[element.EndsWith("x")? element.Substring(0,1) : element];
-                    isotopeValues.Add($"{element}  {massDistribution.Values.Count}");
-                    for (var i = 0; i < massDistribution.Values.Count; i++)
-                    {
-                        isotopeValues.Add($"{massDistribution.Keys[i]}  {massDistribution.Values[i]} ");
-                    }
-                    isotopeValues.Add(string.Empty);
-                }
-
-                File.WriteAllLines(_isotopesFilename, isotopeValues);
+                isotopeValues.Add(string.Empty);
             }
+
+            File.WriteAllLines(isotopesFilename, isotopeValues);
+            return isotopesFilename;
         }
 
         
@@ -855,7 +857,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
 
             // Make sure Hardklor is working with the same isotope information as Skyline
-            InitializeIsotopes();
+            var isotopesFilename = InitializeIsotopes(outputHardklorFile);
 
             var instrument = _searchSettings.SettingsHardklor.Instrument;
             var resolution = GetResolution();
@@ -922,7 +924,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"distribution_area	=	1	#Report sum of distribution peaks instead of highest peak only. 0=off, 1=on",
                 $@"xml					=	0	#Output results as XML. 0=off, 1=on #MAY NEED UI IN FUTURE",
                 $@"",
-                $@"isotope_data	=	""{_isotopesFilename}""	# Using Skyline's isotope abundance values",
+                $@"isotope_data	=	""{isotopesFilename}""	# Using Skyline's isotope abundance values",
                 $@"",
                 $@"# Below this point is where files to be analyzed should go. They should be listed contain ",
                 $@"# both the input file name, and the output file name. Each file to be analyzed should begin ",
@@ -946,7 +948,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return resolution;
         }
 
-        public static SpectrumSummaryList LoadSpectrumSummaries(MsDataFileUri msDataFileUri, IProgressMonitor progressMonitor, IProgressStatus queueStatus)
+        public static SpectrumSummaryList LoadSpectrumSummaries(MsDataFileUri msDataFileUri)
         {
             var summaries = new List<SpectrumSummary>();
             MsDataFileImpl dataFile;
@@ -968,33 +970,35 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     var spectrum = dataFile.GetSpectrum(spectrumIndex);
                     summaries.Add(SpectrumSummary.FromSpectrum(spectrum));
-                    progressMonitor.UpdateProgress(queueStatus.ChangePercentComplete((100 * spectrumIndex) / dataFile.SpectrumCount));
                 }
             }
-            progressMonitor.UpdateProgress(queueStatus.ChangePercentComplete(100));
             return new SpectrumSummaryList(summaries);
         }
 
         public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2, IProgressMonitor progressMonitor)
         {
-            return spectra1.PerformAlignment(progressMonitor, _progressStatus, spectra2);
+            return spectra1.PerformAlignment(progressMonitor, spectra2);
         }
+
+        public int TotalAlignmentSteps(int count) => count + // Read each mzml
+                                                     ((count - 1) * count) + // Compare each A,B and B,A but not A,A
+                                                     1; // And the final feature combining step
 
         private bool PerformAllAlignments(IProgressMonitor progressMonitor)
         {
             IProgressStatus progressStatus = new ProgressStatus();
-            var total = (SpectrumSummaryLists.Count + 1) * SpectrumSummaryLists.Count; // n+1 to account for the initial read step
-            var step = SpectrumSummaryLists.Count; // Steps already taken to read the files
-            foreach (var entry1 in SpectrumSummaryLists)
+            var totalSteps = TotalAlignmentSteps(AlignmentSpectrumSummaryLists.Count);
+            var currentStep = AlignmentSpectrumSummaryLists.Count; // Steps already taken to read the files
+            foreach (var entry1 in AlignmentSpectrumSummaryLists)
             {
-                foreach (var entry2 in SpectrumSummaryLists)
+                foreach (var entry2 in AlignmentSpectrumSummaryLists)
                 {
                     if (Equals(entry1.Key, entry2.Key))
                     {
                         continue;
                     }
-                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangeMessage(
-                        string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileNameWithoutExtension(), entry2.Key.GetFileNameWithoutExtension())));
+                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete((currentStep++ * 100)/totalSteps).
+                        ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileNameWithoutExtension(), entry2.Key.GetFileNameWithoutExtension())));
 
                     try
                     {
@@ -1005,11 +1009,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                         progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_, entry1.Key, entry2.Key, x)));
                         return false;
                     }
-
-                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete((100 * step++) / total));
                 }
             }
-            progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100));
             return true;
         }
 

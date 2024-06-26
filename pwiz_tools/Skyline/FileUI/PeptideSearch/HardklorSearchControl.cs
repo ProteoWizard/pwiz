@@ -108,7 +108,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             CancellationToken cancelToken)
         {
             // parallel converter that starts all files converting
-            var runner = new ParallelFeatureFinder(config, this, parallelProgressMonitor, cancelToken);
+            var runner = new ParallelFeatureFinder(config, this, parallelProgressMonitor, Settings.Default.ActiveDirectory, cancelToken);
 
             runner.Generate();
         }
@@ -164,6 +164,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             private readonly CancellationToken _cancelToken;
             private readonly HardklorSearchEngine _featureFinder;
             private HardklorSearchControl _hardklorSearchControl;
+            private string _workingDirectory;
             private IProgressMonitor _masterProgressMonitor { get; }
             private IProgressMonitor _parallelProgressMonitor { get; }
             public IList<MsDataFileUri> RawDataFiles { get; }
@@ -171,6 +172,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public ParallelFeatureFinder(HardklorSearchEngine featureFinder,
                 HardklorSearchControl hardklorSearchControl,
                 ParallelRunnerProgressControl parallelProgressMonitor,
+                string workingDirectory,
                 CancellationToken cancelToken)
             {
                 _featureFinder = featureFinder;
@@ -178,6 +180,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _cancelToken = cancelToken;
                 _parallelProgressMonitor = parallelProgressMonitor;
                 _masterProgressMonitor = featureFinder;
+                 _workingDirectory = workingDirectory;
                 RawDataFiles = _featureFinder.SpectrumFileNames.ToList();
             }
 
@@ -201,37 +204,38 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var allFilesSearched = new ManualResetEventSlim(false);
                 var allFilesAligned = new ManualResetEventSlim(false);
                 var rawFileThreads = Math.Min(ParallelEx.GetThreadCount() - 1, RawDataFiles.Count);
-                var progressMonitorForAlignment = new ProgressMonitorForFile(PeptideSearchResources.ParallelFeatureFinder_Generate_RT_Alignment, _parallelProgressMonitor);
-                var alignmentStatus = new ProgressStatus();
+                var progressMonitorForAlignment = new ProgressMonitorForFile(PeptideSearchResources.ParallelFeatureFinder_Generate_Align_replicates, _parallelProgressMonitor);
+                var totalAlignmentSteps = _featureFinder.TotalAlignmentSteps(RawDataFiles.Count); // Each file load is one step, then it's n by n comparison, and final combination step
 
-
-                void ConsumeAlignmentFile(MsDataFileUri mzmlFile, int i)
+                void ConsumeAlignmentFile(MsDataFileUri rawFile, int i)
                 {
                     if (IsCanceled)
                     {
                         return;
                     }
 
-                    var alignmentFile = mzmlFile.GetFileName();
+                    var consumeStatus = new ProgressStatus();
+
+                    var mzmlFile = new MsDataFilePath(HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath());
                     _hardklorSearchControl.AnnounceStep(string.Format(PeptideSearchResources.ParallelFeatureFinder_Generate_Preparing__0__for_RT_alignment, mzmlFile.GetFileNameWithoutExtension())); // Update the master progress leb
+
                     // Load for alignment
-                    progressMonitorForAlignment.UpdateProgress(alignmentStatus.ChangeMessage(string.Format(PeptideSearchResources.ParallelFeatureFinder_Generate_Reading__0_, mzmlFile.GetFileName())));
+                    progressMonitorForAlignment.UpdateProgress(consumeStatus=(ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps).ChangeMessage(string.Format(PeptideSearchResources.ParallelFeatureFinder_Generate_Reading__0_, mzmlFile.GetFileName())));
 
-                    var summary = HardklorSearchEngine.LoadSpectrumSummaries(mzmlFile, progressMonitorForAlignment, alignmentStatus);
+                    var summary = HardklorSearchEngine.LoadSpectrumSummaries(mzmlFile);
 
-                    lock (_featureFinder.SpectrumSummaryLists)
+                    lock (_featureFinder.AlignmentSpectrumSummaryLists)
                     {
-                        _featureFinder.SpectrumSummaryLists.Add(mzmlFile, summary);
-                        var totalAlignmentSteps = (RawDataFiles.Count + 1) * RawDataFiles.Count; // Each file load is one step, then it's n by n comparison
-                        progressMonitorForAlignment.UpdateProgress(alignmentStatus.ChangePercentComplete((RawDataFiles.Count * 100) / totalAlignmentSteps));
+                        _featureFinder.AlignmentSpectrumSummaryLists.Add(mzmlFile, summary);
+                        progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps));
 
-                        if (_featureFinder.SpectrumSummaryLists.Count == RawDataFiles.Count)
+                        if (_featureFinder.AlignmentSpectrumSummaryLists.Count == RawDataFiles.Count)
                         {
                             // That was the last one to load, do the alignment amongst them all
                             _hardklorSearchControl.AnnounceStep(PeptideSearchResources.ParallelFeatureFinder_Generate_Performing_RT_alignments);
                             _featureFinder.AlignReplicates(progressMonitorForAlignment);
                             allFilesAligned.Set();
-                            progressMonitorForAlignment.UpdateProgress(alignmentStatus.ChangePercentComplete(100).ChangeMessage(PeptideSearchResources.ParallelFeatureFinder_Generate_done));
+                            progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangeMessage(PeptideSearchResources.ParallelFeatureFinder_Generate_Waiting_for_Hardklor_Bullseye_completion));
                         }
                     }
                 }
@@ -297,7 +301,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
 
                 // Now look for common features
+                var alignmentStatus = new ProgressStatus();
                 _hardklorSearchControl.AnnounceStep(PeptideSearchResources.ParallelFeatureFinder_Generate_Searching_for_common_features_across_replicates);
+                progressMonitorForAlignment.UpdateProgress(alignmentStatus = (ProgressStatus)alignmentStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps).ChangeMessage((DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates)));
 
                 _featureFinder.FindSimilarFeatures();
 
@@ -363,31 +369,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 if (progressMonitorForFile.IsCanceled)
                 {
-                    _featureFinder._keepIntermediateFiles = false; // Delete everything on Dispose
+                    _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
                     FileEx.SafeDelete(mzmlFilePath, true);
                     return;
                 }
 
-                var mzml = new MsDataFilePath(mzmlFilePath);
                 lock (aligner)
                 {
-                    aligner.Add(mzml); // Let aligner thread know this mzML file is ready to be loaded for alignment
+                    aligner.Add(rawFile); // Let aligner thread know this mzML file is ready to be loaded for alignment
                 }
 
+                var mzml = new MsDataFilePath(HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath());
+
                 // Run Hardklor
-                status = _featureFinder.RunFeatureFinderStep(progressMonitorForFile, _hardklorSearchControl,  status, mzml, false);
+                status = _featureFinder.RunFeatureFinderStep(progressMonitorForFile, _workingDirectory, _hardklorSearchControl,  status, mzml, false);
                 if (progressMonitorForFile.IsCanceled)
                 {
-                    _featureFinder._keepIntermediateFiles = false; // Delete everything on Dispose
+                    _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
                     FileEx.SafeDelete(mzmlFilePath, true);
                     return;
                 }
 
                 // Run Bullseye
-                status = _featureFinder.RunFeatureFinderStep(progressMonitorForFile, _hardklorSearchControl, status, mzml, true);
+                status = _featureFinder.RunFeatureFinderStep(progressMonitorForFile, _workingDirectory, _hardklorSearchControl, status, mzml, true);
                 if (progressMonitorForFile.IsCanceled)
                 {
-                    _featureFinder._keepIntermediateFiles = false;  // Delete everything on Dispose
+                    _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
                     FileEx.SafeDelete(mzmlFilePath, true);
                 }
 
@@ -411,13 +418,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 public bool IsCanceled => _multiProgressMonitor.IsCanceled;
 
                 private Regex _msconvert = new Regex(@"writing spectra: (\d+)/(\d+)",
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant);
+                    RegexOptions.Compiled | RegexOptions.CultureInvariant); // e.g. "Orbi3_SA_IP_SMC1_01.RAW::msconvert: writing spectra: 2202/4528"
                 private Regex _hardklor = new Regex(@"(\d+)%",
                     RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
                 public UpdateProgressResponse UpdateProgress(IProgressStatus status)
                 {
-                    var message = status.Message;
+                    var message = status.Message.Trim();
                     var displayMessage = $@"{_filename}::{status.SegmentName}: {message}";
 
                     if (status.IsCanceled || status.ErrorException != null)
@@ -436,6 +443,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var match = _msconvert.Match(status.Message); // MSConvert output?
                     if (match.Success && match.Groups.Count == 3)
                     {
+                        // e.g. "Orbi3_SA_IP_SMC1_01.RAW::msconvert: writing spectra: 2202/4528"
                         _maxPercentComplete = Math.Max(_maxPercentComplete,
                             Convert.ToInt32(match.Groups[1].Value) * 100 /
                             Convert.ToInt32(match.Groups[2].Value));

@@ -776,11 +776,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to done.
+        ///   Looks up a localized string similar to Align replicates.
         /// </summary>
-        public static string ParallelFeatureFinder_Generate_done {
+        public static string ParallelFeatureFinder_Generate_Align_replicates {
             get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_done", resourceCulture);
+                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Align_replicates", resourceCulture);
             }
         }
         
@@ -812,20 +812,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RT Alignment.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_RT_Alignment {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_RT_Alignment", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Searching for common features across replicates.
         /// </summary>
         public static string ParallelFeatureFinder_Generate_Searching_for_common_features_across_replicates {
             get {
                 return ResourceManager.GetString("ParallelFeatureFinder_Generate_Searching_for_common_features_across_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for Hardklor/Bullseye completion.
+        /// </summary>
+        public static string ParallelFeatureFinder_Generate_Waiting_for_Hardklor_Bullseye_completion {
+            get {
+                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Waiting_for_Hardklor_Bullseye_completion", resourceCulture);
             }
         }
         
