@@ -99,27 +99,21 @@
   </resheader>
   <data name="KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__" xml:space="preserve">
     <value>ペプチドシークエンス「{0}」({1})はKoina ({2})でサポートされる最大長より長くなります</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
     <value>「{1}」内のアミノ酸「{0}」はKoinaでサポートされません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
     <value>「{2}」内のインデックス「{1}」における修飾「{0}」はKoinaでサポートされません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
     <value>Koina入力を構築しています</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaModel_BatchPredict_Requesting_predictions_from_Koina" xml:space="preserve">
     <value>Koinaから予測を要求しています</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist" xml:space="preserve">
     <value>強度モデル「{0}」が存在しません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_Server_online" xml:space="preserve">
     <value>サーバーオンライン</value>
@@ -129,33 +123,27 @@
   </data>
   <data name="KoinaPredictionClient_Current_No_Koina_server_set" xml:space="preserve">
     <value>Koinaサーバーが設定されていません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Server_unavailable" xml:space="preserve">
     <value>サーバーが利用できません</value>
   </data>
   <data name="KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
     <value>Koinaはペプチドのみをサポートします。「{0}」は小さい分子です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
     <value>Koinaが正しく設定されていません。今すぐKoinaの設定を変更しますか？</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="GraphSpectrum_UpdateUI_Some_Koina_settings_are_not_set_" xml:space="preserve">
     <value>Koinaが正しく設定されていません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="GraphSpectrum_UpdateUI__0__vs___1_" xml:space="preserve">
     <value>{0}対{1}</value>
   </data>
   <data name="KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist" xml:space="preserve">
     <value>保持時間モデル「{0}」は存在しません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaPredictingException_KoinaPredictingException_Making_predictions___" xml:space="preserve">
     <value>予測を作成中...</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
     <value>サーバーをクエリ中...</value>

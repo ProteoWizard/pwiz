@@ -1763,42 +1763,33 @@
   </data>
   <data name="EncyclopeDiaSettings_KoinaSettings" xml:space="preserve">
     <value>Koina設定</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
     <value>広いウィンドウ結果</value>
   </data>
   <data name="FastaToKoinaInputCsvConfig_DefaultCharge" xml:space="preserve">
     <value>デフォルト電荷</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_DefaultNCE" xml:space="preserve">
     <value>デフォルトNCE</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MaxCharge" xml:space="preserve">
     <value>最大電荷</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
     <value>最大未切断数</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MinCharge" xml:space="preserve">
     <value>最小電荷</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_Enzyme" xml:space="preserve">
     <value>酵素</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MaxMz" xml:space="preserve">
     <value>最大m/z</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
     <value>最小m/z</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
     <value>Group at gene level</value>

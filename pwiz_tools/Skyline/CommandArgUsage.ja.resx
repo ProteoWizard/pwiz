@@ -668,209 +668,61 @@ Waters</value>
     <value>--refine-add-label-typeも使用されている場合、指定されている同位体標識タイプのプリカーサーが削除される（デフォルト）か、追加されます。</value>
   </data>
   <data name="_refine_min_peptides" xml:space="preserve">
-    <value>ペプチドがこの数より少ないタンパク質は
-ドキュメントから削除されます。</value>
-    <comment>Needs Review:English text changed
-Old English:Proteins with fewer than this number of peptides will be
-removed from the document.
-Current English:Proteins with fewer than this number of peptides will be removed from the document.
-Old Localized:ペプチドがこの数より少ないタンパク質は
-ドキュメントから削除されます。</comment>
+    <value>ペプチドがこの数より少ないタンパク質はドキュメントから削除されます。</value>
   </data>
   <data name="_refine_min_transitions" xml:space="preserve">
     <value>トランジションがこの数より少ないプリカーサーは ドキュメントから削除されます。</value>
-    <comment>Needs Review:English text changed
-Old English:Precursors with fewer than this number of transitions will be
-removed from the document.
-Current English:Precursors with fewer than this number of transitions will be removed from the document.
-Old Localized:トランジションがこの数より少ないプリカーサーは ドキュメントから削除されます。</comment>
   </data>
   <data name="_refine_missing_library" xml:space="preserve">
     <value>ライブラリ一致に対応しないすべてのターゲットが削除されます。</value>
   </data>
   <data name="_refine_remove_duplicates" xml:space="preserve">
-    <value>ドキュメント内で一意でないペプチドはすべて
-削除されます。
-</value>
-    <comment>Needs Review:English text changed
-Old English:All peptides that are not unique within the document
-will be removed.
-Current English:All peptides that are not unique within the document will be removed.
-Old Localized:ドキュメント内で一意でないペプチドはすべて
-削除されます。
-</comment>
+    <value>ドキュメント内で一意でないペプチドはすべて削除されます。</value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
-    <value>すべての重複ペプチドは削除され、
-最初に記載された各ペプチドだけが残ります。
-</value>
-    <comment>Needs Review:English text changed
-Old English:All repeated peptides will be removed to leave only the
-first occurrence of any peptide.
-Current English:All repeated peptides will be removed to leave only the first occurrence of any peptide.
-Old Localized:すべての重複ペプチドは削除され、
-最初に記載された各ペプチドだけが残ります。
-</comment>
+    <value>すべての重複ペプチドは削除され、最初に記載された各ペプチドだけが残ります。</value>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
     <value>&lt;標識タイプ&gt;</value>
   </data>
   <data name="_refine_max_peak_found_ratio" xml:space="preserve">
-    <value>次の数値を超えるピーク検出率を持つ全ての成分は
-ドキュメントから削除されます。
+    <value>次の数値を超えるピーク検出率を持つ全ての成分はドキュメントから削除されます。
 
 緑色 = 1.0
 橙色 &gt;= 0.5
 赤色 &lt; 0.5</value>
-    <comment>Needs Review:English text changed
-Old English:All elements with peak found ratio above this number
-will be removed from the document:
+  </data>
+  <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
+    <value>平均面積ピークランクがこの数値より大きいトランジションは全てドキュメントから削除されます。
 
-Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5
-Current English:All elements with peak found ratio above this number will be removed from the document:
-
-Green = 1.0
-Orange &gt;= 0.5
-Red &lt; 0.5
-Old Localized:次の数値を超えるピーク検出率を持つ全ての成分は
-ドキュメントから削除されます。
+</value>
+  </data>
+  <data name="_refine_max_transition_peak_rank" xml:space="preserve">
+    <value>平均面積ピークランクがこの数値より大きいトランジションは全てドキュメントから削除されます。
+</value>
+  </data>
+  <data name="_refine_min_dotp" xml:space="preserve">
+    <value>プロダクトイオンピーク面積を持つプリカーサーのライブラリスペクトル内積がこの閾値を下回るものは全てドキュメントから削除されます。
+</value>
+  </data>
+  <data name="_refine_min_idotp" xml:space="preserve">
+    <value>MS1プリカーサーピーク面積を持つプリカーサーの予測される同位体分布の内積がこの閾値を下回るものは全てドキュメントから削除されます。</value>
+  </data>
+  <data name="_refine_min_peak_found_ratio" xml:space="preserve">
+    <value>次の数値を下回るピーク検出率を持つ全ての成分はドキュメントから削除されます。
 
 緑色 = 1.0
 橙色 &gt;= 0.5
-赤色 &lt; 0.5</comment>
-  </data>
-  <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
-    <value>平均面積ピークランクがこの数値より
-大きいトランジションは全てドキュメントから
-削除されます。
-
-</value>
-    <comment>Needs Review:English text changed
-Old English:All transitions with an average area peak ranking
-greater than this number will be removed from the
-document.
-Current English:All transitions with an average area peak ranking greater than this number will be removed from the document.
-Old Localized:平均面積ピークランクがこの数値より
-大きいトランジションは全てドキュメントから
-削除されます。
-
-</comment>
-  </data>
-  <data name="_refine_max_transition_peak_rank" xml:space="preserve">
-    <value>平均面積ピークランクがこの数値より
-大きいトランジションは全てドキュメントから
-削除されます。
-
-</value>
-    <comment>Needs Review:English text changed
-Old English:All transitions with an average area peak ranking
-greater than this number will be removed from the
-document.
-Current English:All transitions with an average area peak ranking greater than this number will be removed from the document.
-Old Localized:平均面積ピークランクがこの数値より
-大きいトランジションは全てドキュメントから
-削除されます。
-
-</comment>
-  </data>
-  <data name="_refine_min_dotp" xml:space="preserve">
-    <value>プロダクトイオンピーク面積を持つプリカーサーの
-ライブラリスペクトル内積がこの閾値を下回るものは全て
-ドキュメントから削除されます。
-</value>
-    <comment>Needs Review:English text changed
-Old English:All precursors with a product ion peak area to library
-spectrum dot-product below this threshold will be removed
-from the document.
-Current English:All precursors with a product ion peak area to library spectrum dot-product below this threshold will be removed from the document.
-Old Localized:プロダクトイオンピーク面積を持つプリカーサーの
-ライブラリスペクトル内積がこの閾値を下回るものは全て
-ドキュメントから削除されます。
-</comment>
-  </data>
-  <data name="_refine_min_idotp" xml:space="preserve">
-    <value>MS1プリカーサーピーク面積を持つプリカーサーの
-予測される同位体分布の内積がこの閾値を下回るものは全て
-ドキュメントから削除されます。
-</value>
-    <comment>Needs Review:English text changed
-Old English:All precursors with a MS1 precursor peak area to expected
-isotope distribution dot-product below this threshold will be
-removed from the document.
-Current English:All precursors with a MS1 precursor peak area to expected isotope distribution dot-product below this threshold will be removed from the document.
-Old Localized:MS1プリカーサーピーク面積を持つプリカーサーの
-予測される同位体分布の内積がこの閾値を下回るものは全て
-ドキュメントから削除されます。
-</comment>
-  </data>
-  <data name="_refine_min_peak_found_ratio" xml:space="preserve">
-    <value>次の数値を下回るピーク検出率を持つ全ての成分は
-ドキュメントから削除されます。
-
-緑色 = 1.0
-橙色 &amp;gt;= 0.5
-赤色 &amp;lt; 0.5</value>
-    <comment>Needs Review:English text changed
-Old English:All elements with peak found ratio below this number
-will be removed from the document:
-
-Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5
-Current English:All elements with peak found ratio below this number will be removed from the document:
-
-Green = 1.0
-Orange &gt;= 0.5
-Red &lt; 0.5
-Old Localized:次の数値を下回るピーク検出率を持つ全ての成分は
-ドキュメントから削除されます。
-
-緑色 = 1.0
-橙色 &amp;gt;= 0.5
-赤色 &amp;lt; 0.5</comment>
+赤色 &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
-    <value>プリカーサーは、最適保持時間カルキュレータによる
-線形回帰の相関係数目標値が
-この閾値を超えるまで、ドキュメントから
-削除されます。</value>
-    <comment>Needs Review:English text changed
-Old English:Precursors will be removed from the document
-until the target value for the correlation coefficient of a linear
-regression with the optimal retention time calculator
-exceed this threshold.
-Current English:Precursors will be removed from the document until the target value for the correlation coefficient of a linear regression with the optimal retention time calculator exceed this threshold.
-Old Localized:プリカーサーは、最適保持時間カルキュレータによる
-線形回帰の相関係数目標値が
-この閾値を超えるまで、ドキュメントから
-削除されます。</comment>
+    <value>プリカーサーは、最適保持時間カルキュレータによる線形回帰の相関係数目標値がこの閾値を超えるまで、ドキュメントから削除されます。</value>
   </data>
   <data name="_refine_missing_results" xml:space="preserve">
-    <value>測定結果の無い成分は全て
-ドキュメントから削除されます。
-</value>
-    <comment>Needs Review:English text changed
-Old English:All elements without measured results will be
-removed from the document.
-Current English:All elements without measured results will be removed from the document.
-Old Localized:測定結果の無い成分は全て
-ドキュメントから削除されます。
-</comment>
+    <value>測定結果の無い成分は全てドキュメントから削除されます。</value>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
-    <value>小さく選択性が低いイオンが部分的により大きな
-ピーク面積になる場合のみ、
-大きいプロダクトイオンを選択するように修正します。</value>
-    <comment>Needs Review:English text changed
-Old English:Causes refinement to choose larger product ions
-when smaller, less selective ions yeild only fractionally
-greater peak area.
-Current English:Causes refinement to choose larger product ions when smaller, less selective ions yeild only fractionally greater peak area.
-Old Localized:小さく選択性が低いイオンが部分的により大きな
-ピーク面積になる場合のみ、
-大きいプロダクトイオンを選択するように修正します。</comment>
+    <value>小さく選択性が低いイオンが部分的により大きなピーク面積になる場合のみ、大きいプロダクトイオンを選択するように修正します。</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
     <value>最適化値の計算では各ペプチドに対して、最良の繰り返し測定のみ使用します。（分割に使用する）</value>
