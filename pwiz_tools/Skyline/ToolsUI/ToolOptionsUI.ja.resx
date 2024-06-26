@@ -163,11 +163,7 @@
     <value>0</value>
   </data>
   <data name="lblServers.Text" xml:space="preserve">
-    <value>サーバー：</value>
-    <comment>Needs Review:English text changed
-Old English:Servers:
-Current English:&amp;Servers:
-Old Localized:サーバー：</comment>
+    <value>サーバー(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
     <value>lblServers</value>
@@ -185,11 +181,7 @@ Old Localized:サーバー：</comment>
     <value>Top, Right</value>
   </data>
   <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>279, 22</value>
-    <comment>Needs Review:English text changed
-Old English:308, 22
-Current English:308, 23
-Old Localized:279, 22</comment>
+    <value>279, 23</value>
   </data>
   <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
@@ -279,11 +271,7 @@ Old Localized:279, 22</comment>
     <value>3</value>
   </data>
   <data name="lblRemoteAccounts.Text" xml:space="preserve">
-    <value>リモートアカウント：</value>
-    <comment>Needs Review:English text changed
-Old English:Remote accounts:
-Current English:&amp;Remote accounts:
-Old Localized:リモートアカウント：</comment>
+    <value>リモートアカウント(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
     <value>lblRemoteAccounts</value>
@@ -443,7 +431,6 @@ Old Localized:リモートアカウント：</comment>
   </data>
   <data name="koinaServerStatusLabel.Text" xml:space="preserve">
     <value>サーバーステータス</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerStatusLabel.Name" xml:space="preserve">
     <value>koinaServerStatusLabel</value>
@@ -473,8 +460,7 @@ Old Localized:リモートアカウント：</comment>
     <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>iRTモデル：</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>i&amp;RTモデル：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -525,8 +511,7 @@ Old Localized:リモートアカウント：</comment>
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>強度モデル：</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>強度モデル(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -578,7 +563,6 @@ Old Localized:リモートアカウント：</comment>
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
     <value>サーバー（&amp;S）：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
     <value>koinaServerLabel</value>
@@ -615,7 +599,6 @@ Old Localized:リモートアカウント：</comment>
 アーゼ向けに非常に高品質な予測HCD MS2スペクトルを使用
 してカスタムスペクトルライブラリを自由かつ簡単に作成できる、
 ディープラーニングフレームワークです。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaDescrLabel.Name" xml:space="preserve">
     <value>koinaDescrLabel</value>
@@ -676,7 +659,6 @@ Old Localized:リモートアカウント：</comment>
   </data>
   <data name="tabKoina.Text" xml:space="preserve">
     <value>Koina</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;tabKoina.Name" xml:space="preserve">
     <value>tabKoina</value>

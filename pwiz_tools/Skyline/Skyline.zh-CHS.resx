@@ -304,10 +304,6 @@
   </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 396</value>
-    <comment>Needs Review:English text changed
-Old English:229, 374
-Current English:229, 396
-Old Localized:229, 396</comment>
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>

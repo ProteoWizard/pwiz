@@ -439,11 +439,7 @@
     <value>54</value>
   </data>
   <data name="openFileLabel.Text" xml:space="preserve">
-    <value>打开文件</value>
-    <comment>Needs Review:English text changed
-Old English:Open File
-Current English:Open File...
-Old Localized:打开文件</comment>
+    <value>打开文件…</value>
   </data>
   <data name="&gt;&gt;openFileLabel.Name" xml:space="preserve">
     <value>openFileLabel</value>

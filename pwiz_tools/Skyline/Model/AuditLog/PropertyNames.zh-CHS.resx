@@ -1763,42 +1763,33 @@
   </data>
   <data name="EncyclopeDiaSettings_KoinaSettings" xml:space="preserve">
     <value>Koina 设置</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
     <value>宽窗口结果</value>
   </data>
   <data name="FastaToKoinaInputCsvConfig_DefaultCharge" xml:space="preserve">
     <value>默认电荷</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_DefaultNCE" xml:space="preserve">
     <value>默认 NCE</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MaxCharge" xml:space="preserve">
     <value>最大电荷</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
     <value>最大的漏切酶解位点数</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MinCharge" xml:space="preserve">
     <value>最小电荷</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_Enzyme" xml:space="preserve">
     <value>酶</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MaxMz" xml:space="preserve">
     <value>最大质荷比</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
     <value>最小质荷比</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
     <value>Group at gene level</value>

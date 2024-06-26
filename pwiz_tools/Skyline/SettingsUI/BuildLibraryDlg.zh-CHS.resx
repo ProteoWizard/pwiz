@@ -245,7 +245,6 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>输出路径(&amp;O)：</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -300,11 +299,7 @@
     <value>12</value>
   </data>
   <data name="iRTPeptidesLabel.Text" xml:space="preserve">
-    <value>iRT 标准肽段(&amp;I)：</value>
-    <comment>Needs Review:English text changed
-Old English:&amp;iRT standard peptides:
-Current English:i&amp;RT standard peptides:
-Old Localized:iRT 标准肽段(&amp;I)：</comment>
+    <value>iRT 标准肽段(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
     <value>iRTPeptidesLabel</value>
@@ -496,11 +491,7 @@ Old Localized:iRT 标准肽段(&amp;I)：</comment>
     <value>14</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
-    <value>保留冗余库(&amp;K)</value>
-    <comment>Needs Review:English text changed
-Old English:&amp;Keep redundant library
-Current English:K&amp;eep redundant library
-Old Localized:保留冗余库(&amp;K)</comment>
+    <value>保留冗余库(&amp;E)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
     <value>选中并保留冗余库的副本，您可以在
@@ -740,7 +731,6 @@ Old Localized:保留冗余库(&amp;K)</comment>
   </data>
   <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
     <value>信息/设置</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -758,8 +748,7 @@ Old Localized:保留冗余库(&amp;K)</comment>
     <value>1</value>
   </data>
   <data name="koinaDataSourceRadioButton.Text" xml:space="preserve">
-    <value>Pro&amp;sit</value>
-    <comment>Needs Review:New resource</comment>
+    <value>&amp;Koina</value>
   </data>
   <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

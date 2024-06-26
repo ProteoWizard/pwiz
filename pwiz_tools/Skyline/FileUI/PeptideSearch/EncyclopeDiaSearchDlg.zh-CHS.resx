@@ -617,7 +617,6 @@
   </data>
   <data name="lblKoinaPrediction.Text" xml:space="preserve">
     <value>Koina 设置</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblKoinaPrediction.Name" xml:space="preserve">
     <value>lblKoinaPrediction</value>
@@ -669,7 +668,6 @@
   </data>
   <data name="koinaPage.Text" xml:space="preserve">
     <value>Koina 预测</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaPage.Name" xml:space="preserve">
     <value>koinaPage</value>

@@ -668,193 +668,57 @@ Waters</value>
     <value>如果还使用了“--refine-add-label-type”，则将删除（默认）或添加指定同位素标记类型的母离子。</value>
   </data>
   <data name="_refine_min_peptides" xml:space="preserve">
-    <value>含有少于此数目肽段的蛋白质将
-被从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:Proteins with fewer than this number of peptides will be
-removed from the document.
-Current English:Proteins with fewer than this number of peptides will be removed from the document.
-Old Localized:含有少于此数目肽段的蛋白质将
-被从文档中删除。</comment>
+    <value>含有少于此数目肽段的蛋白质将被从文档中删除。</value>
   </data>
   <data name="_refine_min_transitions" xml:space="preserve">
-    <value>含有少于此数目离子对的母离子将
-被从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:Precursors with fewer than this number of transitions will be
-removed from the document.
-Current English:Precursors with fewer than this number of transitions will be removed from the document.
-Old Localized:含有少于此数目离子对的母离子将
-被从文档中删除。</comment>
+    <value>含有少于此数目离子对的母离子将被从文档中删除。</value>
   </data>
   <data name="_refine_missing_library" xml:space="preserve">
     <value>将删除与库匹配不对应的所有目标。</value>
   </data>
   <data name="_refine_remove_duplicates" xml:space="preserve">
-    <value>所有在文档中不是唯一的肽段
-将被删除。</value>
-    <comment>Needs Review:English text changed
-Old English:All peptides that are not unique within the document
-will be removed.
-Current English:All peptides that are not unique within the document will be removed.
-Old Localized:所有在文档中不是唯一的肽段
-将被删除。</comment>
+    <value>所有在文档中不是唯一的肽段将被删除。</value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
-    <value>将删除所有重复的肽段以仅留下
-首次出现的任何肽段。</value>
-    <comment>Needs Review:English text changed
-Old English:All repeated peptides will be removed to leave only the
-first occurrence of any peptide.
-Current English:All repeated peptides will be removed to leave only the first occurrence of any peptide.
-Old Localized:将删除所有重复的肽段以仅留下
-首次出现的任何肽段。</comment>
+    <value>将删除所有重复的肽段以仅留下首次出现的任何肽段。</value>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
     <value>&lt;标记类型&gt;</value>
   </data>
   <data name="_refine_max_peak_found_ratio" xml:space="preserve">
-    <value>峰值发现率高于此数字的所有元素
-将从文件中删除：
+    <value>峰值发现率高于此数字的所有元素将从文件中删除：
 
 绿色 = 1.0
-橙色 &amp;gt;= 0.5
-红色 &amp;lt; 0.5</value>
-    <comment>Needs Review:English text changed
-Old English:All elements with peak found ratio above this number
-will be removed from the document:
-
-Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5
-Current English:All elements with peak found ratio above this number will be removed from the document:
-
-Green = 1.0
-Orange &gt;= 0.5
-Red &lt; 0.5
-Old Localized:峰值发现率高于此数字的所有元素
-将从文件中删除：
-
-绿色 = 1.0
-橙色 &amp;gt;= 0.5
-红色 &amp;lt; 0.5</comment>
+橙色 &gt;= 0.5
+红色 &lt; 0.5</value>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
-    <value>所有平均峰面积值排名
-大于此数目的离子对将被
-从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:All transitions with an average area peak ranking
-greater than this number will be removed from the
-document.
-Current English:All transitions with an average area peak ranking greater than this number will be removed from the document.
-Old Localized:所有平均峰面积值排名
-大于此数目的离子对将被
-从文档中删除。</comment>
+    <value>所有平均峰面积值排名大于此数目的离子对将被从文档中删除。</value>
   </data>
   <data name="_refine_max_transition_peak_rank" xml:space="preserve">
-    <value>所有平均峰面积值排名
-大于此数目的离子对将被
-从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:All transitions with an average area peak ranking
-greater than this number will be removed from the
-document.
-Current English:All transitions with an average area peak ranking greater than this number will be removed from the document.
-Old Localized:所有平均峰面积值排名
-大于此数目的离子对将被
-从文档中删除。</comment>
+    <value>所有平均峰面积值排名大于此数目的离子对将被从文档中删除。</value>
   </data>
   <data name="_refine_min_dotp" xml:space="preserve">
-    <value>所有对库谱图点积的子离子峰面积
-小于此阈值的母离子都将被
-从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:All precursors with a product ion peak area to library
-spectrum dot-product below this threshold will be removed
-from the document.
-Current English:All precursors with a product ion peak area to library spectrum dot-product below this threshold will be removed from the document.
-Old Localized:所有对库谱图点积的子离子峰面积
-小于此阈值的母离子都将被
-从文档中删除。</comment>
+    <value>所有对库谱图点积的子离子峰面积小于此阈值的母离子都将被从文档中删除。</value>
   </data>
   <data name="_refine_min_idotp" xml:space="preserve">
-    <value>所有对预期同位素峰分布点积的 MS1 母离子
-峰面积小于此阈值的母离子都将
-被从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:All precursors with a MS1 precursor peak area to expected
-isotope distribution dot-product below this threshold will be
-removed from the document.
-Current English:All precursors with a MS1 precursor peak area to expected isotope distribution dot-product below this threshold will be removed from the document.
-Old Localized:所有对预期同位素峰分布点积的 MS1 母离子
-峰面积小于此阈值的母离子都将
-被从文档中删除。</comment>
+    <value>所有对预期同位素峰分布点积的 MS1 母离子峰面积小于此阈值的母离子都将被从文档中删除。</value>
   </data>
   <data name="_refine_min_peak_found_ratio" xml:space="preserve">
-    <value>所有峰值检出比大于此数目的元素
-都将被从文档中删除：
+    <value>所有峰值检出比大于此数目的元素都将被从文档中删除：
 
 绿色 = 1.0
-橙色 &amp;gt;= 0.5
-红色 &amp;lt; 0.5</value>
-    <comment>Needs Review:English text changed
-Old English:All elements with peak found ratio below this number
-will be removed from the document:
-
-Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5
-Current English:All elements with peak found ratio below this number will be removed from the document:
-
-Green = 1.0
-Orange &gt;= 0.5
-Red &lt; 0.5
-Old Localized:所有峰值检出比大于此数目的元素
-都将被从文档中删除：
-
-绿色 = 1.0
-橙色 &amp;gt;= 0.5
-红色 &amp;lt; 0.5</comment>
+橙色 &gt;= 0.5
+红色 &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
-    <value>母离子将被从文档中删除
-直到具有最佳保留时间计算的线性
-回归相关系数的目标值
-超过此阈值。</value>
-    <comment>Needs Review:English text changed
-Old English:Precursors will be removed from the document
-until the target value for the correlation coefficient of a linear
-regression with the optimal retention time calculator
-exceed this threshold.
-Current English:Precursors will be removed from the document until the target value for the correlation coefficient of a linear regression with the optimal retention time calculator exceed this threshold.
-Old Localized:母离子将被从文档中删除
-直到具有最佳保留时间计算的线性
-回归相关系数的目标值
-超过此阈值。</comment>
+    <value>母离子将被从文档中删除直到具有最佳保留时间计算的线性回归相关系数的目标值超过此阈值。</value>
   </data>
   <data name="_refine_missing_results" xml:space="preserve">
-    <value>没有测量结果的所有元素都将
-被从文档中删除。</value>
-    <comment>Needs Review:English text changed
-Old English:All elements without measured results will be
-removed from the document.
-Current English:All elements without measured results will be removed from the document.
-Old Localized:没有测量结果的所有元素都将
-被从文档中删除。</comment>
+    <value>没有测量结果的所有元素都将被从文档中删除。</value>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
-    <value>当较小的、选择性较低的离子仅产生少量
-更大的峰面积时，导致细化以选择更大的
-产物离子。</value>
-    <comment>Needs Review:English text changed
-Old English:Causes refinement to choose larger product ions
-when smaller, less selective ions yeild only fractionally
-greater peak area.
-Current English:Causes refinement to choose larger product ions when smaller, less selective ions yeild only fractionally greater peak area.
-Old Localized:当较小的、选择性较低的离子仅产生少量
-更大的峰面积时，导致细化以选择更大的
-产物离子。</comment>
+    <value>当较小的、选择性较低的离子仅产生少量更大的峰面积时，导致细化以选择更大的产物离子。</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
     <value>在细化值计算中仅使用每种肽段的最佳重复测定。（用于分段洗脱）</value>

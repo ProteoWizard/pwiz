@@ -219,14 +219,12 @@
   </data>
   <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
     <value>Koina予測の再利用元：{0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
     <value>EncyclopeDIA検索実行済み</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_" xml:space="preserve">
     <value>EncyclopeDIA Koina検索には、FASTAファイルが必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
     <value>実行</value>

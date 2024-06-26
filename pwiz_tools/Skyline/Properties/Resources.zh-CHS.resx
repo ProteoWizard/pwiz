@@ -1366,11 +1366,7 @@
     <value>无效的模型选择。</value>
   </data>
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>CE：</value>
-    <comment>Needs Review:English text changed
-Old English:CE:
-Current English:NCE:
-Old Localized:CE：</comment>
+    <value>NCE：</value>
   </data>
   <data name="WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_" xml:space="preserve">
     <value>从{0}检索文件夹信息失败</value>
