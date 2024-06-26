@@ -6,12 +6,8 @@
         public string? Comment { get; init; }
         public string? File { get; init; }
         public string? Type { get; init; }
+        public string? MimeType { get; init; }
         public string Value { get; init; } = string.Empty;
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Name, Comment, File, Type, Value);
-        }
 
         public int CompareTo(InvariantResourceKey? other)
         {
@@ -57,6 +53,11 @@
                 parts.Add($"Type:{Type}");
             }
 
+            if (MimeType != null)
+            {
+                parts.Add($"MimeType:{MimeType}");
+            }
+
             return string.Join(" ", parts);
         }
 
@@ -65,11 +66,21 @@
             return this with { File = file };
         }
 
-        public bool CanIgnore
+        public bool IsLocalizableText
         {
             get
             {
-                return true == Name?.StartsWith(">>");
+                if (true == Name?.StartsWith(">>"))
+                {
+                    return false;
+                }
+
+                if (Type == null || MimeType == null)
+                {
+                    return false;
+                }
+
+                return true;
             }
         }
     }

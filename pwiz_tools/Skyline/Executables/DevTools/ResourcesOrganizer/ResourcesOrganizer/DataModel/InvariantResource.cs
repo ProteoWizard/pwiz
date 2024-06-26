@@ -26,6 +26,7 @@ namespace ResourcesOrganizer.DataModel
             {
                 Name = Name,
                 Type = Type,
+                MimeType = MimeType,
                 Value = Value!,
                 Comment = Comment
             };

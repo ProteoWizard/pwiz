@@ -16,7 +16,7 @@
         {
             get { return ImportedValue ?? OriginalValue ?? string.Empty; }
         }
-        public string? Problem { get; init; }
+        public LocalizationIssueType? IssueType { get; init; }
         public string? OriginalInvariantValue { get; init; }
     }
 }

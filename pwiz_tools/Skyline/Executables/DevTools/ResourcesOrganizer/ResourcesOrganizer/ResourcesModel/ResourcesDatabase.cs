@@ -71,7 +71,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         {
                             ImportedValue = localizedResource.ImportedValue,
                             OriginalValue = localizedResource.OriginalValue,
-                            Problem = localizedResource.Problem,
+                            IssueType = LocalizationIssueType.FromName(localizedResource.Problem),
                             OriginalInvariantValue = localizedResource.OriginalInvariantValue
                         });
                     }
@@ -80,7 +80,6 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         Name = resourceLocation.Name!,
                         Invariant = invariantResource.GetKey(),
-                        MimeType = invariantResource.MimeType,
                         XmlSpace = invariantResource.XmlSpace,
                         LocalizedValues = localizedValues.ToImmutableDictionary(),
                         Position = resourceLocation.Position
@@ -156,7 +155,6 @@ namespace ResourcesOrganizer.ResourcesModel
             var result = new Dictionary<InvariantResourceKey, long>();
             foreach ((InvariantResourceKey key, List<ResourceEntry> entries) in GetInvariantResources().OrderBy(kvp=>kvp.Key))
             {
-                var mimeType = entries.Select(entry => entry.MimeType).Distinct().Single();
                 var xmlSpace = entries.Select(entry => entry.XmlSpace).Distinct().Single();
 
                 var invariantResource = new InvariantResource
@@ -165,8 +163,8 @@ namespace ResourcesOrganizer.ResourcesModel
                     Name = key.Name,
                     File = key.File,
                     Type = key.Type,
+                    MimeType = key.MimeType,
                     Value = key.Value,
-                    MimeType = mimeType,
                     XmlSpace = xmlSpace
                 };
 
@@ -197,7 +195,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         Language = localizedEntryGroup.Key,
                         OriginalValue = translations[0].OriginalValue,
                         ImportedValue = translations[0].ImportedValue,
-                        Problem = translations[0].Problem,
+                        Problem = translations[0].IssueType?.Name,
                         OriginalInvariantValue = translations[0].OriginalInvariantValue
                     };
                     session.Insert(localizedResource);
@@ -239,7 +237,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 foreach (var compatibleGroup in groups)
                 {
                     var entries = compatibleGroup.Select(tuple => tuple.Item2).ToList();
-                    if (compatibleGroup.Key.MimeType == null && compatibleGroup.Key.Invariant.Type == null && entries.Count > totalCount / 2)
+                    if (compatibleGroup.Key.Invariant.IsLocalizableText && entries.Count > totalCount / 2)
                     {
                         dictionary.Add(group.Key, entries);
                     }
@@ -316,14 +314,14 @@ namespace ResourcesOrganizer.ResourcesModel
                             continue;
                         }
 
-                        string problem;
+                        LocalizationIssueType problem;
                         if (oldTranslations.Count > 1)
                         {
-                            problem = LocalizationComments.InconsistentTranslation;
+                            problem = LocalizationIssueType.InconsistentTranslation;
                         }
                         else if (oldEntries.Any())
                         {
-                            problem = LocalizationComments.MissingTranslation;
+                            problem = LocalizationIssueType.MissingTranslation;
                         }
                         else
                         {
@@ -342,7 +340,7 @@ namespace ResourcesOrganizer.ResourcesModel
                                     localizedValues.Add(language,
                                         currentValue with
                                         {
-                                            Problem = LocalizationComments.EnglishTextChanged,
+                                            IssueType = LocalizationIssueType.EnglishTextChanged,
                                             OriginalInvariantValue = oldEnglishValues[0],
                                             ImportedValue = oldFuzzyTranslations[0],
                                         });
@@ -352,15 +350,15 @@ namespace ResourcesOrganizer.ResourcesModel
 
                             if (oldEnglishValues.Count == 0)
                             {
-                                problem = LocalizationComments.NewResource;
+                                problem = LocalizationIssueType.NewResource;
                             }
                             else
                             {
-                                problem = LocalizationComments.MissingTranslation;
+                                problem = LocalizationIssueType.MissingTranslation;
                             }
                         }
 
-                        localizedValues.Add(language, currentValue with { Problem = problem });
+                        localizedValues.Add(language, currentValue with { IssueType = problem });
                     }
 
                     newEntries.Add(entry with {LocalizedValues = localizedValues.ToImmutableDictionary()});
@@ -409,20 +407,20 @@ namespace ResourcesOrganizer.ResourcesModel
             foreach (var invariantEntry in GetInvariantResources().OrderBy(kvp=>kvp.Key))
             {
                 var invariantKey = invariantEntry.Key;
-                if (invariantKey.Type != null || invariantKey.CanIgnore)
+                if (!invariantKey.IsLocalizableText)
                 {
                     continue;
                 }
 
                 var localizedValues = invariantEntry.Value.Select(value => value.GetTranslation(language))
                     .OfType<LocalizedValue>().ToList();
-                var problem = localizedValues.Select(value => value.Problem).OfType<string>().FirstOrDefault();
+                var issueType = localizedValues.Select(value => value.IssueType).OfType<LocalizationIssueType>().FirstOrDefault();
                 var localizedText = localizedValues.Select(value => value.CurrentValue).FirstOrDefault();
                 var originalEnglish = localizedValues.Select(value => value.OriginalInvariantValue)
                     .OfType<string>().FirstOrDefault();
-                if (localizedText == null || problem != null)
+                if (localizedText == null || issueType != null)
                 {
-                    writer.WriteLine(TextUtil.ToCsvRow(invariantKey.Name, invariantKey.Comment, invariantKey.Value, localizedText, problem, originalEnglish, invariantEntry.Value.Count.ToString(), invariantKey.File));
+                    writer.WriteLine(TextUtil.ToCsvRow(invariantKey.Name, invariantKey.Comment, invariantKey.Value, localizedText, issueType?.Name, originalEnglish, invariantEntry.Value.Count.ToString(), invariantKey.File));
                 }
             }
         }

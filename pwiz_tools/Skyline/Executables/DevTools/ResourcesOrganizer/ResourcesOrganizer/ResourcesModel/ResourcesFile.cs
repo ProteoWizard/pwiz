@@ -54,7 +54,6 @@ namespace ResourcesOrganizer.ResourcesModel
                 {
                     Name = key.Name,
                     Invariant = key,
-                    MimeType = mimeType,
                     XmlSpace = xmlSpace,
                     Position = otherNodes.Count
                 };
@@ -99,28 +98,17 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
                     string problem = null;
                     string? comment = element.Element("comment")?.Value;
-                    if (comment != null)
-                    {
-                        using var stringReader = new StringReader(comment);
-                        while (stringReader.ReadLine() is { } line)
-                        {
-                            if (line.StartsWith(LocalizationComments.NeedsReviewPrefix))
-                            {
-                                problem = line.Substring(LocalizationComments.NeedsReviewPrefix.Length);
-                                break;
-                            }
-                        }
-                    }
                     var entry = entries[entryIndex];
-                    entries[entryIndex] = entry with
+                    entry = entry with
                     {
                         LocalizedValues = entry.LocalizedValues.SetItem(language,
                             new LocalizedValue
                             {
                                 OriginalValue = element.Element("value")!.Value,
-                                Problem = problem
                             })
                     };
+                    entry = LocalizationIssueType.ParseComment(entry, language, comment);
+                    entries[entryIndex] = entry;
                 }
             }
 
@@ -208,45 +196,29 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 foreach (var entry in entryGroup.Reverse())
                 {
+                    List<string> comments = [];
+                    if (entry.Invariant.Comment != null)
+                    {
+                        comments.Add(entry.Invariant.Comment);
+                    }
+
                     string? localizedText = null;
-                    string? problem = null;
                     if (!string.IsNullOrEmpty(language))
                     {
                         if (entry.LocalizedValues.TryGetValue(language, out var localizedValue))
                         {
-                            if (includeProblems)
+                            if (localizedValue.IssueType != null)
                             {
-                                problem = localizedValue.Problem;
-                                if (problem == LocalizationComments.EnglishTextChanged)
+                                localizedText = localizedValue.IssueType.GetLocalizedText(entry, localizedValue);
+                                var issueComment = localizedValue.IssueType.FormatIssueAsComment(entry, localizedValue);
+                                if (issueComment != null)
                                 {
-                                    // If old translated value was the same as old English, default to new English
-                                    if (localizedValue.ImportedValue == localizedValue.OriginalInvariantValue)
-                                    {
-                                        localizedText = entry.Invariant.Value;
-                                        problem = null;
-                                    }
-                                    else
-                                    {
-                                        var problemLines = new List<string>
-                                        {
-                                            problem,
-                                            "Old English:" + localizedValue.OriginalInvariantValue,
-                                            "Current English:" + entry.Invariant.Value,
-                                            "Old Localized:" + localizedValue.ImportedValue
-                                        };
-                                        problem = string.Join(Environment.NewLine, problemLines);
-                                    }
+                                    comments.Add(issueComment);
                                 }
-
                             }
-                            if (problem == null || includeProblems)
-                            {
-                                localizedText ??= localizedValue.ImportedValue ?? localizedValue.OriginalValue;
-                            }
-
                             if (localizedValue.OriginalValue == null)
                             {
-                                if (entry.Invariant.CanIgnore)
+                                if (!entry.Invariant.IsLocalizableText)
                                 {
                                     continue;
                                 }
@@ -257,27 +229,17 @@ namespace ResourcesOrganizer.ResourcesModel
                                     {
                                         continue;
                                     }
-
-                                    if (entry.Invariant.Type != null || entry.MimeType != null)
-                                    {
-                                        continue;
-                                    }
                                 }
                             }
                         }
                         else
                         {
-                            if (entry.Invariant.CanIgnore)
-                            {
-                                continue;
-                            }
-                            if (entry.Invariant.Type != null || entry.MimeType != null)
+                            if (!entry.Invariant.IsLocalizableText)
                             {
                                 continue;
                             }
                         }
                     }
-
                     localizedText ??= entry.Invariant.Value;
                     var data = new XElement("data");
                     data.SetAttributeValue("name", entry.Name);
@@ -286,24 +248,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         data.SetAttributeValue(XmlSpace, entry.XmlSpace);
                     }
                     data.Add(new XElement("value", localizedText));
-                    List<string> comments = [];
-                    if (entry.Invariant.Comment != null)
-                    {
-                        comments.Add(entry.Invariant.Comment);
-                    }
 
-                    if (problem == LocalizationComments.MissingTranslation ||
-                        problem == LocalizationComments.NewResource)
-                    {
-                        if (entry.Invariant.CanIgnore || entry.Invariant.Type != null || entry.MimeType != null)
-                        {
-                            problem = null;
-                        }
-                    }
-                    if (problem != null)
-                    {
-                        comments.Add(LocalizationComments.NeedsReviewPrefix + problem);
-                    }
                     if (comments.Any())
                     {
                         data.Add(new XElement("comment", string.Join(Environment.NewLine, comments)));
@@ -313,9 +258,9 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         data.SetAttributeValue("type", entry.Invariant.Type);
                     }
-                    if (entry.MimeType != null)
+                    if (entry.Invariant.MimeType != null)
                     {
-                        data.SetAttributeValue("mimetype", entry.MimeType);
+                        data.SetAttributeValue("mimetype", entry.Invariant.MimeType);
                     }
 
                     newNodes.Insert(entryGroup.Key, data);

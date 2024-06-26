@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -17,6 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v24.AboutDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v24.AboutDlg.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v24.AboutDlg.zh-CHS.resx.testfile" />
     <EmbeddedResource Include="ResourcesFileTest\Resources.ja.resx.testfile">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -49,6 +55,9 @@
     </Reference>
     <Reference Include="System.Data.SQLite">
       <HintPath>..\lib\sqlite\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Extensions">
+      <HintPath>..\lib\System.Resources.Extensions.dll</HintPath>
     </Reference>
   </ItemGroup>
 

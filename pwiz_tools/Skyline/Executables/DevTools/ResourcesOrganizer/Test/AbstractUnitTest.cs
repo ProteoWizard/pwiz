@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ResourcesOrganizer.ResourcesModel;
 
 namespace Test
 {
@@ -19,12 +15,27 @@ namespace Test
             {
                 if (manifestResourceName.StartsWith(prefix) && manifestResourceName.EndsWith(suffix))
                 {
-                    var target = manifestResourceName.Substring(prefix.Length, manifestResourceName.Length - prefix.Length - suffix.Length);
+                    var target = manifestResourceName.Substring(prefix.Length,
+                        manifestResourceName.Length - prefix.Length - suffix.Length);
                     using var stream = assembly.GetManifestResourceStream(manifestResourceName);
                     using var dest = File.OpenWrite(Path.Combine(destination, target));
                     stream!.CopyTo(dest);
                 }
             }
         }
-}
+
+        protected void VerifyRoundTrip(ResourcesDatabase database, string path)
+        {
+            database.Save(path);
+            var roundTrip = ResourcesDatabase.ReadDatabase(path);
+            CollectionAssert.AreEquivalent(database.ResourcesFiles.Keys.ToList(),
+                roundTrip.ResourcesFiles.Keys.ToList());
+            foreach (var resourcesFileEntry in database.ResourcesFiles)
+            {
+                var resourcesFile = resourcesFileEntry.Value;
+                Assert.IsTrue(roundTrip.ResourcesFiles.TryGetValue(resourcesFileEntry.Key, out var roundTripFile));
+                CollectionAssert.AreEqual(resourcesFile.Entries.ToList(), roundTripFile.Entries.ToList());
+            }
+        }
+    }
 }

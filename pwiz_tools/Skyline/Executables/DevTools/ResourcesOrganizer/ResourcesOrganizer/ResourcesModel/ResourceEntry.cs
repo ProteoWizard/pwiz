@@ -6,7 +6,6 @@ namespace ResourcesOrganizer.ResourcesModel
     {
         public string Name { get; init; }
         public InvariantResourceKey Invariant { get; init; }
-        public string? MimeType { get; init; }
         public string? XmlSpace { get; init; }
         /// <summary>
         /// Position of the element in the XML relative to <see cref="ResourcesFile.PreserveNode"/> nodes.
@@ -38,7 +37,7 @@ namespace ResourcesOrganizer.ResourcesModel
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            if (Name == other.Name && Invariant.Equals(other.Invariant) && MimeType == other.MimeType &&
+            if (Name == other.Name && Invariant.Equals(other.Invariant) && 
                 XmlSpace == other.XmlSpace && Position == other.Position &&
                 LocalizedValues.ToHashSet().SetEquals(other.LocalizedValues))
             {
@@ -49,7 +48,7 @@ namespace ResourcesOrganizer.ResourcesModel
 
         public override int GetHashCode()
         {
-            int hashCode = HashCode.Combine(Name, Invariant, MimeType, XmlSpace, Position);
+            int hashCode = HashCode.Combine(Name, Invariant, XmlSpace, Position);
             foreach (var kvp in LocalizedValues)
             {
                 hashCode ^= kvp.GetHashCode();
