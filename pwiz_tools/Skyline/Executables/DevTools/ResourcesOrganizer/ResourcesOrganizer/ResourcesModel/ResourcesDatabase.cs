@@ -12,12 +12,6 @@ namespace ResourcesOrganizer.ResourcesModel
         public ImmutableDictionary<string, ResourcesFile> ResourcesFiles { get; init; }
             = ImmutableDictionary<string, ResourcesFile>.Empty;
 
-        /// <summary>
-        /// If true, then untranslated entries are treated the same as entries where the translated text
-        /// is the same as the English
-        /// </summary>
-        public bool OverrideAll { get; init; }
-
         public static ResourcesDatabase ReadFile(string path, HashSet<string> exclude)
         {
             var extension = Path.GetExtension(path);
@@ -74,7 +68,8 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         localizedValues.Add(localizedResource.Language!, new LocalizedValue
                         {
-                            Value = localizedResource.Value!,
+                            ImportedValue = localizedResource.ImportedValue,
+                            OriginalValue = localizedResource.OriginalValue,
                             Problem = localizedResource.Problem
                         });
                     }
@@ -131,7 +126,7 @@ namespace ResourcesOrganizer.ResourcesModel
             transaction.Commit();
         }
 
-        public void Export(string path)
+        public void Export(string path, bool overrideAll, bool includeProblems)
         {
             using var stream = File.Create(path);
             using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Create);
@@ -140,7 +135,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 var entry = zipArchive.CreateEntry(file.Key);
                 using (var entryStream = entry.Open())
                 {
-                    file.Value.ExportResx(entryStream, null, OverrideAll);
+                    file.Value.ExportResx(entryStream, null, overrideAll, includeProblems);
                 }
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())
@@ -149,7 +144,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     var fileName = Path.GetFileNameWithoutExtension(file.Key) + "." + language + Path.GetExtension(file.Key);
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));
                     using var localizedStream = localizedEntry.Open();
-                    file.Value.ExportResx(localizedStream, language, OverrideAll);
+                    file.Value.ExportResx(localizedStream, language, overrideAll, includeProblems);
                 }
             }
         }
@@ -191,14 +186,15 @@ namespace ResourcesOrganizer.ResourcesModel
                     var translations = localizedEntryGroup.Select(kvp => kvp.Value).Distinct().ToList();
                     if (translations.Count > 1)
                     {
-                        Console.Error.WriteLine("{0} was translated into {1} as all of the following: {2}", entryGroup.Key, localizedEntryGroup.Key, string.Join(",", translations.Select(t=>TextUtil.Quote(t.Value))));
+                        Console.Error.WriteLine("{0} was translated into {1} as all of the following: {2}", entryGroup.Key, localizedEntryGroup.Key, string.Join(",", translations.Select(t=>TextUtil.Quote(t.CurrentValue))));
                     }
 
                     var localizedResource = new LocalizedResource
                     {
                         InvariantResourceId = invariantResourceId,
                         Language = localizedEntryGroup.Key,
-                        Value = translations[0].Value,
+                        OriginalValue = translations[0].OriginalValue,
+                        ImportedValue = translations[0].ImportedValue,
                         Problem = translations[0].Problem,
                         OriginalInvariantValue = translations[0].OriginalInvariantValue
                     };
@@ -237,7 +233,7 @@ namespace ResourcesOrganizer.ResourcesModel
                          .GroupBy(tuple => tuple.Item2.Invariant))
             {
                 var totalCount = group.Count();
-                var groups = group.GroupBy(tuple => tuple.Item2.Normalize(OverrideAll)).ToList();
+                var groups = group.GroupBy(tuple => tuple.Item2.Normalize()).ToList();
                 foreach (var compatibleGroup in groups)
                 {
                     var entries = compatibleGroup.Select(tuple => tuple.Item2).ToList();
@@ -295,6 +291,11 @@ namespace ResourcesOrganizer.ResourcesModel
                     var localizedValues = new Dictionary<string, LocalizedValue>();
                     foreach (var language in languages)
                     {
+                        LocalizedValue? currentValue;
+                        if (!entry.LocalizedValues.TryGetValue(language, out currentValue))
+                        {
+                            currentValue = new();
+                        }
                         var fileQualifiedKey = entry.Invariant.FileQualified(resourcesEntry.Key);
                         if (!oldResources.TryGetValue(fileQualifiedKey, out var oldEntries))
                         {
@@ -304,22 +305,12 @@ namespace ResourcesOrganizer.ResourcesModel
                             }
                         }
 
-                        var oldTranslations = oldEntries.Select(oldEntry => oldEntry.GetTranslation(language)?.Value)
+                        var oldTranslations = oldEntries.Select(oldEntry => oldEntry.GetTranslation(language)?.CurrentValue)
                             .OfType<string>().Distinct().ToList();
 
                         if (oldTranslations.Count == 1)
                         {
-                            var localizedValue = oldTranslations.First();
-                            if (string.IsNullOrEmpty(localizedValue) && !string.IsNullOrEmpty(entry.Invariant.Value))
-                            {
-                                localizedValues.Add(language, new LocalizedValue
-                                {
-                                    Value = entry.Invariant.Value,
-                                    Problem = LocalizationComments.EmptyLocalizedResource
-                                });
-                                continue;
-                            }
-                            localizedValues.Add(language, new LocalizedValue { Value = oldTranslations.First() });
+                            localizedValues.Add(language, currentValue with { ImportedValue = oldTranslations.First() });
                             continue;
                         }
 
@@ -342,16 +333,17 @@ namespace ResourcesOrganizer.ResourcesModel
                             if (oldEnglishValues.Count == 1)
                             {
                                 var oldFuzzyTranslations = oldFuzzyMatches
-                                    .Select(oldEntry => oldEntry.GetTranslation(language)?.Value).OfType<string>()
+                                    .Select(oldEntry => oldEntry.GetTranslation(language)?.CurrentValue).OfType<string>()
                                     .Distinct().ToList();
                                 if (oldFuzzyTranslations.Count == 1)
                                 {
-                                    localizedValues.Add(language, new LocalizedValue
-                                    {
-                                        Problem = LocalizationComments.EnglishTextChanged,
-                                        OriginalInvariantValue = oldEnglishValues[0],
-                                        Value = oldFuzzyTranslations[0]
-                                    });
+                                    localizedValues.Add(language,
+                                        currentValue with
+                                        {
+                                            Problem = LocalizationComments.EnglishTextChanged,
+                                            OriginalInvariantValue = oldEnglishValues[0],
+                                            ImportedValue = oldFuzzyTranslations[0],
+                                        });
                                 }
                                 continue;
                             }
@@ -365,32 +357,14 @@ namespace ResourcesOrganizer.ResourcesModel
                                 problem = LocalizationComments.MissingTranslation;
                             }
                         }
-                        localizedValues.Add(language, new LocalizedValue{Value = string.Empty, Problem = problem});
+
+                        localizedValues.Add(language, currentValue with { Problem = problem });
                     }
 
                     newEntries.Add(entry with {LocalizedValues = localizedValues.ToImmutableDictionary()});
                 }
                 var newResourcesFile = resourcesEntry.Value with {Entries = newEntries.ToImmutableList()};
                 newFiles.Add(resourcesEntry.Key, newResourcesFile);
-            }
-
-            return this with { ResourcesFiles = newFiles.ToImmutableDictionary() };
-        }
-
-        [Pure]
-        public ResourcesDatabase Intersect(ResourcesDatabase database)
-        {
-            var keysToKeep = database.ResourcesFiles.Values
-                .SelectMany(file => file.Entries.Select(entry => entry.Invariant)).ToHashSet();
-            var newFiles = new Dictionary<string, ResourcesFile>();
-            foreach (var entry in ResourcesFiles.ToList())
-            {
-                var newFile = entry.Value.Intersect(keysToKeep);
-                
-                if (newFile.Entries.Count > 0)
-                {
-                    newFiles.Add(entry.Key, newFile);
-                }
             }
 
             return this with { ResourcesFiles = newFiles.ToImmutableDictionary() };

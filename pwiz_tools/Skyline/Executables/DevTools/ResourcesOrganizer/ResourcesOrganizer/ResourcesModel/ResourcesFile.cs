@@ -103,7 +103,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         LocalizedValues = entry.LocalizedValues.SetItem(language,
                             new LocalizedValue
                             {
-                                Value = element.Element("value")!.Value
+                                OriginalValue = element.Element("value")!.Value
                             })
                     };
                 }
@@ -197,7 +197,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return true;
         }
 
-        public void ExportResx(Stream stream, string? language, bool overrideAll)
+        public void ExportResx(Stream stream, string? language, bool overrideAll, bool includeProblems)
         {
             var document = XDocument.Load(new StringReader(XmlContent));
             var newNodes = document.Root!.Nodes().Where(PreserveNode).ToList();
@@ -206,13 +206,20 @@ namespace ResourcesOrganizer.ResourcesModel
                 foreach (var entry in entryGroup.Reverse())
                 {
                     string? localizedText = null;
+                    string? problem = null;
                     if (!string.IsNullOrEmpty(language))
                     {
                         if (entry.LocalizedValues.TryGetValue(language, out var localizedValue))
                         {
-                            if (localizedValue.Problem == null)
+                            problem = localizedValue.Problem;
+                            if (problem == null || includeProblems)
                             {
-                                localizedText = localizedValue.Value;
+                                localizedText = localizedValue.CurrentValue;
+                            }
+
+                            if (!overrideAll && localizedValue.ImportedValue == null && localizedValue.OriginalValue == null)
+                            {
+                                continue;
                             }
                         }
                         else
@@ -225,7 +232,6 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
 
                     localizedText ??= entry.Invariant.Value;
-
                     var data = new XElement("data");
                     data.SetAttributeValue("name", entry.Name);
                     if (entry.XmlSpace != null)
@@ -233,10 +239,18 @@ namespace ResourcesOrganizer.ResourcesModel
                         data.SetAttributeValue(XmlSpace, entry.XmlSpace);
                     }
                     data.Add(new XElement("value", localizedText));
-                    string? comment = entry.Invariant.Comment;
-                    if (comment != null)
+                    List<string> comments = [];
+                    if (problem != null)
                     {
-                        data.Add(new XElement("comment", comment));
+                        comments.Add(problem);
+                    }
+                    if (entry.Invariant.Comment != null)
+                    {
+                        comments.Add(entry.Invariant.Comment);
+                    }
+                    if (comments.Any())
+                    {
+                        data.Add(new XElement("comment", string.Join(Environment.NewLine, comments)));
                     }
 
                     if (entry.Invariant.Type != null)
@@ -249,6 +263,10 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
 
                     newNodes.Insert(entryGroup.Key, data);
+                    if (string.IsNullOrEmpty(localizedText) && !string.IsNullOrEmpty(entry.Invariant.Value))
+                    {
+                        newNodes.Insert(entryGroup.Key, new XComment(" ReSharper disable once OverriddenWithEmptyValue "));
+                    }
                 }
             }
             document.Root.ReplaceAll(newNodes.Cast<object>().ToArray());

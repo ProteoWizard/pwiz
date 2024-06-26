@@ -21,11 +21,12 @@ namespace ResourcesOrganizer.ResourcesModel
             return localizedValue;
         }
 
-        public ResourceEntry Normalize(bool overrideAll)
+        public ResourceEntry Normalize()
         {
             var localizedValues = LocalizedValues
-                .Where(kvp => !overrideAll || kvp.Value.Value != Invariant.Value)
-                .ToImmutableDictionary(kvp => kvp.Key, kvp => new LocalizedValue() { Value = kvp.Value.Value });
+                .Where(kvp => kvp.Value.OriginalValue != null || kvp.Value.CurrentValue != Invariant.Value)
+                .ToImmutableDictionary(kvp => kvp.Key, kvp => new LocalizedValue 
+                    { ImportedValue = kvp.Value.CurrentValue });
             return this with
             {
                 Position = 0,

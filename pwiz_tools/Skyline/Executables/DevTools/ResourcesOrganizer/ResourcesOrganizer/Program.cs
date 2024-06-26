@@ -72,7 +72,7 @@ namespace ResourcesOrganizer
         {
             var database = GetDatabase(options);
             using var fileSaver = new FileSaver(options.Output);
-            database.Export(fileSaver.SafeName);
+            database.Export(fileSaver.SafeName, options.OverrideAll, options.IncludeProblems);
             fileSaver.Commit();
             return 0;
         }
@@ -86,7 +86,7 @@ namespace ResourcesOrganizer
                 database = ResourcesDatabase.ReadDatabase(path);
             }
 
-            return database with { OverrideAll = options.OverrideAll };
+            return database;
         }
     }
 }
