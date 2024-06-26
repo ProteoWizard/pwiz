@@ -225,7 +225,7 @@ namespace ResourcesOrganizer.ResourcesModel
 
                                 if (localizedValue.IssueType == null)
                                 {
-                                    if (localizedValue.ImportedValue == null || localizedValue.ImportedValue == entry.Invariant.Value)
+                                    if (localizedText == null || localizedText == entry.Invariant.Value)
                                     {
                                         if (!overrideAll)
                                         {

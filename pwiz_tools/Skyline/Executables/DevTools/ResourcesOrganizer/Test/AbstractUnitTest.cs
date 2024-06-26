@@ -37,5 +37,13 @@ namespace Test
                 CollectionAssert.AreEqual(resourcesFile.Entries.ToList(), roundTripFile.Entries.ToList());
             }
         }
+
+        public IList<string> Languages {get
+        {
+            return new[]
+            {
+                "ja", "zh-CHS"
+            };
+        }}
     }
 }

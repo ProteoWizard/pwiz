@@ -113,6 +113,11 @@
                     return null;
                 }
 
+                if (!resourceEntry.Invariant.IsLocalizableText)
+                {
+                    return null;
+                }
+                
                 return localizedValue.ImportedValue ?? localizedValue.OriginalValue;
             }
 

@@ -14,6 +14,12 @@
     <None Remove="ResourcesFileTest\Resources.resx.testfile" />
     <None Remove="ResourcesFileTest\Resources.zh-CHS.resx.testfile" />
     <None Remove="ResourcesFileTest\Skyline.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +39,12 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourcesFileTest\Skyline.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
   </ItemGroup>
 
   <ItemGroup>

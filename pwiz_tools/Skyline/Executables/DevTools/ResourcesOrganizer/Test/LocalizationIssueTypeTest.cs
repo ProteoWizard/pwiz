@@ -9,7 +9,7 @@ namespace Test
         [TestMethod]
         public void TestEnglishTextChanged()
         {
-            List<string> languages = ["ja", "zh-CHS"];
+            var languages = Languages;
             string runDirectory = TestContext.TestRunDirectory!;
             SaveManifestResources(typeof(LocalizationIssueTypeTest), runDirectory);
             var oldResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v23.AboutDlg.resx"));
