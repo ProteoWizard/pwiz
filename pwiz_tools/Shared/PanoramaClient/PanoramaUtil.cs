@@ -229,15 +229,16 @@ namespace pwiz.PanoramaClient
 
         public static LabKeyError GetErrorFromWebException(WebException e)
         {
-            if (e == null) return null;
-            using (var r = e.Response)
-            {
-                // A WebException is usually thrown if the response status code is something other than 200
-                // We could still have a LabKey error in the JSON response. For example, when we get a 404
-                // response when trying to upload to a folder that does not exist. The response contains a 
-                // LabKey error like "No such folder or workbook..."
-                return GetIfErrorInResponse(r);
-            }
+            if (e == null || e.Response == null) return null;
+            
+            // A WebException is usually thrown if the response status code is something other than 200
+            // We could still have a LabKey error in the JSON response. For example, when we get a 404
+            // response when trying to upload to a folder that does not exist. The response contains a 
+            // LabKey error like "No such folder or workbook..."
+            // Do not close the WebResponse by accessing it in a using statement here. We access the Status
+            // property of the response in the PanoramaServerException constructor.  The response will
+            // be closed there.
+            return GetIfErrorInResponse(e.Response);
         }
 
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
@@ -390,12 +391,21 @@ namespace pwiz.PanoramaClient
 
     public class PanoramaServerException : Exception
     {
+        public HttpStatusCode? HttpStatus { get; }
+
         public PanoramaServerException(string message) : base(message)
         {
         }
 
         public PanoramaServerException(string message, Exception e) : base(message, e)
         {
+            if (e is WebException webException)
+            {
+                using (var response = webException.Response as HttpWebResponse)
+                {
+                    HttpStatus = response?.StatusCode;
+                }
+            }
         }
     }
 
@@ -644,6 +654,11 @@ namespace pwiz.PanoramaClient
                 // After making this request the client should have the X-LABKEY-CSRF token 
                 DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
             }
+        }
+
+        public void ClearCsrfToken()
+        {
+            _csrfToken = null;
         }
     }
 

@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using System.Web;
 using Newtonsoft.Json;
+using pwiz.PanoramaClient;
 using SharedBatch;
 
 namespace SkylineBatch
@@ -80,9 +81,8 @@ namespace SkylineBatch
             var downloadingFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
             Uri webdavUri = null;
             var panoramaServerUri =
-                new Uri(PanoramaUtil.ServerNameToUrl(
-                    Uri.UnescapeDataString(server.URI.GetLeftPart(UriPartial.Authority))));
-            var webClient = new WebPanoramaClient(panoramaServerUri);
+                PanoramaUtil.ServerNameToUri(Uri.UnescapeDataString(server.URI.GetLeftPart(UriPartial.Authority)));
+            var webClient = new WebPanoramaClient(panoramaServerUri, server.FileSource.Username, server.FileSource.Password);
             var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
             if (downloadingFileName == null) // this is not a zipped Skyline file 
             {
@@ -91,10 +91,9 @@ namespace SkylineBatch
             }
             else
             {
-               
                 var idQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", panoramaFolder,
                 "selectRows", "schemaName=targetedms&query.queryName=runs&query.Deleted~eq=false&query.Status~isblank&query.columns=Id,FileName", true);
-                var jsonAsString = webClient.DownloadStringAsync(idQuery, server.FileSource.Username, server.FileSource.Password, cancelToken);
+                var jsonAsString = webClient.DownloadStringAsync(idQuery, cancelToken);
                 if (cancelToken.IsCancellationRequested) return null;
 
                 var id = -1;
@@ -144,15 +143,15 @@ namespace SkylineBatch
 
             var downloadServer = new Server(new RemoteFileSource(server.FileSource.Name + " TEST", webdavUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty);
             var fileName = downloadingFileName;
-            var size = GetSize(downloadServer.URI, panoramaServerUri, webClient, server.FileSource.Username, server.FileSource.Password, cancelToken);
+            var size = GetSize(downloadServer.URI, panoramaServerUri, webClient, cancelToken);
             return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);
         }
 
-        public static long GetSize(Uri remoteUri, Uri panoramaServerUri, WebPanoramaClient webClient, string username, string password, CancellationToken cancelToken)
+        public static long GetSize(Uri remoteUri, Uri panoramaServerUri, WebPanoramaClient webClient, CancellationToken cancelToken)
         {
             var folderUrl = Path.GetDirectoryName(remoteUri.LocalPath);
             var folderUri = new Uri(panoramaServerUri.AbsoluteUri + folderUrl);
-            var filesJsonAsString = webClient.DownloadStringAsync(new Uri(folderUri, "?method=json"), username, password, cancelToken);
+            var filesJsonAsString = webClient.DownloadStringAsync(new Uri(folderUri, "?method=json"), cancelToken);
             dynamic jsonObject = JsonConvert.DeserializeObject(filesJsonAsString);
             long size = 0;
             try
