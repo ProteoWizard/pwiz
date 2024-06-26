@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO.Compression;
+using System.Text;
 using NHibernate;
 using ResourcesOrganizer.DataModel;
 
@@ -70,7 +71,8 @@ namespace ResourcesOrganizer.ResourcesModel
                         {
                             ImportedValue = localizedResource.ImportedValue,
                             OriginalValue = localizedResource.OriginalValue,
-                            Problem = localizedResource.Problem
+                            Problem = localizedResource.Problem,
+                            OriginalInvariantValue = localizedResource.OriginalInvariantValue
                         });
                     }
                     var invariantResource = invariantResources[resourceLocation.InvariantResourceId];
@@ -126,7 +128,7 @@ namespace ResourcesOrganizer.ResourcesModel
             transaction.Commit();
         }
 
-        public void Export(string path, bool overrideAll, bool includeProblems)
+        public void ExportResx(string path, bool overrideAll, bool includeProblems)
         {
             using var stream = File.Create(path);
             using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Create);
@@ -237,7 +239,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 foreach (var compatibleGroup in groups)
                 {
                     var entries = compatibleGroup.Select(tuple => tuple.Item2).ToList();
-                    if (entries.Count > totalCount / 2)
+                    if (compatibleGroup.Key.MimeType == null && compatibleGroup.Key.Invariant.Type == null && entries.Count > totalCount / 2)
                     {
                         dictionary.Add(group.Key, entries);
                     }
@@ -344,8 +346,8 @@ namespace ResourcesOrganizer.ResourcesModel
                                             OriginalInvariantValue = oldEnglishValues[0],
                                             ImportedValue = oldFuzzyTranslations[0],
                                         });
+                                    continue;
                                 }
-                                continue;
                             }
 
                             if (oldEnglishValues.Count == 0)
@@ -396,6 +398,32 @@ namespace ResourcesOrganizer.ResourcesModel
             foreach (var folder in directoryInfo.GetDirectories())
             {
                 AddFolder(files, folder.FullName, Path.Combine(relativePath, folder.Name), exclude);
+            }
+        }
+
+        public void ExportLocalizationCsv(string path, string language)
+        {
+            using var stream = new FileStream(path, FileMode.Create);
+            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            writer.WriteLine(TextUtil.ToCsvRow("Name", "Comment", "English", language + " Translation", "Issue", "Original English", "File Count", "File"));
+            foreach (var invariantEntry in GetInvariantResources().OrderBy(kvp=>kvp.Key))
+            {
+                var invariantKey = invariantEntry.Key;
+                if (invariantKey.Type != null || invariantKey.CanIgnore)
+                {
+                    continue;
+                }
+
+                var localizedValues = invariantEntry.Value.Select(value => value.GetTranslation(language))
+                    .OfType<LocalizedValue>().ToList();
+                var problem = localizedValues.Select(value => value.Problem).OfType<string>().FirstOrDefault();
+                var localizedText = localizedValues.Select(value => value.CurrentValue).FirstOrDefault();
+                var originalEnglish = localizedValues.Select(value => value.OriginalInvariantValue)
+                    .OfType<string>().FirstOrDefault();
+                if (localizedText == null || problem != null)
+                {
+                    writer.WriteLine(TextUtil.ToCsvRow(invariantKey.Name, invariantKey.Comment, invariantKey.Value, localizedText, problem, originalEnglish, invariantEntry.Value.Count.ToString(), invariantKey.File));
+                }
             }
         }
     }

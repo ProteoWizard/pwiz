@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Security.Policy;
+using CommandLine;
 
 namespace ResourcesOrganizer
 {
@@ -27,22 +28,32 @@ namespace ResourcesOrganizer
     {
         [Value(0, MetaName = "oldDb", Required = true)]
         public string OldDb { get; set; }
-        [Option("language", HelpText = "Comma separated list of languages")]
+        [Option("language")]
         public IEnumerable<string> Language { get; set; }
         [Option("output")]
         public string? Output { get; set; }
 
     }
 
-    [Verb("export", HelpText = "Export .resx files to a .zip")]
-    public class ExportVerb : Options
+    [Verb("exportResx", HelpText = "Export .resx files to a .zip")]
+    public class ExportResx : Options
     {
         [Value(0, MetaName = "output", Required = true)]
         public string Output { get; set; }
 
-        [Option("overideAll")]
+        [Option("overrideAll")]
         public bool OverrideAll { get; set; }
         [Option("includeProblems")]
         public bool IncludeProblems { get; set; }
     }
+
+    [Verb("exportLocalizationCsv")]
+    public class ExportLocalizationCsv : Options
+    {
+        [Value(0, MetaName = "output", Required = true)]
+        public string Output { get; set; }
+
+        [Option("language")]
+        public string Language { get; set; }
+}
 }

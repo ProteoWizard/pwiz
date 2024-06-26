@@ -12,5 +12,7 @@ namespace ResourcesOrganizer.ResourcesModel
         public static readonly string EnglishTextChanged = "English text changed";
         public static readonly string InconsistentTranslation = "Inconsistent translation";
         public static readonly string MissingTranslation = "Missing translation";
+
+        public static readonly string NeedsReviewPrefix = "Needs Review:";
     }
 }

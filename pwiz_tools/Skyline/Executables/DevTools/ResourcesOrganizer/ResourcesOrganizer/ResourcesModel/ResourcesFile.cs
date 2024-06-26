@@ -97,13 +97,28 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         continue;
                     }
+                    string problem = null;
+                    string? comment = element.Element("comment")?.Value;
+                    if (comment != null)
+                    {
+                        using var stringReader = new StringReader(comment);
+                        while (stringReader.ReadLine() is { } line)
+                        {
+                            if (line.StartsWith(LocalizationComments.NeedsReviewPrefix))
+                            {
+                                problem = line.Substring(LocalizationComments.NeedsReviewPrefix.Length);
+                                break;
+                            }
+                        }
+                    }
                     var entry = entries[entryIndex];
                     entries[entryIndex] = entry with
                     {
                         LocalizedValues = entry.LocalizedValues.SetItem(language,
                             new LocalizedValue
                             {
-                                OriginalValue = element.Element("value")!.Value
+                                OriginalValue = element.Element("value")!.Value,
+                                Problem = problem
                             })
                     };
                 }
@@ -162,18 +177,6 @@ namespace ResourcesOrganizer.ResourcesModel
             return this with { Entries = ImmutableList.CreateRange(entries) };
         }
 
-        [Pure]
-        public ResourcesFile Subtract(HashSet<InvariantResourceKey> keysToRemove)
-        {
-            return this with { Entries = [..Entries.Where(entry => !keysToRemove.Contains(entry.Invariant))] };
-        }
-
-        [Pure]
-        public ResourcesFile Intersect(HashSet<InvariantResourceKey> keysToKeep)
-        {
-            return this with { Entries = [..Entries.Where(entry => keysToKeep.Contains(entry.Invariant))] };
-        }
-
         public static bool IsInvariantResourceFile(string path)
         {
             var extension = Path.GetExtension(path);
@@ -211,20 +214,64 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         if (entry.LocalizedValues.TryGetValue(language, out var localizedValue))
                         {
-                            problem = localizedValue.Problem;
+                            if (includeProblems)
+                            {
+                                problem = localizedValue.Problem;
+                                if (problem == LocalizationComments.EnglishTextChanged)
+                                {
+                                    // If old translated value was the same as old English, default to new English
+                                    if (localizedValue.ImportedValue == localizedValue.OriginalInvariantValue)
+                                    {
+                                        localizedText = entry.Invariant.Value;
+                                        problem = null;
+                                    }
+                                    else
+                                    {
+                                        var problemLines = new List<string>
+                                        {
+                                            problem,
+                                            "Old English:" + localizedValue.OriginalInvariantValue,
+                                            "Current English:" + entry.Invariant.Value,
+                                            "Old Localized:" + localizedValue.ImportedValue
+                                        };
+                                        problem = string.Join(Environment.NewLine, problemLines);
+                                    }
+                                }
+
+                            }
                             if (problem == null || includeProblems)
                             {
-                                localizedText = localizedValue.CurrentValue;
+                                localizedText ??= localizedValue.ImportedValue ?? localizedValue.OriginalValue;
                             }
 
-                            if (!overrideAll && localizedValue.ImportedValue == null && localizedValue.OriginalValue == null)
+                            if (localizedValue.OriginalValue == null)
                             {
-                                continue;
+                                if (entry.Invariant.CanIgnore)
+                                {
+                                    continue;
+                                }
+
+                                if (localizedValue.ImportedValue == null || localizedValue.ImportedValue == entry.Invariant.Value)
+                                {
+                                    if (!overrideAll)
+                                    {
+                                        continue;
+                                    }
+
+                                    if (entry.Invariant.Type != null || entry.MimeType != null)
+                                    {
+                                        continue;
+                                    }
+                                }
                             }
                         }
                         else
                         {
-                            if (!overrideAll)
+                            if (entry.Invariant.CanIgnore)
+                            {
+                                continue;
+                            }
+                            if (entry.Invariant.Type != null || entry.MimeType != null)
                             {
                                 continue;
                             }
@@ -240,13 +287,22 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
                     data.Add(new XElement("value", localizedText));
                     List<string> comments = [];
-                    if (problem != null)
-                    {
-                        comments.Add(problem);
-                    }
                     if (entry.Invariant.Comment != null)
                     {
                         comments.Add(entry.Invariant.Comment);
+                    }
+
+                    if (problem == LocalizationComments.MissingTranslation ||
+                        problem == LocalizationComments.NewResource)
+                    {
+                        if (entry.Invariant.CanIgnore || entry.Invariant.Type != null || entry.MimeType != null)
+                        {
+                            problem = null;
+                        }
+                    }
+                    if (problem != null)
+                    {
+                        comments.Add(LocalizationComments.NeedsReviewPrefix + problem);
                     }
                     if (comments.Any())
                     {

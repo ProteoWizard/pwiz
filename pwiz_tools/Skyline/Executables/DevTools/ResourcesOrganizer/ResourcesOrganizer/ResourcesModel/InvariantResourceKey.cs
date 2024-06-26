@@ -64,5 +64,13 @@
         {
             return this with { File = file };
         }
+
+        public bool CanIgnore
+        {
+            get
+            {
+                return true == Name?.StartsWith(">>");
+            }
+        }
     }
 }

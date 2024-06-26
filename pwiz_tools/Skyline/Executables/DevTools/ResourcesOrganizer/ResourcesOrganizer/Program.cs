@@ -9,11 +9,12 @@ namespace ResourcesOrganizer
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-            return Parser.Default.ParseArguments<AddVerb, ImportTranslations, ExportVerb>(args)
-                .MapResult<AddVerb, ImportTranslations, ExportVerb, int>(
+            return Parser.Default.ParseArguments<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv>(args)
+                .MapResult<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv, int>(
                     DoAdd, 
                     DoImportTranslations,
-                    DoExport,
+                    DoExportResx,
+                    DoExportLocalizationCsv,
                     HandleParseError);
         }
 
@@ -68,11 +69,20 @@ namespace ResourcesOrganizer
             return 0;
         }
 
-        static int DoExport(ExportVerb options)
+        static int DoExportResx(ExportResx options)
         {
             var database = GetDatabase(options);
             using var fileSaver = new FileSaver(options.Output);
-            database.Export(fileSaver.SafeName, options.OverrideAll, options.IncludeProblems);
+            database.ExportResx(fileSaver.SafeName, options.OverrideAll, options.IncludeProblems);
+            fileSaver.Commit();
+            return 0;
+        }
+
+        static int DoExportLocalizationCsv(ExportLocalizationCsv options)
+        {
+            var database = GetDatabase(options);
+            using var fileSaver = new FileSaver(options.Output);
+            database.ExportLocalizationCsv(fileSaver.SafeName, options.Language);
             fileSaver.Commit();
             return 0;
         }
