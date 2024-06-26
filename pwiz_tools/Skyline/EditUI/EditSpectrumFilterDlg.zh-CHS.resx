@@ -162,9 +162,6 @@
   <data name="btnDeleteFilter.Text" xml:space="preserve">
     <value>删除</value>
   </data>
-  <data name="toolStripFilter.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
   <data name="lblDescription.Text" xml:space="preserve">
     <value>利用 FASTA 文件或背景蛋白质组的信息，将文档中的所有肽段重组为关联的蛋白质或蛋白质组。现有蛋白质的关联性将被丢弃。</value>
     <comment>Needs Review:English text changed

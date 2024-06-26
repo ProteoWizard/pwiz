@@ -141,9 +141,6 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>OK</value>
-  </data>
   <metadata name="toolStripFilter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
@@ -161,9 +158,6 @@
   </data>
   <data name="btnDeleteFilter.Text" xml:space="preserve">
     <value>削除</value>
-  </data>
-  <data name="toolStripFilter.Text" xml:space="preserve">
-    <value>toolStrip1</value>
   </data>
   <data name="lblDescription.Text" xml:space="preserve">
     <value>FASTAファイルかバックグラウンドプロテオームのいずれかを用いて、ドキュメント内のペプチドすべてを関連するタンパク質かタンパク質グループに再編成します。 既存のタンパク質の関連付けは破棄されます。</value>

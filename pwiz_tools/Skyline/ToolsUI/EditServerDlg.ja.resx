@@ -144,9 +144,6 @@
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -170,9 +167,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>InputPanel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="instructionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -241,9 +235,6 @@
   <data name="&gt;&gt;lblProjectInfo.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;lblProjectInfo.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="textServerURL.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 26</value>
   </data>
@@ -265,12 +256,6 @@
   <data name="&gt;&gt;textServerURL.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 152</value>
-  </data>
   <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
@@ -289,14 +274,8 @@
   <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </data>
-  <data name="lblPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 132</value>
   </data>
   <data name="lblPassword.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -316,14 +295,8 @@
   <data name="&gt;&gt;lblPassword.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </data>
-  <data name="lblUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 81</value>
   </data>
   <data name="lblUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 13</value>
@@ -343,12 +316,6 @@
   <data name="&gt;&gt;lblUsername.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 99</value>
-  </data>
   <data name="textUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 20</value>
   </data>
@@ -363,12 +330,6 @@
   </data>
   <data name="&gt;&gt;textUsername.Parent" xml:space="preserve">
     <value>InputPanel</value>
-  </data>
-  <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="InputPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 65</value>
   </data>
   <data name="InputPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>337, 220</value>
@@ -396,9 +357,6 @@
   </data>
   <data name="InstructionPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
-  </data>
-  <data name="InstructionPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>337, 56</value>
   </data>
   <data name="InstructionPanel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -436,9 +394,6 @@
   <data name="ComponentOrganizer.RowCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="ComponentOrganizer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>343, 288</value>
-  </data>
   <data name="ComponentOrganizer.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
@@ -468,9 +423,6 @@
   </data>
   <data name="$this.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>343, 284</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

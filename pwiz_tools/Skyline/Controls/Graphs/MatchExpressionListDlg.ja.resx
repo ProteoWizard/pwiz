@@ -127,9 +127,6 @@
     <value>Enter a list of identifiers on separate lines.</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
-  <data name="buttonOk.Text" xml:space="preserve">
-    <value>OK</value>
-  </data>
   <data name="buttonCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>

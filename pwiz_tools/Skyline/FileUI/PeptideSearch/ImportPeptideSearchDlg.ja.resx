@@ -543,14 +543,8 @@
   <data name="label14.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label14.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
     <value>8, 9</value>
-  </data>
-  <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>119, 20</value>
   </data>
   <data name="label14.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -624,14 +618,8 @@
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label20.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 20</value>
   </data>
   <data name="label20.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -705,14 +693,8 @@
   <data name="label16.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label16.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 20</value>
   </data>
   <data name="label16.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -786,17 +768,11 @@
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 12pt</value>
-  </data>
   <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>214, 20</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -818,12 +794,6 @@
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 43</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -867,14 +837,8 @@
   <data name="label19.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label19.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 20</value>
   </data>
   <data name="label19.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -945,14 +909,8 @@
   <data name="&gt;&gt;ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
   </data>
   <data name="lblFasta.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1023,17 +981,11 @@
   <data name="&gt;&gt;importFastaPage.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 12pt</value>
-  </data>
   <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 20</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1105,17 +1057,11 @@
   <data name="&gt;&gt;converterSettingsPage.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="lblSearchSettings.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="lblSearchSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="lblSearchSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="lblSearchSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
   </data>
   <data name="lblSearchSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1141,12 +1087,6 @@ Old Localized:検索設定の調整</comment>
   </data>
   <data name="searchSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
-  </data>
-  <data name="searchSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="searchSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 43</value>
   </data>
   <data name="searchSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1187,17 +1127,11 @@ Old Localized:検索設定の調整</comment>
   <data name="&gt;&gt;ddaSearchSettingsPage.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="lblDDASearch.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
   <data name="lblDDASearch.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="lblDDASearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
-  </data>
-  <data name="lblDDASearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
   </data>
   <data name="lblDDASearch.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1220,12 +1154,6 @@ Old Localized:検索設定の調整</comment>
   <data name="ddaSearchTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="ddaSearchTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="ddaSearchTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 43</value>
-  </data>
   <data name="ddaSearchTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
@@ -1235,14 +1163,12 @@ Old Localized:検索設定の調整</comment>
   <data name="&gt;&gt;ddaSearchTitlePanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;ddaSearchTitlePanel.Parent" xml:space="preserve">
-    <value>ddaSearch</value>
-  </data>
   <data name="&gt;&gt;ddaSearchTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="ddaSearchPage.Text" xml:space="preserve">
     <value>9</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>

@@ -128,9 +128,6 @@
     <value>Bottom, Right</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="button1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>494, 264</value>
-  </data>
   <data name="button1.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
@@ -155,9 +152,6 @@
   </data>
   <data name="button2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
-  </data>
-  <data name="button2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>575, 264</value>
   </data>
   <data name="button2.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -186,9 +180,6 @@
   <data name="regexColorRowGrid1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
   </data>
-  <data name="regexColorRowGrid1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>434, 235</value>
-  </data>
   <data name="regexColorRowGrid1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -209,9 +200,6 @@
   </data>
   <data name="advancedCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </data>
-  <data name="advancedCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>371, 230</value>
   </data>
   <data name="advancedCheckBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 17</value>
@@ -243,9 +231,6 @@
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>662, 299</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

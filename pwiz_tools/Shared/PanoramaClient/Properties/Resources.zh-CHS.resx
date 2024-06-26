@@ -120,9 +120,6 @@
   <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>服务器未返回有效的 JSON 响应。{0} 并非 Panorama  服务器。</value>
   </data>
-  <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
-    <value>URL: {0}</value>
-  </data>
   <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
     <value>{0}不是 Panorama 文件夹</value>
   </data>

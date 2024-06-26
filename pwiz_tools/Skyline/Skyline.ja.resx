@@ -302,9 +302,6 @@
   <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
     <value>Replicates</value>
   </data>
-  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>229, 396</value>
-  </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>
   </data>
@@ -395,9 +392,6 @@
   </data>
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
-  </data>
-  <data name="koinaLibMatchItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
   </data>
   <data name="koinaLibMatchItem.Text" xml:space="preserve">
     <value>Koina</value>
@@ -1029,9 +1023,6 @@
   <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
   </data>
-  <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 434</value>
-  </data>
   <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
     <value>contextMenuPeakAreas</value>
   </data>
@@ -1331,9 +1322,6 @@
   <data name="startPageMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
-  <data name="startPageMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
     <value>開始(&amp;R)...</value>
   </data>
@@ -1342,9 +1330,6 @@
   </data>
   <data name="newMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+N</value>
-  </data>
-  <data name="newMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
   </data>
   <data name="newMenuItem.Text" xml:space="preserve">
     <value>新規(&amp;N)</value>
@@ -1355,9 +1340,6 @@
   <data name="openMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+O</value>
   </data>
-  <data name="openMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="openMenuItem.Text" xml:space="preserve">
     <value>開く(&amp;O)...</value>
   </data>
@@ -1365,14 +1347,8 @@
     <value>Open From Panora&amp;ma...</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
     <value>フォルダを開く(&amp;C)</value>
-  </data>
-  <data name="toolStripSeparator53.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
   </data>
   <data name="saveMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1380,20 +1356,11 @@
   <data name="saveMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+S</value>
   </data>
-  <data name="saveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="saveMenuItem.Text" xml:space="preserve">
     <value>保存(&amp;S)</value>
   </data>
-  <data name="saveAsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="saveAsMenuItem.Text" xml:space="preserve">
     <value>名前を付けて保存(&amp;A)...</value>
-  </data>
-  <data name="shareDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
   </data>
   <data name="shareDocumentMenuItem.Text" xml:space="preserve">
     <value>共有(&amp;H)...</value>
@@ -1401,14 +1368,8 @@
   <data name="publishMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
-  <data name="publishMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="publishMenuItem.Text" xml:space="preserve">
     <value>Panoramaにアップロード(&amp;U)...</value>
-  </data>
-  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 6</value>
   </data>
   <data name="runPeptideSearchToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Run Peptide Search...</value>
@@ -1482,9 +1443,6 @@
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
     <value>注釈(&amp;N)...</value>
   </data>
-  <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="importToolStripMenuItem.Text" xml:space="preserve">
     <value>インポート(&amp;I)</value>
   </data>
@@ -1542,23 +1500,11 @@
   <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
     <value>注釈(&amp;A)...</value>
   </data>
-  <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
   <data name="exportToolStripMenuItem.Text" xml:space="preserve">
     <value>エクスポート(&amp;E)</value>
   </data>
-  <data name="mruBeforeToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
-  </data>
-  <data name="mruAfterToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
-  </data>
   <data name="mruAfterToolStripSeparator.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
-  </data>
-  <data name="exitMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
   </data>
   <data name="exitMenuItem.Text" xml:space="preserve">
     <value>終了(&amp;X)</value>
@@ -2405,12 +2351,6 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;koinaLibMatchItem.Name" xml:space="preserve">
-    <value>koinaLibMatchItem</value>
-  </data>
-  <data name="&gt;&gt;koinaLibMatchItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mirrorMenuItem.Name" xml:space="preserve">
     <value>mirrorMenuItem</value>

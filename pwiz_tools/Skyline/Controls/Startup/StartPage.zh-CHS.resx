@@ -432,14 +432,15 @@
   <data name="openFileLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 2</value>
   </data>
-  <data name="openFileLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 15</value>
-  </data>
   <data name="openFileLabel.TabIndex" type="System.Int32, mscorlib">
     <value>54</value>
   </data>
   <data name="openFileLabel.Text" xml:space="preserve">
-    <value>打开文件…</value>
+    <value>打开文件</value>
+    <comment>Needs Review:English text changed
+Old English:Open File
+Current English:Open File...
+Old Localized:打开文件</comment>
   </data>
   <data name="&gt;&gt;openFileLabel.Name" xml:space="preserve">
     <value>openFileLabel</value>
@@ -534,17 +535,8 @@
   <data name="toolStripButtonModeUI.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>White</value>
   </data>
-  <data name="toolStripButtonModeUI.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 22</value>
-  </data>
   <data name="toolStripButtonModeUI.Text" xml:space="preserve">
     <value>用户界面选择</value>
-  </data>
-  <data name="tooStripModeUI.Location" type="System.Drawing.Point, System.Drawing">
-    <value>509, 0</value>
-  </data>
-  <data name="tooStripModeUI.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 25</value>
   </data>
   <data name="tooStripModeUI.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

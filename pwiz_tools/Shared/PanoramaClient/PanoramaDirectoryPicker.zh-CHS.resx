@@ -139,9 +139,6 @@
     <value>Forward</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="toolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
   <data name="urlLink.Text" xml:space="preserve">
     <value>&lt;placeholder&gt;</value>
     <comment>Needs Review:New resource</comment>
