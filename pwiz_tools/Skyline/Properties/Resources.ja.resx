@@ -1363,11 +1363,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>無効なモデル選択。</value>
   </data>
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>CE：</value>
-    <comment>Needs Review:English text changed
-Old English:CE:
-Current English:NCE:
-Old Localized:CE：</comment>
+    <value>NCE：</value>
   </data>
   <data name="WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_" xml:space="preserve">
     <value>{0}からのフォルダ情報の取得に失敗</value>
