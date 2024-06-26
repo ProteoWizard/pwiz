@@ -473,7 +473,8 @@ Skyline website.</value>
     <value>4</value>
   </data>
   <data name="textSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline (64-bit : developer build) 22.0.0.000 (abc123456)</value>
+    <value>Skyline (64-bit : developer build) 00.0.0.000 (abc123456)</value>
+    <comment>Testing text to make sure the form is wide enough</comment>
   </data>
   <data name="&gt;&gt;textSoftwareVersion.Name" xml:space="preserve">
     <value>textSoftwareVersion</value>

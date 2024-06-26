@@ -599,11 +599,9 @@
   </data>
   <data name="lblKoinaPrediction.Text" xml:space="preserve">
     <value>Koina設定</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="koinaPage.Text" xml:space="preserve">
     <value>Koina予測</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="lblNarrowWindowFiles.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 12pt</value>
