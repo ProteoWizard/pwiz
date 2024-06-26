@@ -6,6 +6,8 @@ namespace ResourcesOrganizer
     {
         [Option("db", Default = "resources.db")]
         public string DbFile { get; set; }
+        [Option("overrideall", Default = false, HelpText = "Treat missing resources from localized .resx files as if they contained the Invariant text")]
+        public bool OverrideAll { get; set; }
     }
 
     [Verb("add", HelpText = "Adds resources to a database")]

@@ -80,11 +80,13 @@ namespace ResourcesOrganizer
         private static ResourcesDatabase GetDatabase(Options options)
         {
             var path = options.DbFile;
+            ResourcesDatabase database = ResourcesDatabase.Empty;
             if (File.Exists(path))
             {
-                return ResourcesDatabase.ReadDatabase(path);
+                database = ResourcesDatabase.ReadDatabase(path);
             }
-            return ResourcesDatabase.Empty;
+
+            return database with { OverrideAll = options.OverrideAll };
         }
     }
 }

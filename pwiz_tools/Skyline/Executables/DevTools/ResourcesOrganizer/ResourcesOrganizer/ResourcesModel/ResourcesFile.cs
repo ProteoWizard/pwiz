@@ -197,7 +197,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return true;
         }
 
-        public void ExportResx(Stream stream, string? language)
+        public void ExportResx(Stream stream, string? language, bool overrideAll)
         {
             var document = XDocument.Load(new StringReader(XmlContent));
             var newNodes = document.Root!.Nodes().Where(PreserveNode).ToList();
@@ -213,6 +213,13 @@ namespace ResourcesOrganizer.ResourcesModel
                             if (localizedValue.Problem == null)
                             {
                                 localizedText = localizedValue.Value;
+                            }
+                        }
+                        else
+                        {
+                            if (!overrideAll)
+                            {
+                                continue;
                             }
                         }
                     }

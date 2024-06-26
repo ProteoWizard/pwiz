@@ -12,6 +12,12 @@ namespace ResourcesOrganizer.ResourcesModel
         public ImmutableDictionary<string, ResourcesFile> ResourcesFiles { get; init; }
             = ImmutableDictionary<string, ResourcesFile>.Empty;
 
+        /// <summary>
+        /// If true, then untranslated entries are treated the same as entries where the translated text
+        /// is the same as the English
+        /// </summary>
+        public bool OverrideAll { get; init; }
+
         public static ResourcesDatabase ReadFile(string path, HashSet<string> exclude)
         {
             var extension = Path.GetExtension(path);
@@ -134,7 +140,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 var entry = zipArchive.CreateEntry(file.Key);
                 using (var entryStream = entry.Open())
                 {
-                    file.Value.ExportResx(entryStream, null);
+                    file.Value.ExportResx(entryStream, null, OverrideAll);
                 }
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())
@@ -143,7 +149,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     var fileName = Path.GetFileNameWithoutExtension(file.Key) + "." + language + Path.GetExtension(file.Key);
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));
                     using var localizedStream = localizedEntry.Open();
-                    file.Value.ExportResx(localizedStream, language);
+                    file.Value.ExportResx(localizedStream, language, OverrideAll);
                 }
             }
         }
@@ -231,7 +237,7 @@ namespace ResourcesOrganizer.ResourcesModel
                          .GroupBy(tuple => tuple.Item2.Invariant))
             {
                 var totalCount = group.Count();
-                var groups = group.GroupBy(tuple => tuple.Item2.Normalize()).ToList();
+                var groups = group.GroupBy(tuple => tuple.Item2.Normalize(OverrideAll)).ToList();
                 foreach (var compatibleGroup in groups)
                 {
                     var entries = compatibleGroup.Select(tuple => tuple.Item2).ToList();
