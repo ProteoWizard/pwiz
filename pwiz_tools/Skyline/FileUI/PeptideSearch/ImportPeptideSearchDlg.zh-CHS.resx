@@ -1240,30 +1240,6 @@
   <data name="&gt;&gt;ddaSearchTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="ddaSearch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="ddaSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
-  </data>
-  <data name="ddaSearch.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="ddaSearch.Text" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Name" xml:space="preserve">
-    <value>ddaSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>

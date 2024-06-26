@@ -529,9 +529,6 @@ http://localhost:8080</value>
   <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
     <value>提供されたZIPファイルが原因で重複となったカスタム注釈が、既存の注釈を上書きすべき（True）かスキップすべき(False)かを指定します。</value>
   </data>
-  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
-    <value>ドキュメント設定</value>
-  </data>
   <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
     <value>path/to/file（ファイル）</value>
   </data>

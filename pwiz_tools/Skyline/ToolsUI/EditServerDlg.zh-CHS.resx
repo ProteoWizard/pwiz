@@ -206,6 +206,9 @@
   <data name="InputPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <metadata name="toolTipAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="lblProjectInfo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -260,7 +263,7 @@
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 148</value>
   </data>
-  <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+  <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
   <data name="textPassword.Size" type="System.Drawing.Size, System.Drawing">
