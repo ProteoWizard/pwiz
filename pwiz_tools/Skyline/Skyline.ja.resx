@@ -300,6 +300,27 @@
     <value>228, 22</value>
   </data>
   <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 374</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>197, 56</value>
+  </metadata>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
+    <value>イオンタイプ</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
     <value>Replicates</value>
   </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
@@ -310,12 +331,6 @@
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1304, 17</value>
-  </metadata>
-  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
-    <value>イオンタイプ</value>
   </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -358,6 +373,12 @@
   </data>
   <data name="scoreContextMenuItem.Text" xml:space="preserve">
     <value>スコア</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>質量誤差を表示</value>
   </data>
   <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -415,6 +436,12 @@
   </data>
   <data name="spectrumGraphPropsContextMenuItem.Text" xml:space="preserve">
     <value>グラフプロパティ...</value>
+  </data>
+  <data name="showSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="showSpectrumPropertiesContextMenuItem.Text" xml:space="preserve">
+    <value>スペクトルプロパティ</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -741,7 +768,7 @@
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1124, 17</value>
+    <value>17, 56</value>
   </metadata>
   <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -1153,7 +1180,7 @@
     <value>7</value>
   </data>
   <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1480, 17</value>
+    <value>373, 56</value>
   </metadata>
   <data name="newToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -1368,12 +1395,6 @@
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
   </data>
-  <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 22</value>
-  </data>
-  <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
-    <value>&amp;EncyclopeDIA検索...</value>
-  </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
@@ -1394,6 +1415,12 @@
   </data>
   <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
     <value>ペプチド検索(&amp;P)...</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
+    <value>&amp;EncyclopeDIA検索...</value>
   </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
@@ -1463,6 +1490,15 @@
   </data>
   <data name="toolStripSeparator50.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
+  </data>
+  <data name="eSPFeaturesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="eSPFeaturesMenuItem.Text" xml:space="preserve">
+    <value>ESP機能(&amp;E)...</value>
+  </data>
+  <data name="eSPFeaturesMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="exportSpectralLibraryMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1787,15 +1823,6 @@
   </data>
   <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
     <value>9</value>
-  </data>
-  <data name="eSPFeaturesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>183, 22</value>
-  </data>
-  <data name="eSPFeaturesMenuItem.Text" xml:space="preserve">
-    <value>ESP機能(&amp;E)...</value>
-  </data>
-  <data name="eSPFeaturesMenuItem.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>941, 17</value>
@@ -2374,6 +2401,12 @@
     <value>spectrumGraphPropsContextMenuItem</value>
   </data>
   <data name="&gt;&gt;spectrumGraphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showSpectrumPropertiesContextMenuItem.Name" xml:space="preserve">
+    <value>showSpectrumPropertiesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showSpectrumPropertiesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator15.Name" xml:space="preserve">
@@ -3180,12 +3213,6 @@
   <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Name" xml:space="preserve">
-    <value>encyclopeDiaSearchMenuItem</value>
-  </data>
-  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;importToolStripMenuItem.Name" xml:space="preserve">
     <value>importToolStripMenuItem</value>
   </data>
@@ -3214,6 +3241,12 @@
     <value>importPeptideSearchMenuItem</value>
   </data>
   <data name="&gt;&gt;importPeptideSearchMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Name" xml:space="preserve">
+    <value>encyclopeDiaSearchMenuItem</value>
+  </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator52.Name" xml:space="preserve">
@@ -3293,6 +3326,12 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator50.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;eSPFeaturesMenuItem.Name" xml:space="preserve">
+    <value>eSPFeaturesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;eSPFeaturesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;exportSpectralLibraryMenuItem.Name" xml:space="preserve">
     <value>exportSpectralLibraryMenuItem</value>
@@ -3564,12 +3603,6 @@
   <data name="&gt;&gt;submitErrorReportMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
-    <value>crashSkylineMenuItem</value>
-  </data>
-  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;checkForUpdatesSeparator.Name" xml:space="preserve">
     <value>checkForUpdatesSeparator</value>
   </data>
@@ -3592,12 +3625,6 @@
     <value>aboutMenuItem</value>
   </data>
   <data name="&gt;&gt;aboutMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;eSPFeaturesMenuItem.Name" xml:space="preserve">
-    <value>eSPFeaturesMenuItem</value>
-  </data>
-  <data name="&gt;&gt;eSPFeaturesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;massErrorGraphContextMenuItem.Name" xml:space="preserve">
@@ -3863,6 +3890,12 @@
   </data>
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
+    <value>crashSkylineMenuItem</value>
+  </data>
+  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>

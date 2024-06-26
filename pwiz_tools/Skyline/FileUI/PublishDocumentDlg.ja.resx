@@ -303,9 +303,6 @@
   <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
