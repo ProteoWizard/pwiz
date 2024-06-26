@@ -1243,7 +1243,6 @@ Old Localized:検索設定の調整</comment>
   </data>
   <data name="ddaSearchPage.Text" xml:space="preserve">
     <value>9</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>

@@ -302,6 +302,9 @@
   <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
     <value>Replicates</value>
   </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 396</value>
+  </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>
   </data>
@@ -311,6 +314,9 @@
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1304, 17</value>
   </metadata>
+  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
   <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
     <value>イオンタイプ</value>
   </data>
@@ -446,6 +452,9 @@
   </data>
   <data name="synchMzScaleToolStripMenuItem.Text" xml:space="preserve">
     <value>m/zスケールを同期</value>
+  </data>
+  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 486</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1405,7 +1414,7 @@
     <value>Panoramaにアップロード(&amp;U)...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 6</value>
+    <value>194, 6</value>
   </data>
   <data name="runPeptideSearchToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Run Peptide Search...</value>
