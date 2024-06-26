@@ -1,13 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace ResourcesOrganizer
 {
     public static class TextUtil
     {
+        public static Encoding Utf8Encoding = new UTF8Encoding(false, true);
+        public static readonly XmlWriterSettings XmlWriterSettings = new XmlWriterSettings()
+        {
+            Indent = true,
+            Encoding = Utf8Encoding
+        };
+
+
+        public static readonly string NewLine = "\n";
         public static string Quote(string? s)
         {
             if (s == null)
@@ -36,6 +43,29 @@ namespace ResourcesOrganizer
         public static string ToCsvRow(params string?[] fields)
         {
             return ToCsvRow(fields.AsEnumerable());
+        }
+
+        public static string SerializeDocument(XDocument document)
+        {
+            using var memoryStream = new MemoryStream();
+            using (var xmlWriter = XmlWriter.Create(memoryStream, XmlWriterSettings))
+            {
+                document.Save(xmlWriter);
+            }
+            var documentText = Utf8Encoding.GetString(memoryStream.ToArray());
+            return NormalizeXml(documentText);
+        }
+
+        public static string NormalizeXml(string xml)
+        {
+            var lines = new List<string>();
+            using var stringReader = new StringReader(xml);
+            while (stringReader.ReadLine() is { } line)
+            {
+                lines.Add(line.Replace("<value />", "<value></value>"));
+            }
+
+            return string.Join(Environment.NewLine, lines);
         }
     }
 }

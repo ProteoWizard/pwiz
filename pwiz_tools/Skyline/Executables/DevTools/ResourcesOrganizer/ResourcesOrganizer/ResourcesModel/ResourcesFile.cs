@@ -1,21 +1,18 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
-using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace ResourcesOrganizer.ResourcesModel
 {
     public record ResourcesFile
     {
-        public static readonly XmlWriterSettings XmlWriterSettings = new XmlWriterSettings()
-        {
-            Indent = true,
-            Encoding = new UTF8Encoding(false, true),
-            
-        };
         public static readonly XName XmlSpace = XName.Get("space", "http://www.w3.org/XML/1998/namespace");
         public ImmutableList<ResourceEntry> Entries { get; init; } = [];
+
+        public ResourceEntry? FindEntry(string name)
+        {
+            return Entries.FirstOrDefault(entry => entry.Name == name);
+        }
         public string XmlContent { get; init; } = string.Empty;
         public static ResourcesFile Read(string filePath)
         {
@@ -42,7 +39,8 @@ namespace ResourcesOrganizer.ResourcesModel
                     Comment = element.Element("comment")?.Value,
                     Name = (string)element.Attribute("name")!,
                     Value = element.Element("value")!.Value,
-                    Type = (string?)element.Attribute("type")
+                    Type = (string?)element.Attribute("type"),
+                    MimeType = mimeType
                 };
                 if (entriesIndex.ContainsKey(key.Name))
                 {
@@ -188,7 +186,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return true;
         }
 
-        public void ExportResx(Stream stream, string? language, bool overrideAll, bool includeProblems)
+        public XDocument ExportResx(string? language, bool overrideAll)
         {
             var document = XDocument.Load(new StringReader(XmlContent));
             var newNodes = document.Root!.Nodes().Where(PreserveNode).ToList();
@@ -207,15 +205,17 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         if (entry.LocalizedValues.TryGetValue(language, out var localizedValue))
                         {
-                            if (localizedValue.IssueType != null)
+                            var issueType = localizedValue.IssueType;
+                            if (entry.Invariant.IsLocalizableText || (issueType != LocalizationIssueType.MissingTranslation && issueType != LocalizationIssueType.NewResource))
                             {
-                                localizedText = localizedValue.IssueType.GetLocalizedText(entry, localizedValue);
-                                var issueComment = localizedValue.IssueType.FormatIssueAsComment(entry, localizedValue);
+                                localizedText = localizedValue.IssueType?.GetLocalizedText(entry, localizedValue) ?? localizedValue.ImportedValue ?? localizedValue.OriginalValue;
+                                var issueComment = localizedValue.IssueType?.FormatIssueAsComment(entry, localizedValue);
                                 if (issueComment != null)
                                 {
                                     comments.Add(issueComment);
                                 }
                             }
+
                             if (localizedValue.OriginalValue == null)
                             {
                                 if (!entry.Invariant.IsLocalizableText)
@@ -223,11 +223,14 @@ namespace ResourcesOrganizer.ResourcesModel
                                     continue;
                                 }
 
-                                if (localizedValue.ImportedValue == null || localizedValue.ImportedValue == entry.Invariant.Value)
+                                if (localizedValue.IssueType == null)
                                 {
-                                    if (!overrideAll)
+                                    if (localizedValue.ImportedValue == null || localizedValue.ImportedValue == entry.Invariant.Value)
                                     {
-                                        continue;
+                                        if (!overrideAll)
+                                        {
+                                            continue;
+                                        }
                                     }
                                 }
                             }
@@ -251,7 +254,7 @@ namespace ResourcesOrganizer.ResourcesModel
 
                     if (comments.Any())
                     {
-                        data.Add(new XElement("comment", string.Join(Environment.NewLine, comments)));
+                        data.Add(new XElement("comment", string.Join(TextUtil.NewLine, comments)));
                     }
 
                     if (entry.Invariant.Type != null)
@@ -271,9 +274,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 }
             }
             document.Root.ReplaceAll(newNodes.Cast<object>().ToArray());
-
-            using var xmlWriter = XmlWriter.Create(stream, XmlWriterSettings);
-            document.Save(xmlWriter);
+            return document;
         }
     }
 }

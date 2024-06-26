@@ -75,7 +75,7 @@
                     return false;
                 }
 
-                if (Type == null || MimeType == null)
+                if (Type != null || MimeType != null)
                 {
                     return false;
                 }

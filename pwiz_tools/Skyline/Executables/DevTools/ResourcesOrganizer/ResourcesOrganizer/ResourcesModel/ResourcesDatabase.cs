@@ -3,6 +3,7 @@ using System.Diagnostics.Contracts;
 using System.IO.Compression;
 using System.Text;
 using NHibernate;
+using NHibernate.Cache.Entry;
 using ResourcesOrganizer.DataModel;
 
 namespace ResourcesOrganizer.ResourcesModel
@@ -136,7 +137,9 @@ namespace ResourcesOrganizer.ResourcesModel
                 var entry = zipArchive.CreateEntry(file.Key);
                 using (var entryStream = entry.Open())
                 {
-                    file.Value.ExportResx(entryStream, null, overrideAll, includeProblems);
+                    using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
+                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+
                 }
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())
@@ -145,7 +148,8 @@ namespace ResourcesOrganizer.ResourcesModel
                     var fileName = Path.GetFileNameWithoutExtension(file.Key) + "." + language + Path.GetExtension(file.Key);
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));
                     using var localizedStream = localizedEntry.Open();
-                    file.Value.ExportResx(localizedStream, language, overrideAll, includeProblems);
+                    using var writer = new StreamWriter(localizedStream, TextUtil.Utf8Encoding);
+                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(language, overrideAll)));
                 }
             }
         }

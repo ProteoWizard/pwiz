@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NHibernate.Transaction;
+﻿using ResourcesOrganizer;
 using ResourcesOrganizer.ResourcesModel;
 
 namespace Test
@@ -25,26 +19,65 @@ namespace Test
             var newDatabase = ResourcesDatabase.Empty;
             newDatabase = newDatabase with { ResourcesFiles = newDatabase.ResourcesFiles.SetItem("AboutDlg.resx", newResourcesFile) };
             var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, languages);
-            var resourceEntry = withImportedTranslations.ResourcesFiles.Values.Single().Entries
-                .FirstOrDefault(entry => entry.Name == "textBox1.Text");
-            Assert.IsNotNull(resourceEntry);
-            var v23Entry = oldResourcesFile.Entries.FirstOrDefault(entry => entry.Name == resourceEntry.Name);
+            var importedTranslationPath = Path.Combine(TestContext.TestRunDirectory!, "importTranslations.db");
+            VerifyRoundTrip(withImportedTranslations, importedTranslationPath);
+
+            var copyrightEntry = withImportedTranslations.ResourcesFiles.Values.Single()
+                .FindEntry("textBox1.Text");
+            Assert.IsNotNull(copyrightEntry);
+            var v23Entry = oldResourcesFile.FindEntry(copyrightEntry.Name);
             Assert.IsNotNull(v23Entry);
             foreach (var language in languages)
             {
-                var localizedValue = resourceEntry.GetTranslation(language);
+                var localizedValue = copyrightEntry.GetTranslation(language);
                 Assert.IsNotNull(localizedValue);
                 Assert.AreEqual(LocalizationIssueType.EnglishTextChanged, localizedValue.IssueType);
                 Assert.IsNotNull(localizedValue.ImportedValue);
-                var currentLocalizedValue = localizedValue.IssueType!.GetLocalizedText(resourceEntry, localizedValue);
+                var currentLocalizedValue = localizedValue.IssueType!.GetLocalizedText(copyrightEntry, localizedValue);
                 var v23LocalizedValue = v23Entry.GetTranslation(language);
                 Assert.IsNotNull(v23LocalizedValue);
                 Assert.AreEqual(v23LocalizedValue.OriginalValue, currentLocalizedValue);
                 Assert.AreEqual(localizedValue.OriginalInvariantValue, v23Entry.Invariant.Value);
             }
 
-            var importedTranslationPath = Path.Combine(TestContext.TestRunDirectory!, "importTranslations.db");
-            VerifyRoundTrip(withImportedTranslations, importedTranslationPath);
+            var exportedPath = Path.Combine(TestContext.TestRunDirectory!, "exported.resx");
+            
+            ExportFile(withImportedTranslations.ResourcesFiles.Values.Single(), exportedPath, languages);
+            var roundTrip = ResourcesFile.Read(exportedPath);
+            Assert.IsNotNull(roundTrip);
+            var roundTripCopyrightEntry = roundTrip.FindEntry(copyrightEntry.Name);
+            Assert.IsNotNull(roundTripCopyrightEntry);
+            foreach (var language in languages)
+            {
+                var localizedValue = roundTripCopyrightEntry.GetTranslation(language);
+                Assert.IsNotNull(localizedValue);
+                Assert.AreEqual(LocalizationIssueType.EnglishTextChanged, localizedValue.IssueType);
+                var v23LocalizedValue = v23Entry.GetTranslation(language);
+                Assert.IsNotNull(v23LocalizedValue);
+                Assert.IsNull(localizedValue.ImportedValue);
+                Assert.AreEqual(v23LocalizedValue.OriginalValue, localizedValue.OriginalValue);
+                Assert.AreEqual(localizedValue.OriginalInvariantValue, v23Entry.Invariant.Value);
+            }
+
+            var roundTripSoftwareVersion = roundTrip.FindEntry("textSoftwareVersion.Text");
+            Assert.IsNotNull(roundTripSoftwareVersion);
+            foreach (var language in languages)
+            {
+                var localizedValue = roundTripSoftwareVersion.GetTranslation(language);
+                Assert.IsNotNull(localizedValue);
+                Assert.AreEqual(LocalizationIssueType.NewResource, localizedValue.IssueType);
+                Assert.AreEqual(roundTripSoftwareVersion.Invariant.Value, localizedValue.CurrentValue);
+            }
+        }
+
+        private void ExportFile(ResourcesFile resourcesFile, string path, IEnumerable<string> languages)
+        {
+            File.WriteAllText(path, TextUtil.SerializeDocument(resourcesFile.ExportResx(null, false)), TextUtil.Utf8Encoding);
+            foreach (var language in languages)
+            {
+                var localizedPath = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + "." + language + ".resx");
+                File.WriteAllText(localizedPath, TextUtil.SerializeDocument(resourcesFile.ExportResx(language, false)), TextUtil.Utf8Encoding);
+            }
         }
     }
 }

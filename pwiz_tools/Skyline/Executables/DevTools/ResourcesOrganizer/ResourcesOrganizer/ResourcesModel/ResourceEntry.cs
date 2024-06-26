@@ -23,7 +23,7 @@ namespace ResourcesOrganizer.ResourcesModel
         public ResourceEntry Normalize()
         {
             var localizedValues = LocalizedValues
-                .Where(kvp => kvp.Value.OriginalValue != null || kvp.Value.CurrentValue != Invariant.Value)
+                .Where(kvp => kvp.Value.OriginalValue != null || kvp.Value.ImportedValue != Invariant.Value)
                 .ToImmutableDictionary(kvp => kvp.Key, kvp => new LocalizedValue 
                     { ImportedValue = kvp.Value.CurrentValue });
             return this with
