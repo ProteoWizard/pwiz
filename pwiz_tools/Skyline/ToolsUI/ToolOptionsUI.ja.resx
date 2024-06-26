@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="listboxServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 22</value>
+    <value>9, 23</value>
   </data>
   <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
     <value>264, 199</value>
@@ -154,7 +154,7 @@
     <value>True</value>
   </data>
   <data name="lblServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 6</value>
+    <value>6, 7</value>
   </data>
   <data name="lblServers.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 13</value>
@@ -164,6 +164,10 @@
   </data>
   <data name="lblServers.Text" xml:space="preserve">
     <value>サーバー：</value>
+    <comment>Needs Review:English text changed
+Old English:Servers:
+Current English:&amp;Servers:
+Old Localized:サーバー：</comment>
   </data>
   <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
     <value>lblServers</value>
@@ -182,6 +186,10 @@
   </data>
   <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
     <value>279, 22</value>
+    <comment>Needs Review:English text changed
+Old English:308, 22
+Current English:308, 23
+Old Localized:279, 22</comment>
   </data>
   <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
@@ -235,7 +243,7 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listBoxRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 33</value>
+    <value>9, 23</value>
   </data>
   <data name="listBoxRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
     <value>293, 199</value>
@@ -262,7 +270,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 17</value>
+    <value>6, 7</value>
   </data>
   <data name="lblRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 13</value>
@@ -272,6 +280,10 @@
   </data>
   <data name="lblRemoteAccounts.Text" xml:space="preserve">
     <value>リモートアカウント：</value>
+    <comment>Needs Review:English text changed
+Old English:Remote accounts:
+Current English:&amp;Remote accounts:
+Old Localized:リモートアカウント：</comment>
   </data>
   <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
     <value>lblRemoteAccounts</value>
@@ -292,7 +304,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 33</value>
+    <value>308, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -431,6 +443,7 @@
   </data>
   <data name="koinaServerStatusLabel.Text" xml:space="preserve">
     <value>サーバーステータス</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerStatusLabel.Name" xml:space="preserve">
     <value>koinaServerStatusLabel</value>
@@ -461,6 +474,7 @@
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>iRTモデル：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -475,10 +489,10 @@
     <value>4</value>
   </data>
   <data name="iRTModelCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 188</value>
+    <value>13, 212</value>
   </data>
   <data name="iRTModelCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 21</value>
+    <value>175, 21</value>
   </data>
   <data name="iRTModelCombo.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -512,6 +526,7 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>強度モデル：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -526,10 +541,10 @@
     <value>6</value>
   </data>
   <data name="intensityModelCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 149</value>
+    <value>13, 170</value>
   </data>
   <data name="intensityModelCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 21</value>
+    <value>175, 21</value>
   </data>
   <data name="intensityModelCombo.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -563,6 +578,7 @@
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
     <value>サーバー（&amp;S）：</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
     <value>koinaServerLabel</value>
@@ -599,6 +615,7 @@
 アーゼ向けに非常に高品質な予測HCD MS2スペクトルを使用
 してカスタムスペクトルライブラリを自由かつ簡単に作成できる、
 ディープラーニングフレームワークです。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaDescrLabel.Name" xml:space="preserve">
     <value>koinaDescrLabel</value>
@@ -659,6 +676,7 @@
   </data>
   <data name="tabKoina.Text" xml:space="preserve">
     <value>Koina</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;tabKoina.Name" xml:space="preserve">
     <value>tabKoina</value>
@@ -750,8 +768,12 @@
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="lblSettingsPath.Text" xml:space="preserve">
+    <value>Settings are stored in:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 165</value>
+    <value>17, 200</value>
   </data>
   <data name="btnResetSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 37</value>
@@ -772,7 +794,7 @@
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;btnResetSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="comboCompactFormatOption.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 32</value>
@@ -793,7 +815,7 @@
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;comboCompactFormatOption.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="lblCompactDocumentFormat.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -820,7 +842,7 @@
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;lblCompactDocumentFormat.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="checkBoxShowWizard.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -850,7 +872,7 @@
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1075,7 +1097,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>

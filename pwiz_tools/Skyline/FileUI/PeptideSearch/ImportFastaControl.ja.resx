@@ -577,7 +577,7 @@
     <value>282, 59</value>
   </data>
   <data name="panelDecoys.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;panelDecoys.Name" xml:space="preserve">
     <value>panelDecoys</value>
@@ -604,7 +604,7 @@
     <value>238, 17</value>
   </data>
   <data name="cbImportFromSeparateFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>0</value>
   </data>
   <data name="cbImportFromSeparateFasta.Text" xml:space="preserve">
     <value>別のFASTAからターゲットタンパク質をインポート(&amp;M)</value>
@@ -700,7 +700,7 @@
     <value>381, 45</value>
   </data>
   <data name="targetFastaPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;targetFastaPanel.Name" xml:space="preserve">
     <value>targetFastaPanel</value>

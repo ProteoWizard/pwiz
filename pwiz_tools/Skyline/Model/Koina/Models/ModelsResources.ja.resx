@@ -120,14 +120,18 @@
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library" xml:space="preserve">
     <value>KoinaスペクトルのBiblioSpecライブラリへのエクスポート</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaHelpers_ExportKoinaSpectraToBlib_failed_to_write_Koina_output_to_blib" xml:space="preserve">
     <value>Koina出力をblibに書き込めませんでした</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaHelpers_PredictBatchesFromKoinaCsv_Reading_Koina_CSV_input" xml:space="preserve">
     <value>Koina CSV入力の読み取り</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge" xml:space="preserve">
     <value>Koinaでは電荷{0}に対応していません。対応最大電荷は{1}です。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

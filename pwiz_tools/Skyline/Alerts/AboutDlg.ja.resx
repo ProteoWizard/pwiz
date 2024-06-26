@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="linkProteome.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -197,36 +200,6 @@
   </data>
   <data name="&gt;&gt;pictureSkylineIcon.ZOrder" xml:space="preserve">
     <value>6</value>
-  </data>
-  <data name="labelSoftwareVersion.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelSoftwareVersion.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 12pt, style=Bold</value>
-  </data>
-  <data name="labelSoftwareVersion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>162, 12</value>
-  </data>
-  <data name="labelSoftwareVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>461, 20</value>
-  </data>
-  <data name="labelSoftwareVersion.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="labelSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline (64ビット: 開発者ビルド) 22.0.0.000 (abc123456)</value>
-  </data>
-  <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
-    <value>labelSoftwareVersion</value>
-  </data>
-  <data name="&gt;&gt;labelSoftwareVersion.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelSoftwareVersion.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelSoftwareVersion.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="textBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -330,6 +303,256 @@ https://sourceforge.net/projects/zedgraph/
 Zlib
 データ圧縮
 https://www.zlib.net</value>
+    <comment>Needs Review:English text changed
+Old English:Agilent Technologies
+Mass Hunter Data Access Component
+Copyright © 2017 by Agilent Technologies
+https://www.agilent.com
+
+BiblioSpec
+Spectral Library Building
+https://skyline.ms/build-blib.url
+
+Bruker
+CompassXtract Data Reader Library
+Copyright © 2020 by Bruker Daltonik GmbH.
+All rights reserved.
+https://www.bruker.com/
+
+DigitalRune Software
+Docking Windows
+https://github.com/DigitalRune
+
+DotNetZip Library
+ZIP compression &amp; extraction
+https://www.nuget.org/packages/DotNetZip/
+
+James Newton-King
+Json.NET
+http://james.newtonking.com
+
+JetBrains Software
+Development tools: ReSharper, dotTrace and dotCover
+https://www.jetbrains.com/
+
+Matrix Science
+Mascot Parser
+https://www.matrixscience.com
+
+NHibernate
+Object Relational Mapping
+https://nhibernate.info/
+
+ProteoWizard
+Mass Spectrometry Data Import
+https://github.com/ProteoWizard
+
+SCIEX
+WIFF File Reader Library
+Copyright © 2020 by AB Sciex LLC.
+All rights reserved.
+https://sciex.com/
+
+Shimadzu Corporation
+Shimadzu's file converter software
+Copyright © 2020 by Shimadzu Coporation
+All rights reserved.
+https://www.shimadzu.com
+
+SQLite
+Single File and In-Memory RDBMS
+https://www.sqlite.org
+
+SQLite.NET
+ADO.NET Provider for SQLite
+https://system.data.sqlite.org/
+
+Thermo Fisher Scientific
+MSFileReader file reading tool
+Copyright © 2019 by Thermo Fisher Scientific, Inc.
+All rights reserved.
+https://www.thermofisher.com/
+
+Waters Technologies Corporation
+Method export library
+Waters Raw Data Access Component
+Copyright © 2021 by Waters Corporation.
+All rights reserved.
+https://www.waters.com/
+
+ZedGraph
+Chart Plotting
+http://zedgraph.org
+
+Zlib
+Data Compression
+https://www.zlib.net
+Current English:Agilent Technologies
+Mass Hunter Data Access Component
+Copyright © 2023 by Agilent Technologies
+https://www.agilent.com
+
+BiblioSpec
+Spectral Library Building
+https://skyline.ms/build-blib.url
+
+Bruker
+CompassXtract Data Reader Library
+Copyright © 2020 by Bruker Daltonik GmbH.
+All rights reserved.
+https://www.bruker.com/
+
+DigitalRune Software
+Docking Windows
+https://github.com/DigitalRune
+
+DotNetZip Library
+ZIP compression &amp; extraction
+https://www.nuget.org/packages/DotNetZip/
+
+James Newton-King
+Json.NET
+http://james.newtonking.com
+
+JetBrains Software
+Development tools: ReSharper, dotTrace and dotCover
+https://www.jetbrains.com/
+
+Matrix Science
+Mascot Parser
+https://www.matrixscience.com
+
+NHibernate
+Object Relational Mapping
+https://nhibernate.info/
+
+ProteoWizard
+Mass Spectrometry Data Import
+https://github.com/ProteoWizard
+
+SCIEX
+WIFF File Reader Library
+Copyright © 2020 by AB Sciex LLC.
+All rights reserved.
+https://sciex.com/
+
+Shimadzu Corporation
+Shimadzu's file converter software
+Copyright © 2020 by Shimadzu Coporation
+All rights reserved.
+https://www.shimadzu.com
+
+SQLite
+Single File and In-Memory RDBMS
+https://www.sqlite.org
+
+SQLite.NET
+ADO.NET Provider for SQLite
+https://system.data.sqlite.org/
+
+Thermo Fisher Scientific
+MSFileReader file reading tool
+Copyright © 2019 by Thermo Fisher Scientific, Inc.
+All rights reserved.
+https://www.thermofisher.com/
+
+Waters Technologies Corporation
+Method export library
+Waters Raw Data Access Component
+Copyright © 2021 by Waters Corporation.
+All rights reserved.
+https://www.waters.com/
+
+ZedGraph
+Chart Plotting
+http://zedgraph.org
+
+Zlib
+Data Compression
+https://www.zlib.net
+Old Localized:Agilent Technologies
+Mass Hunterデータアクセスコンポーネント
+Copyright © 2017 by Agilent Technologies
+https://www.agilent.com
+
+BiblioSpec
+スペクトルライブラリ構築
+https://skyline.ms/build-blib.url
+
+Bruker
+CompassXtractデータリーダーライブラリ
+Copyright © 2020 by Bruker Daltonik GmbH.
+著作権所有。
+https://www.bruker.com/
+
+DigitalRune Software
+ウィンドウズのドッキング
+https://github.com/DigitalRune
+
+DotNetZipライブラリ
+ZIP圧縮および展開
+https://www.nuget.org/packages/DotNetZip/
+
+James Newton-King
+Json.NET
+http://james.newtonking.com
+
+JetBrains Software
+開発ツール： ReSharper、dotTrace、dotCover
+https://www.jetbrains.com/
+
+Matrix Science
+Mascotパーサー
+https://www.matrixscience.com
+
+NHibernate
+オブジェクト関係写像
+https://nhibernate.info/
+
+ProteoWizard
+質量分析データのインポート
+https://github.com/ProteoWizard
+
+SCIEX
+WIFFファイルリーダーライブラリ
+Copyright © 2020 by AB Sciex LLC.
+著作権所有。
+https://sciex.com/
+
+島津製作所
+島津製作所のファイルコンバータソフトウェア
+Copyright © 2020 by Shimadzu Coporation
+著作権所有。
+https://www.shimadzu.com
+
+SQLite
+単一ファイルおよびメモリ内RDBMS
+https://www.sqlite.org
+
+SQLite.NET
+SQLiteのADO.NETプロバイダ
+https://system.data.sqlite.org/
+
+Thermo Fisher Scientific
+MSFileReaderファイル読み出しツール
+Copyright © 2019 by Thermo Fisher Scientific, Inc.
+著作権所有。
+https://www.thermofisher.com/
+
+Waters Technologies Corporation
+メソッドエクスポートライブラリ
+ウォーターズローデータアクセスコンポーネント
+Copyright © 2021 by Waters Corporation.
+著作権所有。
+https://www.waters.com/
+
+ZedGraph
+チャートのプロット
+https://sourceforge.net/projects/zedgraph/
+
+Zlib
+データ圧縮
+https://www.zlib.net</comment>
   </data>
   <data name="&gt;&gt;textBox1.Name" xml:space="preserve">
     <value>textBox1</value>
@@ -368,7 +591,7 @@ https://www.zlib.net</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="pictureProteoWizardIcon.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 240</value>
@@ -392,7 +615,7 @@ https://www.zlib.net</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;pictureProteoWizardIcon.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="linkProteoWizard.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -419,7 +642,7 @@ https://www.zlib.net</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;linkProteoWizard.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -446,7 +669,7 @@ https://www.zlib.net</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -483,6 +706,10 @@ Skylineウェブサイトをご覧ください。</value>
   </data>
   <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
     <value>9</value>
+  </data>
+  <data name="textSoftwareVersion.Text" xml:space="preserve">
+    <value>Skyline (64-bit : developer build) 22.0.0.000 (abc123456)</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

@@ -245,6 +245,7 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>输出路径(&amp;O)：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -300,6 +301,10 @@
   </data>
   <data name="iRTPeptidesLabel.Text" xml:space="preserve">
     <value>iRT 标准肽段(&amp;I)：</value>
+    <comment>Needs Review:English text changed
+Old English:&amp;iRT standard peptides:
+Current English:i&amp;RT standard peptides:
+Old Localized:iRT 标准肽段(&amp;I)：</comment>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
     <value>iRTPeptidesLabel</value>
@@ -459,6 +464,10 @@
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>包含不明确匹配项(&amp;M)</value>
   </data>
+  <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
+    <value>Check to keep spectra that match multiple peptides.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
   </data>
@@ -488,6 +497,10 @@
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
     <value>保留冗余库(&amp;K)</value>
+    <comment>Needs Review:English text changed
+Old English:&amp;Keep redundant library
+Current English:K&amp;eep redundant library
+Old Localized:保留冗余库(&amp;K)</comment>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
     <value>选中并保留冗余库的副本，您可以在
@@ -522,6 +535,10 @@
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
     <value>文档肽筛选器(&amp;D)</value>
+  </data>
+  <data name="cbFilter.ToolTip" xml:space="preserve">
+    <value>Check to filter matches for only the peptides in the document.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
@@ -723,6 +740,7 @@
   </data>
   <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
     <value>信息/设置</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -741,6 +759,7 @@
   </data>
   <data name="koinaDataSourceRadioButton.Text" xml:space="preserve">
     <value>Pro&amp;sit</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

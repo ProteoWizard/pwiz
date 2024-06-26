@@ -544,7 +544,7 @@
     <value>True</value>
   </data>
   <data name="label14.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
     <value>8, 9</value>
@@ -625,7 +625,7 @@
     <value>True</value>
   </data>
   <data name="label20.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
@@ -706,7 +706,7 @@
     <value>True</value>
   </data>
   <data name="label16.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
@@ -868,7 +868,7 @@
     <value>True</value>
   </data>
   <data name="label19.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
@@ -946,13 +946,13 @@
     <value>4</value>
   </data>
   <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
   <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
+    <value>111, 20</value>
   </data>
   <data name="lblFasta.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1040,6 +1040,7 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>変換設定を調整</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1105,7 +1106,7 @@
     <value>6</value>
   </data>
   <data name="lblSearchSettings.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="lblSearchSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1114,13 +1115,17 @@
     <value>12, 9</value>
   </data>
   <data name="lblSearchSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
+    <value>172, 20</value>
   </data>
   <data name="lblSearchSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="lblSearchSettings.Text" xml:space="preserve">
     <value>検索設定の調整</value>
+    <comment>Needs Review:English text changed
+Old English:Adjust Search Settings
+Current English:Search Settings
+Old Localized:検索設定の調整</comment>
   </data>
   <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
     <value>lblSearchSettings</value>
@@ -1138,10 +1143,10 @@
     <value>Top</value>
   </data>
   <data name="searchSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>3, 3</value>
   </data>
   <data name="searchSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="searchSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1183,7 +1188,7 @@
     <value>7</value>
   </data>
   <data name="lblDDASearch.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="lblDDASearch.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1192,7 +1197,7 @@
     <value>12, 9</value>
   </data>
   <data name="lblDDASearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
+    <value>99, 20</value>
   </data>
   <data name="lblDDASearch.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1216,10 +1221,10 @@
     <value>Top</value>
   </data>
   <data name="ddaSearchTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>3, 3</value>
   </data>
   <data name="ddaSearchTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="ddaSearchTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -1231,34 +1236,14 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ddaSearchTitlePanel.Parent" xml:space="preserve">
-    <value>ddaSearch</value>
+    <value>ddaSearchPage</value>
   </data>
   <data name="&gt;&gt;ddaSearchTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="ddaSearch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="ddaSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
-  </data>
-  <data name="ddaSearch.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="ddaSearch.Text" xml:space="preserve">
+  <data name="ddaSearchPage.Text" xml:space="preserve">
     <value>9</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Name" xml:space="preserve">
-    <value>ddaSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>

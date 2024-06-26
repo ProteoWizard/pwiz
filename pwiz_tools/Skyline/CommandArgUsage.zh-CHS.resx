@@ -288,6 +288,14 @@
   <data name="_import_threads" xml:space="preserve">
     <value>将使用主进程中的线程并行导入的文件数量（相当于用户界面中的“同时导入的文件”），之后各个文件的结果将被汇集。在适当的条件下，这可以带来 2-4 倍的性能提升。务必使用您的系统进行测试。</value>
   </data>
+  <data name="_import_pep_list" xml:space="preserve">
+    <value>Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_import_pep_list_name" xml:space="preserve">
+    <value>Name of imported peptide list specified by --import-pep-list.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="_import_transition_list" xml:space="preserve">
     <value>导入包含 Q1、Q3 和肽段序列的简单离子对列表。 还支持 CSV 格式并具有合适标题的分子离子对列表。</value>
   </data>
@@ -529,8 +537,13 @@ http://localhost:8080</value>
   <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
     <value>指定提供的 ZIP 文件中的冲突的自定义注释是否应覆盖（“true”）或跳过（“false”）现有注释。</value>
   </data>
-  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
-    <value>文档设置</value>
+  <data name="CommandArgs_GROUP_SETTINGS_Transition_Settings" xml:space="preserve">
+    <value>Transition Settings</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_GROUP_SETTINGS_Peptide_Settings" xml:space="preserve">
+    <value>Peptide Settings</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
     <value>路径/到/文件</value>
@@ -657,10 +670,22 @@ Waters</value>
   <data name="_refine_min_peptides" xml:space="preserve">
     <value>含有少于此数目肽段的蛋白质将
 被从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:Proteins with fewer than this number of peptides will be
+removed from the document.
+Current English:Proteins with fewer than this number of peptides will be removed from the document.
+Old Localized:含有少于此数目肽段的蛋白质将
+被从文档中删除。</comment>
   </data>
   <data name="_refine_min_transitions" xml:space="preserve">
     <value>含有少于此数目离子对的母离子将
 被从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:Precursors with fewer than this number of transitions will be
+removed from the document.
+Current English:Precursors with fewer than this number of transitions will be removed from the document.
+Old Localized:含有少于此数目离子对的母离子将
+被从文档中删除。</comment>
   </data>
   <data name="_refine_missing_library" xml:space="preserve">
     <value>将删除与库匹配不对应的所有目标。</value>
@@ -668,10 +693,22 @@ Waters</value>
   <data name="_refine_remove_duplicates" xml:space="preserve">
     <value>所有在文档中不是唯一的肽段
 将被删除。</value>
+    <comment>Needs Review:English text changed
+Old English:All peptides that are not unique within the document
+will be removed.
+Current English:All peptides that are not unique within the document will be removed.
+Old Localized:所有在文档中不是唯一的肽段
+将被删除。</comment>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
     <value>将删除所有重复的肽段以仅留下
 首次出现的任何肽段。</value>
+    <comment>Needs Review:English text changed
+Old English:All repeated peptides will be removed to leave only the
+first occurrence of any peptide.
+Current English:All repeated peptides will be removed to leave only the first occurrence of any peptide.
+Old Localized:将删除所有重复的肽段以仅留下
+首次出现的任何肽段。</comment>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
     <value>&lt;标记类型&gt;</value>
@@ -683,26 +720,76 @@ Waters</value>
 绿色 = 1.0
 橙色 &amp;gt;= 0.5
 红色 &amp;lt; 0.5</value>
+    <comment>Needs Review:English text changed
+Old English:All elements with peak found ratio above this number
+will be removed from the document:
+
+Green = 1.0
+Orange &amp;gt;= 0.5
+Red &amp;lt; 0.5
+Current English:All elements with peak found ratio above this number will be removed from the document:
+
+Green = 1.0
+Orange &gt;= 0.5
+Red &lt; 0.5
+Old Localized:峰值发现率高于此数字的所有元素
+将从文件中删除：
+
+绿色 = 1.0
+橙色 &amp;gt;= 0.5
+红色 &amp;lt; 0.5</comment>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
     <value>所有平均峰面积值排名
 大于此数目的离子对将被
 从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:All transitions with an average area peak ranking
+greater than this number will be removed from the
+document.
+Current English:All transitions with an average area peak ranking greater than this number will be removed from the document.
+Old Localized:所有平均峰面积值排名
+大于此数目的离子对将被
+从文档中删除。</comment>
   </data>
   <data name="_refine_max_transition_peak_rank" xml:space="preserve">
     <value>所有平均峰面积值排名
 大于此数目的离子对将被
 从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:All transitions with an average area peak ranking
+greater than this number will be removed from the
+document.
+Current English:All transitions with an average area peak ranking greater than this number will be removed from the document.
+Old Localized:所有平均峰面积值排名
+大于此数目的离子对将被
+从文档中删除。</comment>
   </data>
   <data name="_refine_min_dotp" xml:space="preserve">
     <value>所有对库谱图点积的子离子峰面积
 小于此阈值的母离子都将被
 从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:All precursors with a product ion peak area to library
+spectrum dot-product below this threshold will be removed
+from the document.
+Current English:All precursors with a product ion peak area to library spectrum dot-product below this threshold will be removed from the document.
+Old Localized:所有对库谱图点积的子离子峰面积
+小于此阈值的母离子都将被
+从文档中删除。</comment>
   </data>
   <data name="_refine_min_idotp" xml:space="preserve">
     <value>所有对预期同位素峰分布点积的 MS1 母离子
 峰面积小于此阈值的母离子都将
 被从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:All precursors with a MS1 precursor peak area to expected
+isotope distribution dot-product below this threshold will be
+removed from the document.
+Current English:All precursors with a MS1 precursor peak area to expected isotope distribution dot-product below this threshold will be removed from the document.
+Old Localized:所有对预期同位素峰分布点积的 MS1 母离子
+峰面积小于此阈值的母离子都将
+被从文档中删除。</comment>
   </data>
   <data name="_refine_min_peak_found_ratio" xml:space="preserve">
     <value>所有峰值检出比大于此数目的元素
@@ -711,21 +798,63 @@ Waters</value>
 绿色 = 1.0
 橙色 &amp;gt;= 0.5
 红色 &amp;lt; 0.5</value>
+    <comment>Needs Review:English text changed
+Old English:All elements with peak found ratio below this number
+will be removed from the document:
+
+Green = 1.0
+Orange &amp;gt;= 0.5
+Red &amp;lt; 0.5
+Current English:All elements with peak found ratio below this number will be removed from the document:
+
+Green = 1.0
+Orange &gt;= 0.5
+Red &lt; 0.5
+Old Localized:所有峰值检出比大于此数目的元素
+都将被从文档中删除：
+
+绿色 = 1.0
+橙色 &amp;gt;= 0.5
+红色 &amp;lt; 0.5</comment>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
     <value>母离子将被从文档中删除
 直到具有最佳保留时间计算的线性
 回归相关系数的目标值
 超过此阈值。</value>
+    <comment>Needs Review:English text changed
+Old English:Precursors will be removed from the document
+until the target value for the correlation coefficient of a linear
+regression with the optimal retention time calculator
+exceed this threshold.
+Current English:Precursors will be removed from the document until the target value for the correlation coefficient of a linear regression with the optimal retention time calculator exceed this threshold.
+Old Localized:母离子将被从文档中删除
+直到具有最佳保留时间计算的线性
+回归相关系数的目标值
+超过此阈值。</comment>
   </data>
   <data name="_refine_missing_results" xml:space="preserve">
     <value>没有测量结果的所有元素都将
 被从文档中删除。</value>
+    <comment>Needs Review:English text changed
+Old English:All elements without measured results will be
+removed from the document.
+Current English:All elements without measured results will be removed from the document.
+Old Localized:没有测量结果的所有元素都将
+被从文档中删除。</comment>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
     <value>当较小的、选择性较低的离子仅产生少量
 更大的峰面积时，导致细化以选择更大的
 产物离子。</value>
+    <comment>Needs Review:English text changed
+Old English:Causes refinement to choose larger product ions
+when smaller, less selective ions yeild only fractionally
+greater peak area.
+Current English:Causes refinement to choose larger product ions when smaller, less selective ions yeild only fractionally greater peak area.
+Old Localized:当较小的、选择性较低的离子仅产生少量
+更大的峰面积时，导致细化以选择更大的
+产物离子。</comment>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
     <value>在细化值计算中仅使用每种肽段的最佳重复测定。（用于分段洗脱）</value>
@@ -928,7 +1057,186 @@ Waters</value>
   <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
     <value>用于从中导入分离方案的 path/to/result-file</value>
   </data>
+  <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
+    <value>Exporting other file types</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_speclib_file" xml:space="preserve">
+    <value>Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
+    <value>Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_features" xml:space="preserve">
+    <value>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
+    <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_targets_only" xml:space="preserve">
+    <value>Include feature scores only for targets. Requires the --exp-mprophet-features argument.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations" xml:space="preserve">
+    <value>Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
+    <value>Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations_include_object" xml:space="preserve">
+    <value>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations_include_properties" xml:space="preserve">
+    <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
+    <value>Exclude all peptides starting before this amino acid position in each protein.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
+    <value>Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_length" xml:space="preserve">
+    <value>The maximum length of a peptide to add to the document.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_min_length" xml:space="preserve">
+    <value>The minimum length of a peptide to add to the document.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
+    <value>Document settings</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_name" xml:space="preserve">
+    <value>Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_targets" xml:space="preserve">
+    <value>A comma-separated list of target types to apply the annotation to in an --annotation-name operation.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_type" xml:space="preserve">
+    <value>Define the data type of the annotation in an --annotation-name operation. Defaults to text.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_values" xml:space="preserve">
+    <value>A comma-separated list of values for a value_list type annotation in an --annotation-name operation. Required only in an --annotation-type=value_list operation.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
+    <value>"&lt;value&gt;, &lt;value&gt;, &lt;value&gt;..."</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_conflict_resolution" xml:space="preserve">
+    <value>Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-name, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts).</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_file" xml:space="preserve">
+    <value>Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_background_proteome_file" xml:space="preserve">
+    <value>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_background_proteome_name" xml:space="preserve">
+    <value>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_digest_enzyme" xml:space="preserve">
+    <value>The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_missed_cleavages" xml:space="preserve">
+    <value>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_unique_by" xml:space="preserve">
+    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
+"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.
+Useful in sample mixtures including multiple species.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_verbose_errors" xml:space="preserve">
+    <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
+    <value>Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
+    <value>full name (e.g. "Oxidation (M)") | short name (Oxi)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__" xml:space="preserve">
+    <value>UniMod ID (e.g. "35")</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_integrate_all" xml:space="preserve">
+    <value>When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_mod" xml:space="preserve">
+    <value>Add a UniMod modification to the document. The modification must be specified by PSI-MS name and site together ("Oxidation (M)").</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_unimod_aa" xml:space="preserve">
+    <value>Provides the amino acid specificity for the last peptide modification added by --pep-add-unimod.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_unimod_term" xml:space="preserve">
+    <value>Provides the terminus specificity for the last peptide modification added by --pep-add-unimod.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_unimod" xml:space="preserve">
+    <value>Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-unimod-aa or --pep-add-unimod-term to choose which specificity you want to add to the document.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_clear_mods" xml:space="preserve">
+    <value>Clears all peptide modifications from the currently open document.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_losses" xml:space="preserve">
+    <value>The maximum number of neutral loss events allowed to occur in combination on any fragment instance.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_variable_mods" xml:space="preserve">
+    <value>The maximum number of variable modifications allowed to occur in combination on any peptide instance.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
+    <value>{0} or {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>值“{0}”对于参数 {1} 无效。使用 {2} 中的一个</value>
+  </data>
+  <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
+    <value>Unable to add peptide modification '{0}': {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_associate_proteins_fasta" xml:space="preserve">
+    <value>Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_mod_variable" xml:space="preserve">
+    <value>Adds a modification as variable if 'true' or static if 'false'. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss).</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>
