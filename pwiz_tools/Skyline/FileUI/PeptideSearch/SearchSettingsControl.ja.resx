@@ -319,7 +319,7 @@
     <value>19</value>
   </data>
   <data name="btnAdditionalSettings.Text" xml:space="preserve">
-    <value>その他の設定</value>
+    <value>その他の設定(&amp;D)</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
     <value>btnAdditionalSettings</value>
@@ -589,7 +589,7 @@
     <value>12</value>
   </data>
   <data name="lblMs2Analyzer.Text" xml:space="preserve">
-    <value>MS2アナライザー(&amp;a)：</value>
+    <value>MS2アナライザー(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.Name" xml:space="preserve">
     <value>lblMs2Analyzer</value>

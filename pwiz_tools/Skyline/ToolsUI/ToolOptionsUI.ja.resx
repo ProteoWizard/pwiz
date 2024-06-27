@@ -188,7 +188,7 @@ Current English:308, 23
 Old Localized:279, 22</comment>
   </data>
   <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 23</value>
+    <value>104, 23</value>
   </data>
   <data name="btnEditServers.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -242,7 +242,7 @@ Old Localized:279, 22</comment>
     <value>9, 23</value>
   </data>
   <data name="listBoxRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>293, 199</value>
+    <value>264, 199</value>
   </data>
   <data name="listBoxRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -296,10 +296,10 @@ Old Localized:279, 22</comment>
     <value>NoControl</value>
   </data>
   <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 23</value>
+    <value>279, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>104, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1041,7 +1041,7 @@ Old Localized:279, 22</comment>
     <value>12, 12</value>
   </data>
   <data name="tabControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>408, 274</value>
+    <value>397, 274</value>
   </data>
   <data name="tabControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1062,7 +1062,7 @@ Old Localized:279, 22</comment>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>342, 292</value>
+    <value>334, 292</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1089,7 +1089,7 @@ Old Localized:279, 22</comment>
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 292</value>
+    <value>253, 292</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1119,7 +1119,7 @@ Old Localized:279, 22</comment>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>432, 320</value>
+    <value>421, 320</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

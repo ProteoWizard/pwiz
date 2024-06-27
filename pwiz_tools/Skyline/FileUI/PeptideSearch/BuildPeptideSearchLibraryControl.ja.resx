@@ -464,11 +464,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>11, 26</value>
   </data>
   <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>261, 270</value>
-    <comment>Needs Review:English text changed
-Old English:261, 147
-Current English:261, 270
-Old Localized:241, 147</comment>
+    <value>241, 270</value>
   </data>
   <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -630,11 +626,7 @@ Old Localized:241, 147</comment>
     <value>NoControl</value>
   </data>
   <data name="btnRemFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>278, 55</value>
-    <comment>Needs Review:English text changed
-Old English:278, 99
-Current English:278, 55
-Old Localized:258, 99</comment>
+    <value>258, 55</value>
   </data>
   <data name="btnRemFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>113, 23</value>
@@ -694,11 +686,7 @@ Old Localized:258, 99</comment>
     <value>NoControl</value>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>278, 26</value>
-    <comment>Needs Review:English text changed
-Old English:278, 70
-Current English:278, 26
-Old Localized:258, 70</comment>
+    <value>258, 26</value>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>113, 23</value>

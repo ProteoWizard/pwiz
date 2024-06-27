@@ -1834,7 +1834,7 @@ Old Localized:Show Mass Error</comment>
     <value>187, 22</value>
   </data>
   <data name="submitErrorReportMenuItem.Text" xml:space="preserve">
-    <value>提交错误报告...</value>
+    <value>提交错误报告…</value>
   </data>
   <data name="submitErrorReportMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1843,7 +1843,7 @@ Old Localized:Show Mass Error</comment>
     <value>187, 22</value>
   </data>
   <data name="crashSkylineMenuItem.Text" xml:space="preserve">
-    <value>Skyline 崩溃...</value>
+    <value>Skyline 崩溃…</value>
   </data>
   <data name="checkForUpdatesSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>184, 6</value>

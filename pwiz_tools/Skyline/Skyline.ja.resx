@@ -258,7 +258,7 @@
     <value>トランジションを定量にマークする</value>
   </data>
   <data name="toolStripSeparator7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 6</value>
+    <value>225, 6</value>
   </data>
   <data name="editNoteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -270,7 +270,7 @@
     <value>メモを編集</value>
   </data>
   <data name="toolStripSeparatorRatios.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 6</value>
+    <value>225, 6</value>
   </data>
   <data name="ratiosToGlobalStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>

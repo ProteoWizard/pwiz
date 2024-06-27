@@ -132,7 +132,7 @@
     <value>9, 23</value>
   </data>
   <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>293, 199</value>
+    <value>264, 199</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
@@ -181,10 +181,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 23</value>
+    <value>279, 23</value>
   </data>
   <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>104, 23</value>
   </data>
   <data name="btnEditServers.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -238,7 +238,7 @@
     <value>9, 23</value>
   </data>
   <data name="listBoxRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>293, 199</value>
+    <value>264, 199</value>
   </data>
   <data name="listBoxRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -292,10 +292,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 23</value>
+    <value>279, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>104, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
