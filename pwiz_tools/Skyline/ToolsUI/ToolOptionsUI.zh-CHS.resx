@@ -157,7 +157,11 @@
     <value>0</value>
   </data>
   <data name="lblServers.Text" xml:space="preserve">
-    <value>服务器(&amp;S)：</value>
+    <value>服务器：</value>
+    <comment>Needs Review:English text changed
+Old English:Servers:
+Current English:&amp;Servers:
+Old Localized:服务器：</comment>
   </data>
   <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
     <value>lblServers</value>
@@ -256,7 +260,11 @@
     <value>3</value>
   </data>
   <data name="lblRemoteAccounts.Text" xml:space="preserve">
-    <value>远程账户(&amp;R)：</value>
+    <value>远程账户：</value>
+    <comment>Needs Review:English text changed
+Old English:Remote accounts:
+Current English:&amp;Remote accounts:
+Old Localized:远程账户：</comment>
   </data>
   <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
     <value>lblRemoteAccounts</value>
@@ -362,6 +370,7 @@
   </data>
   <data name="koinaServerStatusLabel.Text" xml:space="preserve">
     <value>服务器状态</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -373,7 +382,8 @@
     <value>58, 13</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>i&amp;RT 模型：</value>
+    <value>iRT 模型：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -406,7 +416,8 @@
     <value>80, 13</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>强度模型(&amp;N)：</value>
+    <value>强度模型：</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -438,6 +449,7 @@
 可使用任何物种和蛋白质的
 预测的高质量 HCD MS2 谱图以及 iRT预测，
 免费且轻松地生成自定义谱图库。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="pictureBox1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -465,6 +477,7 @@
   </data>
   <data name="tabKoina.Text" xml:space="preserve">
     <value>Koina</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
