@@ -186,7 +186,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return true;
         }
 
-        public XDocument ExportResx(string? language)
+        public XDocument ExportResx(string? language, bool overrideAll)
         {
             var document = XDocument.Load(new StringReader(XmlContent));
             var newNodes = document.Root!.Nodes().Where(PreserveNode).ToList();
@@ -195,6 +195,10 @@ namespace ResourcesOrganizer.ResourcesModel
                 foreach (var entry in entryGroup.Reverse())
                 {
                     string? localizedText = entry.GetLocalizedText(language);
+                    if (overrideAll && localizedText == null)
+                    {
+                        localizedText = entry.Invariant.Value;
+                    }
                     if (localizedText == null)
                     {
                         continue;

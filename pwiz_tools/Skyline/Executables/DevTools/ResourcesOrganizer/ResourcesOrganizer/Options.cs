@@ -40,6 +40,8 @@ namespace ResourcesOrganizer
     {
         [Value(0, MetaName = "output", Required = true)]
         public string Output { get; set; }
+        [Option("overrideAll", Default = false)]
+        public bool OverrideAll { get; set; }
     }
 
     [Verb("exportLocalizationCsv")]

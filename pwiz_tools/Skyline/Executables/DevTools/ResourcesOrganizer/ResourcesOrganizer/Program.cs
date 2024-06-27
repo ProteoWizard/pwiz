@@ -73,7 +73,7 @@ namespace ResourcesOrganizer
         {
             var database = GetDatabase(options);
             using var fileSaver = new FileSaver(options.Output);
-            database.ExportResx(fileSaver.SafeName!);
+            database.ExportResx(fileSaver.SafeName!, options.OverrideAll);
             fileSaver.Commit();
             return 0;
         }

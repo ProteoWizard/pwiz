@@ -128,7 +128,7 @@ namespace ResourcesOrganizer.ResourcesModel
             transaction.Commit();
         }
 
-        public void ExportResx(string path)
+        public void ExportResx(string path, bool overrideAll)
         {
             using var stream = File.Create(path);
             using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Create);
@@ -138,7 +138,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 using (var entryStream = entry.Open())
                 {
                     using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null)));
+                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
 
                 }
                 foreach (var language in file.Value.Entries
@@ -149,7 +149,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));
                     using var localizedStream = localizedEntry.Open();
                     using var writer = new StreamWriter(localizedStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(language)));
+                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(language, overrideAll)));
                 }
             }
         }
