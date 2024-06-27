@@ -447,9 +447,30 @@
   <data name="&gt;&gt;linkRegex.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="enterListButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 22</value>
+  </data>
+  <data name="enterListButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="enterListButton.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
   <data name="enterListButton.Text" xml:space="preserve">
     <value>&amp;Enter List...</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;enterListButton.Name" xml:space="preserve">
+    <value>enterListButton</value>
+  </data>
+  <data name="&gt;&gt;enterListButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;enterListButton.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;enterListButton.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

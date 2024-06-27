@@ -121,6 +121,9 @@
   <data name="Units_mz" xml:space="preserve">
     <value>质荷比</value>
   </data>
+  <data name="Units_ppm" xml:space="preserve">
+    <value>ppm</value>
+  </data>
   <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
     <value>读取 {0} 字节失败。源可能已损坏。</value>
   </data>

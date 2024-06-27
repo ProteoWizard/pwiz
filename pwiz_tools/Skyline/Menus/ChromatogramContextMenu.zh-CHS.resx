@@ -217,6 +217,9 @@
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
     <value>离子对</value>
   </data>
+  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
   <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
     <value>Formatting...</value>
     <comment>Needs Review:New resource</comment>

@@ -133,6 +133,9 @@
     <value>No</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="Retry" xml:space="preserve">
     <value>Retry</value>
     <comment>Needs Review:New resource</comment>
