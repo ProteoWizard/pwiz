@@ -39,7 +39,7 @@ using pwiz.Skyline.Model.Results.Spectra.Alignment;
 using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using pwiz.Common.Collections;
-using pwiz.Skyline.FileUI.PeptideSearch;
+using System.Text.RegularExpressions;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -93,7 +93,17 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
-        internal IProgressStatus RunFeatureFinderStep(IProgressMonitor progressMonitor, string workingDirectory, HardklorSearchControl searchControl, IProgressStatus status, MsDataFilePath input, bool bullseye)
+        public void Generate(IProgressMonitor parallelProgressMonitor,
+            IProgressMonitor masterProgressMonitor,
+            CancellationToken cancelToken)
+        {
+            // parallel converter that starts all files converting
+            var runner = new ParallelFeatureFinder(this, masterProgressMonitor, parallelProgressMonitor, Settings.Default.ActiveDirectory, cancelToken);
+
+            runner.Generate();
+        }
+
+        internal IProgressStatus RunFeatureFinderStep(IProgressMonitor progressMonitor, string workingDirectory, IProgressMonitor searchControl, IProgressStatus status, MsDataFilePath input, bool bullseye)
         {
             // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
             Func<string> RunHardklorStep = () =>
@@ -112,8 +122,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                     exeName = PrepareBullseyeProcess(input, out args, out stepDescription);
                 }
 
+                searchControl.UpdateProgress(status.ChangeMessage($@"{stepDescription}: {exeName} {string.Join(@" ", args)}")); // Update master log
                 progressMonitor.UpdateProgress(status = status.ChangeSegmentName(exeName)); // Update progress bar
-                searchControl.AnnounceStep($@"{stepDescription}: {exeName} {string.Join(@" ", args)}"); // Update master log
 
 
                 var pr = new ProcessRunner();
@@ -980,9 +990,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             return spectra1.PerformAlignment(progressMonitor, spectra2);
         }
 
-        public int TotalAlignmentSteps(int count) => count + // Read each mzml
-                                                     ((count - 1) * count) + // Compare each A,B and B,A but not A,A
-                                                     1; // And the final feature combining step
+        public static int TotalAlignmentSteps(int count) => count + // Read each mzml
+                                                            ((count - 1) * count) + // Compare each A,B and B,A but not A,A
+                                                            1; // And the final feature combining step
 
         private bool PerformAllAlignments(IProgressMonitor progressMonitor)
         {
@@ -1019,6 +1029,316 @@ namespace pwiz.Skyline.Model.DdaSearch
             return MsDataFileUri.Parse(Path.Combine(Path.GetDirectoryName(rawFile.GetFilePath()) ?? string.Empty,
                 MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, (Path.GetFileNameWithoutExtension(rawFile.GetFilePath()) + @".mzML")));
         }
+
+
+        public class ParallelFeatureFinder
+        {
+            private readonly CancellationToken _cancelToken;
+            private readonly HardklorSearchEngine _featureFinder;
+            private string _workingDirectory;
+            private IProgressMonitor _masterProgressMonitor { get; }
+            private IProgressMonitor _parallelProgressMonitor { get; }
+            public IList<MsDataFileUri> RawDataFiles { get; }
+
+            public ParallelFeatureFinder(HardklorSearchEngine featureFinder,
+                IProgressMonitor masterProgressMonitor,
+                IProgressMonitor parallelProgressMonitor,
+                string workingDirectory,
+                CancellationToken cancelToken)
+            {
+                _featureFinder = featureFinder;
+                _cancelToken = cancelToken;
+                _parallelProgressMonitor = parallelProgressMonitor;
+                _masterProgressMonitor = masterProgressMonitor;
+                _workingDirectory = workingDirectory;
+                RawDataFiles = _featureFinder.SpectrumFileNames.ToList();
+            }
+
+            private bool IsCanceled => _parallelProgressMonitor.IsCanceled || _masterProgressMonitor.IsCanceled;
+
+            public bool KeepIntermediateResults
+            {
+                get => _featureFinder?._keepIntermediateFiles ?? false;
+                set
+                {
+                    if (_featureFinder != null) _featureFinder._keepIntermediateFiles = value;
+                }
+            }
+
+            public void Generate()
+            {
+                var rawFileQueue = new ConcurrentQueue<MsDataFileUri>(RawDataFiles);
+
+                // QueueWorkers convert input raw files (in parallel) to feed them to hardklor (in parallel), and to the RT alignment (serial)
+                var searchedFiles = 0;
+                var allFilesSearched = new ManualResetEventSlim(false);
+                var allFilesAligned = new ManualResetEventSlim(false);
+                var rawFileThreads = Math.Min(ParallelEx.GetThreadCount() - 1, RawDataFiles.Count);
+                var progressMonitorForAlignment = new ProgressMonitorForFile(DdaSearchResources.HardklorSearchEngine_Generate_Align_replicates, _parallelProgressMonitor);
+                var totalAlignmentSteps = HardklorSearchEngine.TotalAlignmentSteps(RawDataFiles.Count); // Each file load is one step, then it's n by n comparison, and final combination step
+
+                void ConsumeAlignmentFile(MsDataFileUri rawFile, int i)
+                {
+                    if (IsCanceled)
+                    {
+                        return;
+                    }
+
+                    var consumeStatus = new ProgressStatus();
+
+                    var mzmlFile = new MsDataFilePath(HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath());
+                    _masterProgressMonitor.UpdateProgress(consumeStatus.ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment, mzmlFile.GetFileNameWithoutExtension()))); // Update the master progress leb
+
+                    // Load for alignment
+                    progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps).ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_Generate_Reading__0_, mzmlFile.GetFileName())));
+
+                    var summary = HardklorSearchEngine.LoadSpectrumSummaries(mzmlFile);
+
+                    lock (_featureFinder.AlignmentSpectrumSummaryLists)
+                    {
+                        _featureFinder.AlignmentSpectrumSummaryLists.Add(mzmlFile, summary);
+                        progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps));
+
+                        if (_featureFinder.AlignmentSpectrumSummaryLists.Count == RawDataFiles.Count)
+                        {
+                            // That was the last one to load, do the alignment amongst them all
+                            _masterProgressMonitor.UpdateProgress(consumeStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_Generate_Performing_RT_alignments));
+                            _featureFinder.AlignReplicates(progressMonitorForAlignment);
+                            allFilesAligned.Set();
+                            progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion));
+                        }
+                    }
+                }
+
+                // Start alignments as soon as all mzML are available
+                using var aligner = new QueueWorker<MsDataFileUri>(null, ConsumeAlignmentFile);
+                aligner.RunAsync(1, @"FeatureFindingAlignmentConsumer", 0, null);
+
+                void ConsumeRawFile(MsDataFileUri rawFile, int i)
+                {
+                    ProcessRawDataFileAsync(rawFile, aligner);
+                    lock (rawFileQueue)
+                    {
+                        ++searchedFiles;
+                        if (searchedFiles == RawDataFiles.Count)
+                            allFilesSearched.Set();
+                    }
+                }
+
+                MsDataFileUri ProduceRawFile(int i)
+                {
+                    if (!rawFileQueue.TryDequeue(out var rawFile))
+                    {
+                        return null;
+                    }
+                    return rawFile;
+                }
+
+                using var rawFileProcessor = new QueueWorker<MsDataFileUri>(ProduceRawFile, ConsumeRawFile);
+                rawFileProcessor.RunAsync(rawFileThreads, @"FeatureFindingConsume", 1, @"FeatureFindingProduce");
+
+
+                // Wait for all Hardklor/Bullseye jobs to finish
+                while (!allFilesSearched.Wait(1000, _cancelToken) && !IsCanceled)
+                {
+                    lock (rawFileProcessor)
+                    {
+                        var exception = rawFileProcessor.Exception;
+                        if (exception != null)
+                            throw new OperationCanceledException(exception.Message, exception);
+                    }
+                }
+
+                if (IsCanceled)
+                {
+                    return;
+                }
+
+                // Wait for all RT alignments to complete
+                while (!allFilesAligned.Wait(1000, _cancelToken) && !IsCanceled)
+                {
+                    lock (aligner)
+                    {
+                        var exception = aligner.Exception;
+                        if (exception != null)
+                            throw new OperationCanceledException(exception.Message, exception);
+                    }
+                }
+
+                if (IsCanceled)
+                {
+                    return;
+                }
+
+                // Now look for common features
+                var alignmentStatus = new ProgressStatus();
+                _masterProgressMonitor.UpdateProgress(alignmentStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates));
+                progressMonitorForAlignment.UpdateProgress(alignmentStatus = (ProgressStatus)alignmentStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps).
+                    ChangeMessage((DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates)));
+
+                _featureFinder.FindSimilarFeatures();
+
+                _masterProgressMonitor.UpdateProgress(alignmentStatus.ChangePercentComplete(100));
+            }
+
+            private static string MsconvertOutputExtension => @".mzML";
+
+
+            private void ProcessRawDataFileAsync(MsDataFileUri rawFile, QueueWorker<MsDataFileUri> aligner)
+            {
+                var progressMonitorForFile = new ProgressMonitorForFile(rawFile.GetFileName(), _parallelProgressMonitor);
+                var mzmlFilePath = HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath();
+                IProgressStatus status = new ProgressStatus();
+
+                string convertMessage;
+                if ((string.Compare(mzmlFilePath, rawFile.GetFilePath(), StringComparison.OrdinalIgnoreCase) == 0) ||
+                    (File.Exists(mzmlFilePath) &&
+                     File.GetLastWriteTime(mzmlFilePath) > File.GetLastWriteTime(rawFile.GetFilePath()) &&
+                     MsDataFileImpl.IsValidFile(mzmlFilePath)))
+                {
+                    // No need for mzML conversion
+                    convertMessage = string.Format(
+                        Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__,
+                        MsconvertOutputExtension, rawFile.GetSampleOrFileName());
+                    status = status.ChangeMessage(convertMessage);
+                    _masterProgressMonitor.UpdateProgress(status); // Update main window log
+                }
+                else
+                {
+                    status = status.ChangeSegments(0, 1);
+                    const string MSCONVERT_EXE = @"msconvert";
+                    status = status.ChangeSegmentName(@"msconvert");
+                    convertMessage = string.Format(DdaSearchResources.MsconvertDdaConverter_Run_Converting_file___0___to__1_, rawFile.GetSampleOrFileName(), @"mzML");
+                    status = status.ChangeMessage(convertMessage);
+                    progressMonitorForFile.UpdateProgress(status);
+                    var pr = new ProcessRunner();
+                    var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        Arguments =
+                            "-v -z --mzML " +
+                            $"-o {Path.GetDirectoryName(mzmlFilePath).Quote()} " +
+                            $"--outfile {Path.GetFileName(mzmlFilePath).Quote()} " +
+                            " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
+                            " --filter \"peakPicking true 1-\" " +
+                            " --filter \"msLevel 1\" " +
+                            rawFile.GetFilePath().Quote()
+                    };
+
+                    try
+                    {
+                        var cmd = $@"{psi.FileName} {psi.Arguments}";
+                        _masterProgressMonitor.UpdateProgress(status.ChangeMessage($@"{convertMessage}: {cmd}")); // Update main window log
+                        progressMonitorForFile.UpdateProgress(status = status.ChangeMessage(cmd)); // Update local progress bar
+                        pr.Run(psi, null, progressMonitorForFile, ref status, null, ProcessPriorityClass.BelowNormal);
+                    }
+                    catch (Exception e)
+                    {
+                        progressMonitorForFile.UpdateProgress(status.ChangeMessage(e.Message));
+                    }
+                }
+                if (progressMonitorForFile.IsCanceled)
+                {
+                    _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
+                    FileEx.SafeDelete(mzmlFilePath, true);
+                    return;
+                }
+
+                lock (aligner)
+                {
+                    aligner.Add(rawFile); // Let aligner thread know this mzML file is ready to be loaded for alignment
+                }
+
+                var mzml = new MsDataFilePath(HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath());
+
+                // Run Hardklor
+                status = _featureFinder.RunFeatureFinderStep(progressMonitorForFile, _workingDirectory, _masterProgressMonitor, status, mzml, false);
+                if (progressMonitorForFile.IsCanceled)
+                {
+                    _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
+                    FileEx.SafeDelete(mzmlFilePath, true);
+                    return;
+                }
+
+                // Run Bullseye
+                status = _featureFinder.RunFeatureFinderStep(progressMonitorForFile, _workingDirectory, _masterProgressMonitor, status, mzml, true);
+                if (progressMonitorForFile.IsCanceled)
+                {
+                    _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
+                    FileEx.SafeDelete(mzmlFilePath, true);
+                }
+
+            }
+
+            public class ProgressMonitorForFile : IProgressMonitor
+            {
+                private readonly string _filename;
+                private readonly IProgressMonitor _multiProgressMonitor;
+                private int _maxPercentComplete;
+                private StringBuilder _logText = new StringBuilder();
+
+                public string LogText => _logText.ToString();
+
+                public ProgressMonitorForFile(string filename, IProgressMonitor multiProgressMonitor)
+                {
+                    _filename = filename;
+                    _multiProgressMonitor = multiProgressMonitor;
+                }
+
+                public bool IsCanceled => _multiProgressMonitor.IsCanceled;
+
+                private Regex _msconvert = new Regex(@"writing spectra: (\d+)/(\d+)",
+                    RegexOptions.Compiled | RegexOptions.CultureInvariant); // e.g. "Orbi3_SA_IP_SMC1_01.RAW::msconvert: writing spectra: 2202/4528"
+                private Regex _hardklor = new Regex(@"(\d+)%",
+                    RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+                {
+                    var message = status.Message.Trim();
+                    var displayMessage = $@"{_filename}::{status.SegmentName}: {message}";
+
+                    if (status.IsCanceled || status.ErrorException != null)
+                    {
+                        _logText.AppendLine(message);
+                        status = status.ChangePercentComplete(100);
+                        _multiProgressMonitor.UpdateProgress(status.ChangeMessage(displayMessage));
+                        return UpdateProgressResponse.cancel;
+                    }
+
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        return UpdateProgressResponse.normal; // Don't update 
+                    }
+
+                    var match = _msconvert.Match(status.Message); // MSConvert output?
+                    if (match.Success && match.Groups.Count == 3)
+                    {
+                        // e.g. "Orbi3_SA_IP_SMC1_01.RAW::msconvert: writing spectra: 2202/4528"
+                        _maxPercentComplete = Math.Max(_maxPercentComplete,
+                            Convert.ToInt32(match.Groups[1].Value) * 100 /
+                            Convert.ToInt32(match.Groups[2].Value));
+                        status = status.ChangePercentComplete(_maxPercentComplete);
+                    }
+                    else
+                    {
+                        match = _hardklor.Match(status.Message); // Hardklor output?
+                        if (match.Success)
+                        {
+                            _maxPercentComplete = Math.Max(_maxPercentComplete, Convert.ToInt32(match.Groups[1].Value));
+                            status = status.ChangePercentComplete(_maxPercentComplete);
+                        }
+                    }
+
+                    _logText.AppendLine(message);
+
+                    return _multiProgressMonitor.UpdateProgress(status.ChangeMessage(displayMessage));
+                }
+
+                public bool HasUI => _multiProgressMonitor.HasUI;
+            }
+        }
+
     }
 }
  

@@ -776,60 +776,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Align replicates.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_Align_replicates {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Align_replicates", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Performing RT alignments.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_Performing_RT_alignments {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Performing_RT_alignments", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Preparing {0} for RT alignment.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_Preparing__0__for_RT_alignment {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Preparing__0__for_RT_alignment", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reading {0}.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_Reading__0_ {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Reading__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Searching for common features across replicates.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_Searching_for_common_features_across_replicates {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Searching_for_common_features_across_replicates", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Waiting for Hardklor/Bullseye completion.
-        /// </summary>
-        public static string ParallelFeatureFinder_Generate_Waiting_for_Hardklor_Bullseye_completion {
-            get {
-                return ResourceManager.GetString("ParallelFeatureFinder_Generate_Waiting_for_Hardklor_Bullseye_completion", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
         public static string SearchSettingsControl_Additional_Settings {

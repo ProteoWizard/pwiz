@@ -202,4 +202,22 @@
   <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
     <value>Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution.</value>
   </data>
+  <data name="HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion" xml:space="preserve">
+    <value>Waiting for Hardklor/Bullseye completion</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Performing_RT_alignments" xml:space="preserve">
+    <value>Performing RT alignments</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment" xml:space="preserve">
+    <value>Preparing {0} for RT alignment</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Reading__0_" xml:space="preserve">
+    <value>Reading {0}</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Align_replicates" xml:space="preserve">
+    <value>Align replicates</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates" xml:space="preserve">
+    <value>Searching for common features across replicates</value>
+  </data>    
 </root>

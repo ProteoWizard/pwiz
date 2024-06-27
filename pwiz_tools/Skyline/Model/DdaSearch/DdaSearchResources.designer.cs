@@ -238,6 +238,60 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Align replicates.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Align_replicates {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Align_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing RT alignments.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Performing_RT_alignments {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Performing_RT_alignments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing {0} for RT alignment.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0}.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Reading__0_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Reading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for common features across replicates.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for Hardklor/Bullseye completion.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error performing alignment between {0} and {1}: {2}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_ {

@@ -234,7 +234,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool IsCanceled => _cancelToken.IsCancellationRequested;
 
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
-        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        public virtual UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             if (IsCanceled)
                 return UpdateProgressResponse.cancel;
