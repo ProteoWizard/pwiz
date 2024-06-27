@@ -266,10 +266,10 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 148</value>
+    <value>16, 152</value>
   </data>
   <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
@@ -290,13 +290,13 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 128</value>
+    <value>13, 132</value>
   </data>
   <data name="lblPassword.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -317,13 +317,13 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 69</value>
+    <value>13, 81</value>
   </data>
   <data name="lblUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 13</value>
@@ -344,10 +344,10 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 87</value>
+    <value>16, 99</value>
   </data>
   <data name="textUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 20</value>
@@ -365,7 +365,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="InputPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 61</value>
@@ -470,7 +470,7 @@
     <value>GrowAndShrink</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>343, 288</value>
+    <value>343, 284</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

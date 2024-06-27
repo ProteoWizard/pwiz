@@ -463,13 +463,6 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="gridSearchFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 26</value>
   </data>
-  <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 147</value>
-    <comment>Needs Review:English text changed
-Old English:261, 147
-Current English:261, 270
-Old Localized:241, 147</comment>
-  </data>
   <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -522,13 +515,13 @@ Old Localized:241, 147</comment>
     <value>Bottom, Left</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 258</value>
+    <value>11, 337</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 21</value>
   </data>
   <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>5</value>
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
     <value>Choose a set of know iRT standard peptides to use for retention time normalization.</value>
@@ -556,13 +549,13 @@ Old Localized:241, 147</comment>
     <value>NoControl</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 285</value>
+    <value>11, 364</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>曖昧な一致を含む(&amp;I)</value>
@@ -581,7 +574,7 @@ Old Localized:241, 147</comment>
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>3</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -628,13 +621,6 @@ Old Localized:241, 147</comment>
   </data>
   <data name="btnRemFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
-  </data>
-  <data name="btnRemFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>258, 99</value>
-    <comment>Needs Review:English text changed
-Old English:278, 99
-Current English:278, 55
-Old Localized:258, 99</comment>
   </data>
   <data name="btnRemFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>113, 23</value>
@@ -694,13 +680,13 @@ Old Localized:258, 99</comment>
     <value>NoControl</value>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>258, 70</value>
+    <value>278, 26</value>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>113, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>ファイルを追加(&amp;A)...</value>
@@ -715,7 +701,7 @@ Old Localized:258, 99</comment>
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="panelPeptideSearch.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -763,7 +749,7 @@ Old Localized:258, 99</comment>
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 622</value>
+    <value>381, 652</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>

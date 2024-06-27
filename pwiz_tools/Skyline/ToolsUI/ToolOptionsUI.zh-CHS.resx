@@ -346,10 +346,10 @@
     <value>13, 108</value>
   </data>
   <data name="tbxKoinaServer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 20</value>
+    <value>175, 20</value>
   </data>
   <data name="tbxKoinaServer.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;tbxKoinaServer.Name" xml:space="preserve">
     <value>tbxKoinaServer</value>
@@ -376,7 +376,7 @@
     <value>32, 13</value>
   </data>
   <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>8</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
     <value>N&amp;CE：</value>
@@ -394,13 +394,13 @@
     <value>1</value>
   </data>
   <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>237, 110</value>
+    <value>237, 108</value>
   </data>
   <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 21</value>
   </data>
   <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
     <value>ceCombo</value>
@@ -418,7 +418,7 @@
     <value>True</value>
   </data>
   <data name="koinaServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>137, 111</value>
+    <value>10, 131</value>
   </data>
   <data name="koinaServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 0, 1, 0</value>
@@ -427,7 +427,7 @@
     <value>97, 13</value>
   </data>
   <data name="koinaServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>3</value>
   </data>
   <data name="koinaServerStatusLabel.Text" xml:space="preserve">
     <value>服务器状态</value>
@@ -451,13 +451,13 @@
     <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 172</value>
+    <value>10, 196</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>58, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>i&amp;RT 模型：</value>
@@ -502,13 +502,13 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 133</value>
+    <value>10, 154</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>强度模型(&amp;N)：</value>
@@ -559,7 +559,7 @@
     <value>41, 13</value>
   </data>
   <data name="koinaServerLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
     <value>&amp;服务器：</value>
@@ -593,7 +593,7 @@
     <value>322, 55</value>
   </data>
   <data name="koinaDescrLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="koinaDescrLabel.Text" xml:space="preserve">
     <value>Koina 是一个深度学习框架，
@@ -617,7 +617,7 @@
     <value>NoControl</value>
   </data>
   <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>2, 3</value>
+    <value>13, 2</value>
   </data>
   <data name="pictureBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>

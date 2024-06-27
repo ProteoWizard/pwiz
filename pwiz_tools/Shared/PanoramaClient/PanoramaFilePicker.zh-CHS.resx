@@ -185,27 +185,12 @@
     <value>Forward</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="navToolStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 2</value>
-  </data>
-  <data name="navToolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 31</value>
-  </data>
-  <data name="navToolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="navToolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
   <metadata name="contextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>335, 17</value>
   </metadata>
   <data name="copyLinkAddressToolStripMenuItem.Text" xml:space="preserve">
     <value>Copy link address</value>
     <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 26</value>
   </data>
   <data name="urlLink.Text" xml:space="preserve">
     <value>&lt;placeholder&gt;</value>

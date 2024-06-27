@@ -139,12 +139,6 @@
     <value>Forward</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="toolStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 7</value>
-  </data>
-  <data name="toolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
   <data name="urlLink.Text" xml:space="preserve">
     <value>&lt;placeholder&gt;</value>
     <comment>Needs Review:New resource</comment>
@@ -155,9 +149,6 @@
   <data name="copyLinkAddressToolStripMenuItem.Text" xml:space="preserve">
     <value>Copy link address</value>
     <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 26</value>
   </data>
   <data name="folderLabel.Text" xml:space="preserve">
     <value>&amp;Remote folders:</value>
