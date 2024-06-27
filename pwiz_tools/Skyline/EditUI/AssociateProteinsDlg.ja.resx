@@ -128,6 +128,9 @@
     <value>NoControl</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>420, 523</value>
+  </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
@@ -185,6 +188,9 @@
   </data>
   <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>339, 523</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -323,6 +329,9 @@
   <data name="lblSharedPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="lblSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 46</value>
+  </data>
   <data name="lblSharedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 0, 3</value>
   </data>
@@ -350,6 +359,9 @@
   <data name="&gt;&gt;lblSharedPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lblSharedPeptides.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="lnkHelpSharedPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -358,6 +370,9 @@
   </data>
   <data name="lnkHelpSharedPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="lnkHelpSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>105, 40</value>
   </data>
   <data name="lnkHelpSharedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -380,11 +395,17 @@
   <data name="&gt;&gt;lnkHelpSharedPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lnkHelpSharedPeptides.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="cbMinimalProteinList.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbMinimalProteinList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="cbMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 95</value>
   </data>
   <data name="cbMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 6, 0, 3</value>
@@ -407,8 +428,14 @@
   <data name="&gt;&gt;cbMinimalProteinList.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;cbMinimalProteinList.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
   <data name="lblMinimalProteinList.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="lblMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 95</value>
   </data>
   <data name="lblMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 0, 3</value>
@@ -434,6 +461,9 @@
   <data name="&gt;&gt;lblMinimalProteinList.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lblMinimalProteinList.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
   <data name="lnkHelpFindMinimalProteinList.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -442,6 +472,9 @@
   </data>
   <data name="lnkHelpFindMinimalProteinList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="lnkHelpFindMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>250, 89</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -464,11 +497,17 @@
   <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lnkHelpFindMinimalProteinList.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
   <data name="cbRemoveSubsetProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbRemoveSubsetProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="cbRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 115</value>
   </data>
   <data name="cbRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 0, 3</value>
@@ -491,11 +530,17 @@
   <data name="&gt;&gt;cbRemoveSubsetProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;cbRemoveSubsetProteins.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
   <data name="lblRemoveSubsetProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblRemoveSubsetProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="lblRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 115</value>
   </data>
   <data name="lblRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 3, 0, 3</value>
@@ -521,6 +566,9 @@
   <data name="&gt;&gt;lblRemoveSubsetProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lblRemoveSubsetProteins.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
   <data name="lnkHelpRemoveSubsetProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -529,6 +577,9 @@
   </data>
   <data name="lnkHelpRemoveSubsetProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="lnkHelpRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>139, 112</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -551,11 +602,17 @@
   <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
   <data name="lblMinPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMinPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="lblMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 138</value>
   </data>
   <data name="lblMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 3, 3</value>
@@ -584,6 +641,12 @@
   <data name="&gt;&gt;lblMinPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;lblMinPeptides.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="numMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 155</value>
+  </data>
   <data name="numMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 0, 3, 3</value>
   </data>
@@ -602,11 +665,17 @@
   <data name="&gt;&gt;numMinPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;numMinPeptides.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
   <data name="flowLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="flowLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 16</value>
+  </data>
+  <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>477, 182</value>
   </data>
   <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -623,6 +692,9 @@
   <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 65</value>
+  </data>
   <data name="comboSharedPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>341, 21</value>
   </data>
@@ -638,11 +710,17 @@
   <data name="&gt;&gt;comboSharedPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
+  <data name="&gt;&gt;comboSharedPeptides.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
   <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="gbParsimonyOptions.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 177</value>
+  </data>
+  <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>483, 201</value>
   </data>
   <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -833,6 +911,9 @@
   <data name="targetsColumn.HeaderText" xml:space="preserve">
     <value>ターゲット</value>
   </data>
+  <data name="dgvAssociateResults.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 403</value>
+  </data>
   <data name="dgvAssociateResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 89</value>
   </data>
@@ -859,6 +940,9 @@
   </data>
   <data name="lblResults.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
+  </data>
+  <data name="lblResults.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 385</value>
   </data>
   <data name="lblResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 13</value>
@@ -947,6 +1031,9 @@
   <data name="panelStatusBarResult.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
     <value>RightToLeft</value>
   </data>
+  <data name="panelStatusBarResult.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 497</value>
+  </data>
   <data name="panelStatusBarResult.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 20</value>
   </data>
@@ -994,6 +1081,9 @@
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>507, 558</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>468, 554</value>

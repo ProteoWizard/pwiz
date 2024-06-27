@@ -150,6 +150,9 @@
   <data name="&gt;&gt;cancelButton.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;cancelButton.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
   <data name="okButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -176,6 +179,9 @@
   </data>
   <data name="&gt;&gt;okButton.Parent" xml:space="preserve">
     <value>$this</value>
+  </data>
+  <data name="&gt;&gt;okButton.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="dataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -207,11 +213,20 @@
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;dataGridView1.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="expressionTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="expressionTextBox.AutoCompleteCustomSource" xml:space="preserve">
     <value>测试</value>
+  </data>
+  <data name="expressionTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>99, 25</value>
+  </data>
+  <data name="expressionTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 20</value>
   </data>
   <data name="expressionTextBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -224,6 +239,9 @@
   </data>
   <data name="&gt;&gt;expressionTextBox.Parent" xml:space="preserve">
     <value>$this</value>
+  </data>
+  <data name="&gt;&gt;expressionTextBox.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -345,6 +363,9 @@
   <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="label3.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -372,6 +393,9 @@
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="matchComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -393,8 +417,14 @@
   <data name="&gt;&gt;matchComboBox.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;matchComboBox.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="linkRegex.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="linkRegex.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 8</value>
   </data>
   <data name="linkRegex.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 13</value>
@@ -413,6 +443,9 @@
   </data>
   <data name="&gt;&gt;linkRegex.Parent" xml:space="preserve">
     <value>$this</value>
+  </data>
+  <data name="&gt;&gt;linkRegex.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="enterListButton.Text" xml:space="preserve">
     <value>&amp;Enter List...</value>

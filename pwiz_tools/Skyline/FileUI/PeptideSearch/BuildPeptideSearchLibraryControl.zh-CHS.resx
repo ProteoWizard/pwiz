@@ -228,6 +228,15 @@
   <data name="grpWorkflow.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Bottom</value>
   </data>
+  <data name="grpWorkflow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 561</value>
+  </data>
+  <data name="grpWorkflow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 91</value>
+  </data>
+  <data name="grpWorkflow.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
   <data name="grpWorkflow.Text" xml:space="preserve">
     <value>工作流程</value>
   </data>
@@ -239,6 +248,9 @@
   </data>
   <data name="&gt;&gt;grpWorkflow.Parent" xml:space="preserve">
     <value>$this</value>
+  </data>
+  <data name="&gt;&gt;grpWorkflow.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="radioButtonNewLibrary.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -326,8 +338,14 @@ like TPP pepXML, Mascot .dat, SEQUEST SQT, etc.</value>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="tbxLibraryPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxLibraryPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 39</value>
   </data>
   <data name="tbxLibraryPath.Size" type="System.Drawing.Size, System.Drawing">
     <value>275, 20</value>
@@ -388,6 +406,9 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="lblLibraryPath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="lblLibraryPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 23</value>
+  </data>
   <data name="lblLibraryPath.Size" type="System.Drawing.Size, System.Drawing">
     <value>32, 13</value>
   </data>
@@ -433,8 +454,20 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;panelChooseFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="&gt;&gt;panelChooseFile.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="gridSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="gridSearchFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 26</value>
+  </data>
+  <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>261, 270</value>
+  </data>
+  <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Name" xml:space="preserve">
     <value>gridSearchFiles</value>
@@ -457,8 +490,14 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="lblStandardPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="lblStandardPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 321</value>
+  </data>
   <data name="lblStandardPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
+  </data>
+  <data name="lblStandardPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
   <data name="lblStandardPeptides.Text" xml:space="preserve">
     <value>iRT 标准肽段(&amp;T)：</value>
@@ -472,11 +511,20 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;lblStandardPeptides.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;lblStandardPeptides.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="comboStandards.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
+  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 337</value>
+  </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 21</value>
+  </data>
+  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
     <value>Choose a set of know iRT standard peptides to use for retention time normalization.</value>
@@ -491,6 +539,9 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="cbIncludeAmbiguousMatches.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -500,8 +551,14 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="cbIncludeAmbiguousMatches.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 364</value>
+  </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>包含模糊的匹配项(&amp;I)</value>
@@ -519,6 +576,9 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="cbFilterForDocumentPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -528,8 +588,14 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="cbFilterForDocumentPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="cbFilterForDocumentPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 387</value>
+  </data>
   <data name="cbFilterForDocumentPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 17</value>
+  </data>
+  <data name="cbFilterForDocumentPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
     <value>文档中肽段的筛选器(&amp;E)</value>
@@ -547,6 +613,9 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="btnRemFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -556,8 +625,14 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="btnRemFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="btnRemFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>278, 55</value>
+  </data>
   <data name="btnRemFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
+  </data>
+  <data name="btnRemFile.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
   <data name="btnRemFile.Text" xml:space="preserve">
     <value>删除文件(&amp;O)</value>
@@ -571,14 +646,23 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;btnRemFile.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;btnRemFile.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="lblFileCaption.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblFileCaption.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="lblFileCaption.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 8</value>
+  </data>
   <data name="lblFileCaption.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 13</value>
+  </data>
+  <data name="lblFileCaption.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
   <data name="lblFileCaption.Text" xml:space="preserve">
     <value>结果文件(&amp;R)：</value>
@@ -592,14 +676,23 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;lblFileCaption.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;lblFileCaption.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnAddFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>278, 26</value>
+  </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
+  </data>
+  <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>添加文件(&amp;A)…</value>
@@ -613,11 +706,20 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
   <data name="panelPeptideSearch.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="panelPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 140</value>
+  </data>
+  <data name="panelPeptideSearch.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 512</value>
+  </data>
+  <data name="panelPeptideSearch.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
   <data name="&gt;&gt;panelPeptideSearch.Name" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -627,6 +729,9 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   </data>
   <data name="&gt;&gt;panelPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelPeptideSearch.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
     <value>文件</value>
@@ -648,6 +753,9 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 652</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
