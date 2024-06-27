@@ -67,5 +67,11 @@ namespace ResourcesOrganizer
 
             return string.Join(Environment.NewLine, lines);
         }
+
+        public static string LineSeparate(IEnumerable<string> lines)
+        {
+            return string.Join(NewLine, lines);
+        }
+
     }
 }

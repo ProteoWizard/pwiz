@@ -40,9 +40,9 @@ namespace Test
                 Assert.AreEqual(localizedValue.OriginalInvariantValue, v23Entry.Invariant.Value);
             }
 
-            var exportedPath = Path.Combine(TestContext.TestRunDirectory!, "exported.resx");
+            var exportedPath = Path.Combine(runDirectory, "exported.resx");
             
-            ExportFile(withImportedTranslations.ResourcesFiles.Values.Single(), exportedPath, languages);
+            ExportFile(withImportedTranslations.ResourcesFiles.Values.Single(), exportedPath);
             var roundTrip = ResourcesFile.Read(exportedPath);
             Assert.IsNotNull(roundTrip);
             var roundTripCopyrightEntry = roundTrip.FindEntry(copyrightEntry.Name);
@@ -67,16 +67,6 @@ namespace Test
                 Assert.IsNotNull(localizedValue);
                 Assert.AreEqual(LocalizationIssueType.NewResource, localizedValue.IssueType);
                 Assert.AreEqual(roundTripSoftwareVersion.Invariant.Value, localizedValue.CurrentValue);
-            }
-        }
-
-        private void ExportFile(ResourcesFile resourcesFile, string path, IEnumerable<string> languages)
-        {
-            File.WriteAllText(path, TextUtil.SerializeDocument(resourcesFile.ExportResx(null, false)), TextUtil.Utf8Encoding);
-            foreach (var language in languages)
-            {
-                var localizedPath = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + "." + language + ".resx");
-                File.WriteAllText(localizedPath, TextUtil.SerializeDocument(resourcesFile.ExportResx(language, false)), TextUtil.Utf8Encoding);
             }
         }
     }

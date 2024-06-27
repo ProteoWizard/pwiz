@@ -186,7 +186,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return true;
         }
 
-        public XDocument ExportResx(string? language, bool overrideAll)
+        public XDocument ExportResx(string? language)
         {
             var document = XDocument.Load(new StringReader(XmlContent));
             var newNodes = document.Root!.Nodes().Where(PreserveNode).ToList();
@@ -194,56 +194,17 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 foreach (var entry in entryGroup.Reverse())
                 {
-                    List<string> comments = [];
-                    if (entry.Invariant.Comment != null)
+                    if (entry.Name == "button1.Location")
                     {
-                        comments.Add(entry.Invariant.Comment);
+                        Console.Out.WriteLine(entry.Name);
+                    }
+                    string? localizedText = entry.GetLocalizedText(language);
+                    if (localizedText == null)
+                    {
+                        continue;
                     }
 
-                    string? localizedText = null;
-                    if (!string.IsNullOrEmpty(language))
-                    {
-                        if (entry.LocalizedValues.TryGetValue(language, out var localizedValue))
-                        {
-                            var issueType = localizedValue.IssueType;
-                            if (entry.Invariant.IsLocalizableText || (issueType != LocalizationIssueType.MissingTranslation && issueType != LocalizationIssueType.NewResource))
-                            {
-                                localizedText = localizedValue.IssueType?.GetLocalizedText(entry, localizedValue) ?? localizedValue.ImportedValue ?? localizedValue.OriginalValue;
-                                var issueComment = localizedValue.IssueType?.FormatIssueAsComment(entry, localizedValue);
-                                if (issueComment != null)
-                                {
-                                    comments.Add(issueComment);
-                                }
-                            }
-
-                            if (localizedValue.OriginalValue == null)
-                            {
-                                if (!entry.Invariant.IsLocalizableText)
-                                {
-                                    continue;
-                                }
-
-                                if (localizedValue.IssueType == null)
-                                {
-                                    if (localizedText == null || localizedText == entry.Invariant.Value)
-                                    {
-                                        if (!overrideAll)
-                                        {
-                                            continue;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (!entry.Invariant.IsLocalizableText)
-                            {
-                                continue;
-                            }
-                        }
-                    }
-                    localizedText ??= entry.Invariant.Value;
+                    string? comment = entry.GetComment(language);
                     var data = new XElement("data");
                     data.SetAttributeValue("name", entry.Name);
                     if (entry.XmlSpace != null)
@@ -252,9 +213,9 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
                     data.Add(new XElement("value", localizedText));
 
-                    if (comments.Any())
+                    if (comment != null)
                     {
-                        data.Add(new XElement("comment", string.Join(TextUtil.NewLine, comments)));
+                        data.Add(new XElement("comment", comment));
                     }
 
                     if (entry.Invariant.Type != null)

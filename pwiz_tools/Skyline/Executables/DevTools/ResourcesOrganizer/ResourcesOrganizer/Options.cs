@@ -40,11 +40,6 @@ namespace ResourcesOrganizer
     {
         [Value(0, MetaName = "output", Required = true)]
         public string Output { get; set; }
-
-        [Option("overrideAll")]
-        public bool OverrideAll { get; set; }
-        [Option("includeProblems")]
-        public bool IncludeProblems { get; set; }
     }
 
     [Verb("exportLocalizationCsv")]

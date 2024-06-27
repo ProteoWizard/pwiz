@@ -128,7 +128,7 @@ namespace ResourcesOrganizer.ResourcesModel
             transaction.Commit();
         }
 
-        public void ExportResx(string path, bool overrideAll, bool includeProblems)
+        public void ExportResx(string path)
         {
             using var stream = File.Create(path);
             using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Create);
@@ -138,7 +138,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 using (var entryStream = entry.Open())
                 {
                     using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null)));
 
                 }
                 foreach (var language in file.Value.Entries
@@ -149,7 +149,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));
                     using var localizedStream = localizedEntry.Open();
                     using var writer = new StreamWriter(localizedStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(language, overrideAll)));
+                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(language)));
                 }
             }
         }
@@ -284,8 +284,11 @@ namespace ResourcesOrganizer.ResourcesModel
         public ResourcesDatabase ImportTranslations(ResourcesDatabase oldDb, IList<string> languages)
         {
             var oldResources = oldDb.GetInvariantResources();
-            var oldResourcesWithoutText = oldDb.ResourcesFiles.Values.SelectMany(file=>file.Entries)
-                .ToLookup(entry => entry.Invariant with {Value = string.Empty, File = null});
+            var oldResourcesWithoutText = oldDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
+                .ToLookup(entry => entry.Invariant with
+                {
+                    Value = string.Empty, File = entry.Invariant.IsLocalizableText ? null : entry.Invariant.File
+                });
             var newFiles = new Dictionary<string, ResourcesFile>();
             foreach (var resourcesEntry in ResourcesFiles.ToList())
             {

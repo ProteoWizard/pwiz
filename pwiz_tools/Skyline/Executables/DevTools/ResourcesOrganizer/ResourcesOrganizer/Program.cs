@@ -73,7 +73,7 @@ namespace ResourcesOrganizer
         {
             var database = GetDatabase(options);
             using var fileSaver = new FileSaver(options.Output);
-            database.ExportResx(fileSaver.SafeName, options.OverrideAll, options.IncludeProblems);
+            database.ExportResx(fileSaver.SafeName!);
             fileSaver.Commit();
             return 0;
         }
@@ -82,7 +82,7 @@ namespace ResourcesOrganizer
         {
             var database = GetDatabase(options);
             using var fileSaver = new FileSaver(options.Output);
-            database.ExportLocalizationCsv(fileSaver.SafeName, options.Language);
+            database.ExportLocalizationCsv(fileSaver.SafeName!, options.Language);
             fileSaver.Commit();
             return 0;
         }

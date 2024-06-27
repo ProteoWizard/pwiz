@@ -23,6 +23,26 @@ namespace Test
             newDatabase = newDatabase with { ResourcesFiles = newDatabase.ResourcesFiles.SetItem("VolcanoPlotFormattingDlg.resx", newResourcesFile) };
             var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, Languages);
 
+            var entryName = "button1.Location";
+            var importedFile = withImportedTranslations.ResourcesFiles.Values.Single();
+            var importedEntry = importedFile.FindEntry(entryName);
+            Assert.IsNotNull(importedEntry);
+            var newEntry = newResourcesFile.FindEntry(entryName);
+            Assert.IsNotNull(newEntry);
+            foreach (var language in Languages)
+            {
+                Assert.IsNotNull(newEntry.GetLocalizedText(language));
+                var localizedText = importedEntry.GetLocalizedText(language);
+                Assert.IsNotNull(localizedText);
+                Assert.AreEqual(localizedText, newEntry.Invariant.Value);
+            }
+
+            var exportedPath = Path.Combine(runDirectory, "exported.resx");
+            ExportFile(importedFile, exportedPath);
+            var roundTrip = ResourcesFile.Read(exportedPath);
+            var roundTripEntry = roundTrip.FindEntry(entryName);
+            Assert.IsNotNull(roundTripEntry);
+
         }
     }
 }

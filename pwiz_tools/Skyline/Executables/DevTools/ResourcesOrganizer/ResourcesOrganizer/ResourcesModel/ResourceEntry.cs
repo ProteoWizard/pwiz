@@ -56,5 +56,63 @@ namespace ResourcesOrganizer.ResourcesModel
 
             return hashCode;
         }
+
+        public string? GetLocalizedText(string? language)
+        {
+            if (language == null)
+            {
+                return Invariant.Value;
+            }
+
+            var localizedValue = GetTranslation(language);
+            if (localizedValue == null)
+            {
+                return null;
+            }
+
+            if (localizedValue.IssueType == null)
+            {
+                if (localizedValue.OriginalValue == null)
+                {
+                    if (localizedValue.ImportedValue == null || localizedValue.ImportedValue == Invariant.Value)
+                    {
+                        return null;
+                    }
+
+                    return localizedValue.ImportedValue;
+                }
+
+                return localizedValue.ImportedValue ?? localizedValue.OriginalValue;
+            }
+
+            return localizedValue.IssueType.GetLocalizedText(this, localizedValue);
+        }
+
+        public string? GetComment(string? language)
+        {
+            if (language == null)
+            {
+                return Invariant.Comment;
+            }
+
+            var commentLines = new List<string>();
+            if (Invariant.Comment != null)
+            {
+                commentLines.Add(Invariant.Comment);
+            }
+            var localizedValue = GetTranslation(language);
+            var issueComment = localizedValue?.IssueType?.FormatIssueAsComment(this, localizedValue);
+            if (issueComment != null)
+            {
+                commentLines.Add(issueComment);
+            }
+
+            if (commentLines.Count == 0)
+            {
+                return null;
+            }
+
+            return TextUtil.LineSeparate(commentLines);
+        }
     }
 }

@@ -63,12 +63,27 @@
 
         public virtual string? FormatIssueAsComment(ResourceEntry resourceEntry, LocalizedValue localizedValue)
         {
-            return NeedsReviewPrefix + Name;
+            if (resourceEntry.Invariant.IsLocalizableText)
+            {
+                return NeedsReviewPrefix + Name;
+            }
+
+            return null;
         }
 
         public virtual string? GetLocalizedText(ResourceEntry resourceEntry, LocalizedValue localizedValue)
         {
-            return localizedValue.ImportedValue ?? localizedValue.OriginalValue;
+            if (resourceEntry.Invariant.IsLocalizableText)
+            {
+                return localizedValue.ImportedValue ?? localizedValue.OriginalValue ?? resourceEntry.Invariant.Value;
+            }
+
+            if (localizedValue.OriginalValue == null)
+            {
+                return null;
+            }
+
+            return resourceEntry.Invariant.Value;
         }
 
         public virtual ResourceEntry Parse(ResourceEntry resourceEntry, string language, string commentText)
@@ -102,7 +117,7 @@
                     CurrentEnglish + resourceEntry.Invariant.Value,
                     OldLocalized + localizedValue.ImportedValue
                 };
-                return string.Join(TextUtil.NewLine, lines);
+                return TextUtil.LineSeparate(lines);
             }
 
             public override string? GetLocalizedText(ResourceEntry resourceEntry, LocalizedValue localizedValue)
@@ -110,7 +125,7 @@
                 // If old translated value was the same as old English, default to new English
                 if (localizedValue.ImportedValue == localizedValue.OriginalInvariantValue)
                 {
-                    return null;
+                    return localizedValue.OriginalValue == null ? null : resourceEntry.Invariant.Value;
                 }
 
                 if (!resourceEntry.Invariant.IsLocalizableText)
@@ -155,8 +170,8 @@
                 localizedValue = localizedValue with
                 {
                     IssueType = this,
-                    OriginalInvariantValue = string.Join(TextUtil.NewLine, oldEnglishList),
-                    OriginalValue = string.Join(TextUtil.NewLine, oldLocalizedList)
+                    OriginalInvariantValue = TextUtil.LineSeparate(oldEnglishList),
+                    OriginalValue = TextUtil.LineSeparate(oldLocalizedList)
                 };
                 return resourceEntry with
                 {

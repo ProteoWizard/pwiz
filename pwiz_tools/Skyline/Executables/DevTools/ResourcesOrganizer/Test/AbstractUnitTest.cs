@@ -1,4 +1,5 @@
-﻿using ResourcesOrganizer.ResourcesModel;
+﻿using ResourcesOrganizer;
+using ResourcesOrganizer.ResourcesModel;
 
 namespace Test
 {
@@ -45,5 +46,16 @@ namespace Test
                 "ja", "zh-CHS"
             };
         }}
+
+        protected void ExportFile(ResourcesFile resourcesFile, string path)
+        {
+            File.WriteAllText(path, TextUtil.SerializeDocument(resourcesFile.ExportResx(null)), TextUtil.Utf8Encoding);
+            foreach (var language in Languages)
+            {
+                var localizedPath = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + "." + language + ".resx");
+                File.WriteAllText(localizedPath, TextUtil.SerializeDocument(resourcesFile.ExportResx(language)), TextUtil.Utf8Encoding);
+            }
+        }
+
     }
 }
