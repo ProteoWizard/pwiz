@@ -2,7 +2,6 @@
 using System.Diagnostics.Contracts;
 using System.IO.Compression;
 using System.Text;
-using CommandLine;
 using NHibernate;
 using ResourcesOrganizer.DataModel;
 
@@ -316,7 +315,11 @@ namespace ResourcesOrganizer.ResourcesModel
             reviewedCount = 0;
             totalCount = 0;
             var reviewedResources = reviewedDb.GetInvariantResources();
-            var reviewedResourcesForFuzzyMatching = reviewedDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
+            var reviewedResourcesWithFileWithoutText = reviewedDb.ResourcesFiles.Values.SelectMany(file =>
+                file.Entries.Select(entry =>
+                    Tuple.Create(entry.Invariant with { File = file.RelativePath, Value = string.Empty }, entry)))
+                .ToLookup(tuple=>tuple.Item1, tuple=>tuple.Item2);
+            var reviewedResourcesWithoutText = reviewedDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
                 .ToLookup(entry => entry.Invariant with
                 {
                     Value = string.Empty, File = entry.Invariant.IsLocalizableText ? null : entry.Invariant.File
@@ -367,8 +370,17 @@ namespace ResourcesOrganizer.ResourcesModel
                         }
                         else
                         {
-                            var oldFuzzyMatches = reviewedResourcesForFuzzyMatching[
+                            var oldFuzzyMatches = reviewedResourcesWithFileWithoutText[
+                                entry.Invariant with
+                                {
+                                    Value = string.Empty,
+                                    File = resourcesEntry.Key
+                                }].ToList();
+                            if (oldFuzzyMatches.Count == 0)
+                            {
+                                oldFuzzyMatches = reviewedResourcesWithoutText[
                                     entry.Invariant with { Value = string.Empty }].ToList();
+                            }
                             var oldEnglishValues = oldFuzzyMatches
                                 .Select(oldEntry => oldEntry.Invariant.Value).Distinct().ToList();
 
