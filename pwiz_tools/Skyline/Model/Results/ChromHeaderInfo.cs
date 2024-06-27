@@ -22,9 +22,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web.SessionState;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -37,6 +39,7 @@ using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Util.ValueChecking;
 
 namespace pwiz.Skyline.Model.Results
@@ -972,7 +975,7 @@ namespace pwiz.Skyline.Model.Results
             // This is the last available flag
             mass_error_known =      0x8000,
         }
-
+        
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnassignedField.Global
         public static ChromPeak EMPTY;  // Zero filled struct
@@ -1171,6 +1174,45 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             return string.Format(@"rt={0:F02}, area={1}", RetentionTime, Area);
+        }
+
+        public string ToStringVerbose()
+        {
+            const string format = @"R";
+            var parts = new List<Tuple<string, string>>();
+            parts.Add(Tuple.Create(nameof(RetentionTime), RetentionTime.ToString(format)));
+            parts.Add(Tuple.Create(nameof(StartTime), StartTime.ToString(format)));
+            parts.Add(Tuple.Create(nameof(EndTime), EndTime.ToString(format)));
+            parts.Add(Tuple.Create(nameof(Area), Area.ToString(format)));
+            parts.Add(Tuple.Create(nameof(BackgroundArea), BackgroundArea.ToString(format)));
+            parts.Add(Tuple.Create(nameof(Height), Height.ToString(format)));
+            parts.Add(Tuple.Create(nameof(Fwhm), Fwhm.ToString(format)));
+            if (PointsAcross != null)
+            {
+                parts.Add(Tuple.Create(nameof(PointsAcross), PointsAcross.ToString()));
+            }
+            parts.Add(Tuple.Create(nameof(Flags), ((ushort) Flags).ToString()));
+            if (_stdDev != 0)
+            {
+                parts.Add(Tuple.Create(nameof(PeakShapeValues.Value.StdDev), _stdDev.ToString(format)));
+            }
+
+            if (_skewness != 0)
+            {
+                parts.Add(Tuple.Create(nameof(PeakShapeValues.Value.Skewness), _skewness.ToString(format)));
+            }
+
+            if (_kurtosis != 0)
+            {
+                parts.Add(Tuple.Create(nameof(PeakShapeValues.Value.Kurtosis), _kurtosis.ToString(format)));
+            }
+
+            if (_shapeCorrelation != 0)
+            {
+                parts.Add(Tuple.Create(nameof(PeakShapeValues.Value.ShapeCorrelation), _shapeCorrelation.ToString(format)));
+            }
+
+            return TextUtil.SpaceSeparate(parts.Select(tuple => TextUtil.ColonSeparate(tuple.Item1, tuple.Item2)));
         }
 
         public FlagValues Flags
@@ -1454,6 +1496,21 @@ namespace pwiz.Skyline.Model.Results
 
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
                 pointsAcrossPeak, peakShapeValues);
+        }
+
+        private const float MAX_PLAUSIBLE_FLOAT = 1e20f;
+        public bool AnyCorruptedData()
+        {
+            foreach (var value in new[]
+                         { _retentionTime, _startTime, _endTime, _area, _backgroundArea, _height, _fwhm, _stdDev, _skewness, _kurtosis, _shapeCorrelation })
+            {
+                if (Math.Abs(value) > MAX_PLAUSIBLE_FLOAT)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         #region Fast file I/O
