@@ -192,9 +192,15 @@
   </data>
   <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" xml:space="preserve">
     <value>正在将 FASTA 转换为 Koina 输入</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library" xml:space="preserve">
     <value>正在将 Koina 输出转换为 EncyclopeDIA 库</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
+    <value>Waiting for chromatogram library</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
     <value>正在生成色谱图库 ({0}/{1}): {2}</value>
@@ -213,6 +219,7 @@
   </data>
   <data name="FastaToKoina_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
     <value>不受支持的酶“{0}”; 允许的值为: {1}</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
     <value>库标题中的数据缺损。文件可能已损坏。</value>
@@ -286,6 +293,14 @@
   </data>
   <data name="NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio" xml:space="preserve">
     <value>TF 比率</value>
+  </data>
+  <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
+    <value>An EncyclopeDIA task failed.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
+    <value>Demultiplexing spectra: {0}/{1}</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
     <value>平均质量</value>
