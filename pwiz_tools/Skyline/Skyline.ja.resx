@@ -421,9 +421,15 @@
   <data name="spectrumGraphPropsContextMenuItem.Text" xml:space="preserve">
     <value>グラフプロパティ...</value>
   </data>
+  <data name="showLibSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
   <data name="showLibSpectrumPropertiesContextMenuItem.Text" xml:space="preserve">
     <value>Spectrum Properties</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="showFullScanSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
   </data>
   <data name="showFullScanSpectrumPropertiesContextMenuItem.Text" xml:space="preserve">
     <value>Spectrum Properties</value>
@@ -771,6 +777,9 @@
   <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
     <value>ペプチドの比較</value>
   </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
   <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
     <value>Relative Abundance</value>
     <comment>Needs Review:New resource</comment>
@@ -883,9 +892,15 @@
   <data name="scopeContextMenuItem.Text" xml:space="preserve">
     <value>適用範囲</value>
   </data>
+  <data name="abundanceTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
   <data name="abundanceTargetsMenuItem.Text" xml:space="preserve">
     <value>Targets</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
   </data>
   <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
     <value>Exclude</value>
@@ -1044,17 +1059,29 @@
   <data name="&gt;&gt;contextMenuPeakAreas.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="abundanceTargetsProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
   <data name="abundanceTargetsProteinsMenuItem.Text" xml:space="preserve">
     <value>Proteins</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
   </data>
   <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
     <value>Peptides</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
   <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
     <value>Peptide Lists</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
   </data>
   <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
     <value>Standards</value>
@@ -1367,6 +1394,12 @@
   <data name="openMenuItem.Text" xml:space="preserve">
     <value>開く(&amp;O)...</value>
   </data>
+  <data name="openPanoramaMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="openPanoramaMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
     <value>Open From Panora&amp;ma...</value>
     <comment>Needs Review:New resource</comment>
@@ -1414,7 +1447,10 @@
     <value>Panoramaにアップロード(&amp;U)...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
+    <value>197, 6</value>
+  </data>
+  <data name="runPeptideSearchToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
   </data>
   <data name="runPeptideSearchToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Run Peptide Search...</value>
@@ -1426,9 +1462,15 @@
   <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;EncyclopeDIA検索...</value>
   </data>
+  <data name="importFeatureDetectionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
   <data name="importFeatureDetectionMenuItem.Text" xml:space="preserve">
     <value>&amp;Feature Detection...</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="searchStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Search</value>
@@ -2256,6 +2298,12 @@
   <data name="&gt;&gt;modifyPeptideContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Name" xml:space="preserve">
+    <value>editSpectrumFilterContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toggleQuantitativeContextMenuItem.Name" xml:space="preserve">
     <value>toggleQuantitativeContextMenuItem</value>
   </data>
@@ -2434,6 +2482,18 @@
     <value>spectrumGraphPropsContextMenuItem</value>
   </data>
   <data name="&gt;&gt;spectrumGraphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showLibSpectrumPropertiesContextMenuItem.Name" xml:space="preserve">
+    <value>showLibSpectrumPropertiesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showLibSpectrumPropertiesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showFullScanSpectrumPropertiesContextMenuItem.Name" xml:space="preserve">
+    <value>showFullScanSpectrumPropertiesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showFullScanSpectrumPropertiesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator15.Name" xml:space="preserve">
@@ -2784,6 +2844,12 @@
   <data name="&gt;&gt;areaPeptideComparisonContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;areaRelativeAbundanceContextMenuItem.Name" xml:space="preserve">
+    <value>areaRelativeAbundanceContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaRelativeAbundanceContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;areaCVHistogramContextMenuItem.Name" xml:space="preserve">
     <value>areaCVHistogramContextMenuItem</value>
   </data>
@@ -2884,6 +2950,18 @@
     <value>proteinScopeContextMenuItem</value>
   </data>
   <data name="&gt;&gt;proteinScopeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;abundanceTargetsMenuItem.Name" xml:space="preserve">
+    <value>abundanceTargetsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;abundanceTargetsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;excludeTargetsMenuItem.Name" xml:space="preserve">
+    <value>excludeTargetsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;excludeTargetsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;showPeakAreaLegendContextMenuItem.Name" xml:space="preserve">
@@ -3054,6 +3132,30 @@
   <data name="&gt;&gt;toolStripSeparator57.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;abundanceTargetsProteinsMenuItem.Name" xml:space="preserve">
+    <value>abundanceTargetsProteinsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;abundanceTargetsProteinsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;abundanceTargetsPeptidesMenuItem.Name" xml:space="preserve">
+    <value>abundanceTargetsPeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;abundanceTargetsPeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;excludeTargetsPeptideListMenuItem.Name" xml:space="preserve">
+    <value>excludeTargetsPeptideListMenuItem</value>
+  </data>
+  <data name="&gt;&gt;excludeTargetsPeptideListMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;excludeTargetsStandardsMenuItem.Name" xml:space="preserve">
+    <value>excludeTargetsStandardsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;excludeTargetsStandardsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;statusGeneral.Name" xml:space="preserve">
     <value>statusGeneral</value>
   </data>
@@ -3198,6 +3300,12 @@
   <data name="&gt;&gt;openMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;openPanoramaMenuItem.Name" xml:space="preserve">
+    <value>openPanoramaMenuItem</value>
+  </data>
+  <data name="&gt;&gt;openPanoramaMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;openContainingFolderMenuItem.Name" xml:space="preserve">
     <value>openContainingFolderMenuItem</value>
   </data>
@@ -3240,10 +3348,28 @@
   <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;searchStripMenuItem.Name" xml:space="preserve">
+    <value>searchStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;searchStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runPeptideSearchToolStripMenuItem.Name" xml:space="preserve">
+    <value>runPeptideSearchToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;runPeptideSearchToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Name" xml:space="preserve">
     <value>encyclopeDiaSearchMenuItem</value>
   </data>
   <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importFeatureDetectionMenuItem.Name" xml:space="preserve">
+    <value>importFeatureDetectionMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importFeatureDetectionMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;importToolStripMenuItem.Name" xml:space="preserve">

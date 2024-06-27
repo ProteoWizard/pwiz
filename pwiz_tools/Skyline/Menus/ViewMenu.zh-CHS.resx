@@ -702,6 +702,9 @@
   <data name="areaPeptideComparisonMenuItem.Text" xml:space="preserve">
     <value>肽段比较(&amp;P)</value>
   </data>
+  <data name="areaRelativeAbundanceMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
   <data name="areaRelativeAbundanceMenuItem.Text" xml:space="preserve">
     <value>Relative &amp;Abundance</value>
     <comment>Needs Review:New resource</comment>

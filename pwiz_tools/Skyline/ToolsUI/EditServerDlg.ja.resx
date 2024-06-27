@@ -206,6 +206,18 @@
   <data name="InputPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="cbAnonymous.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAnonymous.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 51</value>
+  </data>
+  <data name="cbAnonymous.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 17</value>
+  </data>
+  <data name="cbAnonymous.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
   <data name="cbAnonymous.Text" xml:space="preserve">
     <value>Anonymous access</value>
     <comment>Needs Review:New resource</comment>
@@ -216,6 +228,18 @@
   <data name="cbAnonymous.ToolTip" xml:space="preserve">
     <value>Check this box if you do not have an account on the server.  Without a user account you can anonymously browse, download and open publicly available documents on the server, but you cannot upload documents to the server.</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Name" xml:space="preserve">
+    <value>cbAnonymous</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Parent" xml:space="preserve">
+    <value>InputPanel</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="lblProjectInfo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -478,6 +502,12 @@
   <data name="$this.Text" xml:space="preserve">
     <value>サーバーを編集</value>
     <comment>Needs Review:Missing translation</comment>
+  </data>
+  <data name="&gt;&gt;toolTipAnonymous.Name" xml:space="preserve">
+    <value>toolTipAnonymous</value>
+  </data>
+  <data name="&gt;&gt;toolTipAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditServerDlg</value>

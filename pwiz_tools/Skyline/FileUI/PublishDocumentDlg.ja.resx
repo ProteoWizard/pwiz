@@ -303,6 +303,21 @@
   <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="cbAnonymousServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbAnonymousServers.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAnonymousServers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 296</value>
+  </data>
+  <data name="cbAnonymousServers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>147, 17</value>
+  </data>
+  <data name="cbAnonymousServers.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
   <data name="cbAnonymousServers.Text" xml:space="preserve">
     <value>Show anonymous servers</value>
     <comment>Needs Review:New resource</comment>
@@ -313,6 +328,18 @@
   <data name="cbAnonymousServers.ToolTip" xml:space="preserve">
     <value>Anonymous servers are not associated with a user account. A user account is required to upload documents to a server.</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;cbAnonymousServers.Name" xml:space="preserve">
+    <value>cbAnonymousServers</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymousServers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymousServers.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymousServers.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -328,6 +355,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>ドキュメントをアップロード</value>
+  </data>
+  <data name="&gt;&gt;toolTipShowAnonymous.Name" xml:space="preserve">
+    <value>toolTipShowAnonymous</value>
+  </data>
+  <data name="&gt;&gt;toolTipShowAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PublishDocumentDlg</value>

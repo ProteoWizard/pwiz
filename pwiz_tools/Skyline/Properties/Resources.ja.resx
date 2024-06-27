@@ -827,6 +827,9 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="LabKey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LabKey.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="HardklorLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hardklor_logo.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators" xml:space="preserve">
     <value>MProphetScoringModeには{0}個の機能を持つピークが与えられましたが、ピーク機能カルキュレータが{1}個あります</value>
   </data>
@@ -3842,6 +3845,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PasteDlg_AddFasta_This_must_start_with" xml:space="preserve">
     <value>これは「&gt;」から始まる必要があります</value>
   </data>
+  <data name="PanoramaDownload" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PanoramaDownload.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
     <value>ユーザーを認証できませんでした。サーバーから受信した応答：{0} {1}</value>
   </data>
@@ -3981,6 +3987,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="koina_logo_fdf731d5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
     <value>Importing peptide list {0} from file {1}...</value>

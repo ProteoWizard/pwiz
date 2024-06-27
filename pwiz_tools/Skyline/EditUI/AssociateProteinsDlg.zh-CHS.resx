@@ -315,6 +315,57 @@
   <data name="&gt;&gt;lnkHelpProteinGroups.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="cbGeneLevel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbGeneLevel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbGeneLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 23</value>
+  </data>
+  <data name="cbGeneLevel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 0, 3</value>
+  </data>
+  <data name="cbGeneLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 14</value>
+  </data>
+  <data name="cbGeneLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="cbGeneLevel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Name" xml:space="preserve">
+    <value>cbGeneLevel</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 23</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 3, 0, 3</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 13</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
   <data name="lblGroupAtGeneLevel.Text" xml:space="preserve">
     <value>Group at g&amp;ene level</value>
     <comment>Needs Review:New resource</comment>
@@ -322,6 +373,18 @@
   <data name="lblGroupAtGeneLevel.ToolTip" xml:space="preserve">
     <value>Peptides will be associated and grouped by gene instead of by protein.</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Name" xml:space="preserve">
+    <value>lblGroupAtGeneLevel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="lblSharedPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
