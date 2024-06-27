@@ -367,7 +367,10 @@
   </data>
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
     <value>Show Mass Error</value>
-    <comment>Needs Review:Missing translation</comment>
+    <comment>Needs Review:English text changed
+Old English:Mass Error
+Current English:Show Mass Error
+Old Localized:Show Mass Error</comment>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>

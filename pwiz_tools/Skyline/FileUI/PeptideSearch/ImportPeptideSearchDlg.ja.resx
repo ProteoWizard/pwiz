@@ -1049,7 +1049,10 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>変換設定を調整</value>
-    <comment>Needs Review:Missing translation</comment>
+    <comment>Needs Review:English text changed
+Old English:Adjust Conversion Settings
+Current English:Conversion Settings
+Old Localized:変換設定を調整</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

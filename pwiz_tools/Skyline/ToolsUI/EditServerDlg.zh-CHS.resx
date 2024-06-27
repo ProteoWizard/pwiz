@@ -501,7 +501,10 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>编辑服务器</value>
-    <comment>Needs Review:Missing translation</comment>
+    <comment>Needs Review:English text changed
+Old English:Edit Server
+Current English:Edit Panorama Server
+Old Localized:编辑服务器</comment>
   </data>
   <data name="&gt;&gt;toolTipAnonymous.Name" xml:space="preserve">
     <value>toolTipAnonymous</value>
