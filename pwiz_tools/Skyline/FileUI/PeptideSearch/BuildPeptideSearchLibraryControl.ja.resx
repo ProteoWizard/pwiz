@@ -695,6 +695,10 @@ Old Localized:258, 99</comment>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
     <value>278, 26</value>
+    <comment>Needs Review:English text changed
+Old English:278, 70
+Current English:278, 26
+Old Localized:258, 70</comment>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>113, 23</value>
