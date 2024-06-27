@@ -9,7 +9,21 @@
     <LangVersion>12.0</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
   <ItemGroup>
+    <None Remove="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
     <None Remove="ResourcesFileTest\Resources.ja.resx.testfile" />
     <None Remove="ResourcesFileTest\Resources.resx.testfile" />
     <None Remove="ResourcesFileTest\Resources.zh-CHS.resx.testfile" />
@@ -23,6 +37,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
     <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.ja.resx.testfile" />
     <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.resx.testfile" />
     <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.zh-CHS.resx.testfile" />

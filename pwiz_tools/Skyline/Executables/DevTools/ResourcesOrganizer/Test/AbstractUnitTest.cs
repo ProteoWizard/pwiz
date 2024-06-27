@@ -35,7 +35,13 @@ namespace Test
             {
                 var resourcesFile = resourcesFileEntry.Value;
                 Assert.IsTrue(roundTrip.ResourcesFiles.TryGetValue(resourcesFileEntry.Key, out var roundTripFile));
-                CollectionAssert.AreEqual(resourcesFile.Entries.ToList(), roundTripFile.Entries.ToList());
+                Assert.AreEqual(resourcesFile.Entries.Count, roundTripFile.Entries.Count);
+                for (int i = 0; i < resourcesFile.Entries.Count; i++)
+                {
+                    var entry = resourcesFile.Entries[i];
+                    var roundTripEntry = roundTripFile.Entries[i];
+                    Assert.AreEqual(entry, roundTripEntry);
+                }
             }
         }
 

@@ -23,7 +23,7 @@ namespace ResourcesOrganizer.ResourcesModel
             }
             if (extension.Equals(".resx", StringComparison.OrdinalIgnoreCase))
             {
-                var resourcesFile = ResourcesFile.Read(path);
+                var resourcesFile = ResourcesFile.Read(path, path);
                 return new ResourcesDatabase
                 {
                     ResourcesFiles = ImmutableDictionary<string, ResourcesFile>.Empty.Add(path, resourcesFile)
@@ -83,9 +83,10 @@ namespace ResourcesOrganizer.ResourcesModel
                         LocalizedValues = localizedValues.ToImmutableDictionary(),
                         Position = resourceLocation.Position
                     };
+
                     entries.Add(entry);
                 }
-                resourcesFiles.Add(resxFile.FilePath!, new ResourcesFile
+                resourcesFiles.Add(resxFile.FilePath!, new ResourcesFile(resxFile.FilePath!)
                 {
                     Entries = entries.ToImmutableList(),
                     XmlContent = xmlContent
@@ -304,6 +305,12 @@ namespace ResourcesOrganizer.ResourcesModel
         }
 
         [Pure]
+        public ResourcesDatabase AddFile(ResourcesFile file)
+        {
+            return this with { ResourcesFiles = ResourcesFiles.Add(file.RelativePath, file) };
+        }
+
+        [Pure]
         public ResourcesDatabase ImportTranslations(ResourcesDatabase reviewedDb, IList<string> languages, out int reviewedCount, out int totalCount)
         {
             reviewedCount = 0;
@@ -424,7 +431,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     continue;
                 }
 
-                var resourcesFile = ResourcesFile.Read(file.FullName);
+                var resourcesFile = ResourcesFile.Read(file.FullName, filePath);
                 files[filePath] = resourcesFile;
             }
 

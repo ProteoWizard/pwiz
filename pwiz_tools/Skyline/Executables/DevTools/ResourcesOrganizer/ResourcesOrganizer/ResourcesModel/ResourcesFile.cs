@@ -4,22 +4,44 @@ using System.Xml.Linq;
 
 namespace ResourcesOrganizer.ResourcesModel
 {
-    public record ResourcesFile
+    public record ResourcesFile(string RelativePath)
     {
         public static readonly XName XmlSpace = XName.Get("space", "http://www.w3.org/XML/1998/namespace");
-        public ImmutableList<ResourceEntry> Entries { get; init; } = [];
+        private ImmutableList<ResourceEntry> _entries = [];
+
+        public ImmutableList<ResourceEntry> Entries
+        {
+            get
+            {
+                return _entries;
+            }
+            init
+            {
+                foreach (var entry in value)
+                {
+                    if (entry.Invariant.File != null && entry.Invariant.File != RelativePath)
+                    {
+                        string message = string.Format("File {0} in entry {1} should be {2}", entry.Invariant.File,
+                            entry.Invariant.Name, RelativePath);
+                        throw new ArgumentException(message);
+                    }
+                }
+                _entries = value;
+            }
+        }
 
         public ResourceEntry? FindEntry(string name)
         {
             return Entries.FirstOrDefault(entry => entry.Name == name);
         }
         public string XmlContent { get; init; } = string.Empty;
-        public static ResourcesFile Read(string filePath)
+
+        public static ResourcesFile Read(string absolutePath, string relativePath)
         {
             var entries = new List<ResourceEntry>();
             var entriesIndex = new Dictionary<string, int>();
             var otherNodes = new List<XNode>();
-            var document = XDocument.Load(filePath);
+            var document = XDocument.Load(absolutePath);
             foreach (var node in document.Root!.Nodes())
             {
                 if (!(node is XElement element) || element.Name != "data")
@@ -42,9 +64,13 @@ namespace ResourcesOrganizer.ResourcesModel
                     Type = (string?)element.Attribute("type"),
                     MimeType = mimeType
                 };
+                if (!key.IsLocalizableText)
+                {
+                    key = key with { File = relativePath };
+                }
                 if (entriesIndex.ContainsKey(key.Name))
                 {
-//                    Console.Error.WriteLine("Duplicate name {0} in file {1}", key.Name, filePath);
+                    Console.Error.WriteLine("Duplicate name {0} in file {1}", key.Name, relativePath);
                     continue;
                 }
 
@@ -62,9 +88,9 @@ namespace ResourcesOrganizer.ResourcesModel
             document.Save(stringWriter);
             var xmlContent = stringWriter.ToString();
 
-            var baseName = Path.GetFileNameWithoutExtension(filePath);
-            var baseExtension = Path.GetExtension(filePath);
-            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(filePath)!))
+            var baseName = Path.GetFileNameWithoutExtension(absolutePath);
+            var baseExtension = Path.GetExtension(absolutePath);
+            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(absolutePath)!))
             {
                 if (!baseExtension.Equals(Path.GetExtension(file), StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -107,7 +133,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 }
             }
 
-            return new ResourcesFile
+            return new ResourcesFile(relativePath)
             {
                 Entries = ImmutableList.CreateRange(entries),
                 XmlContent = xmlContent
@@ -231,7 +257,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
                 }
             }
-            document.Root.ReplaceAll(newNodes.Cast<object>().ToArray());
+            document.Root.ReplaceNodes(newNodes.Cast<object>().ToArray());
             return document;
         }
     }

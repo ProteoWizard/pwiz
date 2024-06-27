@@ -22,7 +22,7 @@ namespace ResourcesOrganizer.DataModel
 
         public ResourcesModel.InvariantResourceKey GetKey()
         {
-            return new ResourcesModel.InvariantResourceKey
+            var key = new ResourcesModel.InvariantResourceKey
             {
                 Name = Name,
                 Type = Type,
@@ -30,6 +30,12 @@ namespace ResourcesOrganizer.DataModel
                 Value = Value!,
                 Comment = Comment
             };
+            if (!key.IsLocalizableText)
+            {
+                key = key with { File = File };
+            }
+
+            return key;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Test
         {
             string runDirectory = TestContext.TestRunDirectory!;
             SaveManifestResources(typeof(ResourcesFileTest), runDirectory);
-            var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"));
+            var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             Assert.AreNotEqual(0, file.Entries.Count);
         }
 
@@ -20,7 +20,7 @@ namespace Test
         {
             string runDirectory = TestContext.TestRunDirectory!;
             SaveManifestResources(typeof(ResourcesFileTest), runDirectory);
-            var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"));
+            var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             var resourcesDatabase = new ResourcesDatabase
             {
                 ResourcesFiles = ImmutableDictionary<string, ResourcesFile>.Empty.Add("test", file)
@@ -40,7 +40,7 @@ namespace Test
         {
             string runDirectory = TestContext.TestRunDirectory!;
             SaveManifestResources(typeof(ResourcesFileTest), runDirectory);
-            var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"));
+            var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             var resourcesDatabase = ResourcesDatabase.Empty with
             {
                 ResourcesFiles = ImmutableDictionary<string, ResourcesFile>.Empty.Add("test", file)
