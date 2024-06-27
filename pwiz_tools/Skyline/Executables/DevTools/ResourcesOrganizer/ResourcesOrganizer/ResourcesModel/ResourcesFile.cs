@@ -48,10 +48,8 @@ namespace ResourcesOrganizer.ResourcesModel
                     continue;
                 }
 
-                var entry = new ResourceEntry
+                var entry = new ResourceEntry(key.Name, key)
                 {
-                    Name = key.Name,
-                    Invariant = key,
                     XmlSpace = xmlSpace,
                     Position = otherNodes.Count
                 };
@@ -94,7 +92,6 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         continue;
                     }
-                    string problem = null;
                     string? comment = element.Element("comment")?.Value;
                     var entry = entries[entryIndex];
                     entry = entry with

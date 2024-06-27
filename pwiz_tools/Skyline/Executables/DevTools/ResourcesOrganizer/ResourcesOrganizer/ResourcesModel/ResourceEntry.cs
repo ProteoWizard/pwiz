@@ -2,10 +2,8 @@
 
 namespace ResourcesOrganizer.ResourcesModel
 {
-    public record ResourceEntry
+    public record ResourceEntry(string Name, InvariantResourceKey Invariant)
     {
-        public string Name { get; init; }
-        public InvariantResourceKey Invariant { get; init; }
         public string? XmlSpace { get; init; }
         /// <summary>
         /// Position of the element in the XML relative to <see cref="ResourcesFile.PreserveNode"/> nodes.
@@ -23,9 +21,9 @@ namespace ResourcesOrganizer.ResourcesModel
         public ResourceEntry Normalize()
         {
             var localizedValues = LocalizedValues
-                .Where(kvp => kvp.Value.OriginalValue != null || kvp.Value.ImportedValue != Invariant.Value)
+                .Where(kvp => kvp.Value.OriginalValue != null || kvp.Value.ReviewedValue != Invariant.Value)
                 .ToImmutableDictionary(kvp => kvp.Key, kvp => new LocalizedValue 
-                    { ImportedValue = kvp.Value.CurrentValue });
+                    { ReviewedValue = kvp.Value.ReviewedValue ?? kvp.Value.OriginalValue });
             return this with
             {
                 Position = 0,
@@ -74,15 +72,15 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 if (localizedValue.OriginalValue == null)
                 {
-                    if (localizedValue.ImportedValue == null || localizedValue.ImportedValue == Invariant.Value)
+                    if (localizedValue.ReviewedValue == null || localizedValue.ReviewedValue == Invariant.Value)
                     {
                         return null;
                     }
 
-                    return localizedValue.ImportedValue;
+                    return localizedValue.ReviewedValue;
                 }
 
-                return localizedValue.ImportedValue ?? localizedValue.OriginalValue;
+                return localizedValue.ReviewedValue ?? localizedValue.OriginalValue;
             }
 
             return localizedValue.IssueType.GetLocalizedText(this, localizedValue);

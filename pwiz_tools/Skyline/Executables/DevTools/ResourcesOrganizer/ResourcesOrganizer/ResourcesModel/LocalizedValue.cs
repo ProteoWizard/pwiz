@@ -10,16 +10,16 @@
         /// <summary>
         /// Value that was imported using "importtranslations" command
         /// </summary>
-        public string? ImportedValue { get; init; }
+        public string? ReviewedValue { get; init; }
 
         public string CurrentValue
         {
-            get { return ImportedValue ?? OriginalValue ?? string.Empty; }
+            get { return ReviewedValue ?? OriginalValue ?? string.Empty; }
         }
         public LocalizationIssueType? IssueType { get; init; }
         /// <summary>
         /// Invariant value in the database that was imported with the "importtranslations" command
         /// </summary>
-        public string? OriginalInvariantValue { get; init; }
+        public string? ReviewedInvariantValue { get; init; }
     }
 }

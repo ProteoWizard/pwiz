@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using CommandLine;
 using ResourcesOrganizer.ResourcesModel;
+using Parser = CommandLine.Parser;
 
 namespace ResourcesOrganizer
 {
@@ -43,12 +44,24 @@ namespace ResourcesOrganizer
             {
                 database = GetDatabase(options);
             }
+
+            var originalFileCount = database.ResourcesFiles.Count;
+            var originalResourceCount = database.ResourcesFiles.Values.Sum(file => file.Entries.Count);
+            var originalLocalizationCount =
+                database.ResourcesFiles.Values.Sum(file => file.Entries.Sum(entry => entry.LocalizedValues.Count));
             var exclude = options.Exclude.ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (var file in options.Path)
             {
                 var otherDb = ResourcesDatabase.ReadFile(file, exclude);
                 database = database.Add(otherDb);
             }
+            var newFileCount = database.ResourcesFiles.Count;
+            var newResourceCount = database.ResourcesFiles.Values.Sum(file => file.Entries.Count);
+            var newLocalizationCount =
+                database.ResourcesFiles.Values.Sum(file => file.Entries.Sum(entry => entry.LocalizedValues.Count));
+            Console.Error.WriteLine("Added {0} new files, {1} new entries, {2} new localizations",
+                newFileCount - originalFileCount, newResourceCount - originalResourceCount,
+                newLocalizationCount - originalLocalizationCount);
             database.SaveAtomic(options.Output ?? options.DbFile);
             return 0;
         }
@@ -64,7 +77,38 @@ namespace ResourcesOrganizer
                     .SelectMany(file => file.Entries.SelectMany(entry => entry.LocalizedValues.Keys)).Distinct()
                     .ToList();
             }
-            database = database.ImportTranslations(otherDb, languages);
+
+            int errorCount = 0;
+            foreach (var fileEntry in otherDb.ResourcesFiles)
+            {
+                foreach (var resourceEntry in fileEntry.Value.Entries)
+                {
+                    foreach (var language in languages)
+                    {
+                        var localizedValue = resourceEntry.GetTranslation(language);
+                        if (localizedValue?.IssueType != null)
+                        {
+                            Console.Error.WriteLine("Error: Entry {0} language {1} file {2} has issue {3}",
+                                resourceEntry.Name, language, fileEntry.Key, localizedValue.IssueType);
+                            errorCount++;
+                        }
+                        else if (localizedValue?.ReviewedValue != null)
+                        {
+                            Console.Error.WriteLine(
+                                "Error: Reviewed value for entry {0} language {1} in file {2} should be null but is {3}",
+                                resourceEntry.Name, language, fileEntry.Key, localizedValue.ReviewedValue);
+                            errorCount++;
+                        }
+                    }
+                }
+            }
+
+            if (errorCount > 0)
+            {
+                return -1;
+            }
+            database = database.ImportTranslations(otherDb, languages, out int reviewedCount, out int totalCount);
+            Console.Error.WriteLine("Imported reviewed translations for {0}/{1} resources", reviewedCount, totalCount);
             database.SaveAtomic(verb.Output ?? verb.DbFile);
             return 0;
         }

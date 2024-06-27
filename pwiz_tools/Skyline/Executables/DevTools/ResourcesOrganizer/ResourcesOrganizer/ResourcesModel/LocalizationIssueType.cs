@@ -75,7 +75,7 @@
         {
             if (resourceEntry.Invariant.IsLocalizableText)
             {
-                return localizedValue.ImportedValue ?? localizedValue.OriginalValue ?? resourceEntry.Invariant.Value;
+                return localizedValue.ReviewedValue ?? localizedValue.OriginalValue ?? resourceEntry.Invariant.Value;
             }
 
             if (localizedValue.OriginalValue == null)
@@ -105,7 +105,7 @@
 
             public override string? FormatIssueAsComment(ResourceEntry resourceEntry, LocalizedValue localizedValue)
             {
-                if (localizedValue.ImportedValue == localizedValue.OriginalInvariantValue)
+                if (localizedValue.ReviewedValue == localizedValue.ReviewedInvariantValue)
                 {
                     // If old translated value was the same as old English, default to new English
                     return null;
@@ -113,9 +113,9 @@
                 var lines = new List<string>
                 {
                     NeedsReviewPrefix + Name,
-                    OldEnglish + localizedValue.OriginalInvariantValue,
+                    OldEnglish + localizedValue.ReviewedInvariantValue,
                     CurrentEnglish + resourceEntry.Invariant.Value,
-                    OldLocalized + localizedValue.ImportedValue
+                    OldLocalized + localizedValue.ReviewedValue
                 };
                 return TextUtil.LineSeparate(lines);
             }
@@ -123,7 +123,7 @@
             public override string? GetLocalizedText(ResourceEntry resourceEntry, LocalizedValue localizedValue)
             {
                 // If old translated value was the same as old English, default to new English
-                if (localizedValue.ImportedValue == localizedValue.OriginalInvariantValue)
+                if (localizedValue.ReviewedValue == localizedValue.ReviewedInvariantValue)
                 {
                     return localizedValue.OriginalValue == null ? null : resourceEntry.Invariant.Value;
                 }
@@ -133,7 +133,7 @@
                     return null;
                 }
                 
-                return localizedValue.ImportedValue ?? localizedValue.OriginalValue;
+                return localizedValue.ReviewedValue ?? localizedValue.OriginalValue;
             }
 
             public override ResourceEntry Parse(ResourceEntry resourceEntry, string language, string commentText)
@@ -170,7 +170,7 @@
                 localizedValue = localizedValue with
                 {
                     IssueType = this,
-                    OriginalInvariantValue = TextUtil.LineSeparate(oldEnglishList),
+                    ReviewedInvariantValue = TextUtil.LineSeparate(oldEnglishList),
                     OriginalValue = TextUtil.LineSeparate(oldLocalizedList)
                 };
                 return resourceEntry with

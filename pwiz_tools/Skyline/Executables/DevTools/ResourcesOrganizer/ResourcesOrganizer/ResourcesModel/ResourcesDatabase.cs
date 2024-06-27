@@ -2,8 +2,8 @@
 using System.Diagnostics.Contracts;
 using System.IO.Compression;
 using System.Text;
+using CommandLine;
 using NHibernate;
-using NHibernate.Cache.Entry;
 using ResourcesOrganizer.DataModel;
 
 namespace ResourcesOrganizer.ResourcesModel
@@ -70,17 +70,15 @@ namespace ResourcesOrganizer.ResourcesModel
                     {
                         localizedValues.Add(localizedResource.Language!, new LocalizedValue
                         {
-                            ImportedValue = localizedResource.ImportedValue,
+                            ReviewedValue = localizedResource.ReviewedValue,
                             OriginalValue = localizedResource.OriginalValue,
-                            IssueType = LocalizationIssueType.FromName(localizedResource.Problem),
-                            OriginalInvariantValue = localizedResource.OriginalInvariantValue
+                            IssueType = LocalizationIssueType.FromName(localizedResource.IssueType),
+                            ReviewedInvariantValue = localizedResource.ReviewedInvariantValue
                         });
                     }
                     var invariantResource = invariantResources[resourceLocation.InvariantResourceId];
-                    var entry = new ResourceEntry
+                    var entry = new ResourceEntry(resourceLocation.Name!, invariantResource.GetKey())
                     {
-                        Name = resourceLocation.Name!,
-                        Invariant = invariantResource.GetKey(),
                         XmlSpace = invariantResource.XmlSpace,
                         LocalizedValues = localizedValues.ToImmutableDictionary(),
                         Position = resourceLocation.Position
@@ -103,7 +101,7 @@ namespace ResourcesOrganizer.ResourcesModel
         public void SaveAtomic(string path)
         {
             using var fileSaver = new FileSaver(path);
-            Save(fileSaver.SafeName);
+            Save(fileSaver.SafeName!);
             fileSaver.Commit();
         }
 
@@ -188,19 +186,45 @@ namespace ResourcesOrganizer.ResourcesModel
                 foreach (var localizedEntryGroup in entryGroup.Value.SelectMany(entry => entry.LocalizedValues).GroupBy(kvp => kvp.Key))
                 {
                     var translations = localizedEntryGroup.Select(kvp => kvp.Value).Distinct().ToList();
-                    if (translations.Count > 1)
+                    var originalValues = translations.Select(localizedValue => localizedValue.OriginalValue)
+                        .OfType<string>().Distinct().ToList();
+                    var reviewedValues = translations.Select(localizedValue => localizedValue.ReviewedValue)
+                        .OfType<string>().Distinct().ToList();
+                    var issueTypes = translations.Select(localizedValue => localizedValue.IssueType).OfType<LocalizationIssueType>().ToList();
+                    var reviewedInvariantValues =
+                        translations.Select(localizedValue => localizedValue.ReviewedInvariantValue).OfType<string>()
+                            .Distinct().ToList();
+                    
+                    if (originalValues.Count > 1)
                     {
-                        Console.Error.WriteLine("{0} was translated into {1} as all of the following: {2}", entryGroup.Key, localizedEntryGroup.Key, string.Join(",", translations.Select(t=>TextUtil.Quote(t.CurrentValue))));
+                        Console.Error.WriteLine("Warning: {0} had multiple original values: {1}", entryGroup.Key, TextUtil.QuoteAndSeparate(originalValues));
+                    }
+
+                    if (reviewedValues.Count > 1)
+                    {
+                        Console.Error.WriteLine("Warning: {0} had multiple reviewed values: {1}", entryGroup.Key,
+                            TextUtil.QuoteAndSeparate(reviewedValues));
+                    }
+
+                    if (issueTypes.Count > 1)
+                    {
+                        Console.Error.WriteLine("Warning: {0} had multiple issue types: {1}", entryGroup.Key,
+                            TextUtil.QuoteAndSeparate(issueTypes.Select(issueType => issueType.Name)));
+                    }
+
+                    if (reviewedInvariantValues.Count > 1)
+                    {
+                        Console.Error.WriteLine("Warning: {0} had multiple reviewed invariant values: {1}", entryGroup.Key, TextUtil.QuoteAndSeparate(reviewedInvariantValues));
                     }
 
                     var localizedResource = new LocalizedResource
                     {
                         InvariantResourceId = invariantResourceId,
                         Language = localizedEntryGroup.Key,
-                        OriginalValue = translations[0].OriginalValue,
-                        ImportedValue = translations[0].ImportedValue,
-                        Problem = translations[0].IssueType?.Name,
-                        OriginalInvariantValue = translations[0].OriginalInvariantValue
+                        OriginalValue = originalValues.FirstOrDefault(),
+                        ReviewedValue = reviewedValues.FirstOrDefault(),
+                        IssueType = issueTypes.FirstOrDefault()?.Name,
+                        ReviewedInvariantValue = reviewedInvariantValues.FirstOrDefault()
                     };
                     session.Insert(localizedResource);
                 }
@@ -252,7 +276,6 @@ namespace ResourcesOrganizer.ResourcesModel
                             var key = tuple.Item2.Invariant.FileQualified(tuple.Item1);
                             dictionary.Add(key, [tuple.Item2]);
                         }
-
                     }
                 }
             }
@@ -281,10 +304,12 @@ namespace ResourcesOrganizer.ResourcesModel
         }
 
         [Pure]
-        public ResourcesDatabase ImportTranslations(ResourcesDatabase oldDb, IList<string> languages)
+        public ResourcesDatabase ImportTranslations(ResourcesDatabase reviewedDb, IList<string> languages, out int reviewedCount, out int totalCount)
         {
-            var oldResources = oldDb.GetInvariantResources();
-            var oldResourcesWithoutText = oldDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
+            reviewedCount = 0;
+            totalCount = 0;
+            var reviewedResources = reviewedDb.GetInvariantResources();
+            var reviewedResourcesForFuzzyMatching = reviewedDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
                 .ToLookup(entry => entry.Invariant with
                 {
                     Value = string.Empty, File = entry.Invariant.IsLocalizableText ? null : entry.Invariant.File
@@ -298,26 +323,29 @@ namespace ResourcesOrganizer.ResourcesModel
                     var localizedValues = new Dictionary<string, LocalizedValue>();
                     foreach (var language in languages)
                     {
+                        totalCount++;
                         LocalizedValue? currentValue;
                         if (!entry.LocalizedValues.TryGetValue(language, out currentValue))
                         {
                             currentValue = new();
                         }
                         var fileQualifiedKey = entry.Invariant.FileQualified(resourcesEntry.Key);
-                        if (!oldResources.TryGetValue(fileQualifiedKey, out var oldEntries))
+                        if (!reviewedResources.TryGetValue(fileQualifiedKey, out var oldEntries))
                         {
-                            if (!oldResources.TryGetValue(entry.Invariant, out oldEntries))
+                            if (!reviewedResources.TryGetValue(entry.Invariant, out oldEntries))
                             {
                                 oldEntries = [];
                             }
                         }
 
-                        var oldTranslations = oldEntries.Select(oldEntry => oldEntry.GetTranslation(language)?.CurrentValue)
+                        var oldTranslations = oldEntries.Select(reviewedEntry =>
+                                reviewedEntry.GetTranslation(language)?.OriginalValue)
                             .OfType<string>().Distinct().ToList();
 
                         if (oldTranslations.Count == 1)
                         {
-                            localizedValues.Add(language, currentValue with { ImportedValue = oldTranslations.First() });
+                            reviewedCount++;
+                            localizedValues.Add(language, currentValue with { ReviewedValue = oldTranslations.First() });
                             continue;
                         }
 
@@ -332,7 +360,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         }
                         else
                         {
-                            var oldFuzzyMatches = oldResourcesWithoutText[
+                            var oldFuzzyMatches = reviewedResourcesForFuzzyMatching[
                                     entry.Invariant with { Value = string.Empty }].ToList();
                             var oldEnglishValues = oldFuzzyMatches
                                 .Select(oldEntry => oldEntry.Invariant.Value).Distinct().ToList();
@@ -348,8 +376,8 @@ namespace ResourcesOrganizer.ResourcesModel
                                         currentValue with
                                         {
                                             IssueType = LocalizationIssueType.EnglishTextChanged,
-                                            OriginalInvariantValue = oldEnglishValues[0],
-                                            ImportedValue = oldFuzzyTranslations[0],
+                                            ReviewedInvariantValue = oldEnglishValues[0],
+                                            ReviewedValue = oldFuzzyTranslations[0],
                                         });
                                     continue;
                                 }
@@ -423,7 +451,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     .OfType<LocalizedValue>().ToList();
                 var issueType = localizedValues.Select(value => value.IssueType).OfType<LocalizationIssueType>().FirstOrDefault();
                 var localizedText = localizedValues.Select(value => value.CurrentValue).FirstOrDefault();
-                var originalEnglish = localizedValues.Select(value => value.OriginalInvariantValue)
+                var originalEnglish = localizedValues.Select(value => value.ReviewedInvariantValue)
                     .OfType<string>().FirstOrDefault();
                 if (localizedText == null || issueType != null)
                 {

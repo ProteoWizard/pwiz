@@ -18,10 +18,10 @@ namespace ResourcesOrganizer.DataModel
         /// Value that was imported using "importtranslations" command
         /// </summary>
         [Property]
-        public string? ImportedValue { get; set; }
+        public string? ReviewedValue { get; set; }
         [Property]
-        public string? Problem { get; set; }
+        public string? IssueType { get; set; }
         [Property]
-        public string? OriginalInvariantValue { get; set; }
+        public string? ReviewedInvariantValue { get; set; }
     }
 }

@@ -21,7 +21,7 @@ namespace Test
             var newResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v24.VolcanoPlotFormattingDlg.resx"));
             var newDatabase = ResourcesDatabase.Empty;
             newDatabase = newDatabase with { ResourcesFiles = newDatabase.ResourcesFiles.SetItem("VolcanoPlotFormattingDlg.resx", newResourcesFile) };
-            var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, Languages);
+            var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, Languages, out _, out _);
 
             var entryName = "button1.Location";
             var importedFile = withImportedTranslations.ResourcesFiles.Values.Single();
