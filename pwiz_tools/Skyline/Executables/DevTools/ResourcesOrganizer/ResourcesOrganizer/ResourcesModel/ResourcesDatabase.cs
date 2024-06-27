@@ -223,7 +223,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     ResxFileId = resxFileId,
                     InvariantResourceId = invariantResourceId,
                     Name = entry.Name,
-                    SortIndex= ++sortIndex,
+                    SortIndex = ++sortIndex,
                     Position = entry.Position
                 };
                 session.Insert(resourceLocation);

@@ -194,10 +194,6 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 foreach (var entry in entryGroup.Reverse())
                 {
-                    if (entry.Name == "button1.Location")
-                    {
-                        Console.Out.WriteLine(entry.Name);
-                    }
                     string? localizedText = entry.GetLocalizedText(language);
                     if (localizedText == null)
                     {
