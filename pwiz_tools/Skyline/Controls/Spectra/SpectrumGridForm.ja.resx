@@ -208,8 +208,7 @@
     <value>270, 17</value>
   </metadata>
   <data name="btnCancelReadingFile.ToolTip" xml:space="preserve">
-    <value>Cancel</value>
-    <comment>Needs Review:New resource</comment>
+    <value>キャンセル</value>
   </data>
   <data name="&gt;&gt;btnCancelReadingFile.Name" xml:space="preserve">
     <value>btnCancelReadingFile</value>
@@ -548,11 +547,9 @@
   </data>
   <data name="$this.TabText" xml:space="preserve">
     <value>SpectraGridForm</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>SpectraGridForm</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
     <value>ModeUIExtender</value>

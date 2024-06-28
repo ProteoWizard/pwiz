@@ -407,7 +407,6 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="koinaLibMatchItem.Text" xml:space="preserve">
     <value>Koina</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="mirrorMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>

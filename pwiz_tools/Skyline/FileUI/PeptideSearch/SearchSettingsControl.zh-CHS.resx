@@ -900,7 +900,6 @@ Old Localized:Q 值截止：</comment>
   </data>
   <data name="lblSearchEngineBlurb.Text" xml:space="preserve">
     <value>(blurb)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblSearchEngineBlurb.Name" xml:space="preserve">
     <value>lblSearchEngineBlurb</value>

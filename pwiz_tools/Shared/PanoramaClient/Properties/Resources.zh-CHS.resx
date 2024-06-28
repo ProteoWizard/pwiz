@@ -220,8 +220,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaFilePicker_ALL_VER_All" xml:space="preserve">
-    <value>All</value>
-    <comment>Needs Review:New resource</comment>
+    <value>全部</value>
   </data>
   <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
     <value>Most recent</value>

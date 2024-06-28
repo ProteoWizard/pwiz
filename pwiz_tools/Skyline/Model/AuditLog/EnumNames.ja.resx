@@ -639,7 +639,6 @@
   </data>
   <data name="SearchEngine_Hardklor" xml:space="preserve">
     <value>Hardklör</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>ペプチドの最も多いタンパク質に割当て</value>

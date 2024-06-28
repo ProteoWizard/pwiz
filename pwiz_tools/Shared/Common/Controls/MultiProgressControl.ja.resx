@@ -132,8 +132,7 @@
     <value>True</value>
   </metadata>
   <data name="NameColumn.HeaderText" xml:space="preserve">
-    <value>Name</value>
-    <comment>Needs Review:New resource</comment>
+    <value>名前</value>
   </data>
   <metadata name="ProgressColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

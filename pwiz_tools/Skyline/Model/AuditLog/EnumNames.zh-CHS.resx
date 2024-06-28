@@ -639,7 +639,6 @@
   </data>
   <data name="SearchEngine_Hardklor" xml:space="preserve">
     <value>Hardklör</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>已分配给肽段最多的蛋白质</value>

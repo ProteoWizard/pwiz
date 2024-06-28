@@ -259,8 +259,7 @@
     <value>Top, Right</value>
   </data>
   <data name="versionOptions.Items" xml:space="preserve">
-    <value>All</value>
-    <comment>Needs Review:New resource</comment>
+    <value>全部</value>
   </data>
   <data name="versionOptions.Items1" xml:space="preserve">
     <value>Most recent</value>
