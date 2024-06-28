@@ -28,6 +28,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Carafe;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -294,6 +295,15 @@ namespace pwiz.Skyline.SettingsUI
                         return false;
                     }
                 }
+                else if (carafeDataSourceRadioButton.Checked)
+                {
+                    Builder = new CarafeLibraryBuilder(
+                        name, 
+                        outputPath,
+                        textBoxMzMLFilePath.Text,
+                        textBoxProteinDatabaseFilePath.Text,
+                        textBoxSpectralLibraryFilePath.Text);
+                }
                 else
                 {
                     if (!Grid.Validate(this, null, true, out var thresholdsByFile))
@@ -371,7 +381,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (!panelProperties.Visible || koinaDataSourceRadioButton.Checked)
+            if (!panelProperties.Visible || koinaDataSourceRadioButton.Checked || carafeDataSourceRadioButton.Checked)
             {
                 if (ValidateBuilder(true))
                 {

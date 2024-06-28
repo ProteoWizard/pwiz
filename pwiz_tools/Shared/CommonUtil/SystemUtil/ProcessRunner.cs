@@ -199,6 +199,8 @@ namespace pwiz.Common.SystemUtil
                             progress.UpdateProgress(status);
                         }
                     }
+
+                    Debug.WriteLine($"Output from process: {sbOutput}");
                 }
                 proc.WaitForExit();
                 int exit = proc.ExitCode;
