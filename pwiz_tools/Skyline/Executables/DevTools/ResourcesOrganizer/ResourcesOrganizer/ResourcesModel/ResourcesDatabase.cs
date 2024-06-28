@@ -1,7 +1,9 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using CsvHelper;
 using NHibernate;
 using ResourcesOrganizer.DataModel;
 
@@ -462,10 +464,7 @@ namespace ResourcesOrganizer.ResourcesModel
 
         public void ExportLocalizationCsv(string path, string language, out int entryCount)
         {
-            entryCount = 0;
-            using var stream = new FileStream(path, FileMode.Create);
-            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-            writer.WriteLine(TextUtil.ToCsvRow("Name", "Comment", "English", language + " Translation", "Issue", "File"));
+            var records = new List<LocalizationCsvRecord>();
             foreach (var invariantEntry in GetInvariantResources().OrderBy(kvp=>kvp.Key))
             {
                 var invariantKey = invariantEntry.Key;
@@ -474,18 +473,53 @@ namespace ResourcesOrganizer.ResourcesModel
                     continue;
                 }
 
+                var issueDetailsGroups = invariantEntry.Value.GroupBy(entry => entry.GetIssueDetails(language)).Where(group=>group.Key != null).ToList();
+                var issueDetails = TextUtil.LineSeparate(issueDetailsGroups.Select(group => group.Key!));
                 var localizedValues = invariantEntry.Value.Select(value => value.GetTranslation(language))
                     .OfType<LocalizedValue>().ToList();
                 var issueType = localizedValues.Select(value => value.IssueType).OfType<LocalizationIssueType>().FirstOrDefault();
                 var localizedText = localizedValues.Select(value => value.CurrentValue).FirstOrDefault();
-                var originalEnglish = localizedValues.Select(value => value.ReviewedInvariantValue)
-                    .OfType<string>().FirstOrDefault();
                 if (localizedText == null || issueType != null)
                 {
-                    writer.WriteLine(TextUtil.ToCsvRow(invariantKey.Name, invariantKey.Comment, invariantKey.Value, localizedText, issueType?.Name, originalEnglish, invariantEntry.Value.Count.ToString(), invariantKey.File));
-                    entryCount++;
+                    records.Add(new LocalizationCsvRecord
+                    {
+                        Name = invariantKey.Name!, 
+                        Comment = invariantKey.Comment!,
+                        English = invariantKey.Value,
+                        Translation = localizedText ?? string.Empty,
+                        Issue = issueDetails,
+                        File = invariantEntry.Key.File,
+                        FileCount = invariantEntry.Value.Count
+                    });
                 }
             }
+            using var stream = new FileStream(path, FileMode.Create);
+            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+            csvWriter.WriteRecords(records);
+            entryCount = records.Count;
+        }
+
+        public ResourcesDatabase ImportLocalizationCsv(LanguageFilePath languageFilePath, out int totalEntryCount, out int totalMatchCount, out int totalChangeCount)
+        {
+            totalMatchCount = 0;
+            totalChangeCount = 0;
+            using var reader = new StreamReader(languageFilePath.FilePath);
+            using var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var allRecords = csvReader.GetRecords<LocalizationCsvRecord>().ToList();
+            totalEntryCount = allRecords.Count;
+            var recordsByName = allRecords.ToLookup(record => record.Name);
+            var newFiles = new Dictionary<string, ResourcesFile>();
+            foreach (var resourceFileEntry in ResourcesFiles)
+            {
+                var newFile = resourceFileEntry.Value.ImportLocalizationRecords(languageFilePath.Language, recordsByName,
+                    out int matchCount, out int changeCount);
+                totalMatchCount += matchCount;
+                totalChangeCount += changeCount;
+                newFiles.Add(resourceFileEntry.Key, newFile);
+            }
+
+            return this with { ResourcesFiles = newFiles.ToImmutableDictionary() };
         }
     }
 }

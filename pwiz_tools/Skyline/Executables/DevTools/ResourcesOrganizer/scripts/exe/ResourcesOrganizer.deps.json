@@ -10,6 +10,7 @@
         "dependencies": {
           "Antlr3.Runtime": "3.5.0.2",
           "CommandLine": "2.9.1.0",
+          "CsvHelper": "33.0.0.0",
           "Iesi.Collections": "4.0.0.4000",
           "Microsoft.Data.Sqlite": "8.0.6.0",
           "NHibernate": "5.5.0.0",
@@ -40,6 +41,14 @@
           "CommandLine.dll": {
             "assemblyVersion": "2.9.1.0",
             "fileVersion": "2.9.1.0"
+          }
+        }
+      },
+      "CsvHelper/33.0.0.0": {
+        "runtime": {
+          "CsvHelper.dll": {
+            "assemblyVersion": "33.0.0.0",
+            "fileVersion": "33.0.1.24"
           }
         }
       },
@@ -153,6 +162,11 @@
       "sha512": ""
     },
     "CommandLine/2.9.1.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "CsvHelper/33.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

@@ -46,4 +46,12 @@ namespace ResourcesOrganizer
         public string? Output { get; set; }
         [Option("language")] public IEnumerable<string> Language { get; set; }
     }
+
+    [Verb("importLocalizationCsv")]
+    public class ImportLocalizationCsv : Options
+    {
+        [Option("input", Default = "localization.csv")]
+        public string? Input { get; set; }
+        [Option("language")] public IEnumerable<string> Language { get; set; }
+    }
 }

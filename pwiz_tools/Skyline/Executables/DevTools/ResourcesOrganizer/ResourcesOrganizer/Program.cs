@@ -10,12 +10,13 @@ namespace ResourcesOrganizer
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-            return Parser.Default.ParseArguments<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv>(args)
-                .MapResult<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv, int>(
+            return Parser.Default.ParseArguments<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv, ImportLocalizationCsv>(args)
+                .MapResult<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv, ImportLocalizationCsv, int>(
                     DoAdd, 
                     DoImportTranslations,
                     DoExportResx,
                     DoExportLocalizationCsv,
+                    DoImportLocalizationCsv,
                     HandleParseError);
         }
 
@@ -42,7 +43,7 @@ namespace ResourcesOrganizer
             }
             else
             {
-                database = GetDatabase(options);
+                database = GetDatabase(options) ?? ResourcesDatabase.Empty;
             }
 
             var originalFileCount = database.ResourcesFiles.Count;
@@ -69,6 +70,11 @@ namespace ResourcesOrganizer
         static int DoImportTranslations(ImportTranslations verb)
         {
             var database = GetDatabase(verb);
+            if (database == null)
+            {
+                 Console.Error.WriteLine("Database {0} does not exist", verb.DbFile);
+                 return -1;
+            }
             var otherDb = ResourcesDatabase.ReadDatabase(verb.OldDb);
             List<string> languages = verb.Language.ToList();
             if (languages.Count == 0)
@@ -114,6 +120,11 @@ namespace ResourcesOrganizer
         static int DoExportResx(ExportResx options)
         {
             var database = GetDatabase(options);
+            if (database == null)
+            {
+                Console.Error.WriteLine("Database {0} does not exist", options.DbFile);
+                return -1;
+            }
             using var fileSaver = new FileSaver(options.Output);
             database.ExportResx(fileSaver.SafeName!, options.OverrideAll);
             fileSaver.Commit();
@@ -123,6 +134,12 @@ namespace ResourcesOrganizer
         static int DoExportLocalizationCsv(ExportLocalizationCsv options)
         {
             var database = GetDatabase(options);
+            if (database == null)
+            {
+                Console.Error.WriteLine("Database {0} does not exist", options.DbFile);
+                return -1;
+            }
+
             var languages = options.Language.ToList();
             if (languages.Count == 0)
             {
@@ -134,39 +151,92 @@ namespace ResourcesOrganizer
                 Console.Error.WriteLine("No languages");
                 return -1;
             }
-            foreach (var language in languages)
+
+            foreach (var languageFilePath in EnumerateLocalizationFiles(options.Output!, languages))
             {
-                string outputFile;
-                if (languages.Count == 1)
-                {
-                    outputFile = options.Output!;
-                }
-                else
-                {
-                    var path = Path.GetFullPath(options.Output!);
-                    var folder = Path.GetDirectoryName(path)!;
-                    var baseFile = Path.GetFileNameWithoutExtension(path);
-                    var extension = Path.GetExtension(path);
-                    outputFile = Path.Combine(folder, baseFile + "." + language + extension);
-                }
-                using var fileSaver = new FileSaver(outputFile);
-                database.ExportLocalizationCsv(fileSaver.SafeName!, language, out int entryCount);
+                using var fileSaver = new FileSaver(languageFilePath.FilePath);
+                database.ExportLocalizationCsv(fileSaver.SafeName!, languageFilePath.Language, out int entryCount);
                 fileSaver.Commit();
-                Console.Error.WriteLine("Wrote {0} strings to {1}", entryCount, outputFile);
+                Console.Error.WriteLine("Wrote {0} strings to {1}", entryCount, languageFilePath.FilePath);
             }
+
             return 0;
         }
 
-        private static ResourcesDatabase GetDatabase(Options options)
+        static int DoImportLocalizationCsv(ImportLocalizationCsv options)
         {
-            var path = options.DbFile;
-            ResourcesDatabase database = ResourcesDatabase.Empty;
-            if (File.Exists(path))
+            var database = GetDatabase(options);
+            if (database == null)
             {
-                database = ResourcesDatabase.ReadDatabase(path);
+                Console.Error.WriteLine("Database {0} does not exist", options.DbFile);
+                return -1;
+            }
+            var languages = options.Language.ToList();
+            if (languages.Count == 0)
+            {
+                languages = database.GetLanguages().ToList();
             }
 
-            return database;
+            if (languages.Count == 0)
+            {
+                Console.Error.WriteLine("No languages");
+                return -1;
+            }
+
+            foreach (var languageFilePath in EnumerateLocalizationFiles(options.Input!, languages))
+            {
+                if (!File.Exists(languageFilePath.FilePath))
+                {
+                    if (languages.Count == 1)
+                    {
+                        Console.Out.WriteLine("Error: File {0} does not exist", languageFilePath.FilePath);
+                        return -1;
+                    }
+                    Console.Error.WriteLine("File {0} for language {1} does not exist, skipping", languageFilePath.FilePath, languageFilePath.Language);
+                    continue;
+                }
+
+                database = database.ImportLocalizationCsv(languageFilePath, out int rowCount,
+                    out int matchedEntryCount, out int changedEntryCount);
+                Console.Out.WriteLine("Read {0} rows from {1} and changed {2}/{3} matching records in resx files", rowCount, languageFilePath.FilePath, changedEntryCount, matchedEntryCount);
+            }
+
+            return 0;
         }
+
+        private static IEnumerable<LanguageFilePath> EnumerateLocalizationFiles(string basePath,
+            IList<string> languages)
+        {
+            if (languages.Count == 0)
+            {
+                yield break;
+            }
+            var fullPath = Path.GetFullPath(basePath);
+            if (languages.Count == 1)
+            {
+                yield return new LanguageFilePath(languages[0], fullPath);
+            }
+
+            foreach (var language in languages)
+            {
+                var folder = Path.GetDirectoryName(fullPath)!;
+                var baseFile = Path.GetFileNameWithoutExtension(fullPath);
+                var extension = Path.GetExtension(fullPath);
+                var filePath = Path.Combine(folder, baseFile + "." + language + extension);
+                yield return new LanguageFilePath(language, filePath);
+            }
+        }
+
+        private static ResourcesDatabase? GetDatabase(Options options)
+        {
+            var path = options.DbFile;
+            if (File.Exists(path))
+            {
+                return ResourcesDatabase.ReadDatabase(path);
+            }
+            return null;
+        }
+
     }
+    public record LanguageFilePath(string Language, string FilePath);
 }

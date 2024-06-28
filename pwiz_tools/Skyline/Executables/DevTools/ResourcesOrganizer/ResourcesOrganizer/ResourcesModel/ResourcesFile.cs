@@ -260,5 +260,46 @@ namespace ResourcesOrganizer.ResourcesModel
             document.Root.ReplaceNodes(newNodes.Cast<object>().ToArray());
             return document;
         }
+
+        public ResourcesFile ImportLocalizationRecords(string language, ILookup<string, LocalizationCsvRecord> records, out int matchCount, out int changeCount)
+        {
+            matchCount = 0;
+            changeCount = 0;
+            var newEntries = new List<ResourceEntry>();
+            foreach (var unchangedEntry in Entries)
+            {
+                var entry = unchangedEntry;
+                foreach (var record in records[entry.Invariant.Name!])
+                {
+                    if (record.File != null && record.File != RelativePath)
+                    {
+                        continue;
+                    }
+
+                    if (record.English != entry.Invariant.Value)
+                    {
+                        continue;
+                    }
+
+
+                    matchCount++;
+                    LocalizedValue localizedValue = new LocalizedValue { OriginalValue = record.Translation };
+                    entry = entry with { LocalizedValues = entry.LocalizedValues.SetItem(language, localizedValue) };
+                    if (!string.IsNullOrEmpty(record.Issue))
+                    {
+                        entry = LocalizationIssueType.ParseComment(entry, language,
+                            LocalizationIssueType.NeedsReviewPrefix + record.Issue);
+                    }
+
+                    if (!Equals(unchangedEntry.GetTranslation(language), entry.GetTranslation(language)))
+                    {
+                        changeCount++;
+                    }
+                    newEntries.Add(entry);
+                }
+            }
+
+            return this with { Entries = newEntries.ToImmutableList() };
+        }
     }
 }
