@@ -1,4 +1,22 @@
-﻿using System.Collections.Immutable;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Xml.Linq;
 
@@ -262,10 +280,10 @@ namespace ResourcesOrganizer.ResourcesModel
         {
             matchCount = 0;
             changeCount = 0;
-            var newEntries = new List<ResourceEntry>();
-            foreach (var unchangedEntry in Entries)
+            var entries = Entries.ToList();
+            for (int i = 0; i < entries.Count; i++)
             {
-                var entry = unchangedEntry;
+                var entry = entries[i];
                 foreach (var record in records[entry.Invariant.Name!])
                 {
                     if (!string.IsNullOrEmpty(record.File) && record.File != RelativePath)
@@ -284,15 +302,16 @@ namespace ResourcesOrganizer.ResourcesModel
                         new LocalizedValue(record.Translation, LocalizationIssue.ParseIssue(record.Issue));
                     entry = entry with { LocalizedValues = entry.LocalizedValues.SetItem(language, localizedValue) };
 
-                    if (!Equals(unchangedEntry.GetTranslation(language), entry.GetTranslation(language)))
+                    if (!Equals(entries[i].GetTranslation(language), entry.GetTranslation(language)))
                     {
                         changeCount++;
                     }
-                    newEntries.Add(entry);
+
+                    entries[i] = entry;
                 }
             }
 
-            return this with { Entries = newEntries.ToImmutableList() };
+            return this with { Entries = entries.ToImmutableList() };
         }
     }
 }
