@@ -98,19 +98,24 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 commentLines.Add(Invariant.Comment);
             }
-            var localizedValue = GetTranslation(language);
-            var issueComment = localizedValue?.IssueType?.FormatIssueAsComment(this, localizedValue);
-            if (issueComment != null)
-            {
-                commentLines.Add(issueComment);
-            }
 
+            var issueDetails = GetIssueDetails(language);
+            if (issueDetails != null)
+            {
+                commentLines.Add(LocalizationIssueType.NeedsReviewPrefix + issueDetails);
+            }
             if (commentLines.Count == 0)
             {
                 return null;
             }
 
             return TextUtil.LineSeparate(commentLines);
+        }
+
+        public string? GetIssueDetails(string language)
+        {
+            var localizedValue = GetTranslation(language);
+            return localizedValue?.IssueType?.GetIssueDetails(this, localizedValue);
         }
     }
 }

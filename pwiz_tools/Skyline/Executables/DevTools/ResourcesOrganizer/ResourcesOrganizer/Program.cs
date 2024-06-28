@@ -73,9 +73,7 @@ namespace ResourcesOrganizer
             List<string> languages = verb.Language.ToList();
             if (languages.Count == 0)
             {
-                languages = otherDb.ResourcesFiles.Values
-                    .SelectMany(file => file.Entries.SelectMany(entry => entry.LocalizedValues.Keys)).Distinct()
-                    .ToList();
+                languages = otherDb.GetLanguages().ToList();
             }
 
             int errorCount = 0;
@@ -125,9 +123,37 @@ namespace ResourcesOrganizer
         static int DoExportLocalizationCsv(ExportLocalizationCsv options)
         {
             var database = GetDatabase(options);
-            using var fileSaver = new FileSaver(options.Output);
-            database.ExportLocalizationCsv(fileSaver.SafeName!, options.Language);
-            fileSaver.Commit();
+            var languages = options.Language.ToList();
+            if (languages.Count == 0)
+            {
+                languages = database.GetLanguages().ToList();
+            }
+
+            if (languages.Count == 0)
+            {
+                Console.Error.WriteLine("No languages");
+                return -1;
+            }
+            foreach (var language in languages)
+            {
+                string outputFile;
+                if (languages.Count == 1)
+                {
+                    outputFile = options.Output!;
+                }
+                else
+                {
+                    var path = Path.GetFullPath(options.Output!);
+                    var folder = Path.GetDirectoryName(path)!;
+                    var baseFile = Path.GetFileNameWithoutExtension(path);
+                    var extension = Path.GetExtension(path);
+                    outputFile = Path.Combine(folder, baseFile + "." + language + extension);
+                }
+                using var fileSaver = new FileSaver(outputFile);
+                database.ExportLocalizationCsv(fileSaver.SafeName!, language, out int entryCount);
+                fileSaver.Commit();
+                Console.Error.WriteLine("Wrote {0} strings to {1}", entryCount, outputFile);
+            }
             return 0;
         }
 

@@ -2,7 +2,7 @@
 {
     public class LocalizationIssueType(string name)
     {
-        public static string NeedsReviewPrefix = "Needs Review:";
+        public static readonly string NeedsReviewPrefix = "Needs Review:";
         public static readonly LocalizationIssueType NewResource = new LocalizationIssueType("New resource");
         public static readonly LocalizationIssueType EnglishTextChanged = new EnglishTextChangedType();
         public static readonly LocalizationIssueType InconsistentTranslation =
@@ -61,11 +61,11 @@
 
         public string Name { get; } = name;
 
-        public virtual string? FormatIssueAsComment(ResourceEntry resourceEntry, LocalizedValue localizedValue)
+        public virtual string? GetIssueDetails(ResourceEntry resourceEntry, LocalizedValue localizedValue)
         {
             if (resourceEntry.Invariant.IsLocalizableText)
             {
-                return NeedsReviewPrefix + Name;
+                return Name;
             }
 
             return null;
@@ -103,7 +103,7 @@
             private const string CurrentEnglish = "Current English:";
             private const string OldLocalized = "Old Localized:";
 
-            public override string? FormatIssueAsComment(ResourceEntry resourceEntry, LocalizedValue localizedValue)
+            public override string? GetIssueDetails(ResourceEntry resourceEntry, LocalizedValue localizedValue)
             {
                 if (localizedValue.ReviewedValue == localizedValue.ReviewedInvariantValue)
                 {
@@ -112,7 +112,7 @@
                 }
                 var lines = new List<string>
                 {
-                    NeedsReviewPrefix + Name,
+                    Name,
                     OldEnglish + localizedValue.ReviewedInvariantValue,
                     CurrentEnglish + resourceEntry.Invariant.Value,
                     OldLocalized + localizedValue.ReviewedValue

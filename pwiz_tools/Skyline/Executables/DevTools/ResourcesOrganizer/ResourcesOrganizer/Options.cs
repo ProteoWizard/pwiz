@@ -42,8 +42,8 @@ namespace ResourcesOrganizer
     [Verb("exportLocalizationCsv")]
     public class ExportLocalizationCsv : Options
     {
-        [Value(0, MetaName = "output", Required = true)]
-        public string Output { get; set; }
-        [Option("language")] public string Language { get; set; }
+        [Option("output", Default = "localization.csv")] 
+        public string? Output { get; set; }
+        [Option("language")] public IEnumerable<string> Language { get; set; }
     }
 }

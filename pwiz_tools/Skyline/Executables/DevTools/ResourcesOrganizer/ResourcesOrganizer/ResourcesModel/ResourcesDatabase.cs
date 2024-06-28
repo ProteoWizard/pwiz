@@ -98,6 +98,13 @@ namespace ResourcesOrganizer.ResourcesModel
             };
         }
 
+        public IEnumerable<string> GetLanguages()
+        {
+            return ResourcesFiles.Values
+                .SelectMany(file => file.Entries.SelectMany(entry => entry.LocalizedValues.Keys)).Distinct()
+                .OrderBy(lang => lang);
+        }
+
         public void SaveAtomic(string path)
         {
             using var fileSaver = new FileSaver(path);
@@ -453,11 +460,12 @@ namespace ResourcesOrganizer.ResourcesModel
             }
         }
 
-        public void ExportLocalizationCsv(string path, string language)
+        public void ExportLocalizationCsv(string path, string language, out int entryCount)
         {
+            entryCount = 0;
             using var stream = new FileStream(path, FileMode.Create);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-            writer.WriteLine(TextUtil.ToCsvRow("Name", "Comment", "English", language + " Translation", "Issue", "Original English", "File Count", "File"));
+            writer.WriteLine(TextUtil.ToCsvRow("Name", "Comment", "English", language + " Translation", "Issue", "File"));
             foreach (var invariantEntry in GetInvariantResources().OrderBy(kvp=>kvp.Key))
             {
                 var invariantKey = invariantEntry.Key;
@@ -475,6 +483,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 if (localizedText == null || issueType != null)
                 {
                     writer.WriteLine(TextUtil.ToCsvRow(invariantKey.Name, invariantKey.Comment, invariantKey.Value, localizedText, issueType?.Name, originalEnglish, invariantEntry.Value.Count.ToString(), invariantKey.File));
+                    entryCount++;
                 }
             }
         }
