@@ -303,8 +303,7 @@
     <value>5</value>
   </data>
   <data name="open.Text" xml:space="preserve">
-    <value>&amp;Open</value>
-    <comment>Needs Review:New resource</comment>
+    <value>開く(&amp;O)</value>
   </data>
   <data name="&gt;&gt;open.Name" xml:space="preserve">
     <value>open</value>
@@ -331,8 +330,7 @@
     <value>6</value>
   </data>
   <data name="cancel.Text" xml:space="preserve">
-    <value>Cancel</value>
-    <comment>Needs Review:New resource</comment>
+    <value>キャンセル</value>
   </data>
   <data name="&gt;&gt;cancel.Name" xml:space="preserve">
     <value>cancel</value>
@@ -442,15 +440,13 @@
     <value>0</value>
   </data>
   <data name="colName.Text" xml:space="preserve">
-    <value>Name</value>
-    <comment>Needs Review:New resource</comment>
+    <value>名前</value>
   </data>
   <data name="colName.Width" type="System.Int32, mscorlib">
     <value>175</value>
   </data>
   <data name="colSize.Text" xml:space="preserve">
-    <value>Size</value>
-    <comment>Needs Review:New resource</comment>
+    <value>サイズ</value>
   </data>
   <data name="colSize.Width" type="System.Int32, mscorlib">
     <value>75</value>
@@ -584,8 +580,7 @@
     <value>28, 28</value>
   </data>
   <data name="back.Text" xml:space="preserve">
-    <value>Back</value>
-    <comment>Needs Review:New resource</comment>
+    <value>戻る</value>
   </data>
   <data name="forward.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -681,7 +676,6 @@
   </data>
   <data name="urlLink.Text" xml:space="preserve">
     <value>&lt;placeholder&gt;</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;urlLink.Name" xml:space="preserve">
     <value>urlLink</value>
