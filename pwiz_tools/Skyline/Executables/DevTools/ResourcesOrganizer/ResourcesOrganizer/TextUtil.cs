@@ -62,9 +62,8 @@ namespace ResourcesOrganizer
             using var stringReader = new StringReader(xml);
             while (stringReader.ReadLine() is { } line)
             {
-                lines.Add(line.Replace("<value />", "<value></value>"));
+                lines.Add(line);
             }
-
             return string.Join(Environment.NewLine, lines);
         }
 

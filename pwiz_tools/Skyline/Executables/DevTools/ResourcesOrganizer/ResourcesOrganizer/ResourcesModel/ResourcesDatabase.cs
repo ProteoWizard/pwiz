@@ -372,9 +372,18 @@ namespace ResourcesOrganizer.ResourcesModel
                                     .Distinct().ToList();
                                 if (reviewedFuzzyTranslations.Count == 1)
                                 {
-                                    localizedValues.Add(language,
-                                        new LocalizedValue(entry.Invariant.Value,
-                                            new EnglishTextChanged(oldEnglishValues[0], reviewedFuzzyTranslations[0])));
+                                    if (oldEnglishValues[0] == reviewedFuzzyTranslations[0])
+                                    {
+                                        // Old translation used to be the same as the English, just use the
+                                        // new English
+                                        localizedValues.Add(language, new LocalizedValue(entry.Invariant.Value));
+                                    }
+                                    else
+                                    {
+                                        localizedValues.Add(language,
+                                            new LocalizedValue(entry.Invariant.Value,
+                                                new EnglishTextChanged(oldEnglishValues[0], reviewedFuzzyTranslations[0])));
+                                    }
                                     continue;
                                 }
                             }

@@ -25,7 +25,7 @@ popd
 pushd newrelease
 %ResourcesOrganizerExe% add --db ..\newrelease.db %ArgumentsForAdd%
 popd
-%ResourcesOrganizerExe% importtranslations --db newrelease.db oldrelease.db --output newstrings.db --language ja zh-CHS
+%ResourcesOrganizerExe% importLastVersion --db newrelease.db oldrelease.db --output newstrings.db --language ja zh-CHS
 %ResourcesOrganizerExe% exportResx --db newstrings.db --overrideAll newresxfiles.zip
 %ResourcesOrganizerExe% exportLocalizationCsv --db newstrings.db Japanese.csv --language ja
 %ResourcesOrganizerExe% exportLocalizationCsv --db newstrings.db Chinese.csv --language zh-CHS
