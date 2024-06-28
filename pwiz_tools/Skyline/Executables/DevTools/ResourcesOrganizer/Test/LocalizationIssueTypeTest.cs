@@ -1,5 +1,4 @@
-﻿using ResourcesOrganizer;
-using ResourcesOrganizer.ResourcesModel;
+﻿using ResourcesOrganizer.ResourcesModel;
 
 namespace Test
 {
@@ -19,7 +18,7 @@ namespace Test
             var newResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v24." + resxFileName), resxFileName);
             var newDatabase = ResourcesDatabase.Empty;
             newDatabase = newDatabase with { ResourcesFiles = newDatabase.ResourcesFiles.SetItem(resxFileName, newResourcesFile) };
-            var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, languages, out _, out _);
+            var withImportedTranslations = newDatabase.ImportLastVersion(oldDatabase, languages, out _, out _);
             var importedTranslationPath = Path.Combine(TestContext.TestRunDirectory!, "importTranslations.db");
             VerifyRoundTrip(withImportedTranslations, importedTranslationPath);
 
@@ -32,13 +31,13 @@ namespace Test
             {
                 var localizedValue = copyrightEntry.GetTranslation(language);
                 Assert.IsNotNull(localizedValue);
-                Assert.AreEqual(LocalizationIssueType.EnglishTextChanged, localizedValue.IssueType);
-                Assert.IsNotNull(localizedValue.ReviewedValue);
-                var currentLocalizedValue = localizedValue.IssueType!.GetLocalizedText(copyrightEntry, localizedValue);
+                var englishTextChanged = localizedValue.Issue as EnglishTextChanged;
+                Assert.IsNotNull(englishTextChanged);
+                Assert.AreEqual(copyrightEntry.Invariant.Value, localizedValue.Value);
                 var v23LocalizedValue = v23Entry.GetTranslation(language);
                 Assert.IsNotNull(v23LocalizedValue);
-                Assert.AreEqual(v23LocalizedValue.OriginalValue, currentLocalizedValue);
-                Assert.AreEqual(localizedValue.ReviewedInvariantValue, v23Entry.Invariant.Value);
+                Assert.AreEqual(v23LocalizedValue.Value, englishTextChanged.ReviewedLocalizedValue);
+                Assert.AreEqual(englishTextChanged.ReviewedInvariantValue, v23Entry.Invariant.Value);
             }
 
             var exportedPath = Path.Combine(runDirectory, "exported.resx");
@@ -52,12 +51,13 @@ namespace Test
             {
                 var localizedValue = roundTripCopyrightEntry.GetTranslation(language);
                 Assert.IsNotNull(localizedValue);
-                Assert.AreEqual(LocalizationIssueType.EnglishTextChanged, localizedValue.IssueType);
+                var englishTextChanged = localizedValue.Issue as EnglishTextChanged;
+                Assert.IsNotNull(englishTextChanged);
                 var v23LocalizedValue = v23Entry.GetTranslation(language);
                 Assert.IsNotNull(v23LocalizedValue);
-                Assert.IsNull(localizedValue.ReviewedValue);
-                Assert.AreEqual(v23LocalizedValue.OriginalValue, localizedValue.OriginalValue);
-                Assert.AreEqual(localizedValue.ReviewedInvariantValue, v23Entry.Invariant.Value);
+                Assert.AreEqual(roundTripCopyrightEntry.Invariant.Value, localizedValue.Value);
+                Assert.AreEqual(v23LocalizedValue.Value, englishTextChanged.ReviewedLocalizedValue);
+                Assert.AreEqual(v23Entry.Invariant.Value, englishTextChanged.ReviewedInvariantValue);
             }
 
             var roundTripSoftwareVersion = roundTrip.FindEntry("textSoftwareVersion.Text");
@@ -66,8 +66,8 @@ namespace Test
             {
                 var localizedValue = roundTripSoftwareVersion.GetTranslation(language);
                 Assert.IsNotNull(localizedValue);
-                Assert.AreEqual(LocalizationIssueType.NewResource, localizedValue.IssueType);
-                Assert.AreEqual(roundTripSoftwareVersion.Invariant.Value, localizedValue.CurrentValue);
+                Assert.AreEqual(LocalizationIssue.NewResource, localizedValue.Issue);
+                Assert.AreEqual(roundTripSoftwareVersion.Invariant.Value, localizedValue.Value);
             }
         }
     }

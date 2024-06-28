@@ -123,12 +123,9 @@ namespace ResourcesOrganizer.ResourcesModel
                     entry = entry with
                     {
                         LocalizedValues = entry.LocalizedValues.SetItem(language,
-                            new LocalizedValue
-                            {
-                                OriginalValue = element.Element("value")!.Value,
-                            })
+                            new LocalizedValue(element.Element("value")!.Value,
+                                LocalizationIssue.ParseComment(comment)))
                     };
-                    entry = LocalizationIssueType.ParseComment(entry, language, comment);
                     entries[entryIndex] = entry;
                 }
             }
@@ -283,13 +280,9 @@ namespace ResourcesOrganizer.ResourcesModel
 
 
                     matchCount++;
-                    LocalizedValue localizedValue = new LocalizedValue { OriginalValue = record.Translation };
+                    LocalizedValue localizedValue =
+                        new LocalizedValue(record.Translation, LocalizationIssue.ParseIssue(record.Issue));
                     entry = entry with { LocalizedValues = entry.LocalizedValues.SetItem(language, localizedValue) };
-                    if (!string.IsNullOrEmpty(record.Issue))
-                    {
-                        entry = LocalizationIssueType.ParseComment(entry, language,
-                            LocalizationIssueType.NeedsReviewPrefix + record.Issue);
-                    }
 
                     if (!Equals(unchangedEntry.GetTranslation(language), entry.GetTranslation(language)))
                     {

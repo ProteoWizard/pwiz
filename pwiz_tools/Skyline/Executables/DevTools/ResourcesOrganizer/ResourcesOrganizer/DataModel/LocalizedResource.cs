@@ -9,19 +9,9 @@ namespace ResourcesOrganizer.DataModel
         public long InvariantResourceId { get; set; }
         [Property]
         public string? Language { get; set; }
-        /// <summary>
-        /// Value found in the .resx that was read using "add" command
-        /// </summary>
         [Property]
-        public string? OriginalValue { get; set; }
-        /// <summary>
-        /// Value that was imported using "importtranslations" command
-        /// </summary>
+        public string? Value { get; set; }
         [Property]
-        public string? ReviewedValue { get; set; }
-        [Property]
-        public string? IssueType { get; set; }
-        [Property]
-        public string? ReviewedInvariantValue { get; set; }
+        public string? Issue { get; set; }
     }
 }

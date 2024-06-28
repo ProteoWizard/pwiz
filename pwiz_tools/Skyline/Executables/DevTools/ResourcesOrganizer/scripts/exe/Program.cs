@@ -10,8 +10,8 @@ namespace ResourcesOrganizer
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-            return Parser.Default.ParseArguments<AddVerb, ImportLastVersion, ExportResx, ExportLocalizationCsv, ImportLocalizationCsv>(args)
-                .MapResult<AddVerb, ImportLastVersion, ExportResx, ExportLocalizationCsv, ImportLocalizationCsv, int>(
+            return Parser.Default.ParseArguments<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv, ImportLocalizationCsv>(args)
+                .MapResult<AddVerb, ImportTranslations, ExportResx, ExportLocalizationCsv, ImportLocalizationCsv, int>(
                     DoAdd, 
                     DoImportTranslations,
                     DoExportResx,
@@ -67,7 +67,7 @@ namespace ResourcesOrganizer
             return 0;
         }
 
-        static int DoImportTranslations(ImportLastVersion verb)
+        static int DoImportTranslations(ImportTranslations verb)
         {
             var database = GetDatabase(verb);
             if (database == null)
@@ -75,7 +75,7 @@ namespace ResourcesOrganizer
                  Console.Error.WriteLine("Database {0} does not exist", verb.DbFile);
                  return -1;
             }
-            var otherDb = ResourcesDatabase.ReadDatabase(verb.OldDb!);
+            var otherDb = ResourcesDatabase.ReadDatabase(verb.OldDb);
             List<string> languages = verb.Language.ToList();
             if (languages.Count == 0)
             {
@@ -104,7 +104,7 @@ namespace ResourcesOrganizer
             {
                 return -1;
             }
-            database = database.ImportLastVersion(otherDb, languages, out int reviewedCount, out int totalCount);
+            database = database.ImportTranslations(otherDb, languages, out int reviewedCount, out int totalCount);
             Console.Error.WriteLine("Imported reviewed translations for {0}/{1} resources into {2}", reviewedCount, totalCount, verb.DbFile);
             database.SaveAtomic(verb.Output ?? verb.DbFile);
             return 0;

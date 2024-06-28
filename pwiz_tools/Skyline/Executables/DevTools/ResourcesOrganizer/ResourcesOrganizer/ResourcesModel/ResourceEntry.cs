@@ -20,14 +20,9 @@ namespace ResourcesOrganizer.ResourcesModel
 
         public ResourceEntry Normalize()
         {
-            var localizedValues = LocalizedValues
-                .Where(kvp => kvp.Value.OriginalValue != null || kvp.Value.ReviewedValue != Invariant.Value)
-                .ToImmutableDictionary(kvp => kvp.Key, kvp => new LocalizedValue 
-                    { ReviewedValue = kvp.Value.ReviewedValue ?? kvp.Value.OriginalValue });
             return this with
             {
                 Position = 0,
-                LocalizedValues = localizedValues
             };
         }
 
@@ -62,28 +57,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 return Invariant.Value;
             }
 
-            var localizedValue = GetTranslation(language);
-            if (localizedValue == null)
-            {
-                return null;
-            }
-
-            if (localizedValue.IssueType == null)
-            {
-                if (localizedValue.OriginalValue == null)
-                {
-                    if (localizedValue.ReviewedValue == null || localizedValue.ReviewedValue == Invariant.Value)
-                    {
-                        return null;
-                    }
-
-                    return localizedValue.ReviewedValue;
-                }
-
-                return localizedValue.ReviewedValue ?? localizedValue.OriginalValue;
-            }
-
-            return localizedValue.IssueType.GetLocalizedText(this, localizedValue);
+            return GetTranslation(language)?.Value;
         }
 
         public string? GetComment(string? language)
@@ -102,7 +76,7 @@ namespace ResourcesOrganizer.ResourcesModel
             var issueDetails = GetIssueDetails(language);
             if (issueDetails != null)
             {
-                commentLines.Add(LocalizationIssueType.NeedsReviewPrefix + issueDetails);
+                commentLines.Add(LocalizationIssue.NeedsReviewPrefix + issueDetails);
             }
             if (commentLines.Count == 0)
             {
@@ -115,7 +89,16 @@ namespace ResourcesOrganizer.ResourcesModel
         public string? GetIssueDetails(string language)
         {
             var localizedValue = GetTranslation(language);
-            return localizedValue?.IssueType?.GetIssueDetails(this, localizedValue);
+            return localizedValue?.Issue?.GetIssueDetails(this);
+        }
+
+        public LocalizedValue LocalizedValueIssue(LocalizationIssue issue)
+        {
+            if (issue.AppliesToTextOnly && !Invariant.IsLocalizableText)
+            {
+                return new LocalizedValue(Invariant.Value);
+            }
+            return new LocalizedValue(Invariant.Value, issue);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace Test
             var newResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v24." + filename), filename);
             var newDatabase = ResourcesDatabase.Empty;
             newDatabase = newDatabase with { ResourcesFiles = newDatabase.ResourcesFiles.SetItem(filename, newResourcesFile) };
-            var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, Languages, out _, out _);
+            var withImportedTranslations = newDatabase.ImportLastVersion(oldDatabase, Languages, out _, out _);
 
             var entryName = "button1.Location";
             var importedFile = withImportedTranslations.ResourcesFiles.Values.Single();

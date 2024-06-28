@@ -22,13 +22,13 @@ namespace Test
                 ResourcesDatabase.Empty.AddFile(oldResourcesFile);
             var newResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v24." + fileName), fileName);
             var newDatabase = ResourcesDatabase.Empty.AddFile(newResourcesFile);
-            var withImportedTranslations = newDatabase.ImportTranslations(oldDatabase, Languages, out _, out _);
+            var withImportedTranslations = newDatabase.ImportLastVersion(oldDatabase, Languages, out _, out _);
             var fileWithImported = withImportedTranslations.ResourcesFiles.Values.Single();
             var entry = fileWithImported.FindEntry("btnAddFile.Location");
             Assert.IsNotNull(entry);
             var localizedValue = entry.GetTranslation("ja");
             Assert.IsNotNull(localizedValue);
-            Assert.IsNotNull(localizedValue.IssueType);
+            Assert.IsNotNull(localizedValue.Issue);
             var exportedDoc = fileWithImported.ExportResx("ja", true);
             var dataItem = exportedDoc.Root!.Elements("data").Single(el => el.Attribute("name")?.Value == entry.Name);
             var comment = dataItem.Elements("comment").SingleOrDefault();

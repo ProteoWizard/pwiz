@@ -73,6 +73,11 @@ namespace ResourcesOrganizer
             return string.Join(NewLine, lines);
         }
 
+        public static string LineSeparate(params string[] lines)
+        {
+            return string.Join(NewLine, lines);
+        }
+
         public static string QuoteAndSeparate(IEnumerable<string> values)
         {
             return string.Join(",", values.Select(Quote));

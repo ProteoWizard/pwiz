@@ -40,7 +40,10 @@ namespace Test
                 {
                     var entry = resourcesFile.Entries[i];
                     var roundTripEntry = roundTripFile.Entries[i];
-                    Assert.AreEqual(entry, roundTripEntry);
+                    if (!Equals(entry, roundTripEntry))
+                    {
+                        Assert.AreEqual(entry, roundTripEntry);
+                    }
                 }
             }
         }
