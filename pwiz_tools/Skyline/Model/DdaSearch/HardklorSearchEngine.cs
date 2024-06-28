@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using pwiz.Common.Collections;
 using System.Text.RegularExpressions;
+using static pwiz.Skyline.Model.MultiFileLoader;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -1073,7 +1074,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var searchedFiles = 0;
                 var allFilesSearched = new ManualResetEventSlim(false);
                 var allFilesAligned = new ManualResetEventSlim(false);
-                var rawFileThreads = Math.Min(ParallelEx.GetThreadCount() - 1, RawDataFiles.Count);
+                var rawFileThreads = MultiFileLoader.GetOptimalThreadCount(null, RawDataFiles.Count, ImportResultsSimultaneousFileOptions.many);
                 var progressMonitorForAlignment = new ProgressMonitorForFile(DdaSearchResources.HardklorSearchEngine_Generate_Align_replicates, _parallelProgressMonitor);
                 var totalAlignmentSteps = HardklorSearchEngine.TotalAlignmentSteps(RawDataFiles.Count); // Each file load is one step, then it's n by n comparison, and final combination step
 
