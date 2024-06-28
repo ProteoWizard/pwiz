@@ -450,7 +450,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     continue;
                 }
 
-                var issueDetailsGroups = invariantEntry.Value.GroupBy(entry => entry.GetIssueDetails(language)).Where(group=>group.Key != null).ToList();
+                var issueDetailsGroups = invariantEntry.Value.GroupBy(entry => entry.GetTranslation(language)?.Issue?.GetIssueDetails(null)).Where(group=>group.Key != null).ToList();
                 var issueDetails = TextUtil.LineSeparate(issueDetailsGroups.Select(group => group.Key!));
                 var localizedValues = invariantEntry.Value.Select(value => value.GetTranslation(language))
                     .OfType<LocalizedValue>().ToList();
