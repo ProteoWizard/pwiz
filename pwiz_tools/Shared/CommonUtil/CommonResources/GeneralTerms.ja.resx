@@ -122,26 +122,22 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
-    <comment>Needs Review:New resource</comment>
+    <value>キャンセル</value>
   </data>
   <data name="Ignore" xml:space="preserve">
     <value>Ignore</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="No" xml:space="preserve">
-    <value>No</value>
-    <comment>Needs Review:New resource</comment>
+    <value>いいえ</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="Retry" xml:space="preserve">
-    <value>Retry</value>
-    <comment>Needs Review:New resource</comment>
+    <value>再試行</value>
   </data>
   <data name="Yes" xml:space="preserve">
-    <value>Yes</value>
-    <comment>Needs Review:New resource</comment>
+    <value>はい</value>
   </data>
 </root>
