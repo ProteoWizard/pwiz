@@ -379,6 +379,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify a valid path to a Skyline document to learn from..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_docume" +
+                        "nt_to_learn_from_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify an output file path..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path {
