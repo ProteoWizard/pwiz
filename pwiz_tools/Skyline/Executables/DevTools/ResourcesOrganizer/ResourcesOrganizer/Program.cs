@@ -200,7 +200,7 @@ namespace ResourcesOrganizer
                     out int matchedEntryCount, out int changedEntryCount);
                 Console.Out.WriteLine("Read {0} rows from {1} and changed {2}/{3} matching records in resx files", rowCount, languageFilePath.FilePath, changedEntryCount, matchedEntryCount);
             }
-
+            database.SaveAtomic(options.DbFile);
             return 0;
         }
 

@@ -271,7 +271,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 var entry = unchangedEntry;
                 foreach (var record in records[entry.Invariant.Name!])
                 {
-                    if (record.File != null && record.File != RelativePath)
+                    if (!string.IsNullOrEmpty(record.File) && record.File != RelativePath)
                     {
                         continue;
                     }
