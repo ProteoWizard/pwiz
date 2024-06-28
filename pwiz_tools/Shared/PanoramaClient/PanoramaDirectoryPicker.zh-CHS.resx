@@ -157,8 +157,7 @@
     <value>4</value>
   </data>
   <data name="cancel.Text" xml:space="preserve">
-    <value>Cancel</value>
-    <comment>Needs Review:New resource</comment>
+    <value>取消</value>
   </data>
   <data name="&gt;&gt;cancel.Name" xml:space="preserve">
     <value>cancel</value>
@@ -185,8 +184,7 @@
     <value>3</value>
   </data>
   <data name="open.Text" xml:space="preserve">
-    <value>Open</value>
-    <comment>Needs Review:New resource</comment>
+    <value>打开</value>
   </data>
   <data name="&gt;&gt;open.Name" xml:space="preserve">
     <value>open</value>
@@ -224,8 +222,7 @@
     <value>28, 28</value>
   </data>
   <data name="back.Text" xml:space="preserve">
-    <value>Back</value>
-    <comment>Needs Review:New resource</comment>
+    <value>后退</value>
   </data>
   <data name="forward.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -289,7 +286,6 @@
   </data>
   <data name="urlLink.Text" xml:space="preserve">
     <value>&lt;placeholder&gt;</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;urlLink.Name" xml:space="preserve">
     <value>urlLink</value>
