@@ -351,6 +351,10 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
             progressMonitor ??= new SilentProgressMonitor(cancellationToken);
+            RowItem[] rowItems;
+            DsvWriter dsvWriter;
+            IList<PropertyDescriptor> itemProperties;
+            int rowCount;
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
@@ -361,18 +365,31 @@ namespace pwiz.Skyline.Controls.Databinding
                         bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
                     }
                 }
+
+                itemProperties = bindingListSource.GetItemProperties(null).Cast<PropertyDescriptor>().ToList();
+                rowCount = bindingListSource.Count;
+                rowItems = bindingListSource.Cast<RowItem>().ToArray();
+                dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                     .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
-
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
-                if (progressMonitor.IsCanceled)
-                    return false;
-
-                writer.Flush();
-                progressMonitor.UpdateProgress(status = status.Complete());
             }
+
+            using var rowItemEnumerator = NullingEnumerator(rowItems);
+            WriteRowItems(progressMonitor, ref status, writer, dsvWriter, itemProperties, rowCount, rowItemEnumerator);
+            writer.Flush();
+            progressMonitor.UpdateProgress(status = status.Complete());
             return true;
         }
+
+        private static IEnumerator<T> NullingEnumerator<T>(T[] array)
+        {
+            for (int index = 0; index < array.Length; index++)
+            {
+                yield return array[index];
+                array[index] = default;
+            }
+        }
+
 
         protected override bool SafeWriteToFile(Control owner, string fileName, Func<Stream, bool> writeFunc)
         {

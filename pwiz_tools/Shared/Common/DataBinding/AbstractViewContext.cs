@@ -197,25 +197,31 @@ namespace pwiz.Common.DataBinding
         protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, char separator)
         {
             var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
-            IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(Array.Empty<PropertyDescriptor>()).Cast<PropertyDescriptor>().ToArray();
-            dsvWriter.WriteHeaderRow(writer, properties);
-            var rowCount = rows.Count;
+            using var rowItemEnumerator = bindingListSource.Cast<RowItem>().GetEnumerator();
+            WriteRowItems(progressMonitor, ref status, writer, dsvWriter, properties, bindingListSource.Count, rowItemEnumerator);
+        }
+
+        protected void WriteRowItems(IProgressMonitor progressMonitor, ref IProgressStatus status, 
+            TextWriter writer, DsvWriter dsvWriter, IList<PropertyDescriptor> properties, int rowCount, IEnumerator<RowItem> rowEnumerator)
+        {
             int startPercent = status.PercentComplete;
-            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+            int rowIndex = 0;
+            while (rowEnumerator.MoveNext())
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                int percentComplete = startPercent + (rowIndex*(100 - startPercent)/rowCount);
+                int percentComplete = startPercent + (rowIndex * (100 - startPercent) / rowCount);
                 if (percentComplete > status.PercentComplete)
                 {
                     status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
                         .ChangePercentComplete(percentComplete);
                     progressMonitor.UpdateProgress(status);
                 }
-                dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
+                dsvWriter.WriteDataRow(writer, rowEnumerator.Current, properties);
+                rowIndex++;
             }
         }
 
