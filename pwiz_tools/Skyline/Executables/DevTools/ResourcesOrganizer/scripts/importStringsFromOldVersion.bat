@@ -1,6 +1,8 @@
+@echo off
 REM creates the following files:
-REM newrelease.zip: resx files to be committed to new release branch. These files contain either the localized string from the old release or the English text if anything has changed
-REM newjapanesestrings.csv, newchinesestrings.csv: files to be sent to localizers
+REM newrelease.zip: resx files to be committed to new release branch. 
+REM These files contain either the localized string from the old release or the English text if anything has changed
+REM <comment> tags are added to the strings in .ja and .zh-CHS resx files which were not present in the last version
 
 
 REM Syntax used in this batch file:
@@ -27,5 +29,3 @@ pushd newrelease
 popd
 %ResourcesOrganizerExe% importLastVersion --db newrelease.db oldrelease.db --output newstrings.db --language ja zh-CHS
 %ResourcesOrganizerExe% exportResx --db newstrings.db --overrideAll newresxfiles.zip
-%ResourcesOrganizerExe% exportLocalizationCsv --db newstrings.db Japanese.csv --language ja
-%ResourcesOrganizerExe% exportLocalizationCsv --db newstrings.db Chinese.csv --language zh-CHS
