@@ -721,8 +721,7 @@
     <value>ピーク面積の中央値</value>
   </data>
   <data name="Message">
-    <value>Message</value>
-    <comment>Needs Review:New resource</comment>
+    <value>メッセージ</value>
   </data>
   <data name="Min">
     <value>最小</value>

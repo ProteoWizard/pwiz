@@ -356,8 +356,7 @@
 上記にリストしたディレクトリの1つにオリジナルのスペクトルファイルを入れた後、もう一度構築を試みるには「再試行」をクリックしてください。</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
-    <value>Add spectral library</value>
-    <comment>Needs Review:New resource</comment>
+    <value>スペクトルライブラリを追加</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
     <value>Building detected features library</value>

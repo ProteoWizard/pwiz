@@ -356,8 +356,7 @@
 将原始谱图文件放在上面列出的其中一个目录后，单击 "重试" 再次尝试构建。</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
-    <value>Add spectral library</value>
-    <comment>Needs Review:New resource</comment>
+    <value>添加谱图库</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
     <value>Building detected features library</value>

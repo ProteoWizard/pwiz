@@ -538,12 +538,10 @@ http://localhost:8080</value>
     <value>指定提供的 ZIP 文件中的冲突的自定义注释是否应覆盖（“true”）或跳过（“false”）现有注释。</value>
   </data>
   <data name="CommandArgs_GROUP_SETTINGS_Transition_Settings" xml:space="preserve">
-    <value>Transition Settings</value>
-    <comment>Needs Review:New resource</comment>
+    <value>离子对设置</value>
   </data>
   <data name="CommandArgs_GROUP_SETTINGS_Peptide_Settings" xml:space="preserve">
-    <value>Peptide Settings</value>
-    <comment>Needs Review:New resource</comment>
+    <value>肽段设置</value>
   </data>
   <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
     <value>路径/到/文件</value>

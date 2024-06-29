@@ -721,8 +721,7 @@
     <value>中位数峰面积</value>
   </data>
   <data name="Message">
-    <value>Message</value>
-    <comment>Needs Review:New resource</comment>
+    <value>消息</value>
   </data>
   <data name="Min">
     <value>最小</value>

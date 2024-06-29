@@ -126,15 +126,13 @@
     <value>150</value>
   </data>
   <data name="operationColumn.HeaderText" xml:space="preserve">
-    <value>Operation</value>
-    <comment>Needs Review:New resource</comment>
+    <value>操作</value>
   </data>
   <data name="operationColumn.Width" type="System.Int32, mscorlib">
     <value>150</value>
   </data>
   <data name="valueColumn.HeaderText" xml:space="preserve">
-    <value>Value</value>
-    <comment>Needs Review:New resource</comment>
+    <value>值</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -379,11 +377,7 @@
     <value>12</value>
   </data>
   <data name="lblDescription.Text" xml:space="preserve">
-    <value>利用 FASTA 文件或背景蛋白质组的信息，将文档中的所有肽段重组为关联的蛋白质或蛋白质组。现有蛋白质的关联性将被丢弃。</value>
-    <comment>Needs Review:English text changed
-Old English:Use either a FASTA file or a background proteome to reorganize all document peptides into associated proteins or protein groups. Existing protein associations will be discarded.
-Current English:Description
-Old Localized:利用 FASTA 文件或背景蛋白质组的信息，将文档中的所有肽段重组为关联的蛋白质或蛋白质组。现有蛋白质的关联性将被丢弃。</comment>
+    <value>描述</value>
   </data>
   <data name="lblDescription.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

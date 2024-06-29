@@ -160,8 +160,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
-    <value>Remove</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>删除</value>
   </data>
   <data name="btnUp.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -170,8 +169,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>Up</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>向上</value>
   </data>
   <data name="btnDown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -180,8 +178,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-    <value>Down</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>向下</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>126, 0</value>
