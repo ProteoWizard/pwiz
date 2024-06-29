@@ -191,23 +191,17 @@ namespace pwiz.Common.DataBinding
             BindingListSource bindingListSource, char separator)
         {
             IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, separator);
+            WriteDataWithStatus(progressMonitor, ref status, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
         }
 
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, char separator)
+        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, RowItemEnumerator rowItemEnumerator, char separator)
         {
-            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
-            IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(Array.Empty<PropertyDescriptor>()).Cast<PropertyDescriptor>().ToArray();
-            using var rowItemEnumerator = bindingListSource.Cast<RowItem>().GetEnumerator();
-            WriteRowItems(progressMonitor, ref status, writer, dsvWriter, properties, bindingListSource.Count, rowItemEnumerator);
-        }
-
-        protected void WriteRowItems(IProgressMonitor progressMonitor, ref IProgressStatus status, 
-            TextWriter writer, DsvWriter dsvWriter, IList<PropertyDescriptor> properties, int rowCount, IEnumerator<RowItem> rowEnumerator)
-        {
+            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
+            dsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
+            var rowCount = rowItemEnumerator.Count;
             int startPercent = status.PercentComplete;
             int rowIndex = 0;
-            while (rowEnumerator.MoveNext())
+            while (rowItemEnumerator.MoveNext())
             {
                 if (progressMonitor.IsCanceled)
                 {
@@ -220,7 +214,7 @@ namespace pwiz.Common.DataBinding
                         .ChangePercentComplete(percentComplete);
                     progressMonitor.UpdateProgress(status);
                 }
-                dsvWriter.WriteDataRow(writer, rowEnumerator.Current, properties);
+                dsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
                 rowIndex++;
             }
         }
