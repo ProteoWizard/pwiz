@@ -98,22 +98,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質を追加済み</value>
+    <value>{0}タンパク質を追加済み</value>
   </data>
   <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質のインポートが完了</value>
+    <value>{0}タンパク質のインポートが完了</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
-    <value xml:space="preserve">既存のペプチドをリスト中</value>
+    <value>既存のペプチドをリスト中</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_proteins" xml:space="preserve">
-    <value xml:space="preserve">タンパク質をリスト中</value>
+    <value>タンパク質をリスト中</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質の消化中</value>
+    <value>{0}タンパク質の消化中</value>
   </data>
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質を{1}ユニークペプチドに消化済み</value>
+    <value>{0}タンパク質を{1}ユニークペプチドに消化済み</value>
   </data>
   <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>変更を保存中</value>
