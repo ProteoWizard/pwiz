@@ -160,8 +160,7 @@
     <value>ライブラリ内にあるこのペプチドに対して測定されたスペクトルの数</value>
   </data>
   <data name="Adduct" xml:space="preserve">
-    <value>Adduct</value>
-    <comment>Needs Review:New resource</comment>
+    <value>付加物</value>
   </data>
   <data name="FileName" xml:space="preserve">
     <value>ファイル名</value>

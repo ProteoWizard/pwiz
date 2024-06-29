@@ -326,8 +326,7 @@
     <value>6</value>
   </data>
   <data name="lblSummary.Text" xml:space="preserve">
-    <value>Summary</value>
-    <comment>Needs Review:New resource</comment>
+    <value>概要</value>
   </data>
   <data name="&gt;&gt;lblSummary.Name" xml:space="preserve">
     <value>lblSummary</value>

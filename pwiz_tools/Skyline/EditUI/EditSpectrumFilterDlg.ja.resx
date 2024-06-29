@@ -126,15 +126,13 @@
     <value>150</value>
   </data>
   <data name="operationColumn.HeaderText" xml:space="preserve">
-    <value>Operation</value>
-    <comment>Needs Review:New resource</comment>
+    <value>操作</value>
   </data>
   <data name="operationColumn.Width" type="System.Int32, mscorlib">
     <value>150</value>
   </data>
   <data name="valueColumn.HeaderText" xml:space="preserve">
-    <value>Value</value>
-    <comment>Needs Review:New resource</comment>
+    <value>値</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">

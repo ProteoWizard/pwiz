@@ -221,8 +221,7 @@
     <value>212, 22</value>
   </data>
   <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
-    <value>Formatting...</value>
-    <comment>Needs Review:New resource</comment>
+    <value>格式化...</value>
   </data>
   <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>

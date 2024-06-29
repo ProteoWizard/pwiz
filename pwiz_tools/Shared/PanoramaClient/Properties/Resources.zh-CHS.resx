@@ -158,15 +158,13 @@
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
-    <value>There was an error authenticating user credentials on the server {0}.</value>
-    <comment>Needs Review:New resource</comment>
+    <value>验证服务器 {0} 上的用户凭据时出错。</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
     <value>文件夹{0}不存在于 Panorama 服务器{1}中</value>
   </data>
   <data name="WebPanoramaClient_DownloadFile_Downloading__0_" xml:space="preserve">
-    <value>Downloading {0}</value>
-    <comment>Needs Review:New resource</comment>
+    <value>下载{0}</value>
   </data>
   <data name="Icojam-Blueberry-Basic-Arrow-up" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -267,8 +265,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
-    <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
-    <comment>Needs Review:New resource</comment>
+    <value>服务器未返回有效的 JSON 响应。{0} 并非 Panorama  服务器。</value>
   </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
     <value>There was an error getting the status of the document import pipeline job.</value>

@@ -612,7 +612,6 @@
   </data>
   <data name="SkylineWindow_Add" xml:space="preserve">
     <value>添加</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_AddMolecule_Add_custom_product_ion__0_" xml:space="preserve">
     <value>添加自定义子离子 {0}</value>

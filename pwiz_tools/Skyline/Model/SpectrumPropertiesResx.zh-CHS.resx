@@ -160,8 +160,7 @@
     <value>谱图库中该肽段的测量谱图数量</value>
   </data>
   <data name="Adduct" xml:space="preserve">
-    <value>Adduct</value>
-    <comment>Needs Review:New resource</comment>
+    <value>加合物</value>
   </data>
   <data name="FileName" xml:space="preserve">
     <value>文件名</value>
@@ -170,8 +169,7 @@
     <value>文件路径</value>
   </data>
   <data name="Formula" xml:space="preserve">
-    <value>Formula</value>
-    <comment>Needs Review:New resource</comment>
+    <value>公式</value>
   </data>
   <data name="IdFileName" xml:space="preserve">
     <value>Id 文件名</value>
