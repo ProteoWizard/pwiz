@@ -369,6 +369,8 @@ namespace pwiz.Skyline.Controls.Databinding
             progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                 .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
             WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
+            if (progressMonitor.IsCanceled)
+                return false;
             writer.Flush();
             progressMonitor.UpdateProgress(status = status.Complete());
             return true;
