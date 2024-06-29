@@ -98,22 +98,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">添加 {0} 个蛋白质</value>
+    <value>添加 {0} 个蛋白质</value>
   </data>
   <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">已完成导入 {0} 个蛋白质</value>
+    <value>已完成导入 {0} 个蛋白质</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
-    <value xml:space="preserve">列出现有的肽段</value>
+    <value>列出现有的肽段</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_proteins" xml:space="preserve">
-    <value xml:space="preserve">列出蛋白质</value>
+    <value>列出蛋白质</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">消化 {0} 个蛋白质</value>
+    <value>消化 {0} 个蛋白质</value>
   </data>
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
-    <value xml:space="preserve">将 {0} 个蛋白质酶解成 {1} 个序列特异的肽段</value>
+    <value>将 {0} 个蛋白质酶解成 {1} 个序列特异的肽段</value>
   </data>
   <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>保存更改</value>
