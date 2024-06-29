@@ -87,6 +87,18 @@ public record EnglishTextChanged() : LocalizationIssue("English text changed")
 
 
     }
-
     public override bool AppliesToTextOnly => false;
+
+    public override LocalizationIssue ParseFromCsvRecord(LocalizationCsvRecord csvRecord)
+    {
+        return this with {ReviewedInvariantValue = csvRecord.OldEnglish, ReviewedLocalizedValue = csvRecord.OldLocalized};
+    }
+
+    public override LocalizationCsvRecord StoreInCsvRecord(LocalizationCsvRecord csvRecord)
+    {
+        return csvRecord with
+        {
+            Issue = Name, OldEnglish = ReviewedInvariantValue, OldLocalized = ReviewedLocalizedValue
+        };
+    }
 }

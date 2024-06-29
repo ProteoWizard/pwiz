@@ -298,8 +298,14 @@ namespace ResourcesOrganizer.ResourcesModel
 
 
                     matchCount++;
-                    LocalizedValue localizedValue =
-                        new LocalizedValue(record.Translation, LocalizationIssue.ParseIssue(record.Issue));
+
+                    LocalizedValue localizedValue = new LocalizedValue(string.IsNullOrEmpty(record.Translation)
+                        ? entry.Invariant.Value
+                        : record.Translation, LocalizationIssue.FromCsvRecord(record));
+                    if (string.IsNullOrEmpty(localizedValue.Value))
+                    {
+                        localizedValue = localizedValue with { Value = entry.Invariant.Value };
+                    }
                     entry = entry with { LocalizedValues = entry.LocalizedValues.SetItem(language, localizedValue) };
 
                     if (!Equals(entries[i].GetTranslation(language), entry.GetTranslation(language)))

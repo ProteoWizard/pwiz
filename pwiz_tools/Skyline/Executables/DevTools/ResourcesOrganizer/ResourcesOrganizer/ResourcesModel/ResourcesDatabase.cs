@@ -468,23 +468,37 @@ namespace ResourcesOrganizer.ResourcesModel
                     continue;
                 }
 
-                var issueDetailsGroups = invariantEntry.Value.GroupBy(entry => entry.GetTranslation(language)?.Issue?.GetIssueDetails(null)).Where(group=>group.Key != null).ToList();
-                var issueDetails = TextUtil.LineSeparate(issueDetailsGroups.Select(group => group.Key!));
+                var issues = invariantEntry.Value.Select(value => value.GetTranslation(language)?.Issue)
+                    .OfType<LocalizationIssue>().Distinct().ToList();
+                if (issues.Count > 1)
+                {
+                    Console.Error.WriteLine("Multiple different localization issues found for {0}: {1}", invariantEntry.Key, TextUtil.LineSeparate(issues.Select(issue=>issue.GetIssueDetails(null))));
+                }
+
+                var issue = issues.FirstOrDefault();
                 var localizedValues = invariantEntry.Value.Select(value => value.GetTranslation(language))
                     .OfType<LocalizedValue>().ToList();
                 var localizedText = localizedValues.Select(value => value.Value).FirstOrDefault();
-                if (localizedText == null || !string.IsNullOrEmpty(issueDetails))
+                if (localizedText == null || issue != null)
                 {
-                    records.Add(new LocalizationCsvRecord
+                    var csvRecord = new LocalizationCsvRecord
                     {
                         Name = invariantKey.Name!, 
                         Comment = invariantKey.Comment!,
                         English = invariantKey.Value,
-                        Translation = localizedText ?? string.Empty,
-                        Issue = issueDetails,
-                        File = invariantEntry.Key.File,
+                        File = invariantEntry.Key.File ?? string.Empty,
                         FileCount = invariantEntry.Value.Count
-                    });
+                    };
+                    if (localizedText != invariantEntry.Key.Value)
+                    {
+                        csvRecord = csvRecord with { Translation = localizedText ?? string.Empty };
+                    }
+
+                    if (issue != null)
+                    {
+                        csvRecord = issue.StoreInCsvRecord(csvRecord);
+                    }
+                    records.Add(csvRecord);
                 }
             }
             using var stream = new FileStream(path, FileMode.Create);

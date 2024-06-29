@@ -27,9 +27,8 @@ namespace Test
         public void TestEnglishTextChanged()
         {
             var languages = Languages;
-            string runDirectory = TestContext.TestRunDirectory!;
             string resxFileName = "AboutDlg.resx";
-            SaveManifestResources(typeof(LocalizationIssueTypeTest), runDirectory);
+            var runDirectory = SaveManifestResources(typeof(LocalizationIssueTypeTest));
             var oldResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v23." + resxFileName), resxFileName);
             var oldDatabase = ResourcesDatabase.Empty;
             oldDatabase = oldDatabase with { ResourcesFiles = oldDatabase.ResourcesFiles.SetItem(resxFileName, oldResourcesFile) };
@@ -37,7 +36,7 @@ namespace Test
             var newDatabase = ResourcesDatabase.Empty;
             newDatabase = newDatabase with { ResourcesFiles = newDatabase.ResourcesFiles.SetItem(resxFileName, newResourcesFile) };
             var withImportedTranslations = newDatabase.ImportLastVersion(oldDatabase, languages, out _, out _);
-            var importedTranslationPath = Path.Combine(TestContext.TestRunDirectory!, "importTranslations.db");
+            var importedTranslationPath = Path.Combine(runDirectory, "importTranslations.db");
             VerifyRoundTrip(withImportedTranslations, importedTranslationPath);
 
             var copyrightEntry = withImportedTranslations.ResourcesFiles.Values.Single()

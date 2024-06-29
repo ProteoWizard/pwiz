@@ -20,12 +20,14 @@ namespace ResourcesOrganizer.ResourcesModel
 {
     public record LocalizationCsvRecord
     {
-        public string Name { get; init; }
-        public string Comment { get; init; }
-        public string English { get; init; }
-        public string Translation { get; init; }
-        public string Issue { get; init; }
-        public int? FileCount { get; init; }
-        public string? File { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Comment { get; init; } = string.Empty;
+        public string English { get; init; } = string.Empty;
+        public string Translation { get; init; } = string.Empty;
+        public string Issue { get; init; } = string.Empty;
+        public string OldEnglish { get; init; } = string.Empty;
+        public string OldLocalized { get; init; } = string.Empty;
+        public int FileCount { get; init; }
+        public string File { get; init; } = string.Empty;
     }
 }

@@ -27,8 +27,7 @@ namespace Test
         [TestMethod]
         public void TestResourcesFile()
         {
-            string runDirectory = TestContext.TestRunDirectory!;
-            SaveManifestResources(typeof(ResourcesFileTest), runDirectory);
+            string runDirectory = SaveManifestResources(typeof(ResourcesFileTest));
             var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             Assert.AreNotEqual(0, file.Entries.Count);
         }
@@ -36,8 +35,7 @@ namespace Test
         [TestMethod]
         public void TestResourcesDatabase()
         {
-            string runDirectory = TestContext.TestRunDirectory!;
-            SaveManifestResources(typeof(ResourcesFileTest), runDirectory);
+            string runDirectory = SaveManifestResources(typeof(ResourcesFileTest));
             var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             var resourcesDatabase = new ResourcesDatabase
             {
@@ -56,8 +54,7 @@ namespace Test
         [TestMethod]
         public void TestInvariantKeyFile()
         {
-            string runDirectory = TestContext.TestRunDirectory!;
-            SaveManifestResources(typeof(ResourcesFileTest), runDirectory);
+            string runDirectory = SaveManifestResources(typeof(ResourcesFileTest));
             var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             var resourcesDatabase = ResourcesDatabase.Empty with
             {

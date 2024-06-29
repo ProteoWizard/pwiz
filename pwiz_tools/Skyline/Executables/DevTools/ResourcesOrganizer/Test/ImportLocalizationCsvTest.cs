@@ -28,9 +28,8 @@ namespace Test
         [TestMethod]
         public void TestImportLocalizationCsv()
         {
-            string folder = TestContext.TestRunDirectory!;
-            SaveManifestResources(typeof(ImportLocalizationCsvTest), folder);
-            Environment.CurrentDirectory = TestContext.TestRunDirectory!;
+            string folder = SaveManifestResources(typeof(ImportLocalizationCsvTest));
+            Environment.CurrentDirectory = folder;
             Assert.AreEqual(0, Program.DoAdd(new AddVerb() { DbFile = "resources.db", Path= ["."] }));
             Assert.AreEqual(0, Program.DoExportLocalizationCsv(new ExportLocalizationCsv()));
             var originalDb = ResourcesDatabase.ReadDatabase("resources.db");

@@ -26,8 +26,7 @@ namespace Test
         [TestMethod]
         public void TestVolcanoPlotFormattingDlg()
         {
-            string runDirectory = TestContext.TestRunDirectory!;
-            SaveManifestResources(typeof(VolcanoPlotFormattingDlgTest), runDirectory);
+            string runDirectory = SaveManifestResources(typeof(VolcanoPlotFormattingDlgTest));
             string filename = "VolcanoPlotFormattingDlg.resx";
             var oldResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v23." + filename), filename);
             var oldDatabase = ResourcesDatabase.Empty;

@@ -27,8 +27,7 @@ namespace Test
         public void TestBuildPeptideSearchLibraryControl()
         {
             const string fileName = "BuildPeptideSearchLibraryControl.resx";
-            string runDirectory = TestContext.TestRunDirectory!;
-            SaveManifestResources(typeof(BuildPeptideSearchLibraryControlTest), runDirectory);
+            string runDirectory = SaveManifestResources(typeof(BuildPeptideSearchLibraryControlTest));
             var oldResourcesFile =
                 ResourcesFile.Read(Path.Combine(runDirectory, "v23." + fileName), fileName);
             var oldDatabase =

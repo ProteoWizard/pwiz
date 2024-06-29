@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using NHibernate.Criterion;
 using ResourcesOrganizer;
 using ResourcesOrganizer.ResourcesModel;
 
@@ -25,11 +27,13 @@ namespace Test
     {
         public TestContext TestContext { get; set; }
 
-        protected void SaveManifestResources(Type type, string destination)
+        protected string SaveManifestResources(Type type)
         {
             var assembly = type.Assembly;
             const string suffix = ".testfile";
             string prefix = type.FullName + ".";
+            var destination = FindUniqueName(TestContext.TestRunDirectory!, type.Name);
+            Directory.CreateDirectory(destination);
             foreach (var manifestResourceName in assembly.GetManifestResourceNames())
             {
                 if (manifestResourceName.StartsWith(prefix) && manifestResourceName.EndsWith(suffix))
@@ -41,6 +45,8 @@ namespace Test
                     stream!.CopyTo(dest);
                 }
             }
+
+            return destination;
         }
 
         protected void VerifyRoundTrip(ResourcesDatabase database, string path)
@@ -84,5 +90,15 @@ namespace Test
             }
         }
 
+        protected string FindUniqueName(string folder, string name)
+        {
+            var path = Path.Combine(folder, name);
+            int index = 0;
+            while (File.Exists(path) || Directory.Exists(path))
+            {
+                path = Path.Combine(path, name + ++index);
+            }
+            return path;
+        }
     }
 }

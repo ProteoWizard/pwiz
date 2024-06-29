@@ -84,6 +84,11 @@ namespace ResourcesOrganizer.ResourcesModel
             return issueType.ParseCommentText(reader.ReadToEnd());
         }
 
+        public static LocalizationIssue? FromCsvRecord(LocalizationCsvRecord csvRecord)
+        {
+            return FromName(csvRecord.Issue)?.ParseFromCsvRecord(csvRecord);
+        }
+
         public virtual string GetIssueDetails(ResourceEntry? entry)
         {
             return Name;
@@ -92,6 +97,16 @@ namespace ResourcesOrganizer.ResourcesModel
         public virtual LocalizationIssue ParseCommentText(string commentText)
         {
             return this;
+        }
+
+        public virtual LocalizationIssue ParseFromCsvRecord(LocalizationCsvRecord csvRecord)
+        {
+            return this;
+        }
+
+        public virtual LocalizationCsvRecord StoreInCsvRecord(LocalizationCsvRecord csvRecord)
+        {
+            return csvRecord with { Issue = Name };
         }
 
         public virtual bool AppliesToTextOnly => true;
