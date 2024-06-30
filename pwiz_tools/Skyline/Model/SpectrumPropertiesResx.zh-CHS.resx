@@ -121,8 +121,16 @@
   <data name="Description_Charge" xml:space="preserve">
     <value>所选离子的母离子电荷</value>
   </data>
+  <data name="Description_Adduct" xml:space="preserve">
+    <value>Adduct of the selected ion</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="Description_FileName" xml:space="preserve">
     <value>作为谱图源的文件的文件名和可能的完整路径</value>
+  </data>
+  <data name="Description_Formula" xml:space="preserve">
+    <value>Neutral chemical formula of the selected ion</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_IdFileName" xml:space="preserve">
     <value>目标离子与谱图相匹配的文件的文件名以及可能的完整路径</value>
@@ -151,11 +159,17 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>谱图库中该肽段的测量谱图数量</value>
   </data>
+  <data name="Adduct" xml:space="preserve">
+    <value>加合物</value>
+  </data>
   <data name="FileName" xml:space="preserve">
     <value>文件名</value>
   </data>
   <data name="FilePath" xml:space="preserve">
     <value>文件路径</value>
+  </data>
+  <data name="Formula" xml:space="preserve">
+    <value>公式</value>
   </data>
   <data name="IdFileName" xml:space="preserve">
     <value>Id 文件名</value>

@@ -485,6 +485,24 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__" xml:space="preserve">
     <value>プロダクト電荷{0}は、ゼロであってはならず、{1}と{2}の間でなければなりません。</value>
   </data>
+  <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
+    <value>「{0}」という名前の注釈が既に定義されています。</value>
+  </data>
+  <data name="NistLibraryBase_Load_Loading__0__library" xml:space="preserve">
+    <value>{0}ライブラリの読み込み中</value>
+  </data>
+  <data name="SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
+    <value>単離リストをエクスポート</value>
+  </data>
+  <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
+    <value>異なるFASTAシークエンス内のペプチドは比較できません。</value>
+  </data>
+  <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
+    <value>レガシーライブラリ</value>
+  </data>
   <data name="CompareElement_CompareElement__Compare____" xml:space="preserve">
     <value>&lt;比較...&gt;</value>
   </data>
@@ -809,8 +827,15 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="LabKey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LabKey.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="HardklorLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hardklor_logo.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators" xml:space="preserve">
     <value>MProphetScoringModeには{0}個の機能を持つピークが与えられましたが、ピーク機能カルキュレータが{1}個あります</value>
+  </data>
+  <data name="SkylineWindow_GetDownloadName__0___1__" xml:space="preserve">
+    <value>{0}({1})</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AlertDlg_GetDefaultButtonText__Ignore" xml:space="preserve">
     <value>無視(&amp;I)</value>
@@ -1173,6 +1198,14 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="ReportSpecList_GetDefaults_Peptide_RT_Results" xml:space="preserve">
     <value>ペプチドRT結果</value>
+  </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_RT_Results" xml:space="preserve">
+    <value>Molecule RT Results</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Transition_Results" xml:space="preserve">
+    <value>Molecule Transition Results</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
     <value>{0}は空にできません。</value>
@@ -2082,9 +2115,9 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
     <value>自動選択を有効にし、ドキュメント設定を使用してこの新しいトランジションを管理しますか？
 
-自動選択を有効にする：{0}プリカーサーおよび{1}断片のトランジションが現在のドキュメントに追加されます。
+自動選択を有効にする：{0}プリカーサーおよび{1}フラグメントのトランジションが現在のドキュメントに追加されます。
 
-自動選択を無効にする：{2}プリカーサーおよび{3}断片のトランジションが現在のドキュメントに追加されます。
+自動選択を無効にする：{2}プリカーサーおよび{3}フラグメントのトランジションが現在のドキュメントに追加されます。
 
 無効化を選択した場合、「最適化 &gt; 詳細」メニュー項目で後から自動選択を有効にできます。</value>
   </data>
@@ -3617,6 +3650,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="RefineListDlgProtein_OkDialog_Of_the_specified__0__proteins__1__are_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
     <value>指定された{0}タンパク質{1}はどれもドキュメント内にありません。続行しますか？</value>
   </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>検索に失敗しました：{0}</value>
+  </data>
   <data name="RefineListDlgProtein_OkDialog_The_protein___0___is_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
     <value>タンパク質'{0}'はドキュメント内にありません。続行しますか？</value>
   </data>
@@ -3809,6 +3845,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PasteDlg_AddFasta_This_must_start_with" xml:space="preserve">
     <value>これは「&gt;」から始まる必要があります</value>
   </data>
+  <data name="PanoramaDownload" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PanoramaDownload.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
     <value>ユーザーを認証できませんでした。サーバーから受信した応答：{0} {1}</value>
   </data>
@@ -3832,6 +3871,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
     <value>EncyclopeDIAを見つけられませんでした</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
     <value>定量化ライブラリの統合</value>
@@ -3851,5 +3891,132 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>コマンドの実行：{0} {1}</value>
+  </data>
+  <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
+    <value>File does not exist. It may have been deleted on the server.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_" xml:space="preserve">
+    <value>There are no Panorama servers with a user account. To upload documents to a server a user account is required.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
+    <value>Unmapped Peptides</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_" xml:space="preserve">
+    <value>Spectral library file {0} exported successfully.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_" xml:space="preserve">
+    <value>Error: The document must contain at least one precursor to export a spectral library.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
+    <value>Error: The document must contain results to export a spectral library.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_" xml:space="preserve">
+    <value>mProphet features file {0} exported successfully.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
+    <value>Error: The document must contain targets for which to export mProphet features.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
+    <value>Error: The document must contain results to export mProphet features.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
+    <value>Annotations successfully defined from file {0}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
+    <value>Protein Expression</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
+    <value>Annotations file {0} exported successfully.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__" xml:space="preserve">
+    <value>Error: Unable to read annotations from file {0}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation type '{0}'. Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
+    <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
+    <value>Warning: Overwriting existing annotation '{0}' due to a name conflict.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
+    <value>Error: Cannot add a {0} type annotation without providing a list of values through {1}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
+    <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
+    <value>Try one of the following:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_" xml:space="preserve">
+    <value>Error: The document must contain annotations in order to export annotations.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
+    <value>Error: Could not find background proteome file {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
+    <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="koina_logo_fdf731d5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
+    <value>Importing peptide list {0} from file {1}...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
+    <value>Importing peptide lists from file {0}...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
+    <value>Warning: peptide list file contains lines with &gt;&gt;. Ignoring provided list name.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_" xml:space="preserve">
+    <value>Associating peptides with proteins from FASTA file {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_" xml:space="preserve">
+    <value>Add peptide precursors to the document to build a library from Koina predictions.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_" xml:space="preserve">
+    <value>Using the Unimod definitions for the following modifications:</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
+    <value>A peptide modification must be added before assigning its variable status.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

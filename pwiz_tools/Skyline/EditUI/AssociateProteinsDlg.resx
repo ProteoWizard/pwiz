@@ -268,8 +268,7 @@
     <value>155, 17</value>
   </metadata>
   <data name="lblGroupProteins.ToolTip" xml:space="preserve">
-    <value>Proteins that match the same set of peptides will be combined into a single target in the document.
-</value>
+    <value>Proteins that match the same set of peptides will be combined into a single target in the document.</value>
   </data>
   <data name="&gt;&gt;lblGroupProteins.Name" xml:space="preserve">
     <value>lblGroupProteins</value>
@@ -512,8 +511,7 @@
     <value>Find &amp;minimal protein list that explains all peptides</value>
   </data>
   <data name="lblMinimalProteinList.ToolTip" xml:space="preserve">
-    <value>Apply an algorithm to find the smallest (parsimonious) set of proteins that explains all of the peptides.
-</value>
+    <value>Apply an algorithm to find the smallest (parsimonious) set of proteins that explains all of the peptides.</value>
   </data>
   <data name="&gt;&gt;lblMinimalProteinList.Name" xml:space="preserve">
     <value>lblMinimalProteinList</value>
