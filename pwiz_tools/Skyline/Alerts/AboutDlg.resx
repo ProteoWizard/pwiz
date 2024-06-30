@@ -437,7 +437,7 @@ https://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2023 University of Washington, all rights reserved
+    <value>Copyright © 2008-2024 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 
@@ -473,7 +473,8 @@ Skyline website.</value>
     <value>4</value>
   </data>
   <data name="textSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline (64-bit : developer build) 22.0.0.000 (abc123456)</value>
+    <value>Skyline (64-bit : developer build) 00.0.0.000 (abc123456)</value>
+    <comment>Testing text to make sure the form is wide enough</comment>
   </data>
   <data name="&gt;&gt;textSoftwareVersion.Name" xml:space="preserve">
     <value>textSoftwareVersion</value>

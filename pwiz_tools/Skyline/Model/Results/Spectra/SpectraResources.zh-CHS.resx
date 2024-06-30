@@ -134,13 +134,13 @@
       x + y = 7 AND x * y &lt; 20</comment>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MS1 谱图必须满足才能包含在提取的色谱图中的条件</value>
+    <value>MS1 谱图能够被包含在提取的色谱图中的必要条件</value>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MS 级别为 2 或以上的谱图必须满足才能包含在所提取的色谱图中的条件</value>
+    <value>MS 级别为 2 或以上的谱图能够被包含在所提取的色谱图中的必要条件</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>

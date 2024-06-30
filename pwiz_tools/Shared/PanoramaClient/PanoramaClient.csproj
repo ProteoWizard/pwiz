@@ -93,12 +93,30 @@
     <Compile Include="PanoramaFilePicker.Designer.cs">
       <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="PanoramaDirectoryPicker.ja.resx">
+      <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaDirectoryPicker.zh-CHS.resx">
+      <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PanoramaDirectoryPicker.resx">
       <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaFolderBrowser.ja.resx">
+      <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaFolderBrowser.zh-CHS.resx">
+      <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PanoramaFolderBrowser.resx">
       <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.ja.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -110,6 +128,12 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="PanoramaFilePicker.ja.resx">
+      <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaFilePicker.zh-CHS.resx">
+      <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PanoramaFilePicker.resx">
       <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
     </EmbeddedResource>

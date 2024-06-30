@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -883,9 +883,9 @@
   <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
     <value>Please choose a unique name.</value>
   </data>
-	<data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-	</data>
+  <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="OpenRemoteFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\OpenRemoteFolder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -896,9 +896,9 @@
     <value>The template file for {0} has not been downloaded. Please run {0} and try again.</value>
   </data>
   <data name="RemoteFileSource_ValidateInputs_Error_parsing_the_URL_" xml:space="preserve">
-      <value>Error parsing the URL.</value>
+    <value>Error parsing the URL.</value>
   </data>
   <data name="RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_" xml:space="preserve">
-      <value>Please correct the URL and try again.</value>
+    <value>Please correct the URL and try again.</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -703,7 +703,7 @@
     <value>&amp;Peptide Comparison</value>
   </data>
   <data name="areaRelativeAbundanceMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-	  <value>228, 22</value>
+    <value>228, 22</value>
   </data>
   <data name="areaRelativeAbundanceMenuItem.Text" xml:space="preserve">
     <value>Relative &amp;Abundance</value>

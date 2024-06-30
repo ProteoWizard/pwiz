@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -188,123 +188,123 @@
     <value>..\Resources\Copy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaFilePicker_Open_Click_You_must_select_a_file_first_" xml:space="preserve">
-	  <value>You must select a file first!</value>
+    <value>You must select a file first!</value>
   </data>
   <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
-	  <value>Go to Tools - Options - Panorama tab to update the username and password</value>
+    <value>Go to Tools - Options - Panorama tab to update the username and password</value>
   </data>
   <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers" xml:space="preserve">
-	  <value>Failed attempting to retrieve information from the following servers</value>
+    <value>Failed attempting to retrieve information from the following servers</value>
   </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
-	  <value>Open</value>
+    <value>Open</value>
   </data>
   <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
-	  <value>Failed attempting to retrieve information from the following folders:</value>
+    <value>Failed attempting to retrieve information from the following folders:</value>
   </data>
   <data name="PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder" xml:space="preserve">
-	  <value>There are no files in this folder</value>
+    <value>There are no files in this folder</value>
   </data>
   <data name="PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder" xml:space="preserve">
-	  <value>There are no Skyline files in this folder</value>
+    <value>There are no Skyline files in this folder</value>
   </data>
   <data name="PanoramaFilePicker_ALL_VER_All" xml:space="preserve">
-      <value>All</value>
+    <value>All</value>
   </data>
   <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
-      <value>Most recent</value>
+    <value>Most recent</value>
   </data>
   <data name="LabKeyError_ToString_Response_status___0_" xml:space="preserve">
-	  <value>Response status: {0}</value>
+    <value>Response status: {0}</value>
   </data>
   <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
-	  <value>Deleting temporary file on server</value>
+    <value>Deleting temporary file on server</value>
   </data>
   <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
-	  <value>Waiting for data import completion...</value>
+    <value>Waiting for data import completion...</value>
   </data>
   <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
-	  <value>Error validating folder '{0}'</value>
+    <value>Error validating folder '{0}'</value>
   </data>
   <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
-	  <value>Error getting information for folder '{0}'</value>
+    <value>Error getting information for folder '{0}'</value>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
-	  <value>There was an error getting the WebDAV url for folder '{0}'</value>
+    <value>There was an error getting the WebDAV url for folder '{0}'</value>
   </data>
   <data name="AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
-	  <value>Importing data. {0}% complete.</value>
+    <value>Importing data. {0}% complete.</value>
   </data>
   <data name="AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_" xml:space="preserve">
-	  <value>Status on server is: {0}</value>
+    <value>Status on server is: {0}</value>
   </data>
   <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated" xml:space="preserve">
-	  <value>Progress Updated</value>
+    <value>Progress Updated</value>
   </data>
   <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
-	  <value>Uploaded {0:fs} of {1:fs}</value>
+    <value>Uploaded {0:fs} of {1:fs}</value>
   </data>
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
-	  <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
+    <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
   </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
-	  <value>There was an error getting the status of the document import pipeline job.</value>
+    <value>There was an error getting the status of the document import pipeline job.</value>
   </data>
   <data name="AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_" xml:space="preserve">
-	  <value>There was an error adding the document import job on the server.</value>
+    <value>There was an error adding the document import job on the server.</value>
   </data>
   <data name="AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_" xml:space="preserve">
-	  <value>There was an error uploading the file.</value>
+    <value>There was an error uploading the file.</value>
   </data>
   <data name="AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_" xml:space="preserve">
-	  <value>There was an error renaming the temporary zip file on the server.</value>
+    <value>There was an error renaming the temporary zip file on the server.</value>
   </data>
   <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_" xml:space="preserve">
-	  <value>There was an error deleting the temporary zip file on the server.</value>
+    <value>There was an error deleting the temporary zip file on the server.</value>
   </data>
   <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_" xml:space="preserve">
-	  <value>The server {0} is not a Panorama server.</value>
+    <value>The server {0} is not a Panorama server.</value>
   </data>
   <data name="ErrorMessageBuilder_Build_Response__" xml:space="preserve">
-	  <value>Response: </value>
+    <value>Response: </value>
   </data>
   <data name="AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_" xml:space="preserve">
-	  <value>{0} request was unsuccessful.</value>
+    <value>{0} request was unsuccessful.</value>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_" xml:space="preserve">
-	  <value>Missing webDavURL in response.</value>
+    <value>Missing webDavURL in response.</value>
   </data>
   <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
-	  <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.</value>
+    <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.</value>
   </data>
   <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
-	  <value>Error parsing response as JSON.</value>
+    <value>Error parsing response as JSON.</value>
   </data>
   <data name="PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
-	  <value>There was an error getting a CSRF token from the server.</value>
+    <value>There was an error getting a CSRF token from the server.</value>
   </data>
   <data name="ErrorMessageBuilder_Build_Error__" xml:space="preserve">
-	  <value>Error: </value>
+    <value>Error: </value>
   </data>
   <data name="ErrorMessageBuilder_Build_Response_status___0_" xml:space="preserve">
-	  <value>Response status: {0}</value>
+    <value>Response status: {0}</value>
   </data>
   <data name="FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__" xml:space="preserve">
-	  <value>Unrecognized error trying to get the status for folder {0}.</value>
+    <value>Unrecognized error trying to get the status for folder {0}.</value>
   </data>
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_" xml:space="preserve">
-	  <value>File name may not contain any of these characters: {0}</value>
+    <value>File name may not contain any of these characters: {0}</value>
   </data>
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_" xml:space="preserve">
-	  <value>File name may not begin with any of these characters: {0}</value>
+    <value>File name may not begin with any of these characters: {0}</value>
   </data>
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash" xml:space="preserve">
-	  <value>File name may not contain space followed by dash</value>
+    <value>File name may not contain space followed by dash</value>
   </data>
   <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled" xml:space="preserve">
-	  <value>Request cancelled</value>
+    <value>Request cancelled</value>
   </data>
   <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_" xml:space="preserve">
-	  <value>There was an error reading the server response.</value>
+    <value>There was an error reading the server response.</value>
   </data>
 </root>

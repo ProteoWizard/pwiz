@@ -231,6 +231,9 @@
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="checkBoxBestOnly.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="checkBoxBestOnly.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -260,6 +263,9 @@
   </data>
   <data name="&gt;&gt;checkBoxBestOnly.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="checkBoxTargetsOnly.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="checkBoxTargetsOnly.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

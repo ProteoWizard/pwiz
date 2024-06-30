@@ -1175,6 +1175,6 @@
     <value>The document must be fully loaded before running a peptide search.</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
-      <value>Library from DIA deconvoluted to single-precursor MS/MS spectra and chromatograms from raw DIA spectra of same runs</value>
+    <value>Library from DIA deconvoluted to single-precursor MS/MS spectra and chromatograms from raw DIA spectra of same runs</value>
   </data>
 </root>
