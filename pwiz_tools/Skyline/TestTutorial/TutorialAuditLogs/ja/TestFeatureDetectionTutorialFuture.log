@@ -38,12 +38,12 @@ All Info  :
 分子検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"Orbi3_SA_IP_"です
 分子検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_01"です
 分子検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"Default"です
-分子検索のインポート>Hardklor Search Settings>Min idotpは"0.9"です
-分子検索のインポート>Hardklor Search Settings>Signal to noiseは"3.01"です
-分子検索のインポート>Hardklor Search Settings>Instrumentは"TOF"です
-分子検索のインポート>Hardklor Search Settings>Resolutionは"10000"です
-分子検索のインポート>Hardklor Search Settings>Charges："2"が含まれています
-分子検索のインポート>Hardklor Search Settings>Charges："3"が含まれています
+分子検索のインポート>Hardklor Search Settings>最小同位体内積は"0.9"です
+分子検索のインポート>Hardklor Search Settings>信号対ノイズ比は"3.01"です
+分子検索のインポート>Hardklor Search Settings>装置は"TOF"です
+分子検索のインポート>Hardklor Search Settings>分解能は"10000"です
+分子検索のインポート>Hardklor Search Settings>電荷："2"が含まれています
+分子検索のインポート>Hardklor Search Settings>電荷："3"が含まれています
 分子検索のインポート>Hardklor Search Settings>Min intensity PPMは"5"です
 Extra Info: クロマトグラムを抽出 = 
 {
@@ -62,11 +62,11 @@ Extra Info: クロマトグラムを抽出 =
 },
 Hardklor Search Settings = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF",
-    Resolution = "10000",
-    Charges = 
+    最小同位体内積 = "0.9",
+    信号対ノイズ比 = "3.01",
+    装置 = "TOF",
+    分解能 = "10000",
+    電荷 = 
     [
         "2",
         "3"
@@ -114,12 +114,12 @@ All Info  :
 分子検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"Orbi3_SA_IP_"です
 分子検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_01"です
 分子検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"Default"です
-分子検索のインポート>Hardklor Search Settings>Min idotpは"0.9"です
-分子検索のインポート>Hardklor Search Settings>Signal to noiseは"3.01"です
-分子検索のインポート>Hardklor Search Settings>Instrumentは"TOF"です
-分子検索のインポート>Hardklor Search Settings>Resolutionは"10000"です
-分子検索のインポート>Hardklor Search Settings>Charges："2"が含まれています
-分子検索のインポート>Hardklor Search Settings>Charges："3"が含まれています
+分子検索のインポート>Hardklor Search Settings>最小同位体内積は"0.9"です
+分子検索のインポート>Hardklor Search Settings>信号対ノイズ比は"3.01"です
+分子検索のインポート>Hardklor Search Settings>装置は"TOF"です
+分子検索のインポート>Hardklor Search Settings>分解能は"10000"です
+分子検索のインポート>Hardklor Search Settings>電荷："2"が含まれています
+分子検索のインポート>Hardklor Search Settings>電荷："3"が含まれています
 分子検索のインポート>Hardklor Search Settings>Min intensity PPMは"5"です
 Extra Info: クロマトグラムを抽出 = 
 {
@@ -138,11 +138,11 @@ Extra Info: クロマトグラムを抽出 =
 },
 Hardklor Search Settings = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF",
-    Resolution = "10000",
-    Charges = 
+    最小同位体内積 = "0.9",
+    信号対ノイズ比 = "3.01",
+    装置 = "TOF",
+    分解能 = "10000",
+    電荷 = 
     [
         "2",
         "3"
