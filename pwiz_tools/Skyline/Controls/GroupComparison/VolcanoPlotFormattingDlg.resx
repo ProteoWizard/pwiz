@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -234,8 +234,6 @@
   <data name="&gt;&gt;advancedCheckBox.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-
-
   <data name="layoutLabelsBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -269,8 +267,6 @@
   <data name="&gt;&gt;layoutLabelsBox.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-
-
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
