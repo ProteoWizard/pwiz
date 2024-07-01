@@ -189,9 +189,9 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// These points should further be filtered by <see cref="FilterBestPoints"/> to get the real list
         /// that should be given to KdeAligner.Train.
         /// </summary>
-        public IEnumerable<Point> GetBestPointCandidates(IProgressMonitor progressMonitor, IProgressStatus status)
+        public IEnumerable<Point> GetBestPointCandidates(IProgressMonitor progressMonitor)
         {
-            var parallelProcessor = new ParallelProcessor(progressMonitor, status);
+            var parallelProcessor = new ParallelProcessor(progressMonitor);
             var results = parallelProcessor.FindBestPoints(ToQuadrants(3));
             return results;
         }
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             private QueueWorker<Quadrant> _queue;
             private List<Exception> _exceptions = new List<Exception>();
 
-            public ParallelProcessor(IProgressMonitor progressMonitor, IProgressStatus status)
+            public ParallelProcessor(IProgressMonitor progressMonitor)
             {
                 _progressMonitor = progressMonitor;
             }

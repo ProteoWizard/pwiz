@@ -22,12 +22,10 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -613,54 +611,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public EncyclopeDiaSearchDlg.EncyclopeDiaSettings Settings { get; set; }
         public string EncyclopeDiaChromLibraryPath { get; private set; }
         public string EncyclopeDiaQuantLibraryPath { get; private set; }
-
-        public class ParallelRunnerProgressControl : MultiProgressControl, IProgressMonitor
-        {
-            private readonly EncyclopeDiaSearchControl _hostControl;
-
-            public ParallelRunnerProgressControl(EncyclopeDiaSearchControl hostControl)
-            {
-                _hostControl = hostControl;
-                ProgressSplit.Panel2Collapsed = true;
-            }
-
-            // ReSharper disable once InconsistentlySynchronizedField
-            public bool IsCanceled => _hostControl.IsCanceled;
-
-            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
-            {
-                if (IsCanceled || status.IsCanceled)
-                    return UpdateProgressResponse.cancel;
-
-                var match = Regex.Match(status.Message, @"(.*)\:\:(.*)");
-                Assume.IsTrue(match.Success && match.Groups.Count == 3,
-                    @"ParallelRunnerProgressDlg requires a message like file::message to indicate which file's progress is being updated");
-
-                lock(this)
-                {
-                    // only make the MultiProgressControl visible if it's actually used
-                    if (RowCount == 0)
-                    {
-                        var hostDialog = _hostControl.HostDialog;
-                        hostDialog.BeginInvoke(new MethodInvoker(() =>
-                        {
-                            _hostControl.progressSplitContainer.Panel1Collapsed = false;
-                            hostDialog.Size = new Size(Math.Min(
-                                Screen.FromControl(hostDialog).Bounds.Width * 90 / 100,
-                                hostDialog.Width * 2), hostDialog.Height);
-                        }));
-                    }
-
-                    string name = match.Groups[1].Value;
-                    string message = match.Groups[2].Value;
-                    Update(name, status.PercentComplete, message, status.ErrorException != null);
-                    return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
-                }
-            }
-
-            public bool HasUI => true;
-        }
-
+        
         private bool Search(EncyclopeDiaSearchDlg.EncyclopeDiaSettings settings, CancellationTokenSource token, IProgressStatus status)
         {
             ParallelRunnerProgressControl multiProgressControl = null;

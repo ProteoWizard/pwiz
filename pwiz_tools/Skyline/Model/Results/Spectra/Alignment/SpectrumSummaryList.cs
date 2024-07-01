@@ -190,10 +190,10 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             return new SimilarityGrid(thisByDigestKey[bestDigestKey], thatByDigestKey[bestDigestKey]);
         }
 
-        public KdeAligner PerformAlignment(IProgressMonitor progressMonitor, IProgressStatus status, SpectrumSummaryList spectra2)
+        public KdeAligner PerformAlignment(IProgressMonitor progressMonitor, SpectrumSummaryList spectra2)
         {
             var similarityGrid = GetSimilarityGrid(spectra2);
-            var candidatePoints = similarityGrid.GetBestPointCandidates(progressMonitor, status);
+            var candidatePoints = similarityGrid.GetBestPointCandidates(progressMonitor);
             if (candidatePoints == null)
             {
                 return null;
