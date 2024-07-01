@@ -1721,9 +1721,12 @@ namespace pwiz.Skyline
         public void ShowRelativeAbundanceFormatting()
         {
             var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
-            if (true == summary?.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
+            if (summary != null)
             {
-                graphPane.ShowFormattingDialog();
+                if (summary.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
+                {
+                    graphPane.ShowFormattingDialog();
+                }
             }
         }
         public void ShowAllTransitions()

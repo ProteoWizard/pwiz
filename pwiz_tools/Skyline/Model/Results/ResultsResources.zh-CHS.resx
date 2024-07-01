@@ -296,6 +296,10 @@
   <data name="ResultsGrid_ChangeChromInfo_Element_not_found" xml:space="preserve">
     <value>未发现元素</value>
   </data>
+  <data name="ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___" xml:space="preserve">
+    <value>The scan ID '{0}' could not be found in the file '{1}'.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_" xml:space="preserve">
     <value>数据文件{0}无法找到，无论是在原始位置还是在文档或文档父文件夹中。</value>
   </data>
@@ -325,5 +329,25 @@
   </data>
   <data name="VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_" xml:space="preserve">
     <value>无法在目录{2}中找到 {0}或{1}。 请重新安装 ProteinPilot 软件以便处理 .group 文件。</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_" xml:space="preserve">
+    <value>Discarding chromatograms for '{0}' because the explicit retention time {1} is not between {2} and {3}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
+    <value>need a value for  Transition Settings  Ion mobility filtering  Window type</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
+    <value>mixed ion mobility types are not supported</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataFileInstrumentInfo_CCSFromIonMobility_no_conversion" xml:space="preserve">
+    <value>Vendor-supplied library is unable to determine CCS for {0} with mobility={1:0.###}, mz={2:0.####}, and charge={3}.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
+    <value>Vendor-supplied library is unable to determine ion mobility for {0} with CCS={1:0.###}, mz={2:0.####}, and charge={3}.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

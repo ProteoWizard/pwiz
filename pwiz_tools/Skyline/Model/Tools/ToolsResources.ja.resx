@@ -155,7 +155,7 @@
     <value>エラー： {0}.zipが欠損しているファイルがあります</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
-    <value>選択されたzipファイルはToolsメニューに追加するアイテムを指定しませんでした。</value>
+    <value>選択されたzipファイルはツールメニューに追加するアイテムを指定しませんでした。</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
     <value>選択したzipファイルはインストール可能なツールではありません。</value>

@@ -173,13 +173,13 @@
     <value>Starting msconvert conversion.</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-      <value>Retention time alignment: {0} vs {1}</value>
+    <value>Retention time alignment: {0} vs {1}</value>
   </data>
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
-      <value>Looking for features occurring in multiple replicates</value>
+    <value>Looking for features occurring in multiple replicates</value>
   </data>
   <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
-      <value>See Hardklor/Bullseye log for details</value>
+    <value>See Hardklor/Bullseye log for details</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_" xml:space="preserve">
     <value>Error performing alignment between {0} and {1}: {2}</value>
