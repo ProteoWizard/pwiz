@@ -1004,11 +1004,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                                                             ((count - 1) * count) + // Compare each A,B and B,A but not A,A
                                                             1; // And the final feature combining step
 
+        private int CompletedAlignmentSteps => AlignmentSpectrumSummaryLists.Count + _alignments.Count; // Steps already taken to read the files and align available
+        private int AlignmentsPercentDone => 100 * CompletedAlignmentSteps / TotalAlignmentSteps(SpectrumFileNames.Length);
+
         private bool PerformAllAlignments(IProgressMonitor progressMonitor)
         {
             IProgressStatus progressStatus = new ProgressStatus();
-            var totalSteps = TotalAlignmentSteps(SpectrumFileNames.Length);
-            var currentStep = AlignmentSpectrumSummaryLists.Count + _alignments.Count; // Steps already taken to read the files and align available
             foreach (var entry1 in AlignmentSpectrumSummaryLists)
             {
                 foreach (var entry2 in AlignmentSpectrumSummaryLists)
@@ -1024,7 +1025,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue; // Already processed
                     }
 
-                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete((currentStep++ * 100)/totalSteps).
+                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(AlignmentsPercentDone).
                         ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileNameWithoutExtension(), entry2.Key.GetFileNameWithoutExtension())));
 
 
@@ -1118,14 +1119,14 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _masterProgressMonitor.UpdateProgress(consumeStatus.ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment, mzmlFile.GetFileNameWithoutExtension()))); // Update the master progress leb
 
                     // Load for alignment
-                    progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps).ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_Generate_Reading__0_, mzmlFile.GetFileName())));
+                    progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete(_featureFinder.AlignmentsPercentDone).ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_Generate_Reading__0_, mzmlFile.GetFileName())));
 
                     var summary = HardklorSearchEngine.LoadSpectrumSummaries(mzmlFile);
 
                     lock (_featureFinder.AlignmentSpectrumSummaryLists)
                     {
                         _featureFinder.AlignmentSpectrumSummaryLists.Add(mzmlFile, summary);
-                        progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps));
+                        progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete(_featureFinder.AlignmentsPercentDone));
 
                         _featureFinder.AlignReplicates(progressMonitorForAlignment);
 
