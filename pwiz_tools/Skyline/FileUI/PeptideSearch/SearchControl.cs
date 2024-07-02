@@ -60,6 +60,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return showTimestamp ? $"[{Timestamp.ToString("yyyy/MM/dd HH:mm:ss")}]  {Message}" : Message;
                 // ReSharper restore LocalizableElement
             }
+
+            public override string ToString()
+            {
+                return ToString(true); // For debugging convenience
+            }
+
         }
 
         protected List<ProgressEntry> _progressTextItems = new List<ProgressEntry>();

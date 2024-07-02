@@ -40,7 +40,6 @@ using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using pwiz.Common.Collections;
 using System.Text.RegularExpressions;
-using static pwiz.Skyline.Model.MultiFileLoader;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -48,6 +47,7 @@ namespace pwiz.Skyline.Model.DdaSearch
     {
         private ImportPeptideSearch _searchSettings;
         private List<MsDataFileUri> _convertedFileNames; // The mzML files Hardklor operates on
+        private List<MsDataFileUri> _completedSearches; // The mzML files we've searched
 
         internal bool _keepIntermediateFiles;
         // Temp files we'll need to clean up at the end the end if !_keepIntermediateFiles
@@ -63,6 +63,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             _convertedFileNames = SpectrumFileNames.Select(HardklorSearchEngine.GetMzmlFilePath).ToList();
 
             _searchSettings.RemainingStepsInSearch = 1; // Everything runs in a parallel step
+
+            var nThreads = ParallelEx.GetThreadCount(Environment.ProcessorCount);
+            _rawFileThreadCount = Math.Max(1, nThreads/3); // Allocate twice as many threads to RT alignment than to msconvert->hardklor->bullseye
+            _alignerThreadCount = Math.Max(1, nThreads-_rawFileThreadCount);
+            _completedSearches = new List<MsDataFileUri>();
         }
         public HardklorSearchEngine(ImportPeptideSearch searchSettings)
         {
@@ -75,6 +80,10 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private CancellationTokenSource _cancelToken;
         private bool _success;
+
+        private int _rawFileThreadCount; // Number of threads to use for per-file msconvert->Hardklor->Bullseye 
+        private int _alignerThreadCount; // Number of threads to use for RT alignment
+        private int CountCompletedSearches => _completedSearches.Count; // Number of per-file msconvert->Hardklor->Bullseye runs completed
 
         public override string[] FragmentIons => Array.Empty<string>();
         public override string[] Ms2Analyzers => Array.Empty<string>();
@@ -123,7 +132,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     exeName = PrepareBullseyeProcess(input, out args, out stepDescription);
                 }
 
-                searchControl.UpdateProgress(status.ChangeMessage($@"{stepDescription}: {exeName} {string.Join(@" ", args)}")); // Update master log
+                searchControl.UpdateProgress(status = status.ChangeMessage($@"{stepDescription}: {exeName} {string.Join(@" ", args)}")); // Update master log
                 progressMonitor.UpdateProgress(status = status.ChangeSegmentName(exeName)); // Update progress bar
 
 
@@ -986,9 +995,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             return new SpectrumSummaryList(summaries);
         }
 
-        public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2, IProgressMonitor progressMonitor)
+        public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2, IProgressMonitor progressMonitor, int? threadCount)
         {
-            return spectra1.PerformAlignment(progressMonitor, spectra2);
+            return spectra1.PerformAlignment(progressMonitor, spectra2, threadCount);
         }
 
         public static int TotalAlignmentSteps(int count) => count + // Read each mzml
@@ -998,8 +1007,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         private bool PerformAllAlignments(IProgressMonitor progressMonitor)
         {
             IProgressStatus progressStatus = new ProgressStatus();
-            var totalSteps = TotalAlignmentSteps(AlignmentSpectrumSummaryLists.Count);
-            var currentStep = AlignmentSpectrumSummaryLists.Count; // Steps already taken to read the files
+            var totalSteps = TotalAlignmentSteps(SpectrumFileNames.Length);
+            var currentStep = AlignmentSpectrumSummaryLists.Count + _alignments.Count; // Steps already taken to read the files and align available
             foreach (var entry1 in AlignmentSpectrumSummaryLists)
             {
                 foreach (var entry2 in AlignmentSpectrumSummaryLists)
@@ -1008,12 +1017,28 @@ namespace pwiz.Skyline.Model.DdaSearch
                     {
                         continue;
                     }
+
+                    var tuple = Tuple.Create(entry1.Key, entry2.Key);
+                    if (_alignments.ContainsKey(tuple))
+                    {
+                        continue; // Already processed
+                    }
+
                     progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete((currentStep++ * 100)/totalSteps).
                         ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileNameWithoutExtension(), entry2.Key.GetFileNameWithoutExtension())));
 
+
+                    // We can claw back some worker threads if most Hardklor/Bullseye jobs are done
+                    var remainingHardklorJobs = SpectrumFileNames.Length - CountCompletedSearches;
+                    while (remainingHardklorJobs < _rawFileThreadCount)
+                    {
+                        _rawFileThreadCount--;
+                        _alignerThreadCount++;
+                    }
+
                     try
                     {
-                        _alignments[Tuple.Create(entry1.Key, entry2.Key)] = PerformAlignment(entry1.Value, entry2.Value, progressMonitor);
+                        _alignments[tuple] = PerformAlignment(entry1.Value, entry2.Value, progressMonitor, _alignerThreadCount);
                     }
                     catch (Exception x)
                     {
@@ -1022,6 +1047,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                     }
                 }
             }
+            progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file));
+
             return true;
         }
 
@@ -1074,7 +1101,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var searchedFiles = 0;
                 var allFilesSearched = new ManualResetEventSlim(false);
                 var allFilesAligned = new ManualResetEventSlim(false);
-                var rawFileThreads = MultiFileLoader.GetOptimalThreadCount(null, RawDataFiles.Count, ImportResultsSimultaneousFileOptions.many);
+
                 var progressMonitorForAlignment = new ProgressMonitorForFile(DdaSearchResources.HardklorSearchEngine_Generate_Align_replicates, _parallelProgressMonitor);
                 var totalAlignmentSteps = HardklorSearchEngine.TotalAlignmentSteps(RawDataFiles.Count); // Each file load is one step, then it's n by n comparison, and final combination step
 
@@ -1100,11 +1127,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                         _featureFinder.AlignmentSpectrumSummaryLists.Add(mzmlFile, summary);
                         progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangePercentComplete((_featureFinder.AlignmentSpectrumSummaryLists.Count * 100) / totalAlignmentSteps));
 
+                        _featureFinder.AlignReplicates(progressMonitorForAlignment);
+
                         if (_featureFinder.AlignmentSpectrumSummaryLists.Count == RawDataFiles.Count)
                         {
                             // That was the last one to load, do the alignment amongst them all
-                            _masterProgressMonitor.UpdateProgress(consumeStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_Generate_Performing_RT_alignments));
-                            _featureFinder.AlignReplicates(progressMonitorForAlignment);
                             allFilesAligned.Set();
                             progressMonitorForAlignment.UpdateProgress(consumeStatus = (ProgressStatus)consumeStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion));
                         }
@@ -1136,7 +1163,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
 
                 using var rawFileProcessor = new QueueWorker<MsDataFileUri>(ProduceRawFile, ConsumeRawFile);
-                rawFileProcessor.RunAsync(rawFileThreads, @"FeatureFindingConsume", 1, @"FeatureFindingProduce");
+                rawFileProcessor.RunAsync(_featureFinder._rawFileThreadCount, @"FeatureFindingConsume", 1, @"FeatureFindingProduce");
 
 
                 // Wait for all Hardklor/Bullseye jobs to finish
@@ -1190,6 +1217,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var progressMonitorForFile = new ProgressMonitorForFile(rawFile.GetFileName(), _parallelProgressMonitor);
                 var mzmlFilePath = HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath();
                 IProgressStatus status = new ProgressStatus();
+                const string MSCONVERT_EXE = @"msconvert";
+                status = status.ChangeSegmentName(MSCONVERT_EXE);
 
                 string convertMessage;
                 if ((string.Compare(mzmlFilePath, rawFile.GetFilePath(), StringComparison.OrdinalIgnoreCase) == 0) ||
@@ -1202,16 +1231,14 @@ namespace pwiz.Skyline.Model.DdaSearch
                         Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__,
                         MsconvertOutputExtension, rawFile.GetSampleOrFileName());
                     status = status.ChangeMessage(convertMessage);
+                    progressMonitorForFile.UpdateProgress(status);
                     _masterProgressMonitor.UpdateProgress(status); // Update main window log
                 }
                 else
                 {
-                    status = status.ChangeSegments(0, 1);
-                    const string MSCONVERT_EXE = @"msconvert";
-                    status = status.ChangeSegmentName(@"msconvert");
                     convertMessage = string.Format(DdaSearchResources.MsconvertDdaConverter_Run_Converting_file___0___to__1_, rawFile.GetSampleOrFileName(), @"mzML");
                     status = status.ChangeMessage(convertMessage);
-                    progressMonitorForFile.UpdateProgress(status);
+                    progressMonitorForFile.UpdateProgress(status); // Update main window log
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(MSCONVERT_EXE)
                     {
@@ -1268,6 +1295,13 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     _featureFinder.DeleteIntermediateFiles(); // Delete .conf etc
                     FileEx.SafeDelete(mzmlFilePath, true);
+                    return;
+                }
+
+                // Note completion so RT aligner can reclaim threads
+                lock (_featureFinder._completedSearches)
+                {
+                    _featureFinder._completedSearches.Add(rawFile);
                 }
 
             }

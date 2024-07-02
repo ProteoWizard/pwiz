@@ -205,9 +205,6 @@
   <data name="HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion" xml:space="preserve">
     <value>Waiting for Hardklor/Bullseye completion</value>
   </data>
-  <data name="HardklorSearchEngine_Generate_Performing_RT_alignments" xml:space="preserve">
-    <value>Performing RT alignments</value>
-  </data>
   <data name="HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment" xml:space="preserve">
     <value>Preparing {0} for RT alignment</value>
   </data>
@@ -219,5 +216,8 @@
   </data>
   <data name="HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates" xml:space="preserve">
     <value>Searching for common features across replicates</value>
-  </data>    
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
+      <value>Waiting for next file</value>
+  </data>
 </root>

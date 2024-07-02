@@ -189,10 +189,10 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// These points should further be filtered by <see cref="FilterBestPoints"/> to get the real list
         /// that should be given to KdeAligner.Train.
         /// </summary>
-        public IEnumerable<Point> GetBestPointCandidates(IProgressMonitor progressMonitor)
+        public IEnumerable<Point> GetBestPointCandidates(IProgressMonitor progressMonitor, int ?threadCount)
         {
             var parallelProcessor = new ParallelProcessor(progressMonitor);
-            var results = parallelProcessor.FindBestPoints(ToQuadrants(3));
+            var results = parallelProcessor.FindBestPoints(ToQuadrants(3), threadCount);
             return results;
         }
 
@@ -210,12 +210,12 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 _progressMonitor = progressMonitor;
             }
 
-            public List<Point> FindBestPoints(IEnumerable<Quadrant> startingQuadrants)
+            public List<Point> FindBestPoints(IEnumerable<Quadrant> startingQuadrants, int ? threadCount)
             {
                 _queue = new QueueWorker<Quadrant>(null, Consume);
                 try
                 {
-                    _queue.RunAsync(ParallelEx.GetThreadCount(), @"SimilarityGrid");
+                    _queue.RunAsync(threadCount ?? ParallelEx.GetThreadCount(), @"SimilarityGrid");
                     foreach (var q in startingQuadrants)
                     {
                         Enqueue(q);

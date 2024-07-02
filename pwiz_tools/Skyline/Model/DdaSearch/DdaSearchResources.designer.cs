@@ -247,15 +247,6 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Performing RT alignments.
-        /// </summary>
-        public static string HardklorSearchEngine_Generate_Performing_RT_alignments {
-            get {
-                return ResourceManager.GetString("HardklorSearchEngine_Generate_Performing_RT_alignments", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Preparing {0} for RT alignment.
         /// </summary>
         public static string HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment {
@@ -302,7 +293,7 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} vs {1}.
+        ///   Looks up a localized string similar to RT alignment: {0} vs {1}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_ {
             get {
@@ -318,6 +309,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
             get {
                 return ResourceManager.GetString("HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_" +
                         "on___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for next file.
+        /// </summary>
+        public static string HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file", resourceCulture);
             }
         }
         
