@@ -78,7 +78,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
-        public enum Pages { properties, files, learning }
+        public enum Pages { properties, files, learning, carafe }
 
         public class PropertiesPage : IFormView { }
         public class FilesPage : IFormView { }
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
                     ? Pages.files
-                    : Pages.learning);
+                    : Pages.carafe);
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
@@ -887,6 +887,19 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textLearningDoc.Text = dlg.FileName;
                 }
+            }
+
+        }
+
+        private void checkBoxFineTune_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxFineTune.Checked)
+            {
+                groupBoxModelFineTuneInputs.Show();
+            }
+            else
+            {
+                groupBoxModelFineTuneInputs.Hide();
             }
 
         }
