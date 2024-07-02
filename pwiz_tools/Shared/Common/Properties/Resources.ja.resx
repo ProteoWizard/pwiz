@@ -542,17 +542,8 @@
   <data name="ZScore_ZScore_Z_Score" xml:space="preserve">
     <value>Zスコア</value>
   </data>
-  <data name="Units_mz" xml:space="preserve">
-    <value>m/z</value>
-  </data>
-  <data name="Units_ppm" xml:space="preserve">
-    <value>ppm</value>
-  </data>
   <data name="DropImageNoBackground" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\DropImageNoBackground.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
-    <value>{0}バイトの読み込みに失敗しました。ソースが壊れている可能性があります。</value>
   </data>
   <data name="FilterClause_MakePredicate_Invalid_filter_column___0__" xml:space="preserve">
     <value>フィルタ列「{0}」が無効です</value>
