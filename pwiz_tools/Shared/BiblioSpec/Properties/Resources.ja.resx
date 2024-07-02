@@ -98,10 +98,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LibraryBuildActionExtension_LOCALIZED_VALUES_Create">
-    <value xml:space="preserve">作成</value>
+    <value>作成</value>
   </data>
   <data name="LibraryBuildActionExtension_LOCALIZED_VALUES_Append">
-    <value xml:space="preserve">追加</value>
+    <value>追加</value>
   </data>
   <data name="LibraryBuildActionExtension_GetEnum_The_string___0___does_not_match_an_enum_value" xml:space="preserve">
     <value>文字列'{0}'がenum値と一致しません</value>
@@ -168,5 +168,8 @@
   </data>
   <data name="ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_" xml:space="preserve">
     <value>最大スコア閾値（スコアは同定が正しくないという確率）</value>
+  </data>
+  <data name="BiblioSpecScoreType_DisplayName_Hardklor_idotp" xml:space="preserve">
+    <value>Hardklor idotp</value>
   </data>
 </root>

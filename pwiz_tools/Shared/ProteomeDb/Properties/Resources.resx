@@ -98,22 +98,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">Added {0} proteins</value>
+    <value>Added {0} proteins</value>
   </data>
   <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">Finished importing {0} proteins</value>
+    <value>Finished importing {0} proteins</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
-    <value xml:space="preserve">Listing existing peptides</value>
+    <value>Listing existing peptides</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_proteins" xml:space="preserve">
-    <value xml:space="preserve">Listing proteins</value>
+    <value>Listing proteins</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">Digesting {0} proteins</value>
+    <value>Digesting {0} proteins</value>
   </data>
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
-    <value xml:space="preserve">Digested {0} proteins into {1} unique peptides</value>
+    <value>Digested {0} proteins into {1} unique peptides</value>
   </data>
   <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>Saving changes</value>

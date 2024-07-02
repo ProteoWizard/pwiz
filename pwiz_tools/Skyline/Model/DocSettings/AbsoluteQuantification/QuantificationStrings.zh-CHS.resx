@@ -335,4 +335,9 @@
   <data name="MsLevelOption_DEFAULT_Default" xml:space="preserve">
     <value>默认</value>
   </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>Example: Standard (MyMolecule)
+Needs Review:New resource</comment>
+  </data>
 </root>
