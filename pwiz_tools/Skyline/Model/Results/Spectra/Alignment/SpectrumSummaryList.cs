@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 return null;
             }
 
-            var bestPoints = SimilarityGrid.FilterBestPoints(candidatePoints).ToList();
+            var bestPoints = SimilarityGrid.FilterBestPoints(candidatePoints);
             var kdeAligner = new KdeAligner();
             kdeAligner.Train(bestPoints.Select(pt => pt.XRetentionTime).ToArray(), bestPoints.Select(pt=>pt.YRetentionTime).ToArray(), CancellationToken.None);
             return kdeAligner;

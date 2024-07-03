@@ -152,16 +152,19 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 // return quadrants.Where(q => q.MaxScore >= minMedian).Take(3);
             }
 
-            public IEnumerable<Point> EnumeratePoints()
+            public List<Point> EnumeratePoints()
             {
+                var result = new List<Point>(XCount * YCount);
                 for (int x = 0; x < XCount; x++)
                 {
                     for (int y = 0; y < YCount; y++)
                     {
                         var score = CalcScore(XStart + x, YStart + y);
-                        yield return new Point(Grid, x + XStart, y + YStart, score);
+                        result.Add( new Point(Grid, x + XStart, y + YStart, score));
                     }
                 }
+
+                return result;
             }
         }
 
@@ -189,7 +192,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// These points should further be filtered by <see cref="FilterBestPoints"/> to get the real list
         /// that should be given to KdeAligner.Train.
         /// </summary>
-        public IEnumerable<Point> GetBestPointCandidates(IProgressMonitor progressMonitor, int ?threadCount)
+        public List<Point> GetBestPointCandidates(IProgressMonitor progressMonitor, int ?threadCount)
         {
             var parallelProcessor = new ParallelProcessor(progressMonitor);
             var results = parallelProcessor.FindBestPoints(ToQuadrants(3), threadCount);
@@ -280,7 +283,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             {
                 if (quadrant.XCount <= 4 || quadrant.YCount <= 4)
                 {
-                    var pointsToAdd = quadrant.EnumeratePoints().ToList();
+                    var pointsToAdd = quadrant.EnumeratePoints();
                     lock (this)
                     {
                         _results.AddRange(pointsToAdd);
@@ -324,25 +327,66 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             public double Score { get; }
         }
 
+        private class BestPointIndex
+        {
+            private Point[] _valuesX;
+            private Point[] _valuesY;
+
+            private int _capacityX;
+            private int _capacityY;
+
+            public BestPointIndex()
+            {
+                _capacityX = 16384;
+                _capacityY = 16384;
+                _valuesX = new Point[_capacityX];
+                _valuesY = new Point[_capacityY];
+            }
+
+            public void Consider(Point p)
+            {
+                if (p.X >= _capacityX)
+                {
+                    _capacityX = 2 * _capacityX;
+                    Array.Resize(ref _valuesX, _capacityX);
+                }
+                if (p.Score > ((_valuesX[p.X]?.Score)??0.0))
+                {
+                    _valuesX[p.X] = p;
+                }
+
+                if (p.Y >= _capacityY)
+                {
+                    _capacityY = 2 * _capacityY;
+                    Array.Resize(ref _valuesY, _capacityY);
+                }
+                if (p.Score > ((_valuesY[p.Y]?.Score) ?? 0.0))
+                {
+                    _valuesY[p.Y] = p;
+                }
+            }
+
+            public bool Contains(Point p) => ReferenceEquals(p, _valuesX[p.X]) || ReferenceEquals(p, _valuesY[p.Y]);
+        }
+
+
         /// <summary>
         /// Returns a subset such that each point has the highest score in either its row
         /// or column.
         /// </summary>
-        public static IEnumerable<Point> FilterBestPoints(IEnumerable<Point> allPoints)
+        public static List<Point> FilterBestPoints(List<Point> allPoints)
         {
-            HashSet<int> xIndexes = new HashSet<int>();
-            HashSet<int> yIndexes = new HashSet<int>();
+            var bestPointPerXY = new BestPointIndex();
+            var result = new List<Point>(allPoints.Count/100); // Arbitrary guess at needed capacity as 1% of all points
 
-            foreach (Point point in allPoints.OrderByDescending(pt=>pt.Score))
+            foreach (var p in allPoints)
             {
-                if (xIndexes.Contains(point.X) && yIndexes.Contains(point.Y))
-                {
-                    continue;
-                }
-                xIndexes.Add(point.X);
-                yIndexes.Add(point.Y);
-                yield return point;
+                bestPointPerXY.Consider(p);
             }
+
+            result.AddRange(allPoints.Where(p => bestPointPerXY.Contains(p)));
+
+            return result;
         }
     }
 }
