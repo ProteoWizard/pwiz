@@ -8,7 +8,7 @@ Undo Redo : Added spectral library "TestDdaTutorial"
 Summary   : Added spectral library "TestDdaTutorial"
 All Info  :
 Added spectral library "TestDdaTutorial"
-Build Spectral Library > Search files : contains { File = "QE_140221_01_UPS1_100fmolspiked.pepXML", Score type = "q-value", Score threshold = "0,01" }
+Build Spectral Library > Search files : contains { File = "QE_140221_01_UPS1_100fmolspiked-percolator.pepXML", Score type = "q-value", Score threshold = "0,01" }
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
@@ -17,7 +17,7 @@ Build Spectral Library > Input File Type is "DDA raw (search and build library)"
 Extra Info: Search files = 
 [
     {
-        File = "QE_140221_01_UPS1_100fmolspiked.pepXML",
+        File = "QE_140221_01_UPS1_100fmolspiked-percolator.pepXML",
         Score type = "q-value",
         Score threshold = "0,01"
     }
@@ -44,11 +44,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Assigned to first protein"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "9488"
-Import Peptide Search > Associate Proteins > Peptides mapped is "5720"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "79039"
-Import Peptide Search > Associate Proteins > Protein targets is "2802"
-Import Peptide Search > Associate Proteins > Peptide targets is "5774"
+Import Peptide Search > Associate Proteins > Proteins mapped is "8724"
+Import Peptide Search > Associate Proteins > Peptides mapped is "5243"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "79803"
+Import Peptide Search > Associate Proteins > Protein targets is "2637"
+Import Peptide Search > Associate Proteins > Peptide targets is "5299"
 Import Peptide Search > DDA search settings > Search Engine is "MSFragger"
 Import Peptide Search > DDA search settings > Precursor tolerance is "5" ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is "10" ppm
@@ -85,11 +85,11 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Assigned to first protein",
     Min peptides per protein = "1",
-    Proteins mapped = "9488",
-    Peptides mapped = "5720",
-    Proteins unmapped = "79039",
-    Protein targets = "2802",
-    Peptide targets = "5774"
+    Proteins mapped = "8724",
+    Peptides mapped = "5243",
+    Proteins unmapped = "79803",
+    Protein targets = "2637",
+    Peptide targets = "5299"
 },
 DDA search settings = 
 {
