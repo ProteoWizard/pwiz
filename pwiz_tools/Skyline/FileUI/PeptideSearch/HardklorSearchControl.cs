@@ -91,7 +91,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return UpdateProgressResponse.cancel;
             }
 
-            lock (progressBar) // Just locking to make sure _currentStep is handled properly
+            lock (this)
             {
                 _status = _status.ChangeMessage(status.Message).ChangePercentComplete((100 * _currentStep++) / _totalSteps);
             }
