@@ -126,11 +126,6 @@ namespace ZedGraph
             }
         }
 
-        public void ShowToolTip(Point pt)
-        {
-            //var tooltipLabel = new TextObj("Test", pt.X, pt.Y){}
-        }
-
         /// <summary>
         /// Calculates goal function for a labeled point and a suggested label position.
         /// All coordinates are in screen pixels.
@@ -430,6 +425,7 @@ namespace ZedGraph
             {
                 _label = value;
                 LabelPosition = _label.Location.TopLeft;
+                _label.FontSpec.BoxExpansion = 2;
             }
         }
 
@@ -467,6 +463,12 @@ namespace ZedGraph
                 Connector.Location.Width = newConnectorEnd.Width;
                 Connector.Location.Height = newConnectorEnd.Height;
             }
+        }
+        public void InvalidateLabelRectangle(GraphPane pane, ZedGraphControl control)
+        {
+            var labelRect = Label.Location.TransformRect(pane);
+            var screenRect = new Rectangle((int)labelRect.X, (int)labelRect.Y, (int)labelRect.Right, (int)labelRect.Bottom);
+            control.Invalidate(screenRect);
         }
     }
 

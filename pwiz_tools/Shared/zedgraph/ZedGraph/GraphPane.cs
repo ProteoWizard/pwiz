@@ -1563,8 +1563,9 @@ namespace ZedGraph
             }
         }
 
-        public LabeledPoint OverLabel(Point mousePt)
+        public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
         {
+            isOverBoundary = false;
             if (_labelLayout != null)
             {
                 using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
@@ -1572,16 +1573,20 @@ namespace ZedGraph
                     if (FindNearestObject(mousePt, g, out var nearestObj, out _))
                     {
                         if (nearestObj is TextObj label && _labelLayout.LabeledPoints.TryGetValue(label, out var labPoint))
+                        {
+                            float scaleFactor = CalcScaleFactor();
+                            isOverBoundary = labPoint.Label.PointOnBoxBoundary(mousePt, this, g, scaleFactor);
                             return labPoint;
+                        }
                     }
                 }
             }
             return null;
         }
 
-        public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
+		public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
         {
-            labPoint = OverLabel(mousePt);
+            labPoint = OverLabel(mousePt, out _);
             return labPoint !=	null;
         }
 

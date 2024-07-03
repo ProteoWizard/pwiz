@@ -468,23 +468,30 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _selectedRow = (FoldChangeBindingSource.FoldChangeRow) lineItem[index].Tag;
                 isSelected = true;
             }
-            else if (zedGraphControl.GraphPane.IsOverLabel(point, out var labPoint))
-            {
-                _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
-                isSelected = true;
-            }
             else
             {
-                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                var labPoint = zedGraphControl.GraphPane.OverLabel(point, out var isOverBoundary);
+                if (labPoint != null )
                 {
-                    zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
-                    if (nearestObj is TextObj nearestText)
+                    if (!isOverBoundary)
                     {
-                        var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
-                        if (labels.Any())
+                        _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
+                        isSelected = true;
+                    }
+                }
+                else
+                {
+                    using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                    {
+                        zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
+                        if (nearestObj is TextObj nearestText)
                         {
-                            _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labels.First().Point.Tag;
-                            isSelected = true;
+                            var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
+                            if (labels.Any())
+                            {
+                                _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labels.First().Point.Tag;
+                                isSelected = true;
+                            }
                         }
                     }
                 }

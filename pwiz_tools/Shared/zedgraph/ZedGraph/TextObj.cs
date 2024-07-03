@@ -176,6 +176,9 @@ namespace ZedGraph
 				_fontSpec = value;
 			}
 		}
+
+		public bool IsDraggable { get; set; }
+
 	#endregion
 	
 	#region Constructors
@@ -381,6 +384,7 @@ namespace ZedGraph
 				//	this.FontSpec.Draw( g, pane.IsPenWidthScaled, this.text, pix.X, pix.Y,
 				//		this.location.AlignH, this.location.AlignV, scaleFactor );
 				//else
+				this.DrawDraggingHandle(g, pane, scaleFactor);
 					this.FontSpec.Draw( g, pane, _text, pix.X, pix.Y,
 						_location.AlignH, _location.AlignV, scaleFactor, _layoutArea );
 
@@ -421,6 +425,19 @@ namespace ZedGraph
 								_location.AlignH, _location.AlignV, scaleFactor, this.LayoutArea );
 		}
 
+        public bool PointOnBoxBoundary(PointF pt, PaneBase pane, Graphics g, float scaleFactor)
+        {
+            if (!base.PointInBox(pt, pane, g, scaleFactor))
+                return false;
+
+            // transform the x,y location from the user-defined
+            // coordinate frame to the screen pixel location
+            PointF pix = _location.Transform(pane);
+
+            return _fontSpec.PointOnBoxBoundary(pt, g, _text, pix.X, pix.Y,
+                _location.AlignH, _location.AlignV, scaleFactor, this.LayoutArea);
+        }
+
 		/// <summary>
 		/// Determines the shape type and Coords values for this GraphObj
 		/// </summary>
@@ -440,8 +457,16 @@ namespace ZedGraph
 						pts[2].X, pts[2].Y, pts[3].X, pts[3].Y );
 		}
 
-		
+        public void DrawDraggingHandle(Graphics g, PaneBase pane, float scaleFactor)
+        {
+			if(IsDraggable)
+                FontSpec.Border = new Border(Color.Black, 1);
+			else 
+				FontSpec.Border = new Border(Color.Transparent, 0);
+
+        }
+
 	#endregion
-	
+
 	}
 }

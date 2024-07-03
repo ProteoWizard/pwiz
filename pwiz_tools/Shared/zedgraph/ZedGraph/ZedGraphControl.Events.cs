@@ -456,6 +456,7 @@ namespace ZedGraph
 
 			// Second, Check to see if it's within a Chart Rect
 			pane = this.MasterPane.FindChartRect( mousePt );
+            var label = pane.OverLabel(mousePt, out var isOverBoundary);
 			//Rectangle rect = new Rectangle( mousePt, new Size( 1, 1 ) );
 
 			if ( pane != null &&
@@ -469,7 +470,7 @@ namespace ZedGraph
 				//_zoomState = new ZoomState( _dragPane, ZoomState.StateType.Pan );
 				ZoomStateSave( _dragPane, ZoomState.StateType.Pan );
 			}
-			else if ( pane != null && ( _isEnableHZoom || _isEnableVZoom ) &&
+			else if ( pane != null && ( _isEnableHZoom || _isEnableVZoom ) && !isOverBoundary &&
 				( ( e.Button == _zoomButtons && Control.ModifierKeys == _zoomModifierKeys ) ||
 				( e.Button == _zoomButtons2 && Control.ModifierKeys == _zoomModifierKeys2 ) ) )
 			{
@@ -506,15 +507,13 @@ namespace ZedGraph
 					_dragStartPair = _dragCurve[_dragIndex];
 				}
 			}
-			else if (pane != null && pane.IsOverLabel(mousePt, out var label) && Control.ModifierKeys == _editModifierKeys &&
-					e.Button == _selectButtons)
+            else if (pane != null && label != null && isOverBoundary && e.Button == _selectButtons)
 			{
 				_isTextDragging = true;
 				_dragPane = pane;
 				_dragText = label; 
 				_dragText.UpdatePositions();
 				_dragStartPt = mousePt;
-				_dragPane.Layout.ShowToolTip(mousePt);
 			}
 		}
 
@@ -537,9 +536,9 @@ namespace ZedGraph
 				if ( ( _isEnableHPan || _isEnableVPan ) && ( Control.ModifierKeys == Keys.Shift || _isPanning ) &&
 					( pane != null || _isPanning ) )
 					this.Cursor = Cursors.Hand;
-				else if (pane != null && pane.IsOverLabel(mousePt, out var _))
+				else if (pane != null && pane.OverLabel(mousePt, out var isOverBoundary) is LabeledPoint labeledPoint)
 				{
-					if (Control.ModifierKeys == _editModifierKeys)
+					if (isOverBoundary)
 						this.Cursor = Cursors.SizeAll;
 					else
 						this.Cursor = Cursors.Hand;
@@ -700,15 +699,17 @@ namespace ZedGraph
 
 				SetCursor( mousePt );
 
+                GraphPane pane = this.MasterPane.FindPane(mousePt);
 				// Provide Callback for MouseMove events
-				if( !_isTextDragging )
+				if ( !(_isTextDragging || _isZooming || _isPanning || _isSelecting) )
 				{
-					if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
+                    if (pane != null && e.Button == MouseButtons.None)
+                        HandleDragHandle(mousePt, pane); 
+                    if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
 						return;
 				}
 
 				//Point tempPt = this.PointToClient( Control.MousePosition );
-
 
 				// If the mouse is being dragged,
 				// undraw and redraw the rectangle as the mouse moves.
@@ -868,10 +869,29 @@ namespace ZedGraph
 			return mousePt;
 		}
 
+        private LabeledPoint _dragLabel;
+        private void HandleDragHandle(Point mousePt, GraphPane pane)
+        {
+			var invalidate = false;
+            if (_dragLabel != null)
+            {
+                _dragLabel.Label.IsDraggable = false;
+                invalidate = true;
+            }
 
-	#endregion
+			if (pane.OverLabel(mousePt, out _) is LabeledPoint labPoint)
+            { 
+                _dragLabel = labPoint;
+                _dragLabel.Label.IsDraggable = true;
+                invalidate = true;
+            }
+			if(invalidate)
+				Invalidate();
+		}
 
-	#region Mouse Wheel Zoom Events
+		#endregion
+
+		#region Mouse Wheel Zoom Events
 
 		/// <summary>
 		/// Handle a MouseWheel event in the <see cref="ZedGraphControl" />
