@@ -91,7 +91,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return UpdateProgressResponse.cancel;
             }
 
-            lock (_status)
+            lock (progressBar)
             {
                 _status = _status.ChangeMessage(status.Message).ChangePercentComplete((100 * _currentStep++) / _totalSteps);
                 Invoke(new MethodInvoker(() => UpdateSearchEngineProgress(_status)));
