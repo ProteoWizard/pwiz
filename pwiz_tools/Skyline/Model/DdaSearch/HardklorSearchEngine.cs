@@ -1010,17 +1010,20 @@ namespace pwiz.Skyline.Model.DdaSearch
         private bool PerformAllAlignments(IProgressMonitor progressMonitor)
         {
             IProgressStatus progressStatus = new ProgressStatus();
-            var fileUri1 = SpectrumFileNames.FirstOrDefault(AlignmentSpectrumSummaryLists.ContainsKey);
+            var fileUri1 = _convertedFileNames.FirstOrDefault(AlignmentSpectrumSummaryLists.ContainsKey);
             if (fileUri1 == null)
             {
                 return true;
             }
 
             var spectra1 = AlignmentSpectrumSummaryLists[fileUri1];
-            foreach (var fileUri2 in SpectrumFileNames)
+            foreach (var fileUri2 in _convertedFileNames)
             {
-                if (Equals(fileUri1, fileUri2) ||
-                    !AlignmentSpectrumSummaryLists.TryGetValue(fileUri2, out var spectra2))
+                if (Equals(fileUri1, fileUri2))
+                {
+                    continue;
+                }
+                if (!AlignmentSpectrumSummaryLists.TryGetValue(fileUri2, out var spectra2))
                 {
                     continue;
                 }
