@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -202,7 +203,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         class ParallelProcessor
         {
             private IProgressMonitor _progressMonitor;
-            private List<Point> _results = new List<Point>();
+            private ConcurrentBag<Point> _results = new ConcurrentBag<Point>();
             private int _totalItemCount;
             private int _completedItemCount;
             private QueueWorker<Quadrant> _queue;
@@ -234,7 +235,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 
                             if (_completedItemCount == _totalItemCount)
                             {
-                                return _results;
+                                return _results.ToList();
                             }
 
                             if (true == _progressMonitor?.IsCanceled)
@@ -284,9 +285,9 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 if (quadrant.XCount <= 4 || quadrant.YCount <= 4)
                 {
                     var pointsToAdd = quadrant.EnumeratePoints();
-                    lock (this)
+                    foreach (var p in pointsToAdd)
                     {
-                        _results.AddRange(pointsToAdd);
+                        _results.Add(p);
                     }
 
                     return;
