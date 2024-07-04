@@ -24,7 +24,6 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -417,38 +416,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public AlignmentFunction GetMappingFunction(string alignTo, string alignFrom, int maxStopovers)
         {
-            var queue = new Queue<ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>>();
-            queue.Enqueue(ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>.EMPTY);
-            while (queue.Count > 0)
+            var alignmentSet = new DocumentAlignmentSet(this);
+            var path = alignmentSet.FindAlignmentPath(alignFrom, alignTo, maxStopovers);
+            if (path == null)
             {
-                var list = queue.Dequeue();
-                var name = list.LastOrDefault().Key ?? alignTo;
-                var fileAlignment = FileAlignments.Find(name);
-                if (fileAlignment == null)
-                {
-                    continue;
-                }
-
-                var endAlignment = fileAlignment.RetentionTimeAlignments.Find(alignFrom);
-                if (endAlignment != null)
-                {
-                    return MakeAlignmentFunc(list.Select(tuple => tuple.Value.RegressionLine).Prepend(endAlignment.RegressionLine));
-                }
-
-                if (list.Count < maxStopovers)
-                {
-                    var excludeNames = list.Select(tuple => tuple.Key).ToHashSet();
-                    foreach (var availableAlignment in fileAlignment.RetentionTimeAlignments)
-                    {
-                        if (!excludeNames.Contains(availableAlignment.Key))
-                        {
-                            queue.Enqueue(ImmutableList.ValueOf(list.Prepend(availableAlignment)));
-                        }
-                    }
-                }
+                return null;
             }
 
-            return null;
+            return MakeAlignmentFunc(path);
         }
 
         public static AlignmentFunction MakeAlignmentFunc(IEnumerable<RegressionLine> regressionLines)
@@ -456,6 +431,32 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             return AlignmentFunction.FromParts(regressionLines.Select(line =>
                 AlignmentFunction.Define(line.GetY, line.GetX)));
+        }
+
+        private class DocumentAlignmentSet : AlignmentSet<string, RegressionLine>
+        {
+            private DocumentRetentionTimes _documentRetentionTimes;
+            public DocumentAlignmentSet(DocumentRetentionTimes documentRetentionTimes)
+            {
+                _documentRetentionTimes = documentRetentionTimes;
+            }
+
+            protected override RegressionLine GetAlignment(string to, string from)
+            {
+                return _documentRetentionTimes.FileAlignments.Find(to)?.RetentionTimeAlignments.Find(from)?.RegressionLine;
+            }
+
+            protected override IEnumerable<KeyValuePair<string, RegressionLine>> GetAvailableAlignmentsTo(string alignTo)
+            {
+                var fileAlignment = _documentRetentionTimes.FileAlignments.Find(alignTo);
+                if (fileAlignment == null)
+                {
+                    return Array.Empty<KeyValuePair<string, RegressionLine>>();
+                }
+
+                return fileAlignment.RetentionTimeAlignments.Select(kvp =>
+                    new KeyValuePair<string, RegressionLine>(kvp.Key, kvp.Value.RegressionLine));
+            }
         }
     }
 }

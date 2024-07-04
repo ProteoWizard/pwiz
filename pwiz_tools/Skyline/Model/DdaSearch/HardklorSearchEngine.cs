@@ -54,8 +54,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         private ConcurrentDictionary<MsDataFileUri, string> _inputsAndOutputs; // Maps mzml to  .hk.bs.kro results files
         public Dictionary<MsDataFileUri, SpectrumSummaryList> AlignmentSpectrumSummaryLists = new Dictionary<MsDataFileUri, SpectrumSummaryList>();
 
-        private Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner> _alignments =
-            new Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner>();
+        private DataFileAlignments _alignments =
+            new DataFileAlignments();
         public static int MaxCharge = 7; // Look for charge states up to and including this
         public override void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
@@ -536,19 +536,19 @@ namespace pwiz.Skyline.Model.DdaSearch
                             {
                                 var fileI = _convertedFileNames[hkFeatureDetailI.fileIndex];
                                 var fileJ = _convertedFileNames[hkFeatureDetailJ.fileIndex];
-                                if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignmentI) &&
-                                    _alignments.TryGetValue(Tuple.Create(fileJ, fileI), out var alignmentJ))
+                                var alignmentItoJ = _alignments.BuildAlignmentFunction(fileI, fileJ, 2);
+                                if (alignmentItoJ != null)
                                 {
-                                    var rtJIStart = alignmentJ.GetValue(hkFeatureDetailJ.rtStart); // Warp rt J into I rt space
-                                    var rtJIEnd = alignmentJ.GetValue(hkFeatureDetailJ.rtEnd); // Warp rt J into I rt space
+                                    var rtJIStart = alignmentItoJ.GetX(hkFeatureDetailJ.rtStart); // Warp rt J into I rt space
+                                    var rtJIEnd = alignmentItoJ.GetX(hkFeatureDetailJ.rtEnd); // Warp rt J into I rt space
                                     if (RTOverlap(hkFeatureDetailI.rtStart, hkFeatureDetailI.rtEnd, rtJIStart, rtJIEnd))
                                     {
                                         matchIndex[j] = i; // J is the same feature as I
                                     }
                                     else
                                     {
-                                        var rtIJStart = alignmentI.GetValue(hkFeatureDetailI.rtStart); // Warp rt I into J rt space
-                                        var rtIJEnd = alignmentI.GetValue(hkFeatureDetailI.rtEnd); // Warp rt I into J rt space
+                                        var rtIJStart = alignmentItoJ.GetY(hkFeatureDetailI.rtStart); // Warp rt I into J rt space
+                                        var rtIJEnd = alignmentItoJ.GetY(hkFeatureDetailI.rtEnd); // Warp rt I into J rt space
                                         if (RTOverlap(hkFeatureDetailJ.rtStart, hkFeatureDetailJ.rtEnd, rtIJStart, rtIJEnd))
                                         {
                                             matchIndex[j] = i; // J is the same feature as I
@@ -1010,45 +1010,54 @@ namespace pwiz.Skyline.Model.DdaSearch
         private bool PerformAllAlignments(IProgressMonitor progressMonitor)
         {
             IProgressStatus progressStatus = new ProgressStatus();
-            foreach (var entry1 in AlignmentSpectrumSummaryLists)
+            var fileUri1 = SpectrumFileNames.FirstOrDefault(AlignmentSpectrumSummaryLists.ContainsKey);
+            if (fileUri1 == null)
             {
-                foreach (var entry2 in AlignmentSpectrumSummaryLists)
+                return true;
+            }
+
+            var spectra1 = AlignmentSpectrumSummaryLists[fileUri1];
+            foreach (var fileUri2 in SpectrumFileNames)
+            {
+                if (Equals(fileUri1, fileUri2) ||
+                    !AlignmentSpectrumSummaryLists.TryGetValue(fileUri2, out var spectra2))
                 {
-                    if (Equals(entry1.Key, entry2.Key))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var tuple = Tuple.Create(entry1.Key, entry2.Key);
-                    if (_alignments.ContainsKey(tuple))
-                    {
-                        continue; // Already processed
-                    }
-
-                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(AlignmentsPercentDone).
-                        ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileNameWithoutExtension(), entry2.Key.GetFileNameWithoutExtension())));
+                progressMonitor.UpdateProgress(progressStatus = progressStatus
+                    .ChangePercentComplete(AlignmentsPercentDone).ChangeMessage(
+                        string.Format(
+                            DdaSearchResources
+                                .HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_,
+                            fileUri1.GetFileNameWithoutExtension(), fileUri2.GetFileNameWithoutExtension())));
 
 
-                    // We can claw back some worker threads if most Hardklor/Bullseye jobs are done
-                    var remainingHardklorJobs = SpectrumFileNames.Length - CountCompletedSearches;
-                    while (remainingHardklorJobs < _rawFileThreadCount)
-                    {
-                        _rawFileThreadCount--;
-                        _alignerThreadCount++;
-                    }
+                // We can claw back some worker threads if most Hardklor/Bullseye jobs are done
+                var remainingHardklorJobs = SpectrumFileNames.Length - CountCompletedSearches;
+                while (remainingHardklorJobs < _rawFileThreadCount)
+                {
+                    _rawFileThreadCount--;
+                    _alignerThreadCount++;
+                }
 
-                    try
-                    {
-                        _alignments[tuple] = PerformAlignment(entry1.Value, entry2.Value, progressMonitor, _alignerThreadCount);
-                    }
-                    catch (Exception x)
-                    {
-                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_, entry1.Key, entry2.Key, x)));
-                        return false;
-                    }
+                try
+                {
+                    var alignment = PerformAlignment(spectra1, spectra2, progressMonitor, _alignerThreadCount);
+                    _alignments.Add(fileUri1, fileUri2, alignment);
+                }
+                catch (Exception x)
+                {
+                    progressMonitor.UpdateProgress(progressStatus =
+                        progressStatus.ChangeMessage(string.Format(
+                            DdaSearchResources
+                                .HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_,
+                            fileUri1, fileUri2, x)));
+                    return false;
                 }
             }
-            progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file));
+
+        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangeMessage(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file));
 
             return true;
         }
