@@ -333,34 +333,19 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             private Point[] _valuesX;
             private Point[] _valuesY;
 
-            private int _capacityX;
-            private int _capacityY;
-
-            public BestPointIndex()
+            public BestPointIndex(int capacityX, int capacityY)
             {
-                _capacityX = 16384;
-                _capacityY = 16384;
-                _valuesX = new Point[_capacityX];
-                _valuesY = new Point[_capacityY];
+                _valuesX = new Point[capacityX];
+                _valuesY = new Point[capacityY];
             }
 
             public void Consider(Point p)
             {
-                if (p.X >= _capacityX)
-                {
-                    _capacityX = 2 * _capacityX;
-                    Array.Resize(ref _valuesX, _capacityX);
-                }
                 if (p.Score > ((_valuesX[p.X]?.Score)??0.0))
                 {
                     _valuesX[p.X] = p;
                 }
 
-                if (p.Y >= _capacityY)
-                {
-                    _capacityY = 2 * _capacityY;
-                    Array.Resize(ref _valuesY, _capacityY);
-                }
                 if (p.Score > ((_valuesY[p.Y]?.Score) ?? 0.0))
                 {
                     _valuesY[p.Y] = p;
@@ -377,8 +362,8 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// </summary>
         public static List<Point> FilterBestPoints(List<Point> allPoints)
         {
-            var bestPointPerXY = new BestPointIndex();
-            var result = new List<Point>(allPoints.Count/100); // Arbitrary guess at needed capacity as 1% of all points
+            var bestPointPerXY = new BestPointIndex(allPoints.Max(p=> p.X) + 1, allPoints.Max(p => p.Y) + 1);
+            var result = new List<Point>(allPoints.Count); // Almost certainly way more capacity than needed, but it's not retained for long
 
             foreach (var p in allPoints)
             {
