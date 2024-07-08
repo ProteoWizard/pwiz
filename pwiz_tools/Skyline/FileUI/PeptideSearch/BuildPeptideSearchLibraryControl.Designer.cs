@@ -28,7 +28,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildPeptideSearchLibraryControl));
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
@@ -50,10 +49,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnRemFile = new System.Windows.Forms.Button();
             this.lblFileCaption = new System.Windows.Forms.Label();
             this.btnAddFile = new System.Windows.Forms.Button();
-            this.panelSearchThreshold = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textCutoff = new System.Windows.Forms.TextBox();
-            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.helpTip = new System.Windows.Forms.ToolTip();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,7 +59,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelChooseFile.SuspendLayout();
             this.panelPeptideSearch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).BeginInit();
-            this.panelSearchThreshold.SuspendLayout();
             this.SuspendLayout();
             // 
             // grpWorkflow
@@ -220,24 +215,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnAddFile.UseVisualStyleBackColor = true;
             this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
-            // panelSearchThreshold
-            // 
-            this.panelSearchThreshold.Controls.Add(this.label1);
-            this.panelSearchThreshold.Controls.Add(this.textCutoff);
-            resources.ApplyResources(this.panelSearchThreshold, "panelSearchThreshold");
-            this.panelSearchThreshold.Name = "panelSearchThreshold";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // textCutoff
-            // 
-            resources.ApplyResources(this.textCutoff, "textCutoff");
-            this.textCutoff.Name = "textCutoff";
-            this.helpTip.SetToolTip(this.textCutoff, resources.GetString("textCutoff.ToolTip"));
-            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.Frozen = true;
@@ -274,7 +251,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.grpWorkflow);
             this.Controls.Add(this.panelPeptideSearch);
-            this.Controls.Add(this.panelSearchThreshold);
             this.Controls.Add(this.panelChooseFile);
             this.Controls.Add(this.panel1);
             this.Name = "BuildPeptideSearchLibraryControl";
@@ -286,8 +262,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelPeptideSearch.ResumeLayout(false);
             this.panelPeptideSearch.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).EndInit();
-            this.panelSearchThreshold.ResumeLayout(false);
-            this.panelSearchThreshold.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -317,9 +291,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
-        private System.Windows.Forms.Panel panelSearchThreshold;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.ToolTip helpTip;
     }
 }

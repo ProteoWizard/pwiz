@@ -32,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -63,8 +62,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Grid = gridSearchFiles;
             Grid.FilesChanged += OnGridChange;
 
-            CutOffScore = ImportPeptideSearch.CutoffScore;
-
             if (DocumentContainer.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
 
@@ -75,7 +72,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (_isRunPeptideSearch)
             {
                 panel1.Hide();
-                panelSearchThreshold.Show();
                 radioDIA.Text = SkylineResources.BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire;
                 helpTip.SetToolTip(radioDIA, SkylineResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs);
                 InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
@@ -99,7 +95,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             private SrmDocument.DOCUMENT_TYPE _docType;
 
-            public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(null, null, null, false,
+            public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(null, null, false,
                 false, ImportPeptideSearchDlg.Workflow.dda, ImportPeptideSearchDlg.InputFile.search_result, SrmDocument.DOCUMENT_TYPE.proteomic);
 
             public override MessageInfo MessageInfo
@@ -111,20 +107,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
-            public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(control.CutOffScore,
+            public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(
                 control.Grid.Files, control.IrtStandards, control.IncludeAmbiguousMatches,
                 control.FilterForDocumentPeptides, control.WorkflowType, control.InputFileType, control.ModeUI)
             {
             }
 
-            public BuildPeptideSearchLibrarySettings(double? cutoffScore, IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
+            public BuildPeptideSearchLibrarySettings(IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
                 bool includeAmbiguousMatches, bool filterForDocumentPeptides,
                 ImportPeptideSearchDlg.Workflow workFlow, ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
             {
-                if (workFlow != ImportPeptideSearchDlg.Workflow.feature_detection) // This gets set elsewhere for this workflow
-                {
-                    CutoffScore = cutoffScore;
-                }
                 SearchFileNames = files?.ToArray() ?? Array.Empty<BuildLibraryGridView.File>();
                 Standard = standard;
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
@@ -134,8 +126,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _docType = docType;
             }
 
-            [Track(defaultValues: typeof(DefaultValuesNull))]
-            public double? CutoffScore { get; private set; }
             [Track]
             public BuildLibraryGridView.File[] SearchFileNames { get; private set; }
             [Track]
@@ -314,41 +304,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
-        // For test purposes, lets us test error handling
-        public string CutOffScoreText
-        {
-            set { textCutoff.Text = value; } // Can be a null or empty string under some circumstances
-        }
-
         public bool NeedsCutoffScore => _isRunPeptideSearch; // Only needed if Skyline is conducting the search
-
-        private double? _cutoffScore; // May be null when Skyline is not doing the search
-
-        public double? CutOffScore
-        {
-            // Only valid when Skyline performs the search
-            get { return NeedsCutoffScore ? _cutoffScore : null; }
-            set
-            {
-                _cutoffScore = value;
-                textCutoff.Text = _cutoffScore.HasValue ? _cutoffScore.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
-            }
-        }
-
-        public bool ValidateCutoffScore()
-        {
-            if (!NeedsCutoffScore)
-            {
-                return true; // Doesn't matter what's in the text box, we won't use it
-            }
-            var helper = new MessageBoxHelper(this.ParentForm);
-            if (helper.ValidateDecimalTextBox(textCutoff, out var cutoffScore))
-            {
-                _cutoffScore = cutoffScore;
-                return true;
-            }
-            return false;
-        }
 
         public bool IncludeAmbiguousMatches
         {
@@ -699,13 +655,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 Grid.IsFileOnly = true;
                 Grid.FileUris = _ddaSearchDataSources;
-                panelSearchThreshold.Visible = !_isFeatureDetectionWorkflow; // We'll get the search threshold in a different tab if we're doing feature detection
             }
             else
             {
                 Grid.IsFileOnly = false;
                 Grid.FilePaths = ImportPeptideSearch.SearchFilenames;
-                panelSearchThreshold.Visible = false;
             }
             Grid.FilesChanged += OnGridChange;
         }

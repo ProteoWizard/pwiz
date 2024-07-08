@@ -165,8 +165,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledDda.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetDdaHeader(_fieldSeparator),
-                FieldSeparate("True", mzFirst, 20, zFirst, "Preferred", t46, halfWin, isolationWidth, ceFirst),
-                FieldSeparate("True", mzLast, 20, zLast, "Preferred", t39, halfWin, isolationWidth, ceLast));
+                FieldSeparate("True", mzFirst, 20, zFirst, "Preferred", t46, 2*halfWin, isolationWidth, ceFirst),
+                FieldSeparate("True", mzLast, 20, zLast, "Preferred", t39, 2*halfWin, isolationWidth, ceLast));
 
             // Export Thermo unscheduled DDA list.
             const double nce = ThermoQExactiveIsolationListExporter.NARROW_NCE;
@@ -214,8 +214,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledTargeted.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetTargetedHeader(_fieldSeparator),
-                FieldSeparate("True", mzFirst, zFirst, t46, halfWin, isolationWidth, ceFirst, string.Empty),
-                FieldSeparate("True", mzLast, zLast, t39, halfWin, isolationWidth, ceLast, string.Empty));
+                FieldSeparate("True", mzFirst, zFirst, t46, 2*halfWin, isolationWidth, ceFirst, string.Empty),
+                FieldSeparate("True", mzLast, zLast, t39, 2*halfWin, isolationWidth, ceLast, string.Empty));
 
             // Export Thermo unscheduled Targeted list.
             ExportIsolationList(
@@ -482,12 +482,13 @@ namespace pwiz.SkylineTestFunctional
                     dlg.OkDialog();
                 });
             // Set RT predictor to produce negative times
+            const float regressionWindow = 1.4f;
             var rtRegression = new RetentionTimeRegression("NegativeRt",
                 new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A), 
-                .45, -7.8, 1.4, new MeasuredRetentionTime[0]);
+                .45, -7.8, regressionWindow, new MeasuredRetentionTime[0]);
             RunUI(() =>
             {
-                SkylineWindow.ModifyDocument("Set RT predition with negative RTs", doc =>
+                SkylineWindow.ModifyDocument("Set RT prediction with negative RTs", doc =>
                 {
                     return doc.ChangeSettings(
                         doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(rtRegression))
@@ -510,29 +511,46 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.ClickYes();
                 });
 
+            string[] paths = { csvPath };
+            if (SkylineWindow.Document.IsMixedPolarity())
+            {
+                // Mixed polarity documents result in two files 
+                paths = new[]
+                {
+                    TestFilesDirs[0].GetTestPath("negativeRtTest_negative_0001.csv"),
+                    TestFilesDirs[0].GetTestPath("negativeRtTest_positive_0001.csv")
+                };
+            }
+
             // Verify that all peptides have had their predicted retention time moved so that the retention time window subtracted from
             // the predicted retention time is at least AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME
-            var resReader = new DsvFileReader(csvPath, TextUtil.SEPARATOR_TSV);
-            while (resReader.ReadLine() != null)
+            foreach (var path in paths)
             {
-                Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT Window (min)"),
-                    NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtWindow));
-                Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT (min)"),
-                    NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtPredicted));
-                var pepSequence = resReader.GetFieldByName("Compound Name");
-                if (pepSequence == "YIC[+57.021464]DNQDTISSK.light" || pepSequence == "IKNLQSLDPSH.light")
+                var resReader = new DsvFileReader(path, TextUtil.SEPARATOR_TSV);
+                while (resReader.ReadLine() != null)
                 {
-                    // These two peptides are known to have predicted retention times less than rtWindow
-                    Assert.AreEqual(rtPredicted, rtWindow + AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME, 
-                        "Peptide {0} retention time {1} should be equal to RT Window {2} plus minimum {3}",
-                        pepSequence, rtPredicted, rtWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
-                }
-                else
-                {
-                    // All other peptides should have a predicted retention time that is greater than rtWindow
-                    Assert.IsTrue(rtPredicted >= rtWindow + AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME, 
-                        "Peptide {0} retention time {1} should be greater than or equal to RT Window {2} plus minimum {3}",
-                        pepSequence, rtPredicted, rtWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
+                    Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT Window (min)"),
+                        NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtWindow));
+                    Assert.AreEqual(regressionWindow, rtWindow);
+                    Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT (min)"),
+                        NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtPredicted));
+                    var pepSequence = resReader.GetFieldByName("Compound Name");
+                    float halfWindow = rtWindow / 2;
+                    float minPredictedTime = halfWindow + AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME;
+                    if (pepSequence == "YIC[+57.021464]DNQDTISSK.light" || pepSequence == "IKNLQSLDPSH.light")
+                    {
+                        // These two peptides are known to have predicted retention times less than rtWindow
+                        Assert.AreEqual(rtPredicted, minPredictedTime,
+                            "Peptide {0} retention time {1} should be equal to half-RT Window {2} plus minimum {3}",
+                            pepSequence, rtPredicted, halfWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
+                    }
+                    else
+                    {
+                        // All other peptides should have a predicted retention time that is greater than rtWindow
+                        Assert.IsTrue(rtPredicted >= minPredictedTime,
+                            "Peptide {0} retention time {1} should be greater than or equal to half-RT Window {2} plus minimum {3}",
+                            pepSequence, rtPredicted, halfWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
+                    }
                 }
             }
         }

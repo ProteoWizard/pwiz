@@ -191,31 +191,31 @@ namespace pwiz.Common.DataBinding
             BindingListSource bindingListSource, char separator)
         {
             IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, separator);
+            WriteDataWithStatus(progressMonitor, ref status, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
         }
 
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, char separator)
+        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, RowItemEnumerator rowItemEnumerator, char separator)
         {
-            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
-            IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
-            IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(Array.Empty<PropertyDescriptor>()).Cast<PropertyDescriptor>().ToArray();
-            dsvWriter.WriteHeaderRow(writer, properties);
-            var rowCount = rows.Count;
+            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
+            dsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
+            var rowCount = rowItemEnumerator.Count;
             int startPercent = status.PercentComplete;
-            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+            int rowIndex = 0;
+            while (rowItemEnumerator.MoveNext())
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                int percentComplete = startPercent + (rowIndex*(100 - startPercent)/rowCount);
+                int percentComplete = startPercent + (rowIndex * (100 - startPercent) / rowCount);
                 if (percentComplete > status.PercentComplete)
                 {
                     status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
                         .ChangePercentComplete(percentComplete);
                     progressMonitor.UpdateProgress(status);
                 }
-                dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
+                dsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
+                rowIndex++;
             }
         }
 

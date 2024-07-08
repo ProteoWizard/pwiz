@@ -1086,6 +1086,7 @@ namespace SkylineTester
                 runParallel,
                 runSerial,
                 parallelWorkerCount,
+                coverageCheckbox,
 
                 // Build
                 buildTrunk,
@@ -1515,6 +1516,7 @@ namespace SkylineTester
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
         public RadioButton      RunParallel                 { get { return runParallel; } }
+        public CheckBox         RunCoverage                 { get { return coverageCheckbox; } }
         public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
@@ -1947,6 +1949,29 @@ namespace SkylineTester
             labelParallelOffscreenHint.Location = Offscreen.Location;
             Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
             labelParallelOffscreenHint.Visible = !Offscreen.Visible;
+
+            if (runSerial.Checked)
+            {
+                coverageCheckbox.Checked = false;
+                coverageCheckbox.Enabled = false;
+            }
+            else
+            {
+                coverageCheckbox.Enabled = true;
+            }
+        }
+
+        private void coverageCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (coverageCheckbox.Checked)
+            {
+                runSerial.Enabled = false;
+                runParallel.Checked = true;
+            }
+            else
+            {
+                runSerial.Enabled = true;
+            }
         }
 
         #endregion Control events
