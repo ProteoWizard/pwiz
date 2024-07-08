@@ -238,7 +238,12 @@ namespace pwiz.SkylineTestUtil
 
         public QueryLock ReaderWriterLock
         {
-            get { return new QueryLock(CancellationToken.None); }
+            get
+            {
+                // Memory streams do not do any sort of locking, so just return a
+                // new QueryLock whenever requested.
+                return new QueryLock(CancellationToken.None);
+            }
         }
     }
 }

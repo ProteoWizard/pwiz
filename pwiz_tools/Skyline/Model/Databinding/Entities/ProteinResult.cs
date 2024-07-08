@@ -59,20 +59,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("MoleculeListAbundance")]
         [ProteomicDisplayName("ProteinAbundance")]
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? Abundance
+        public Protein.AbundanceValue Abundance
         {
             get
             {
-                if (!Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out var abundanceValue))
-                {
-                    return null;
-                }
-                if (abundanceValue.Incomplete)
-                {
-                    return null;
-                }
-                return abundanceValue.Abundance;
+                return GetAbundance();
             }
+        }
+
+        private Protein.AbundanceValue GetAbundance()
+        {
+            if (Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out var abundanceValue))
+            {
+                return abundanceValue;
+            }
+
+            return null;
         }
 
         EventHandler ILinkValue.ClickEventHandler

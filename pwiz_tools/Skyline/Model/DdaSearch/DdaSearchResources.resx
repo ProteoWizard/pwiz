@@ -173,13 +173,13 @@
     <value>Starting msconvert conversion.</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-      <value>Retention time alignment: {0} vs {1}</value>
+    <value>Retention time alignment: {0} vs {1}</value>
   </data>
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
-      <value>Looking for features occurring in multiple replicates</value>
+    <value>Looking for features occurring in multiple replicates</value>
   </data>
   <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
-      <value>See Hardklor/Bullseye log for details</value>
+    <value>See Hardklor/Bullseye log for details</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_" xml:space="preserve">
     <value>Error performing alignment between {0} and {1}: {2}</value>
@@ -195,5 +195,11 @@
   </data>
   <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
     <value>Converting file "{0}" to {1}</value>
+  </data>
+  <data name="HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_" xml:space="preserve">
+    <value>Min isotope &amp;dot product:</value>
+  </data>
+  <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
+    <value>Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution.</value>
   </data>
 </root>

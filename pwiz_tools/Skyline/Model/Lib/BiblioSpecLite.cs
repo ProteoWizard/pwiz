@@ -142,9 +142,9 @@ namespace pwiz.Skyline.Model.Lib
         private PooledSqliteConnection _sqliteConnectionRedundant;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
+        private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
         private bool _hasExplicitBoundsQValues;
-        private Dictionary<MsDataFileUri, int> msDataFileUriLookup;
 
         public static string GetLibraryCachePath(string libraryPath)
         {
@@ -196,7 +196,8 @@ namespace pwiz.Skyline.Model.Lib
             _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
 
             // Create an empty list for _librarySource files, will be updated when library is loaded
-            _librarySourceFiles = new BiblioLiteSourceInfo[0];
+            _librarySourceFiles = Array.Empty<BiblioLiteSourceInfo>();
+            _libraryFiles = LibraryFiles.EMPTY;
         }
 
         protected override LibrarySpec CreateSpec()
@@ -254,13 +255,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                return new LibraryFiles
-                {
-                    FilePaths = from sourceFile in _librarySourceFiles
-                        let fileName = sourceFile.FilePath
-                        where fileName != null
-                        select fileName
-                };
+                return _libraryFiles;
             }
         }
 
@@ -1136,7 +1131,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     _librarySourceFiles = librarySourceFiles.ToArray();
-                    msDataFileUriLookup = new Dictionary<MsDataFileUri, int>();
+                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
 
                     var scoreTypes = new Dictionary<int, string>();
                     if (locationScoreTypes != 0)
@@ -1562,6 +1557,14 @@ namespace pwiz.Skyline.Model.Lib
             get { return _hasExplicitBoundsQValues; }
         }
 
+        public override bool HasExplicitBounds
+        {
+            get
+            {
+                return _anyExplicitPeakBounds;
+            }
+        }
+
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
         {
             return TryGetRetentionTimes(MsDataFileUri.Parse(_librarySourceFiles[fileIndex].FilePath), out retentionTimes);
@@ -1868,51 +1871,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private int FindSource(MsDataFileUri filePath)
         {
-            if (filePath == null || _librarySourceFiles.Length == 0)
-            {
-                return -1;
+            return _libraryFiles.FindIndexOf(filePath);
             }
-            Assume.IsNotNull(msDataFileUriLookup);
-            lock (msDataFileUriLookup)
-            {
-                if (msDataFileUriLookup.TryGetValue(filePath, out int index))
-                {
-                    return index;
-                }
-            }
-            string filePathToString = filePath.ToString();
-            // First look for an exact path match
-            int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
-            // filePath.ToString may include decorators e.g. "C:\\data\\mydata.raw?centroid_ms1=true", try unadorned name ("mydata.raw")
-            if (i == -1)
-            {
-                string fileName = filePath.GetFileName();
-                i = _librarySourceFiles.IndexOf(info => Equals(fileName, info.FilePath));
-            }
-            // Or a straight basename match, which we sometimes use internally
-            if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.BaseName));
-            // NOTE: We don't expect multi-part wiff files to appear in a library
-            if (i == -1 && null == filePath.GetSampleName())
-            {
-                try
-                {
-                    // Failing an exact path match, look for a basename match
-                    string baseName = filePath.GetFileNameWithoutExtension();
-                    i = _librarySourceFiles.IndexOf(info => MeasuredResults.IsBaseNameMatch(baseName, info.BaseName));
-                }
-                catch (ArgumentException)
-                {
-                    // Handle: Illegal characters in path
-                }
-            }
-
-            lock (msDataFileUriLookup)
-            {
-                msDataFileUriLookup[filePath] = i;
-            }
-            return i;
-        }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {

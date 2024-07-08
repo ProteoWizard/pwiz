@@ -30,9 +30,11 @@ using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
 using MSAmanda.InOutput.Output;
+using pwiz.BiblioSpec;
 using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
@@ -161,10 +163,21 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Do nothing. MS Amanda does not seem to give this value to Percolator
+        }
+
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
+
         public override string[] FragmentIons => Settings.ChemicalData.Instruments.Keys.ToArray();
         public override string[] Ms2Analyzers => new[] { @"Default" };
         public override string EngineName => @"MS Amanda";
+        public override string CutoffScoreName => _cutoffScoreName;
+        public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
+        public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
         public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
+        public override string  SearchEngineBlurb => string.Empty;
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)
         {

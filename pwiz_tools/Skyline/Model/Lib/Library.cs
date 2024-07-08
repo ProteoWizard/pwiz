@@ -939,6 +939,11 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public virtual bool HasExplicitBounds
+        {
+            get { return false; }
+        }
+
         /// <summary>
         /// Returns true if the library has explicit bounds and also if the q-values
         /// are different for different files (i.e. not peptide-level q-values).
@@ -1243,6 +1248,11 @@ namespace pwiz.Skyline.Model.Lib
         protected IEnumerable<TInfo> LibraryEntriesWithSequence(Target target)
         {
             return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
+        }
+
+        protected int FindFileInList(MsDataFileUri sourceFile, LibraryFiles fileNames)
+        {
+            return fileNames.FindIndexOf(sourceFile);
         }
     }
 
@@ -2778,17 +2788,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(Link))
                 result.Add($@"LinkURL: {Link} ");
             return TextUtil.LineSeparate(result);
-        }
-    }
-
-    public sealed class LibraryFiles
-    {
-        private IEnumerable<string> _filePaths;
-
-        public IEnumerable<string> FilePaths
-        {
-            get { return _filePaths ?? (_filePaths = new List<string>()); }
-            set { _filePaths = value; }
         }
     }
 

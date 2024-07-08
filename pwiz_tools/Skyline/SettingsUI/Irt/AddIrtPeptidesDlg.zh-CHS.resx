@@ -316,18 +316,6 @@
     <value>从色谱峰中计算得到的 {0} 个肽段 iRT 值将被保留
 并且从 MS/MS 扫描中计算得到的新 iRT 值将被忽略：</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Name" xml:space="preserve">
-    <value>labelKeep</value>
-  </data>
-  <data name="&gt;&gt;labelKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelKeep.Parent" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;labelKeep.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="listKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -338,18 +326,6 @@
     <value>437, 69</value>
   </data>
   <data name="listKeep.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Name" xml:space="preserve">
-    <value>listKeep</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Parent" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelRunsFailed.AutoSize" type="System.Boolean, mscorlib">
@@ -509,18 +485,6 @@
     <value>从 MS/MS 扫描中计算得到的 {0} 个肽段 iRT 值将被替换
 为从色谱峰中计算得到的 iRT 值：</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.Name" xml:space="preserve">
-    <value>labelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.Parent" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="listOverwrite.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -531,18 +495,6 @@
     <value>437, 69</value>
   </data>
   <data name="listOverwrite.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Name" xml:space="preserve">
-    <value>listOverwrite</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Parent" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -662,18 +614,6 @@
   <data name="radioAverage.Text" xml:space="preserve">
     <value>平均新值和现有值</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
-    <value>radioAverage</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="radioReplace.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -694,18 +634,6 @@
   </data>
   <data name="radioReplace.Text" xml:space="preserve">
     <value>替换现有值</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
-    <value>radioReplace</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="radioSkip.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -728,18 +656,6 @@
   <data name="radioSkip.Text" xml:space="preserve">
     <value>离开现有值</value>
   </data>
-  <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
-    <value>radioSkip</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="labelChoice.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -761,18 +677,6 @@
   <data name="labelChoice.Text" xml:space="preserve">
     <value>选择您希望以何种方式处理这些肽段：</value>
   </data>
-  <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
-    <value>labelChoice</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="labelExisting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -791,18 +695,6 @@
   <data name="labelExisting.Text" xml:space="preserve">
     <value>库中已经有 {0} 个肽段具有值：</value>
   </data>
-  <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
-    <value>labelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="listExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -814,18 +706,6 @@
   </data>
   <data name="listExisting.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Name" xml:space="preserve">
-    <value>listExisting</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
