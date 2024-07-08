@@ -546,6 +546,8 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Results\Imputation\AlignmentParameters.cs" />
+    <Compile Include="Model\Results\Imputation\AlignmentResults.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentType.cs" />
     <Compile Include="Model\Results\Imputation\KdeAlignmentType.cs" />
     <Compile Include="Model\Results\Imputation\ChromatogramTimeRanges.cs" />
@@ -561,6 +563,8 @@
     <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
     <Compile Include="Model\Results\Imputation\ScoreConversionData.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
+    <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
