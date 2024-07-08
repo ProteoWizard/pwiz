@@ -800,7 +800,7 @@ namespace pwiz.Skyline.Model.Lib
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_IONMODE = new Regex(@" ^ IonMode:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
         private const string MZVAULT_NEGATIVE_SCAN_INIDCATOR = @"Negative scan";
@@ -1474,9 +1474,9 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_IONMODE.Match(line);
                 if (match.Success)
                 {
-                    if (string.Equals(@"positive", match.Groups[1].Value))
+                    if (string.Equals(@"positive", match.Groups[1].Value, StringComparison.InvariantCultureIgnoreCase))
                         isPositive = true;
-                    else if (string.Equals(@"negative", match.Groups[1].Value))
+                    else if (string.Equals(@"negative", match.Groups[1].Value, StringComparison.InvariantCultureIgnoreCase))
                         isPositive = false;
                     return true;  // Line is fully consumed
                 }
