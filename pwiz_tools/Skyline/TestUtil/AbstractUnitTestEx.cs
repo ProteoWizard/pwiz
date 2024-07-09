@@ -27,7 +27,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Koina.Config;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
 
