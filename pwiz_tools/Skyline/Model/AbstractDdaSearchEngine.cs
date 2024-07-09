@@ -169,9 +169,14 @@ namespace pwiz.Skyline.Model
             public string ToString(bool withEqualSign, IFormatProvider provider = null)
             {
                 string delimiter = withEqualSign ? @" =" : string.Empty;
+                return $@"{Name}{delimiter} {ValueToString(provider)}";
+            }
+
+            public string ValueToString(IFormatProvider provider = null)
+            {
                 if (Value is double d)
-                    return $@"{Name}{delimiter} {d.ToString(@"F", provider)}";
-                return $@"{Name}{delimiter} {Value}";
+                    return d.ToString(@"F", provider);
+                return Value.ToString();
             }
 
             public string AuditLogText => ToString();
