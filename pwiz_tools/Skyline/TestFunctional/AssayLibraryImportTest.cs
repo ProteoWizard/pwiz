@@ -1507,57 +1507,7 @@ importIrt => importIrt.Btn1Click());
                 return; // Keep it simple, only worry about one language
             }
             var auditLogActual = Path.Combine(TestFilesDir.GetTestPath(@".."), this.TestContext.TestName, @"Auditlog", english, this.TestContext.TestName) + ".log";
-            var auditLogExpected = TestFilesDir.GetTestPath(@"TestAssayLibraryImport.log");
-            var linesActual = File.ReadAllLines(auditLogActual);
-            var linesExpected = File.ReadAllLines(auditLogExpected);
-            if (_asSmallMolecules)
-            {
-                // A bit of surgery to make the reference audit log look like it was generated from a small molecule transition list
-                var adjustedExpectedLines = new List<string>();
-                var countActual = 0;
-                for (var count = 0; count < linesExpected.Length; count++)
-                {
-                    if ((count >= 29 && count <= 37) ||
-                        (count >= 132 && count <= 208) ||
-                        (count >= 216 && count <= 230) ||
-                        (count >= 245 && count <= 257))
-                    {
-                        // Skip sections that were purely peptide oriented
-                        continue; 
-                    }
-
-                    var lineExpected = linesExpected[count].Replace("Peptide", "Molecule");
-                    if (count == 81)
-                    {
-                        // Small mol reader doesn't duplicate transitions
-                        lineExpected = lineExpected.Replace("1361", "0");
-                    }
-                    else if (count == 97)
-                    {
-                        // Small mol reader doesn't duplicate transitions
-                        lineExpected = lineExpected.Replace("1361", "242");
-                    }
-                    else if (count == 262)
-                    {
-                        // Small mol tests skipped a previous import so had more to add on this step
-                        lineExpected = lineExpected.Replace("1670", "2001");
-                    }
-
-                    var columnsIdentifiedAs = "Columns identified as";
-                    if (lineExpected.StartsWith(columnsIdentifiedAs))
-                    {
-                        AssertEx.IsTrue(linesActual[countActual].StartsWith(columnsIdentifiedAs));
-                        adjustedExpectedLines.Add(linesActual[countActual]); // Just too messy trying to match translated column headers, assume they're OK or nothing else would work
-                    }
-                    else
-                    {
-                        adjustedExpectedLines.Add(lineExpected);
-                    }
-                    countActual++;
-                }
-                auditLogExpected = auditLogExpected.Replace(".log", "_as_small_molecules.log");
-                File.WriteAllLines(auditLogExpected, adjustedExpectedLines);
-            }
+            var auditLogExpected = TestFilesDir.GetTestPath(_asSmallMolecules ? @"TestAssayLibraryImportAsSmallMolecules.log" : @"TestAssayLibraryImport.log");
             AssertEx.FileEquals(auditLogExpected, auditLogActual, null, true);
         }
     }
