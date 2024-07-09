@@ -286,7 +286,7 @@ namespace pwiz.SkylineTest
                 1)); // Skip first line with its timestamp);
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.

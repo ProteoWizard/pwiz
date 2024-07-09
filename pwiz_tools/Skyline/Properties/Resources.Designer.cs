@@ -3288,6 +3288,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There is already an annotation defined named &apos;{0}&apos;..
+        /// </summary>
+        public static string DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__ {
+            get {
+                return ResourceManager.GetString("DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Delete {
@@ -3913,6 +3922,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Legacy Libraries.
+        /// </summary>
+        public static string EditLibraryDlg_GetLibraryPath_Legacy_Libraries {
+            get {
+                return ResourceManager.GetString("EditLibraryDlg_GetLibraryPath_Legacy_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} is not a supported spectral library file format..
         /// </summary>
         public static string EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format {
@@ -4184,6 +4202,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export Isolation List.
+        /// </summary>
+        public static string ExportMethodDlg_ExportMethodDlg_Export_Isolation_List {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ExportMethodDlg_Export_Isolation_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compensation Voltage:.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Compensation_Voltage_ {
@@ -4403,6 +4430,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("ExternalTool", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides in different FASTA sequences may not be compared..
+        /// </summary>
+        public static string FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared {
+            get {
+                return ResourceManager.GetString("FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_co" +
+                        "mpared", resourceCulture);
             }
         }
         
@@ -6227,6 +6264,15 @@ namespace pwiz.Skyline.Properties {
         public static string NistLibraryBase_CreateCache_ {
             get {
                 return ResourceManager.GetString("NistLibraryBase_CreateCache_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading {0} library.
+        /// </summary>
+        public static string NistLibraryBase_Load_Loading__0__library {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_Load_Loading__0__library", resourceCulture);
             }
         }
         
@@ -10746,6 +10792,15 @@ namespace pwiz.Skyline.Properties {
         public static string String1 {
             get {
                 return ResourceManager.GetString("String1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
+            get {
+                return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
             }
         }
         

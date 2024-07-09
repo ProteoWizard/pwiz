@@ -468,18 +468,6 @@
   <data name="tabGeneral.Text" xml:space="preserve">
     <value>予測</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.Name" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;tabGeneral.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabGeneral.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabGeneral.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="comboCompensationVoltage.Location" type="System.Drawing.Point, System.Drawing">
     <value>208, 179</value>
   </data>
@@ -488,18 +476,6 @@
   </data>
   <data name="comboCompensationVoltage.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
-  </data>
-  <data name="&gt;&gt;comboCompensationVoltage.Name" xml:space="preserve">
-    <value>comboCompensationVoltage</value>
-  </data>
-  <data name="&gt;&gt;comboCompensationVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboCompensationVoltage.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboCompensationVoltage.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="label19.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -519,18 +495,6 @@
   <data name="label19.Text" xml:space="preserve">
     <value>補償電圧(&amp;V)：</value>
   </data>
-  <data name="&gt;&gt;label19.Name" xml:space="preserve">
-    <value>label19</value>
-  </data>
-  <data name="&gt;&gt;label19.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="comboOptimizationLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>23, 179</value>
   </data>
@@ -539,18 +503,6 @@
   </data>
   <data name="comboOptimizationLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizationLibrary.Name" xml:space="preserve">
-    <value>comboOptimizationLibrary</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizationLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizationLibrary.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizationLibrary.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -570,18 +522,6 @@
   <data name="label20.Text" xml:space="preserve">
     <value>最適化ライブラリ(&amp;O)：</value>
   </data>
-  <data name="&gt;&gt;label20.Name" xml:space="preserve">
-    <value>label20</value>
-  </data>
-  <data name="&gt;&gt;label20.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="labelOptimizeType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -599,18 +539,6 @@
   </data>
   <data name="labelOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizeType.Name" xml:space="preserve">
-    <value>labelOptimizeType</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizeType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizeType.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizeType.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
@@ -637,18 +565,6 @@
   <data name="comboOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="&gt;&gt;comboOptimizeType.Name" xml:space="preserve">
-    <value>comboOptimizeType</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizeType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizeType.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizeType.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="cbUseOptimized.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -669,18 +585,6 @@
 DPの最適化値が、メソッドおよびトランジションのリストで
 エクスポートされた値の選択に使用されます。 最大総ピーク面積を生成する値が選択されます。</value>
   </data>
-  <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
-    <value>cbUseOptimized</value>
-  </data>
-  <data name="&gt;&gt;cbUseOptimized.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbUseOptimized.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;cbUseOptimized.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="comboDeclusterPotential.Location" type="System.Drawing.Point, System.Drawing">
     <value>208, 109</value>
   </data>
@@ -692,18 +596,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
     <value>プリカーサーイオンのm/z値からデクラスタリングポテンシャル（DP）を計算するための一次方程式です。同位体標識ペプチドは、非標識ペプチドと同一のDPを使用します。（AB装置のみ）</value>
-  </data>
-  <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
-    <value>comboDeclusterPotential</value>
-  </data>
-  <data name="&gt;&gt;comboDeclusterPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboDeclusterPotential.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboDeclusterPotential.ZOrder" xml:space="preserve">
-    <value>7</value>
   </data>
   <data name="label12.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -720,18 +612,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="label12.Text" xml:space="preserve">
     <value>デクラスタリングポテンシャル(&amp;D)：</value>
   </data>
-  <data name="&gt;&gt;label12.Name" xml:space="preserve">
-    <value>label12</value>
-  </data>
-  <data name="&gt;&gt;label12.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label12.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
   <data name="comboCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
     <value>23, 109</value>
   </data>
@@ -743,18 +623,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
     <value>プリカーサーイオンのm/z値から最適衝突エネルギー (CE) を計算するための一次方程式です。同位体標識ペプチドは、非標識ペプチドと同一のCEを使用します。</value>
-  </data>
-  <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
-    <value>comboCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;comboCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboCollisionEnergy.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>9</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -770,18 +638,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>衝突エネルギー(&amp;C)：</value>
-  </data>
-  <data name="&gt;&gt;label7.Name" xml:space="preserve">
-    <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>10</value>
   </data>
   <data name="comboIonMass.Items" xml:space="preserve">
     <value>モノアイソトピック</value>
@@ -802,18 +658,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>すべてのプリカーサー質量の計算に使用する
 分子質量計算法 (モノアイソトピックまたは平均) です</value>
   </data>
-  <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
-    <value>comboIonMass</value>
-  </data>
-  <data name="&gt;&gt;comboIonMass.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboIonMass.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboIonMass.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -828,18 +672,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>プロダクトイオン質量(&amp;D)：</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>12</value>
   </data>
   <data name="comboPrecursorMass.Items" xml:space="preserve">
     <value>モノアイソトピック</value>
@@ -860,18 +692,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>すべてのプリカーサー質量の計算に使用する
 分子質量計算法 (モノアイソトピックまたは平均) です。</value>
   </data>
-  <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
-    <value>comboPrecursorMass</value>
-  </data>
-  <data name="&gt;&gt;comboPrecursorMass.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboPrecursorMass.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;comboPrecursorMass.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -886,18 +706,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>プリカーサー質量(&amp;P)：</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>tabGeneral</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>14</value>
   </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
     <value>cbExclusionUseDIAWindow</value>
@@ -986,18 +794,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="tabFilter.Text" xml:space="preserve">
     <value>フィルタ</value>
   </data>
-  <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabFilter.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="cbExclusionUseDIAWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1022,18 +818,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="cbExclusionUseDIAWindow.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
-    <value>cbExclusionUseDIAWindow</value>
-  </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="lbMZ.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1051,18 +835,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="lbMZ.Text" xml:space="preserve">
     <value>m/z</value>
-  </data>
-  <data name="&gt;&gt;lbMZ.Name" xml:space="preserve">
-    <value>lbMZ</value>
-  </data>
-  <data name="&gt;&gt;lbMZ.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lbMZ.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;lbMZ.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
     <value>tabPage1</value>
@@ -1096,18 +868,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="tabControlPeptidesSmallMols.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Name" xml:space="preserve">
-    <value>tabControlPeptidesSmallMols</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -1208,18 +968,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="tabPage1.Text" xml:space="preserve">
     <value>ペプチド</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
-    <value>tabControlPeptidesSmallMols</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1235,18 +983,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="label5.Text" xml:space="preserve">
     <value>プリカーサーイオンの電荷(&amp;P)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="textPeptideIonTypes.Location" type="System.Drawing.Point, System.Drawing">
     <value>232, 26</value>
   </data>
@@ -1260,18 +996,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>プロダクトイオン候補の計算に用いるプロダクトイオンタイプ（a, b, c, x, y, z, z., z', p（プリカーサー）） のカンマ区切りのリストです。 z. および z’ はz+1ラジカルイオンおよびz+2イオンを意味します。
 これらは通常、ExD実験にみられます。
 代わりに z* や z" を使用することもできます。 </value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
-    <value>textPeptideIonTypes</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonTypes.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonTypes.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="&gt;&gt;btnEditSpecialTransitions.Name" xml:space="preserve">
     <value>btnEditSpecialTransitions</value>
@@ -1369,18 +1093,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="groupBox1.Text" xml:space="preserve">
     <value>プロダクトイオンの選択</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="btnEditSpecialTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>194, 103</value>
   </data>
@@ -1395,18 +1107,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="btnEditSpecialTransitions.ToolTip" xml:space="preserve">
     <value>利用可能な特別なプロダクトイオンのリストを編集</value>
-  </data>
-  <data name="&gt;&gt;btnEditSpecialTransitions.Name" xml:space="preserve">
-    <value>btnEditSpecialTransitions</value>
-  </data>
-  <data name="&gt;&gt;btnEditSpecialTransitions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnEditSpecialTransitions.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;btnEditSpecialTransitions.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="label18.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1423,18 +1123,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="label18.Text" xml:space="preserve">
     <value>特別なイオン(&amp;S)：</value>
   </data>
-  <data name="&gt;&gt;label18.Name" xml:space="preserve">
-    <value>label18</value>
-  </data>
-  <data name="&gt;&gt;label18.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label18.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="listAlwaysAdd.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 103</value>
   </data>
@@ -1447,18 +1135,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="listAlwaysAdd.ToolTip" xml:space="preserve">
     <value>フィルタ範囲外であっても、存在していれば 測定される特別なプロダクトイオンのセットです</value>
   </data>
-  <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
-    <value>listAlwaysAdd</value>
-  </data>
-  <data name="&gt;&gt;listAlwaysAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listAlwaysAdd.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;listAlwaysAdd.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="comboRangeFrom.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 44</value>
   </data>
@@ -1470,18 +1146,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="comboRangeFrom.ToolTip" xml:space="preserve">
     <value>フィルタ範囲のイオンに対する開始時プロダクトイオン</value>
-  </data>
-  <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
-    <value>comboRangeFrom</value>
-  </data>
-  <data name="&gt;&gt;comboRangeFrom.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboRangeFrom.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;comboRangeFrom.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1498,18 +1162,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="label3.Text" xml:space="preserve">
     <value>開始点(&amp;F)：</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="comboRangeTo.Location" type="System.Drawing.Point, System.Drawing">
     <value>173, 43</value>
   </data>
@@ -1521,18 +1173,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="comboRangeTo.ToolTip" xml:space="preserve">
     <value>プロダクトイオンのフィルタ範囲の終了点</value>
-  </data>
-  <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
-    <value>comboRangeTo</value>
-  </data>
-  <data name="&gt;&gt;comboRangeTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboRangeTo.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;comboRangeTo.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1549,18 +1189,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="label4.Text" xml:space="preserve">
     <value>終了点(&amp;O)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1575,18 +1203,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="label6.Text" xml:space="preserve">
     <value>イオン電荷(&amp;I)：</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1603,18 +1219,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="label8.Text" xml:space="preserve">
     <value>イオンタイプ(&amp;T)：</value>
   </data>
-  <data name="&gt;&gt;label8.Name" xml:space="preserve">
-    <value>label8</value>
-  </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="textPeptidePrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 26</value>
   </data>
@@ -1627,18 +1231,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="textPeptidePrecursorCharges.ToolTip" xml:space="preserve">
     <value>プリカーサーのm/z値の計算に使用する カンマ区切りの荷電状態のリストです</value>
   </data>
-  <data name="&gt;&gt;textPeptidePrecursorCharges.Name" xml:space="preserve">
-    <value>textPeptidePrecursorCharges</value>
-  </data>
-  <data name="&gt;&gt;textPeptidePrecursorCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textPeptidePrecursorCharges.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;textPeptidePrecursorCharges.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="textPeptideIonCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>122, 26</value>
   </data>
@@ -1650,18 +1242,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="textPeptideIonCharges.ToolTip" xml:space="preserve">
     <value>プロダクトイオンのm/z値の計算に使用する カンマ区切りの荷電状態のリストです</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonCharges.Name" xml:space="preserve">
-    <value>textPeptideIonCharges</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonCharges.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonCharges.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <data name="&gt;&gt;btnPrecursorAdduct.Name" xml:space="preserve">
     <value>btnPrecursorAdduct</value>
@@ -1774,18 +1354,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   <data name="tabPage2.Text" xml:space="preserve">
     <value>分子</value>
   </data>
-  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
-    <value>tabControlPeptidesSmallMols</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="btnPrecursorAdduct.Location" type="System.Drawing.Point, System.Drawing">
     <value>286, 24</value>
   </data>
@@ -1794,18 +1362,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="btnPrecursorAdduct.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
-  </data>
-  <data name="&gt;&gt;btnPrecursorAdduct.Name" xml:space="preserve">
-    <value>btnPrecursorAdduct</value>
-  </data>
-  <data name="&gt;&gt;btnPrecursorAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnPrecursorAdduct.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;btnPrecursorAdduct.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="btnFragmentAdduct.Location" type="System.Drawing.Point, System.Drawing">
     <value>286, 63</value>
@@ -1818,18 +1374,6 @@ DPの最適化値が、メソッドおよびトランジションのリストで
   </data>
   <data name="btnFragmentAdduct.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentAdduct.Name" xml:space="preserve">
-    <value>btnFragmentAdduct</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentAdduct.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentAdduct.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="textSmallMoleculeFragmentAdducts.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 66</value>
@@ -1855,18 +1399,6 @@ ACN (C2H3N)、DMSO (C2H6OS)、FA (CH2O2)、Hac (CH3COOH)、TFA (C2HF3O2)、IsoPr
 荷電状態はこれらの付加イオン成分から推測されます：
 H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)、HCOO (-1)、NH4 (+1)</value>
   </data>
-  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
-    <value>textSmallMoleculeFragmentAdducts</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="labelSmallMoleculeFragmentAdducts.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1885,18 +1417,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="labelSmallMoleculeFragmentAdducts.Text" xml:space="preserve">
     <value>フラグメント付加イオン(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
-    <value>labelSmallMoleculeFragmentAdducts</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="textSmallMoleculeIonTypes.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 112</value>
   </data>
@@ -1908,18 +1428,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="textSmallMoleculeIonTypes.ToolTip" xml:space="preserve">
     <value>スペクトルライブラリのフィルタに用いるプロダクトイオンのタイプ（fはフラグメント、pはプリカーサー） のカンマ区切りのリストです </value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeIonTypes.Name" xml:space="preserve">
-    <value>textSmallMoleculeIonTypes</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeIonTypes.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeIonTypes.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="labelSmallMoleculeIonTypes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1938,18 +1446,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="labelSmallMoleculeIonTypes.Text" xml:space="preserve">
     <value>イオンタイプ(&amp;T)：</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Name" xml:space="preserve">
-    <value>labelSmallMoleculeIonTypes</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeIonTypes.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="textSmallMoleculePrecursorAdducts.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 26</value>
@@ -1975,18 +1471,6 @@ ACN (C2H3N)、DMSO (C2H6OS)、FA (CH2O2)、Hac (CH3COOH)、TFA (C2HF3O2)、IsoPr
 荷電状態はこれらの付加イオン成分から推測されます：
 H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)、HCOO (-1)、NH4 (+1)</value>
   </data>
-  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
-    <value>textSmallMoleculePrecursorAdducts</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="lblSmallMoleculePrecursorAdducts.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2008,18 +1492,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="lblSmallMoleculePrecursorAdducts.Text" xml:space="preserve">
     <value>プリカーサー付加イオン(&amp;A)：</value>
   </data>
-  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
-    <value>lblSmallMoleculePrecursorAdducts</value>
-  </data>
-  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
   <data name="textExclusionWindow.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 408</value>
   </data>
@@ -2032,18 +1504,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="textExclusionWindow.ToolTip" xml:space="preserve">
     <value>プリカーサーイオンm/z近傍のトランジションを除外または空白にするm/zウィンドウです。たとえば、ウィンドウ値 20の場合は、 
 プリカーサーイオンm/z値の前後10の範囲内にあるすべてのトランジションを除外します。</value>
-  </data>
-  <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
-    <value>textExclusionWindow</value>
-  </data>
-  <data name="&gt;&gt;textExclusionWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textExclusionWindow.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;textExclusionWindow.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="cbAutoSelect.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2065,18 +1525,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
 トランジションが自動的に選択されます。オフにすると、すべてのトランジションを
 手動ドキュメント編集で選択する必要があります。</value>
   </data>
-  <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
-    <value>cbAutoSelect</value>
-  </data>
-  <data name="&gt;&gt;cbAutoSelect.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbAutoSelect.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;cbAutoSelect.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="lbPrecursorMzWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2091,18 +1539,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="lbPrecursorMzWindow.Text" xml:space="preserve">
     <value>プリカーサーm/zのexclusionウィンドウ(&amp;X)：</value>
-  </data>
-  <data name="&gt;&gt;lbPrecursorMzWindow.Name" xml:space="preserve">
-    <value>lbPrecursorMzWindow</value>
-  </data>
-  <data name="&gt;&gt;lbPrecursorMzWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lbPrecursorMzWindow.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;lbPrecursorMzWindow.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
@@ -2191,18 +1627,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="tabLibrary.Text" xml:space="preserve">
     <value>ライブラリ</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="label23.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2224,18 +1648,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="label23.Text" xml:space="preserve">
     <value>許容誤差単位(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label23.Name" xml:space="preserve">
-    <value>label23</value>
-  </data>
-  <data name="&gt;&gt;label23.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label23.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="comboToleranceUnits.Items" xml:space="preserve">
     <value>m/z</value>
   </data>
@@ -2251,18 +1663,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="comboToleranceUnits.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="&gt;&gt;comboToleranceUnits.Name" xml:space="preserve">
-    <value>comboToleranceUnits</value>
-  </data>
-  <data name="&gt;&gt;comboToleranceUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboToleranceUnits.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;comboToleranceUnits.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2277,18 +1677,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="label9.Text" xml:space="preserve">
     <value>イオン許容誤差(&amp;I)：</value>
-  </data>
-  <data name="&gt;&gt;label9.Name" xml:space="preserve">
-    <value>label9</value>
-  </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label9.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
@@ -2395,18 +1783,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="label22.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2425,18 +1801,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="label22.Text" xml:space="preserve">
     <value>最小プロダクトイオン数</value>
   </data>
-  <data name="&gt;&gt;label22.Name" xml:space="preserve">
-    <value>label22</value>
-  </data>
-  <data name="&gt;&gt;label22.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label22.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;label22.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="textMinIonCount.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 51</value>
   </data>
@@ -2448,18 +1812,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="textMinIonCount.ToolTip" xml:space="preserve">
     <value>最低これだけのトランジションでプリカーサーを選択</value>
-  </data>
-  <data name="&gt;&gt;textMinIonCount.Name" xml:space="preserve">
-    <value>textMinIonCount</value>
-  </data>
-  <data name="&gt;&gt;textMinIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMinIonCount.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;textMinIonCount.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="radioAllAndFiltered.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2482,18 +1834,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
 しかし、一致するプロダクトイオンがライブラリに見つからない場合には、
 フィルタに合うすべてのプロダクトイオンも追加します</value>
   </data>
-  <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
-    <value>radioAllAndFiltered</value>
-  </data>
-  <data name="&gt;&gt;radioAllAndFiltered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAllAndFiltered.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;radioAllAndFiltered.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="radioFiltered.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2511,18 +1851,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="radioFiltered.ToolTip" xml:space="preserve">
     <value>[フィルタ]タブのパラメータを適用して、ランク付けのために、一致するイオンをMS / MSピークから選択します</value>
-  </data>
-  <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
-    <value>radioFiltered</value>
-  </data>
-  <data name="&gt;&gt;radioFiltered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioFiltered.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;radioFiltered.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="radioAll.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2542,18 +1870,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="radioAll.ToolTip" xml:space="preserve">
     <value>[フィルタ] タブで設定したイオン電荷数とイオンのタイプのみを用い、ランク付けのために、ライブラリと一致するプロダクトイオンをMS/MSピークから選択します。</value>
   </data>
-  <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
-    <value>radioAll</value>
-  </data>
-  <data name="&gt;&gt;radioAll.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAll.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;radioAll.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="label14.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2568,18 +1884,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="label14.Text" xml:space="preserve">
     <value>選択(&amp;P)：</value>
-  </data>
-  <data name="&gt;&gt;label14.Name" xml:space="preserve">
-    <value>label14</value>
-  </data>
-  <data name="&gt;&gt;label14.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label14.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="label15.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2596,18 +1900,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="label15.Text" xml:space="preserve">
     <value>プロダクトイオン</value>
   </data>
-  <data name="&gt;&gt;label15.Name" xml:space="preserve">
-    <value>label15</value>
-  </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label15.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;label15.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="textIonCount.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 25</value>
   </data>
@@ -2621,18 +1913,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>ライブラリスペクトルピーク強度ランク別に
 各プリカーサーに対してこのトランジションを選択します</value>
   </data>
-  <data name="&gt;&gt;textIonCount.Name" xml:space="preserve">
-    <value>textIonCount</value>
-  </data>
-  <data name="&gt;&gt;textIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textIonCount.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;textIonCount.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
   <data name="textTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 41</value>
   </data>
@@ -2645,18 +1925,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="textTolerance.ToolTip" xml:space="preserve">
     <value>予測プロダクトイオンm/z値を測定MS/MSスペクトルライブラリ
 ピークm/z値にマッチするときの最大許容誤差です。</value>
-  </data>
-  <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
-    <value>textTolerance</value>
-  </data>
-  <data name="&gt;&gt;textTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textTolerance.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;textTolerance.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="cbLibraryPick.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2676,18 +1944,6 @@ H (+1)、K (+1)、Na (+1),、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="cbLibraryPick.ToolTip" xml:space="preserve">
     <value>チェックマークをオンにすると、トランジションフィルタはペプチドがライブラリスペクトルに一致する場合には、MS /
 MSスペクトルライブラリのピークに基づいて選択されます。</value>
-  </data>
-  <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
-    <value>cbLibraryPick</value>
-  </data>
-  <data name="&gt;&gt;cbLibraryPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbLibraryPick.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;cbLibraryPick.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
     <value>cbxTriggeredAcquisition</value>
@@ -2953,18 +2209,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="tabInstrument.Text" xml:space="preserve">
     <value>装置</value>
   </data>
-  <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="cbxTriggeredAcquisition.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2984,18 +2228,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
     <value>特定のアナライトに対してスペクトルを取得した場合、保持時間に大きなギャップがある可能性があることを示しています。
 ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドは差し引かれません。</value>
   </data>
-  <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
-    <value>cbxTriggeredAcquisition</value>
-  </data>
-  <data name="&gt;&gt;cbxTriggeredAcquisition.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbxTriggeredAcquisition.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;cbxTriggeredAcquisition.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="textMaxInclusions.Location" type="System.Drawing.Point, System.Drawing">
     <value>189, 185</value>
   </data>
@@ -3008,18 +2240,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="textMaxInclusions.ToolTip" xml:space="preserve">
     <value>多重化スキャン中に使用する装置で測定した
 最大インクルージョンウィンドウ数です。</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
-    <value>textMaxInclusions</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="label21.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3036,18 +2256,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label21.Text" xml:space="preserve">
     <value>ファームウェア包含制限(&amp;I)：</value>
   </data>
-  <data name="&gt;&gt;label21.Name" xml:space="preserve">
-    <value>label21</value>
-  </data>
-  <data name="&gt;&gt;label21.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label21.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="label30.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -3062,18 +2270,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="label30.Text" xml:space="preserve">
     <value>分</value>
-  </data>
-  <data name="&gt;&gt;label30.Name" xml:space="preserve">
-    <value>label30</value>
-  </data>
-  <data name="&gt;&gt;label30.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label30.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="label31.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3090,18 +2286,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label31.Text" xml:space="preserve">
     <value>分</value>
   </data>
-  <data name="&gt;&gt;label31.Name" xml:space="preserve">
-    <value>label31</value>
-  </data>
-  <data name="&gt;&gt;label31.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label31.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="label33.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -3116,18 +2300,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="label33.Text" xml:space="preserve">
     <value>最大時間(&amp;A)：</value>
-  </data>
-  <data name="&gt;&gt;label33.Name" xml:space="preserve">
-    <value>label33</value>
-  </data>
-  <data name="&gt;&gt;label33.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label33.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="label34.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3144,18 +2316,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label34.Text" xml:space="preserve">
     <value>最小時間(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label34.Name" xml:space="preserve">
-    <value>label34</value>
-  </data>
-  <data name="&gt;&gt;label34.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label34.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="textMaxTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 249</value>
   </data>
@@ -3170,18 +2330,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
 クロマトグラムにおける最大許容時間。 これを設定すると、データ採取に関与しない部分のグラジアントで使用される可能性のある
 メモリとディスク容量を節約できます。</value>
   </data>
-  <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
-    <value>textMaxTime</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
   <data name="textMinTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 249</value>
   </data>
@@ -3195,18 +2343,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
     <value>分析方法を問わず、
 クロマトグラムにおける最小許容時間。 これを設定すると、データ採取に関与しない部分のグラジアントで使用される可能性のある
 メモリとディスク容量を節約できます。</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
-    <value>textMinTime</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
-    <value>8</value>
   </data>
   <data name="label26.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3226,18 +2362,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label26.Text" xml:space="preserve">
     <value>m/z</value>
   </data>
-  <data name="&gt;&gt;label26.Name" xml:space="preserve">
-    <value>label26</value>
-  </data>
-  <data name="&gt;&gt;label26.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label26.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
   <data name="label25.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -3256,18 +2380,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label25.Text" xml:space="preserve">
     <value>m/z</value>
   </data>
-  <data name="&gt;&gt;label25.Name" xml:space="preserve">
-    <value>label25</value>
-  </data>
-  <data name="&gt;&gt;label25.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label25.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
   <data name="label24.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -3285,18 +2397,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="label24.Text" xml:space="preserve">
     <value>m/z</value>
-  </data>
-  <data name="&gt;&gt;label24.Name" xml:space="preserve">
-    <value>label24</value>
-  </data>
-  <data name="&gt;&gt;label24.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label24.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
-    <value>11</value>
   </data>
   <data name="cbDynamicMinimum.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3318,18 +2418,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
 プリカーサーイオンm/zから動的に計算します。
 この計算にはThermo-Scientificが提供するLTQ測定器用の特定の方程式を用います。</value>
   </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
-    <value>cbDynamicMinimum</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
   <data name="textMaxTrans.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 185</value>
   </data>
@@ -3342,18 +2430,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="textMaxTrans.ToolTip" xml:space="preserve">
     <value>1 回の注入でターゲット装置により測定可能な最大総トランジション数です。
 最大値が適用されない場合は空白となります</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
-    <value>textMaxTrans</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
-    <value>13</value>
   </data>
   <data name="label17.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3370,18 +2446,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label17.Text" xml:space="preserve">
     <value>ファームウェアトランジション制限(&amp;F)：</value>
   </data>
-  <data name="&gt;&gt;label17.Name" xml:space="preserve">
-    <value>label17</value>
-  </data>
-  <data name="&gt;&gt;label17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label17.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
   <data name="textMzMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 124</value>
   </data>
@@ -3395,18 +2459,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
     <value>装置メソッドのトランジションm/z値を
 予測トランジションm/z値とマッチする時の最大許容誤差です。
 （SRMとターゲットMS/MSデータにのみ適用。）</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
-    <value>textMzMatchTolerance</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
   </data>
   <data name="lblMethodMatchTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3423,18 +2475,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="lblMethodMatchTolerance.Text" xml:space="preserve">
     <value>メソッド許容誤差m/z(&amp;t)：</value>
   </data>
-  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
-    <value>lblMethodMatchTolerance</value>
-  </data>
-  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
-  </data>
   <data name="label10.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -3449,18 +2489,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="label10.Text" xml:space="preserve">
     <value>最大m/z(&amp;X)：</value>
-  </data>
-  <data name="&gt;&gt;label10.Name" xml:space="preserve">
-    <value>label10</value>
-  </data>
-  <data name="&gt;&gt;label10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label10.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
-    <value>17</value>
   </data>
   <data name="label11.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3477,18 +2505,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="label11.Text" xml:space="preserve">
     <value>最小m/z(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label11.Name" xml:space="preserve">
-    <value>label11</value>
-  </data>
-  <data name="&gt;&gt;label11.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label11.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>18</value>
-  </data>
   <data name="textMaxMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 38</value>
   </data>
@@ -3501,18 +2517,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="textMaxMz.ToolTip" xml:space="preserve">
     <value>ターゲット装置で測定可能な最大m/z値です</value>
   </data>
-  <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
-    <value>textMaxMz</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
-    <value>19</value>
-  </data>
   <data name="textMinMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 38</value>
   </data>
@@ -3524,18 +2528,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="textMinMz.ToolTip" xml:space="preserve">
     <value>ターゲット装置で測定可能な最小m/z値です</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
-    <value>textMinMz</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
-    <value>20</value>
   </data>
   <data name="tabFullScan.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -3551,18 +2543,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   </data>
   <data name="tabFullScan.Text" xml:space="preserve">
     <value>フルスキャン</value>
-  </data>
-  <data name="&gt;&gt;tabFullScan.Name" xml:space="preserve">
-    <value>tabFullScan</value>
-  </data>
-  <data name="&gt;&gt;tabFullScan.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabFullScan.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabFullScan.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Name" xml:space="preserve">
     <value>ionMobilityFilteringControl</value>
@@ -3588,18 +2568,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
   <data name="tabIonMobility.Text" xml:space="preserve">
     <value>イオン移動度</value>
   </data>
-  <data name="&gt;&gt;tabIonMobility.Name" xml:space="preserve">
-    <value>tabIonMobility</value>
-  </data>
-  <data name="&gt;&gt;tabIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabIonMobility.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabIonMobility.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="ionMobilityFilteringControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 13</value>
   </data>
@@ -3607,18 +2575,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
     <value>334, 281</value>
   </data>
   <data name="ionMobilityFilteringControl.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;ionMobilityFilteringControl.Name" xml:space="preserve">
-    <value>ionMobilityFilteringControl</value>
-  </data>
-  <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
-    <value>tabIonMobility</value>
-  </data>
-  <data name="&gt;&gt;ionMobilityFilteringControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

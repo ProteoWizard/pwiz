@@ -1152,7 +1152,7 @@ information, there is no spectrum to show</value>
   <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
     <value>This is the value assumed by Hardklor, it cannot be adjusted.</value>
   </data>
-    <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_" xml:space="preserve">
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_" xml:space="preserve">
     <value>Sets the MS data type for Hardklor's FWHM calculation. Normally set to Centroided.</value>
   </data>
   <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_" xml:space="preserve">
@@ -1178,9 +1178,9 @@ This document uses peak boundaries from spectral libraries. When these boundarie
 
 Before training a peak scoring model, it is recommended that you follow these steps:
 
-1. Navigate to "Settings > Peptide Settings - Libraries" tab and click "Edit List".
+1. Navigate to "Settings &gt; Peptide Settings - Libraries" tab and click "Edit List".
 2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.
-3. Navigate to "Edit > Manage Results" and click the "Re-score" button.
+3. Navigate to "Edit &gt; Manage Results" and click the "Re-score" button.
 
 This will provide Skyline with a variety of candidate peaks to evaluate peak quality.</value>
   </data>

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -56,6 +58,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 pBLogo.Visible = true;
                 pBLogo.SizeMode = PictureBoxSizeMode.AutoSize;
+                HandleSearchEngineBlurb();
 
                 // Add the Hardklor full scan settings control, used only when the user set FullScan analyzer to "Centroided"
                 // Otherwise just displays the previously designated Full Scan settings
@@ -214,7 +217,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case SearchEngine.MSFragger:
                     if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
                         SelectedSearchEngine = SearchEngine.MSAmanda;
-                    return new MsFraggerSearchEngine(1 - ImportPeptideSearch.CutoffScore);
+                    return new MsFraggerSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
@@ -230,7 +233,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class DdaSearchSettings
         {
             public DdaSearchSettings(SearchSettingsControl control) : this(control.SelectedSearchEngine, control.PrecursorTolerance,
-                control.FragmentTolerance, control.MaxVariableMods, control.FragmentIons, control.Ms2Analyzer)
+                control.FragmentTolerance, control.MaxVariableMods, control.FragmentIons, control.Ms2Analyzer, control.CutoffLabel, control.CutoffScore)
             {
                 if (control.cbFragmentIons.Items.Count == 1)
                     FragmentIons = null;
@@ -247,7 +250,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
             }
 
-            public DdaSearchSettings(SearchEngine searchEngine, MzTolerance precursorTolerance, MzTolerance fragmentTolerance, int maxVariableMods, string fragmentIons, string ms2Analyzer)
+            public DdaSearchSettings(SearchEngine searchEngine, MzTolerance precursorTolerance, MzTolerance fragmentTolerance, int maxVariableMods, string fragmentIons, string ms2Analyzer, string scoreType, double scoreThreshold)
             {
                 SearchEngine = searchEngine;
                 PrecursorTolerance = precursorTolerance;
@@ -255,6 +258,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MaxVariableMods = maxVariableMods;
                 FragmentIons = fragmentIons;
                 Ms2Analyzer = ms2Analyzer;
+                ScoreType = scoreType;
+                ScoreThreshold = scoreThreshold;
             }
 
             private class SearchEngineDefault : DefaultValues
@@ -277,6 +282,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public string FragmentIons { get; private set; }
             [Track(defaultValues:typeof(DefaultValuesNull))]
             public string Ms2Analyzer { get; private set; }
+            [Track]
+            public string ScoreType { get; private set; }
+            [Track]
+            public double ScoreThreshold { get; private set; }
         }
         
         private void txtMS1Tolerance_LostFocus(object sender, EventArgs e)
@@ -302,8 +311,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             //lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
             LoadComboboxEntries();
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
+            labelCutoff.Text = ImportPeptideSearch.SearchEngine.CutoffScoreLabel + @":";
+            HandleSearchEngineBlurb();
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
             ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
+        }
+
+        // Arrange and populate the search engine blurb, if any, below the search engine logo
+        private void HandleSearchEngineBlurb()
+        {
+            lblSearchEngineBlurb.Left = pBLogo.Left;
+            lblSearchEngineBlurb.Width = pBLogo.Width;
+            lblSearchEngineBlurb.Top = pBLogo.Bottom + pBLogo.Margin.Top;
+            lblSearchEngineBlurb.Text = ImportPeptideSearch.SearchEngine.SearchEngineBlurb ?? string.Empty;
+            lblSearchEngineBlurb.Enabled = lblSearchEngineBlurb.Visible = !string.IsNullOrEmpty(ImportPeptideSearch.SearchEngine.SearchEngineBlurb);
         }
 
         private void LoadComboboxEntries()
@@ -319,6 +340,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
             if (cbMaxVariableMods.SelectedIndex < 0)
                 cbMaxVariableMods.SelectedIndex = 2; // default max = 2
+
+            CutoffScore =
+                BiblioSpecLiteBuilder.GetDefaultScoreThreshold(ImportPeptideSearch.SearchEngine.CutoffScoreName) ??
+                ImportPeptideSearch.SearchEngine.DefaultCutoffScore;
         }
 
         private void LoadMassUnitEntries()
@@ -360,7 +385,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             selectedElement = comboBox.SelectedItem.ToString();
             return true;
         }
-   
+
+        public bool ValidateCutoffScore()
+        {
+            var helper = new MessageBoxHelper(this.ParentForm);
+            if (helper.ValidateDecimalTextBox(textCutoff, out var cutoffScore))
+            {
+                ImportPeptideSearch.SearchEngine.SetCutoffScore(cutoffScore);
+                CutoffScore = cutoffScore;
+                return true;
+            }
+            return false;
+        }
+
         public bool SaveAllSettings(bool interactive)
         {
             bool valid = ValidateEntries(interactive);
@@ -378,7 +415,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // If the fullscan section was enabled, that's because user chose "Centroided" in actual FullScan settings, so set that again
                     _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                 }
-                Settings.Default.LibraryResultCutOff = ImportPeptideSearch.CutoffScore;
+                BiblioSpecLiteBuilder.SetDefaultScoreThreshold(ImportPeptideSearch.SearchEngine.CutoffScoreName, CutoffScore);
                 Settings.Default.FeatureFindingMinIntensityPPM = HardklorMinIntensityPPM;
                 Settings.Default.FeatureFindingMinIdotP = HardklorMinIdotP;
                 Settings.Default.FeatureFindingSignalToNoise = HardklorSignalToNoise;
@@ -412,7 +449,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     minIdotP, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
                     HardklorMinIntensityPPM,
                     _documentContainer.FullScanSettingsControl.FullScan.RetentionTimeFilterLength);
-                ImportPeptideSearch.CutoffScore = minIdotP;
+                CutoffScore = minIdotP;
                 return true;
             }
 
@@ -449,6 +486,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetMs2Analyzer(ms2Analyzer);
+
+            if (!ValidateCutoffScore())
+                return false;
 
             return true;
         }
@@ -517,6 +557,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return Convert.ToInt32(cbMaxVariableMods.SelectedItem); }
             set { cbMaxVariableMods.SelectedIndex = cbMaxVariableMods.Items.IndexOf(value.ToString()); }
+        }
+
+        public string CutoffLabel => ImportPeptideSearch.SearchEngine.CutoffScoreLabel;
+        public string CutoffScoreName => ImportPeptideSearch.SearchEngine.CutoffScoreName;
+
+        public double CutoffScore
+        {
+            get { return Convert.ToDouble(textCutoff.Text, CultureInfo.CurrentCulture); }
+            set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public string FragmentIons

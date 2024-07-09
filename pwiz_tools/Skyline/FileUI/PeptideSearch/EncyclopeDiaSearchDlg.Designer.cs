@@ -122,6 +122,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPages.Controls.Add(this.runSearchPage);
             this.wizardPages.Name = "wizardPages";
             this.wizardPages.SelectedIndex = 0;
+            this.wizardPages.TabStop = false;
             // 
             // fastaPage
             // 

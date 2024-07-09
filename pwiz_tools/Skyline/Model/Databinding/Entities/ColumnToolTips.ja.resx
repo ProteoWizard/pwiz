@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
-		Microsoft ResX Schema
+    Microsoft ResX Schema
 
-		Version 1.3
+    Version 1.3
 
-		The primary goals of this format is to allow a simple XML format 
-		that is mostly human readable. The generation and parsing of the 
-		various data types are done through the TypeConverter classes 
-		associated with the data types.
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
 
-		Example:
+    Example:
 
-		... ado.net/XML headers & schema ...
-		<resheader name="resmimetype">text/microsoft-resx</resheader>
-		<resheader name="version">1.3</resheader>
-		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-		<data name="Name1">this is my long string</data>
-		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-			[base64 mime encoded serialized .NET Framework object]
-		</data>
-		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-			[base64 mime encoded string representing a byte array form of the .NET Framework object]
-		</data>
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">1.3</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1">this is my long string</data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+      [base64 mime encoded serialized .NET Framework object]
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+      [base64 mime encoded string representing a byte array form of the .NET Framework object]
+    </data>
 
-		There are any number of "resheader" rows that contain simple 
-		name/value pairs.
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
 
-		Each data row contains a name, and value. The row also contains a 
-		type or mimetype. Type corresponds to a .NET class that support 
-		text/value conversion through the TypeConverter architecture. 
-		Classes that don't support this are serialized and stored with the 
-		mimetype set.
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
 
-		The mimetype is used for serialized objects, and tells the 
-		ResXResourceReader how to depersist the object. This is currently not 
-		extensible. For a given mimetype the value must be set accordingly:
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
 
-		Note - application/x-microsoft.net.object.binary.base64 is the format 
-		that the ResXResourceWriter will generate, however the reader can 
-		read any of the formats listed below.
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
 
-		mimetype: application/x-microsoft.net.object.binary.base64
-		value   : The object must be serialized with 
-			: System.Serialization.Formatters.Binary.BinaryFormatter
-			: and then encoded with base64 encoding.
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+      : System.Serialization.Formatters.Binary.BinaryFormatter
+      : and then encoded with base64 encoding.
 
-		mimetype: application/x-microsoft.net.object.soap.base64
-		value   : The object must be serialized with 
-			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-			: and then encoded with base64 encoding.
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+      : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+      : and then encoded with base64 encoding.
 
-		mimetype: application/x-microsoft.net.object.bytearray.base64
-		value   : The object must be serialized into a byte array 
-			: using a System.ComponentModel.TypeConverter
-			: and then encoded with base64 encoding.
-	-->
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+      : using a System.ComponentModel.TypeConverter
+      : and then encoded with base64 encoding.
+  -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -108,6 +108,10 @@
   </data>
   <data name="Accuracy">
     <value>アナライトの濃度と算出される濃度の比率（繰り返し測定で指定）</value>
+    <comment>Needs Review:English text changed
+Old English:Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)
+Current English:Ratio of Calculated Concentration to the specified Analyte Concentration
+Old Localized:アナライトの濃度と算出される濃度の比率（繰り返し測定で指定）</comment>
   </data>
   <data name="AcquiredTime">
     <value>質量分析計が前回この繰り返し測定データの取得を開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</value>
@@ -201,6 +205,28 @@
     <value>アナライト濃度は、以下のいずれかによって計算されます：  
 1. 校正曲線を使用する（[ペプチド設定] &gt; [定量]に[回帰式に合わせる]が指定されている場合）  
 2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</value>
+    <comment>Needs Review:English text changed
+Old English:The concentration of the analyte is calculated by either:
+    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration
+Current English:The concentration of the analyte calculated using either:
+1. The calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration
+Old Localized:アナライト濃度は、以下のいずれかによって計算されます：  
+1. 校正曲線を使用する（[ペプチド設定] &gt; [定量]に[回帰式に合わせる]が指定されている場合）  
+2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</comment>
+  </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>Warning if missing data impacts comparisons of the "Calculated Concentration" between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>Calculated concentration value available even when missing data impacts comparisons between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>Calculated concentration value unavailable when missing data impacts comparisons between replicates</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalibrationCurve">
     <value>試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</value>
@@ -558,6 +584,22 @@
   </data>
   <data name="LibraryDotProduct">
     <value>プリカーサーの各トランジションのピーク面積と一致したMS/MSスペクトルライブラリスペクトルにおける一致するイオンピークの強度との内積です（注：v1.4同様、 これは現在1 – Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。プリカーサーに一致するライブラリスペクトルがない 場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、 メソッドの最適化に使用します。トランジションが6個以上ある場合に最もうまく機能します。</value>
+    <comment>Needs Review:English text changed
+Old English:The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.
+Current English:Equivalent to "dotp" displayed in the user interface. The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.
+Old Localized:プリカーサーの各トランジションのピーク面積と一致したMS/MSスペクトルライブラリスペクトルにおける一致するイオンピークの強度との内積です（注：v1.4同様、 これは現在1 – Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。プリカーサーに一致するライブラリスペクトルがない 場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、 メソッドの最適化に使用します。トランジションが6個以上ある場合に最もうまく機能します。</comment>
   </data>
   <data name="LibraryIntensity">
     <value>一致するライブラリスペクトルでトランジションのプロダクトイオンに該当するMS/MSのピーク強度です。</value>
@@ -618,6 +660,10 @@
   </data>
   <data name="MassErrorPPM">
     <value>質量誤差（ppm）</value>
+    <comment>Needs Review:English text changed
+Old English:Mass Error PPM
+Current English:The difference between the expected and measured m/z values expressed in parts per million (PPM)
+Old Localized:質量誤差（ppm）</comment>
   </data>
   <data name="MassErrors">
     <value>クロマトグラムの質量誤差です。</value>
@@ -697,6 +743,10 @@
 内標準標識タイプがある場合、ピーク面積の中央値はプリカーサー標識タイプが内標準のトランジションで示されるピーク面積のみを使って計算されます。
 内標準ピーク面積がない場合はすべてのトランジションピーク面積からトランジションピーク面積の中央値が計算されます。</value>
   </data>
+  <data name="Message">
+    <value>Warning, if any, of missing values that might impact comparisons of the "Raw" value between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="Min">
     <value>最小値</value>
   </data>
@@ -758,6 +808,33 @@
     <value>分子リストの存在量を表す数値です。この数値は、分子リストの下にある正規化面積を平均して得られます。
 面積は分子定量化設定で指定される正規化メソッドに従って正規化されます。
 この繰り返し測定中に値のないトランジションがある場合には、正規化メソッドが標識に対する比率でない限り、分子リスト存在量は空白となります。</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label.
+Current English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
+Old Localized:分子リストの存在量を表す数値です。この数値は、分子リストの下にある正規化面積を平均して得られます。
+面積は分子定量化設定で指定される正規化メソッドに従って正規化されます。
+この繰り返し測定中に値のないトランジションがある場合には、正規化メソッドが標識に対する比率でない限り、分子リスト存在量は空白となります。</comment>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>Warning if missing data impacts comparisons of "Molecule List Abundance" between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Average of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Sum of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</value>
@@ -821,6 +898,10 @@
   </data>
   <data name="NextAa">
     <value>次のAa</value>
+    <comment>Needs Review:English text changed
+Old English:Next Aa
+Current English:The amino acid residue found immediately after the peptide in the protein sequence.
+Old Localized:次のAa</comment>
   </data>
   <data name="NormalizationDivisor">
     <value>デフォルトの正規化メソッドの使用時に観測値を割った数字。
@@ -831,6 +912,31 @@
   </data>
   <data name="NormalizedArea">
     <value>そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</value>
+    <comment>Needs Review:English text changed
+Old English:Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
+    Settings &gt; Peptide Settings &gt; Quantification
+Current English:Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule 
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification
+Old Localized:そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</comment>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>Warning if missing data impacts of the "Normalized Area" value between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Available even when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
     <value>クロマトグラムにある点の数です。</value>
@@ -930,6 +1036,10 @@
   <data name="PeptideSequenceLength">
     <value>ペプチドシークエンスのアミノ酸数です。</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>Number of spectra in the spectral library which match the peptide and result file.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PointCount">
     <value>曲線のフィッティングで使用されたデータポイント数です。</value>
   </data>
@@ -948,8 +1058,28 @@
   <data name="PrecursorCalculatedConcentration">
     <value>アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。</value>
   </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Warning if missing data impacts comparisons of "Precursor Calculated Concentration" between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
+Available even when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PrecursorCharge">
     <value>  プリカーサーイオンと関連付けられた電荷。</value>
+    <comment>Needs Review:English text changed
+Old English:
+      The charge associated with the precursor ion.
+    
+Current English:The charge associated with the precursor ion.
+Old Localized:  プリカーサーイオンと関連付けられた電荷。</comment>
   </data>
   <data name="PrecursorConcentration">
     <value>このプリカーサーが試料にスパイクされた濃度です。これを使用してアイソトポログ反応曲線を作成します。</value>
@@ -980,6 +1110,34 @@
     <value>プリカーサー結果の正規化面積。
 これはペプチドの正規化メソッドに従い正規化されたプリカーサー結果の合計面積と同じです。
 ペプチド正規化メソッドが「なし」または標識に対する比率である場合、プリカーサー正規化面積はプリカーサー合計面積と同じです。</value>
+    <comment>Needs Review:English text changed
+Old English:The normalized area of the Precursor Result.
+This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.
+Current English:Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If Peptide Normalization Method is "None" or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Old Localized:プリカーサー結果の正規化面積。
+これはペプチドの正規化メソッドに従い正規化されたプリカーサー結果の合計面積と同じです。
+ペプチド正規化メソッドが「なし」または標識に対する比率である場合、プリカーサー正規化面積はプリカーサー合計面積と同じです。</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Warning if missing values impacts comparisons of the "Precursor Normalized Area" value between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Available even when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
     <value>編集メニューで[メモを編集]をクリックすると表示される、プリカーサーに関連付けられるフリーテキストのメモ</value>
@@ -1050,6 +1208,35 @@
 タンパク質存在量は、タンパク質に帰属するすべてのトランジションの正規化面積の平均を使用して計算されます。
 トランジション面積はペプチド定量設定で指定される正規化メソッドに従って正規化されます。
 この繰り返し測定中にピーク面積のないトランジションがある場合、又は正規化メソッドが標識に対する比率でない限り、タンパク質リスト存在量は空白となります。</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the protein in the particular replicate.
+The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
+The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label.
+Current English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Old Localized:特定の繰り返し測定のタンパク質の存在量を表す数値です。
+タンパク質存在量は、タンパク質に帰属するすべてのトランジションの正規化面積の平均を使用して計算されます。
+トランジション面積はペプチド定量設定で指定される正規化メソッドに従って正規化されます。
+この繰り返し測定中にピーク面積のないトランジションがある場合、又は正規化メソッドが標識に対する比率でない限り、タンパク質リスト存在量は空白となります。</comment>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>Warning if missing data impacts comparisons of "Protein Abundance" between replicates</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Average of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Sum of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション番号</value>
@@ -1122,9 +1309,17 @@
   </data>
   <data name="RatioDotProduct">
     <value>内積比率</value>
+    <comment>Needs Review:English text changed
+Old English:Ratio Dot Product
+Current English:Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.
+Old Localized:内積比率</comment>
   </data>
   <data name="RatioToStandard">
     <value>LightのHeavyに対するペプチドの面積比</value>
+  </data>
+  <data name="Raw">
+    <value>Calculated value available even when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
     <value>生（未補間）のクロマトグラムデータです。クロマトグラムの間隔が均一でなく、各トランジションのクロマトグラムにはそれぞれ異なる点の数があります。</value>
@@ -1317,8 +1512,16 @@ Double Blank（ダブルブランク）</value>
   <data name="StdevTotalAreaRatio">
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
+  <data name="Strict">
+    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="SummaryMessage">
     <value>変更の説明</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>校正から除外されていない外部標準繰り返し測定全体での定性イオン比の平均値です。</value>

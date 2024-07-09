@@ -326,7 +326,7 @@ This document uses peak boundaries from spectral libraries. When these boundarie
 
 To be ready to train a peak scoring model effectively, follow these steps:
 
-1. Navigate to the "Settings > Peptide Settings - Libraries" tab and click "Edit List".
+1. Navigate to the "Settings &gt; Peptide Settings - Libraries" tab and click "Edit List".
 2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.</value>
   </data>
   <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">

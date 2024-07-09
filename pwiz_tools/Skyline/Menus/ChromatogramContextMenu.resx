@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -218,7 +218,7 @@
     <value>Transitions</value>
   </data>
   <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-	  <value>212, 22</value>
+    <value>212, 22</value>
   </data>
   <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
     <value>Formatting...</value>

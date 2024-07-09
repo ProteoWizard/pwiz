@@ -21,7 +21,6 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
@@ -36,12 +35,6 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Type = AxisType.Ordinal;
             XAxis.Title.Text = GraphsResources.DetectionHistogramPane_XAxis_Name;
         }
-
-        public override ImmutableList<float> GetToolTipDataSeries()
-        {
-            return ImmutableList.ValueOf(TargetData.Histogram.Select(n => (float)n));
-        }
-
 
         public override void UpdateGraph(bool selectionChanged)
         {
@@ -74,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.Max = TargetData.Histogram.Max() / YScale * 1.15;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             DetectionPlotData.DataSet targetData = _detectionData.GetTargetData(Settings.TargetType);

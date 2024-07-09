@@ -141,7 +141,7 @@
     <value>无法找到{0}。</value>
   </data>
   <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
-    <value>找不到与任何 {0} 条件相匹配的内容</value>
+    <value>找不到任何与 {0} 条件相匹配的内容</value>
     <comment>{0} is an integer greater than 1</comment>
   </data>
   <data name="FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found" xml:space="preserve">

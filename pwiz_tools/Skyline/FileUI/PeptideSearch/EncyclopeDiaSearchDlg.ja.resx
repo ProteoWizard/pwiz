@@ -478,7 +478,7 @@
     <value>20</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>デフォルト&amp;NCE：</value>
+    <value>デフォルトNCE(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>

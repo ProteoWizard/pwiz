@@ -126,12 +126,12 @@
             // 
             // panelFilesKoinaProperties
             // 
+            resources.ApplyResources(this.panelFilesKoinaProperties, "panelFilesKoinaProperties");
             this.panelFilesKoinaProperties.Controls.Add(this.ceLabel);
             this.panelFilesKoinaProperties.Controls.Add(this.ceCombo);
             this.panelFilesKoinaProperties.Controls.Add(this.panelFilesProps);
             this.panelFilesKoinaProperties.Controls.Add(this.comboStandards);
             this.panelFilesKoinaProperties.Controls.Add(this.iRTPeptidesLabel);
-            resources.ApplyResources(this.panelFilesKoinaProperties, "panelFilesKoinaProperties");
             this.panelFilesKoinaProperties.Name = "panelFilesKoinaProperties";
             // 
             // ceLabel
@@ -176,6 +176,7 @@
             // 
             resources.ApplyResources(this.cbIncludeAmbiguousMatches, "cbIncludeAmbiguousMatches");
             this.cbIncludeAmbiguousMatches.Name = "cbIncludeAmbiguousMatches";
+            this.helpTip.SetToolTip(this.cbIncludeAmbiguousMatches, resources.GetString("cbIncludeAmbiguousMatches.ToolTip"));
             this.cbIncludeAmbiguousMatches.UseVisualStyleBackColor = true;
             // 
             // cbKeepRedundant
@@ -189,6 +190,7 @@
             // 
             resources.ApplyResources(this.cbFilter, "cbFilter");
             this.cbFilter.Name = "cbFilter";
+            this.helpTip.SetToolTip(this.cbFilter, resources.GetString("cbFilter.ToolTip"));
             this.cbFilter.UseVisualStyleBackColor = true;
             // 
             // comboStandards

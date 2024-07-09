@@ -129,8 +129,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private double? GetAreaProportion(IEnumerable<Peptide> peptides)
         {
-            var normalizedArea = GetQuantificationResult()?.NormalizedArea;
-            if (!normalizedArea.HasValue)
+            var normalizedArea = GetQuantificationResult()?.NormalizedArea?.Strict;
+            if (normalizedArea == null)
             {
                 return null;
             }
@@ -141,12 +141,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
                     {
-                        total += peptideResult.GetQuantificationResult()?.NormalizedArea ?? 0.0;
+                        total += peptideResult.GetQuantificationResult()?.NormalizedArea?.Strict ?? 0.0;
                     }
                 }
             }
 
-            return normalizedArea.Value / total;
+            return normalizedArea / total;
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
