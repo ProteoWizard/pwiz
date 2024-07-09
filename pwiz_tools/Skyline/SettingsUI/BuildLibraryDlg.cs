@@ -89,7 +89,10 @@ namespace pwiz.Skyline.SettingsUI
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
 
-        public enum DataSourcePages { files, carafe, koina }
+        private bool IsAlphaEnabled => false;   // TODO: Implement and enable
+        private bool IsCarafeEnabled => false;   // TODO: Implement and enable
+
+        public enum DataSourcePages { files, alpha, carafe, koina }
         public enum LearningOptions { none, libraries, document }
 
         private readonly MessageBoxHelper _helper;
@@ -123,6 +126,7 @@ namespace pwiz.Skyline.SettingsUI
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
+            comboLearnFrom.SelectedIndex = 0;
 
             _helper = new MessageBoxHelper(this);
 
@@ -135,13 +139,38 @@ namespace pwiz.Skyline.SettingsUI
                 btnNext.Enabled = tabControlMain.SelectedIndex == (int)Pages.files || Grid.IsReady;
             };
 
-            // Reposition checkboxes
-            cbKeepRedundant.Left = cbIncludeAmbiguousMatches.Left = cbFilter.Left = actionLabel.Left;
-
-            // If we're not using dataSourceGroupBox (because we're in small molecule mode) shift other controls up where it was
+            // If we're not using dataSourceGroupBox (because we're in small molecule mode) shift other controls over where it was
             if (modeUIHandler.ComponentsDisabledForModeUI(dataSourceGroupBox))
             {
-                this.Height -= dataSourceGroupBox.Height;
+                tabControlDataSource.Left = dataSourceGroupBox.Left;
+                Height -= tabControlDataSource.Bottom - dataSourceGroupBox.Bottom;
+            }
+            else
+            {
+                int heightDiffGroupBox = 0;
+                if (!IsAlphaEnabled)
+                {
+                    int yShift = radioCarafeSource.Top - radioAlphaSource.Top;
+                    radioCarafeSource.Top -= yShift;
+                    radioKoinaSource.Top -= yShift;
+                    koinaInfoSettingsBtn.Top -= yShift;
+                    radioAlphaSource.Visible = false;
+                    heightDiffGroupBox += yShift;
+                }
+
+                if (!IsCarafeEnabled)
+                {
+                    int yShift = radioKoinaSource.Top - radioCarafeSource.Top;
+                    radioKoinaSource.Top -= yShift;
+                    koinaInfoSettingsBtn.Top -= yShift;
+                    radioCarafeSource.Visible = false;
+                    heightDiffGroupBox += yShift;
+                }
+
+                dataSourceGroupBox.Height -= heightDiffGroupBox;
+                iRTPeptidesLabel.Top -= heightDiffGroupBox;
+                comboStandards.Top -= heightDiffGroupBox;
+                Height -= heightDiffGroupBox;
             }
         }
 
@@ -224,42 +253,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (radioKoinaSource.Checked)
                 {
-                    // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
-                    var doc = _documentUiContainer.DocumentUI;
-                    var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
-                    var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
-                    var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
-                    var precursors = new TransitionGroupDocNode[precursorCount];
-                    int index = 0;
-
-                    for (var i = 0; i < peptides.Length; ++i)
-                    {
-                        var groups = peptides[i].TransitionGroups.ToArray();
-                        Array.Copy(Enumerable.Repeat(peptides[i], groups.Length).ToArray(), 0, peptidesPerPrecursor, index,
-                            groups.Length);
-                        Array.Copy(groups, 0, precursors, index, groups.Length);
-                        index += groups.Length;
-                    }
-
-                    if (index == 0)
-                    {
-                        MessageDlg.Show(this, Resources.BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_);
+                    if (!CreateKoinaBuilder(name, outputPath, NCE))
                         return false;
-                    }
-
-                    try
-                    {
-                        KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
-                        // Still construct the library builder, otherwise a user might configure Koina
-                        // incorrectly, causing the build to silently fail
-                        Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
-                            peptidesPerPrecursor, precursors, NCE);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageDlg.ShowWithException(this, ex.Message, ex);
+                }
+                else if (radioAlphaSource.Checked)
+                {
+                    // TODO: Replace with working AlphaPeptDeep implementation
+                    if (!CreateKoinaBuilder(name, outputPath))
                         return false;
-                    }
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -286,6 +287,8 @@ namespace pwiz.Skyline.SettingsUI
                     }
 
                     // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
+                    if (!CreateKoinaBuilder(name, outputPath))
+                        return false;
                 }
                 else
                 {
@@ -326,6 +329,48 @@ namespace pwiz.Skyline.SettingsUI
                     };
                 }
             }
+            return true;
+        }
+
+        private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
+        {
+            // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
+            var doc = _documentUiContainer.DocumentUI;
+            var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
+            var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
+            var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
+            var precursors = new TransitionGroupDocNode[precursorCount];
+            int index = 0;
+
+            for (var i = 0; i < peptides.Length; ++i)
+            {
+                var groups = peptides[i].TransitionGroups.ToArray();
+                Array.Copy(Enumerable.Repeat(peptides[i], groups.Length).ToArray(), 0, peptidesPerPrecursor, index,
+                    groups.Length);
+                Array.Copy(groups, 0, precursors, index, groups.Length);
+                index += groups.Length;
+            }
+
+            if (index == 0)
+            {
+                MessageDlg.Show(this, Resources.BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_);
+                return false;
+            }
+
+            try
+            {
+                KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
+                // Still construct the library builder, otherwise a user might configure Koina
+                // incorrectly, causing the build to silently fail
+                Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
+                    peptidesPerPrecursor, precursors, nce);
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(this, ex.Message, ex);
+                return false;
+            }
+
             return true;
         }
 
@@ -386,7 +431,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioKoinaSource.Checked)
+            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
                 if (ValidateBuilder(true))
                 {
@@ -401,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
                     ? Pages.files
-                    : Pages.learning);
+                    : Pages.learning);  // Carafe
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
@@ -824,7 +869,14 @@ namespace pwiz.Skyline.SettingsUI
                 Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
                 if (radioCarafeSource.Checked)
+                {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.carafe;
+                }
+                else if (radioAlphaSource.Checked)
+                {
+                    tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
+                    nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                }
                 else // must be Koina
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.koina;

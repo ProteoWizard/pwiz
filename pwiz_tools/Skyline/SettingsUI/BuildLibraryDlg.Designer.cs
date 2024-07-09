@@ -47,6 +47,7 @@
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
             this.radioCarafeSource = new System.Windows.Forms.RadioButton();
+            this.radioAlphaSource = new System.Windows.Forms.RadioButton();
             this.koinaInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
             this.radioKoinaSource = new System.Windows.Forms.RadioButton();
             this.radioFilesSource = new System.Windows.Forms.RadioButton();
@@ -67,17 +68,16 @@
             this.tabFiles = new System.Windows.Forms.TabPage();
             this.tabLearn = new System.Windows.Forms.TabPage();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
-            this.tabPageNone = new System.Windows.Forms.TabPage();
-            this.label6 = new System.Windows.Forms.Label();
-            this.tabPageLibraries = new System.Windows.Forms.TabPage();
-            this.listLibraries = new System.Windows.Forms.CheckedListBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.tabPageDocument = new System.Windows.Forms.TabPage();
             this.btnLearningDocBrowse = new System.Windows.Forms.Button();
             this.textLearningDoc = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.tabPageLibraries = new System.Windows.Forms.TabPage();
+            this.listLibraries = new System.Windows.Forms.CheckedListBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.comboLearnFrom = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.tabAlphaSource = new System.Windows.Forms.TabPage();
             this.dataSourceGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
             this.tabControlMain.SuspendLayout();
@@ -88,9 +88,8 @@
             this.tabFiles.SuspendLayout();
             this.tabLearn.SuspendLayout();
             this.tabControlLearning.SuspendLayout();
-            this.tabPageNone.SuspendLayout();
-            this.tabPageLibraries.SuspendLayout();
             this.tabPageDocument.SuspendLayout();
+            this.tabPageLibraries.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -135,6 +134,7 @@
             // 
             resources.ApplyResources(this.iRTPeptidesLabel, "iRTPeptidesLabel");
             this.iRTPeptidesLabel.Name = "iRTPeptidesLabel";
+            this.modeUIHandler.SetUIMode(this.iRTPeptidesLabel, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // ceLabel
             // 
@@ -191,11 +191,13 @@
             this.comboStandards.FormattingEnabled = true;
             resources.ApplyResources(this.comboStandards, "comboStandards");
             this.comboStandards.Name = "comboStandards";
+            this.modeUIHandler.SetUIMode(this.comboStandards, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
             // dataSourceGroupBox
             // 
             this.dataSourceGroupBox.Controls.Add(this.radioCarafeSource);
+            this.dataSourceGroupBox.Controls.Add(this.radioAlphaSource);
             this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
             this.dataSourceGroupBox.Controls.Add(this.radioKoinaSource);
             this.dataSourceGroupBox.Controls.Add(this.radioFilesSource);
@@ -211,6 +213,14 @@
             this.radioCarafeSource.TabStop = true;
             this.radioCarafeSource.UseVisualStyleBackColor = true;
             this.radioCarafeSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
+            // 
+            // radioAlphaSource
+            // 
+            resources.ApplyResources(this.radioAlphaSource, "radioAlphaSource");
+            this.radioAlphaSource.Name = "radioAlphaSource";
+            this.radioAlphaSource.TabStop = true;
+            this.radioAlphaSource.UseVisualStyleBackColor = true;
+            this.radioAlphaSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
             // 
             // koinaInfoSettingsBtn
             // 
@@ -319,6 +329,7 @@
             // 
             resources.ApplyResources(this.tabControlDataSource, "tabControlDataSource");
             this.tabControlDataSource.Controls.Add(this.tabFilesSource);
+            this.tabControlDataSource.Controls.Add(this.tabAlphaSource);
             this.tabControlDataSource.Controls.Add(this.tabCarafeSource);
             this.tabControlDataSource.Controls.Add(this.tabKoinaSource);
             this.tabControlDataSource.Name = "tabControlDataSource";
@@ -373,43 +384,11 @@
             // tabControlLearning
             // 
             resources.ApplyResources(this.tabControlLearning, "tabControlLearning");
-            this.tabControlLearning.Controls.Add(this.tabPageNone);
-            this.tabControlLearning.Controls.Add(this.tabPageLibraries);
             this.tabControlLearning.Controls.Add(this.tabPageDocument);
+            this.tabControlLearning.Controls.Add(this.tabPageLibraries);
             this.tabControlLearning.Name = "tabControlLearning";
             this.tabControlLearning.SelectedIndex = 0;
             this.tabControlLearning.TabStop = false;
-            // 
-            // tabPageNone
-            // 
-            this.tabPageNone.BackColor = System.Drawing.SystemColors.Control;
-            this.tabPageNone.Controls.Add(this.label6);
-            resources.ApplyResources(this.tabPageNone, "tabPageNone");
-            this.tabPageNone.Name = "tabPageNone";
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
-            // 
-            // tabPageLibraries
-            // 
-            this.tabPageLibraries.BackColor = System.Drawing.SystemColors.Control;
-            this.tabPageLibraries.Controls.Add(this.listLibraries);
-            this.tabPageLibraries.Controls.Add(this.label3);
-            resources.ApplyResources(this.tabPageLibraries, "tabPageLibraries");
-            this.tabPageLibraries.Name = "tabPageLibraries";
-            // 
-            // listLibraries
-            // 
-            resources.ApplyResources(this.listLibraries, "listLibraries");
-            this.listLibraries.FormattingEnabled = true;
-            this.listLibraries.Name = "listLibraries";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
             // 
             // tabPageDocument
             // 
@@ -437,14 +416,32 @@
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
+            // tabPageLibraries
+            // 
+            this.tabPageLibraries.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPageLibraries.Controls.Add(this.listLibraries);
+            this.tabPageLibraries.Controls.Add(this.label3);
+            resources.ApplyResources(this.tabPageLibraries, "tabPageLibraries");
+            this.tabPageLibraries.Name = "tabPageLibraries";
+            // 
+            // listLibraries
+            // 
+            resources.ApplyResources(this.listLibraries, "listLibraries");
+            this.listLibraries.FormattingEnabled = true;
+            this.listLibraries.Name = "listLibraries";
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
             // comboLearnFrom
             // 
             this.comboLearnFrom.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLearnFrom.FormattingEnabled = true;
             this.comboLearnFrom.Items.AddRange(new object[] {
             resources.GetString("comboLearnFrom.Items"),
-            resources.GetString("comboLearnFrom.Items1"),
-            resources.GetString("comboLearnFrom.Items2")});
+            resources.GetString("comboLearnFrom.Items1")});
             resources.ApplyResources(this.comboLearnFrom, "comboLearnFrom");
             this.comboLearnFrom.Name = "comboLearnFrom";
             this.comboLearnFrom.SelectedIndexChanged += new System.EventHandler(this.comboLearnFrom_SelectedIndexChanged);
@@ -453,6 +450,12 @@
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
+            // 
+            // tabAlphaSource
+            // 
+            this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
+            resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
+            this.tabAlphaSource.Name = "tabAlphaSource";
             // 
             // BuildLibraryDlg
             // 
@@ -485,11 +488,10 @@
             this.tabLearn.ResumeLayout(false);
             this.tabLearn.PerformLayout();
             this.tabControlLearning.ResumeLayout(false);
-            this.tabPageNone.ResumeLayout(false);
-            this.tabPageLibraries.ResumeLayout(false);
-            this.tabPageLibraries.PerformLayout();
             this.tabPageDocument.ResumeLayout(false);
             this.tabPageDocument.PerformLayout();
+            this.tabPageLibraries.ResumeLayout(false);
+            this.tabPageLibraries.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -530,7 +532,7 @@
         private System.Windows.Forms.TabPage tabFilesSource;
         private System.Windows.Forms.TabPage tabCarafeSource;
         private System.Windows.Forms.TabPage tabKoinaSource;
-        private System.Windows.Forms.RadioButton radioCarafeSource;
+        private System.Windows.Forms.RadioButton radioAlphaSource;
         private System.Windows.Forms.TabPage tabLearn;
         private System.Windows.Forms.ComboBox comboLearnFrom;
         private System.Windows.Forms.Label label1;
@@ -542,7 +544,7 @@
         private System.Windows.Forms.Button btnLearningDocBrowse;
         private System.Windows.Forms.TextBox textLearningDoc;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TabPage tabPageNone;
-        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.RadioButton radioCarafeSource;
+        private System.Windows.Forms.TabPage tabAlphaSource;
     }
 }
