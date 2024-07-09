@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestFunctional
                     new KeyValuePair<string, string>("calibrate_mass", "0"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
-                ExpectedResultsFinal = new ExpectedResults(127, 305, 384, 1152, 150)
+                ExpectedResultsFinal = new ExpectedResults(143, 340, 428, 1284, 166)
             };
 
             RunFunctionalTest();
@@ -424,7 +424,22 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-                RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+
+                RunUI(() =>
+                {
+                    Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
+
+                    // If this message is seen, the default config needs to be updated.
+                    if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                    {
+                        const string parameterNotSuppliedMessage = @"was not supplied. Using default value";
+                        Assert.IsFalse(
+                            importPeptideSearchDlg.SearchControl.LogText.Contains(parameterNotSuppliedMessage),
+                            "The default MSFragger config needs to be updated with new parameters:\r\n" +
+                            string.Join("", importPeptideSearchDlg.SearchControl.LogText.Split('\n')
+                                .Where(l => l.Contains(parameterNotSuppliedMessage))));
+                    }
+                });
             }
             finally
             {
