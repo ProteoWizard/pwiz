@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -1837,7 +1836,7 @@ namespace pwiz.SkylineTestUtil
                         }
                         else
                         {
-                            int currentProcessId = Process.GetCurrentProcess().Id;
+                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
                             Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
                             var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
                             var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));

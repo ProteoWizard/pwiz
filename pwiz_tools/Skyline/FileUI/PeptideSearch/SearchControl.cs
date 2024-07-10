@@ -25,7 +25,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
