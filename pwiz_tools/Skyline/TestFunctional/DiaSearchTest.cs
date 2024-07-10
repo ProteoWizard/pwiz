@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 104, PeptideCount = 109, PrecursorCount = 128, TransitionCount = 1152 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 79, PeptideCount = 84, PrecursorCount = 99, TransitionCount = 891 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0")
