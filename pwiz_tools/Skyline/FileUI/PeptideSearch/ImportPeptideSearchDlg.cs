@@ -99,7 +99,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly Stack<SrmDocument> _documents;
         public bool IsAutomatedTest; // Testing support
 
-        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow? workflowType, bool useExistingLibrary = false)
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType, bool useExistingLibrary = false)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Enabled = HasUnmatchedLibraryRuns(Document);
 
             // Create and add wizard pages
-            BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(this, ImportPeptideSearch, libraryManager)
+            BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(this, ImportPeptideSearch, libraryManager, isRunPeptideSearch)
             {
                 Dock = DockStyle.Fill,
             };
@@ -395,7 +395,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType,
             IList<ImportPeptideSearch.FoundResultsFile> resultFiles, ImportFastaControl.ImportFastaSettings fastaSettings,
             IEnumerable<string> existingLibraryFilepaths)
-            : this(skylineWindow, libraryManager, workflowType, true)
+            : this(skylineWindow, libraryManager, false, workflowType, true)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
 
@@ -544,11 +544,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.spectra_page:
                 {
                     _pagesToSkip.Clear();
-
-                    if (!BuildPepSearchLibControl.ValidateCutoffScore())
-                    {
-                        return;
-                    }
                     ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     if (!BuildPepSearchLibControl.UseExistingLibrary)
@@ -767,7 +762,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
-                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore ?? 0;
+                        ImportPeptideSearch.CutoffScore = SearchSettingsControl.CutoffScore;
 
                         if (!File.Exists(ImportFastaControl.FastaFile))
                         {
@@ -810,9 +805,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
-                    var scoreThreshold = IsFeatureDetectionWorkflow
-                        ? BuildPepSearchLibControl.CutOffScore ?? 0
-                        : (1 - (BuildPepSearchLibControl.CutOffScore ?? 0));
+                    var scoreThreshold = SearchSettingsControl.CutoffScore;
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorIdotp
                         : ScoreType.GenericQValue;

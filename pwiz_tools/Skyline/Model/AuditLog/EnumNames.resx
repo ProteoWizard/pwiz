@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -633,7 +633,7 @@
   <data name="SearchEngine_MSFragger" xml:space="preserve">
     <value>MSFragger</value>
   </data>
-    <data name="SearchEngine_MSGFPlus" xml:space="preserve">
+  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
   </data>
   <data name="SearchEngine_Hardklor" xml:space="preserve">

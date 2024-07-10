@@ -438,7 +438,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&config.ignoreZeroIntensityPoints)->zero_tokens()->default_value(config.ignoreZeroIntensityPoints),
             ": some vendor readers do not include zero samples in their profile data; the default behavior is to add the zero samples but this option disables that")
         ("ignoreUnknownInstrumentError",
-            po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(!config.unknownInstrumentIsError),
+            po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(false),
             ": if true, if an instrument cannot be determined from a vendor file, it will not be an error")
         ("stripLocationFromSourceFiles",
             po::value<bool>(&config.stripLocationFromSourceFiles)->zero_tokens(),

@@ -134,13 +134,13 @@
       x + y = 7 AND x * y &lt; 20</comment>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MS1スペクトルを抽出されたクロマトグラムに含むために満たさなければならない基準</value>
+    <value>MS1スペクトルが抽出クロマトグラムに含まれるために満たさなければならない基準</value>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MSレベル2以上のスペクトルを抽出されたクロマトグラムに含むために満たさなければならない基準</value>
+    <value>MSレベル2以上のスペクトルが抽出クロマトグラムに含まれるために満たさなければならない基準</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>

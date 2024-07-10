@@ -24,6 +24,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 
 namespace ZedGraph
 {
@@ -1730,6 +1731,20 @@ namespace ZedGraph
 					return val;
 			}
 		}
+
+		public double AddInterval(double val, double intervalStart, double intervalEnd)
+		{
+			switch (Type)
+			{
+				case AxisType.Exponent:
+					return Math.Log10(Math.Pow(10, val)+ Math.Pow(10, intervalEnd) - Math.Pow(10, intervalStart));
+				case AxisType.Log:
+					return Math.Pow(10, Math.Log10(val * intervalEnd / intervalStart));
+				default:
+					return val + intervalEnd - intervalStart;
+			}
+		}
+
 /*
 		/// <summary>
 		/// Make a value label for the axis at the specified ordinal position.

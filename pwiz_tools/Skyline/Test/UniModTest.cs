@@ -25,7 +25,6 @@ using System.Reflection;
 using System.Threading;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -160,7 +159,7 @@ namespace pwiz.SkylineTest
                     directory != null && directory.Length > 10;
                     directory = Path.GetDirectoryName(directory))
             {
-                if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
                     return Path.Combine(directory, relativePath);
             }
             return null;

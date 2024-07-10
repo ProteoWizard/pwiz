@@ -339,9 +339,9 @@ Charge states are inferred from the presence of these adduct components:{1}</val
     <value>Cannot parse "{0}" as a mass offset in the text "{1}"</value>
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_" xml:space="preserve">
-	  <value>Would you like to go to Panorama?</value>
+    <value>Would you like to go to Panorama?</value>
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
-	  <value>An import error occurred on the Panorama server {0}.</value>
+    <value>An import error occurred on the Panorama server {0}.</value>
   </data>
 </root>

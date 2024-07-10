@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNotNull(chromFileInfo);
                     var peptideChromInfo = FindChromInfo(peptideDocNode.Results, chromFileInfo.FileId);
                     var ratioToGlobalStandard = (double?) row.Cells[colRatioLightToGlobalStandard.Index].Value;
-                    double? normalizedArea = (double?)row.Cells[colNormalizedArea.Index].Value;
+                    var normalizedArea = (AnnotatedDouble)row.Cells[colNormalizedArea.Index].Value;
                     var normalizationMethod = peptideDocNode.NormalizationMethod;
                     double expectedNormalizedArea = double.NaN;
                     double totalArea = peptideDocNode.TransitionGroups.Sum(tg =>
@@ -319,7 +319,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.Fail("Unexpected normalization method {0}", normalizationMethod);
                     }
-                    AssertValuesEqual(expectedNormalizedArea, normalizedArea ?? 0);
+                    AssertValuesEqual(expectedNormalizedArea, normalizedArea?.Raw ?? 0);
                     if (peptideChromInfo == null)
                     {
                         Assert.IsNull(ratioToGlobalStandard);

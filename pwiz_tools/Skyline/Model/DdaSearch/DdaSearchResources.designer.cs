@@ -219,6 +219,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Min isotope &amp;dot product:.
+        /// </summary>
+        public static string HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Looking for features occurring in multiple replicates.
         /// </summary>
         public static string HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates {
@@ -283,6 +292,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
         public static string HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details {
             get {
                 return ResourceManager.GetString("HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution..
+        /// </summary>
+        public static string HardklorSearchEngine_SearchEngineBlurb {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_SearchEngineBlurb", resourceCulture);
             }
         }
         

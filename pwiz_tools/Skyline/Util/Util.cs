@@ -1862,7 +1862,7 @@ namespace pwiz.Skyline.Util
                     $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
                     $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 5 sec extra time when running code coverage or other analysis
-                milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
+                milliseconds += (5000 * (loopCount)) / maxLoopCount; // Each loop a little more desperate
             }
             DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);

@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -123,7 +124,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         {
                             IdentityPath.ROOT,
                             new PeptideQuantifier.Quantity(GetPeptideQuantifier(calibrationPoint).GetIsotopologArea(SrmSettings, calibrationPoint.ReplicateIndex,
-                                calibrationPoint.LabelType), 1)
+                                calibrationPoint.LabelType), 1, false)
                         }
                     };
                 }
@@ -329,25 +330,33 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetNormalizedPeakArea(CalibrationPoint calibrationPoint)
         {
+            return GetAnnotatedNormalizedPeakArea(calibrationPoint)?.Strict;
+        }
+
+        public AnnotatedDouble GetAnnotatedNormalizedPeakArea(CalibrationPoint calibrationPoint)
+        {
             var allTransitionQuantities = GetTransitionQuantities(calibrationPoint);
-            ICollection<PeptideQuantifier.Quantity> quantitiesToSum;
-            if (!IsAllowMissingTransitions())
+            if (allTransitionQuantities.Count == 0)
             {
-                var completeTransitionSet = GetTransitionsToQuantifyOn();
-                quantitiesToSum = allTransitionQuantities
-                    .Where(entry => completeTransitionSet.Contains(entry.Key))
-                    .Select(entry => entry.Value)
-                    .ToArray();
-                if (quantitiesToSum.Count != completeTransitionSet.Count)
+                return null;
+            }
+            ICollection<IdentityPath> completeTransitionSet;
+            if (IsAllowMissingTransitions())
+            {
+                if (allTransitionQuantities.Values.Any(v => v.Truncated) && !allTransitionQuantities.Values.All(v=>v.Truncated))
                 {
-                    return null;
+                    completeTransitionSet = allTransitionQuantities.Where(kvp=>!kvp.Value.Truncated).Select(kvp=>kvp.Key).ToHashSet();
+                }
+                else
+                {
+                    completeTransitionSet = allTransitionQuantities.Keys;
                 }
             }
             else
             {
-                quantitiesToSum = allTransitionQuantities.Values;
+                completeTransitionSet = GetTransitionsToQuantifyOn();
             }
-            return PeptideQuantifier.SumQuantities(quantitiesToSum, PeptideQuantifier.NormalizationMethod, QuantificationSettings.SimpleRatios);
+            return PeptideQuantifier.SumTransitionQuantities(completeTransitionSet, allTransitionQuantities);
         }
 
         public CalibrationCurve GetCalibrationCurve()
@@ -611,11 +620,21 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
         public double? GetCalculatedConcentration(CalibrationCurve calibrationCurve, CalibrationPoint calibrationPoint)
         {
+            return GetAnnotatedConcentration(calibrationCurve, calibrationPoint)?.Strict;
+        }
+
+        public AnnotatedDouble GetAnnotatedConcentration(CalibrationCurve calibrationCurve,
+            CalibrationPoint calibrationPoint)
+        {
             if (!HasExternalStandards() && !HasInternalStandardConcentration())
             {
                 return null;
             }
-            return GetConcentrationFromXValue(GetCalculatedXValue(calibrationCurve, calibrationPoint) * GetDilutionFactor(calibrationPoint.ReplicateIndex));
+
+            var normalizedPeakArea = GetAnnotatedNormalizedPeakArea(calibrationPoint);
+            var concentration = GetConcentrationFromXValue(calibrationCurve.GetX(normalizedPeakArea?.Raw) *
+                                                           GetDilutionFactor(calibrationPoint.ReplicateIndex));
+            return normalizedPeakArea?.ChangeValue(concentration);
         }
 
         public double? GetCalculatedConcentration(CalibrationCurve calibrationCurve, int iReplicate)
@@ -690,14 +709,18 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             CalibrationCurve calibrationCurve = GetCalibrationCurve();
             QuantificationResult result = new QuantificationResult();
-            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
+            result = result.ChangeNormalizedArea(GetAnnotatedNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
+            
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
-                double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
-                result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = GetPeptideConcentration(replicateIndex) * GetChromatogramSet(replicateIndex)?.SampleDilutionFactor;
-                result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = result.ChangeUnits(QuantificationSettings.Units);
+                AnnotatedDouble calculatedConcentration = GetAnnotatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
+                if (calculatedConcentration != null)
+                {
+                    result = result.ChangeCalculatedConcentration(calculatedConcentration);
+                    double? expectedConcentration = GetPeptideConcentration(replicateIndex) * GetChromatogramSet(replicateIndex)?.SampleDilutionFactor;
+                    result = result.ChangeAccuracy(calculatedConcentration.Raw / expectedConcentration);
+                    result = result.ChangeUnits(QuantificationSettings.Units);
+                }
             }
 
 
@@ -712,14 +735,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 result = new PrecursorQuantificationResult();
                 var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
                 CalibrationCurve calibrationCurve = GetCalibrationCurve();
-                result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
+                result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetAnnotatedNormalizedPeakArea(calibrationPoint));
                 if (HasExternalStandards() || HasInternalStandardConcentration())
                 {
-                    double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
-                    result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(calculatedConcentration);
-                    double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
-                    result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                    result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
+                    var calculatedConcentration = GetAnnotatedConcentration(calibrationCurve, calibrationPoint);
+                    if (calculatedConcentration != null)
+                    {
+                        result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(calculatedConcentration);
+                        double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
+                        result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration.Raw / expectedConcentration);
+                        result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
+                    }
                 }
             }
 

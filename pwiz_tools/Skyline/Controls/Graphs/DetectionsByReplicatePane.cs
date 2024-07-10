@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -40,7 +39,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Title.Text = GraphsResources.DetectionPlotPane_XAxis_Name;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             var targetData = _detectionData.GetTargetData(Settings.TargetType);
@@ -63,12 +62,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             ChangeSelectedIndex(index);
         }
-
-        public override ImmutableList<float> GetToolTipDataSeries()
-        {
-            return ImmutableList.ValueOf(TargetData.TargetsCount.Select(n => (float)n));
-        }
-
 
         public override void UpdateGraph(bool selectionChanged)
         {

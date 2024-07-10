@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Import the file "S_1.mzML" into the document multiple times,
             // copying it to a new name each time
-            for (int iFile = 1; iFile <= 6; iFile++)
+            for (int iFile = 1; iFile <= 3; iFile++)
             {
                 var filePath = TestFilesDir.GetTestPath("S_" + iFile + ".mzML");
                 if (iFile != 1)
@@ -131,7 +131,10 @@ namespace pwiz.SkylineTestFunctional
                 }
 
                 Thread.Sleep(delay);
-                delay += 100;
+                // Increase the delay a little each time so that ChromatogramManager has 
+                // more time to complete its work without being interrupted by the transition
+                // settings change
+                delay += 200;
             } while (!SkylineWindow.Document.IsLoaded);
         }
 

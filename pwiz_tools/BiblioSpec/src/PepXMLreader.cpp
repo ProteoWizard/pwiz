@@ -413,7 +413,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        string score_name = getAttrValue("name", attr);
        bal::to_lower(score_name);
 
-       if (score_name == "expect" ||
+       if ((analysisType_ != CRUX_ANALYSIS && score_name == "expect") ||
            (analysisType_ == SPECTRUM_MILL_ANALYSIS && score_name == "smscore") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||

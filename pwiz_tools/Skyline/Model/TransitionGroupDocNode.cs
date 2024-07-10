@@ -888,8 +888,8 @@ namespace pwiz.Skyline.Model
         private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)
         {
             double shift = SequenceMassCalc.GetPeptideInterval(massShift);
-            return MassDistribution.NewInstance(massDist.ToDictionary(p => p.Key + shift, p => p.Value),
-                massDist.MassResolution, massDist.MinimumAbundance);
+            // Use "OffsetAndDivide" to shift the mass distribution without reapplying binning.
+            return massDist.OffsetAndDivide(shift, 1);
         }
 
         private RelativeRT CalcRelativeRT(SrmSettings settings, ExplicitMods mods)

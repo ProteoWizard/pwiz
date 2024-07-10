@@ -299,8 +299,8 @@
     <value>Import Peptide Search</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
-      <value>Select Files to Search</value>
-   </data>
+    <value>Select Files to Search</value>
+  </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
     <value>Could not find all the missing results files.</value>
   </data>

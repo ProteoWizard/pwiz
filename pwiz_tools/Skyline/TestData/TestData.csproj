@@ -167,6 +167,7 @@
     <Compile Include="RefineTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ResourcesTest.cs" />
     <Compile Include="Results\AgilentCEOptTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
     <Compile Include="Results\AgilentMseTest.cs" />
