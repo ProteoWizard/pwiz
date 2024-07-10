@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (status.IsError)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
+                MessageDlg.ShowWithException(Program.MainWindow, status.ErrorException.Message, status.ErrorException);
                 return;
             }
 

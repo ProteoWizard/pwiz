@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -1795,6 +1796,9 @@ namespace pwiz.SkylineTestUtil
             return result.ToString();
         }
 
+        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
         private void WaitForSkyline()
         {
             try
@@ -1820,6 +1824,27 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
+                // if it's a file locking issue, wrap the exception to report the locking process
+                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
+                {
+                    var match = Regex.Match(ioException.Message, "'(.*)'");
+                    if (match.Success)
+                    {
+                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                        if (!File.Exists(lockedFilepath))
+                        {
+                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+                        }
+                        else
+                        {
+                            int currentProcessId = Process.GetCurrentProcess().Id;
+                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
+                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+                        }
+                    }
+                }
                 // Save exception for reporting from main thread.
                 Program.AddTestException(x);
             }
