@@ -681,12 +681,12 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
 
-        private static string GetHardlorIsotopesFilename(string hkFile)
+        private static string GetHardklorIsotopesFilename(string hkFile)
         {
             return hkFile + @".isotopes";
         }
 
-        private static string GetHardlorConfigurationFilename(string hkFile)
+        private static string GetHardklorConfigurationFilename(string hkFile)
         {
             return hkFile + @".conf";
         }
@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetMs2Analyzer(string ms2Analyzer)
         {
-            // not used by Hardklor
+            // Not used by Hardklor
         }
 
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
@@ -787,8 +787,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             foreach (var hkFile in _inputsAndOutputs.Values)
             {
                 FileEx.SafeDelete(hkFile, true); // The hardklor .hk file
-                FileEx.SafeDelete(GetHardlorConfigurationFilename(hkFile));
-                FileEx.SafeDelete(GetHardlorIsotopesFilename(hkFile));
+                FileEx.SafeDelete(GetHardklorConfigurationFilename(hkFile));
+                FileEx.SafeDelete(GetHardklorIsotopesFilename(hkFile));
                 var bullseyeKronikFilename = GetBullseyeKronikFilename(hkFile);
                 FileEx.SafeDelete(bullseyeKronikFilename, true); // The Bullseye result file
                 FileEx.SafeDelete(GetBullseyeKronikUnalignedFilename(bullseyeKronikFilename), true); // The Bullseye result file before we aligned it
@@ -802,7 +802,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             // Make sure Hardklor is working with the same isotope information as Skyline
 
-            var isotopesFilename = GetHardlorIsotopesFilename(hkFile);
+            var isotopesFilename = GetHardklorIsotopesFilename(hkFile);
             var isotopeValues = new List<string>
             {
                 // First few lines are particular to Hardklor
@@ -952,7 +952,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"",
                 $@"""{input}""	""{outputHardklorFile}"""
             );
-            var hardklorConfigFile = GetHardlorConfigurationFilename(outputHardklorFile);
+            var hardklorConfigFile = GetHardklorConfigurationFilename(outputHardklorFile);
             File.WriteAllText(hardklorConfigFile, conf);
             return hardklorConfigFile;
         }
