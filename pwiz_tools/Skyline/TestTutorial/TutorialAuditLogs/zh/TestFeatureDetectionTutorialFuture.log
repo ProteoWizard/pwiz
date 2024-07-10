@@ -38,12 +38,12 @@ All Info  :
 导入分子搜索 > 提取色谱图 > 已删除前缀 是 "Orbi3_SA_IP_"
 导入分子搜索 > 提取色谱图 > 已删除后缀 是 "_01"
 导入分子搜索 > 配置全扫描设置 > 同位素标记富集 是 "Default"
-导入分子搜索 > Hardklor Search Settings > Min idotp 是 "0.9"
-导入分子搜索 > Hardklor Search Settings > Signal to noise 是 "3.01"
-导入分子搜索 > Hardklor Search Settings > Instrument 是 "TOF（飞行时间）"
-导入分子搜索 > Hardklor Search Settings > Resolution 是 "10000"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "2"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "3"
+导入分子搜索 > Hardklor Search Settings > 最小同位素点积 是 "0.9"
+导入分子搜索 > Hardklor Search Settings > 噪声信号 是 "3.01"
+导入分子搜索 > Hardklor Search Settings > 仪器 是 "TOF（飞行时间）"
+导入分子搜索 > Hardklor Search Settings > 分辨率 是 "10000"
+导入分子搜索 > Hardklor Search Settings > 电荷 : 包含 "2"
+导入分子搜索 > Hardklor Search Settings > 电荷 : 包含 "3"
 导入分子搜索 > Hardklor Search Settings > Min intensity PPM 是 "5"
 Extra Info: 提取色谱图 = 
 {
@@ -62,11 +62,11 @@ Extra Info: 提取色谱图 =
 },
 Hardklor Search Settings = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF（飞行时间）",
-    Resolution = "10000",
-    Charges = 
+    最小同位素点积 = "0.9",
+    噪声信号 = "3.01",
+    仪器 = "TOF（飞行时间）",
+    分辨率 = "10000",
+    电荷 = 
     [
         "2",
         "3"
@@ -114,12 +114,12 @@ All Info  :
 导入分子搜索 > 提取色谱图 > 已删除前缀 是 "Orbi3_SA_IP_"
 导入分子搜索 > 提取色谱图 > 已删除后缀 是 "_01"
 导入分子搜索 > 配置全扫描设置 > 同位素标记富集 是 "Default"
-导入分子搜索 > Hardklor Search Settings > Min idotp 是 "0.9"
-导入分子搜索 > Hardklor Search Settings > Signal to noise 是 "3.01"
-导入分子搜索 > Hardklor Search Settings > Instrument 是 "TOF（飞行时间）"
-导入分子搜索 > Hardklor Search Settings > Resolution 是 "10000"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "2"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "3"
+导入分子搜索 > Hardklor Search Settings > 最小同位素点积 是 "0.9"
+导入分子搜索 > Hardklor Search Settings > 噪声信号 是 "3.01"
+导入分子搜索 > Hardklor Search Settings > 仪器 是 "TOF（飞行时间）"
+导入分子搜索 > Hardklor Search Settings > 分辨率 是 "10000"
+导入分子搜索 > Hardklor Search Settings > 电荷 : 包含 "2"
+导入分子搜索 > Hardklor Search Settings > 电荷 : 包含 "3"
 导入分子搜索 > Hardklor Search Settings > Min intensity PPM 是 "5"
 Extra Info: 提取色谱图 = 
 {
@@ -138,11 +138,11 @@ Extra Info: 提取色谱图 =
 },
 Hardklor Search Settings = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF（飞行时间）",
-    Resolution = "10000",
-    Charges = 
+    最小同位素点积 = "0.9",
+    噪声信号 = "3.01",
+    仪器 = "TOF（飞行时间）",
+    分辨率 = "10000",
+    电荷 = 
     [
         "2",
         "3"

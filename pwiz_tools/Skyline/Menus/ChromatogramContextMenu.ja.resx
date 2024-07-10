@@ -217,6 +217,12 @@
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
     <value>トランジション</value>
   </data>
+  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
+    <value>フォーマット中...</value>
+  </data>
   <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
