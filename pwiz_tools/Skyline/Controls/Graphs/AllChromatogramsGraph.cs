@@ -592,25 +592,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ModifyDocument(string message, Action<SrmSettingsChangeMonitor> modifyAction)
         {
-            using (var longWaitDlg = new LongWaitDlg(Program.MainWindow))
+            try
             {
+                using var longWaitDlg = new LongWaitDlg(Program.MainWindow);
                 longWaitDlg.Text = Text; // Same as dialog box
                 longWaitDlg.Message = message;
                 longWaitDlg.ProgressValue = 0;
-                try
+                longWaitDlg.PerformWork(this, 800, progressMonitor =>
                 {
-                    longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                    using (var settingsChangeMonitor =
+                           new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
                     {
-                        using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
-                        {
-                            modifyAction(settingsChangeMonitor);
-                        }
-                    });
-                }
-                catch (OperationCanceledException)
-                {
-                    // SrmSettingsChangeMonitor can throw OperationCancelledException without LongWaitDlg knowing about it.
-                }
+                        modifyAction(settingsChangeMonitor);
+                    }
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                // SrmSettingsChangeMonitor can throw OperationCancelledException without LongWaitDlg knowing about it.
+            }
+            catch (Exception exception)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, exception);
             }
         }
 
