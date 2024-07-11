@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -28,7 +29,9 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina;
@@ -36,6 +39,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model.Tools;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -84,13 +88,22 @@ namespace pwiz.Skyline.SettingsUI
         public class FilesPage : IFormView { }
         public class LearningPage : IFormView { }
 
+        private const string PYTHON = @"Python";
+        private const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.12.4";
+        private const string ALPHAPEPTDEEP = @"alphapeptdeep";
+        private const string BACK_SLASH = @"\";
+
+
         private static readonly IFormView[] TAB_PAGES =
         {
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
 
-        private bool IsAlphaEnabled => false;   // TODO: Implement and enable
+        private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => false;   // TODO: Implement and enable
+        // TODO(xgwang): move this to PythonUtil.GetPythonVirtualEnvironmentDir
+        private string AlphapeptdeepPythonVirtualEnvironmentDir =>
+            ToolDescriptionHelpers.GetToolsDirectory() + BACK_SLASH + PYTHON + BACK_SLASH + ALPHAPEPTDEEP_PYTHON_VERSION + BACK_SLASH + ALPHAPEPTDEEP;
 
         public enum DataSourcePages { files, alpha, carafe, koina }
         public enum LearningOptions { none, libraries, document }
@@ -258,9 +271,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-                    // TODO: Replace with working AlphaPeptDeep implementation
-                    if (!CreateKoinaBuilder(name, outputPath))
+                    if (!SetupPythonEnvironment())
                         return false;
+                    Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir);
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -286,7 +299,7 @@ namespace pwiz.Skyline.SettingsUI
                         // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
                     }
 
-                    // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
+                    // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
                     if (!CreateKoinaBuilder(name, outputPath))
                         return false;
                 }
@@ -371,6 +384,30 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
+            return true;
+        }
+
+        private bool SetupPythonEnvironment()
+        {
+            var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
+                // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
+                // TODO: delete the following line after the issue above is resolved
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            using var dlg = new PythonInstaller(
+                programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(),virtualEnvironmentName: ALPHAPEPTDEEP);
+            if (dlg.IsPythonVirtualEnvironmentReady())
+            {
+                return true;
+            }
+            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return false;
+            }
             return true;
         }
 
