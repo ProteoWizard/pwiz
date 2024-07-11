@@ -1769,7 +1769,8 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new SpectrumInfoLibrary(this, labelType, i)
                 {
                     SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]),
-                    RetentionTime = _libraryEntries[i].RT
+                    RetentionTime = _libraryEntries[i].RT,
+                    IonMobilityInfo = _libraryEntries[i].IonMobility,
                 };
             }
         }
