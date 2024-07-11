@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -36,6 +38,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model.Tools;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -89,7 +92,7 @@ namespace pwiz.Skyline.SettingsUI
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
 
-        private bool IsAlphaEnabled => false;   // TODO: Implement and enable
+        private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => false;   // TODO: Implement and enable
 
         public enum DataSourcePages { files, alpha, carafe, koina }
@@ -258,9 +261,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-                    // TODO: Replace with working AlphaPeptDeep implementation
-                    if (!CreateKoinaBuilder(name, outputPath))
-                        return false;
+                    // SetupPythonEnvironment();
+                    SetupAlphaPeptDeepCli();
+                    Builder = new AlphaPeptDeepLibraryBuilder(name, outputPath);
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -286,7 +289,7 @@ namespace pwiz.Skyline.SettingsUI
                         // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
                     }
 
-                    // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
+                    // TODO: Create AlphaPeptDeepLibraryBuilder class with everything necessary to build a library
                     if (!CreateKoinaBuilder(name, outputPath))
                         return false;
                 }
@@ -371,6 +374,26 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
+            return true;
+        }
+
+        private bool SetupPythonEnvironment()
+        {
+            // TODO(xgwang): implement
+            var programPathContainer = new ProgramPathContainer(@"Python", @"3.12.4");
+            var packages = new List<ToolPackage>()
+            {
+                new ToolPackage{ Name = @"numpy.zip", Version = @"1.26.4"},
+                new ToolPackage{ Name = @"pandas.zip", Version = @"2.2.1"}
+            };
+            Debug.WriteLine(@"HELLO: Installing python...");
+            _skylineWindow.InstallProgram(programPathContainer, packages, null);
+            return true;
+        }
+
+        private bool SetupAlphaPeptDeepCli()
+        {
+            // TODO(xgwang): implement
             return true;
         }
 
