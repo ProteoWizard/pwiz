@@ -166,6 +166,7 @@
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
+    <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
