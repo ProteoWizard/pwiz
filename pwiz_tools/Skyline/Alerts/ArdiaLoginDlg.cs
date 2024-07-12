@@ -187,6 +187,8 @@ namespace pwiz.Skyline.Alerts
             //webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
             webView.CoreWebView2.DOMContentLoaded += CoreWebView2_NavigationCompleted;
 
+            webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage;
+
             //   START:  Stuffing in launch Register Device here to see if can get working
 
             // Account = Account.ChangeApplicationCode("6fFwDy55");
@@ -247,6 +249,8 @@ namespace pwiz.Skyline.Alerts
 
             // !!!!!!!!!!!!!!!!
 
+            //  Remove Listener for Client Registration page
+            webView.CoreWebView2.NavigationCompleted -= CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage;  // Remove Listener
 
 
             //   END:  Stuffing in launch Register Device here to see if can get working
@@ -274,14 +278,15 @@ namespace pwiz.Skyline.Alerts
 
         }
 
-        private void CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
+        private void CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
         {
+
             if (!eventArgs.IsSuccess)
             {
-                if (eventArgs.HttpStatusCode == 401)
+                if (eventArgs.HttpStatusCode == 404)
                 {
                     MessageDlg.Show(
-                        webView, "Load Login page failed with status code 401.  Likely that the Client Registration Code is invalid.");
+                        webView, "Load Client Registration page failed with HTTP status code 404.  Page not found at URL.");
 
 
                     //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
@@ -290,7 +295,43 @@ namespace pwiz.Skyline.Alerts
                 else
                 {
                     MessageDlg.Show(
-                        webView, "Load Login page failed with status code " + eventArgs.HttpStatusCode + ".");
+                        webView, "Load Client Registration page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
+                }
+
+                // TODO DJJ Not sure what to do here
+
+                //  Exception throws does NOT appear to do anything.
+
+                throw new Exception("Load Client Registraton page failed. if (!eventArgs.IsSuccess) ");
+            }
+        }
+
+        private void CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
+        {
+            if (!eventArgs.IsSuccess)
+            {
+                if (eventArgs.HttpStatusCode == 401)
+                {
+                    MessageDlg.Show(
+                        webView, "Load Login page failed with HTTP status code 401.  Likely that the Client Registration Code is invalid.");
+
+
+                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
+
+                }
+                else if (eventArgs.HttpStatusCode == 404)
+                {
+                    MessageDlg.Show(
+                        webView, "Load Login page failed with HTTP status code 404.  Page not found at URL.");
+
+
+                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
+
+                }
+                else
+                {
+                    MessageDlg.Show(
+                        webView, "Load Login page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
                 }
 
                 // TODO DJJ Not sure what to do here
@@ -317,6 +358,8 @@ namespace pwiz.Skyline.Alerts
                     var discoveryDocument = await discoveryCache.GetAsync();
                     if (discoveryDocument.IsError)
                     {
+                        //  For Register Device, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
+
                         throw new Exception(discoveryDocument.Error);
                     }
 
@@ -405,21 +448,56 @@ namespace pwiz.Skyline.Alerts
         // Request device authorization from the Ardia platform using the device authorization endpoint and the device client credentials
         private async Task<DeviceAuthorizationResponse> RequestDeviceAuthorizationAsync()
         {
-            using (var httpClient = new HttpClient())
+            try
             {
-                var _baseUrl = Account.ServerUrl.Replace("https://", "");
-
-                //  Hard coded for initial connection to get device registration
-                var _ardiaDeviceClientId = "ardia.device.client.registration";
-
-                var deviceAuthorizationEndpoint = $"https://identity.{_baseUrl}/connect/deviceauthorization";
-                var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
+                using (var httpClient = new HttpClient())
                 {
-                    Address = deviceAuthorizationEndpoint,
-                    ClientId = _ardiaDeviceClientId,
-                    Scope = "openid profile Ardia_Client_Registration"
-                });
-                return response;
+                    var _baseUrl = Account.ServerUrl.Replace("https://", "");
+
+                    //  Hard coded for initial connection to get device registration
+                    var _ardiaDeviceClientId = "ardia.device.client.registration";
+
+                    var deviceAuthorizationEndpoint = $"https://identity.{_baseUrl}/connect/deviceauthorization";
+                    var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
+                    {
+                        Address = deviceAuthorizationEndpoint,
+                        ClientId = _ardiaDeviceClientId,
+                        Scope = "openid profile Ardia_Client_Registration"
+                    });
+                    return response;
+                }
+            // StoreClientCredentials(identityClient);
+            }
+            catch (HttpRequestException e)
+            {
+                var eToString = e.ToString();
+                var z = 0;
+
+                // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
+                //
+                // var eMessage = e.Message;
+
+
+                if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
+                {
+                    MessageDlg.Show(webView, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                }
+                else
+                {
+                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+                }
+
+
+                //  added throw to code from Thermo
+                throw;
+            }
+            catch (Exception e)
+            {
+                var eToString = e.ToString();
+                var z = 0;
+                MessageDlg.ShowWithException(webView, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client", e);
+                //  added throw to code from Thermo
+                throw;
             }
         }
 
