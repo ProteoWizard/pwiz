@@ -259,7 +259,7 @@
     <value>0</value>
   </data>
   <data name="lblStatus.Text" xml:space="preserve">
-    <value>File reading status</value>
+    <value>文件读取状态</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="lblStatus.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
@@ -359,7 +359,7 @@
     <value>5</value>
   </data>
   <data name="btnRemoveFile.ToolTip" xml:space="preserve">
-    <value>Remove from list</value>
+    <value>移出列表</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;btnRemoveFile.Name" xml:space="preserve">
@@ -414,7 +414,7 @@
     <value>4</value>
   </data>
   <data name="btnAddSpectrumFilter.Text" xml:space="preserve">
-    <value>Add Spectrum Filter...</value>
+    <value>添加 Spectrum 过滤器...</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;btnAddSpectrumFilter.Name" xml:space="preserve">
@@ -472,7 +472,7 @@
     <value>2</value>
   </data>
   <data name="listBoxFiles.ToolTip" xml:space="preserve">
-    <value>Remove from list</value>
+    <value>移出列表</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;listBoxFiles.Name" xml:space="preserve">
