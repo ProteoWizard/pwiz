@@ -1040,7 +1040,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>Vertical</value>
   </data>
   <data name="textPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 20</value>
+    <value>345, 20</value>
   </data>
   <data name="textPanoramaFolder.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
