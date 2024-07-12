@@ -457,7 +457,7 @@
     <value>9</value>
   </data>
   <data name="enterListButton.Text" xml:space="preserve">
-    <value>&amp;Enter List...</value>
+    <value>输入列表(&amp;E)...</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;enterListButton.Name" xml:space="preserve">
