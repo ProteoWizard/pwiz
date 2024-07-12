@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Alerts
             // Navigate to the login page
             var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=https://{_baseUrl}/";
 
-            MessageDlg.Show(webView, "loginUrl: " + loginUrl);
+            // MessageDlg.Show(webView, "loginUrl: " + loginUrl);
 
             //  NOTE:  Opening the Login URL with invalid "applicationcode" results in 401 HTTP status code along with returned contents of:  "Unknown Client. Please register/activate the client"
 
@@ -306,18 +306,19 @@ namespace pwiz.Skyline.Alerts
                 {
                     var eToString = e.ToString();
                     var z = 0;
-                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
-
+                    
                     // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                     //
                     // var eMessage = e.Message;
 
 
-                    MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  e.Message: " + e.Message);
-
                     if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
                     {
-                        MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  e.Message matches the expected 403 Forbidden message: " + e.Message);
+                        MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                    }
+                    else
+                    {
+                        MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
                     }
 
 

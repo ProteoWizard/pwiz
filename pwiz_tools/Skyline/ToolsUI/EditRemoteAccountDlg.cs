@@ -296,7 +296,23 @@ namespace pwiz.Skyline.ToolsUI
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
             groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType);
+
             pnlArdiaSettings.Visible = RemoteAccountType.ARDIA.Equals(AccountType);
+
+            if (RemoteAccountType.ARDIA.Equals(AccountType))
+            {
+                //  Hide everything not needed
+
+                lblUsername.Visible = false;
+                textUsername.Visible = false;
+                lblPassword.Visible = false;
+                textPassword.Visible = false;
+                
+                tbxRole.Visible = false;
+                lblRole.Visible = false;
+
+
+            }
         }
 
         private void flowLayoutPanel_Resize(object sender, EventArgs e)

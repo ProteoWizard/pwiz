@@ -335,12 +335,6 @@
     <Compile Include="Alerts\UpgradeLicenseDlg.designer.cs">
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\ArdiaClientRegistrationDlg.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Alerts\ArdiaClientRegistrationDlg.Designer.cs">
-      <DependentUpon>ArdiaClientRegistrationDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="CommandArgUsage.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -2589,9 +2583,6 @@
     <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.zh-CHS.resx">
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\ArdiaClientRegistrationDlg.resx">
-      <DependentUpon>ArdiaClientRegistrationDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CommandArgUsage.ja.resx">
       <DependentUpon>CommandArgUsage.resx</DependentUpon>
