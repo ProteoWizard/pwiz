@@ -211,17 +211,20 @@ namespace pwiz.SkylineTestUtil
         /// <example>GetSystemResourceString("IO.FileNotFound_FileName", "SomeFilepath")</example>
         public string GetSystemResourceString(string resourceId, params object[] args)
         {
-            if (_systemResources == null)
+            if (_systemResources == null || !Equals(_systemResourcesCultureInfo, CultureInfo.CurrentUICulture))
             {
+                _systemResources?.Dispose();
                 var assembly = Assembly.GetAssembly(typeof(object));
                 var assemblyName = assembly.GetName().Name;
                 var manager = new ResourceManager(assemblyName, assembly);
                 _systemResources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                _systemResourcesCultureInfo = CultureInfo.CurrentUICulture;
             }
 
             return string.Format(_systemResources.GetString(resourceId) ?? throw new ArgumentException(nameof(resourceId)), args);
         }
 
         private static ResourceSet _systemResources;
+        private static CultureInfo _systemResourcesCultureInfo;
     }
 }
