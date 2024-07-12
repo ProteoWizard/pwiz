@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Alerts
 
             // !!!!!!!!!!!!!!!!
 
-            applicationCode_AfterRegister = "FAKE"; // TODO DJJ  See what happens when have invalid application code at the Login URL
+            // applicationCode_AfterRegister = "FAKE"; // TODO DJJ  See what happens when have invalid application code at the Login URL
 
             // !!!!!!!!!!!!!!!!
 
@@ -276,16 +276,16 @@ namespace pwiz.Skyline.Alerts
 
         private void CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
         {
-            // eventArgs.HttpStatusCode;
-            // eventArgs.IsSuccess;
-            // eventArgs.WebErrorStatus;
-
             if (!eventArgs.IsSuccess)
             {
                 if (eventArgs.HttpStatusCode == 401)
                 {
                     MessageDlg.Show(
                         webView, "Load Login page failed with status code 401.  Likely that the Client Registration Code is invalid.");
+
+
+                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
+
                 }
                 else
                 {
@@ -293,12 +293,12 @@ namespace pwiz.Skyline.Alerts
                         webView, "Load Login page failed with status code " + eventArgs.HttpStatusCode + ".");
                 }
 
-                // throw new Exception("Load Login page failed. if (!eventArgs.IsSuccess) ");
+                // TODO DJJ Not sure what to do here
+
+                //  Exception throws does NOT appear to do anything.
+
+                throw new Exception("Load Login page failed. if (!eventArgs.IsSuccess) ");
             }
-
-            var z = 0;
-
-            // throw new NotImplementedException();
         }
 
         //   START:  Stuffing in launch Register Device here to see if can get working
