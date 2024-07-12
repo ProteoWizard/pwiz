@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Alerts
                     // MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     MessageDlg.ShowWithException(webView, "Error registering this Skyline instance to Ardia", e); //  TODO  DJJ  Maybe need something different
 
-                    // throw e;
+                    // throw;
 
                     //  TODO  May be better to close/exit this dialog here
 
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Alerts
 
             // !!!!!!!!!!!!!!!!
 
-            // applicationCode_AfterRegister = "FAKE"; // TODO DJJ  See what happens when have invalid application code at the Login URL
+            applicationCode_AfterRegister = "FAKE"; // TODO DJJ  See what happens when have invalid application code at the Login URL
 
             // !!!!!!!!!!!!!!!!
 
@@ -261,6 +261,8 @@ namespace pwiz.Skyline.Alerts
 
             //  NOTE:  Opening the Login URL with invalid "applicationcode" results in 401 HTTP status code along with returned contents of:  "Unknown Client. Please register/activate the client"
 
+            webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL;
+
             webView.CoreWebView2.Navigate(loginUrl);
 
             //  When Application Code is invalid, the Webview at 'login' URL shows "Unknown Client. Please register/activate the client"
@@ -270,6 +272,33 @@ namespace pwiz.Skyline.Alerts
             // Navigate to the login page
             // webView.CoreWebView2.Navigate($@"{Account.ServerUrl}/login");
 
+        }
+
+        private void CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
+        {
+            // eventArgs.HttpStatusCode;
+            // eventArgs.IsSuccess;
+            // eventArgs.WebErrorStatus;
+
+            if (!eventArgs.IsSuccess)
+            {
+                if (eventArgs.HttpStatusCode == 401)
+                {
+                    MessageDlg.Show(
+                        webView, "Load Login page failed with status code 401.  Likely that the Client Registration Code is invalid.");
+                }
+                else
+                {
+                    MessageDlg.Show(
+                        webView, "Load Login page failed with status code " + eventArgs.HttpStatusCode + ".");
+                }
+
+                // throw new Exception("Load Login page failed. if (!eventArgs.IsSuccess) ");
+            }
+
+            var z = 0;
+
+            // throw new NotImplementedException();
         }
 
         //   START:  Stuffing in launch Register Device here to see if can get working
@@ -323,7 +352,7 @@ namespace pwiz.Skyline.Alerts
 
 
                     //  added throw to code from Thermo
-                    throw e;
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -331,7 +360,7 @@ namespace pwiz.Skyline.Alerts
                     var z = 0;
                     MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
                     //  added throw to code from Thermo
-                    throw e;
+                    throw;
                 }
             }
         }
@@ -421,9 +450,32 @@ namespace pwiz.Skyline.Alerts
                     }
                 }
             }
+            catch (HttpRequestException e)
+            {
+                var eToString = e.ToString();
+                var z = 0;
+
+                // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
+                //
+                // var eMessage = e.Message;
+
+
+                if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
+                {
+                    MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                }
+                else
+                {
+                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+                }
+
+
+                //  added throw to code from Thermo
+                throw;
+            }
             catch (Exception e)
             {
-                throw e;
+                throw new Exception(e.Message, e);
             }
         }
 
