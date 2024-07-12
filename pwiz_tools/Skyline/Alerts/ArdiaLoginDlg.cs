@@ -31,9 +31,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using IdentityModel;
 using IdentityModel.Client;
-using Microsoft.Web.WebView2.WinForms;
 using Newtonsoft.Json;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -78,11 +78,54 @@ namespace pwiz.Skyline.Alerts
 
         private Cookie _bffCookie;
 
+        private string _ardia_ApplicationCode__TEMP;
+
+        private string GetSavedArdiaApplicationCode()
+        {
+            //  Temp to NOT store in Settings
+
+            return _ardia_ApplicationCode__TEMP;
+
+            // var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
+            //
+            // string applicationCode = null;
+            //
+            // {
+            //     if (!Settings.Default.ArdiaRegistrationCodes.TryGetValue(ardiaServerURL,
+            //             out applicationCode))
+            //     {
+            //         applicationCode = null;
+            //     }
+            // }
+            //
+            // return applicationCode;
+        }
+
+        private void SetSavedArdiaApplicationCode(string applicationCode)
+        {
+
+            //  Temp to NOT store in Settings
+
+            _ardia_ApplicationCode__TEMP = applicationCode;
+
+            // var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
+            //
+            // Settings.Default.ArdiaRegistrationCodes[ardiaServerURL] = applicationCode;
+        }
+
         private Func<HttpClient> GetFactory()
         {
             return () =>
             {
-                var applicationCode = Account.ApplicationCode;
+                var applicationCode = GetSavedArdiaApplicationCode();
+
+
+                if (applicationCode == null)
+                {
+                    throw new Exception("GetFactory(); if (applicationCode == null) ");
+                }
+
+                // var applicationCode = Account.ApplicationCode;
 
                 var cookieContainer = new CookieContainer();
                 var handler = new HttpClientHandler();
@@ -148,22 +191,63 @@ namespace pwiz.Skyline.Alerts
 
             // Account = Account.ChangeApplicationCode("6fFwDy55");
 
+            var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
 
-            var applicationCode_BeforeRegister = Account.ApplicationCode;
+            var applicationCode_BeforeRegister = GetSavedArdiaApplicationCode();
+            
+
+            // !!!!!!!!!!!!!!!!
+
+            //  TODO  DJJ  FAKE set to null so do Client Registration always
+
+            applicationCode_BeforeRegister = null;
+
+            // !!!!!!!!!!!!!!!!
+
+
+            // var applicationCode_BeforeRegister = Account.ApplicationCode;
 
             if (applicationCode_BeforeRegister == null)
             {
                 try
                 {
-                    await RegisterDevice(webView);
+                    await RegisterDevice();
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageDlg.ShowWithException(webView, "Error registering this Skyline instance to Ardia", e); //  TODO  DJJ  Maybe need something different
+
+                    // throw e;
+
+                    //  TODO  May be better to close/exit this dialog here
+
+                    // this does not not work here.  Get problems further down the line from "webView = null"
+
+
+                    webView.CoreWebView2.Environment.BrowserProcessExited += (s, ea) => DialogResult = DialogResult.OK;
+                    webView.Dispose();
+                    webView = null;
+
+                    return;
                 }
             }
 
-            var applicationCode_AfterRegister = Account.ApplicationCode;
+            var applicationCode_AfterRegister = GetSavedArdiaApplicationCode();
+            
+            if (applicationCode_AfterRegister == null)
+            {
+                throw new Exception("applicationCode_AfterRegister == null");
+            }
+
+
+            // !!!!!!!!!!!!!!!!
+
+            // applicationCode_AfterRegister = "FAKE"; // TODO DJJ  See what happens when have invalid application code at the Login URL
+
+            // !!!!!!!!!!!!!!!!
+
+
 
             //   END:  Stuffing in launch Register Device here to see if can get working
 
@@ -171,8 +255,15 @@ namespace pwiz.Skyline.Alerts
 
 
             // Navigate to the login page
-            var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={Account.ApplicationCode}&returnUrl=https://{_baseUrl}/";
+            var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=https://{_baseUrl}/";
+
+            MessageDlg.Show(webView, "loginUrl: " + loginUrl);
+
+            //  NOTE:  Opening the Login URL with invalid "applicationcode" results in 401 HTTP status code along with returned contents of:  "Unknown Client. Please register/activate the client"
+
             webView.CoreWebView2.Navigate(loginUrl);
+
+            //  When Application Code is invalid, the Webview at 'login' URL shows "Unknown Client. Please register/activate the client"
 
             //  OLD LOGIN
 
@@ -184,7 +275,7 @@ namespace pwiz.Skyline.Alerts
         //   START:  Stuffing in launch Register Device here to see if can get working
 
         // Register the device with the Ardia platform using the WebView2 control to display the registration page
-        public async Task RegisterDevice(WebView2 webView)
+        public async Task RegisterDevice()
         {
             if (webView != null && webView.CoreWebView2 != null)
             {
@@ -199,6 +290,7 @@ namespace pwiz.Skyline.Alerts
                     {
                         throw new Exception(discoveryDocument.Error);
                     }
+
                     var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
                     var verificationUri = $"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
                     webView.CoreWebView2.Navigate(verificationUri);
@@ -210,10 +302,33 @@ namespace pwiz.Skyline.Alerts
                     var x = 0;
                     // StoreClientCredentials(identityClient);
                 }
+                catch (HttpRequestException e)
+                {
+                    var eToString = e.ToString();
+                    var z = 0;
+                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+
+                    // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
+                    //
+                    // var eMessage = e.Message;
+
+
+                    MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  e.Message: " + e.Message);
+
+                    if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
+                    {
+                        MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  e.Message matches the expected 403 Forbidden message: " + e.Message);
+                    }
+
+
+                    //  added throw to code from Thermo
+                    throw e;
+                }
                 catch (Exception e)
                 {
+                    var eToString = e.ToString();
                     var z = 0;
-                    // MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
                     //  added throw to code from Thermo
                     throw e;
                 }
@@ -360,7 +475,9 @@ namespace pwiz.Skyline.Alerts
                             var ApplicationCode = clientCredentials.ApplicationCode;
                             var Name = clientCredentials.Name;
 
-                            Account = Account.ChangeApplicationCode( clientCredentials.ApplicationCode );
+
+                            SetSavedArdiaApplicationCode(clientCredentials.ApplicationCode);
+
 
                             await CheckForBffHostCookie();
 
@@ -473,7 +590,7 @@ namespace pwiz.Skyline.Alerts
 
             if (webView == null)
                 return;
-
+            
             try
             {
                 string location = webView.Source.AbsolutePath.ToLower();
