@@ -27,6 +27,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ArdiaLoginDlg));
             this.webView = new Microsoft.Web.WebView2.WinForms.WebView2();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.webView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -39,17 +40,26 @@
             this.webView.Name = "webView";
             this.webView.ZoomFactor = 1D;
             // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // ArdiaLoginDlg
             // 
             resources.ApplyResources(this, "$this");
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.webView);
             this.Name = "ArdiaLoginDlg";
             this.ShowIcon = false;
             ((System.ComponentModel.ISupportInitialize)(this.webView)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
         private Microsoft.Web.WebView2.WinForms.WebView2 webView;
         #endregion
+
+        private System.Windows.Forms.Label label1;
     }
 }
