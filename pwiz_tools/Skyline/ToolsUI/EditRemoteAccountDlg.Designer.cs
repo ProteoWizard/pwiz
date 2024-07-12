@@ -29,14 +29,8 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditRemoteAccountDlg));
-            this.lblServerUrl = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.textServerURL = new System.Windows.Forms.TextBox();
-            this.textPassword = new System.Windows.Forms.TextBox();
-            this.lblPassword = new System.Windows.Forms.Label();
-            this.lblUsername = new System.Windows.Forms.Label();
-            this.textUsername = new System.Windows.Forms.TextBox();
             this.btnTest = new System.Windows.Forms.Button();
             this.comboAccountType = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -50,19 +44,24 @@
             this.tbxRole = new System.Windows.Forms.TextBox();
             this.lblRole = new System.Windows.Forms.Label();
             this.pnlArdiaSettings = new System.Windows.Forms.Panel();
-            this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.pnlCommonSettings = new System.Windows.Forms.Panel();
             this.cbDeleteRawAfterImport = new System.Windows.Forms.CheckBox();
+            this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.pnlAccountTypeSelect = new System.Windows.Forms.Panel();
+            this.pnlUsernamePassword = new System.Windows.Forms.Panel();
+            this.lblUsername = new System.Windows.Forms.Label();
+            this.textUsername = new System.Windows.Forms.TextBox();
+            this.textPassword = new System.Windows.Forms.TextBox();
+            this.lblPassword = new System.Windows.Forms.Label();
+            this.pnlServerURL = new System.Windows.Forms.Panel();
+            this.textServerURL = new System.Windows.Forms.TextBox();
+            this.lblServerUrl = new System.Windows.Forms.Label();
             this.groupBoxUnifi.SuspendLayout();
             this.pnlArdiaSettings.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
-            this.pnlCommonSettings.SuspendLayout();
+            this.pnlAccountTypeSelect.SuspendLayout();
+            this.pnlUsernamePassword.SuspendLayout();
+            this.pnlServerURL.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // lblServerUrl
-            // 
-            resources.ApplyResources(this.lblServerUrl, "lblServerUrl");
-            this.lblServerUrl.Name = "lblServerUrl";
             // 
             // btnCancel
             // 
@@ -78,32 +77,6 @@
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // textServerURL
-            // 
-            resources.ApplyResources(this.textServerURL, "textServerURL");
-            this.textServerURL.Name = "textServerURL";
-            // 
-            // textPassword
-            // 
-            resources.ApplyResources(this.textPassword, "textPassword");
-            this.textPassword.Name = "textPassword";
-            this.textPassword.UseSystemPasswordChar = true;
-            // 
-            // lblPassword
-            // 
-            resources.ApplyResources(this.lblPassword, "lblPassword");
-            this.lblPassword.Name = "lblPassword";
-            // 
-            // lblUsername
-            // 
-            resources.ApplyResources(this.lblUsername, "lblUsername");
-            this.lblUsername.Name = "lblUsername";
-            // 
-            // textUsername
-            // 
-            resources.ApplyResources(this.textUsername, "textUsername");
-            this.textUsername.Name = "textUsername";
-            // 
             // btnTest
             // 
             resources.ApplyResources(this.btnTest, "btnTest");
@@ -113,9 +86,10 @@
             // 
             // comboAccountType
             // 
-            resources.ApplyResources(this.comboAccountType, "comboAccountType");
             this.comboAccountType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAccountType.DropDownWidth = 200;
             this.comboAccountType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboAccountType, "comboAccountType");
             this.comboAccountType.Name = "comboAccountType";
             this.comboAccountType.SelectedIndexChanged += new System.EventHandler(this.comboAccountType_SelectedIndexChanged);
             // 
@@ -181,39 +155,82 @@
             // 
             resources.ApplyResources(this.pnlArdiaSettings, "pnlArdiaSettings");
             this.pnlArdiaSettings.Controls.Add(this.cbDeleteRawAfterImport);
-            this.pnlArdiaSettings.Controls.Add(this.tbxRole);
-            this.pnlArdiaSettings.Controls.Add(this.lblRole);
             this.flowLayoutPanel.SetFlowBreak(this.pnlArdiaSettings, true);
             this.pnlArdiaSettings.Name = "pnlArdiaSettings";
-            // 
-            // flowLayoutPanel
-            // 
-            resources.ApplyResources(this.flowLayoutPanel, "flowLayoutPanel");
-            this.flowLayoutPanel.Controls.Add(this.pnlCommonSettings);
-            this.flowLayoutPanel.Controls.Add(this.pnlArdiaSettings);
-            this.flowLayoutPanel.Controls.Add(this.groupBoxUnifi);
-            this.flowLayoutPanel.Name = "flowLayoutPanel";
-            this.flowLayoutPanel.Resize += new System.EventHandler(this.flowLayoutPanel_Resize);
-            // 
-            // pnlCommonSettings
-            // 
-            resources.ApplyResources(this.pnlCommonSettings, "pnlCommonSettings");
-            this.pnlCommonSettings.Controls.Add(this.label1);
-            this.pnlCommonSettings.Controls.Add(this.comboAccountType);
-            this.pnlCommonSettings.Controls.Add(this.textServerURL);
-            this.pnlCommonSettings.Controls.Add(this.lblUsername);
-            this.pnlCommonSettings.Controls.Add(this.lblServerUrl);
-            this.pnlCommonSettings.Controls.Add(this.textUsername);
-            this.pnlCommonSettings.Controls.Add(this.textPassword);
-            this.pnlCommonSettings.Controls.Add(this.lblPassword);
-            this.flowLayoutPanel.SetFlowBreak(this.pnlCommonSettings, true);
-            this.pnlCommonSettings.Name = "pnlCommonSettings";
             // 
             // cbDeleteRawAfterImport
             // 
             resources.ApplyResources(this.cbDeleteRawAfterImport, "cbDeleteRawAfterImport");
             this.cbDeleteRawAfterImport.Name = "cbDeleteRawAfterImport";
             this.cbDeleteRawAfterImport.UseVisualStyleBackColor = true;
+            // 
+            // flowLayoutPanel
+            // 
+            resources.ApplyResources(this.flowLayoutPanel, "flowLayoutPanel");
+            this.flowLayoutPanel.Controls.Add(this.pnlAccountTypeSelect);
+            this.flowLayoutPanel.Controls.Add(this.pnlUsernamePassword);
+            this.flowLayoutPanel.Controls.Add(this.pnlServerURL);
+            this.flowLayoutPanel.Controls.Add(this.pnlArdiaSettings);
+            this.flowLayoutPanel.Controls.Add(this.groupBoxUnifi);
+            this.flowLayoutPanel.Controls.Add(this.lblRole);
+            this.flowLayoutPanel.Controls.Add(this.tbxRole);
+            this.flowLayoutPanel.Name = "flowLayoutPanel";
+            this.flowLayoutPanel.Resize += new System.EventHandler(this.flowLayoutPanel_Resize);
+            // 
+            // pnlAccountTypeSelect
+            // 
+            resources.ApplyResources(this.pnlAccountTypeSelect, "pnlAccountTypeSelect");
+            this.pnlAccountTypeSelect.Controls.Add(this.label1);
+            this.pnlAccountTypeSelect.Controls.Add(this.comboAccountType);
+            this.flowLayoutPanel.SetFlowBreak(this.pnlAccountTypeSelect, true);
+            this.pnlAccountTypeSelect.Name = "pnlAccountTypeSelect";
+            // 
+            // pnlUsernamePassword
+            // 
+            this.pnlUsernamePassword.Controls.Add(this.lblUsername);
+            this.pnlUsernamePassword.Controls.Add(this.textUsername);
+            this.pnlUsernamePassword.Controls.Add(this.textPassword);
+            this.pnlUsernamePassword.Controls.Add(this.lblPassword);
+            resources.ApplyResources(this.pnlUsernamePassword, "pnlUsernamePassword");
+            this.pnlUsernamePassword.Name = "pnlUsernamePassword";
+            // 
+            // lblUsername
+            // 
+            resources.ApplyResources(this.lblUsername, "lblUsername");
+            this.lblUsername.Name = "lblUsername";
+            // 
+            // textUsername
+            // 
+            resources.ApplyResources(this.textUsername, "textUsername");
+            this.textUsername.Name = "textUsername";
+            // 
+            // textPassword
+            // 
+            resources.ApplyResources(this.textPassword, "textPassword");
+            this.textPassword.Name = "textPassword";
+            this.textPassword.UseSystemPasswordChar = true;
+            // 
+            // lblPassword
+            // 
+            resources.ApplyResources(this.lblPassword, "lblPassword");
+            this.lblPassword.Name = "lblPassword";
+            // 
+            // pnlServerURL
+            // 
+            this.pnlServerURL.Controls.Add(this.textServerURL);
+            this.pnlServerURL.Controls.Add(this.lblServerUrl);
+            resources.ApplyResources(this.pnlServerURL, "pnlServerURL");
+            this.pnlServerURL.Name = "pnlServerURL";
+            // 
+            // textServerURL
+            // 
+            resources.ApplyResources(this.textServerURL, "textServerURL");
+            this.textServerURL.Name = "textServerURL";
+            // 
+            // lblServerUrl
+            // 
+            resources.ApplyResources(this.lblServerUrl, "lblServerUrl");
+            this.lblServerUrl.Name = "lblServerUrl";
             // 
             // EditRemoteAccountDlg
             // 
@@ -236,22 +253,19 @@
             this.pnlArdiaSettings.PerformLayout();
             this.flowLayoutPanel.ResumeLayout(false);
             this.flowLayoutPanel.PerformLayout();
-            this.pnlCommonSettings.ResumeLayout(false);
-            this.pnlCommonSettings.PerformLayout();
+            this.pnlAccountTypeSelect.ResumeLayout(false);
+            this.pnlAccountTypeSelect.PerformLayout();
+            this.pnlUsernamePassword.ResumeLayout(false);
+            this.pnlUsernamePassword.PerformLayout();
+            this.pnlServerURL.ResumeLayout(false);
+            this.pnlServerURL.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Label lblServerUrl;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
-        private System.Windows.Forms.TextBox textServerURL;
-        internal System.Windows.Forms.TextBox textPassword;
-        private System.Windows.Forms.Label lblPassword;
-        private System.Windows.Forms.Label lblUsername;
-        internal System.Windows.Forms.TextBox textUsername;
         private System.Windows.Forms.Button btnTest;
         private System.Windows.Forms.ComboBox comboAccountType;
         private System.Windows.Forms.Label label1;
@@ -266,7 +280,15 @@
         private System.Windows.Forms.Label lblRole;
         private System.Windows.Forms.Panel pnlArdiaSettings;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
-        private System.Windows.Forms.Panel pnlCommonSettings;
+        private System.Windows.Forms.Panel pnlAccountTypeSelect;
         private System.Windows.Forms.CheckBox cbDeleteRawAfterImport;
+        private System.Windows.Forms.Panel pnlUsernamePassword;
+        private System.Windows.Forms.Label lblUsername;
+        internal System.Windows.Forms.TextBox textUsername;
+        internal System.Windows.Forms.TextBox textPassword;
+        private System.Windows.Forms.Label lblPassword;
+        private System.Windows.Forms.Panel pnlServerURL;
+        private System.Windows.Forms.TextBox textServerURL;
+        private System.Windows.Forms.Label lblServerUrl;
     }
 }
