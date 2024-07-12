@@ -289,11 +289,11 @@
     <value>将使用主进程中的线程并行导入的文件数量（相当于用户界面中的“同时导入的文件”），之后各个文件的结果将被汇集。在适当的条件下，这可以带来 2-4 倍的性能提升。务必使用您的系统进行测试。</value>
   </data>
   <data name="_import_pep_list" xml:space="preserve">
-    <value>Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name.</value>
+    <value>导入肽段或肽段母离子（带电荷状态）列表，列表名称可由 --import-pep-list-name 指定。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_import_pep_list_name" xml:space="preserve">
-    <value>Name of imported peptide list specified by --import-pep-list.</value>
+    <value>导入的肽段列表名称由 --import-pep-list 指定。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_import_transition_list" xml:space="preserve">
@@ -920,79 +920,79 @@ Waters</value>
     <value>用于从中导入分离方案的 path/to/result-file</value>
   </data>
   <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
-    <value>Exporting other file types</value>
+    <value>导出其他文件类型</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_speclib_file" xml:space="preserve">
-    <value>Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library.</value>
+    <value>将当前文档中的实验数据导出为谱图库文件。峰面积用作谱图强度，峰顶点时间用作保留时间，如果文档中有 iRT 值，这些值也会存储在库中。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
-    <value>Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument.</value>
+    <value>用于从导出的文件中按名称排除特定的特征得分。用户界面中可以找到这些名称。该参数可多次使用，以排除多个特征。需要使用 --exp-mprophet-features 参数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_features" xml:space="preserve">
-    <value>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</value>
+    <value>以 mProphet 格式导出每个肽段的所有单个特征得分、复合物得分、p 值和 q 值。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
-    <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument.</value>
+    <value>仅包含最佳得分峰的特征得分。需要使用 --exp-mprophet-features 参数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_targets_only" xml:space="preserve">
-    <value>Include feature scores only for targets. Requires the --exp-mprophet-features argument.</value>
+    <value>只包含目标特征得分。需要使用 --exp-mprophet-features 参数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations" xml:space="preserve">
-    <value>Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well.</value>
+    <value>按照 --import-annotations 要求的格式，将文档中的所有注释导出到包含 ElementLocator 字段的文本文件。也可以使用 --exp-annotations-include-properties 来包含属性。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
-    <value>Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument.</value>
+    <value>用于删除所导出注释中的空白行。需要使用 --exp-annotations 参数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_include_object" xml:space="preserve">
-    <value>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument.</value>
+    <value>用于指定在导出的注释中包含哪些对象类型。默认为包含所有对象类型。该参数可多次使用，来指定多种对象类型。需要使用 --exp-annotations 参数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_include_properties" xml:space="preserve">
-    <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument.</value>
+    <value>用于在导出的注释中包含所有属性。默认为不包含任何属性。需要使用 --exp-annotations 参数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
-    <value>Exclude all peptides starting before this amino acid position in each protein.</value>
+    <value>在每个蛋白质中排除所有在此氨基酸位置前开始的肽段。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
-    <value>Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
+    <value>排除因紧邻前方或后方位置具有剪切位点而产生的肽段， 例如，针对胰蛋白酶的 RR、KK、RK 和 KR</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_length" xml:space="preserve">
-    <value>The maximum length of a peptide to add to the document.</value>
+    <value>要向文档添加的肽段的最大长度。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_min_length" xml:space="preserve">
-    <value>The minimum length of a peptide to add to the document.</value>
+    <value>要向文档添加的肽段的最小长度。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
-    <value>Document settings</value>
+    <value>文档设置</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_name" xml:space="preserve">
-    <value>Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten.</value>
+    <value>向文档添加指定名称的注释。具有相同名称的现有注释将被覆盖。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_targets" xml:space="preserve">
-    <value>A comma-separated list of target types to apply the annotation to in an --annotation-name operation.</value>
+    <value>逗号分隔的目标类型列表，用于在 --annotation-name 操作中应用注释。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_type" xml:space="preserve">
-    <value>Define the data type of the annotation in an --annotation-name operation. Defaults to text.</value>
+    <value>在 --annotation-name 操作中定义注释的数据类型。默认为文本。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_values" xml:space="preserve">
-    <value>A comma-separated list of values for a value_list type annotation in an --annotation-name operation. Required only in an --annotation-type=value_list operation.</value>
+    <value>在 --annotation-name 操作中为 value_list 类型注释提供的逗号分隔值列表。仅在 --annotation-type=value_list 操作中需要使用。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
@@ -1000,105 +1000,102 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_conflict_resolution" xml:space="preserve">
-    <value>Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-name, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts).</value>
+    <value>指定在使用 --annotation-name、--annotation-file 或 --annotation-add-from-environment 时，如何通过覆盖或跳过注释名称冲突来解决注释名称冲突（默认情况下是为冲突输出错误消息）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_file" xml:space="preserve">
-    <value>Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten.</value>
+    <value>从 XML 格式文件向文档和环境添加注释。有关 XML 格式文件的示例，请查看用户界面窗口“工具 &gt; 选项 &gt;杂项”中指定的 user.config 文件。具有相同名称的现有注释将被覆盖。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_file" xml:space="preserve">
-    <value>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename.</value>
+    <value>要应用于打开的文档的背景蛋白质组 (protdb) 文件的路径。可以通过 --background-proteome-name 指定文件名，否则默认为此文件名。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_name" xml:space="preserve">
-    <value>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file.</value>
+    <value>要应用于打开的文档的背景蛋白质组名称。背景蛋白质组指定注入质谱仪的样品基质中可能存在的全部蛋白质。如果 Skyline 中尚未定义该名称，还必须通过 --background-proteome-file 设置 protdb 文件路径。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_digest_enzyme" xml:space="preserve">
-    <value>The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages.</value>
+    <value>蛋白酶定义用于解析蛋白质序列（作为目标添加到文档）中的肽段序列。作为目标添加的肽段列表会忽略此设置，但会计算遗漏的酶解位点数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_missed_cleavages" xml:space="preserve">
-    <value>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</value>
+    <value>当考虑到蛋白质酶解时，肽段中允许的 最大遗漏的酶解位点数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_unique_by" xml:space="preserve">
-    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
-"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
-"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.
-Useful in sample mixtures including multiple species.</value>
+    <value>“蛋白质”不包括出现在背景蛋白质组中的多个蛋白质中的任何肽段。 “基因”不包括出现在背景蛋白质组中的多个基因蛋白质中的任何肽段。 “物种”不包括出现在背景蛋白质组中的多个物种蛋白质中的任何肽段。适用于包含多个物种的样品混合物。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_verbose_errors" xml:space="preserve">
-    <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
+    <value>请在出错时为程序输出添加额外信息，此举可能对 Skyline 开发人员有所帮助。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
-    <value>Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association.</value>
+    <value>关联肽段与基因（或基因组）而不关联蛋白质，并对这种关联应用简约法选项。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
-    <value>full name (e.g. "Oxidation (M)") | short name (Oxi)</value>
+    <value>完整名称（如“Oxidation (M)” | 简称 (Oxi)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__" xml:space="preserve">
-    <value>UniMod ID (e.g. "35")</value>
+    <value>UniMod ID (如“35”)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_integrate_all" xml:space="preserve">
-    <value>When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor.</value>
+    <value>如果设置，所有在积分边界之间贡献任何信号的离子对都会被视为找到的离子对。如未设置，只有共洗脱的离子对才视为找到的离子对。无论设置与否，积分边界之间的所有定量离子对信号都会相加，从而得出母离子的总面积。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod" xml:space="preserve">
-    <value>Add a UniMod modification to the document. The modification must be specified by PSI-MS name and site together ("Oxidation (M)").</value>
+    <value>向文档中添加 UniMod 修饰。必须通过 PSI-MS 名称和位点（“Oxidation (M)”）来指定修饰。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod_aa" xml:space="preserve">
-    <value>Provides the amino acid specificity for the last peptide modification added by --pep-add-unimod.</value>
+    <value>提供 --pep-add-unimod 添加的最后一个肽段修饰的氨基酸特异性。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod_term" xml:space="preserve">
-    <value>Provides the terminus specificity for the last peptide modification added by --pep-add-unimod.</value>
+    <value>提供 --pep-add-unimod 添加的最后一个肽段修饰的末端特异性。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod" xml:space="preserve">
-    <value>Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-unimod-aa or --pep-add-unimod-term to choose which specificity you want to add to the document.</value>
+    <value>通过 UniMod ID 向文档中添加 UniMod 修饰。如果修饰有多个特异性，必须使用 --pep-add-unimod-aa 或 --pep-add-unimod-term 来选择要向文档添加的特异性。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_clear_mods" xml:space="preserve">
-    <value>Clears all peptide modifications from the currently open document.</value>
+    <value>清除当前打开文档中的所有肽段修饰。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_losses" xml:space="preserve">
-    <value>The maximum number of neutral loss events allowed to occur in combination on any fragment instance.</value>
+    <value>在任何肽段上允许出现的最大 中性丢失数目。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_variable_mods" xml:space="preserve">
-    <value>The maximum number of variable modifications allowed to occur in combination on any peptide instance.</value>
+    <value>在任何肽段上允许出现的 最大可变修饰数目。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
-    <value>{0} or {1}</value>
+    <value>{0} 或 {1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>值“{0}”对于参数 {1} 无效。使用 {2} 中的一个</value>
   </data>
   <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
-    <value>Unable to add peptide modification '{0}': {1}</value>
+    <value>无法添加肽段修饰“{0}”：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
-    <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
+    <value>值“{0}”对于参数“{1}”无效：必须为 {2}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_fasta" xml:space="preserve">
-    <value>Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used.</value>
+    <value>关联文档中的肽段与给定 FASTA 中的蛋白质。如果未提供此参数，但提供了其他 --associate-proteins 选项，将使用 --import-fasta 中的 FASTA。如果 --import-fasta 也未提供，则使用上次用来关联蛋白质的 FASTA。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod_variable" xml:space="preserve">
-    <value>Adds a modification as variable if 'true' or static if 'false'. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss).</value>
+    <value>若为“true”，则添加可变修饰；若为“false”，则添加静态修饰。仅对结构修饰有效，但仅限丢失的修饰（如氨和水损失）除外。</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

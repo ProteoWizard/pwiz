@@ -289,11 +289,11 @@
     <value>多数のファイルが、メインプロセスのスレッド（ユーザーインターフェイスの[同時にインポートするファイル]に相当）を使用して並行にインポートされます。その後、それぞれの単一ファイルからの結果が結合されます。これにより、正しい条件の下では2～4倍に性能がアップされる可能性があります。お使いのシステムで必ずテストしてください。</value>
   </data>
   <data name="_import_pep_list" xml:space="preserve">
-    <value>Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name.</value>
+    <value>ペプチドまたはペプチドプリカーサー（電荷状態）のリストを--import-pep-list-nameで指定したオプションのリスト名でインポートします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_import_pep_list_name" xml:space="preserve">
-    <value>Name of imported peptide list specified by --import-pep-list.</value>
+    <value>--import-pep-listで指定されたインポート対象のペプチドリストの名前です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_import_transition_list" xml:space="preserve">
@@ -924,185 +924,182 @@ Waters</value>
     <value>単離スキームのインポート元となるpath/to/result-file</value>
   </data>
   <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
-    <value>Exporting other file types</value>
+    <value>その他のファイルタイプのエクスポート中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_speclib_file" xml:space="preserve">
-    <value>Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library.</value>
+    <value>現在のドキュメントの実験データをスペクトルライブラリファイルにエクスポートします。ピーク面積はスペクトル強度として、ピーク頂点時間は保持時間として使用され、ドキュメントにiRT値がある場合は、それもライブラリに保存されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
-    <value>Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument.</value>
+    <value>エクスポートしたファイルから名前で特定のフィーチャースコアを除外するために使用します。名前はユーザーインターフェースで見つけられます。この引数を複数回使用すると、複数のフィーチャーを除外できます。--exp-mprophet-features引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_features" xml:space="preserve">
-    <value>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</value>
+    <value>各ペプチドの個々のフィーチャースコア、複合スコア、p値、q値をすべてmProphet形式にエクスポートします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
-    <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument.</value>
+    <value>最良スコアのピークに対してのみフィーチャースコアを含めます。--exp-mprophet-features引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_targets_only" xml:space="preserve">
-    <value>Include feature scores only for targets. Requires the --exp-mprophet-features argument.</value>
+    <value>ターゲットに対してのみフィーチャースコアを含めます。--exp-mprophet-features引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations" xml:space="preserve">
-    <value>Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well.</value>
+    <value>--import-annotationsで要求される形式のElementLocatorフィールドがあるテキストファイルに、ドキュメント内のすべての注釈をエクスポートします。--exp-annotations-include-propertiesを使用すると、プロパティも含まれます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
-    <value>Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument.</value>
+    <value>エクスポートした注釈から空白行を削除するために使用します。 --exp-annotations引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_include_object" xml:space="preserve">
-    <value>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument.</value>
+    <value>エクスポートする注釈に含めるオブジェクトタイプの指定に使用します。デフォルトでは、すべてのオブジェクトタイプが含まれます。この引数を複数回使用すると、複数のオブジェクトタイプを指定できます。--exp-annotations引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_include_properties" xml:space="preserve">
-    <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument.</value>
+    <value>エクスポートされた注釈にすべてのプロパティを含めるために使用します。デフォルトではどのプロパティも含まれません。--exp-annotations引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
-    <value>Exclude all peptides starting before this amino acid position in each protein.</value>
+    <value>各タンパク質内でこのアミノ酸の位置より前にあるすべてのペプチドを除外します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
-    <value>Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
+    <value>切断部位の直前か直後にある切断部位によるペプチドを除外します。 例：トリプシンのRR、KK、RK、KR</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_length" xml:space="preserve">
-    <value>The maximum length of a peptide to add to the document.</value>
+    <value>ドキュメントに追加するペプチドの最大長。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_min_length" xml:space="preserve">
-    <value>The minimum length of a peptide to add to the document.</value>
+    <value>ドキュメントに追加するペプチドの最小長。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
-    <value>Document settings</value>
+    <value>ドキュメント設定</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_name" xml:space="preserve">
-    <value>Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten.</value>
+    <value>指定した名前でドキュメントに注釈を追加します。同名の既存の注釈は上書きされます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_targets" xml:space="preserve">
-    <value>A comma-separated list of target types to apply the annotation to in an --annotation-name operation.</value>
+    <value>--annotation-name操作で注釈を適用するターゲットタイプのカンマ区切りリスト。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_type" xml:space="preserve">
-    <value>Define the data type of the annotation in an --annotation-name operation. Defaults to text.</value>
+    <value>--annotation-name操作の注釈のデータタイプを定義します。デフォルトはテキストです。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_values" xml:space="preserve">
-    <value>A comma-separated list of values for a value_list type annotation in an --annotation-name operation. Required only in an --annotation-type=value_list operation.</value>
+    <value>--annotation-name操作でvalue_listタイプの注釈で使う値のカンマ区切りリスト。--annotation-type=value_list操作でのみ必須となります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
-    <value>"&lt;value&gt;, &lt;value&gt;, &lt;value&gt;..."</value>
+    <value>「&lt;value&gt;、&lt;value&gt;、&lt;value&gt;...」</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_conflict_resolution" xml:space="preserve">
-    <value>Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-name, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts).</value>
+    <value>--annotation-name、--annotation-file、または--annotation-add-from-environmentを使用する際、注釈名の重複を解決する方法を、上書き、重複をスキップする、のいずれかで指定します（デフォルトは、重複のエラーメッセージの出力です。）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_file" xml:space="preserve">
-    <value>Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten.</value>
+    <value>XML形式のファイルからドキュメントと環境に注釈を追加します。XML形式ファイルの例は、ユーザーインターフェースウィンドウの [ツール] &gt; [オプション] &gt; [その他] で指定されるuser.configファイルをご覧ください。同名の既存の注釈は上書きされます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_file" xml:space="preserve">
-    <value>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename.</value>
+    <value>開いたドキュメントに適用するバックグラウンドプロテオーム（protdb）ファイルへのパス。この名前は、オプションで--background-proteome-nameを使って指定できます。指定しない場合、filenameがデフォルトとして使用されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_name" xml:space="preserve">
-    <value>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file.</value>
+    <value>開いたドキュメントに適用するバックグラウンドプロテオームの名前。バックグラウンドプロテオームは、質量分析計に導入される試料マトリックス内に存在し得るすべてのタンパク質を指定します。名前がSkylineで定義されていない場合は、protdbファイルへのパスも--background-proteome-fileで設定する必要があります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_digest_enzyme" xml:space="preserve">
-    <value>The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages.</value>
+    <value>ドキュメントにターゲットとして追加されたタンパク質配列からペプチド配列を解析するために使用されるプロテアーゼ酵素の定義。ペプチドリストがターゲットとして追加された場合、この設定は未切断数をカウントする以外は無視されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_missed_cleavages" xml:space="preserve">
-    <value>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</value>
+    <value>タンパク質消化時にペプチドで許容される最大未切断数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_unique_by" xml:space="preserve">
-    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
-"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
-"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.
-Useful in sample mixtures including multiple species.</value>
+    <value>「タンパク質」は、バックグラウンドプロテオームで2つ以上のタンパク質に出現するペプチドを全て除外します。 「遺伝子」は、バックグラウンドプロテオームで2つ以上の遺伝子のタンパク質に出現するペプチドを全て除外します。 「種」は、バックグラウンドプロテオームで2つ以上の種のタンパク質に出現するペプチドを全て除外します。複数の種を含む試料混合物に有用です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_verbose_errors" xml:space="preserve">
-    <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
+    <value>エラーが発生した場合、Skylineの開発者に役立つ可能性のある追加情報をプログラムの出力に追加します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
-    <value>Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association.</value>
+    <value>タンパク質ではなく遺伝子（または遺伝子グループ）とペプチドを関連付け、その関連付けに倹約オプションを適用します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
-    <value>full name (e.g. "Oxidation (M)") | short name (Oxi)</value>
+    <value>フルネーム（例「Oxidation (M)」）| ショートネーム(Oxi)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__" xml:space="preserve">
-    <value>UniMod ID (e.g. "35")</value>
+    <value>UniMod ID（例「35」）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_integrate_all" xml:space="preserve">
-    <value>When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor.</value>
+    <value>設定されると、積分領域間のシグナルに貢献するすべてのトランジションが検出されたと見なされます。設定されない場合、共溶出しているトランジションのみが検出されたと見なされます。設定にかかわらず、積分領域間の定量的トランジションからのシグナルはすべて合計され、プリカーサーのTotalAreaとなります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod" xml:space="preserve">
-    <value>Add a UniMod modification to the document. The modification must be specified by PSI-MS name and site together ("Oxidation (M)").</value>
+    <value>ドキュメントにUniMod修飾を追加します。修飾は、PSI-MS名と部位を共に指定する必要があります（「酸化(M)」）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod_aa" xml:space="preserve">
-    <value>Provides the amino acid specificity for the last peptide modification added by --pep-add-unimod.</value>
+    <value>--pep-add-unimod により最後に追加されたペプチド修飾のアミノ酸特異性が提供されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod_term" xml:space="preserve">
-    <value>Provides the terminus specificity for the last peptide modification added by --pep-add-unimod.</value>
+    <value>--pep-add-unimod により最後に追加されたペプチド修飾の末端特異性が提供されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod" xml:space="preserve">
-    <value>Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-unimod-aa or --pep-add-unimod-term to choose which specificity you want to add to the document.</value>
+    <value>UniMod IDでドキュメントにUniMod修飾を追加します。修飾に複数の特異性がある場合は、--pep-add-unimod-aaまたは--pep-add-unimod-termを使用して、ドキュメントに追加する特異性を選ぶ必要があります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_clear_mods" xml:space="preserve">
-    <value>Clears all peptide modifications from the currently open document.</value>
+    <value>現在開いているドキュメントからすべてのペプチド修飾を消去します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_losses" xml:space="preserve">
-    <value>The maximum number of neutral loss events allowed to occur in combination on any fragment instance.</value>
+    <value>どのフラグメントインスタンスにおける組み合わせでも発生可能な 最大ニュートラルロスイベント数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_variable_mods" xml:space="preserve">
-    <value>The maximum number of variable modifications allowed to occur in combination on any peptide instance.</value>
+    <value>どのペプチドインスタンスにおける組み合わせでも発生可能な 最大可変修飾数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
-    <value>{0} or {1}</value>
+    <value>{0} または {1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>値「{0}」は引数{1}に対して有効ではありません。{2}の1つを使用します。</value>
   </data>
   <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
-    <value>Unable to add peptide modification '{0}': {1}</value>
+    <value>ペプチド修飾「{0}」を追加できません：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
-    <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
+    <value>値「{0}」は引数{1}には有効ではありません。{2}である必要があります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_fasta" xml:space="preserve">
-    <value>Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used.</value>
+    <value>ドキュメント内のペプチドを、指定されたFASTAファイル内のタンパク質と関連付けます。この引数がなく、他の--associate-proteinsオプションがある場合は、--import-fastaからのFASTAが使用されます。--import-fastaもない場合は、タンパク質の関連付けに使用された最後のFASTAが使用されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod_variable" xml:space="preserve">
-    <value>Adds a modification as variable if 'true' or static if 'false'. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss).</value>
+    <value>「true」の場合は修飾を変数として、「false」の場合は静的として追加します。損失のみの修飾（アンモニアと水の損失など）を除く構造修飾にのみ有効です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

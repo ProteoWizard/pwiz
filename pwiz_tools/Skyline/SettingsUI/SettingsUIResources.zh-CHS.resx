@@ -725,7 +725,7 @@
     <value>您必须为已过滤的库输入路径。</value>
   </data>
   <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
-    <value>Help</value>
+    <value>帮助</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
@@ -1141,62 +1141,56 @@
   <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
     <value>
 
-This library entry only provides precursor
-information, there is no spectrum to show</value>
+该库条目只提供母离子信息，没有可以显示的谱图</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
-    <value>minutes of detected features</value>
+    <value>检测到特征的分钟数 </value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
-    <value>Hardklor looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
+    <value>Hardklor 查找代表电荷 1-{0} 的同位素包络。生成的库中只包含此处所列电荷的离子。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
-    <value>This is the value assumed by Hardklor, it cannot be adjusted.</value>
+    <value>这是 Hardklor 假定的值，不能调整。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_" xml:space="preserve">
-    <value>Sets the MS data type for Hardklor's FWHM calculation. Normally set to Centroided.</value>
+    <value>针对 Hardklor FWHM 计算设置 MS 数据类型。通常设置为 Centroided。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_" xml:space="preserve">
-    <value>Sets the mass analyzer type for Hardklor's FWHM calculation.</value>
+    <value>针对 Hardklor FWHM 计算设置质量分析仪类型。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
-    <value>&amp;Instrument values</value>
+    <value>仪器值(&amp;I)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
-    <value>Instrument values (from full-scan settings)</value>
+    <value>（全扫描设置的）仪器值 </value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient" xml:space="preserve">
-    <value>{0} methods usually specify the time range for the mass spectrometer to acquire spectra.
-
-Applying retention time filtering in Skyline is typically unnecessary and may lead to truncated extracted ion chromatograms.
-
-Use this option only if your acquisition method includes multiple targets with the same m/z.</value>
+    <value>{0} 方法通常指定质谱仪采集谱图的时间范围。
+在 Skyline 中通常不必应用保留时间过滤，否则可能会导致提取的离子色谱图被截短。
+只有在采集方法包括多个质荷比相同的目标时，才使用该选项。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
-    <value>Are you sure you want to train a peak scoring model for this document?
-      
-This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+    <value>您是否确定要为该文档训练峰得分模型？ 
+该文档使用谱图库中的峰边界。使用这些边界时，Skyline 不会自行检测峰。
+在训练峰得分模型前，建议您按照以下步骤进行操作：
 
-Before training a peak scoring model, it is recommended that you follow these steps:
-
-1. Navigate to "Settings &gt; Peptide Settings - Libraries" tab and click "Edit List".
-2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.
-3. Navigate to "Edit &gt; Manage Results" and click the "Re-score" button.
-
-This will provide Skyline with a variety of candidate peaks to evaluate peak quality.</value>
+1. 导航至“设置 &gt; 肽段设置 - 库”选项卡，然后单击“编辑列表”。
+2. 选择库中的某项，单击“编辑”，然后取消选中“使用明示峰界限”复选框。
+3. 导航至“编辑  &gt; 管理结果”，然后单击“再次计分”按钮。
+该操作将为 Skyline 提供各种候选峰，用来评估峰质量。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
-    <value>Train Model</value>
+    <value>训练模型</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

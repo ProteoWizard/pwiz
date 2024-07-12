@@ -367,11 +367,11 @@
     <value>14</value>
   </data>
   <data name="lblGroupAtGeneLevel.Text" xml:space="preserve">
-    <value>Group at g&amp;ene level</value>
+    <value>按基因水平分组(&amp;E)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="lblGroupAtGeneLevel.ToolTip" xml:space="preserve">
-    <value>Peptides will be associated and grouped by gene instead of by protein.</value>
+    <value>肽段将按基因而非蛋白质进行关联和分组。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblGroupAtGeneLevel.Name" xml:space="preserve">
