@@ -78,6 +78,8 @@ namespace pwiz.Skyline.Alerts
 
         private Cookie _bffCookie;
 
+        private bool _firstTime_ExecuteClientRegistration;
+
         private string _ardia_ApplicationCode__TEMP;
 
         private string GetSavedArdiaApplicationCode()
@@ -172,7 +174,9 @@ namespace pwiz.Skyline.Alerts
 
         private async void InitializeWebView()
         {
-            var options = new CoreWebView2EnvironmentOptions(@"--disable-web-security --allow-file-access-from-files --allow-file-access");
+            var options =
+                new CoreWebView2EnvironmentOptions(
+                    @"--disable-web-security --allow-file-access-from-files --allow-file-access");
             var environment = await CoreWebView2Environment.CreateAsync(null, _tempUserDataFolder.DirPath, options);
             // EnsureCoreWebView2Async must be called before any other call
             // to WebView2 and before setting the Source property
@@ -186,6 +190,13 @@ namespace pwiz.Skyline.Alerts
             // Wait for the user to login and the source to change
             //webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
             webView.CoreWebView2.DOMContentLoaded += CoreWebView2_NavigationCompleted;
+
+            StartAtClientRegistrationIfNeeded();
+        }
+
+
+        private async void StartAtClientRegistrationIfNeeded()
+        {
 
             webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage;
 
@@ -211,6 +222,8 @@ namespace pwiz.Skyline.Alerts
 
             if (applicationCode_BeforeRegister == null)
             {
+                _firstTime_ExecuteClientRegistration = false;
+
                 try
                 {
                     await RegisterDevice();
@@ -312,9 +325,25 @@ namespace pwiz.Skyline.Alerts
             {
                 if (eventArgs.HttpStatusCode == 401)
                 {
-                    MessageDlg.Show(
-                        webView, "Load Login page failed with HTTP status code 401.  Likely that the Client Registration Code is invalid.");
+                    if (_firstTime_ExecuteClientRegistration)
+                    {
+                        //  Client Registration has NOT been executed yet to get new value
 
+                        //  Assume the Registration Code (ApplicationCode) is invalid and remove it and go through client registration to get a new one
+
+                        SetSavedArdiaApplicationCode(null);
+
+
+                        //  Start over at Client Registration if needed
+                        StartAtClientRegistrationIfNeeded();
+                    }
+                    else
+                    {
+                        MessageDlg.Show(
+                            webView,
+                            "Load Login page failed with HTTP status code 401.  Likely that the Client Registration Code is invalid.  A new Client Registration Code was just received from the server so this is likely a bug.");
+
+                    }
 
                     //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
 
