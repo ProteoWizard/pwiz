@@ -197,6 +197,8 @@ namespace pwiz.Skyline.Alerts
 
         private async void StartAtClientRegistrationIfNeeded()
         {
+            //  Cleanup in case execute this a second time
+            webView.CoreWebView2.NavigationCompleted -= CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL;
 
             webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage;
 
