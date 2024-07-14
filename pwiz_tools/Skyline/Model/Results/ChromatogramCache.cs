@@ -338,7 +338,12 @@ namespace pwiz.Skyline.Model.Results
             float tolerance, ChromatogramSet chromatograms)
         {
             var fileIndexesFound = new HashSet<int>();
-            if (nodePep != null && _chromEntryIndex != null)
+            // For peptides, see if "_chromEntryIndex" has any matches.
+            // We only do this for peptides because:
+            // 1. Small molecules do not require the complicated matching logic in "MassModification.Matches".
+            // 2. The LibKey for a peptide is always based on "nodePep.ModifiedTarget". Small molecule LibKey's have
+            // evolved over time and is implemented in "TextIdEqual".
+            if (true == nodePep?.IsProteomic && _chromEntryIndex != null)
             {
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
