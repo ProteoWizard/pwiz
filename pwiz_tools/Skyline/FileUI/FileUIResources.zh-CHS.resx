@@ -422,7 +422,7 @@ Old Localized:选定的文件夹无 Agilent QQQ 方法模板。文件夹预计�
     <value>文本“{0}”并不是选定文件的后缀。</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
-    <value>正在检查错误...</value>
+    <value>正在检查错误…</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z" xml:space="preserve">
     <value>分子式和/或母离子质荷比</value>

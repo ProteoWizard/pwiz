@@ -519,7 +519,7 @@
     <value>错误：您试图添加的库与文件中已经存在的库发生冲突。</value>
   </data>
   <data name="CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___" xml:space="preserve">
-    <value>警告：导入结果文件{0}失败。 忽视...</value>
+    <value>警告：导入结果文件{0}失败。 忽视…</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>下载工具出错</value>
@@ -1251,7 +1251,7 @@
     <value>匹配的谱图</value>
   </data>
   <data name="PeptidesPerProteinDlg_UpdateRemaining_Calculating___" xml:space="preserve">
-    <value>正在计算...</value>
+    <value>正在计算…</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
     <value>正在处理保留时间</value>
@@ -1614,7 +1614,7 @@
     <value>模型在用于峰值边界比较前必须被训练。</value>
   </data>
   <data name="CommandLine_ImportTool_The_tool_was_not_imported___" xml:space="preserve">
-    <value>工具未导入...</value>
+    <value>工具未导入…</value>
   </data>
   <data name="SkylineDoc" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\skylinedoc.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -1988,7 +1988,7 @@
     <value>未能在文件{1}中找到扫描ID{0}。</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">
-    <value>正在导入离子对列表{0}...</value>
+    <value>正在导入离子对列表{0}…</value>
   </data>
   <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
     <value>蛋白质</value>
@@ -2396,7 +2396,7 @@
     <value>成功更新下列工具</value>
   </data>
   <data name="SkylineWindow_SaveDocument_Saving___" xml:space="preserve">
-    <value>保存...</value>
+    <value>保存…</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>片段名称</value>
@@ -2405,7 +2405,7 @@
     <value>下载失败。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
-    <value>错误：如要导入工具，则必须含有名称和命令。 使用“--工具-添加”来指定一个名称，并且使用“--工具-命令”来指定一个命令。 工具未导入...</value>
+    <value>错误：如要导入工具，则必须含有名称和命令。 使用“--工具-添加”来指定一个名称，并且使用“--工具-命令”来指定一个命令。 工具未导入…</value>
   </data>
   <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
     <value>肽段序列</value>
@@ -2615,7 +2615,7 @@
     <value>..\resources\comment.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportFasta_Importing_FASTA_file__0____" xml:space="preserve">
-    <value>FASTA 文件{0}导入中...</value>
+    <value>FASTA 文件{0}导入中…</value>
   </data>
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_" xml:space="preserve">
     <value>一些背景蛋白质组蛋白没有基因信息，此选择可疑。</value>
@@ -2627,7 +2627,7 @@
     <value>异常值</value>
   </data>
   <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
-    <value>正在计算...</value>
+    <value>正在计算…</value>
   </data>
   <data name="SkylineWindow_ImportFasta_Unexpected_document_change_during_operation" xml:space="preserve">
     <value>操作过程中的意外文档修改。</value>
@@ -2681,7 +2681,7 @@
     <value>{0}必须至少包含一个氨基酸。</value>
   </data>
   <data name="CommandLine_RefineDocument_Refining_document___" xml:space="preserve">
-    <value>正在细化文档...</value>
+    <value>正在细化文档…</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_File_Name" xml:space="preserve">
     <value>文件名称</value>
@@ -3152,7 +3152,7 @@
     <value>无效的 S-Lens 值 {0}</value>
   </data>
   <data name="CommandLine_OpenSkyFile_Opening_file___" xml:space="preserve">
-    <value>文件打开中...</value>
+    <value>文件打开中…</value>
   </data>
   <data name="PasteDlg_AddFasta_An_unexpected_error_occurred" xml:space="preserve">
     <value>发生意外错误：</value>
@@ -3231,7 +3231,7 @@
     <value>截尾计数</value>
   </data>
   <data name="CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
-    <value>{0} -&gt; {1} 注释：文件已导入。忽视...</value>
+    <value>{0} -&gt; {1} 注释：文件已导入。忽视…</value>
   </data>
   <data name="IIrtRegression_DisplayEquation_Measured_RT" xml:space="preserve">
     <value>测量的 RT</value>
@@ -3633,7 +3633,7 @@
     <value>软件包安装已完成。</value>
   </data>
   <data name="CommandLine_ExportReport_Exporting_report__0____" xml:space="preserve">
-    <value>报告{0}导出中...</value>
+    <value>报告{0}导出中…</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>出现命名冲突。您已经从压缩文件夹内使用名称{0}安装一个工具。您是否想要覆盖或并行安装？</value>
@@ -3995,11 +3995,11 @@
     <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
-    <value>正在导入文件 {1} 中的肽段列表 {0}...</value>
+    <value>正在导入文件 {1} 中的肽段列表 {0}…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
-    <value>正在导入文件 {0} 中的肽段列表...</value>
+    <value>正在导入文件 {0} 中的肽段列表…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
