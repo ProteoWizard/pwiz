@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="folderLabel.Text" xml:space="preserve">
-    <value>远程文件夹(&amp;R):</value>
+    <value>远程文件夹(&amp;R)：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;folderLabel.Name" xml:space="preserve">

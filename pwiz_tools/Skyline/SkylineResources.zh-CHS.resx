@@ -226,7 +226,7 @@
     <value>样品名“{0}”不符合模式“{1}”。忽视{2}</value>
   </data>
   <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
-    <value>正在“{1}”中创建离子迁移库“{0}”...</value>
+    <value>正在“{1}”中创建离子迁移库“{0}”…</value>
   </data>
   <data name="CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_" xml:space="preserve">
     <value>错误：创建得分模型失败。</value>
@@ -260,7 +260,7 @@
     <value>错误：文档必须拥有导入的结果</value>
   </data>
   <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
-    <value>正在导出色谱图文件{0}...</value>
+    <value>正在导出色谱图文件{0}…</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
     <value>错误：您必须借助“--exp-file=path/to/file”参数来指定写入的导出文件。无离子对列表将被导出。</value>
@@ -309,7 +309,7 @@
     <value>警告：“添加-能量-斜坡”参数仅适用于 Thermo 离子对列表。该参数将被忽视。</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___" xml:space="preserve">
-    <value>警告：供应商{0}在 CE 或 DP 预测设置中不匹配供应商。 无论如何继续导出离子对列表...</value>
+    <value>警告：供应商{0}在 CE 或 DP 预测设置中不匹配供应商。 无论如何继续导出离子对列表…</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
     <value>您必须导出一个{0}离子对列表并使用供应商软件来将其手动导入方法文件。</value>
@@ -327,7 +327,7 @@
     <value>错误：报告{0}不存在。如果名称中存在空格，请在整个命令参数列表周围使用“双引号”。</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Exporting_report__0____" xml:space="preserve">
-    <value>报告{0}导出中...</value>
+    <value>报告{0}导出中…</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__" xml:space="preserve">
     <value>报告{0}已成功导出至{1}。</value>
@@ -368,16 +368,16 @@
     <value>正在从 {0} 导入峰边界 </value>
   </data>
   <data name="CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
-    <value>{0} -&gt; {1} 注释：文件已导入。忽视...</value>
+    <value>{0} -&gt; {1} 注释：文件已导入。忽视…</value>
   </data>
   <data name="CommandLine_ImportResultsFile_Adding_results___" xml:space="preserve">
     <value>结果添加中…</value>
   </data>
   <data name="CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___" xml:space="preserve">
-    <value>文件写入日期 {0} 晚于 --导入-之前日期 {1}。忽视...</value>
+    <value>文件写入日期 {0} 晚于 --导入-之前日期 {1}。忽视…</value>
   </data>
   <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
-    <value>文件写入日期 {0} 早于 --导入-在-或-之前日期 {1}。忽视...</value>
+    <value>文件写入日期 {0} 早于 --导入-在-或-之前日期 {1}。忽视…</value>
   </data>
   <data name="CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__" xml:space="preserve">
     <value>错误：无法找到文件{0}的上次写入时间。</value>
@@ -434,13 +434,13 @@
     <value>已删除：{0}</value>
   </data>
   <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
-    <value>正在将峰周围的色谱图噪声限制为 +/- {0} 分钟...</value>
+    <value>正在将峰周围的色谱图噪声限制为 +/- {0} 分钟…</value>
   </data>
   <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
     <value>结果最小化为 {0}</value>
   </data>
   <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
-    <value>正在删除未使用的色谱图...</value>
+    <value>正在删除未使用的色谱图…</value>
   </data>
   <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
     <value>错误：未添加新结果。跳过 Panorama 导入。</value>
@@ -480,13 +480,13 @@
     <value>错误：打开日志文件 {0} 失败</value>
   </data>
   <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
-    <value>错误：发生故障。正在退出...</value>
+    <value>错误：发生故障。正在退出…</value>
   </data>
   <data name="CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__" xml:space="preserve">
     <value>错误：您无法同时导出离子对列表和方法。 这样操作不会导出任何内容。请更改命令行参数。</value>
   </data>
   <data name="CommandLine_Run_Exiting___" xml:space="preserve">
-    <value>退出中...</value>
+    <value>退出中…</value>
   </data>
   <data name="CommandLine_Run_Not_setting_library_" xml:space="preserve">
     <value>未设定库。</value>
@@ -501,7 +501,7 @@
     <value>错误：打开文件{0}失败。“--批次-命令”命令失败。</value>
   </data>
   <data name="CommandLine_SaveFile_Saving_file___" xml:space="preserve">
-    <value>文件保存中...</value>
+    <value>文件保存中…</value>
   </data>
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>错误：未能保存至用户配置文件。</value>
@@ -549,7 +549,7 @@
     <value>消息：</value>
   </data>
   <data name="CommandWaitBroker_UpdateProgress_Waiting___" xml:space="preserve">
-    <value>正在等待...</value>
+    <value>正在等待…</value>
   </data>
   <data name="CommandWaitBroker_Wait_Done" xml:space="preserve">
     <value>已完成</value>
@@ -953,7 +953,7 @@
     <value>打开{0}失败。</value>
   </data>
   <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
-    <value>加载中...</value>
+    <value>加载中…</value>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
     <value>正在下载文件 {0}</value>
@@ -1003,7 +1003,7 @@
     <value>写入{0}失败。</value>
   </data>
   <data name="SkylineWindow_SaveDocument_Optimizing_data_file___" xml:space="preserve">
-    <value>优化数据文件...</value>
+    <value>优化数据文件…</value>
   </data>
   <data name="SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name" xml:space="preserve">
     <value>文档必须在可以保存为新名称之前被完全加载。</value>
@@ -1072,7 +1072,7 @@
     <value>导出谱图库</value>
   </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
-    <value>正在导出谱图库 {0}...</value>
+    <value>正在导出谱图库 {0}…</value>
   </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
     <value>向 {0} 导出谱图库失败。</value>

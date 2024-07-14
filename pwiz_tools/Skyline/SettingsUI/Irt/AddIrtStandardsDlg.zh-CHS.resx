@@ -259,7 +259,7 @@
     <value>3</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>图形...</value>
+    <value>图形…</value>
   </data>
   <data name="btnGraph.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

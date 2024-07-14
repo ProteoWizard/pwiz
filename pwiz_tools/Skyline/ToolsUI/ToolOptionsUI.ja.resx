@@ -566,7 +566,7 @@ Old Localized:279, 22</comment>
     <value>1</value>
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
-    <value>サーバー（&amp;S）：</value>
+    <value>サーバー(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
     <value>koinaServerLabel</value>

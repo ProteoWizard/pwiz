@@ -181,7 +181,7 @@
     <value>所有目标的离子迁移值必须介于此模板方法中指定的 {0} 和 {1} 之间。请使用其他模板方法，或更改下列目标的离子迁移值:</value>
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___" xml:space="preserve">
-    <value>正在获取时序安排...</value>
+    <value>正在获取时序安排…</value>
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>时序安排故障（无目标？）</value>

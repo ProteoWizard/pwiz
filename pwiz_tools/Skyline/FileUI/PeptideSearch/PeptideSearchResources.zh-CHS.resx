@@ -215,7 +215,7 @@
     <value>搜索失败。</value>
   </data>
   <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
-    <value>正在启动搜索...</value>
+    <value>正在启动搜索…</value>
   </data>
   <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
     <value>再次使用来自 {0} 的 Koina 预测</value>

@@ -352,7 +352,7 @@
     <value>2</value>
   </data>
   <data name="btnLocateFiles.Text" xml:space="preserve">
-    <value>定位文件(&amp;L)...</value>
+    <value>定位文件(&amp;L)…</value>
   </data>
   <data name="&gt;&gt;btnLocateFiles.Name" xml:space="preserve">
     <value>btnLocateFiles</value>
@@ -403,7 +403,7 @@
     <value>3</value>
   </data>
   <data name="btnFindInFolder.Text" xml:space="preserve">
-    <value>在文件夹中查找(&amp;F)...</value>
+    <value>在文件夹中查找(&amp;F)…</value>
   </data>
   <data name="&gt;&gt;btnFindInFolder.Name" xml:space="preserve">
     <value>btnFindInFolder</value>
