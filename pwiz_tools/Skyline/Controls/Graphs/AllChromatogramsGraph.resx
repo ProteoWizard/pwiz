@@ -632,18 +632,6 @@
   <data name="textBoxError.Text" xml:space="preserve">
     <value></value>
   </data>
-  <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
-    <value>textBoxError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btnCopyText.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -659,18 +647,6 @@
   <data name="btnCopyText.Text" xml:space="preserve">
     <value>Copy &amp;Text</value>
   </data>
-  <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
-    <value>btnCopyText</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="cbMoreInfo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -685,18 +661,6 @@
   </data>
   <data name="cbMoreInfo.Text" xml:space="preserve">
     <value>&amp;More info</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
-    <value>cbMoreInfo</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>468, 17</value>
@@ -851,18 +815,6 @@
   <data name="flowFileStatus.WrapContents" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
-    <value>flowFileStatus</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
-    <value>panelFileList</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -938,18 +890,6 @@
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>panelStatus</value>
-  </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="lblDuration.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -968,18 +908,6 @@
   <data name="lblDuration.Text" xml:space="preserve">
     <value>00:00:00</value>
   </data>
-  <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
-    <value>lblDuration</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="progressBarTotal.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -997,18 +925,6 @@
   </data>
   <data name="progressBarTotal.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
-    <value>progressBarTotal</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="graphChromatograms.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>

@@ -730,18 +730,6 @@ you can append more spectra in the future.</value>
   <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
     <value>Info/Settings</value>
   </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
-    <value>koinaInfoSettingsBtn</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -760,18 +748,6 @@ you can append more spectra in the future.</value>
   <data name="koinaDataSourceRadioButton.Text" xml:space="preserve">
     <value>&amp;Koina</value>
   </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.Name" xml:space="preserve">
-    <value>koinaDataSourceRadioButton</value>
-  </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;koinaDataSourceRadioButton.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -786,18 +762,6 @@ you can append more spectra in the future.</value>
   </data>
   <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
     <value>&amp;Files</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
-    <value>dataSourceFilesRadioButton</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -898,18 +862,6 @@ you can append more spectra in the future.</value>
   <data name="gridInputFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;gridInputFiles.Name" xml:space="preserve">
-    <value>gridInputFiles</value>
-  </data>
-  <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;gridInputFiles.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btnAddPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -925,18 +877,6 @@ you can append more spectra in the future.</value>
   <data name="btnAddPaths.Text" xml:space="preserve">
     <value>Add Pat&amp;hs...</value>
   </data>
-  <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
-    <value>btnAddPaths</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -951,18 +891,6 @@ you can append more spectra in the future.</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>&amp;Input Files:</value>
-  </data>
-  <data name="&gt;&gt;label7.Name" xml:space="preserve">
-    <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -983,18 +911,6 @@ you can append more spectra in the future.</value>
     <value>Add all acceptable spectrum files found below a root directory.
 You can uncheck ones you do not want added to the library.</value>
   </data>
-  <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
-    <value>btnAddDirectory</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -1012,18 +928,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="btnAddFile.ToolTip" xml:space="preserve">
     <value>Add a file or multiple files from a single directory.</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
-    <value>btnAddFile</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>

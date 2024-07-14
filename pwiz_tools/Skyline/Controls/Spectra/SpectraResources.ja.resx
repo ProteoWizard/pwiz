@@ -128,7 +128,7 @@
     <value>フィルタの調査</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_" xml:space="preserve">
-    <value>ドキュメントにはスペクトルフィルタが追加されませんでした。</value>
+    <value>スペクトルフィルタはドキュメントに追加されませんでした。</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_" xml:space="preserve">
     <value>1個のスペクトルフィルタがドキュメントに追加されます。</value>
