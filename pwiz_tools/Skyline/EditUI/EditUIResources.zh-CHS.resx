@@ -134,7 +134,7 @@
     <value>无</value>
   </data>
   <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
-    <value>保留时间计算器...</value>
+    <value>保留时间计算器…</value>
   </data>
   <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
     <value>保留时间计算器 ({0})</value>

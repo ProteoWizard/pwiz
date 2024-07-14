@@ -243,7 +243,7 @@
     <value>228, 22</value>
   </data>
   <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
-    <value>编辑谱图过滤器...</value>
+    <value>编辑谱图过滤器…</value>
   </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -421,7 +421,7 @@ Old Localized:Show Mass Error</comment>
     <value>193, 22</value>
   </data>
   <data name="spectrumGraphPropsContextMenuItem.Text" xml:space="preserve">
-    <value>图形属性...</value>
+    <value>图形属性…</value>
   </data>
   <data name="showLibSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1397,7 +1397,7 @@ Old Localized:Show Mass Error</comment>
     <value>200, 22</value>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
-    <value>从 Panorama 打开(&amp;M)...</value>
+    <value>从 Panorama 打开(&amp;M)…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1456,13 +1456,13 @@ Old Localized:Show Mass Error</comment>
     <value>194, 22</value>
   </data>
   <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
-    <value>EncyclopeDIA 搜索...</value>
+    <value>EncyclopeDIA 搜索…</value>
   </data>
   <data name="importFeatureDetectionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
   </data>
   <data name="importFeatureDetectionMenuItem.Text" xml:space="preserve">
-    <value>特征检测(&amp;F)...</value>
+    <value>特征检测(&amp;F)…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="searchStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1500,7 +1500,7 @@ Old Localized:Show Mass Error</comment>
     <value>170, 22</value>
   </data>
   <data name="importFASTAMenuItem.Text" xml:space="preserve">
-    <value>&amp;FASTA...</value>
+    <value>&amp;FASTA…</value>
   </data>
   <data name="importAssayLibraryMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
