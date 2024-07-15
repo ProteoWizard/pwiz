@@ -681,4 +681,8 @@
   <data name="XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty" xml:space="preserve">
     <value>名称属性不得缺失或为空。</value>
   </data>
+  <data name="StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_" xml:space="preserve">
+    <value>同位素修饰可能不可变。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

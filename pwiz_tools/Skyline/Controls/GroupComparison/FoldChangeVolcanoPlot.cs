@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private LineItem _minPValueLine;
 
         private readonly List<LineItem> _points;
-        private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
+        private readonly List<LabeledPoint> _labeledPoints;
 
         private FoldChangeBindingSource.FoldChangeRow _selectedRow;
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.IsZoomOnMouseCenter = true;
 
             _points = new List<LineItem>();
-            _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
+            _labeledPoints = new List<LabeledPoint>();
         }
 
         public SrmDocument Document
@@ -137,7 +137,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine[1].X = pane.XAxis.Scale.Max;
             }
 
-            DotPlotUtil.AdjustLabelLocations(_labeledPoints, pane.YAxis.Scale, pane.Rect.Height);
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+            }
+            else
+                zedGraphControl.GraphPane.EnableLabelLayout = false;
         }
 
         private void GraphPane_AxisChangeEvent(GraphPane pane)
@@ -159,6 +165,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
+
+            Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
 
             if (FoldChangeBindingSource != null)
             {
@@ -198,6 +206,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
+            Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
 
             if (_bindingListSource != null)
             {
@@ -306,7 +315,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 var foldChange = row.FoldChangeResult.Log2FoldChange;
                 var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
-
                 var point = new PointPair(foldChange, pvalue) { Tag = row };
                 if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsTargetSelected(_skylineWindow, row.Peptide, row.Protein))
                 {
@@ -359,11 +367,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;       
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
-
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+            }
             zedGraphControl.Invalidate();
         }
         // ReSharper restore PossibleMultipleEnumeration
-
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
@@ -375,7 +385,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
                     Line = { IsVisible = false },
-                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true}
+                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true }
                 };
             }
             else
@@ -397,7 +407,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
-                    _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
+                    _labeledPoints.Add(new LabeledPoint(selected){Point = point, Label = label, Curve = lineItem}); 
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -418,7 +428,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             return new LineItem(text, new[] { fromX, toX }, new[] { fromY, toY }, color, SymbolType.None, 1.0f)
             {
-                Line = { Style = DashStyle.Dash }
+                Line = { Style = DashStyle.Dash },
+                
             };
         }
 
@@ -447,6 +458,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             CurveItem nearestCurveItem = null;
             var index = -1;
+            var isSelected = false;
             if (TryGetNearestCurveItem(point, ref nearestCurveItem, ref index))
             {
                 var lineItem = nearestCurveItem as LineItem;
@@ -454,24 +466,46 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     return false;
 
                 _selectedRow = (FoldChangeBindingSource.FoldChangeRow) lineItem[index].Tag;
-                zedGraphControl.Cursor = Cursors.Hand;
-
-                if (_tip == null)
-                    _tip = new NodeTip(this) { Parent = this };
-
-                _tip.SetTipProvider(new FoldChangeRowTipProvider(_selectedRow), new Rectangle(point, new Size()),
-                    point);
-
-                return true;
+                isSelected = true;
+            }
+            else if (zedGraphControl.GraphPane.IsOverLabel(point, out var labPoint))
+            {
+                _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
+                isSelected = true;
             }
             else
             {
-                if (_tip != null)
-                    _tip.HideTip();
-
-                _selectedRow = null;
-                return false;
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
+                    if (nearestObj is TextObj nearestText)
+                    {
+                        var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
+                        if (labels.Any())
+                        {
+                            _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labels.First().Point.Tag;
+                            isSelected = true;
+                        }
+                    }
+                }
             }
+
+            if (isSelected)
+            {
+                if (Control.ModifierKeys != zedGraphControl.EditModifierKeys)
+                    zedGraphControl.Cursor = Cursors.Hand;
+
+                if (_tip == null)
+                    _tip = new NodeTip(this) { Parent = this };
+                _tip.SetTipProvider(new FoldChangeRowTipProvider(_selectedRow), new Rectangle(point, new Size()),
+                    point);
+            }
+            else
+            {
+                _tip?.HideTip();
+                _selectedRow = null;
+            }
+            return isSelected;
         }
 
         private bool TryGetNearestCurveItem(Point point, ref CurveItem nearestCurveItem, ref int index)
@@ -534,6 +568,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (Control.ModifierKeys == zedGraphControl.EditModifierKeys)
+            {
+                _tip?.HideTip();
+                _selectedRow = null;
+                return false;
+            }
+
             return e.Button.HasFlag(MouseButtons.Left) && ClickSelectedRow();
         }
 
@@ -589,16 +630,48 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (index >= 0)
             {
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Properties___, null, OnPropertiesClick));
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Formatting___, null, OnFormattingClick));
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
                     { Checked = Settings.Default.GroupComparisonShowSelection });
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
+                    { Checked = Settings.Default.GroupComparisonAvoidLabelOverlap });
+                if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+                {
+                    if (Settings.Default.GroupComparisonSuspendLabelLayout)
+                        menuStrip.Items.Insert(index++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout, null, OnSuspendLayout));
+                    else
+                        menuStrip.Items.Insert(index++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout, null, OnSuspendLayout));
+                }
+                menuStrip.Items.Insert(index++, new ToolStripSeparator());
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Properties___, null, OnPropertiesClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Formatting___, null, OnFormattingClick));
                 if (AnyCutoffSettingsValid)
                 {
                     menuStrip.Items.Insert(index++, new ToolStripSeparator());
                     menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs, null, OnRemoveBelowCutoffsClick));
-                }  
+                }
             }
+        }
+
+        /// <summary>
+        /// Detect changes in settings shared with <see cref="SummaryRelativeAbundanceGraphPane"/> right-click menu
+        /// </summary>
+        private void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+                UpdateGraph();
+            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            {
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                {
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                    zedGraphControl.Invalidate();
+                }
+            }
+        }
+
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
         private void OnFormattingClick(object o, EventArgs eventArgs)
@@ -606,19 +679,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ShowFormattingDialog();
         }
 
+        private void OnSuspendLayout(object sender, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonSuspendLabelLayout = !Settings.Default.GroupComparisonSuspendLabelLayout;
+        }
+
         public void ShowFormattingDialog()
         {
             var foldChangeRows = GetFoldChangeRows(_bindingListSource).ToArray();
 
-            var backup = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToArray();
-            // This list will later be used as a BindingList, so we have to create a mutable clone
-            var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor) r.Clone()).ToList();
-            using (var form = new VolcanoPlotFormattingDlg(this, copy, foldChangeRows,
-                rows =>
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
-                    UpdateGraph();
-                }))
+            var backup = GroupComparisonDef.ColorRows.Select(r => r.Clone()).ToArray();
+            using var form = new VolcanoPlotFormattingDlg(this, GroupComparisonDef.ColorRows, foldChangeRows, UpdateColorRows);
             {
                 if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
@@ -631,6 +702,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
                 UpdateGraph();
             }     
+        }
+
+        private void UpdateColorRows(IEnumerable<MatchRgbHexColor> colorRows)
+        {
+            EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel,
+                GroupComparisonDef.ChangeColorRows(colorRows));
+            zedGraphControl.GraphPane.EnableLabelLayout = Settings.Default.GroupComparisonAvoidLabelOverlap;
+            UpdateGraph();
         }
 
         private void OnRemoveBelowCutoffsClick(object o, EventArgs eventArgs)
@@ -878,7 +957,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 outCount, inCount);
         }
 
-        public List<DotPlotUtil.LabeledPoint> LabeledPoints
+        public List<LabeledPoint> LabeledPoints
         {
             get { return _labeledPoints; }
         }

@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Text;
 using System.Xml.Serialization;
 using System.Xml;
@@ -31,6 +33,8 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Koina.Config;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
+using System.Globalization;
+using System.Reflection;
 
 
 namespace pwiz.SkylineTestUtil
@@ -199,5 +203,28 @@ namespace pwiz.SkylineTestUtil
         {
             return !string.IsNullOrEmpty(KoinaConfig.GetKoinaConfig().Server);
         }
+
+        /// <summary>
+        /// Get a system resource string. Useful when checking that a test throws an expected error message but the text comes from the OS or .NET.
+        /// Use an ID from https://github.com/ng256/Tools/blob/main/MscorlibMessage.md
+        /// </summary>
+        /// <example>GetSystemResourceString("IO.FileNotFound_FileName", "SomeFilepath")</example>
+        public string GetSystemResourceString(string resourceId, params object[] args)
+        {
+            if (_systemResources == null || !Equals(_systemResourcesCultureInfo, CultureInfo.CurrentUICulture))
+            {
+                _systemResources?.Dispose();
+                var assembly = Assembly.GetAssembly(typeof(object));
+                var assemblyName = assembly.GetName().Name;
+                var manager = new ResourceManager(assemblyName, assembly);
+                _systemResources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                _systemResourcesCultureInfo = CultureInfo.CurrentUICulture;
+            }
+
+            return string.Format(_systemResources.GetString(resourceId) ?? throw new ArgumentException(nameof(resourceId)), args);
+        }
+
+        private static ResourceSet _systemResources;
+        private static CultureInfo _systemResourcesCultureInfo;
     }
 }
