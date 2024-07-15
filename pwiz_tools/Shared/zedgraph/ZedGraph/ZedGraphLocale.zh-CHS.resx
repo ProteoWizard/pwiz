@@ -124,7 +124,7 @@
     <value>复制到剪贴板</value>
   </data>
   <data name="save_as" xml:space="preserve">
-    <value>另存图表...</value>
+    <value>另存图表…</value>
   </data>
   <data name="set_default" xml:space="preserve">
     <value>恢复默认大小</value>
@@ -151,9 +151,9 @@
     <value>Y 轴</value>
   </data>
   <data name="page_setup" xml:space="preserve">
-    <value>页面设置...</value>
+    <value>页面设置…</value>
   </data>
   <data name="print" xml:space="preserve">
-    <value>打印...</value>
+    <value>打印…</value>
   </data>
 </root>
