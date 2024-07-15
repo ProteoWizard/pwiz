@@ -78,7 +78,9 @@ namespace pwiz.Skyline.Alerts
 
         private Cookie _bffCookie;
 
-        private bool _firstTime_ExecuteClientRegistration;
+        private bool _firstTime_ExecuteClientRegistration = true;
+
+        private bool _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = true;
 
         private string _ardia_ApplicationCode__TEMP;
 
@@ -213,9 +215,23 @@ namespace pwiz.Skyline.Alerts
 
             // !!!!!!!!!!!!!!!!
 
-            //  TODO  DJJ  FAKE set to null so do Client Registration always
+            //  TODO DJJ  FAKE
+            if (_firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake)
+            {
+                _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = false;
 
-            applicationCode_BeforeRegister = null;
+                //  Use One of following "applicationCode_BeforeRegister = ..."
+
+                //  TODO  DJJ  FAKE set to null so do Client Registration always
+
+                // applicationCode_BeforeRegister = null;
+
+                //  TODO  DJJ  FAKE set to "FAKE"" so do Client Registration always
+
+                applicationCode_BeforeRegister = "FAKE";
+
+                SetSavedArdiaApplicationCode(applicationCode_BeforeRegister);
+            }
 
             // !!!!!!!!!!!!!!!!
 
@@ -327,9 +343,13 @@ namespace pwiz.Skyline.Alerts
             {
                 if (eventArgs.HttpStatusCode == 401)
                 {
+                    //  Page load for Login failed with HTTP status code 401.  Assumed due to invalid ApplicationCode (Registration Code)
+
                     if (_firstTime_ExecuteClientRegistration)
                     {
                         //  Client Registration has NOT been executed yet to get new value
+
+                        _firstTime_ExecuteClientRegistration = false;
 
                         //  Assume the Registration Code (ApplicationCode) is invalid and remove it and go through client registration to get a new one
 
