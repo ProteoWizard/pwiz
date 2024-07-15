@@ -216,22 +216,23 @@ namespace pwiz.Skyline.Alerts
             // !!!!!!!!!!!!!!!!
 
             //  TODO DJJ  FAKE
-            if (_firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake)
-            {
-                _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = false;
 
-                //  Use One of following "applicationCode_BeforeRegister = ..."
-
-                //  TODO  DJJ  FAKE set to null so do Client Registration always
-
-                // applicationCode_BeforeRegister = null;
-
-                //  TODO  DJJ  FAKE set to "FAKE"" so do Client Registration always
-
-                applicationCode_BeforeRegister = "FAKE";
-
-                SetSavedArdiaApplicationCode(applicationCode_BeforeRegister);
-            }
+            // if (_firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake)
+            // {
+            //     _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = false;
+            //
+            //     //  Use One of following "applicationCode_BeforeRegister = ..."
+            //
+            //     //  TODO  DJJ  FAKE set to null so do Client Registration always
+            //
+            //     // applicationCode_BeforeRegister = null;
+            //
+            //     //  TODO  DJJ  FAKE set to "FAKE"" so do Client Registration always
+            //
+            //     applicationCode_BeforeRegister = "FAKE";
+            //
+            //     SetSavedArdiaApplicationCode(applicationCode_BeforeRegister);
+            // }
 
             // !!!!!!!!!!!!!!!!
 
@@ -244,7 +245,12 @@ namespace pwiz.Skyline.Alerts
 
                 try
                 {
+                    MessageDlg.Show(webView, "Register this Skyline instance with Ardia");
+
                     await RegisterDevice();
+
+                    MessageDlg.Show(webView, "Registration of this Skyline instance with Ardia is complete.  Continuing to Sign in.");
+
                 }
                 catch (Exception e)
                 {
@@ -319,6 +325,7 @@ namespace pwiz.Skyline.Alerts
                     MessageDlg.Show(
                         webView, "Load Client Registration page failed with HTTP status code 404.  Page not found at URL.");
 
+                    //  404 may result in something different being triggered
 
                     //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
 
@@ -374,6 +381,8 @@ namespace pwiz.Skyline.Alerts
                 {
                     MessageDlg.Show(
                         webView, "Load Login page failed with HTTP status code 404.  Page not found at URL.");
+
+                    //  404 may result in something different being triggered
 
 
                     //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
