@@ -158,7 +158,7 @@
     <value>找不到得分类型。</value>
   </data>
   <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
-    <value>得分阈值“{0}”无效(必须为介于 {1} 和 {2} 之间的十进制值)。</value>
+    <value>得分阈值“{0}”无效(须为介于 {1} 和 {2} 之间的小数值)。</value>
   </data>
   <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>获取此文件的得分类型时出错。</value>
@@ -215,7 +215,7 @@
     <value>搜索失败。</value>
   </data>
   <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
-    <value>正在启动搜索...</value>
+    <value>正在启动搜索…</value>
   </data>
   <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
     <value>再次使用来自 {0} 的 Koina 预测</value>
@@ -286,6 +286,10 @@
   <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>部分结果文件仍然缺失。您确定想要继续？</value>
   </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
+    <value>特征检测</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
     <value>全扫描 MS1 过滤必须被启用，以导入一个肽段搜索。</value>
   </data>
@@ -294,6 +298,10 @@
   </data>
   <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
     <value>导入肽段搜索</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
+    <value>选择要搜索的文件</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
     <value>无法找到所有缺失结果文件。</value>
@@ -346,5 +354,16 @@
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
     <value>单击 "嵌入" 即可使用嵌入的谱图。
 将原始谱图文件放在上面列出的其中一个目录后，单击 "重试" 再次尝试构建。</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
+    <value>添加谱图库</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
+    <value>正在建立检测的特征库</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
+    <value>正在向文档中添加检测到的特征</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

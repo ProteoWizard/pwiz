@@ -1397,7 +1397,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                 }
-                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues && filePath != null)
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
                 {
                     var libraries = PeptideSettings.Libraries;
                     if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)

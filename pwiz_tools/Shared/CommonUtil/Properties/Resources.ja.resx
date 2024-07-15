@@ -118,4 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Units_mz" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="Units_ppm" xml:space="preserve">
+    <value>ppm</value>
+  </data>
+  <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
+    <value>{0}バイトの読み込みに失敗しました。ソースが壊れている可能性があります。</value>
+  </data>
+  <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
+    <value>実行コマンド：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>
