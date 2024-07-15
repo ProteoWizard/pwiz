@@ -566,7 +566,7 @@ Old Localized:279, 22</comment>
     <value>1</value>
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
-    <value>サーバー（&amp;S）：</value>
+    <value>サーバー(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
     <value>koinaServerLabel</value>
@@ -791,7 +791,7 @@ Old Localized:279, 22</comment>
     <value>5</value>
   </data>
   <data name="lblSettingsPath.Text" xml:space="preserve">
-    <value>Settings are stored in:</value>
+    <value>設定の保存場所：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblSettingsPath.Name" xml:space="preserve">

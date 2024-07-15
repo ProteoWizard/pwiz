@@ -253,7 +253,7 @@
     <value>1</value>
   </data>
   <data name="layoutLabelsBox.Text" xml:space="preserve">
-    <value>Auto arrange labels</value>
+    <value>ラベルの自動配置</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;layoutLabelsBox.Name" xml:space="preserve">
