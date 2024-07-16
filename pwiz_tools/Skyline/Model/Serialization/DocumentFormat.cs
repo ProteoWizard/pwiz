@@ -117,7 +117,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_23_11 = new DocumentFormat(23.11); // Surrogate calibration curve
         public static readonly DocumentFormat VERSION_23_12 = new DocumentFormat(23.12); // gene level parsimony
         public static readonly DocumentFormat VERSION_23_13 = new DocumentFormat(23.13); // Relative abundance formatting
-        public static readonly DocumentFormat CURRENT = VERSION_23_13;
+        public static readonly DocumentFormat VERSION_23_14 = new DocumentFormat(23.14); // Group comparison and relative abundance label layout
+        public static readonly DocumentFormat CURRENT = VERSION_23_14;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)
