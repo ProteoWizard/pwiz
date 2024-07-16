@@ -263,6 +263,6 @@
     <value>Error interacting with web page</value>
   </data>
   <data name="ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_" xml:space="preserve">
-    <value>Role '{0}' is not an available option. Pick your role manually.</value>
+    <value>TestingOnly_NotSerialized_Role '{0}' is not an available option. Pick your role manually.</value>
   </data>
 </root>

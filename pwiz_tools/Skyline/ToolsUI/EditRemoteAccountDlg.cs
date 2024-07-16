@@ -37,6 +37,13 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly RemoteAccount _originalAccount;
         private readonly IList<RemoteAccount> _existing;
+
+        //  Ardia Test Only Pass Through
+        private string ardia_TestingOnly_NotSerialized_Username;
+        private string ardia_TestingOnly_NotSerialized_Password;
+        private string ardia_TestingOnly_NotSerialized_Role;
+
+
         public EditRemoteAccountDlg(RemoteAccount remoteAccount, IEnumerable<RemoteAccount> existing)
         {
             InitializeComponent();
@@ -61,8 +68,11 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (remoteAccount is ArdiaAccount ardiaAccount)
             {
-                tbxRole.Text = ardiaAccount.Role;
                 cbDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
+                //  Ardia Test Only Pass Through
+                ardia_TestingOnly_NotSerialized_Username = ardiaAccount.TestingOnly_NotSerialized_Username;
+                ardia_TestingOnly_NotSerialized_Password = ardiaAccount.TestingOnly_NotSerialized_Password;
+                ardia_TestingOnly_NotSerialized_Role = ardiaAccount.TestingOnly_NotSerialized_Role;
             }
         }
 
@@ -82,8 +92,13 @@ namespace pwiz.Skyline.ToolsUI
             else if (accountType == RemoteAccountType.ARDIA)
             {
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
-                ardiaAccount = ardiaAccount.ChangeRole(tbxRole.Text);
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbDeleteRawAfterImport.Checked);
+
+                //  Ardia Test Only Pass Through
+                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(ardia_TestingOnly_NotSerialized_Username);
+                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Password(ardia_TestingOnly_NotSerialized_Password);
+                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Role(ardia_TestingOnly_NotSerialized_Role);
+
                 remoteAccount = ardiaAccount;
             }
             return remoteAccount;
@@ -308,16 +323,6 @@ namespace pwiz.Skyline.ToolsUI
                 //  Hide everything not needed
 
                 pnlUsernamePassword.Visible = false;
-
-                // lblUsername.Visible = false;
-                // textUsername.Visible = false;
-                // lblPassword.Visible = false;
-                // textPassword.Visible = false;
-                //
-                // tbxRole.Visible = false;
-                // lblRole.Visible = false;
-
-
             }
         }
 

@@ -41,8 +41,6 @@
             this.lblClientScope = new System.Windows.Forms.Label();
             this.tbxIdentityServer = new System.Windows.Forms.TextBox();
             this.lblIdentityServer = new System.Windows.Forms.Label();
-            this.tbxRole = new System.Windows.Forms.TextBox();
-            this.lblRole = new System.Windows.Forms.Label();
             this.pnlArdiaSettings = new System.Windows.Forms.Panel();
             this.cbDeleteRawAfterImport = new System.Windows.Forms.CheckBox();
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
@@ -141,16 +139,6 @@
             resources.ApplyResources(this.lblIdentityServer, "lblIdentityServer");
             this.lblIdentityServer.Name = "lblIdentityServer";
             // 
-            // tbxRole
-            // 
-            resources.ApplyResources(this.tbxRole, "tbxRole");
-            this.tbxRole.Name = "tbxRole";
-            // 
-            // lblRole
-            // 
-            resources.ApplyResources(this.lblRole, "lblRole");
-            this.lblRole.Name = "lblRole";
-            // 
             // pnlArdiaSettings
             // 
             resources.ApplyResources(this.pnlArdiaSettings, "pnlArdiaSettings");
@@ -172,8 +160,6 @@
             this.flowLayoutPanel.Controls.Add(this.pnlServerURL);
             this.flowLayoutPanel.Controls.Add(this.pnlArdiaSettings);
             this.flowLayoutPanel.Controls.Add(this.groupBoxUnifi);
-            this.flowLayoutPanel.Controls.Add(this.lblRole);
-            this.flowLayoutPanel.Controls.Add(this.tbxRole);
             this.flowLayoutPanel.Name = "flowLayoutPanel";
             this.flowLayoutPanel.Resize += new System.EventHandler(this.flowLayoutPanel_Resize);
             // 
@@ -252,7 +238,6 @@
             this.pnlArdiaSettings.ResumeLayout(false);
             this.pnlArdiaSettings.PerformLayout();
             this.flowLayoutPanel.ResumeLayout(false);
-            this.flowLayoutPanel.PerformLayout();
             this.pnlAccountTypeSelect.ResumeLayout(false);
             this.pnlAccountTypeSelect.PerformLayout();
             this.pnlUsernamePassword.ResumeLayout(false);
@@ -276,8 +261,6 @@
         private System.Windows.Forms.TextBox tbxClientScope;
         private System.Windows.Forms.Label lblClientScope;
         private System.Windows.Forms.TextBox tbxIdentityServer;
-        private System.Windows.Forms.TextBox tbxRole;
-        private System.Windows.Forms.Label lblRole;
         private System.Windows.Forms.Panel pnlArdiaSettings;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
         private System.Windows.Forms.Panel pnlAccountTypeSelect;

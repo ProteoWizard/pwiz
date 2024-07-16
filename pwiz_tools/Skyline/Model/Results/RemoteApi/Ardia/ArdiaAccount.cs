@@ -30,10 +30,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     {
         public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty);
 
-        public string Role { get; private set; }
         public bool DeleteRawAfterImport { get; private set; }
         public string BffHostCookie { get; private set; }
-        // public string ApplicationCode { get; private set; }
+
+        //  Following 'TestingOnly...' properties are for only supporting the automated tests in class ArdiaTest
+        public string TestingOnly_NotSerialized_Role { get; private set; }
+        public string TestingOnly_NotSerialized_Username { get; private set; }
+        public string TestingOnly_NotSerialized_Password { get; private set; }
+
 
         public ArdiaAccount(string serverUrl, string username, string password)
         {
@@ -62,21 +66,18 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         private enum ATTR
         {
-            role,
             delete_after_import
-        }
+    }
 
         protected override void ReadXElement(XElement xElement)
         {
             base.ReadXElement(xElement);
-            Role = (string) xElement.Attribute(ATTR.role.ToString());
             DeleteRawAfterImport = Convert.ToBoolean((string) xElement.Attribute(ATTR.delete_after_import.ToString()));
         }
 
         public override void WriteXml(XmlWriter writer)
         {
             base.WriteXml(writer);
-            writer.WriteAttributeIfString(ATTR.role, Role);
             writer.WriteAttribute(ATTR.delete_after_import, DeleteRawAfterImport);
         }
 
@@ -129,10 +130,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return new ArdiaSession(this);
         }
 
-        public ArdiaAccount ChangeRole(string role)
-        {
-            return ChangeProp(ImClone(this), im => im.Role = role);
-        }
 
         public ArdiaAccount ChangeDeleteRawAfterImport(bool deleteAfterImport)
         {
@@ -143,14 +140,23 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         {
             return ChangeProp(ImClone(this), im => im.BffHostCookie = bffHostCookie);
         }
-        // public ArdiaAccount ChangeApplicationCode(string applicationCode)
-        // {
-        //     return ChangeProp(ImClone(this), im => im.ApplicationCode = applicationCode);
-        // }
+
+        public ArdiaAccount ChangeTestingOnly_NotSerialized_Role(string role)
+        {
+            return ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Role = role);
+        }
+        public ArdiaAccount ChangeTestingOnly_NotSerialized_Username(string username)
+        {
+            return ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Username = username);
+        }
+        public ArdiaAccount ChangeTestingOnly_NotSerialized_Password(string password)
+        {
+            return ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Password= password);
+        }
 
         public ArdiaUrl GetRootArdiaUrl()
         {
-            return (ArdiaUrl) ArdiaUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
+            return (ArdiaUrl) ArdiaUrl.Empty.ChangeServerUrl(ServerUrl); // .ChangeUsername(Username)  changed to TestingOnly_NotSerialized_Username
         }
 
         public override RemoteUrl GetRootUrl()
@@ -169,12 +175,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         protected bool Equals(ArdiaAccount other)
         {
             return base.Equals(other) &&
-                   Equals(Role, other.Role) &&
+                   Equals(TestingOnly_NotSerialized_Role, other.TestingOnly_NotSerialized_Role) &&
+                   Equals(TestingOnly_NotSerialized_Username, other.TestingOnly_NotSerialized_Username) &&
+                   Equals(TestingOnly_NotSerialized_Password, other.TestingOnly_NotSerialized_Password) &&
                    DeleteRawAfterImport == other.DeleteRawAfterImport &&
-                   Equals(BffHostCookie, other.BffHostCookie) 
-                   // &&
-                   // Equals(ApplicationCode, other.ApplicationCode)
-                   ;
+                   Equals(BffHostCookie, other.BffHostCookie);
         }
 
         public override int GetHashCode()
@@ -182,10 +187,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             unchecked
             {
                 int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Role?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Role?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Username?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Password?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ DeleteRawAfterImport.GetHashCode();
                 hashCode = (hashCode * 397) ^ (BffHostCookie?.GetHashCode() ?? 0);
-                // hashCode = (hashCode * 397) ^ (ApplicationCode?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

@@ -45,22 +45,26 @@ namespace pwiz.SkylineTestUtil
             switch (type)
             {
                 case AccountType.MultiRole:
-                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeRole("Tester")
-                        .ChangeServerUrl(_baseUrl)
-                        .ChangeUsername("matt.chambers42@gmail.com")
-                        .ChangePassword(password);
+                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeTestingOnly_NotSerialized_Role("Tester")
+                        .ChangeTestingOnly_NotSerialized_Username("matt.chambers42@gmail.com")
+                        .ChangeTestingOnly_NotSerialized_Password(password)
+                        .ChangeUsername("Testing_FAKE_ArdiaUser_MultiRole")
+                        .ChangeServerUrl(_baseUrl);
 
                 case AccountType.SingleRole:
-                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeServerUrl(_baseUrl)
+                    return (ArdiaAccount)ArdiaAccount.DEFAULT
 
-                        .ChangeUsername("chambem2@uw.edu")
+                        .ChangeTestingOnly_NotSerialized_Username("chambem2@uw.edu")
 
-                        //  The Client Registration will fail with HTTP Status 403 due to Role configuration where NOT Enabled: "Generate an activation code and/or directly register client"
-                        //  Role SkylineTeser_NoClientRegist - No Client Registration
-                        // .ChangeUsername("djaschob@u.washington.edu")
+                        //  The Client Registration will fail with HTTP Status 403 due to TestingOnly_NotSerialized_Role configuration where NOT Enabled: "Generate an activation code and/or directly register client"
+                        //  TestingOnly_NotSerialized_Role SkylineTeser_NoClientRegist - No Client Registration
+                        // .ChangeTestingOnly_NotSerialized_Username("djaschob@u.washington.edu")
 
+                        .ChangeTestingOnly_NotSerialized_Password(password)
 
-                        .ChangePassword(password);
+                        .ChangeUsername("Testing_FAKE_ArdiaUser_SingleRole")
+
+                        .ChangeServerUrl(_baseUrl);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);

@@ -177,7 +177,7 @@ namespace pwiz.SkylineTestConnected
             string rawFilepath = TestFilesDir.GetTestPath(_openPaths.Last().First() + ".raw");
 
             // short circuit single role test to reduce test time
-            if (_account.Role.IsNullOrEmpty())
+            if (_account.TestingOnly_NotSerialized_Role.IsNullOrEmpty())
             {
                 AssertEx.FileNotExists(rawFilepath); // for single role test, file should have been deleted after importing
                 return;

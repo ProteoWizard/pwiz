@@ -825,25 +825,6 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        /*[UserScopedSettingAttribute]
-        public SerializableDictionary<string, string> LastArdiaLoginCookieByUsername
-        {
-            get
-            {
-                var list = (SerializableDictionary<string, string>) this[nameof(LastArdiaLoginCookieByUsername)];
-                if (list == null)
-                {
-                    list = new SerializableDictionary<string, string>();
-                    LastArdiaLoginCookieByUsername = list;
-                }
-                return list;
-            }
-            set
-            {
-                this[nameof(LastArdiaLoginCookieByUsername)] = value;
-            }
-        }*/
-
         public DeclusteringPotentialRegression GetDeclusterPotentialByName(string name)
         {
             // Null return is valid for this list, and means no declustring potential

@@ -48,30 +48,34 @@ namespace pwiz.Skyline.Alerts
 
             Account = account;
             _tempUserDataFolder = new TemporaryDirectory(null, @"~SK_WebView2");
-
-            /*if (headless)
-            {
-                if (account.Username.IsNullOrEmpty() || account.Password.IsNullOrEmpty())
-                {
-                    throw new ArgumentException("importing an Ardia file from command-line requires the account to have username and password set up in Skyline (Tools > Options > Remote Accounts)");
-                }
-                var uiThread = new Thread(() =>
-                {
-                    System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(async () =>
-                    {
-                        var environment = await CoreWebView2Environment.CreateAsync(null, null, null);
-                        var controller = await environment.CreateCoreWebView2ControllerAsync(HWND_MESSAGE);
-                        controller.CoreWebView2.Navigate("https://microsoft.com");
-                    });
-
-                    Dispatcher.Run();
-                });
-
-                uiThread.SetApartmentState(ApartmentState.STA);
-                uiThread.Start();
-                uiThread.Join();
-                Visible = false;
-            }*/
+            
+            // To support command line, need to do something completely different since Ardia objects to Skyline code having username/password and also programmatic sign in to Ardia not possible for MFA and other possible issues.
+            //
+            //      The code to Programmatic sign in has been changed to use account.TestingOnly_NotSerialized_Username AND account.TestingOnly_NotSerialized_Password
+            //
+            // if (headless)
+            // {
+            //     if (account.Username.IsNullOrEmpty() || account.Password.IsNullOrEmpty())
+            //     {
+            //         throw new ArgumentException("importing an Ardia file from command-line requires the account to have username and password set up in Skyline (Tools > Options > Remote Accounts)");
+            //     }
+            //     var uiThread = new Thread(() =>
+            //     {
+            //         System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(async () =>
+            //         {
+            //             var environment = await CoreWebView2Environment.CreateAsync(null, null, null);
+            //             var controller = await environment.CreateCoreWebView2ControllerAsync(HWND_MESSAGE);
+            //             controller.CoreWebView2.Navigate("https://microsoft.com");
+            //         });
+            //
+            //         Dispatcher.Run();
+            //     });
+            //
+            //     uiThread.SetApartmentState(ApartmentState.STA);
+            //     uiThread.Start();
+            //     uiThread.Join();
+            //     Visible = false;
+            // }
         }
 
         private TemporaryDirectory _tempUserDataFolder;
@@ -148,10 +152,8 @@ namespace pwiz.Skyline.Alerts
 
         protected override void OnShown(EventArgs e)
         {
-            //if (Settings.Default.LastArdiaLoginCookieByUsername.ContainsKey(Account.Username))
             if (!Account.BffHostCookie.IsNullOrEmpty())
             {
-                //_bffCookie = new Cookie(@"Bff-Host", Settings.Default.LastArdiaLoginCookieByUsername[Account.Username]);
                 _bffCookie = new Cookie(@"Bff-Host", Account.BffHostCookie);
                 AuthenticatedHttpClientFactory = GetFactory();
 
@@ -244,11 +246,11 @@ namespace pwiz.Skyline.Alerts
 
                 try
                 {
-                    MessageDlg.Show(webView, "Register this Skyline instance with Ardia");
+                    // MessageDlg.Show(webView, "Register this Skyline instance with Ardia");
 
                     await RegisterDevice();
 
-                    MessageDlg.Show(webView, "Registration of this Skyline instance with Ardia is complete.  Continuing to Sign in.");
+                    // MessageDlg.Show(webView, "Registration of this Skyline instance with Ardia is complete.  Continuing to Sign in.");
 
                 }
                 catch (Exception e)
@@ -748,8 +750,6 @@ namespace pwiz.Skyline.Alerts
             if (bffCookie != null)
             {
                 _bffCookie = bffCookie.ToSystemNetCookie();
-                //Settings.Default.LastArdiaLoginCookieByUsername[Account.Username] = _bffCookie.Value;
-                //Settings.Default.Save();
                 Account = Account.ChangeBffHostCookie(_bffCookie.Value);
                 AuthenticatedHttpClientFactory = GetFactory();
 
@@ -795,15 +795,15 @@ namespace pwiz.Skyline.Alerts
                 if (buttonText == null)
                     return;
 
-                bool hasUsername = Account.Username?.Any() ?? false;
-                bool hasPassword = Account.Password?.Any() ?? false;
-                bool hasRole = Account.Role?.Any() ?? false;
+                bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
+                bool hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
+                bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
 
                 if (buttonText == @"Continue")
                 {
                     if (hasUsername)
                     {
-                        await ExecuteScriptAsync(usernameSelector + @".value=" + Account.Username.Quote());
+                        await ExecuteScriptAsync(usernameSelector + @".value=" + Account.TestingOnly_NotSerialized_Username.Quote());
                         await ExecuteScriptAsync(usernameSelector + triggerInputEvent);
                     }
 
@@ -834,12 +834,12 @@ namespace pwiz.Skyline.Alerts
                         const string clickDropDownBox = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#roleSelection\").shadowRoot.firstChild.click()";
                         const string selectPopper = "document.querySelector(\"body > tf-popper\")";
                         //const string selectFirstRole = "document.querySelector(\"body > tf-popper > div\").shadowRoot.querySelector(\"div > tf-dropdown-item:nth-child(1)\").click()";
-                        string roleNotFoundMsg = string.Format(AlertsResources.ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_, Account.Role);
+                        string roleNotFoundMsg = string.Format(AlertsResources.ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_, Account.TestingOnly_NotSerialized_Role);
 
                         // loop through popper items to find one that matches the user's role name
                         string selectNamedRole = @"(function() {" +
                                                  @"for (role of document.querySelector(""body > tf-popper > div"").shadowRoot.querySelectorAll(""tf-dropdown-item"")) {" +
-                                                 @$"if (role.shadowRoot.textContent == ""{Account.Role}"") {{" +
+                                                 @$"if (role.shadowRoot.textContent == ""{Account.TestingOnly_NotSerialized_Role}"") {{" +
                                                  @"role.click(); return; }" +
                                                  @$"}} alert(""{roleNotFoundMsg}""); }})()";
                         await ExecuteScriptAsyncUntil(clickDropDownBox, async s => await ExecuteScriptAsync(selectPopper) != @"null");
