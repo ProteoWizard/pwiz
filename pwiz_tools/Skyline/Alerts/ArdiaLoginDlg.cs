@@ -141,7 +141,6 @@ namespace pwiz.Skyline.Alerts
                 client.DefaultRequestHeaders.Add(@"Accept", @"application/json");
 
                 client.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);
-                // client.DefaultRequestHeaders.Add(@"applicationCode", @"z78ja2c2");
 
                 return client;
             };
