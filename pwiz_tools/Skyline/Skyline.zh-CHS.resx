@@ -243,7 +243,7 @@
     <value>228, 22</value>
   </data>
   <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
-    <value>编辑谱图过滤器...</value>
+    <value>编辑谱图过滤器…</value>
   </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -366,7 +366,7 @@
     <value>193, 22</value>
   </data>
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
-    <value>Show Mass Error</value>
+    <value>显示质量误差</value>
     <comment>Needs Review:English text changed
 Old English:Mass Error
 Current English:Show Mass Error
@@ -421,7 +421,7 @@ Old Localized:Show Mass Error</comment>
     <value>193, 22</value>
   </data>
   <data name="spectrumGraphPropsContextMenuItem.Text" xml:space="preserve">
-    <value>图形属性...</value>
+    <value>图形属性…</value>
   </data>
   <data name="showLibSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -781,7 +781,7 @@ Old Localized:Show Mass Error</comment>
     <value>190, 22</value>
   </data>
   <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
-    <value>Relative Abundance</value>
+    <value>相对丰度</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -902,7 +902,7 @@ Old Localized:Show Mass Error</comment>
     <value>209, 22</value>
   </data>
   <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
-    <value>Exclude</value>
+    <value>排除</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1074,7 +1074,7 @@ Old Localized:Show Mass Error</comment>
     <value>209, 22</value>
   </data>
   <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
-    <value>Peptide Lists</value>
+    <value>肽段列表</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1397,7 +1397,7 @@ Old Localized:Show Mass Error</comment>
     <value>200, 22</value>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
-    <value>Open From Panora&amp;ma...</value>
+    <value>从 Panorama 打开(&amp;M)…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1449,27 +1449,27 @@ Old Localized:Show Mass Error</comment>
     <value>194, 22</value>
   </data>
   <data name="runPeptideSearchToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Run Peptide Search...</value>
+    <value>运行肽段搜索(&amp;R)…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
   </data>
   <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
-    <value>EncyclopeDIA 搜索...</value>
+    <value>EncyclopeDIA 搜索…</value>
   </data>
   <data name="importFeatureDetectionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
   </data>
   <data name="importFeatureDetectionMenuItem.Text" xml:space="preserve">
-    <value>&amp;Feature Detection...</value>
+    <value>特征检测(&amp;F)…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="searchStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Search</value>
+    <value>搜索(&amp;S)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1500,7 +1500,7 @@ Old Localized:Show Mass Error</comment>
     <value>170, 22</value>
   </data>
   <data name="importFASTAMenuItem.Text" xml:space="preserve">
-    <value>&amp;FASTA...</value>
+    <value>&amp;FASTA…</value>
   </data>
   <data name="importAssayLibraryMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>

@@ -128,7 +128,7 @@
     <value>读取 {0} 字节失败。源可能已损坏。</value>
   </data>
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
-    <value>Run command:</value>
+    <value>运行命令：</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>
