@@ -211,20 +211,28 @@ namespace pwiz.SkylineTestUtil
         /// <example>GetSystemResourceString("IO.FileNotFound_FileName", "SomeFilepath")</example>
         public string GetSystemResourceString(string resourceId, params object[] args)
         {
-            if (_systemResources == null || !Equals(_systemResourcesCultureInfo, CultureInfo.CurrentUICulture))
+            if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
             {
-                _systemResources?.Dispose();
                 var assembly = Assembly.GetAssembly(typeof(object));
                 var assemblyName = assembly.GetName().Name;
                 var manager = new ResourceManager(assemblyName, assembly);
-                _systemResources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
-                _systemResourcesCultureInfo = CultureInfo.CurrentUICulture;
+
+                // preload the dictionary with all tested languages to minimize the appearance of memory leaks
+                foreach (string lang in _testLanguages)
+                {
+                    var culture = new CultureInfo(lang);
+                    _systemResources[culture] = manager.GetResourceSet(culture, true, true);
+                }
+                if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
+                    _systemResources[CultureInfo.CurrentUICulture] = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
             }
 
-            return string.Format(_systemResources.GetString(resourceId) ?? throw new ArgumentException(nameof(resourceId)), args);
+            return string.Format(
+                _systemResources[CultureInfo.CurrentUICulture].GetString(resourceId) ??
+                throw new ArgumentException(nameof(resourceId)), args);
         }
 
-        private static ResourceSet _systemResources;
-        private static CultureInfo _systemResourcesCultureInfo;
+        private readonly string[] _testLanguages = { "en", "fr", "tr", "ja", "zh-CHS" };
+        private static Dictionary<CultureInfo, ResourceSet> _systemResources = new Dictionary<CultureInfo, ResourceSet>();
     }
 }
