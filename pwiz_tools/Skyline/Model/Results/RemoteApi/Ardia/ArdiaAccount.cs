@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         public ArdiaUrl GetRootArdiaUrl()
         {
-            return (ArdiaUrl) ArdiaUrl.Empty.ChangeServerUrl(ServerUrl); // .ChangeUsername(Username)  changed to TestingOnly_NotSerialized_Username
+            return (ArdiaUrl) ArdiaUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username); //  Copy along the Username value for code that matches the username works
         }
 
         public override RemoteUrl GetRootUrl()

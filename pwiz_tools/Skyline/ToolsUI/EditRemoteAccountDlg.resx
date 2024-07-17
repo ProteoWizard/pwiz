@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>369, 424</value>
+    <value>369, 484</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 424</value>
+    <value>288, 484</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -187,7 +187,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnTest.Location" type="System.Drawing.Point, System.Drawing">
-    <value>207, 424</value>
+    <value>207, 484</value>
   </data>
   <data name="btnTest.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -478,7 +478,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblUsername.Parent" xml:space="preserve">
-    <value>pnlUsernamePassword</value>
+    <value>pnlUsername</value>
   </data>
   <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -502,16 +502,37 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textUsername.Parent" xml:space="preserve">
-    <value>pnlUsernamePassword</value>
+    <value>pnlUsername</value>
   </data>
   <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="pnlUsername.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 72</value>
+  </data>
+  <data name="pnlUsername.Size" type="System.Drawing.Size, System.Drawing">
+    <value>404, 52</value>
+  </data>
+  <data name="pnlUsername.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="&gt;&gt;pnlUsername.Name" xml:space="preserve">
+    <value>pnlUsername</value>
+  </data>
+  <data name="&gt;&gt;pnlUsername.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pnlUsername.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;pnlUsername.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="textPassword.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 78</value>
+    <value>10, 29</value>
   </data>
   <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
     <value>*</value>
@@ -520,7 +541,7 @@
     <value>380, 20</value>
   </data>
   <data name="textPassword.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;textPassword.Name" xml:space="preserve">
     <value>textPassword</value>
@@ -529,10 +550,10 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
-    <value>pnlUsernamePassword</value>
+    <value>pnlPassword</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -541,7 +562,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 55</value>
+    <value>10, 6</value>
   </data>
   <data name="lblPassword.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 6, 3, 0</value>
@@ -550,7 +571,7 @@
     <value>56, 13</value>
   </data>
   <data name="lblPassword.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="lblPassword.Text" xml:space="preserve">
     <value>&amp;Password:</value>
@@ -562,31 +583,31 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblPassword.Parent" xml:space="preserve">
-    <value>pnlUsernamePassword</value>
+    <value>pnlPassword</value>
   </data>
   <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
-  <data name="pnlUsernamePassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 72</value>
+  <data name="pnlPassword.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 130</value>
   </data>
-  <data name="pnlUsernamePassword.Size" type="System.Drawing.Size, System.Drawing">
-    <value>404, 102</value>
+  <data name="pnlPassword.Size" type="System.Drawing.Size, System.Drawing">
+    <value>397, 59</value>
   </data>
-  <data name="pnlUsernamePassword.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+  <data name="pnlPassword.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
   </data>
-  <data name="&gt;&gt;pnlUsernamePassword.Name" xml:space="preserve">
-    <value>pnlUsernamePassword</value>
+  <data name="&gt;&gt;pnlPassword.Name" xml:space="preserve">
+    <value>pnlPassword</value>
   </data>
-  <data name="&gt;&gt;pnlUsernamePassword.Type" xml:space="preserve">
+  <data name="&gt;&gt;pnlPassword.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;pnlUsernamePassword.Parent" xml:space="preserve">
+  <data name="&gt;&gt;pnlPassword.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
-  <data name="&gt;&gt;pnlUsernamePassword.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;pnlPassword.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="textServerURL.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -649,7 +670,7 @@
     <value>1</value>
   </data>
   <data name="pnlServerURL.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 180</value>
+    <value>11, 195</value>
   </data>
   <data name="pnlServerURL.Size" type="System.Drawing.Size, System.Drawing">
     <value>404, 56</value>
@@ -667,7 +688,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;pnlServerURL.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="pnlArdiaSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -700,7 +721,7 @@
     <value>0</value>
   </data>
   <data name="pnlArdiaSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 239</value>
+    <value>8, 254</value>
   </data>
   <data name="pnlArdiaSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -721,7 +742,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;pnlArdiaSettings.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="flowLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -730,7 +751,7 @@
     <value>8, 0, 0, 0</value>
   </data>
   <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>457, 418</value>
+    <value>457, 478</value>
   </data>
   <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -748,7 +769,7 @@
     <value>0</value>
   </data>
   <data name="groupBoxUnifi.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 269</value>
+    <value>11, 284</value>
   </data>
   <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
     <value>397, 144</value>
@@ -769,7 +790,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;groupBoxUnifi.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -778,7 +799,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>456, 459</value>
+    <value>456, 519</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>376, 493</value>
