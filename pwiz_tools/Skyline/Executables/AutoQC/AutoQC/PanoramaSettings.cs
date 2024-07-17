@@ -83,8 +83,8 @@ namespace AutoQC
             }
             try
             {
-                // User should have admin permissions in the folder, and the folder should be of type TargetedMS
-                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.admin);
+                // User should have insert permissions in the folder, and the folder should be of type TargetedMS
+                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.insert);
             }
             catch (Exception ex)
             {

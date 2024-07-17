@@ -344,17 +344,7 @@ namespace AutoQC
                         // will be removed from the re-import queue.
                         TryReimportOldFiles(e, true);
 
-                        if (_annotationsImportError)
-                        {
-                            // If the annotations file could not be imported earlier, try again after importing a raw file, and
-                            // re-trying previously failed raw files. 
-                            ImportAnnotationsFileIfWatching(true, "Attempting to re-import the annotations file.");
-                            if (_annotationsImportError)
-                            {
-                                LogError("There were errors importing the annotations file. Stopping configuration.");
-                                break;
-                            }
-                        }
+                        if (!ImportAnnotationsIfRequired()) break;
                     }
 
                     inWait = false;
@@ -362,7 +352,9 @@ namespace AutoQC
                 else
                 {
                     // Try to import any older files that resulted in an import error the first time.
-                    TryReimportOldFiles(e, false);
+                    var reimported = TryReimportOldFiles(e, false);
+
+                    if (reimported > 0 && !ImportAnnotationsIfRequired()) break;
 
                     if (_panoramaFatalError)
                     {
@@ -399,24 +391,42 @@ namespace AutoQC
             }
         }
 
-        private void TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
+        private bool ImportAnnotationsIfRequired()
+        {
+            if (_annotationsImportError)
+            {
+                // If the annotations file could not be imported earlier, try again after importing a raw file, and
+                // re-trying previously failed raw files. 
+                ImportAnnotationsFileIfWatching(true, "Attempting to re-import the annotations file.");
+                if (_annotationsImportError)
+                {
+                    LogError("There were errors importing the annotations file. Stopping configuration.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private int TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
         {
             var failed = new List<RawFile>();
 
+            var reimported = 0;
             while (_fileWatcher.GetReimportQueueCount() > 0)
             {
                 var file = _fileWatcher.GetNextFileToReimport();
                 if (forceImport || file.TryReimport())
                 {
                     var importContext = new ImportContext(file.FilePath);
-                    _logger.Log(Resources.ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__, file.FilePath);
+                    _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__, file.FilePath));
                     if (!ImportFile(e, importContext, false)) 
                     {
                         if (forceImport)
                         {
                             // forceImport is true when we attempt to import failed files after successfully importing a newer file.
                             // If the file still fails to import we will not add it back to the re-import queue.
-                            _logger.Log(Resources.ConfigRunner_TryReimportOldFiles__0__failed_to_import_successfully__Skipping___, file.FilePath);     
+                            _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles__0__failed_to_import_successfully__Skipping___, file.FilePath));     
                         }
                         else
                         {
@@ -433,6 +443,10 @@ namespace AutoQC
                             
                         }        
                     }
+                    else
+                    {
+                        reimported++;
+                    }
                 }
                 else
                 {
@@ -447,6 +461,8 @@ namespace AutoQC
                     _fileWatcher.AddToReimportQueue(file);
                 }
             }
+
+            return reimported;
         }
 
         private void ProcessFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -594,8 +610,8 @@ namespace AutoQC
 
         private void AddToReimportQueue(string filePath)
         {
-            _logger.Log(Resources.ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_,
-                GetFilePathForLog(filePath));
+            _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_,
+                GetFilePathForLog(filePath)));
                 _fileWatcher.AddToReimportQueue(filePath);
         }
 
@@ -767,7 +783,7 @@ namespace AutoQC
                     ChangeStatus(_panoramaUploadError || _panoramaFatalError ? RunnerStatus.Error : RunnerStatus.Stopped);
                 }
 
-                if (_runnerStatus == RunnerStatus.Stopped && (_panoramaUploadError || _panoramaFatalError))
+                if (_runnerStatus == RunnerStatus.Stopped && (_panoramaUploadError || _panoramaFatalError || _annotationsImportError))
                 {
                     ChangeStatus(RunnerStatus.Error);
                 }
