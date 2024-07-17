@@ -161,7 +161,7 @@
     <value>蛋白质细节分辨中</value>
   </data>
   <data name="ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups" xml:space="preserve">
-    <value>Calculating gene groups</value>
+    <value>正在计算基因组</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

@@ -706,7 +706,7 @@
     <value>228, 22</value>
   </data>
   <data name="areaRelativeAbundanceMenuItem.Text" xml:space="preserve">
-    <value>Relative &amp;Abundance</value>
+    <value>相対的存在量(&amp;A)</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="areaCVHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
