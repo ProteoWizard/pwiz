@@ -43,6 +43,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.ArrangeGraphsTabbed(); });
             var document = SkylineWindow.Document;
             var protein = document.MoleculeGroups.First();
+            // Iterate over all of the peptides in the first protein in the document
+            // and make sure that the chromatogram graphs are zoomed correctly.
+            // Some of these peptides have no chosen peak, and some of these peptides
+            // have no predicted retention time
             foreach (var peptideDocNode in protein.Molecules)
             {
                 RunUI(() => SkylineWindow.SelectedPath =
@@ -77,6 +81,12 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        /// <summary>
+        /// Returns the expected range that the chromatogram graph x-axis should be zoomed to,
+        /// or null if it should be "auto".
+        /// This method takes into account the current value of "GraphChromatogram.AutoZoom"
+        /// as well as whether the peptide has a chosen peak and/or a predicted retention time.
+        /// </summary>
         private PeakBounds GetExpectedZoom(SrmDocument document, PeptideDocNode peptideDocNode,
             int replicateIndex)
         {
