@@ -148,8 +148,17 @@ namespace pwiz.SkylineTestConnected
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("small.sky")));
+
+            // PauseTest();
+
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+
+            // PauseTest();
+
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
+
+            // PauseTest();
+
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
 
             // PauseTest();
@@ -160,7 +169,9 @@ namespace pwiz.SkylineTestConnected
 
             // Click test button
             var testSuccessfulDlg = ShowDialog<MessageDlg>(() => editAccountDlg.TestSettings());
+            // PauseTest();
             OkDialog(testSuccessfulDlg, testSuccessfulDlg.OkDialog);
+            // PauseTest();
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
 
             // PauseTest();

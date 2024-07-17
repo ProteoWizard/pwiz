@@ -177,6 +177,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             if (remoteAccount as ArdiaAccount is { } ardiaAccount)
                 return new ArdiaSession(ardiaAccount);
 
+            if (remoteAccount == null)
+            {
+                throw new ArgumentException("Invalid value for parameter remoteAccount.  remoteAccount == null");
+            }
+
             throw new ArgumentException();
         }
 
