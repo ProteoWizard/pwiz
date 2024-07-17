@@ -257,8 +257,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="DdaTutorialViews.zip" />
+    <None Include="DiaSwathPASEFViews.zip" />
     <None Include="DiaSwathQEViews.zip" />
     <None Include="DiaSwathTTOFViews.zip" />
+    <None Include="DiaUmpireQEViews.zip" />
+    <None Include="DiaUmpireTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
     <None Include="FeatureDetectionTest.zip" />

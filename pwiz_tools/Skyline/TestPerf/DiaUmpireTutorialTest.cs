@@ -119,6 +119,12 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES)]
         public void TestDiaTtofDiaUmpireTutorial()
         {
+            if (IsCoverShotMode)
+            {
+                TestDiaTtofDiaUmpireTutorialFullFilesetInner();
+                return;
+            }
+
             //IsPauseForScreenShots = true;
             _analysisValues = new AnalysisValues
             {
@@ -141,11 +147,17 @@ namespace TestPerf
             TestTtofData();
         }
 
-        [TestMethod, 
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
          NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
+        {
+            if (!IsCoverShotMode)
+                TestDiaTtofDiaUmpireTutorialFullFilesetInner();
+        }
+
+        public void TestDiaTtofDiaUmpireTutorialFullFilesetInner()
         {
             _analysisValues = new AnalysisValues
             {
@@ -173,8 +185,7 @@ namespace TestPerf
                 },
             };
 
-            if (!IsCoverShotMode)
-                TestTtofData();
+            TestTtofData();
         }
 
         private void TestTtofData()
@@ -306,7 +317,7 @@ namespace TestPerf
             TestFilesZipPaths = new[]
             {
                 string.Format(@"http://skyline.ms/tutorials/{0}.zip", RootName),
-                string.Format(@"TestPerf\DiaSwath{0}Views.zip", InstrumentTypeName)
+                string.Format(@"TestPerf\DiaUmpire{0}Views.zip", InstrumentTypeName)
             };
 
             TestFilesPersistent = new[] { Path.Combine(RootName, "DDA_search"), Path.Combine(RootName, "DIA") };
@@ -317,7 +328,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsPauseForCoverShot = true;
-            CoverShotName = "DIA-SWATH with DiaUmpire";
+            CoverShotName = "DIA-Umpire";
 
             RunFunctionalTest();
 
@@ -329,6 +340,13 @@ namespace TestPerf
         private PropertyPath _resultProperty = PropertyPath.Root.Property("FoldChangeResult");
         private PropertyPath _proteinProperty = PropertyPath.Root.Property("Protein");
         private const string OXIDATION_M = "Oxidation (M)";
+
+        private Image _searchLogImage;
+        protected override void ProcessCoverShot(Bitmap bmp)
+        {
+            var graph = Graphics.FromImage(bmp);
+            graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
+        }
 
         private string GetTestPath(string path)
         {
@@ -586,6 +604,13 @@ namespace TestPerf
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
 
+            if (IsCoverShotMode)
+            {
+                RunUI(() => importPeptideSearchDlg.Width = 404);
+                _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
+                Assert.IsNotNull(_searchLogImage);
+            }
+
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
             RunUI(() =>
             {
@@ -777,19 +802,9 @@ namespace TestPerf
                 });
 
                 RestoreCoverViewOnScreen();
-                /*fcGrid = WaitForOpenForm<FoldChangeGrid>();
-                fcGridControlFinal = fcGrid.DataboundGridControl;
-                FilterIrtProtein(fcGridControlFinal);
-                changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
-                RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
-                OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
 
-                RunUI(() =>
-                {
-                    var fcFloatingWindow = fcGrid.Parent.Parent;
-                    fcFloatingWindow.Left = SkylineWindow.Left + 8;
-                    fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
-                });*/
+                SelectNode(SrmDocument.Level.MoleculeGroups, 2);
+
                 TakeCoverShot();
             }
         }
