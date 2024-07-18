@@ -86,27 +86,29 @@ namespace pwiz.Skyline.Alerts
 
         private bool _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = true;
 
-        private string _ardia_ApplicationCode__TEMP;
+        // private string _ardia_ApplicationCode__TEMP; //  TODO  Only used to hold ardia_ApplicationCode until store in Settings
 
         private string GetSavedArdiaApplicationCode()
         {
             //  Temp to NOT store in Settings
 
-            return _ardia_ApplicationCode__TEMP;
+            // return _ardia_ApplicationCode__TEMP;
 
-            // var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
-            //
-            // string applicationCode = null;
-            //
-            // {
-            //     if (!Settings.Default.ArdiaRegistrationCodes.TryGetValue(ardiaServerURL,
-            //             out applicationCode))
-            //     {
-            //         applicationCode = null;
-            //     }
-            // }
-            //
-            // return applicationCode;
+            //  END Temp NOT store in Settings
+
+            var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
+            
+            string applicationCode = null;
+            
+            {
+                if (!Settings.Default.ArdiaRegistrationCodes.TryGetValue(ardiaServerURL,
+                        out applicationCode))
+                {
+                    applicationCode = null;
+                }
+            }
+            
+            return applicationCode;
         }
 
         private void SetSavedArdiaApplicationCode(string applicationCode)
@@ -114,11 +116,13 @@ namespace pwiz.Skyline.Alerts
 
             //  Temp to NOT store in Settings
 
-            _ardia_ApplicationCode__TEMP = applicationCode;
+            // _ardia_ApplicationCode__TEMP = applicationCode;
 
-            // var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
-            //
-            // Settings.Default.ArdiaRegistrationCodes[ardiaServerURL] = applicationCode;
+            //  END Temp NOT store in Settings
+
+            var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
+            
+            Settings.Default.ArdiaRegistrationCodes[ardiaServerURL] = applicationCode;
         }
 
         private Func<HttpClient> GetFactory()
