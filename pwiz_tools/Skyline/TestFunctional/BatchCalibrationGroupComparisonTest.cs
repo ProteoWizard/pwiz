@@ -118,10 +118,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var controlValues = row.Peptide.Results.Values.Where(peptideResult =>
                             "AD".Equals(peptideResult.GetResultFile().Replicate.GetAnnotation(conditionAnnotation)))
-                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea).OfType<double>().ToList();
+                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea.Strict).OfType<double>().ToList();
                     var caseValues = row.Peptide.Results.Values.Where(peptideResult =>
                             "HC".Equals(peptideResult.GetResultFile().Replicate.GetAnnotation(conditionAnnotation)))
-                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea).OfType<double>().ToList();
+                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea.Strict).OfType<double>().ToList();
                     var expectedFoldChange = CalculateFoldChange(controlValues, caseValues);
                     Assert.AreEqual(expectedFoldChange, row.FoldChangeResult.FoldChange, 1e-4, "Peptide: {0}", row.Peptide);
                 }
@@ -144,10 +144,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var controlValues = row.Peptide.Results.Values.Where(peptideResult =>
                             "AD".Equals(peptideResult.GetResultFile().Replicate.GetAnnotation(conditionAnnotation)))
-                        .Select(peptideResult => peptideResult.Quantification.Value.CalculatedConcentration).OfType<double>().ToList();
+                        .Select(peptideResult => peptideResult.Quantification.Value.CalculatedConcentration.Strict).OfType<double>().ToList();
                     var caseValues = row.Peptide.Results.Values.Where(peptideResult =>
                             "HC".Equals(peptideResult.GetResultFile().Replicate.GetAnnotation(conditionAnnotation)))
-                        .Select(peptideResult => peptideResult.Quantification.Value.CalculatedConcentration).OfType<double>().ToList();
+                        .Select(peptideResult => peptideResult.Quantification.Value.CalculatedConcentration.Strict).OfType<double>().ToList();
                     var expectedFoldChange = CalculateFoldChange(controlValues, caseValues);
                     Assert.AreEqual(expectedFoldChange, row.FoldChangeResult.FoldChange, 1e-4, "Peptide: {0}", row.Peptide);
                 }

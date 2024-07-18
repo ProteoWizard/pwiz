@@ -312,18 +312,6 @@
   <data name="cbDecimalCvs.Text" xml:space="preserve">
     <value>十進数のCV値を表示(&amp;D)</value>
   </data>
-  <data name="&gt;&gt;cbDecimalCvs.Name" xml:space="preserve">
-    <value>cbDecimalCvs</value>
-  </data>
-  <data name="&gt;&gt;cbDecimalCvs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbDecimalCvs.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;cbDecimalCvs.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="labelCvPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -339,18 +327,6 @@
   <data name="labelCvPercent.Text" xml:space="preserve">
     <value>%</value>
   </data>
-  <data name="&gt;&gt;labelCvPercent.Name" xml:space="preserve">
-    <value>labelCvPercent</value>
-  </data>
-  <data name="&gt;&gt;labelCvPercent.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCvPercent.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;labelCvPercent.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="textMaxCv.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 115</value>
   </data>
@@ -359,18 +335,6 @@
   </data>
   <data name="textMaxCv.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
-  </data>
-  <data name="&gt;&gt;textMaxCv.Name" xml:space="preserve">
-    <value>textMaxCv</value>
-  </data>
-  <data name="&gt;&gt;textMaxCv.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxCv.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;textMaxCv.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -386,18 +350,6 @@
   </data>
   <data name="label5.Text" xml:space="preserve">
     <value>最大CV(&amp;C)：</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="textSizeComboBox.Items" xml:space="preserve">
     <value>極小</value>

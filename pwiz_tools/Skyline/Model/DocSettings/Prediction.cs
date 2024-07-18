@@ -987,7 +987,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)";
         public const string SSRCALC_100_A = "SSRCalc 3.0 (100A)";
-        // public const string PROSITRTCALC = "Prosit RT Calc";
+        // public const string KOINARTCALC = "Koina RT Calc";
 
         public static IRetentionScoreCalculator GetCalculatorByName(string calcName)
         {
@@ -997,8 +997,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     return new SSRCalc3(SSRCALC_300_A, SSRCalc3.Column.A300);
                 case SSRCALC_100_A:
                     return new SSRCalc3(SSRCALC_100_A, SSRCalc3.Column.A100);
-                // case PROSITRTCALC:
-                //    return new PrositRetentionScoreCalculator(PROSITRTCALC);
+                // case KOINARTCALC:
+                //    return new KoinaRetentionScoreCalculator(KOINARTCALC);
 
             }
             return null;

@@ -30,9 +30,11 @@ using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
 using MSAmanda.InOutput.Output;
+using pwiz.BiblioSpec;
 using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
@@ -68,13 +70,14 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
-        public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
+        public static string MSAmandaTmp => Program.FunctionalTest ? TemporaryDirectory.TEMP_PREFIX : @"~SK_MSAmanda";
+
         private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
         // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
 
         public MSAmandaSearchWrapper()
         {
-            _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
+            _baseDir = new TemporaryDirectory(tempPrefix: MSAmandaTmp + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
             Settings = new MSAmandaSettings();
             helper = new MSHelper();
             helper.InitLogWriter(_baseDir.DirPath);
@@ -160,10 +163,21 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Do nothing. MS Amanda does not seem to give this value to Percolator
+        }
+
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
+
         public override string[] FragmentIons => Settings.ChemicalData.Instruments.Keys.ToArray();
         public override string[] Ms2Analyzers => new[] { @"Default" };
         public override string EngineName => @"MS Amanda";
+        public override string CutoffScoreName => _cutoffScoreName;
+        public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
+        public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
         public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
+        public override string  SearchEngineBlurb => string.Empty;
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)
         {

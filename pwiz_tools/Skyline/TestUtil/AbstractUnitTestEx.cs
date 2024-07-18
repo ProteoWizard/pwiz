@@ -17,15 +17,24 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Text;
+using System.Xml.Serialization;
+using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Koina.Config;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
+using System.Globalization;
+using System.Reflection;
 
 
 namespace pwiz.SkylineTestUtil
@@ -159,5 +168,63 @@ namespace pwiz.SkylineTestUtil
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
         }
+        public static void EnableAuditLogging(string path)
+        {
+            var doc = ResultsUtil.DeserializeDocument(path);
+            Assert.IsFalse(doc.Settings.DataSettings.IsAuditLoggingEnabled);
+            doc = AuditLogList.ToggleAuditLogging(doc, true);
+            doc.SerializeToFile(path, path, SkylineVersion.CURRENT, new SilentProgressMonitor());
+        }
+
+        public static SrmDocument DeserializeWithAuditLog(string path)
+        {
+            using var hashingStream = (HashingStream)HashingStream.CreateReadStream(path);
+            using var reader = XmlReader.Create(hashingStream, new XmlReaderSettings() { IgnoreWhitespace = true }, path);
+            XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+            var document = (SrmDocument)ser.Deserialize(reader);
+            var skylineDocumentHash = hashingStream.Done();
+            return document.ReadAuditLog(path, skylineDocumentHash, () => throw new AssertFailedException("Document hash did not match"));
+        }
+
+
+        public static void AssertLastEntry(AuditLogList auditLogList, MessageType messageType)
+        {
+            var lastEntry = auditLogList.AuditLogEntries;
+            Assert.IsFalse(lastEntry.IsRoot);
+            Assert.AreNotEqual(0, lastEntry.AllInfo.Count);
+            Assert.AreEqual(messageType, lastEntry.AllInfo[0].MessageInfo.Type);
+        }
+
+
+        /// <summary>
+        /// Returns true if Skyline was compiled with a Koina config file that enables connecting to a real server.
+        /// </summary>
+        public static bool HasKoinaServer()
+        {
+            return !string.IsNullOrEmpty(KoinaConfig.GetKoinaConfig().Server);
+        }
+
+        /// <summary>
+        /// Get a system resource string. Useful when checking that a test throws an expected error message but the text comes from the OS or .NET.
+        /// Use an ID from https://github.com/ng256/Tools/blob/main/MscorlibMessage.md
+        /// </summary>
+        /// <example>GetSystemResourceString("IO.FileNotFound_FileName", "SomeFilepath")</example>
+        public string GetSystemResourceString(string resourceId, params object[] args)
+        {
+            if (_systemResources == null || !Equals(_systemResourcesCultureInfo, CultureInfo.CurrentUICulture))
+            {
+                _systemResources?.Dispose();
+                var assembly = Assembly.GetAssembly(typeof(object));
+                var assemblyName = assembly.GetName().Name;
+                var manager = new ResourceManager(assemblyName, assembly);
+                _systemResources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                _systemResourcesCultureInfo = CultureInfo.CurrentUICulture;
+            }
+
+            return string.Format(_systemResources.GetString(resourceId) ?? throw new ArgumentException(nameof(resourceId)), args);
+        }
+
+        private static ResourceSet _systemResources;
+        private static CultureInfo _systemResourcesCultureInfo;
     }
 }

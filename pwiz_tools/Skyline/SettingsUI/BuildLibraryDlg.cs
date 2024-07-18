@@ -31,7 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -127,9 +127,9 @@ namespace pwiz.Skyline.SettingsUI
             cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
 
             ceCombo.Items.AddRange(
-                Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object)c)
+                Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
-            ceCombo.SelectedItem = Settings.Default.PrositNCE;
+            ceCombo.SelectedItem = Settings.Default.KoinaNCE;
 
             _helper = new MessageBoxHelper(this);
 
@@ -251,9 +251,9 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
 
-                if (prositDataSourceRadioButton.Checked)
+                if (koinaDataSourceRadioButton.Checked)
                 {
-                    // TODO: Need to figure out a better way to do this, use PrositPeptidePrecursorPair?
+                    // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
                     var doc = _documentUiContainer.DocumentUI;
                     var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
                     var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
@@ -269,18 +269,24 @@ namespace pwiz.Skyline.SettingsUI
                         Array.Copy(groups, 0, precursors, index, groups.Length);
                         index += groups.Length;
                     }
-                    
+
+                    if (index == 0)
+                    {
+                        MessageDlg.Show(this, Resources.BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_);
+                        return false;
+                    }
+
                     try
                     {
-                        PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
-                        // Still construct the library builder, otherwise a user might configure Prosit
+                        KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
+                        // Still construct the library builder, otherwise a user might configure Koina
                         // incorrectly, causing the build to silently fail
-                        Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
+                        Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
                             peptidesPerPrecursor, precursors, NCE);
                     }
                     catch (Exception ex)
                     {
-                        _helper.ShowTextBoxError(this, ex.Message);
+                        MessageDlg.ShowWithException(this, ex.Message, ex);
                         return false;
                     }
                 }
@@ -361,7 +367,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (!panelProperties.Visible || prositDataSourceRadioButton.Checked)
+            if (!panelProperties.Visible || koinaDataSourceRadioButton.Checked)
             {
                 if (ValidateBuilder(true))
                 {
@@ -699,10 +705,10 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
-        public bool Prosit
+        public bool Koina
         {
-            get { return prositDataSourceRadioButton.Checked; }
-            set { prositDataSourceRadioButton.Checked = value; }
+            get { return koinaDataSourceRadioButton.Checked; }
+            set { koinaDataSourceRadioButton.Checked = value; }
         }
 
         public int NCE
@@ -796,16 +802,16 @@ namespace pwiz.Skyline.SettingsUI
                 comboStandards.Location = _actionComboPos;
                 Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
-                PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
+                KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
             }
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
         }
 
-        private void prositInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void koinaInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit);
+            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Koina);
         }
 
         public IFormView ShowingFormView

@@ -809,4 +809,7 @@
     <value>no UniMod match</value>
     <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
   </data>
+  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
+    <value>detected features</value>
+  </data>
 </root>

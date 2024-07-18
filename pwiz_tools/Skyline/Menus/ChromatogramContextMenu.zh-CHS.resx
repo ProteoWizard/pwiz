@@ -161,7 +161,7 @@
     <value>212, 22</value>
   </data>
   <data name="synchronizeIntegrationContextMenuItem.Text" xml:space="preserve">
-    <value>同步积分...</value>
+    <value>同步积分…</value>
   </data>
   <data name="toolStripSeparator33.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -216,6 +216,12 @@
   </data>
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
     <value>离子对</value>
+  </data>
+  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
+    <value>格式化…</value>
   </data>
   <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -290,7 +296,7 @@
     <value>172, 22</value>
   </data>
   <data name="thresholdRTContextMenuItem.Text" xml:space="preserve">
-    <value>高于阈值...</value>
+    <value>高于阈值…</value>
   </data>
   <data name="noneRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>172, 22</value>

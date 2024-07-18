@@ -28,6 +28,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -786,7 +787,7 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending);
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
             }
         }
 
@@ -833,7 +834,7 @@ namespace pwiz.Skyline
                 // Only align to regressions that are auto-calculated.  Otherwise,
                 // conversion will be the same for all replicates, making this just
                 // a linear unit conversion
-                var predictRT = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
                 if (predictRT != null && predictRT.IsAutoCalculated)
                 {
                     return new GraphValues.RegressionUnconversion(predictRT);
@@ -1190,8 +1191,8 @@ namespace pwiz.Skyline
             // Need to test small mol
             if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
-                prositLibMatchItem.Checked = Settings.Default.Prosit;
-                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                koinaLibMatchItem.Checked = Settings.Default.Koina;
+                menuStrip.Items.Insert(iInsert++, koinaLibMatchItem);
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
                 menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
@@ -1722,11 +1723,11 @@ namespace pwiz.Skyline
             var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
             if (summary != null)
             {
-                summary.ShowFormattingDlg = true;
-                UpdatePeakAreaGraph();
-                summary.ShowFormattingDlg = false;
+                if (summary.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
+                {
+                    graphPane.ShowFormattingDialog();
+                }
             }
-            
         }
         public void ShowAllTransitions()
         {
@@ -3043,30 +3044,28 @@ namespace pwiz.Skyline
 
         private void AddTargetsContextMenu(ToolStrip menuStrip, int iInsert)
         {
-            menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
-            if (abundanceTargetsMenuItem.DropDownItems.Count == 0)
+            abundanceTargetsMenuItem.DropDownItems.Clear();
+            abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    abundanceTargetsPeptidesMenuItem,
-                    abundanceTargetsProteinsMenuItem
-                });
-                abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
-                abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
-            }
+                abundanceTargetsPeptidesMenuItem,
+                abundanceTargetsProteinsMenuItem
+            });
+            abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
+            abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
+            menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
         }
 
         private void AddExcludeTargetsContextMenu(ToolStrip menuStrip, int iInsert)
         {
-            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
-            if (excludeTargetsMenuItem.DropDownItems.Count == 0)
+            excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            excludeTargetsMenuItem.DropDownItems.Clear();
+            excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
+            if (!IsSmallMoleculeOrMixedUI)
             {
-                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
-                if (!IsSmallMoleculeOrMixedUI)
-                {
-                    excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
-                }
+                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
             }
+            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
         }
 
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -3923,9 +3922,26 @@ namespace pwiz.Skyline
                 peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                if (graphType == GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
+                    {
+                        Checked = Settings.Default.GroupComparisonAvoidLabelOverlap
+                    });
+                    if (Settings.Default.GroupComparisonAvoidLabelOverlap && 
+                        graphSummary.GraphPaneFromPoint(mousePt) is SummaryRelativeAbundanceGraphPane abundancePane)
+                    {
+                        var suspendResumeText = Settings.Default.GroupComparisonSuspendLabelLayout
+                            ? GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout
+                            : GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout;
+                        menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(suspendResumeText, null, abundancePane.OnSuspendLayout));
+                    }
+                }
+                else
+                {
+                    synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                    menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                }
             }
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
@@ -3950,6 +3966,11 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
         private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
@@ -4469,13 +4490,6 @@ namespace pwiz.Skyline
             ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);
             ShowGraphPeakArea(true, GraphTypeSummary.abundance);
-            foreach (var summary in _listGraphPeakArea)
-            {
-                if (summary.Type == GraphTypeSummary.abundance)
-                {
-                    summary.Window = this;
-                }
-            }
             UpdatePeakAreaGraph();
         }
 
@@ -4629,15 +4643,11 @@ namespace pwiz.Skyline
 
         private void abundanceTargetsProteinsMenuItem_Click(object sender, EventArgs e)
         {
-            abundanceTargetsPeptidesMenuItem.Checked = false;
-            abundanceTargetsProteinsMenuItem.Checked = true;
             SetAreaProteinTargets(true);
         }
 
         private void abundanceTargetsPeptidesMenuItem_Click(object sender, EventArgs e)
         {
-            abundanceTargetsProteinsMenuItem.Checked = false;
-            abundanceTargetsPeptidesMenuItem.Checked = true;
             SetAreaProteinTargets(false);
         }
 

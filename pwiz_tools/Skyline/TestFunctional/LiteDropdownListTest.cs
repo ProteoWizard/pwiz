@@ -26,6 +26,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -57,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.Paste(GetTransitionList('\t', 20));
             });
-            RunUI(()=>
+            RunUI(() =>
             {
                 foreach (var comboBox in columnSelectDlg.ComboBoxes)
                 {
@@ -82,6 +83,85 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsFalse(lightCombo.DroppedDown);
                 }
             });
+
+            // Test choosing modifications and editing the list
+            const string strWaterLoss = "Water Loss (D, E, S, T)";
+            const string strMethyl = "Methyl (L)";
+            RunUI(() =>
+            {
+                editPepModsDlg.GetComboBox(IsotopeLabelType.light, 0).SelectedItem = strWaterLoss;
+                editPepModsDlg.GetComboBox(IsotopeLabelType.light, 1).SelectedItem = strMethyl;
+            });
+
+            // Rename the modification on the second amino acid
+            const string strNewModName = "New modification name";
+            RunDlg<EditStaticModDlg>(() =>
+                    editPepModsDlg.GetComboBox(IsotopeLabelType.light, 1).SelectedItem =
+                        Resources.SettingsListComboDriver_Edit_current,
+                editStaticModDlg =>
+                {
+                    editStaticModDlg.Modification = (StaticMod)editStaticModDlg.Modification.ChangeName(strNewModName);
+                    editStaticModDlg.OkDialog();
+                });
+            // Set the modification on the third amino acid
+            const string strCarbonyl = "Carbonyl (V)";
+            RunUI(() =>
+            {
+                Assert.AreEqual(strNewModName, editPepModsDlg.GetComboBox(IsotopeLabelType.light, 1).SelectedItem);
+                editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem = strCarbonyl;
+            });
+            // Edit the modification list and remove the modification which is on the first amino acid
+            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(
+                () => editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem =
+                    Resources.SettingsListComboDriver_Edit_list,
+                editListDlg =>
+                {
+                    editListDlg.SelectItem(strWaterLoss);
+                    editListDlg.RemoveItem();
+                    editListDlg.OkDialog();
+                });
+            // Verify that the amino acids have the expected modifications
+            RunUI(() =>
+            {
+                Assert.IsNull(editPepModsDlg.GetComboBox(IsotopeLabelType.light, 0).SelectedItem);
+                Assert.AreEqual(strNewModName, editPepModsDlg.GetComboBox(IsotopeLabelType.light, 1).SelectedItem);
+                Assert.AreEqual(strCarbonyl, editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem);
+            });
+            var oxidationV = new StaticMod(@"Carboxidation (V)", "V", null, "CO");
+            RunDlg<EditStaticModDlg>(
+                () => editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem =
+                    Resources.SettingsListComboDriver_Add,
+                addModDlg =>
+                {
+                    addModDlg.Modification = oxidationV;
+                    addModDlg.OkDialog();
+                }
+            );
+
+            RunUI(() =>
+            {
+                var combo = editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2);
+                Assert.AreEqual(oxidationV.Name, combo.SelectedItem);
+                Assert.AreEqual(oxidationV.Name, combo.Text);
+            });
+
+            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(
+                () => editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem =
+                    Resources.SettingsListComboDriver_Edit_list,
+                editListDlg =>
+                {
+                    editListDlg.SelectItem(oxidationV.Name);
+                    editListDlg.RemoveItem();
+                    editListDlg.OkDialog();
+                });
+
+            RunUI(() =>
+            {
+                var combo = editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2);
+                Assert.IsNull(combo.SelectedItem);
+                Assert.AreEqual(string.Empty, combo.Text);
+            });
+
             OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
         }
 

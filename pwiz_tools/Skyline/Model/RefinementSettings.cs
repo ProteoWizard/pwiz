@@ -373,7 +373,8 @@ namespace pwiz.Skyline.Model
                 var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
+                var normalizedValueCalculator = new NormalizedValueCalculator(refined);
+                var data = new AreaCVRefinementData(normalizedValueCalculator, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
                     Transitions, countTransitions, MSLevel), CancellationToken.None, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
@@ -1317,6 +1318,33 @@ namespace pwiz.Skyline.Model
                                                         .Select(nodePeptideGroup => nodePeptideGroup.Id.GlobalIndex).ToArray()); 
         }
 
+        public static ModifiedDocument ModifyDocumentByRemovingDecoys(SrmDocument originalDocument)
+        {
+            var modifiedDocument = new ModifiedDocument(RemoveDecoys(originalDocument));
+            var deletedMoleculeGroups = originalDocument.MoleculeGroups.Where(moleculeGroup =>
+                modifiedDocument.Document.FindNodeIndex(moleculeGroup.PeptideGroup) < 0).ToList();
+            var docPair = SrmDocumentPair.Create(originalDocument, modifiedDocument.Document, SrmDocument.DOCUMENT_TYPE.none);
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(SkylineWindow.CreateDeleteNodesEntry(docPair,
+                deletedMoleculeGroups.Select(
+                    moleculeGroup => AuditLogEntry.GetNodeName(originalDocument, moleculeGroup).ToString()), null));
+            return modifiedDocument;
+        }
+
+        public ModifiedDocument ModifyDocumentByGeneratingDecoys(SrmDocument document)
+        {
+            var modifiedDocument = new ModifiedDocument(GenerateDecoys(document));
+            if (ReferenceEquals(document, modifiedDocument.Document))
+            {
+                return null;
+            }
+            var plural = NumberOfDecoys > 1;
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                new MessageInfo(
+                    plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
+                    modifiedDocument.Document.DocumentType,
+                    NumberOfDecoys, DecoysMethod)));
+            return modifiedDocument;
+        }
 
         public SrmDocument GenerateDecoys(SrmDocument document)
         {

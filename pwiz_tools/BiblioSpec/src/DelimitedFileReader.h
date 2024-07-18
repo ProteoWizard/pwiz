@@ -87,14 +87,18 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
     STORAGE_TYPE lineEntry_; // object for storing one line from the file
     DelimitedFileConsumer<STORAGE_TYPE>* fileConsumer_; // where to send data
     int curLineNumber_;
+    bool hasHeader_;
+    // For use with less elaborate input formats - noticeable performance improvement on large files vs Boost csv tokenizer
+    bool isSimpleReader_;
+    string simpleDelimiter_;
 
 
  public:
     /**
      * The only constructor requries a pointer to a file consumer.
      */
-     DelimitedFileReader(DelimitedFileConsumer<STORAGE_TYPE>* fc) 
-     : separatorFunction_(NULL), fileConsumer_(fc), curLineNumber_(0) {};
+     DelimitedFileReader(DelimitedFileConsumer<STORAGE_TYPE>* fc, bool hasHeader = true) 
+     : separatorFunction_(NULL), fileConsumer_(fc), curLineNumber_(0), hasHeader_(hasHeader), isSimpleReader_(false) {};
 
     /**
      * Destructor closes file if open.
@@ -108,21 +112,24 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
      * when that column is read.  These columns are required to be in
      * the file and parsing will exit with an error if they are not
      * found.
+     * For formats without headers, the 0-based column position can be declared here.
      */
     void addRequiredColumn(const char* name,
-                           void (*fun)(STORAGE_TYPE&, const std::string&)   ){ 
-      targetColumns_.push_back(ColumnTranslator<STORAGE_TYPE>(name, -1, fun));
-
+                           void (*fun)(STORAGE_TYPE&, const std::string&),
+                            int position = -1){
+      targetColumns_.push_back(ColumnTranslator<STORAGE_TYPE>(name, position, fun));
     }
 
     /**
      * Add the name of a column to look for and the function to call
      * when that column is read.  These columns are optional and will
      * be ignored if missing.
+     * For formats without headers, the 0-based column position can be declared here.
      */
     void addOptionalColumn(const char* name,
-                           void (*fun)(STORAGE_TYPE&, const std::string&)   ){ 
-      optionalColumns_.push_back(ColumnTranslator<STORAGE_TYPE>(name, -1, fun));
+                           void (*fun)(STORAGE_TYPE&, const std::string&),
+                           int position = -1){ 
+      optionalColumns_.push_back(ColumnTranslator<STORAGE_TYPE>(name, position, fun));
     }
 
     /**
@@ -141,6 +148,22 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
             new boost::escaped_list_separator<char>(escape, delimiter, quote);
     }
 
+    bool isSimpleReader() const
+    {
+        return isSimpleReader_;
+    }
+
+    const char *simpleReaderDelimiter()
+    {
+        return simpleDelimiter_.c_str();
+    }
+
+    void defineSeparatorsNoEscape(const std::string& delimiter = ",", const std::string& quote = "\"") {
+        isSimpleReader_ = quote == "";
+        simpleDelimiter_ = delimiter;
+        separatorFunction_ =
+            new boost::escaped_list_separator<char>("", delimiter, quote);
+    }
     /**
      * Opens the file, parses the header, reads each line, inserting
      * the target columns into the selected data structure, and passes
@@ -150,11 +173,14 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
         // open file
         openFile(filename);
 
-        // parse header
-        std::string line;
-        getlinePortable(delimFile_, line);
-        curLineNumber_++;
-        parseHeader(line);
+        if (hasHeader_)
+        {
+            // parse header
+            std::string line;
+            getlinePortable(delimFile_, line);
+            curLineNumber_++;
+            parseHeader(line);
+        }
 
         // read remaining lines
         readRemainingLines();
@@ -233,37 +259,77 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
         std::string line;
         bool parseSuccess = true;
         std::string errorMsg;
-        
+
+        // Boost tokenizer is overkill for some formats
+        const bool simple = isSimpleReader(); 
+#define MAX_SIMPLE 1024
+        char simple_buf[MAX_SIMPLE];
+        char const* sep = simpleReaderDelimiter();
+
         while( ! delimFile_.eof() ){
             getlinePortable(delimFile_, line);
             curLineNumber_++;
 
-            if (line.empty() && delimFile_.eof())
-                break;
+            if (line.empty())
+            {
+                if (delimFile_.eof())
+                    break;
+                continue;
+            }
 
             size_t colListIdx = 0;  // go through all target columns
             int lineColNumber = 0;  // compare to all file columns
 
             STORAGE_TYPE lineEntry;//create an empty container for each line
             try{
-                CsvTokenizer lineParser(line, *separatorFunction_);
-                CsvTokenIterator token = lineParser.begin();
-                // for each token in this line
-                for(; token != lineParser.end(); ++token) {
-                    // if it's in the right position
-                    if(lineColNumber == targetColumns_[colListIdx].position_ ){
+                if (simple && (line.size() < MAX_SIMPLE)) // Use less elaborate tokenizer
+                {
+                    // for each token in this line
+                    char* next_token;
+                    memmove(simple_buf, line.c_str(), line.size() + 1);
+#ifdef BOOST_MSVC // MSVC silliness with non-POSIX function names
+#define STRTOK_R strtok_s
+#else
+#define STRTOK_R strtok_r
+#endif
+                    char* token = STRTOK_R(simple_buf, sep, &next_token);
+                    while (token) {
+                        // if it's in the right position
+                        if (lineColNumber == targetColumns_[colListIdx].position_) {
 
-                        // insert the value into the proper field
-                        targetColumns_[colListIdx].inserter(lineEntry,(*token));
-                        colListIdx++; // next target column
+                            // insert the value into the proper field
+                            targetColumns_[colListIdx].inserter(lineEntry, token);
+                            colListIdx++; // next target column
 
-                        if( colListIdx == targetColumns_.size() ){
-                            break;
+                            if (colListIdx == targetColumns_.size()) {
+                                break;
+                            }
                         }
+                        lineColNumber++; // next token in the line
+                        token = STRTOK_R(NULL, sep, &next_token);
                     }
-                    lineColNumber++; // next token in the line
                 }
-                
+                else
+                {
+                    CsvTokenizer lineParser(line, *separatorFunction_);
+                    CsvTokenIterator token = lineParser.begin();
+                    // for each token in this line
+                    for(; token != lineParser.end(); ++token) {
+                        // if it's in the right position
+                        if(lineColNumber == targetColumns_[colListIdx].position_ ){
+
+                            // insert the value into the proper field
+                            targetColumns_[colListIdx].inserter(lineEntry,(*token));
+                            colListIdx++; // next target column
+
+                            if( colListIdx == targetColumns_.size() ){
+                                break;
+                            }
+                        }
+                        lineColNumber++; // next token in the line
+                    }
+                }
+
                 // end of this line, pass back the data
                 fileConsumer_->addDataLine(lineEntry);
 

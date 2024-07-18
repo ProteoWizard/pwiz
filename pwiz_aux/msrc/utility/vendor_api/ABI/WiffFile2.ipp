@@ -205,9 +205,41 @@ struct Spectrum2Impl : public Spectrum
     // cache each possible combination of addZeros/doCentroid (probably will only use one, but it avoids need for logic of checking previous setting)
     mutable gcroot<ISpectrum^> msSpectrumCache[2][2];
     mutable gcroot<ISpectrum^> lastSpectrum;
+    static bool framingZerosThrowsError;
+    static bool doCentroidThrowsError;
 
     ISpectrum^ getSpectrumWithOptions(bool addZeros, bool doCentroid) const
     {
+        try
+        {
+            return getSpectrumWithOptionsInner(addZeros, doCentroid);
+        }
+        catch (Exception^ ex)
+        {
+            if (addZeros && !framingZerosThrowsError)
+            {
+                framingZerosThrowsError = true;
+                System::Console::Error->WriteLine("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} error adding framing zeros ({4}); retrying without framing zeros and disabling framing zeros for further spectra",
+                                                  experiment->wiffFile_->msSample->Id, experiment->msExperiment->Id, cycle, scanTime, ex->Message);
+                return getSpectrumWithOptions(false, doCentroid);
+            }
+
+            if (doCentroid && !doCentroidThrowsError)
+            {
+                doCentroidThrowsError = true;
+                System::Console::Error->WriteLine("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} error centroiding spectrum ({4}); retrying without centroiding and disabling centroiding for further spectra",
+                                                  experiment->wiffFile_->msSample->Id, experiment->msExperiment->Id, cycle, scanTime, ex->Message);
+                return getSpectrumWithOptions(addZeros, false);
+            }
+
+            throw;
+        }
+    }
+
+    ISpectrum^ getSpectrumWithOptionsInner(bool addZeros, bool doCentroid) const
+    {
+        addZeros = addZeros && !framingZerosThrowsError;
+        doCentroid = doCentroid && !doCentroidThrowsError;
         auto& msSpectrum = msSpectrumCache[addZeros ? 1 : 0][doCentroid ? 1 : 0];
         if ((ISpectrum^) msSpectrum == nullptr)
         {
@@ -223,8 +255,7 @@ struct Spectrum2Impl : public Spectrum
             if (spectraReader->MoveNext())
                 msSpectrum = spectraReader->GetCurrent();
             else
-                throw gcnew Exception(String::Format("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} returned null spectrum",
-                                                     spectrumRequest->SampleId, spectrumRequest->ExperimentId, cycle, scanTime));
+                throw gcnew Exception("null spectrum");
         }
 
         lastSpectrum = msSpectrum;
@@ -256,6 +287,9 @@ struct Spectrum2Impl : public Spectrum
         bpX = bpY = 0;
     }
 };
+
+bool Spectrum2Impl::framingZerosThrowsError = false;
+bool Spectrum2Impl::doCentroidThrowsError = false;
 
 typedef boost::shared_ptr<Spectrum2Impl> Spectrum2ImplPtr;
 

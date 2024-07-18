@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -151,11 +152,13 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private int _labelHeight;
         private ImmutableList<float> _dotpData;
+        private readonly Receiver<NormalizedValueCalculator.Params, NormalizedValueCalculator> _calcListener;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
             ToolTip = new ToolTipImplementation(this);
+            _calcListener = NormalizedValueCalculator.PRODUCER.RegisterCustomer(graphSummary, OnNormalizedValueCalculatorAvailable);
         }
 
         protected override void InitFromData(GraphData graphData)
@@ -220,8 +223,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public TransitionGroupDocNode ParentGroupNode { get; private set; }
 
-        private NormalizedValueCalculator NormalizedValueCalculator { get; set; }
-
         public override void Draw(Graphics g)
         {
             // Make sure changes are not only drawn when the graph is updated.
@@ -259,7 +260,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
-            NormalizedValueCalculator = new NormalizedValueCalculator(document);
             bool resultsAvailable = results != null;
             Clear();
 
@@ -441,8 +441,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 expectedValue = ExpectedVisible;
 
             var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
+            NormalizedValueCalculator normalizedValueCalculator = null;
+            try
+            {
+                if (!_calcListener.TryGetProduct(new NormalizedValueCalculator.Params(document, normalizeOption), out normalizedValueCalculator))
+                {
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Title.Text = ex.Message;
+                EmptyGraph(document);
+                return;
+            }
+            
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
+                    normalizedValueCalculator,
                     peptidePaths,
                     displayType,
                     replicateGroupOp,
@@ -451,6 +467,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     expectedValue,
                     PaneKey) : 
                 new AreaGraphData(document,
+                    normalizedValueCalculator,
                     identityPath,
                     displayType,
                     replicateGroupOp,
@@ -513,6 +530,7 @@ namespace pwiz.Skyline.Controls.Graphs
             
             int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
+            ToolTip.TargetCurves.Clear();
             for (int i = 0; i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
@@ -579,6 +597,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && dataScalingOption == DataScalingOption.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
+                        ToolTip.TargetCurves.Add(curveItem);
                     }
                     else 
                     {
@@ -589,6 +608,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         else
                         {
                             curveItem = new BarItem(label, pointPairList, color);
+                            ToolTip.TargetCurves.Add(curveItem);
                         }
                     }
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
@@ -655,7 +675,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 dotpLine.Tag = selectedTreeNode.Path;
                 CurveList.Insert(0, dotpLine);                  // Add dotp graph line
-                ToolTip.TargetCurves.ClearAndAdd(dotpLine);
+                ToolTip.TargetCurves.Add(dotpLine);
             }
             else
             {
@@ -707,16 +727,64 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public override ImmutableList<float> GetToolTipDataSeries()
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
-            return _dotpData;
-        }
-        public override void PopulateTooltip(int index)
-        {
-            ToolTip.ClearData();
-            ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
-            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
-                string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+            if (targetCurve is LineItem line)
+            {
+                ToolTip.ClearData();
+                ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                ToolTip.AddLine(
+                    string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText),
+                    string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+                ToolTip.YPosition = null;
+            }
+            if (targetCurve is BarItem)
+            {
+                NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(GraphSummary.DocumentUIContainer.DocumentUI.Settings);
+
+                ToolTip.ClearData();
+                ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
+
+                var dataFormat = @"0.###";
+                if (Settings.Default.UsePowerOfTen)
+                    dataFormat += @"e0";
+                var percentageFormat = @"0.#%";
+                var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+
+
+                foreach (var ion in CurveList.OfType<BarItem>())
+                {
+                    var dataPoint = "";
+                    if (NormalizeOption.DEFAULT.Equals(normalizeOption) || NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizeOption.NormalizationMethod))
+                    {
+                        if (index== 0)
+                            dataPoint = (ion.Points[index].Y / total ).ToString(percentageFormat, CultureInfo.CurrentCulture);
+                        else
+                            dataPoint = ion.Points[index].Y.ToString(dataFormat, CultureInfo.CurrentCulture);
+                    }
+                    else if (NormalizeOption.MAXIMUM.Equals(normalizeOption)
+                             || NormalizationMethod.TIC.Equals(normalizeOption.NormalizationMethod) 
+                             || NormalizeOption.TOTAL.Equals(normalizeOption))
+                    {
+                        if(!(selectedTreeNode is PeptideTreeNode))
+                            dataFormat = percentageFormat;
+                        dataPoint = (ion.Points[index].Y/(NormalizeOption.TOTAL.Equals(normalizeOption) ? 100:1))
+                            .ToString(dataFormat, CultureInfo.CurrentCulture);
+                    }
+                    else if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel || NormalizationMethod.NONE.Equals(normalizeOption.NormalizationMethod))
+                        dataPoint = (ion.Points[index].Y).ToString(dataFormat, CultureInfo.CurrentCulture);
+
+                    ToolTip.AddLine(ion.Label.Text,dataPoint);
+                }
+                if (!(normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel) && !NormalizeOption.TOTAL.Equals(normalizeOption))
+                    ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Total, total.ToString(dataFormat, CultureInfo.CurrentCulture));
+                
+                if (BarSettings.Type == BarType.Stack || BarSettings.Type == BarType.PercentStack)
+                    ToolTip.YPosition = total;
+                else
+                    ToolTip.YPosition = CurveList.OfType<BarItem>().Max(curve => curve.Points[index].Y);
+            }
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -1064,8 +1132,6 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class AreaGraphData : GraphData
         {
-            public static readonly NormalizeOption RATIO_INDEX_NONE = NormalizeOption.NONE;
-
             private readonly DocNode _docNode;
             private readonly NormalizeOption _normalizeOption;
             private readonly DataScalingOption _dataScalingOption;
@@ -1074,6 +1140,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private PointPairList _dotpData;
 
             public AreaGraphData(SrmDocument document,
+                                 NormalizedValueCalculator normalizedValueCalculator,
                                  IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
@@ -1082,12 +1149,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
                                  bool zeroMissingValues)
-                : this(document, new []{identityPath}, displayType, replicateGroupOp, normalizeOption, dataScalingOption, expectedVisible, paneKey, zeroMissingValues)
+                : this(document, normalizedValueCalculator, new []{identityPath}, displayType, replicateGroupOp, normalizeOption, dataScalingOption, expectedVisible, paneKey, zeroMissingValues)
             {
                 _docNode = document.FindNode(identityPath);
             }
 
             public AreaGraphData(SrmDocument document,
+                NormalizedValueCalculator normalizedValueCalculator,
                                  IEnumerable<IdentityPath> selectedDocNodePaths,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
@@ -1102,7 +1170,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _dataScalingOption = dataScalingOption;
                 _expectedVisible = expectedVisible;
                 _zeroMissingValues = zeroMissingValues;
-                NormalizedValueCalculator = new NormalizedValueCalculator(document);
+                NormalizedValueCalculator = normalizedValueCalculator;
             }
 
             protected override void InitData()
@@ -1572,6 +1640,17 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return (float?) NormalizedValueCalculator.GetTransitionDataValue(_normalizeOption, chromInfo);
             }
+        }
+
+        private void OnNormalizedValueCalculatorAvailable()
+        {
+            GraphSummary.UpdateUI(false);
+        }
+
+        public override void OnClose(EventArgs e)
+        {
+            base.OnClose(e);
+            _calcListener.Dispose();
         }
     }
 }

@@ -22,9 +22,9 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -90,13 +90,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         protected int lastSegment = -1;
         protected string lastMessage;
+        protected string lastSegmentName;
         protected void UpdateSearchEngineProgress(IProgressStatus status)
         {
             string message = status.IsError ? status.ErrorException.ToString() : status.Message;
 
             if (status.IsError)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
+                MessageDlg.ShowWithException(Program.MainWindow, status.ErrorException.Message, status.ErrorException);
                 return;
             }
 
@@ -104,7 +105,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (status.SegmentCount > 0 && status.Segment != lastSegment)
             {
                 lastSegment = status.Segment;
-                progressBar.CustomText = status.Message;
+            }
+
+            if (status.SegmentName != lastSegmentName)
+            {
+                lastSegmentName = status.SegmentName;
+                progressBar.CustomText = status.SegmentName;
             }
 
             if (!status.WarningMessage.IsNullOrEmpty() && status.WarningMessage != lastMessage)
@@ -130,9 +136,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (_progressTextItems.Skip(Math.Max(0, _progressTextItems.Count - 10)).Any(entry => entry.Message == message))
                 return;
 
+            if (message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length - 1), out _))
+            {
+                // Don't update text if the message is just a percent complete update (e.g. "13%") - that gets parsed in ProcessRunner.Run
+                return;
+            }
+
             var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
             txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+        }
+
+        public void SetProgressBarDisplayStyle(ProgressBarDisplayText style)
+        {
+            progressBar.DisplayStyle = style;
+        }
+
+        public void SetProgressBarText(string message)
+        {
+            progressBar.CustomText = message;
+            if (progressBar.DisplayStyle == ProgressBarDisplayText.CustomText)
+            {
+                Invalidate();
+            }
         }
 
         protected CancellationTokenSource _cancelToken;

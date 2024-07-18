@@ -1125,6 +1125,17 @@ namespace IDPicker
             }
         }
 
+        string outputFilepath(string inputFilepath)
+        {
+            string outputFilename = Path.GetFileNameWithoutExtension(inputFilepath.Replace(".pep.xml", ".pepXML")) + ".idpDB";
+
+            // for Mascot files (*.dat), use parseSource() to get the real filename, else save time by just using filename without extension
+            if (inputFilepath.ToLowerInvariant().EndsWith(".dat"))
+                outputFilename = Parser.ParseSource(inputFilepath) + ".idpDB";
+
+            return Path.Combine(Path.GetDirectoryName(inputFilepath) ?? string.Empty, outputFilename);
+        }
+
         void OpenFiles (IList<string> filepaths, TreeNode rootNode = null)
         {
             try
@@ -1153,7 +1164,7 @@ namespace IDPicker
                 var skipFiles = new List<string>();
                 foreach (string filepath in xml_filepaths)
                 {
-                    string idpDB_filepath = Path.ChangeExtension(filepath.Replace(".pep.xml", ".pepXML"), ".idpDB");
+                    string idpDB_filepath = outputFilepath(filepath);
                     if (File.Exists(idpDB_filepath))
                     {
                         if (!warnOnce && MessageBox.Show("Some of these files have already been converted. Do you want to reconvert them?",
@@ -1170,7 +1181,7 @@ namespace IDPicker
                     }
                 }
                 xml_filepaths = xml_filepaths.Where(o => !skipFiles.Contains(o));
-                idpDB_filepaths = idpDB_filepaths.Union(skipFiles.Select(o => Path.ChangeExtension(o.Replace(".pep.xml", ".pepXML"), ".idpDB")));
+                idpDB_filepaths = idpDB_filepaths.Union(skipFiles.Select(outputFilepath));
 
 
                 // determine if merged filepath exists and that it's a valid idpDB
@@ -1181,7 +1192,7 @@ namespace IDPicker
                         string.Empty) + ".idpDB").ToList();
 
                 // for Mascot files (*.dat), use parseSource() to get the real filename, else save time by just using filename without extension
-                var sourceNames = filepaths.Select(o => Path.Combine(Path.GetDirectoryName(o), o.ToLower().EndsWith(".dat") ? Parser.ParseSource(o) : Path.GetFileNameWithoutExtension(o.Replace(".pep.xml", ".pepXML")) + Path.GetExtension(o)));
+                var sourceNames = filepaths.Select(outputFilepath);
 
                 string commonFilepath = Util.GetCommonFilename(sourceNames);
                 if (!openSingleFile && potentialPaths.Contains(commonFilepath))
@@ -1275,7 +1286,7 @@ namespace IDPicker
 
                         try
                         {
-                            parser.Parse(xml_filepaths, ilr);
+                            parser.Parse(xml_filepaths, 2, ilr);
 
                             // read log for non-fatal errors
                             //string log = Logger.Reader.ReadToEnd().Trim();
@@ -1303,7 +1314,7 @@ namespace IDPicker
                     if (importCancelled)
                         return;
 
-                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o.Replace(".pep.xml", ".pepXML"), ".idpDB")));
+                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(outputFilepath));
                 }
 
                 if (idpDB_filepaths.Count() > 1)

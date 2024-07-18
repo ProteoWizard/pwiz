@@ -73,9 +73,9 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null)
+        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null, bool useExplicitPeakBounds = true)
         {
-            LibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
+            LibrarySpec = new BiblioSpecLiteSpec(name, outputPath, useExplicitPeakBounds);
 
             InputFiles = inputFiles;
 
@@ -95,6 +95,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool IncludeAmbiguousMatches { get; set; }
         public IrtStandard IrtStandard { get; set; }
         public bool? PreferEmbeddedSpectra { get; set; }
+        public IList<int> Charges { get; set; } // Optional list of desired charges, if populated BlibBuild ignores any not listed
         public bool DebugMode { get; set; }
 
         public IList<string> InputFiles
@@ -156,6 +157,7 @@ namespace pwiz.Skyline.Model.Lib
                 Id = Id,
                 PreferEmbeddedSpectra = PreferEmbeddedSpectra,
                 DebugMode = DebugMode,
+                Charges = Charges,
             };
 
             bool retry = true;

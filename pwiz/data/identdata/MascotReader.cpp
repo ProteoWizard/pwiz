@@ -185,12 +185,12 @@ namespace
 }
 
 //
-// MascotReader::Impl
+// MascotReaderImpl
 //
-class MascotReader::Impl
+class MascotReaderImpl
 {
 public:
-    Impl()
+    MascotReaderImpl()
     {
         varmodPattern = bxp::sregex::compile("(.*) \\((Protein)?\\s*([NC]-term)?\\s*(.*?)\\)");
         varmodListOfChars = bxp::sregex::compile("([A-Z]+)");
@@ -1184,19 +1184,12 @@ private:
     static const char* error_id;
 };
 
-const char* MascotReader::Impl::owner_person_id = "doc_owner_person";
-const char* MascotReader::Impl::provider_id = "provider";
-const char* MascotReader::Impl::mz_id = "mz_id";
-const char* MascotReader::Impl::intensity_id = "intensity_id";
-const char* MascotReader::Impl::error_id = "error_id";
+const char* MascotReaderImpl::owner_person_id = "doc_owner_person";
+const char* MascotReaderImpl::provider_id = "provider";
+const char* MascotReaderImpl::mz_id = "mz_id";
+const char* MascotReaderImpl::intensity_id = "intensity_id";
+const char* MascotReaderImpl::error_id = "error_id";
 
-//
-// MascotReader::MascotReader
-//
-MascotReader::MascotReader()
-    : pimpl(new MascotReader::Impl())
-{
-}
 
 //
 // MascotReader::read
@@ -1206,7 +1199,8 @@ void MascotReader::read(const string& filename,
                         IdentData& result,
                         const Reader::Config& config) const
 {
-    pimpl->read(filename, head, result, config);
+    MascotReaderImpl reader;
+    reader.read(filename, head, result, config);
 }
 
 //
@@ -1245,10 +1239,6 @@ namespace pwiz {
 namespace identdata {
 
 
-PWIZ_API_DECL MascotReader::MascotReader()
-{
-}
-
 PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                                       const std::string& head,
                                       IdentData& result,
@@ -1272,13 +1262,6 @@ PWIZ_API_DECL void MascotReader::read(const std::string& filename,
 {
     throw std::runtime_error("[MascotReader::read] no mascot support enabled.");
 }
-
-class MascotReader::Impl
-{
-    Impl() {}
-    ~Impl() {}
-};
-
 
 } // namespace identdata 
 } // namespace pwiz 

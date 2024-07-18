@@ -496,7 +496,6 @@ namespace BuildSciexMethod
                         : typeof(AccumulationTimeProperty);
                 var groupName = Equals(instrument, InstrumentType.QQQ) ?
                     typeof(GroupIdProperty) : typeof(GroupNameProperty);
-                ;
 
                 var props = new List<PropertyData>( new[]
                 {

@@ -193,15 +193,10 @@ namespace pwiz.Skyline.Model.Results
                 var datas = new List<PeptideChromInfoData>();
                 var chromatograms = measuredResults.Chromatograms[replicateIndex];
                 var peptideChromInfos = peptideResults[replicateIndex];
-                if (peptideChromInfos.IsEmpty)
-                    datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, null, null, peptideDocNode));
-                else
+                foreach (var peptideChromInfo in peptideChromInfos)
                 {
-                    foreach (var peptideChromInfo in peptideChromInfos)
-                    {
-                        var chromFileInfo = chromatograms.GetFileInfo(peptideChromInfo.FileId);
-                        datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, chromFileInfo, peptideChromInfo, peptideDocNode));
-                    }
+                    var chromFileInfo = chromatograms.GetFileInfo(peptideChromInfo.FileId);
+                    datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, chromFileInfo, peptideChromInfo, peptideDocNode));
                 }
                 list.Add(datas);
             }

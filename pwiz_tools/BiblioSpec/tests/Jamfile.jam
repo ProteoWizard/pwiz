@@ -216,6 +216,9 @@ blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.c
 blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl-invalid-sequence.blib : ssl-invalid-sequence.check : $(TEST_INPUTS_PATH)/ssl-invalid-sequence.ssl ;
 blib-test-build ssl-crosslink : -o -K : output/ssl-crosslink.blib : ssl-crosslink.check : $(TEST_INPUTS_PATH)/ssl-crosslink.ssl ;
 
+# Test with the tab-delimited Hardklor format
+blib-test-build hardklor : -o : output/hardklor.blib : hardklor.check : $(TEST_INPUTS_PATH)/hardklor.hk.bs.kro ;
+
 # Test building with percolator XML files
 
 blib-test-build perc-xml : --unicode -o : output/perc-xml.blib : perc-xml.check : $(TEST_INPUTS_PATH)/smaller.perc.xml ;
@@ -246,6 +249,8 @@ blib-test-build msfragger-thermo : -o : output/msfragger-thermo.blib : msfragger
 blib-test-build-basic peptideprophet-msfragger-thermo-mzml : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
 blib-test-build-basic peptideprophet-msfragger-thermo-mzml-nativeid : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml-nativeid.pep.xml ;
 blib-test-build-basic peptideprophet-msfragger-bruker-mgf : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-bruker-mgf-nativeid : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf-nativeid.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-bruker-mzml-nativeid : -o : $(TEST_INPUTS_PATH)/interact-peptideprophet-msfragger-bruker-mzml-nativeid.pep.xml ;
 blib-test-build-basic msfragger-check-parent-path-first : -o : $(TEST_INPUTS_PATH)/msfragger-check-parent-path-first.pepXML ;
 blib-test-build-basic msfragger-check-parent-path-first-with-missing-file : -o -e@inputs$(.slash)msfragger-check-parent-path-first : $(TEST_INPUTS_PATH)/msfragger-check-parent-path-first-with-missing-file.pepXML ;
 

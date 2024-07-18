@@ -87,7 +87,9 @@ class BuildParser : protected SAXHandler{
   double calculatePeptideMass(PSM* psm);
   int calculateCharge(double neutralMass, double precursorMz);
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
-  void removeDuplicates();
+  virtual void removeDuplicates();
+  virtual bool keepAmbiguous();
+  void removeNulls();
   double aaMasses_[128];
 
  protected:
@@ -120,6 +122,9 @@ class BuildParser : protected SAXHandler{
   sqlite3_int64 insertSpectrumFilename(string& filename, bool insertAsIs = false);
   sqlite3_int64 insertProtein(const Protein* protein);
   void buildTables(PSM_SCORE_TYPE score_type, string specfilename = "", bool showSpecProgress = true);
+
+  void OptionalSort(PSM_SCORE_TYPE scoreType); // Sort the psms if needed
+
   const char* getPsmFilePath(); // path containing file being parsed
   string getFilenameFromID(const string& idStr); // spectrum source file from spectrum ID
 

@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.ElementLocators
                 switch (tk.Key)
                 {
                     case TokenType.String:
-                        if (keyName == null)
+                        if (string.IsNullOrEmpty(keyName))
                         {
                             keyName = tk.Value;
                         }
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Model.ElementLocators
                             attributes.Add(new KeyValuePair<string, string>(attributeName, attributeValue));
                         }
                         yield return new ElementLocator(keyName ?? string.Empty, attributes);
-                        keyName = null;
+                        keyName = string.Empty;
                         attributeName = null;
                         attributeValue = null;
                         attributes.Clear();

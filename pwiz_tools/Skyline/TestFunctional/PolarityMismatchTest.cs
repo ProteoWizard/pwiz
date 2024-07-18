@@ -53,9 +53,9 @@ namespace pwiz.SkylineTestFunctional
             var noPolarityPath = TestFilesDir.GetTestPath("no_polarity.mzML"); // Converted by older msconvert without any ion polarity sense, so all positive
             var replicateName = Path.GetFileNameWithoutExtension(replicatePath);
 
-            var docProperPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, replicatePath, null); // Mixed polarity doc and data
-            var docPosPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath, -1);  // All neg doc, all pos data
-            var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath, 1);  // All pos doc, all neg data
+            var docProperPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, replicatePath, null, false); // Mixed polarity doc and data
+            var docPosPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath, -1, true);  // All neg doc, all pos data
+            var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath, 1, true);  // All pos doc, all neg data
 
             var transProperPolarity = docProperPolarity.MoleculeTransitions.ToArray();
             var transNoPolarity = docPosPolarity.MoleculeTransitions.ToArray();
@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
 
         // Load a skyline doc, half of which is positve charges and half negative, so we can verify interaction with 
         // polarity in the replicate mass spec files
-        private SrmDocument LoadDocWithReplicate(TestFilesDir testFilesDir, string replicateName, string replicatePath, int? charge)
+        private SrmDocument LoadDocWithReplicate(TestFilesDir testFilesDir, string replicateName, string replicatePath, int? charge, bool expectAutoManageDlg)
         {
             var docPathBase = testFilesDir.GetTestPath("NegativeIonChromatograms.sky");
             var docPath = docPathBase.Replace(".sky", replicatePath.Split('\\').Last() + ".sky"); // Make sure name in unique
@@ -156,7 +156,10 @@ namespace pwiz.SkylineTestFunctional
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
             });
             OkDialog(col4Dlg, col4Dlg.OkDialog);
-            DismissAutoManageDialog(docEmpty); // If asked about automanage, decline it
+            if (expectAutoManageDlg)
+            {
+                DismissAutoManageDialog(); // When asked about automanage, decline it
+            }
             
             var document = WaitForDocumentChangeLoaded(docEmpty);
             AssertEx.IsDocumentState(document, null, 1, 236, 236, 236);

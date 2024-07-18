@@ -107,6 +107,25 @@ struct PSM{
     proteins.clear();
   };
 
+#define PRECURSOR_WITHOUT_MS2_SCAN "#PRECURSOR_ONLY#" // Precursor-only entries may not have an associated scan
+
+  static bool isPrecursorOnlyIdentifier(const std::string &str)
+  {
+      return boost::starts_with(str, PRECURSOR_WITHOUT_MS2_SCAN);
+  }
+
+  bool isPrecursorOnly()
+  {
+      return isPrecursorOnlyIdentifier(specName);
+  }
+  
+  void setPrecursorOnly()
+  {
+      specName = std::string(PRECURSOR_WITHOUT_MS2_SCAN) + "_"
+      + smallMolMetadata.moleculeName + "_" + smallMolMetadata.chemicalFormula + "_" + modifiedSeq + "_"
+      + smallMolMetadata.precursorAdduct + boost::lexical_cast<std::string>(charge);
+  }
+
   bool IsCompleteEnough() const
   {
       return (specKey >= 0 || specIndex >= 0 || !specName.empty()) && 
@@ -118,9 +137,9 @@ struct PSM{
     std::string result;
         if( ! specName.empty() ){
             result = specName;
-        } else if( specKey != -1 ){
+        } else if( specKey >= 0 ){
             result =  boost::lexical_cast<std::string>(specKey);
-        } else if( specIndex != -1 ){
+        } else if( specIndex >= 0 ){
             result = boost::lexical_cast<std::string>(specIndex);
         } 
         return result;

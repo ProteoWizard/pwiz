@@ -373,7 +373,7 @@
     <value>btnShare</value>
   </data>
   <data name="openViewEditorContextMenuItem.Text" xml:space="preserve">
-    <value>打开报告编辑器...</value>
+    <value>打开报告编辑器…</value>
   </data>
   <data name="&gt;&gt;btnShare.ZOrder" xml:space="preserve">
     <value>4</value>

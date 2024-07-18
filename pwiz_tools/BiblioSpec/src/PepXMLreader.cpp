@@ -83,7 +83,8 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
   state(STATE_INIT),
-  isScoreLookup_(false)
+  isScoreLookup_(false),
+  isMGF_(false)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
     numFiles = 0;
@@ -269,14 +270,18 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            // Only the MGF file from MSFragger will match up with the scan numbers from an MSFragger pepXML file from a timsTOF dataset, but
            // other extensions must be supported for MSFragger searches of non-timsTOF datasets (e.g. mzML, Thermo RAW)
            extensions.insert(extensions.begin(), "_calibrated.mgf");
-           extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated, so place first in list
+           extensions.insert(extensions.begin(), "_calibrated.mzML");
+           extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated MGF over calibrated, so place second in list
+           extensions.insert(extensions.begin(), "_uncalibrated.mzML"); // Prefer uncalibrated mzML over all, so place first in list
            if (analysisType_ != MSFRAGGER_ANALYSIS)
                parentAnalysisType_ = MSFRAGGER_ANALYSIS;
        }
 
        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
-       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
+       isMGF_ = bal::iends_with(getSpecFileName(), ".mgf");
+
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && isMGF_) {
            lookUpBy_ = NAME_ID;
            specReader_->setIdType(NAME_ID);
        }
@@ -309,8 +314,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
 
-           if (!spectrumName.empty()) {
-               lookUpBy_ = NAME_ID;
+           if (!isMGF_ && !spectrumName.empty()) {
+               if (bal::contains(spectrumName, "="))
+                   lookUpBy_ = NAME_ID;
+               else
+                   lookUpBy_ = SCAN_NUM_ID;
            }
            else {
                spectrumName = getRequiredAttrValue("spectrum", attr);
@@ -405,7 +413,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        string score_name = getAttrValue("name", attr);
        bal::to_lower(score_name);
 
-       if (score_name == "expect" ||
+       if ((analysisType_ != CRUX_ANALYSIS && score_name == "expect") ||
            (analysisType_ == SPECTRUM_MILL_ANALYSIS && score_name == "smscore") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||

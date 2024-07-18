@@ -25,6 +25,8 @@
 
 #include "SpectrumList_Agilent.hpp"
 
+#include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
+
 
 #ifdef PWIZ_READER_AGILENT
 #include "Reader_Agilent_Detail.hpp"
@@ -416,8 +418,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
         if (doCentroid)
             result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
 
-
-        if (isIonMobilityScan && config_.combineIonMobilitySpectra)
+    	if (isIonMobilityScan && config_.combineIonMobilitySpectra)
         {
             BinaryDataArrayPtr mobility(new BinaryDataArray);
             result->binaryDataArrayPtrs.push_back(mobility);
@@ -493,7 +494,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             intensityArray.resize(newcount);
         }
 
-        if (!mzArray.empty())
+        if (isIonMobilityScan)
+        {
+            const auto metadata = pwiz::analysis::SpectrumList_MetadataFixer::calculatePeakMetadata(mzArray, intensityArray);
+            if (!mzArray.empty())
+            {
+                result->set(MS_base_peak_intensity, metadata.basePeakY, MS_number_of_detector_counts);
+                result->set(MS_base_peak_m_z, metadata.basePeakX, MS_m_z);
+                result->set(MS_lowest_observed_m_z, metadata.lowestX, MS_m_z);
+                result->set(MS_highest_observed_m_z, metadata.highestX, MS_m_z);
+            }
+            result->set(MS_TIC, metadata.totalY, MS_number_of_detector_counts);
+        }
+        else if (!mzArray.empty())
         {
             for (size_t i = 0; i < 10; ++i)
             {
@@ -519,7 +532,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     {
         if (isIonMobilityScan && config_.combineIonMobilitySpectra)
         {
-            result->defaultArrayLength = lastFrame_->getCombinedSpectrumDataSize(config_.ignoreZeroIntensityPoints, config_.isolationMzAndMobilityFilter);
+            analysis::SpectrumList_MetadataFixer::PeakMetadata metadata;
+            result->defaultArrayLength = lastFrame_->getCombinedSpectrumDataSize(config_.ignoreZeroIntensityPoints, config_.isolationMzAndMobilityFilter, metadata.totalY, metadata.lowestX, metadata.highestX);
+
+            if (result->defaultArrayLength > 0)
+            {
+                // no base peak information because that would require summing all drift scans
+                result->set(MS_lowest_observed_m_z, metadata.lowestX, MS_m_z);
+                result->set(MS_highest_observed_m_z, metadata.highestX, MS_m_z);
+            }
+            result->set(MS_TIC, metadata.totalY, MS_number_of_detector_counts);
         }
         else if (doCentroid || xArray.size() < 3)
         {

@@ -243,7 +243,7 @@ namespace pwiz.Skyline.EditUI
         public int MinPeptidesPerProtein
         {
             get => (int) numMinPeptides.Value;
-            set => numMinPeptides.Value = value;
+            set => numMinPeptides.Value = Math.Max(numMinPeptides.Minimum, value);
         }
 
         private void UpdateTargetCounts()

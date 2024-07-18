@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -33,12 +34,11 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         int Items { get; }
         AreaCVGraphData CurrentData { get; }
-        AreaCVGraphData.AreaCVGraphDataCache Cache { get; }
     }
 
-    public class AreaCVHistogramGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramInfo
+    public class AreaCVHistogramGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
+        private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData = AreaCVGraphData.INVALID;
         private CVData _selectedData;
         private SrmDocument _document;
@@ -51,24 +51,12 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             _stickItems = new List<StickItem>(2);
-            _cache = new AreaCVGraphData.AreaCVGraphDataCache();
+            _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, () => graphSummary.UpdateUI());
         }
-
-        public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
         public int Items { get { return GetTotalBars(); } }
 
         public override bool HasToolbar { get { return true; } }
-
-        public override void OnClose(EventArgs e)
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            _cache.Dispose();
-        }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
@@ -117,11 +105,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return height * (YAxis.Scale.Max - YAxis.Scale.Min) / Rect.Height;
         }
 
-        private void DataCallback(AreaCVGraphData data)
-        {
-            GraphSummary.GraphControl.BeginInvoke((Action) (() => { GraphSummary.UpdateUI(); }));
-        }
-
         public override void UpdateGraph(bool selectionChanged)
         {
             if (!GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasResults)
@@ -146,7 +129,9 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             _stickItems.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
+            var gotData =
+                _receiver.TryGetProduct(new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                    out _areaCVGraphData);
 
             if (!gotData || !_areaCVGraphData.IsValid)
                 return;

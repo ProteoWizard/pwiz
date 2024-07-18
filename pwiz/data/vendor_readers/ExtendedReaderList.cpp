@@ -44,10 +44,12 @@ namespace msdata {
 PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
 {
     push_back(ReaderPtr(new Reader_ABI));
+    push_back(ReaderPtr(new Reader_ABI_WIFF2));
     push_back(ReaderPtr(new Reader_ABI_T2D));
     push_back(ReaderPtr(new Reader_Agilent));
     push_back(ReaderPtr(new Reader_Bruker_BAF));
     push_back(ReaderPtr(new Reader_Bruker_TDF));
+    push_back(ReaderPtr(new Reader_Bruker_TSF));
 #if !defined(PWIZ_READER_BRUKER) || defined(PWIZ_READER_BRUKER_WITH_COMPASSXTRACT)
     push_back(ReaderPtr(new Reader_Bruker_FID));
     push_back(ReaderPtr(new Reader_Bruker_YEP));

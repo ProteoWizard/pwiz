@@ -20,7 +20,7 @@ minorVersion INTEGER -- Schema version number:
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Fri Feb 21 16:04:56 2020',-1,0,10)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Fri Apr 14 09:57:02 2023',-1,0,10)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -41,7 +41,7 @@ startTime REAL, -- start retention time in minutes, if known
 endTime REAL, -- end retention time in minutes, if known
 totalIonCurrent REAL, -- total ion current of spectrum
 moleculeName VARCHAR(128), -- precursor molecule's name (not needed for peptides)
-chemicalFormula VARCHAR(128), -- precursor molecule's neutral formula (not needed for peptides)
+chemicalFormula VARCHAR(128), -- precursor molecule's neutral formula, may include value for unexplained mass e.g. H84C44N12O13[+3.3122] (not needed for peptides)
 precursorAdduct VARCHAR(128), -- ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)
 inchiKey VARCHAR(128), -- molecular identifier for structure retrieval (not needed for peptides)
 otherKeys VARCHAR(128), -- alternative molecular identifiers for structure retrieval, tab separated name:value pairs e.g. cas:58-08-2\thmdb:01847 (not needed for peptides)
@@ -141,6 +141,8 @@ INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(17, 'BYONIC SCORE'
 INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(18, 'PEPTIDE SHAKER CONFIDENCE', 'PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT')
 
 INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(19, 'GENERIC Q-VALUE', 'PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT')
+
+INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(20, 'HARDKLOR IDOTP', 'PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT')
 
 CREATE TABLE IonMobilityTypes ( -- table of known ion mobility units
 id INTEGER PRIMARY KEY, -- as used in ionMobilityType field of RefSpectra

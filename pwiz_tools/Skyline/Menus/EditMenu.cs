@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -786,69 +787,124 @@ namespace pwiz.Skyline.Menus
             if (!canApply)
                 return;
 
-            var resultsIndex = SelectedResultsIndex;
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            var nodeTranGroup = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode ?? PeakMatcher.PickTransitionGroup(DocumentUI, nodePepTree, resultsIndex);
-
-            if (DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any())
+            
+            lock (SkylineWindow.GetDocumentChangeLock())
             {
-                // Apply peak with synchronized integration
+                var resultsIndex = SelectedResultsIndex;
+                var document = SkylineWindow.Document;
                 var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];
+                var resultsFile = SkylineWindow.GetGraphChrom(chromSet.Name).GetChromFileInfoId();
                 var filePath = SkylineWindow.GetGraphChrom(chromSet.Name).FilePath;
-                var chromInfo = SkylineWindow.FindChromInfo(DocumentUI, nodeTranGroup, chromSet.Name, filePath);
+                IdentityPath currentTransitionGroupPath = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.Path;
+                IdentityPath currentPeptidePath = SkylineWindow.SequenceTree.GetNodeOfType<PeptideTreeNode>()?.Path;
+                
+                if (SkylineWindow.SequenceTree.SelectedPath.Depth >= (int) SrmDocument.Level.TransitionGroups)
+                {
+                    currentTransitionGroupPath =
+                        SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int) SrmDocument.Level.TransitionGroups);
+                }
+                var peptidePaths =
+                    SkylineWindow.SequenceTree.SelectedPaths.SelectMany(path =>
+                        document.EnumeratePathsAtLevel(path, SrmDocument.Level.Molecules)).Distinct().ToList();
+                var changedPaths = new List<PropertyName>();
+                if (peptidePaths.Count == 0)
+                {
+                    return;
+                }
+                var groupBy = group ? ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy) : null;
 
-                nodePepTree.EnsureChildren(); // in case peptide node is not expanded
-                var nodeTranGroupPath = nodePepTree.Nodes.Cast<TransitionGroupTreeNode>().First(node => ReferenceEquals(node.DocNode, nodeTranGroup)).Path;
-
-                var change = new ChangedPeakBoundsEventArgs(
-                    nodeTranGroupPath, null, chromSet.Name, filePath,
-                    new ScaledRetentionTime(chromInfo.StartRetentionTime.GetValueOrDefault()),
-                    new ScaledRetentionTime(chromInfo.EndRetentionTime.GetValueOrDefault()),
-                    null, PeakBoundsChangeType.both);
-
-                var path = PropertyName.ROOT
-                    .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
-                    .SubProperty(nodePepTree.DocNode.AuditLogText)
-                    .SubProperty(nodeTranGroup.AuditLogText);
-
-                ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak,
-                    doc => SkylineWindow.ChangePeakBounds(doc, SkylineWindow.GetSynchronizedPeakBoundChanges(doc, change, false)),
-                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType,
-                        path.ToString()));
-                return;
-            }
-
-            using (var longWait = new LongWaitDlg(SkylineWindow))
-            {
+                using var longWait = new LongWaitDlg(SkylineWindow);
                 longWait.Text = MenusResources.SkylineWindow_ApplyPeak_Applying_Peak;
-                SrmDocument doc = null;
-                try
+                var progressStatus = new ProgressStatus(longWait.Message).ChangeSegments(0, peptidePaths.Count);
+
+                longWait.PerformWork(SkylineWindow, 1000, progressMonitor =>
                 {
-                    var chromatogramSet = Document.MeasuredResults.Chromatograms[resultsIndex];
-                    var resultsFile = SkylineWindow.GetGraphChrom(chromatogramSet.Name).GetChromFileInfoId();
-                    var groupBy = group ? ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy) : null;
-                    var groupByValue = groupBy?.GetValue(new AnnotationCalculator(Document), chromatogramSet);
-                    longWait.PerformWork(SkylineWindow, 800, monitor =>
-                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
-                }
-                catch (Exception x)
+                    if (longWait.IsCanceled)
+                    {
+                        return;
+                    }
+                    for (int iPeptide = 0; iPeptide < peptidePaths.Count; iPeptide++)
+                    {
+                        var peptidePath = peptidePaths[iPeptide];
+                        progressStatus = progressStatus.ChangeSegments(iPeptide, peptidePaths.Count);
+                        progressMonitor.UpdateProgress(progressStatus);
+                        var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(peptidePath.GetIdentity(0));
+                        var peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(peptidePath.GetIdentity(1));
+                        if (peptideDocNode == null)
+                        {
+                            continue;
+                        }
+
+                        var auditLogProperty = PropertyName.ROOT.SubProperty(peptideGroupDocNode.AuditLogText)
+                            .SubProperty(peptideDocNode.AuditLogText);
+                        TransitionGroupDocNode transitionGroupDocNode = null;
+                        if (currentTransitionGroupPath != null && Equals(currentPeptidePath, peptidePath))
+                        {
+                            transitionGroupDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(currentTransitionGroupPath.Child);
+                        }
+
+                        if (transitionGroupDocNode != null)
+                        {
+                            auditLogProperty =
+                                auditLogProperty.SubProperty(transitionGroupDocNode.AuditLogText);
+                        }
+                        else
+                        {
+                            transitionGroupDocNode =
+                                PeakMatcher.PickTransitionGroup(document, peptideDocNode, resultsIndex);
+                        }
+
+                        if (transitionGroupDocNode == null)
+                        {
+                            continue;
+                        }
+
+                        var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
+                        if (document.GetSynchronizeIntegrationChromatogramSets().Any())
+                        {
+                            // Apply peak with synchronized integration
+
+                            var nodeTranGroupPath = new IdentityPath(peptidePath, transitionGroupDocNode.TransitionGroup);
+
+                            var change = new ChangedPeakBoundsEventArgs(
+                                nodeTranGroupPath, null, chromSet.Name, filePath,
+                                new ScaledRetentionTime(chromInfo.StartRetentionTime.GetValueOrDefault()),
+                                new ScaledRetentionTime(chromInfo.EndRetentionTime.GetValueOrDefault()),
+                                null, PeakBoundsChangeType.both);
+
+                            document = SkylineWindow.ChangePeakBounds(document, SkylineWindow.GetSynchronizedPeakBoundChanges(document, change, false));
+                        }
+                        else
+                        {
+                            PeptideGroup peptideGroup = (PeptideGroup)peptidePath.GetIdentity(0);
+                            document = PeakMatcher.ApplyPeak(progressMonitor, progressStatus, document, peptideGroup,
+                                peptideDocNode, transitionGroupDocNode, resultsIndex, resultsFile, subsequent, groupBy, group);
+                        }
+
+                        if (!Equals(peptideDocNode, document.FindNode(peptidePath)))
+                        {
+                            changedPaths.Add(auditLogProperty);
+                        }
+                    }
+                });
+                if (longWait.IsCanceled || document == null)
                 {
-                    MessageDlg.ShowWithException(SkylineWindow, TextUtil.LineSeparate(MenusResources.SkylineWindow_ApplyPeak_Failed_to_apply_peak_, x.Message), x);
+                    return;
                 }
 
-                if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
+                var messageType = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
+                AuditLogEntry auditLogEntry;
+                if (changedPaths.Count == 1)
                 {
-                    // ReSharper disable once PossibleNullReferenceException
-                    var path = PropertyName.ROOT
-                        .SubProperty(((PeptideGroupTreeNode)nodePepTree.SrmParent).DocNode.AuditLogText)
-                        .SubProperty(nodePepTree.DocNode.AuditLogText)
-                        .SubProperty(nodeTranGroup.AuditLogText);
-
-                    var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
-
-                    ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
-                        docPair => AuditLogEntry.CreateSimpleEntry(msg, docPair.NewDocumentType, path.ToString()));
+                    auditLogEntry = AuditLogEntry.CreateSimpleEntry(messageType, document.DocumentType, changedPaths[0].ToString());
                 }
+                else
+                {
+                    auditLogEntry = AuditLogEntry.CreateSimpleEntry(messageType, document.DocumentType, MessageArgs.Create(changedPaths.Count).Args);
+
+                }
+                ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, doc => document,
+                    docPair => auditLogEntry);
             }
         }
 
@@ -996,6 +1052,11 @@ namespace pwiz.Skyline.Menus
             var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
             if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
                 return;
+            if (SequenceTree.SelectedPaths.Count > 1)
+            {
+                canApply = canRemove = true;
+                return;
+            }
             var chromFileInfoId = GetSelectedChromFileId();
 
             var node = selectedTreeNode as TransitionTreeNode;
@@ -1470,6 +1531,11 @@ namespace pwiz.Skyline.Menus
                                     // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.  
                                     var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
+                                    if (doc.Settings.HasResults)
+                                    {
+                                        // If the document has results, remember the original name of the molecule so the chromatograms do not get orphaned
+                                        newNode = newNode.RememberOriginalTarget(nodePep);
+                                    }
                                     // Nothing to do if the node is not changing
                                     if (Equals(nodePep, newNode))
                                         return doc;
@@ -1792,7 +1858,7 @@ namespace pwiz.Skyline.Menus
                 bool changed = false;
                 var idPathSet = peptidePathGroup.ToHashSet();
                 var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
-                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                    Tuple.Create(tg.LabelType, tg.PrecursorAdduct)).ToList();
                 var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {

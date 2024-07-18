@@ -105,8 +105,11 @@ namespace pwiz.SkylineTestConnected
                 Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
                 Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
             });
+            var doc = SkylineWindow.Document;
             OkDialog(remoteDlg, () => Assert.IsTrue(remoteDlg.ClickFile(TEST_FILE), "Unable to click file {0}", TEST_FILE));
             WaitForCondition(() => File.Exists(path));
+            var docLoaded = WaitForDocumentChangeLoaded(doc);
+            AssertEx.IsDocumentState(docLoaded, null, 7, 22, 23, 115);
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }
@@ -220,6 +223,7 @@ namespace pwiz.SkylineTestConnected
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama(path));
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
+            var doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
@@ -229,6 +233,8 @@ namespace pwiz.SkylineTestConnected
             });
             WaitForClosedForm(remoteDlg);
             WaitForCondition(() => File.Exists(path));
+            var docLoaded = WaitForDocumentChangeLoaded(doc);
+            AssertEx.IsDocumentState(docLoaded, null, 12, 68, 126, 576);
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }

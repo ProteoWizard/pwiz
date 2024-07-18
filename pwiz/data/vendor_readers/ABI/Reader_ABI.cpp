@@ -33,10 +33,11 @@
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& filename, const std::string& head) const
 {
-	std::string result;
+    std::string result;
     // TODO: check header signature?
-    if (bal::iends_with(filename, ".wiff") || bal::iends_with(filename, ".wiff2"))
-		result = getType();
+    for (const auto& ext : getFileExtensions())
+        if (bal::iends_with(filename, ext))
+            result = getType();
     return result;
 }
 
@@ -148,22 +149,36 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     }
     catch (runtime_error& e)
     {
-        if (config.unknownInstrumentIsError)
-            throw runtime_error("[Reader_ABI::fillInMetadata] unable to determine instrument model (" + string(e.what()) + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");
+        config.instrumentMetadataError("[Reader_ABI::fillInMetadata] unable to determine instrument model (" + string(e.what()) + ")");
     }
 
     InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(instrumentModel, IonSpray);
     ic->softwarePtr = acquisitionSoftware;
 
-    auto serialNumber = wifffile->getInstrumentSerialNumber();
-    if (!serialNumber.empty())
-        ic->set(MS_instrument_serial_number, serialNumber);
+    try
+    {
+        auto serialNumber = wifffile->getInstrumentSerialNumber();
+        if (!serialNumber.empty())
+            ic->set(MS_instrument_serial_number, serialNumber);
+    }
+    catch (runtime_error& e)
+    {
+        config.instrumentMetadataError("[Reader_ABI::fillInMetadata] unable to read instrument serial number (" + string(e.what()) + ")");
+    }
 
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;
 
     msd.run.id = msd.id;
-    msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime(sample, config.adjustUnknownTimeZonesToHostTimeZone));
+
+    try
+    {
+        msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime(sample, config.adjustUnknownTimeZonesToHostTimeZone));
+    }
+    catch (runtime_error& e)
+    {
+        config.instrumentMetadataError("[Reader_ABI::fillInMetadata] unable to read sample acquisition time (" + string(e.what()) + ")");
+    }
 }
 
 void cacheExperiments(WiffFilePtr wifffile, ExperimentsMap& experimentsMap, int sample)

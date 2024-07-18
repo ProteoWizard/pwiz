@@ -4,11 +4,11 @@ All Info  :
 Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
 EncyclopeDIA Search > FASTA settings > Max missed cleavages is "2"
 EncyclopeDIA Search > FASTA settings > FASTA file is "20230123-abundant-proteins.fasta"
-EncyclopeDIA Search > Prosit settings > Default NCE is "33"
-EncyclopeDIA Search > Prosit settings > Default charge is "3"
-EncyclopeDIA Search > Prosit settings > Min charge is "2"
-EncyclopeDIA Search > Prosit settings > Max charge is "3"
-EncyclopeDIA Search > Prosit settings > Max missed cleavages is "2"
+EncyclopeDIA Search > Koina settings > Default NCE is "33"
+EncyclopeDIA Search > Koina settings > Default charge is "3"
+EncyclopeDIA Search > Koina settings > Min charge is "2"
+EncyclopeDIA Search > Koina settings > Max charge is "3"
+EncyclopeDIA Search > Koina settings > Max missed cleavages is "2"
 EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
 EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
@@ -21,7 +21,7 @@ Extra Info: FASTA settings =
     Max missed cleavages = "2",
     FASTA file = "20230123-abundant-proteins.fasta"
 },
-Prosit settings = 
+Koina settings = 
 {
     Default NCE = "33",
     Default charge = "3",
@@ -107,11 +107,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "317"
-Import Peptide Search > Associate Proteins > Peptides mapped is "524"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "241"
-Import Peptide Search > Associate Proteins > Protein targets is "317"
-Import Peptide Search > Associate Proteins > Peptide targets is "552"
+Import Peptide Search > Associate Proteins > Proteins mapped is "368"
+Import Peptide Search > Associate Proteins > Peptides mapped is "676"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "190"
+Import Peptide Search > Associate Proteins > Protein targets is "368"
+Import Peptide Search > Associate Proteins > Peptide targets is "717"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -163,10 +163,10 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
-    Proteins mapped = "317",
-    Peptides mapped = "524",
-    Proteins unmapped = "241",
-    Protein targets = "317",
-    Peptide targets = "552"
+    Proteins mapped = "368",
+    Peptides mapped = "676",
+    Proteins unmapped = "190",
+    Protein targets = "368",
+    Peptide targets = "717"
 }
 

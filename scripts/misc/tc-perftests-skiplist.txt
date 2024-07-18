@@ -20,6 +20,7 @@ TestDiaQeDiaUmpireTutorial
 TestDiaQeDiaUmpireTutorialFullFileset
 TestDiaQeFullSearchTutorial
 TestEncyclopeDiaSearchTutorialFullFileset
+TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates
 #TestMobilIon
 TestPeakPerf

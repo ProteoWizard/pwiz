@@ -35,10 +35,12 @@ lib pwiz_analysis_chromatogram_processing
         ChromatogramList_LockmassRefiner.cpp
         ChromatogramListFactory.cpp
     : # requirements
+        <library>../spectrum_processing//pwiz_analysis_spectrum_processing_basic
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
     : # default-build
     : # usage-requirements
+        <library>../spectrum_processing//pwiz_analysis_spectrum_processing_basic
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
     ;

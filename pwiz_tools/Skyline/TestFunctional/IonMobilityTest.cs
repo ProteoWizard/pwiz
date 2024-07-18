@@ -48,7 +48,8 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZipPaths = new[]
             {
                 @"TestFunctional\IonMobilityTest.zip",
-                @"TestData\Results\BlibDriftTimeTest.zip" // Re-used from BlibDriftTimeTest
+                @"TestData\Results\BlibDriftTimeTest.zip", // Re-used from BlibDriftTimeTest
+                @"TestFunctional\TestBadCalibrationCCS.zip",
             };
             RunFunctionalTest();
         }
@@ -76,6 +77,9 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
             }
+
+            // Verify fix for handling vendor files with bad CCS calibrations
+            TestBadCalibrationCCS();
 
             // Verify fix for issue where we would not preserve a simple change to IM window width
             TestMobilityWindowWidth();
@@ -458,12 +462,27 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
             AssertEx.AreEqual(fixedWidth, centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001);
 
+            // Test creating IMSDB on data set with IM values in existing spectral library
             TestMeasuredDriftTimes();
         }
 
         private void SetUiDocument(SrmDocument newDocument)
         {
             RunUI(() => AssertEx.IsTrue(SkylineWindow.SetDocument(newDocument, SkylineWindow.DocumentUI)));
+        }
+
+        // Verify fix for handling vendor files with bad CCS calibrations
+        private void TestBadCalibrationCCS()
+        {
+            var testFilesDir = TestFilesDirs[2]; //TestBadCalibrationCCS.zip
+            // Open document with some molecules with explicit IM values but no results yet
+            var documentFile = testFilesDir.GetTestPath(@"Tune Mix Test_LR22Apredit.sky");
+            WaitForCondition(() => File.Exists(documentFile));
+            RunUI(() => SkylineWindow.OpenFile(documentFile));
+            WaitForDocumentLoaded();
+            var doc = SkylineWindow.Document;
+            ImportResultsFile(testFilesDir.GetTestPath(@"2024-04-18 14.12.29-Tune Mix _1000 ms drift_.d")); // This will throw due to bad CCS calibration in .d file, if bug isn't fixed
+            LoadNewDocument(true); // Clean up
         }
 
         // Verify fix for issue where we would not preserve a simple change to IM window width
@@ -811,14 +830,18 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(2, result.Count);
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
             var key2 = new LibKey("GLAGVENVTELKK", Adduct.DOUBLY_PROTONATED);
-            const double expectedDT3= 4.0709;
-            const double expectedOffset3 = -0.758987;
-            AssertEx.AreEqual(expectedDT3, result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value, .001);
-            AssertEx.AreEqual(expectedOffset3, result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value, .001); // High energy offset
-            const double expectedDT2 = 5.5889;
-            const double expectedOffset2 = -1.1039;
-            AssertEx.AreEqual(expectedDT2, result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value, .001);
-            AssertEx.AreEqual(expectedOffset2, result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value, .001);  // High energy offset
+            const double expectedDT3 = 4.0019;
+            const double expectedOffset3 = -0.482922;
+            var actualDT3 = result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value;
+            var actualOffset3 = result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value;
+            const double expectedDT2 = 6.14089; // Was 5.5889 before we started looking for isotope envelope match
+            const double expectedOffset2 = -1.379977;
+            var actualDT2 = result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value;
+            var actualOffset2 = result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value;
+            AssertEx.AreEqual(expectedDT3, actualDT3, .001);
+            AssertEx.AreEqual(expectedOffset3, actualOffset3, .001); // High energy offset
+            AssertEx.AreEqual(expectedDT2, actualDT2, .001);
+            AssertEx.AreEqual(expectedOffset2, actualOffset2, .001);  // High energy offset
             var doc2 = WaitForDocumentLoaded();
 
             // Reimport with these new settings, then export a spectral library and verify it got IMS data

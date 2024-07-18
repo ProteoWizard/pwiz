@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1254,6 +1255,11 @@ namespace pwiz.Skyline.Model
 
                 foreach (var transitionExp in info.TransitionExps.ToArray())
                 {
+                    transitionExp.Product = GetCustomIonProductExp(productMz, productZ, MzMatchTolerance, info, Settings) ??
+                                            GetPrecursorIsotopeProductExp(transitionExp, sequence, productMz, productZ, MzMatchTolerance, info, Settings);
+                    if (transitionExp.Product != null)
+                        continue;
+
                     var mods = transitionExp.Precursor.VariableMods;
                     var calc = Settings.GetFragmentCalc(transitionExp.Precursor.LabelType, mods);
                     var productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
@@ -1312,6 +1318,71 @@ namespace pwiz.Skyline.Model
                 }
 
                 return info;
+            }
+
+            private static ProductExp GetPrecursorIsotopeProductExp(TransitionExp transitionExp, Target sequence, double productMz, int? productZ, double tolerance,
+                ExTransitionInfo info, SrmSettings settings)
+            {
+                var precursorAdduct = transitionExp.Precursor.PrecursorAdduct;
+                // If a product charge is specified, it must be the same as the precursor
+                if (productZ.HasValue && productZ.Value != precursorAdduct.AdductCharge)
+                    return null;
+
+                var fullScan = settings.TransitionSettings.FullScan;
+                if (!fullScan.IsHighResPrecursor)
+                    return null;
+
+                var mods = transitionExp.Precursor.VariableMods;
+                var calc = settings.GetPrecursorCalc(transitionExp.Precursor.LabelType, mods);
+                var mass = calc.GetPrecursorMass(sequence);
+                var massDist = calc.GetMzDistribution(sequence,
+                    precursorAdduct, fullScan.IsotopeAbundances);
+                var isotopeDist =
+                    IsotopeDistInfo.MakeIsotopeDistInfo(massDist, mass, precursorAdduct, fullScan);
+
+                double minDeltaMz = double.MaxValue;
+                ProductExp productExp = null;
+                for (int i = 0; i < isotopeDist.CountPeaks; i++)
+                {
+                    int massIndex = isotopeDist.PeakIndexToMassIndex(i);
+                    double isotopeMz = isotopeDist.GetMZI(massIndex);
+                    var deltaMz = Math.Abs(productMz - isotopeMz);
+                    if (deltaMz < minDeltaMz && deltaMz <= tolerance)
+                    {
+                        productExp = new ProductExp(precursorAdduct, massIndex, info);
+                        minDeltaMz = deltaMz;
+                    }
+                }
+
+                return productExp;
+            }
+
+            /// <summary>
+            /// Finds the closest custom product ion if any to a specified product m/z value.
+            /// </summary>
+            private static ProductExp GetCustomIonProductExp(double productMz, int? productZ, double tolerance, ExTransitionInfo info, SrmSettings settings)
+            {
+                double minDeltaMz = double.MaxValue;
+                ProductExp productExp = null;
+                var massType = settings.TransitionSettings.Prediction.FragmentMassType;
+
+                foreach (var measuredIon in settings.TransitionSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
+                {
+                    if (productZ.HasValue && productZ.Value != measuredIon.Charge)
+                        continue;
+
+                    var customIonMz = massType == MassType.Monoisotopic
+                        ? measuredIon.SettingsCustomIon.MonoisotopicMassMz
+                        : measuredIon.SettingsCustomIon.AverageMassMz;
+                    var deltaMz = Math.Abs(productMz - customIonMz);
+                    if (deltaMz < minDeltaMz && deltaMz <= tolerance)
+                    {
+                        productExp = new ProductExp(measuredIon.Adduct, measuredIon.SettingsCustomIon, info);
+                        minDeltaMz = deltaMz;
+                    }
+                }
+
+                return productExp;
             }
 
             private static double ColumnMz(string[] fields, int column, IFormatProvider provider)
@@ -1421,6 +1492,9 @@ namespace pwiz.Skyline.Model
                 var types = settings.TransitionSettings.Filter.PeptideIonTypes;
                 foreach (var transitionExp in transitionExps)
                 {
+                    if (transitionExp.Product != null)
+                        continue;
+
                     var mods = transitionExp.Precursor.VariableMods;
                     var calc = settings.GetFragmentCalc(transitionExp.Precursor.LabelType, mods);
                     var productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
@@ -1437,7 +1511,13 @@ namespace pwiz.Skyline.Model
                         if (productMz == 0)
                             continue;
 
-                        var charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
+                        // First check for reporter ions and precursor isotopes
+                        var specialProduct = GetCustomIonProductExp(productMz, null, tolerance, null, settings) ??
+                                             GetPrecursorIsotopeProductExp(transitionExp, sequence, productMz, null, tolerance, null, settings);
+
+                        // If not found check for backbone fragment ions
+                        var charge = specialProduct != null ? Adduct.SINGLY_PROTONATED :
+                            TransitionCalc.CalcProductCharge(productPrecursorMass,
                                                                       null, // CONSIDER: Use product charge field?
                                                                       transitionExp.Precursor.PrecursorAdduct,
                                                                       types,
@@ -2744,12 +2824,30 @@ namespace pwiz.Skyline.Model
             ExInfo = info;
         }
 
+        public ProductExp(Adduct productAdduct, int massIndex, ExTransitionInfo info)
+        {
+            Adduct = productAdduct;
+            IonType = IonType.precursor;
+            MassIndex = massIndex;
+            ExInfo = info;
+        }
+
+        public ProductExp(Adduct productAdduct, CustomIon customIon, ExTransitionInfo info)
+        {
+            Adduct = productAdduct;
+            IonType = IonType.custom;
+            CustomIon = customIon;
+            ExInfo = info;
+        }
+
         public Adduct Adduct { get; private set; }
         public IonType IonType { get; private set; }
         public int FragmentOrdinal { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public int? MassShift { get; private set; }
         public ExTransitionInfo ExInfo { get; private set; }
+        public CustomIon CustomIon { get; private set; }
+        public int? MassIndex { get ; private set; }    // For precursor isotopes
     }
 
     public class MzMatchException : LineColNumberedIoException
@@ -3201,14 +3299,26 @@ namespace pwiz.Skyline.Model
             var transitions = _activeTransitionInfos.ConvertAll(info =>
                 {
                     var productExp = info.TransitionExps.Single(exp => Equals(precursorExp, exp.Precursor)).Product;
-                    var ionType = productExp.IonType;
-                    var ordinal = productExp.FragmentOrdinal;
-                    int offset = Transition.OrdinalToOffset(ionType, ordinal, _activePeptide.Sequence.Length);
-                    int? massShift = productExp.MassShift;
-                    if (massShift == null && precursorExp.MassShift.HasValue)
-                        massShift = 0;
                     var annotations = string.IsNullOrEmpty(productExp.ExInfo.Note) ? Annotations.EMPTY : new Annotations(productExp.ExInfo.Note, null, 0);
-                    var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
+                    var ionType = productExp.IonType;
+                    Transition tran;
+                    if (ionType == IonType.custom)
+                    {
+                        tran = new Transition(transitionGroup, productExp.Adduct, null, productExp.CustomIon);
+                    }
+                    else if (ionType == IonType.precursor && productExp.MassIndex.HasValue)
+                    {
+                        tran = new Transition(transitionGroup, productExp.MassIndex.Value, productExp.Adduct);
+                    }
+                    else
+                    {
+                        var ordinal = productExp.FragmentOrdinal;
+                        int offset = Transition.OrdinalToOffset(ionType, ordinal, _activePeptide.Sequence.Length);
+                        int? massShift = productExp.MassShift;
+                        if (massShift == null && precursorExp.MassShift.HasValue)
+                            massShift = 0;
+                        tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
+                    }
                     // m/z and library info calculated later
                     return new TransitionDocNode(tran, annotations, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, productExp.ExInfo.ExplicitTransitionValues, null);
                 });

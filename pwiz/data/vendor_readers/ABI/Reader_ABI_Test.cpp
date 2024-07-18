@@ -85,7 +85,9 @@ int main(int argc, char* argv[])
         #endif
 
         bool requireUnicodeSupport = true;
-        pwiz::msdata::Reader_ABI reader;
+        ReaderList reader;
+        reader.emplace_back(boost::make_shared<Reader_ABI>());
+        reader.emplace_back(boost::make_shared<Reader_ABI_WIFF2>());
         pwiz::util::ReaderTestConfig config;
         pwiz::util::TestResult result;
 

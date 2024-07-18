@@ -1020,7 +1020,6 @@ namespace pwiz.SkylineTestFunctional
                 SetClipboardText(transitionList);
                 SkylineWindow.Paste();
             });
-            DismissAutoManageDialog(docCurrent); // Say no to the offer to set new nodes to automanage
             var doc = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
 

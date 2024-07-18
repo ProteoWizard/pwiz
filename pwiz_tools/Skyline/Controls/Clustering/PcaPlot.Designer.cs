@@ -34,7 +34,7 @@
             this.numericUpDownXAxis = new System.Windows.Forms.NumericUpDown();
             this.lblYAxis = new System.Windows.Forms.Label();
             this.numericUpDownYAxis = new System.Windows.Forms.NumericUpDown();
-            this.zedGraphControl1 = new ZedGraph.ZedGraphControl();
+            this.zedGraphControl1 = new pwiz.Skyline.Controls.Clustering.DebugZedGraphControl();
             this.lblDataset = new System.Windows.Forms.Label();
             this.comboDataset = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownXAxis)).BeginInit();

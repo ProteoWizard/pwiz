@@ -1778,6 +1778,8 @@ string Parser::parseSource(const string& inputFilepath)
 
 bfs::path Parser::outputFilepath(const string& inputFilepath)
 {
+    if (bal::iends_with(inputFilepath, ".dat")) // use parseSource for Mascot DAT input
+        return (bfs::path(inputFilepath).parent_path() / parseSource(inputFilepath)).replace_extension(".idpDB");
     if (bal::iends_with(inputFilepath, ".pep.xml"))
         return bal::ireplace_last_copy(inputFilepath, ".pep.xml", ".idpDB");
     return bfs::path(inputFilepath).replace_extension(".idpDB");
