@@ -48,14 +48,14 @@ namespace pwiz.Skyline.Alerts
 
             Account = account;
             _tempUserDataFolder = new TemporaryDirectory(null, @"~SK_WebView2");
-            
+
             // To support command line, need to do something completely different since Ardia objects to Skyline code having username/password and also programmatic sign in to Ardia not possible for MFA and other possible issues.
             //
             //      The code to Programmatic sign in has been changed to use account.TestingOnly_NotSerialized_Username AND account.TestingOnly_NotSerialized_Password
             //
             // if (headless)
             // {
-            //     if (account.Username.IsNullOrEmpty() || account.Password.IsNullOrEmpty())
+            //     if (account.TestingOnly_NotSerialized_Username.IsNullOrEmpty() || account.TestingOnly_NotSerialized_Password.IsNullOrEmpty())
             //     {
             //         throw new ArgumentException("importing an Ardia file from command-line requires the account to have username and password set up in Skyline (Tools > Options > Remote Accounts)");
             //     }
@@ -196,7 +196,20 @@ namespace pwiz.Skyline.Alerts
 
             // Wait for the user to login and the source to change
             //webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
-            webView.CoreWebView2.DOMContentLoaded += DOMContentLoaded_CheckForSessionCookie_ProgrammaticSigninForTesting;
+            webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterEveryNavigate;
+
+            {
+                bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
+                bool hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
+                bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
+
+                if (hasUsername && hasPassword)
+                {
+                    //  Yes TestingOnly Username and Password for Programmatic Login for Testing so add event listener for Programmatic Login
+
+                    webView.CoreWebView2.DOMContentLoaded += DOMContentLoaded_CheckForSessionCookie_ProgrammaticLoginForTesting;
+                }
+            }
 
             StartAtClientRegistrationIfNeeded();
         }
@@ -250,17 +263,16 @@ namespace pwiz.Skyline.Alerts
 
                 try
                 {
-                    // MessageDlg.Show(webView, "Register this Skyline instance with Ardia");
+                    // MessageDlg.Show(this, "Register this Skyline instance with Ardia");
 
                     await RegisterDevice();
 
-                    // MessageDlg.Show(webView, "Registration of this Skyline instance with Ardia is complete.  Continuing to Sign in.");
+                    // MessageDlg.Show(this, "Registration of this Skyline instance with Ardia is complete.  Continuing to Sign in.");
 
                 }
                 catch (Exception e)
                 {
-                    // MessageBox.Show(webView, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    MessageDlg.ShowWithException(webView, "Error registering this Skyline instance to Ardia", e); //  TODO  DJJ  Maybe need something different
+                    MessageDlg.ShowWithException(this, "Error registering this Skyline instance to Ardia", e); //  TODO  DJJ  Maybe need something different
 
                     // throw;
 
@@ -303,7 +315,7 @@ namespace pwiz.Skyline.Alerts
             // Navigate to the login page
             var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=https://{_baseUrl}/";
 
-            // MessageDlg.Show(webView, "loginUrl: " + loginUrl);
+            // MessageDlg.Show(this, "loginUrl: " + loginUrl);
 
             //  NOTE:  Opening the Login URL with invalid "applicationcode" results in 401 HTTP status code along with returned contents of:  "Unknown Client. Please register/activate the client"
 
@@ -325,10 +337,12 @@ namespace pwiz.Skyline.Alerts
 
             if (!eventArgs.IsSuccess)
             {
+                var currentURLofWebview = webView.Source.AbsolutePath;
+
                 if (eventArgs.HttpStatusCode == 404)
                 {
                     MessageDlg.Show(
-                        webView, "Load Client Registration page failed with HTTP status code 404.  Page not found at URL.");
+                        this, "Load Client Registration page failed with HTTP status code 404.  Page not found at URL: " + currentURLofWebview );
 
                     //  404 may result in something different being triggered
 
@@ -338,7 +352,7 @@ namespace pwiz.Skyline.Alerts
                 else
                 {
                     MessageDlg.Show(
-                        webView, "Load Client Registration page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
+                        this, "Load Client Registration page failed with HTTP status code " + eventArgs.HttpStatusCode + " at URL: " + currentURLofWebview + ".");
                 }
 
                 // TODO DJJ Not sure what to do here
@@ -385,7 +399,7 @@ namespace pwiz.Skyline.Alerts
                 else if (eventArgs.HttpStatusCode == 404)
                 {
                     MessageDlg.Show(
-                        webView, "Load Login page failed with HTTP status code 404.  Page not found at URL.");
+                        this, "Load Login page failed with HTTP status code 404.  Page not found at URL.");
 
                     //  404 may result in something different being triggered
 
@@ -396,7 +410,7 @@ namespace pwiz.Skyline.Alerts
                 else
                 {
                     MessageDlg.Show(
-                        webView, "Load Login page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
+                        this, "Load Login page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
                 }
 
                 // TODO DJJ Not sure what to do here
@@ -444,18 +458,18 @@ namespace pwiz.Skyline.Alerts
                     var eToString = e.ToString();
                     var z = 0;
                     
-                    // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
+                    // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                     //
                     // var eMessage = e.Message;
 
 
                     if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
                     {
-                        MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                        MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
                     }
                     else
                     {
-                        MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+                        MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
                     }
 
 
@@ -466,7 +480,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     var eToString = e.ToString();
                     var z = 0;
-                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+                    MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
                     //  added throw to code from Thermo
                     throw;
                 }
@@ -538,18 +552,18 @@ namespace pwiz.Skyline.Alerts
                 var eToString = e.ToString();
                 var z = 0;
 
-                // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
+                // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                 //
                 // var eMessage = e.Message;
 
 
                 if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
                 {
-                    MessageDlg.Show(webView, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                    MessageDlg.Show(this, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
                 }
                 else
                 {
-                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+                    MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
                 }
 
 
@@ -560,7 +574,7 @@ namespace pwiz.Skyline.Alerts
             {
                 var eToString = e.ToString();
                 var z = 0;
-                MessageDlg.ShowWithException(webView, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client", e);
+                MessageDlg.ShowWithException(this, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client", e);
                 //  added throw to code from Thermo
                 throw;
             }
@@ -598,18 +612,18 @@ namespace pwiz.Skyline.Alerts
                 var eToString = e.ToString();
                 var z = 0;
 
-                // MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
+                // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                 //
                 // var eMessage = e.Message;
 
 
                 if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
                 {
-                    MessageDlg.Show(webView, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                    MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
                 }
                 else
                 {
-                    MessageDlg.ShowWithException(webView, "Error Registering Skyline Instance in Ardia as Client", e);
+                    MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
                 }
 
 
@@ -744,6 +758,55 @@ namespace pwiz.Skyline.Alerts
             return null;
         }
 
+        private async void CoreWebView2OnNavigationCompleted_AfterEveryNavigate(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
+        {
+            //  Called after every navigation
+
+            //   Available for debugging for now
+
+            var location = webView.Source.AbsolutePath;
+
+            if (!eventArgs.IsSuccess)
+            {
+                if (eventArgs.HttpStatusCode == 404)
+                {
+                    // MessageDlg.Show(
+                    //     this, "Load Client Registration page failed with HTTP status code 404.  Page not found at URL." + eventArgs.);
+
+                    //  404 may result in something different being triggered
+
+                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
+
+                }
+                else
+                {
+                    // MessageDlg.Show(
+                    //     this, "Load Client Registration page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
+                }
+
+                // TODO DJJ Not sure what to do here
+
+                //  Add exception here to make sure we report that navigation is invalid
+
+                if (Program.FunctionalTest)
+                {
+                    throw new Exception("ArdiaLoginDlg: Webview Navigation failed with HTTP status code " + eventArgs.HttpStatusCode + ", AbsolutePath: " + webView.Source.AbsolutePath );
+                }
+                else
+                {
+                    //  Show specific MessageDlg in other places specific to loading Registration or Login URLs
+                }
+
+                //  Exception throws does NOT appear to do anything.
+
+                // throw new Exception("Load Client Registraton page failed. if (!eventArgs.IsSuccess) ");
+            }
+
+            await CheckForBffHostCookie();
+
+        }
+
+
         private async Task CheckForBffHostCookie()
         {
             // Get the list of cookies from the webview
@@ -768,9 +831,25 @@ namespace pwiz.Skyline.Alerts
             await CheckForBffHostCookie();
         }
 
+        //////////////////////////////////////////////////////
+        ///
+        ///   Programatic Login for Testing Purposes only
+        
         private bool _doAutomatedLogin = true;
-        private async void DOMContentLoaded_CheckForSessionCookie_ProgrammaticSigninForTesting(object sender, CoreWebView2DOMContentLoadedEventArgs e)
+        private bool _programmaticLogin_HaveEnteredUsername = false;
+        private async void DOMContentLoaded_CheckForSessionCookie_ProgrammaticLoginForTesting(object sender, CoreWebView2DOMContentLoadedEventArgs e)
         {
+            bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
+            bool hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
+            bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
+
+
+            if ( ( ! hasUsername ) || ( ! hasPassword ) )
+            {
+                //  No TestingOnly Username for Programtic Login for Testing so exit
+                return;
+            }
+
             await CheckForBffHostCookie();
 
             if (!_doAutomatedLogin)
@@ -799,12 +878,19 @@ namespace pwiz.Skyline.Alerts
                 if (buttonText == null)
                     return;
 
-                bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
-                bool hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
-                bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
-
                 if (buttonText == @"Continue")
                 {
+                    if (_programmaticLogin_HaveEnteredUsername)
+                    {
+                        // Have already entered username.  Is an error that arrived here again for same instance of this Dialog so log error and exit.
+
+                        //  Failed login for invalid password results in username input being displayed again.
+
+                        throw new Exception("Already entered Username so appears to be stuck in login loop");
+                    }
+
+                    _programmaticLogin_HaveEnteredUsername = true;
+
                     if (hasUsername)
                     {
                         await ExecuteScriptAsync(usernameSelector + @".value=" + Account.TestingOnly_NotSerialized_Username.Quote());
@@ -821,7 +907,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     if (hasPassword)
                     {
-                        await ExecuteScriptAsync(passwordSelector + @".value=" + Account.Password.Quote());
+                        await ExecuteScriptAsync(passwordSelector + @".value=" + Account.TestingOnly_NotSerialized_Password.Quote());
                         await ExecuteScriptAsync(passwordSelector + triggerInputEvent);
                     }
 
