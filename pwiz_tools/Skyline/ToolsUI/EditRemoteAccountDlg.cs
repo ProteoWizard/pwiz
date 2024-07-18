@@ -261,12 +261,18 @@ namespace pwiz.Skyline.ToolsUI
         private bool ValidateValues()
         {
             var remoteAccount = GetRemoteAccount();
-            /*if (string.IsNullOrEmpty(remoteAccount.Username))
+
+            if (RemoteAccountType.UNIFI.Equals(AccountType))
             {
-                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank);
-                textUsername.Focus();
-                return false;
-            }*/
+                if (string.IsNullOrEmpty(remoteAccount.Username))
+                {
+                    MessageDlg.Show(this,
+                        ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank);
+                    textUsername.Focus();
+                    return false;
+                }
+            }
+
             if (string.IsNullOrEmpty(remoteAccount.ServerUrl))
             {
                 MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank);
