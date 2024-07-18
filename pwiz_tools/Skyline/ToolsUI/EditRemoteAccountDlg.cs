@@ -313,15 +313,22 @@ namespace pwiz.Skyline.ToolsUI
             groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType);
             if (RemoteAccountType.UNIFI.Equals(AccountType))
             {
+                pnlUsernameLabel.Visible = true;
                 pnlPassword.Visible = true;
+
+                //  Hide everything not needed
+                pnlUsernameAliasLabel.Visible = false;
             }
 
             pnlArdiaSettings.Visible = RemoteAccountType.ARDIA.Equals(AccountType);
 
             if (RemoteAccountType.ARDIA.Equals(AccountType))
             {
+                pnlUsernameAliasLabel.Visible = true;
+
                 //  Hide everything not needed
 
+                pnlUsernameLabel.Visible = false;
                 pnlPassword.Visible = false;
             }
         }
@@ -329,7 +336,9 @@ namespace pwiz.Skyline.ToolsUI
         private void flowLayoutPanel_Resize(object sender, EventArgs e)
         {
             pnlAccountTypeSelect.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlUsername.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
+            pnlUsernameLabel.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
+            pnlUsernameAliasLabel.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
+            pnlUsernameInputField.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
             pnlPassword.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
             pnlServerURL.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
             pnlArdiaSettings.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;

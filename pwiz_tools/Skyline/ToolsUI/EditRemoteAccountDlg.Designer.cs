@@ -45,22 +45,27 @@
             this.cbDeleteRawAfterImport = new System.Windows.Forms.CheckBox();
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.pnlAccountTypeSelect = new System.Windows.Forms.Panel();
-            this.pnlUsername = new System.Windows.Forms.Panel();
+            this.pnlUsernameLabel = new System.Windows.Forms.Panel();
             this.lblUsername = new System.Windows.Forms.Label();
+            this.pnlUsernameAliasLabel = new System.Windows.Forms.Panel();
+            this.lblUsernameAlias = new System.Windows.Forms.Label();
+            this.pnlUsernameInputField = new System.Windows.Forms.Panel();
             this.textUsername = new System.Windows.Forms.TextBox();
-            this.pnlServerURL = new System.Windows.Forms.Panel();
-            this.textServerURL = new System.Windows.Forms.TextBox();
-            this.lblServerUrl = new System.Windows.Forms.Label();
             this.pnlPassword = new System.Windows.Forms.Panel();
             this.textPassword = new System.Windows.Forms.TextBox();
             this.lblPassword = new System.Windows.Forms.Label();
+            this.pnlServerURL = new System.Windows.Forms.Panel();
+            this.textServerURL = new System.Windows.Forms.TextBox();
+            this.lblServerUrl = new System.Windows.Forms.Label();
             this.groupBoxUnifi.SuspendLayout();
             this.pnlArdiaSettings.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             this.pnlAccountTypeSelect.SuspendLayout();
-            this.pnlUsername.SuspendLayout();
-            this.pnlServerURL.SuspendLayout();
+            this.pnlUsernameLabel.SuspendLayout();
+            this.pnlUsernameAliasLabel.SuspendLayout();
+            this.pnlUsernameInputField.SuspendLayout();
             this.pnlPassword.SuspendLayout();
+            this.pnlServerURL.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -158,7 +163,9 @@
             // 
             resources.ApplyResources(this.flowLayoutPanel, "flowLayoutPanel");
             this.flowLayoutPanel.Controls.Add(this.pnlAccountTypeSelect);
-            this.flowLayoutPanel.Controls.Add(this.pnlUsername);
+            this.flowLayoutPanel.Controls.Add(this.pnlUsernameLabel);
+            this.flowLayoutPanel.Controls.Add(this.pnlUsernameAliasLabel);
+            this.flowLayoutPanel.Controls.Add(this.pnlUsernameInputField);
             this.flowLayoutPanel.Controls.Add(this.pnlPassword);
             this.flowLayoutPanel.Controls.Add(this.pnlServerURL);
             this.flowLayoutPanel.Controls.Add(this.pnlArdiaSettings);
@@ -174,39 +181,38 @@
             this.flowLayoutPanel.SetFlowBreak(this.pnlAccountTypeSelect, true);
             this.pnlAccountTypeSelect.Name = "pnlAccountTypeSelect";
             // 
-            // pnlUsername
+            // pnlUsernameLabel
             // 
-            this.pnlUsername.Controls.Add(this.lblUsername);
-            this.pnlUsername.Controls.Add(this.textUsername);
-            resources.ApplyResources(this.pnlUsername, "pnlUsername");
-            this.pnlUsername.Name = "pnlUsername";
+            this.pnlUsernameLabel.Controls.Add(this.lblUsername);
+            resources.ApplyResources(this.pnlUsernameLabel, "pnlUsernameLabel");
+            this.pnlUsernameLabel.Name = "pnlUsernameLabel";
             // 
             // lblUsername
             // 
             resources.ApplyResources(this.lblUsername, "lblUsername");
             this.lblUsername.Name = "lblUsername";
             // 
+            // pnlUsernameAliasLabel
+            // 
+            this.pnlUsernameAliasLabel.Controls.Add(this.lblUsernameAlias);
+            resources.ApplyResources(this.pnlUsernameAliasLabel, "pnlUsernameAliasLabel");
+            this.pnlUsernameAliasLabel.Name = "pnlUsernameAliasLabel";
+            // 
+            // lblUsernameAlias
+            // 
+            resources.ApplyResources(this.lblUsernameAlias, "lblUsernameAlias");
+            this.lblUsernameAlias.Name = "lblUsernameAlias";
+            // 
+            // pnlUsernameInputField
+            // 
+            this.pnlUsernameInputField.Controls.Add(this.textUsername);
+            resources.ApplyResources(this.pnlUsernameInputField, "pnlUsernameInputField");
+            this.pnlUsernameInputField.Name = "pnlUsernameInputField";
+            // 
             // textUsername
             // 
             resources.ApplyResources(this.textUsername, "textUsername");
             this.textUsername.Name = "textUsername";
-            // 
-            // pnlServerURL
-            // 
-            this.pnlServerURL.Controls.Add(this.textServerURL);
-            this.pnlServerURL.Controls.Add(this.lblServerUrl);
-            resources.ApplyResources(this.pnlServerURL, "pnlServerURL");
-            this.pnlServerURL.Name = "pnlServerURL";
-            // 
-            // textServerURL
-            // 
-            resources.ApplyResources(this.textServerURL, "textServerURL");
-            this.textServerURL.Name = "textServerURL";
-            // 
-            // lblServerUrl
-            // 
-            resources.ApplyResources(this.lblServerUrl, "lblServerUrl");
-            this.lblServerUrl.Name = "lblServerUrl";
             // 
             // pnlPassword
             // 
@@ -225,6 +231,23 @@
             // 
             resources.ApplyResources(this.lblPassword, "lblPassword");
             this.lblPassword.Name = "lblPassword";
+            // 
+            // pnlServerURL
+            // 
+            this.pnlServerURL.Controls.Add(this.textServerURL);
+            this.pnlServerURL.Controls.Add(this.lblServerUrl);
+            resources.ApplyResources(this.pnlServerURL, "pnlServerURL");
+            this.pnlServerURL.Name = "pnlServerURL";
+            // 
+            // textServerURL
+            // 
+            resources.ApplyResources(this.textServerURL, "textServerURL");
+            this.textServerURL.Name = "textServerURL";
+            // 
+            // lblServerUrl
+            // 
+            resources.ApplyResources(this.lblServerUrl, "lblServerUrl");
+            this.lblServerUrl.Name = "lblServerUrl";
             // 
             // EditRemoteAccountDlg
             // 
@@ -248,12 +271,16 @@
             this.flowLayoutPanel.ResumeLayout(false);
             this.pnlAccountTypeSelect.ResumeLayout(false);
             this.pnlAccountTypeSelect.PerformLayout();
-            this.pnlUsername.ResumeLayout(false);
-            this.pnlUsername.PerformLayout();
-            this.pnlServerURL.ResumeLayout(false);
-            this.pnlServerURL.PerformLayout();
+            this.pnlUsernameLabel.ResumeLayout(false);
+            this.pnlUsernameLabel.PerformLayout();
+            this.pnlUsernameAliasLabel.ResumeLayout(false);
+            this.pnlUsernameAliasLabel.PerformLayout();
+            this.pnlUsernameInputField.ResumeLayout(false);
+            this.pnlUsernameInputField.PerformLayout();
             this.pnlPassword.ResumeLayout(false);
             this.pnlPassword.PerformLayout();
+            this.pnlServerURL.ResumeLayout(false);
+            this.pnlServerURL.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -275,8 +302,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
         private System.Windows.Forms.Panel pnlAccountTypeSelect;
         private System.Windows.Forms.CheckBox cbDeleteRawAfterImport;
-        private System.Windows.Forms.Panel pnlUsername;
-        private System.Windows.Forms.Label lblUsername;
+        private System.Windows.Forms.Panel pnlUsernameInputField;
         internal System.Windows.Forms.TextBox textUsername;
         private System.Windows.Forms.Panel pnlServerURL;
         private System.Windows.Forms.TextBox textServerURL;
@@ -284,5 +310,9 @@
         private System.Windows.Forms.Panel pnlPassword;
         internal System.Windows.Forms.TextBox textPassword;
         private System.Windows.Forms.Label lblPassword;
+        private System.Windows.Forms.Panel pnlUsernameLabel;
+        private System.Windows.Forms.Label lblUsername;
+        private System.Windows.Forms.Panel pnlUsernameAliasLabel;
+        private System.Windows.Forms.Label lblUsernameAlias;
     }
 }
