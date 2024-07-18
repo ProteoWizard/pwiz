@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
+    <value>サーバーは有効なJSON応答を返しませんでした。{0}はPanoramaサーバーではありません。</value>
+  </data>
+  <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
+    <value>URL：{0}</value>
+  </data>
+  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
+    <value>{0}はPanoramaフォルダではありません</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Folder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Folder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
+    <value>サーバーからの予期しないJSON応答：{0}</value>
+  </data>
+  <data name="UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_" xml:space="preserve">
+    <value>Panoramaサーバーでユーザー名とパスワードが認証できませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
+    <value>ユーザーを認証できませんでした。サーバーから受信した応答：{0} {1}</value>
+  </data>
+  <data name="ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__" xml:space="preserve">
+    <value>サーバー{0}に接続できません。</value>
+  </data>
+  <data name="ChromLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ChromLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ServerState_GetErrorMessage_The_server__0__does_not_exist_" xml:space="preserve">
+    <value>サーバー{0}が存在していません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded" xml:space="preserve">
+    <value>ファイルのダウンロード先フォルダを選択</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Icojam-Blueberry-Basic-Arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
+    <value>サーバー{0}でのユーザー認証情報の認証中にエラーがありました。</value>
+  </data>
+  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
+    <value>フォルダ{0}はPanoramaサーバー{1}上に存在しません</value>
+  </data>
+  <data name="WebPanoramaClient_DownloadFile_Downloading__0_" xml:space="preserve">
+    <value>{0}のダウンロード中</value>
+  </data>
+  <data name="Icojam-Blueberry-Basic-Arrow-up" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icojam_Blueberry_Basic_Arrow_left" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="up_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\up-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Edit_Undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Undo.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icojam_Blueberry_Basic_Arrow_right" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icojam-Blueberry-Basic-Arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
+    <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
+  </data>
+  <data name="Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Copy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PanoramaFilePicker_Open_Click_You_must_select_a_file_first_" xml:space="preserve">
+    <value>最初にファイルを選択してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
+    <value>[ツール] - [オプション] - [Panorama] タブへ移動し、ユーザー名とパスワードを更新してください</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers" xml:space="preserve">
+    <value>以下のサーバーからの情報の取得に失敗しました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
+    <value>開</value>
+  </data>
+  <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
+    <value>以下のフォルダからの情報の取得に失敗しました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder" xml:space="preserve">
+    <value>このフォルダにファイルはありません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder" xml:space="preserve">
+    <value>このフォルダにSkylineファイルはありません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaFilePicker_ALL_VER_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
+    <value>最近</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LabKeyError_ToString_Response_status___0_" xml:space="preserve">
+    <value>応答ステータス：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
+    <value>サーバーの一時ファイルの削除中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
+    <value>データインポートの完了待ち...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
+    <value>フォルダ「{0}」検証中のエラー</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
+    <value>フォルダ「{0}」情報取得中のエラー</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
+    <value>フォルダ「{0}」のWebDAV url取得中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
+    <value>データをインポート中。{0}%完了。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_" xml:space="preserve">
+    <value>サーバーのステータス：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated" xml:space="preserve">
+    <value>進捗状況を更新しました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
+    <value>{1:fs}中{0:fs}がアップロード済み</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
+    <value>サーバーは有効なJSON応答を返しませんでした。{0}はPanoramaサーバーではありません。</value>
+  </data>
+  <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
+    <value>ドキュメントのインポートパイプラインジョブのステータス取得中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_" xml:space="preserve">
+    <value>サーバーでドキュメントのインポートジョブ追加中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_" xml:space="preserve">
+    <value>ファイルのアップロード中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_" xml:space="preserve">
+    <value>サーバーで一時zipファイルの名称変更中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_" xml:space="preserve">
+    <value>サーバーで一時zipファイルの削除エラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_" xml:space="preserve">
+    <value>サーバー{0}はPanoramaサーバーではありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ErrorMessageBuilder_Build_Response__" xml:space="preserve">
+    <value>応答： </value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_" xml:space="preserve">
+    <value>{0}のリクエストが失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_" xml:space="preserve">
+    <value>応答にwebDavURLが不足しています。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
+    <value>ファイルがサーバーにアップロードされませんでした。もう一度試すか、mataもしくは問題が続くようであればPanoramaサーバー管理者に問い合わせてください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
+    <value>応答をJSONとして解析できませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
+    <value>サーバーからのCSRFトークン取得中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ErrorMessageBuilder_Build_Error__" xml:space="preserve">
+    <value>エラー： </value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ErrorMessageBuilder_Build_Response_status___0_" xml:space="preserve">
+    <value>応答ステータス：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__" xml:space="preserve">
+    <value>フォルダ{0}のステータスを取得中に認識できないエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_" xml:space="preserve">
+    <value>ファイル名に次の文字を使用することはできません：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_" xml:space="preserve">
+    <value>ファイル名を次の文字で始めることはできません：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash" xml:space="preserve">
+    <value>ファイル名では、スペースの後にダッシュを使用することはできません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled" xml:space="preserve">
+    <value>リクエストがキャンセルされました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_" xml:space="preserve">
+    <value>サーバー応答の読み取り中にエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

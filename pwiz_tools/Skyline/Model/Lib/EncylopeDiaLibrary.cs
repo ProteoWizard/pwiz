@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 5;
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
-        private ImmutableList<string> _sourceFiles;
+        private LibraryFiles _sourceFiles = LibraryFiles.EMPTY;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
         // List of entries which includes items which do not have a spectrum but which do have peak boundaries
         private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
@@ -368,7 +368,7 @@ on one.SourceFile = two.SourceFile";
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
                 SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
-                _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
                 return true;
@@ -454,7 +454,7 @@ on one.SourceFile = two.SourceFile";
                         sourceFiles.Add(Encoding.UTF8.GetString(bytes));
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
-                    _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                    _sourceFiles = new LibraryFiles(sourceFiles);
                     List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
                     while (spectrumInfos.Count < spectrumInfoCount)
                     {
@@ -664,7 +664,7 @@ on one.SourceFile = two.SourceFile";
         {
             get
             {
-                return new LibraryFiles{FilePaths = _sourceFiles};
+                return _sourceFiles;
             }
         }
 
@@ -699,6 +699,14 @@ on one.SourceFile = two.SourceFile";
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
+        }
+
+        public override bool HasExplicitBounds
+        {
+            get
+            {
+                return true;
+            }
         }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)

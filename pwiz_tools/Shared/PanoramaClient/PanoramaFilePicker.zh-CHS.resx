@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="folderLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="folderLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 36</value>
+  </data>
+  <data name="folderLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>81, 13</value>
+  </data>
+  <data name="folderLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="folderLabel.Text" xml:space="preserve">
+    <value>远程文件夹(&amp;R)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;folderLabel.Name" xml:space="preserve">
+    <value>folderLabel</value>
+  </data>
+  <data name="&gt;&gt;folderLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;folderLabel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;folderLabel.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <metadata name="treeViewIcons.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="treeViewIcons.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
+    <value>
+        AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
+        LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
+        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADy
+        CgAAAk1TRnQBSQFMAgEBBAEAARABBQEQAQUBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        AwABQAMAASADAAEBAQABCAYAAQgYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
+        AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
+        AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
+        AWYDAAGZAwABzAIAATMDAAIzAgABMwFmAgABMwGZAgABMwHMAgABMwH/AgABZgMAAWYBMwIAAmYCAAFm
+        AZkCAAFmAcwCAAFmAf8CAAGZAwABmQEzAgABmQFmAgACmQIAAZkBzAIAAZkB/wIAAcwDAAHMATMCAAHM
+        AWYCAAHMAZkCAALMAgABzAH/AgAB/wFmAgAB/wGZAgAB/wHMAQABMwH/AgAB/wEAATMBAAEzAQABZgEA
+        ATMBAAGZAQABMwEAAcwBAAEzAQAB/wEAAf8BMwIAAzMBAAIzAWYBAAIzAZkBAAIzAcwBAAIzAf8BAAEz
+        AWYCAAEzAWYBMwEAATMCZgEAATMBZgGZAQABMwFmAcwBAAEzAWYB/wEAATMBmQIAATMBmQEzAQABMwGZ
+        AWYBAAEzApkBAAEzAZkBzAEAATMBmQH/AQABMwHMAgABMwHMATMBAAEzAcwBZgEAATMBzAGZAQABMwLM
+        AQABMwHMAf8BAAEzAf8BMwEAATMB/wFmAQABMwH/AZkBAAEzAf8BzAEAATMC/wEAAWYDAAFmAQABMwEA
+        AWYBAAFmAQABZgEAAZkBAAFmAQABzAEAAWYBAAH/AQABZgEzAgABZgIzAQABZgEzAWYBAAFmATMBmQEA
+        AWYBMwHMAQABZgEzAf8BAAJmAgACZgEzAQADZgEAAmYBmQEAAmYBzAEAAWYBmQIAAWYBmQEzAQABZgGZ
+        AWYBAAFmApkBAAFmAZkBzAEAAWYBmQH/AQABZgHMAgABZgHMATMBAAFmAcwBmQEAAWYCzAEAAWYBzAH/
+        AQABZgH/AgABZgH/ATMBAAFmAf8BmQEAAWYB/wHMAQABzAEAAf8BAAH/AQABzAEAApkCAAGZATMBmQEA
+        AZkBAAGZAQABmQEAAcwBAAGZAwABmQIzAQABmQEAAWYBAAGZATMBzAEAAZkBAAH/AQABmQFmAgABmQFm
+        ATMBAAGZATMBZgEAAZkBZgGZAQABmQFmAcwBAAGZATMB/wEAApkBMwEAApkBZgEAA5kBAAKZAcwBAAKZ
+        Af8BAAGZAcwCAAGZAcwBMwEAAWYBzAFmAQABmQHMAZkBAAGZAswBAAGZAcwB/wEAAZkB/wIAAZkB/wEz
+        AQABmQHMAWYBAAGZAf8BmQEAAZkB/wHMAQABmQL/AQABzAMAAZkBAAEzAQABzAEAAWYBAAHMAQABmQEA
+        AcwBAAHMAQABmQEzAgABzAIzAQABzAEzAWYBAAHMATMBmQEAAcwBMwHMAQABzAEzAf8BAAHMAWYCAAHM
+        AWYBMwEAAZkCZgEAAcwBZgGZAQABzAFmAcwBAAGZAWYB/wEAAcwBmQIAAcwBmQEzAQABzAGZAWYBAAHM
+        ApkBAAHMAZkBzAEAAcwBmQH/AQACzAIAAswBMwEAAswBZgEAAswBmQEAA8wBAALMAf8BAAHMAf8CAAHM
+        Af8BMwEAAZkB/wFmAQABzAH/AZkBAAHMAf8BzAEAAcwC/wEAAcwBAAEzAQAB/wEAAWYBAAH/AQABmQEA
+        AcwBMwIAAf8CMwEAAf8BMwFmAQAB/wEzAZkBAAH/ATMBzAEAAf8BMwH/AQAB/wFmAgAB/wFmATMBAAHM
+        AmYBAAH/AWYBmQEAAf8BZgHMAQABzAFmAf8BAAH/AZkCAAH/AZkBMwEAAf8BmQFmAQAB/wKZAQAB/wGZ
+        AcwBAAH/AZkB/wEAAf8BzAIAAf8BzAEzAQAB/wHMAWYBAAH/AcwBmQEAAf8CzAEAAf8BzAH/AQAC/wEz
+        AQABzAH/AWYBAAL/AZkBAAL/AcwBAAJmAf8BAAFmAf8BZgEAAWYC/wEAAf8CZgEAAf8BZgH/AQAC/wFm
+        AQABIQEAAaUBAANfAQADdwEAA4YBAAOWAQADywEAA7IBAAPXAQAD3QEAA+MBAAPqAQAD8QEAA/gBAAHw
+        AfsB/wEAAaQCoAEAA4ADAAH/AgAB/wMAAv8BAAH/AwAB/wEAAf8BAAL/AgAD//8A/wD/AP8ABQAP1QHc
+        Av8B7QrsARwB/wH0BEYBlAT/ARcFRgFvAQAC/wz0Af8G1QO0AbMBrQGzA9UB3AH/AfcBvArwAZIB6wH/
+        AigBhgG2AZQBFwEWAfQBFwElASkEKAFQAQAB9AHzCvEC8gHzAbQDswO0A7MBtAGzAa0CtAHcAf8BbQLw
+        AQkBBwH3AbUC7wEHAQkB8gEHAesB/wKYAbUB5gGuAUsBlAHjASUBlAFPAZcEmAEAAfEG7AfrAbwBtAmt
+        AbMBtAKLAQkB9AH/AesB8AEJAbQBrgGLAYYCrgGRAbQB8AHvAesE/wHWAa0BiwEcARYBJQFzAZgBCAT/
+        AQACUgFMCioBEgHrAbsBCQGLAQkDtAH/AosBrQK0AZkBGgL/Au8BBwG1Aa4EhgGuAfcBvAH3AewF/wHW
+        Aa0BiwHzAWIBAgEIBf8BUgF6AVIBoAh6AVIBoAEqARIBwwH/AYsBGQG0AbMBtAH/AooBrQHxAf8BwwF6
+        AfYC/wHrAQcB8AGRBIYBrgG8Ae8B9wf/AdYByAEZAfwBSAEIBf8BUgF6AVIBoAh6AVIBoAEqARIBoAH/
+        AYsBGQG0Aa0BtAH/AqYBiwEZAv8BmgEaAv8B9wEHAbwBtAGuAoYB6wG1AfABkgHsB/8B1gHIAd0B/AFI
+        AQgF/wFSAXoBUgmgAVgBoAEqARIBoAHDAYsB8QG0Aa0B8QH/AbUCiwP/AZoBGgP/Ae0B7wHwAbQC6wG0
+        AfIB7wEHCP8B1gP8AUgBCAX/AVIBegFSCaABegGgASoB6gH2AZkBiwEJAbQBrQHxAf8BtQKmAv8B9gF6
+        ARoD/wH3AQcB8AO0AbUB8gHsAfcJ/wHWAvwBSAEIBf8BUgF6AVIJoAF6AaABKgHqAf8BvAGLArUBtAEZ
+        Av8BtAHxAv8BGgF6AcMD/wHzAu8E8gHvAQcB8gn/Ad0ByAHdAU8BCAX/AVIBegFSCf8BmgH/ASoBbQHy
+        Aa4BiwGuAZkBwwH2BP8B9gGaAXoBGgX/Ae8B9wT/AewBBwr/AbwBbAH/AU8BCAX/AVIBoAGaDFIB7AWL
+        AZoBegSaAXoBmgEaBv8B8AHvAQcC/wHvAfcB8Qr/AQgBAgKYAfIF/wFSBqAF/wEqAeoBBwL/AYsBpgGL
+        Af8B9gLDApoBGgHDAfYI/wEHAewC/wHqAbwL/wHxAXIBAgHyBv8BUgH/BKAB/wVSAUwDAAL/AYsR/wHz
+        Ae8B7QL/AesBBwH0C/8B8gECAfIG/wEAAVIE/wFSAf8BAAH/BgAC/wHxEf8B7wFtAZIC8wHsAesBvAv/
+        AfMBTwHzBv8CAARSAf8JABT/AQcBrgLrA0oBBxT/EAABQgFNAT4HAAE+AwABKAMAAUADAAEgAwABAQEA
+        AQEGAAEBFgAD/4cAAYAHAAGABwABgAcAAYBIAAEHBgABgAG/BgABwQH/BgAC/ws=
+</value>
+  </data>
+  <metadata name="fileIcons.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>127, 17</value>
+  </metadata>
+  <data name="fileIcons.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
+    <value>
+        AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
+        LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
+        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA0
+        CQAAAk1TRnQBSQFMAgEBAgEAAfABBAHwAQQBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        AwABQAMAARADAAEBAQABCAYAAQQYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
+        AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
+        AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
+        AWYDAAGZAwABzAIAATMDAAIzAgABMwFmAgABMwGZAgABMwHMAgABMwH/AgABZgMAAWYBMwIAAmYCAAFm
+        AZkCAAFmAcwCAAFmAf8CAAGZAwABmQEzAgABmQFmAgACmQIAAZkBzAIAAZkB/wIAAcwDAAHMATMCAAHM
+        AWYCAAHMAZkCAALMAgABzAH/AgAB/wFmAgAB/wGZAgAB/wHMAQABMwH/AgAB/wEAATMBAAEzAQABZgEA
+        ATMBAAGZAQABMwEAAcwBAAEzAQAB/wEAAf8BMwIAAzMBAAIzAWYBAAIzAZkBAAIzAcwBAAIzAf8BAAEz
+        AWYCAAEzAWYBMwEAATMCZgEAATMBZgGZAQABMwFmAcwBAAEzAWYB/wEAATMBmQIAATMBmQEzAQABMwGZ
+        AWYBAAEzApkBAAEzAZkBzAEAATMBmQH/AQABMwHMAgABMwHMATMBAAEzAcwBZgEAATMBzAGZAQABMwLM
+        AQABMwHMAf8BAAEzAf8BMwEAATMB/wFmAQABMwH/AZkBAAEzAf8BzAEAATMC/wEAAWYDAAFmAQABMwEA
+        AWYBAAFmAQABZgEAAZkBAAFmAQABzAEAAWYBAAH/AQABZgEzAgABZgIzAQABZgEzAWYBAAFmATMBmQEA
+        AWYBMwHMAQABZgEzAf8BAAJmAgACZgEzAQADZgEAAmYBmQEAAmYBzAEAAWYBmQIAAWYBmQEzAQABZgGZ
+        AWYBAAFmApkBAAFmAZkBzAEAAWYBmQH/AQABZgHMAgABZgHMATMBAAFmAcwBmQEAAWYCzAEAAWYBzAH/
+        AQABZgH/AgABZgH/ATMBAAFmAf8BmQEAAWYB/wHMAQABzAEAAf8BAAH/AQABzAEAApkCAAGZATMBmQEA
+        AZkBAAGZAQABmQEAAcwBAAGZAwABmQIzAQABmQEAAWYBAAGZATMBzAEAAZkBAAH/AQABmQFmAgABmQFm
+        ATMBAAGZATMBZgEAAZkBZgGZAQABmQFmAcwBAAGZATMB/wEAApkBMwEAApkBZgEAA5kBAAKZAcwBAAKZ
+        Af8BAAGZAcwCAAGZAcwBMwEAAWYBzAFmAQABmQHMAZkBAAGZAswBAAGZAcwB/wEAAZkB/wIAAZkB/wEz
+        AQABmQHMAWYBAAGZAf8BmQEAAZkB/wHMAQABmQL/AQABzAMAAZkBAAEzAQABzAEAAWYBAAHMAQABmQEA
+        AcwBAAHMAQABmQEzAgABzAIzAQABzAEzAWYBAAHMATMBmQEAAcwBMwHMAQABzAEzAf8BAAHMAWYCAAHM
+        AWYBMwEAAZkCZgEAAcwBZgGZAQABzAFmAcwBAAGZAWYB/wEAAcwBmQIAAcwBmQEzAQABzAGZAWYBAAHM
+        ApkBAAHMAZkBzAEAAcwBmQH/AQACzAIAAswBMwEAAswBZgEAAswBmQEAA8wBAALMAf8BAAHMAf8CAAHM
+        Af8BMwEAAZkB/wFmAQABzAH/AZkBAAHMAf8BzAEAAcwC/wEAAcwBAAEzAQAB/wEAAWYBAAH/AQABmQEA
+        AcwBMwIAAf8CMwEAAf8BMwFmAQAB/wEzAZkBAAH/ATMBzAEAAf8BMwH/AQAB/wFmAgAB/wFmATMBAAHM
+        AmYBAAH/AWYBmQEAAf8BZgHMAQABzAFmAf8BAAH/AZkCAAH/AZkBMwEAAf8BmQFmAQAB/wKZAQAB/wGZ
+        AcwBAAH/AZkB/wEAAf8BzAIAAf8BzAEzAQAB/wHMAWYBAAH/AcwBmQEAAf8CzAEAAf8BzAH/AQAC/wEz
+        AQABzAH/AWYBAAL/AZkBAAL/AcwBAAJmAf8BAAFmAf8BZgEAAWYC/wEAAf8CZgEAAf8BZgH/AQAC/wFm
+        AQABIQEAAaUBAANfAQADdwEAA4YBAAOWAQADywEAA7IBAAPXAQAD3QEAA+MBAAPqAQAD8QEAA/gBAAHw
+        AfsB/wEAAaQCoAEAA4ADAAH/AgAB/wMAAv8BAAH/AwAB/wEAAf8BAAL/AgAD/wIADu8FAAGuAWwKZiEA
+        AQcM8gHvBQAB9AH/CRkB1SEAAQcM/wHvBQAB9AH/BxkByAEZAdUhAAEHAf8K7AH/Ae8FAAH0Av8BGQP0
+        AYsBzgKnAdUhAAEHAf8BBwj0AewB/wHvBQAF/wH0Af8BxwHVAQkBGQHVIQABBwH/AQcC/wGTAv8CmAH0
+        AewB/wHvBQAG/wHHAc4BpwH0ARkB1SEAAQcB/wEHAf8BkwEWAf8B1gHhAdYB9AHsAf8B7wEABdUDtAL/
+        Ac0B3AH/AfQBGQHWIQABBwH/AQcB/wGgAZMC/wHWAf8B9AHsAf8B7wIAAgkBrQG0Aq0BswH/AfQB1QGt
+        Af8C9AEJIQABBwH/AQcH/wH0AewB/wHvAgACCQGtAbQCpgGtBv8B9AEJIQABBwH/AQcItQHsAf8B7wIA
+        AbsBCQKtAf8BiwG0Bv8B9AEJIQABBwH/AQcBtQGaBrUB7AH/Ae8CAAK0AQABtAH/AbsI/wEJIQABBwH/
+        CQcB7AHyAe8BAAG0AosBtAn/Aa4CbCEAAQcJ/wG8A+8CAAHPAbQBAAn/ARkB3QHyIQABBwn/AbwB/wHv
+        BgAJ/wEZAfIiAAEHCfQBvAHvBwAJ/wHyIwAKBwG8NAABQgFNAT4HAAE+AwABKAMAAUADAAEQAwABAQEA
+        AQEFAAGAFwAD/wEAAYABAQHwBQABgAEBAfAFAAGAAQEB8AUAAYABAQHwBQABgAEBAfAFAAGAAQEB8AUA
+        AYABAQYAAYABAQGABQABgAEBAYAFAAGAAQEBgAUAAYABAQGQBQABgAEBBgABgAEBAZAFAAGAAQMB8AEB
+        BAABgAEHAfABAwQAAYABDwL/BAAL
+</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="versionOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="versionOptions.Items" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="versionOptions.Items1" xml:space="preserve">
+    <value>最近</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="versionOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>574, 26</value>
+  </data>
+  <data name="versionOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 21</value>
+  </data>
+  <data name="versionOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="versionOptions.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;versionOptions.Name" xml:space="preserve">
+    <value>versionOptions</value>
+  </data>
+  <data name="&gt;&gt;versionOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;versionOptions.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;versionOptions.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="open.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="open.Location" type="System.Drawing.Point, System.Drawing">
+    <value>556, 530</value>
+  </data>
+  <data name="open.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="open.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="open.Text" xml:space="preserve">
+    <value>打开(&amp;O)</value>
+  </data>
+  <data name="&gt;&gt;open.Name" xml:space="preserve">
+    <value>open</value>
+  </data>
+  <data name="&gt;&gt;open.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;open.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;open.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="cancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="cancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>637, 530</value>
+  </data>
+  <data name="cancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="cancel.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="cancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="&gt;&gt;cancel.Name" xml:space="preserve">
+    <value>cancel</value>
+  </data>
+  <data name="&gt;&gt;cancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cancel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="versionLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="versionLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="versionLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>571, 10</value>
+  </data>
+  <data name="versionLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="versionLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="versionLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="versionLabel.Text" xml:space="preserve">
+    <value>版本(&amp;V)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="versionLabel.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;versionLabel.Name" xml:space="preserve">
+    <value>versionLabel</value>
+  </data>
+  <data name="&gt;&gt;versionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;versionLabel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;versionLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="browserSplitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="browserSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="browserSplitContainer.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel1.Name" xml:space="preserve">
+    <value>browserSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel1.Parent" xml:space="preserve">
+    <value>browserSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="noFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="noFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="noFiles.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="noFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>115, 209</value>
+  </data>
+  <data name="noFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 16</value>
+  </data>
+  <data name="noFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="noFiles.Text" xml:space="preserve">
+    <value>此文件夹中没有 Skyline 文件</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="noFiles.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleCenter</value>
+  </data>
+  <data name="&gt;&gt;noFiles.Name" xml:space="preserve">
+    <value>noFiles</value>
+  </data>
+  <data name="&gt;&gt;noFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;noFiles.Parent" xml:space="preserve">
+    <value>browserSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;noFiles.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="colName.Text" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="colName.Width" type="System.Int32, mscorlib">
+    <value>175</value>
+  </data>
+  <data name="colSize.Text" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="colSize.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="colVersions.Text" xml:space="preserve">
+    <value>版本</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="colVersions.Width" type="System.Int32, mscorlib">
+    <value>52</value>
+  </data>
+  <data name="colReplacedBy.Text" xml:space="preserve">
+    <value>已替换为</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="colReplacedBy.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="colCreated.Text" xml:space="preserve">
+    <value>已创建</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="listView.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="listView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="listView.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="listView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>462, 472</value>
+  </data>
+  <data name="listView.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listView.Name" xml:space="preserve">
+    <value>listView</value>
+  </data>
+  <data name="&gt;&gt;listView.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listView.Parent" xml:space="preserve">
+    <value>browserSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;listView.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel2.Name" xml:space="preserve">
+    <value>browserSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel2.Parent" xml:space="preserve">
+    <value>browserSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="browserSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>702, 472</value>
+  </data>
+  <data name="browserSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
+    <value>237</value>
+  </data>
+  <data name="browserSplitContainer.SplitterWidth" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="browserSplitContainer.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Name" xml:space="preserve">
+    <value>browserSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.Parent" xml:space="preserve">
+    <value>browserPanel</value>
+  </data>
+  <data name="&gt;&gt;browserSplitContainer.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="browserPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="browserPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 52</value>
+  </data>
+  <data name="browserPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>702, 472</value>
+  </data>
+  <data name="browserPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;browserPanel.Name" xml:space="preserve">
+    <value>browserPanel</value>
+  </data>
+  <data name="&gt;&gt;browserPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;browserPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;browserPanel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <metadata name="navToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>237, 17</value>
+  </metadata>
+  <data name="navToolStrip.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="back.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAElSURBVFhH7Y6xSgNBEIbv0SxS2NqkSWEnpBBLSZCAZQqL
+        gI0oIiSEI4IIgqRJiCGFBDtLwVcZmb1/uM3eRg3sTAjkg5+53Zm9b7I9O0nn8YMGiy/C0RaWS3Blhy83
+        XyCUmy7QzpdOGFa0dWHZumBEj/PhO6UKLyz1afn99/LhD1IHmjixB6kDVZWzh7kb0Kwc6FaRpkWgLAkH
+        Tu/fVM/QFoRDFhXqgubtlKwDdYnf5A39s0agXeXkZuKax9djt4ScuUrkB/7dJpH3UFZhOQ+E1f9BeLdp
+        +D10cXhAO1CtJ/YoZaD5nUbvlTRyN/n83wLMUfeZ6lcv7iF/+xUj+rAwFrRtOLwcEYfF8o2WHSLe2gJM
+        rZOTBFf2HFwMqdWfbW+BPenIsh9lGoeCmcAw0gAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="back.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="back.Size" type="System.Drawing.Size, System.Drawing">
+    <value>28, 28</value>
+  </data>
+  <data name="back.Text" xml:space="preserve">
+    <value>后退</value>
+  </data>
+  <data name="forward.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEySURBVFhH7ZaxS0JRFMbfn+bQ0OrS0uAWNERjCPLA0aFB
+        aIkkgsIsQQRBWpSKhhK3xqB/5cSn39H39LyX+rz3IfiDj+s759z7u3cz2LPzPHz8SNgeCz/9A7mGJb9E
+        L5DLJSpPI1kMW36wLoCw7R5LruHI/3RGv1J+/DIPuWh+ZgoV6UQ3nN+9T8RYo/UsoSYZa9O2Q5UNXlu+
+        f5292tVK3TIY8BUq46BxdvsWG1z3e51QO0cPy7quGsxTPeX0Zii+Q/UUa2CT4GVWfTHUzkHx5HowaWLd
+        NKWrl8QztE5lHN2YdsAqSduLs6lbBk3XocrG2rDNUJNMY/Atx/W+k1DhjqPLnmggLNa6s5UjboHICtvu
+        Oaw+CwKp/mbLDyrNRQ4OwpZoWPIL/kcUKs185HuyEwR/UFmHnV3u2vkAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="forward.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="forward.Size" type="System.Drawing.Size, System.Drawing">
+    <value>28, 28</value>
+  </data>
+  <data name="forward.Text" xml:space="preserve">
+    <value>前进</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="up.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADVSURBVFhH5ZXBDcIwEARdGqWklJSSF3XkTTV0ABzaQydn
+        gzhjs0JZaR4kwTOPSCl/vWlZbwZ+/nYul0TUcge3x46JI3hszJgwMgM83ndMyBgSwUQMl3eNmGYu26Nr
+        xFOeCKjlDo7L7ZSUOyzAwLGfzeSvgEQEE0dw/Pu1yh0mjkDD5/LWCCZkQLed3dwEPK5lqGU158s1/1Iy
+        EaOW4e/fj8n2kAZEuSTAkAZEuSTAkAZEuSTAkAZEuSTAkAZEuSTAkAZEuSTAGBKwrFzGcHnTZ/eAK+UO
+        mzeHG7y1XsoAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="up.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="up.Size" type="System.Drawing.Size, System.Drawing">
+    <value>28, 28</value>
+  </data>
+  <data name="navToolStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 2</value>
+  </data>
+  <data name="navToolStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 31</value>
+  </data>
+  <data name="navToolStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="navToolStrip.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Name" xml:space="preserve">
+    <value>navToolStrip</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="urlLink.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <metadata name="contextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>335, 17</value>
+  </metadata>
+  <data name="copyLinkAddressToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>167, 22</value>
+  </data>
+  <data name="copyLinkAddressToolStripMenuItem.Text" xml:space="preserve">
+    <value>复制链接地址</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 26</value>
+  </data>
+  <data name="&gt;&gt;contextMenuStrip.Name" xml:space="preserve">
+    <value>contextMenuStrip</value>
+  </data>
+  <data name="&gt;&gt;contextMenuStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="urlLink.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 535</value>
+  </data>
+  <data name="urlLink.Size" type="System.Drawing.Size, System.Drawing">
+    <value>538, 13</value>
+  </data>
+  <data name="urlLink.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="urlLink.Text" xml:space="preserve">
+    <value>&lt;placeholder&gt;</value>
+  </data>
+  <data name="&gt;&gt;urlLink.Name" xml:space="preserve">
+    <value>urlLink</value>
+  </data>
+  <data name="&gt;&gt;urlLink.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;urlLink.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;urlLink.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>52</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>724, 562</value>
+  </data>
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAMMOAADDDgAAAAAAAAAA
+        AAD1p3f/9ad3//Wnd//1p3f/9ad3//Smdv/uoHD/9KV1//Sldf/0pXX/9aZ3//Wnd//1p3f/9ad3//Wn
+        d//4vZn/7Z9v/+2fb//tn2//7qBw/++hcf/sn27/45Zj/9iMWP/YjFj/z4NO/8h8Rv/MgEv/7Z9v/+2f
+        b//tn2//8reT/+WYZv/MgUv/zIFL/8yBS//lmGb/5Zhm/9mNWf/MgUv//////8yBS//cj1z/zoNN/8B1
+        Pv/lmGb/5Zhm/+yyjP/ekV7/vHI5/7xyOf+8cjn/vHI5/7xyOf+8cjn//////wHDJf//////0IRO/9qO
+        Wv+kWx//rGMo/+u7m//56+H/08Gr/+vFq/+vZSv/5raW/9aKVv/Wilb//////wHDJf8BwyX/AcMl////
+        //+sYij/xHhB/5G/1v9Wxf///////1zS////////r2Ur//DYx//Xmm///////wHDJf8BwyX/AcMl/wHD
+        Jf8BwyX//////7htNP/f8fv/Gsr//+/4/f8ayv///////69lK//x3tD//////wHDJf8BwyX/AcMl/wHD
+        Jf8BwyX/AcMl/wHDJf///////////xrK//9c0v//Gsr//1zS//+vZSv/79zO/86Xbf///////////wHD
+        Jf8BwyX/AcMl////////////n1ca//////9Wxf//XNL//+/8//+NyMv/r2Ur/+TIsv/Jkmf/t200////
+        //8BwyX/AcMl/wHDJf//////k0sN/5NLDf/3/P7/Gsr//1zS////////09TK/69lK/+/rJT/06mJ/8SM
+        Yf//////AcMl/wHDJf8BwyX//////72Vcv/p3ND//////xrK///f8Pv/7uDV/5x+WP+nXiP/nH5Y/5jB
+        xP981P3/9/3//wHDJf8BwyX/AcMl///////v+f3//////1bF//8ayv///////59XGv+fVxr/n1ca/59X
+        Gv+fVxr/o+r//////////////////////////////////1bF//8ayv//VsX/////////////n1ca/5dP
+        Ef+fVxr/+fTw/xrK//8ayv//O83//03Q//87zf//O83//xrK//8ayv//VsX/////////////////////
+        //+fVxr/////////////////XNL//1bF//9c0v//XNL//1bF//9Wxf//////////////////////////
+        ////////6dvP////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+        ////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAA==
+</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Panorama 文件夹</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
+  <data name="&gt;&gt;treeViewIcons.Name" xml:space="preserve">
+    <value>treeViewIcons</value>
+  </data>
+  <data name="&gt;&gt;treeViewIcons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fileIcons.Name" xml:space="preserve">
+    <value>fileIcons</value>
+  </data>
+  <data name="&gt;&gt;fileIcons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colName.Name" xml:space="preserve">
+    <value>colName</value>
+  </data>
+  <data name="&gt;&gt;colName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colSize.Name" xml:space="preserve">
+    <value>colSize</value>
+  </data>
+  <data name="&gt;&gt;colSize.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colVersions.Name" xml:space="preserve">
+    <value>colVersions</value>
+  </data>
+  <data name="&gt;&gt;colVersions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colReplacedBy.Name" xml:space="preserve">
+    <value>colReplacedBy</value>
+  </data>
+  <data name="&gt;&gt;colReplacedBy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colCreated.Name" xml:space="preserve">
+    <value>colCreated</value>
+  </data>
+  <data name="&gt;&gt;colCreated.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;back.Name" xml:space="preserve">
+    <value>back</value>
+  </data>
+  <data name="&gt;&gt;back.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;forward.Name" xml:space="preserve">
+    <value>forward</value>
+  </data>
+  <data name="&gt;&gt;forward.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;up.Name" xml:space="preserve">
+    <value>up</value>
+  </data>
+  <data name="&gt;&gt;up.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;copyLinkAddressToolStripMenuItem.Name" xml:space="preserve">
+    <value>copyLinkAddressToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;copyLinkAddressToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>PanoramaFilePicker</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Common.SystemUtil.CommonFormEx, pwiz.CommonUtil, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

@@ -334,6 +334,12 @@ namespace pwiz.Skyline.Model
         {
             return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
         }
+
+        public ReintegrateDlgSettings GetReintegrateDlgSettings()
+        {
+            return new ReintegrateDlgSettings(ScoringModel, QValueCutoff == double.MaxValue,
+                QValueCutoff != double.MaxValue, QValueCutoff, OverrideManual);
+        }
     }
 
     public class PeakFeatureStatistics

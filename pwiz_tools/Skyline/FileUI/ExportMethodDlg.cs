@@ -253,6 +253,7 @@ namespace pwiz.Skyline.FileUI
                 }
             }
             SetBounds(Left, Top, btnOk.Right + 2 * label4.Left, Height);
+            UpdateInstrumentControls(MethodType);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -323,6 +324,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
                    Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
                    Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
+                   Equals(type, ExportInstrumentType.THERMO_STELLAR) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -347,6 +349,7 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                        Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
                        Equals(type, ExportInstrumentType.THERMO_ALTIS) ||
+                       Equals(type, ExportInstrumentType.THERMO_STELLAR) ||
                        Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                        Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
                        Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
@@ -635,7 +638,7 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                panelThermoRt.Top = labelDwellTime.Visible
+                panelThermoRt.Top = DwellTimeVisible(targetType == ExportMethodType.Standard) != DwellControlContent.none
                     ? labelDwellTime.Top - panelThermoRt.Height
                     : labelDwellTime.Top + (panelThermoRt.Height / 2);
             }
@@ -651,11 +654,19 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateThermoFaimsCvControl()
         {
-            var fusionMethod = InstrumentType == ExportInstrumentType.THERMO_FUSION && _fileType == ExportFileType.Method;
-            cbWriteCoV.Top = !fusionMethod ? cbSlens.Bottom : panelTuneColumns.Top - cbWriteCoV.Height;
-            cbWriteCoV.Left = !fusionMethod ? cbIgnoreProteins.Left : panelTuneColumns.Left + cbTune3.Left;
+            if (panelTuneColumns.Visible)
+            {
+                cbWriteCoV.Top = panelTuneColumns.Top - cbWriteCoV.Height;
+                cbWriteCoV.Left = panelTuneColumns.Left + cbTune3.Left;
+            }
+            else
+            {
+                cbWriteCoV.Top = cbSlens.Bottom;
+                cbWriteCoV.Left = cbIgnoreProteins.Left;
+            }
             cbWriteCoV.Visible = cbWriteCoV.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_STELLAR ||
                 (InstrumentType == ExportInstrumentType.THERMO_FUSION && !cbSureQuant.Checked) ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
@@ -1964,6 +1975,43 @@ namespace pwiz.Skyline.FileUI
                 CalcMethodCount();
         }
 
+        private enum DwellControlContent
+        {
+            none,
+            dwell,
+            accumulation,
+            runLength
+        };
+
+        private DwellControlContent DwellTimeVisible(bool standard)
+        {
+            if (standard)
+            {
+                if (!IsSingleDwellInstrument && !IsDia)
+                {
+                    if (!Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                    {
+                        return DwellControlContent.dwell;
+                    }
+                    else
+                    {
+                        return DwellControlContent.accumulation;
+                    }
+                }
+                else if (IsAlwaysScheduledInstrument)
+                {
+                    return DwellControlContent.runLength;
+                }
+            }
+            else
+            {
+                if (!IsDia && Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                {
+                    return DwellControlContent.accumulation;
+                }
+            }
+            return DwellControlContent.none;
+        }
         private void UpdateDwellControls(bool standard)
         {
             bool showDwell = false;

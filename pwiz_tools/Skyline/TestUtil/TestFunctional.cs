@@ -151,6 +151,8 @@ namespace pwiz.SkylineTestUtil
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
+        public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
+        public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
     }
 
     /// <summary>
@@ -1793,6 +1795,9 @@ namespace pwiz.SkylineTestUtil
             return result.ToString();
         }
 
+        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
         private void WaitForSkyline()
         {
             try
@@ -1818,6 +1823,27 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
+                // if it's a file locking issue, wrap the exception to report the locking process
+                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
+                {
+                    var match = Regex.Match(ioException.Message, "'(.*)'");
+                    if (match.Success)
+                    {
+                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                        if (!File.Exists(lockedFilepath))
+                        {
+                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+                        }
+                        else
+                        {
+                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
+                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+                        }
+                    }
+                }
                 // Save exception for reporting from main thread.
                 Program.AddTestException(x);
             }
@@ -2320,6 +2346,11 @@ namespace pwiz.SkylineTestUtil
             return ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
         }
 
+        public static PeptideSettingsUI ShowPeptideSettings(PeptideSettingsUI.TABS settingsTab)
+        {
+            return ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(settingsTab));
+        }
+
         public static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditStaticModsDlg(PeptideSettingsUI peptideSettingsUI)
         {
             return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditStaticMods);
@@ -2365,24 +2396,24 @@ namespace pwiz.SkylineTestUtil
             OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
-        public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
+        public static void AddStaticMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, isVariable, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
         public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, false, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
-        private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        private static void AddMod(string uniModName, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            RunUI(() => addStaticModDlg.SetModification(uniModName));
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
             OkDialog(editModsDlg, editModsDlg.OkDialog);

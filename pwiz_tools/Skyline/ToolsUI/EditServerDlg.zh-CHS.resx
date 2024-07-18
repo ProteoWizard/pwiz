@@ -145,7 +145,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -172,7 +172,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="instructionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -206,6 +206,41 @@
   <data name="InputPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="cbAnonymous.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAnonymous.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 51</value>
+  </data>
+  <data name="cbAnonymous.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 17</value>
+  </data>
+  <data name="cbAnonymous.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="cbAnonymous.Text" xml:space="preserve">
+    <value>匿名访问</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <metadata name="toolTipAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="cbAnonymous.ToolTip" xml:space="preserve">
+    <value>如果您没有服务器帐户，请选中该复选框。如果没有用户帐户，可以匿名浏览、下载和打开服务器上可以公开获取的文档，但是您不能上传文档到服务器。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Name" xml:space="preserve">
+    <value>cbAnonymous</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Parent" xml:space="preserve">
+    <value>InputPanel</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="lblProjectInfo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -231,7 +266,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblProjectInfo.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="textServerURL.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 26</value>
@@ -255,12 +290,12 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 148</value>
+    <value>16, 152</value>
   </data>
-  <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+  <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
   <data name="textPassword.Size" type="System.Drawing.Size, System.Drawing">
@@ -279,13 +314,13 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 128</value>
+    <value>13, 132</value>
   </data>
   <data name="lblPassword.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -306,13 +341,13 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 69</value>
+    <value>13, 81</value>
   </data>
   <data name="lblUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 13</value>
@@ -333,10 +368,10 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 87</value>
+    <value>16, 99</value>
   </data>
   <data name="textUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 20</value>
@@ -354,10 +389,10 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="InputPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 65</value>
+    <value>3, 61</value>
   </data>
   <data name="InputPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>337, 220</value>
@@ -387,7 +422,7 @@
     <value>3, 3</value>
   </data>
   <data name="InstructionPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>337, 56</value>
+    <value>337, 52</value>
   </data>
   <data name="InstructionPanel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -426,7 +461,7 @@
     <value>2</value>
   </data>
   <data name="ComponentOrganizer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>343, 288</value>
+    <value>343, 284</value>
   </data>
   <data name="ComponentOrganizer.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -459,13 +494,23 @@
     <value>GrowAndShrink</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>343, 288</value>
+    <value>343, 284</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>编辑服务器</value>
+    <value>编辑 Panorama 服务器</value>
+    <comment>Needs Review:English text changed
+Old English:Edit Server
+Current English:Edit Panorama Server
+Old Localized:编辑服务器</comment>
+  </data>
+  <data name="&gt;&gt;toolTipAnonymous.Name" xml:space="preserve">
+    <value>toolTipAnonymous</value>
+  </data>
+  <data name="&gt;&gt;toolTipAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditServerDlg</value>

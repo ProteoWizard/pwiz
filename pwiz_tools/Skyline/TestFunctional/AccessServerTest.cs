@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestAccessServer()
         {
             TestFilesZip = @"TestFunctional\AccessServerTest.zip";
-            using (new FakeProsit(null))
+            using (new FakeKoina(null))
             {
                 RunFunctionalTest();
             }
@@ -434,7 +434,7 @@ namespace pwiz.SkylineTestFunctional
                 publishDocDlg.ShowAnonymousServers = true;
                 servers = publishDocDlg.GetServers();
                 Assert.AreEqual(2, servers.Count);
-                Assert.AreEqual(pweb + @" (anonymous)", servers[1]);
+                Assert.AreEqual(pweb + UtilResources.Server_GetKey___anonymous_, servers[1]);
 
                 publishDocDlg.ShowAnonymousServers = false;
                 servers = publishDocDlg.GetServers();

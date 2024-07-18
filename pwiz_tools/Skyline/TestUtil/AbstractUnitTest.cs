@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// When false, tests should not access resources on the internet other than
-        /// downloading the test ZIP files. e.g. UniProt, Prosit, Chorus, etc.
+        /// downloading the test ZIP files. e.g. UniProt, Koina, Chorus, etc.
         /// </summary>
         protected bool AllowInternetAccess
         {
