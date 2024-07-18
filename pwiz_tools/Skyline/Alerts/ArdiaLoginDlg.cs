@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Alerts
 
             // Wait for the user to login and the source to change
             //webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
-            webView.CoreWebView2.DOMContentLoaded += CoreWebView2_NavigationCompleted;
+            webView.CoreWebView2.DOMContentLoaded += DOMContentLoaded_CheckForSessionCookie_ProgrammaticSigninForTesting;
 
             StartAtClientRegistrationIfNeeded();
         }
@@ -769,7 +769,7 @@ namespace pwiz.Skyline.Alerts
         }
 
         private bool _doAutomatedLogin = true;
-        private async void CoreWebView2_NavigationCompleted(object sender, CoreWebView2DOMContentLoadedEventArgs e)
+        private async void DOMContentLoaded_CheckForSessionCookie_ProgrammaticSigninForTesting(object sender, CoreWebView2DOMContentLoadedEventArgs e)
         {
             await CheckForBffHostCookie();
 
