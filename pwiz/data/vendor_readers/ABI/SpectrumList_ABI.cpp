@@ -163,14 +163,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
     if (spectrum->getHasPrecursorInfo())
     {
-        double selectedMz = 0, intensity, collisionEnergy = 0;
+        double selectedMz = 0, intensity, collisionEnergy = 0, electronKineticEnergy = 0;
         double centerMz = 0, lowerLimit, upperLimit;
         int charge;
+		FragmentationMode fragmentationMode = FragmentationMode_CID;
         spectrum->getPrecursorInfo(selectedMz, intensity, charge);
 
         if (spectrum->getHasIsolationInfo())
         {
-            spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit, collisionEnergy);
+            spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit, collisionEnergy, electronKineticEnergy, fragmentationMode);
             selectedMz = centerMz;
         }
 
@@ -210,7 +211,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             if (charge > 0)
                 selectedIon.set(MS_charge_state, charge);
 
-            precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
+			if(fragmentationMode == FragmentationMode_CID)
+				precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
+			else if(fragmentationMode == FragmentationMode_EAD)
+			{
+				precursor.activation.set(MS_EAD);
+				// wait for psi-ms-CCV #288 to add term for EAD electron beam energy
+				//if(electronKineticEnergy > 0)
+				//	precursor.activation.set(MS_Electron_Beam_Energy, electronKineticEnergy, UO_electronvolt);
+			}
+			
             if (collisionEnergy > 0)
                 precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
 
