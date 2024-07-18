@@ -39,9 +39,9 @@ namespace pwiz.Skyline.ToolsUI
         private readonly IList<RemoteAccount> _existing;
 
         //  Ardia Test Only Pass Through
-        private string ardia_TestingOnly_NotSerialized_Username;
-        private string ardia_TestingOnly_NotSerialized_Password;
-        private string ardia_TestingOnly_NotSerialized_Role;
+        private string _ardia_TestingOnly_NotSerialized_Username;
+        private string _ardia_TestingOnly_NotSerialized_Password;
+        private string _ardia_TestingOnly_NotSerialized_Role;
 
 
         public EditRemoteAccountDlg(RemoteAccount remoteAccount, IEnumerable<RemoteAccount> existing)
@@ -70,9 +70,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 cbDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
                 //  Ardia Test Only Pass Through
-                ardia_TestingOnly_NotSerialized_Username = ardiaAccount.TestingOnly_NotSerialized_Username;
-                ardia_TestingOnly_NotSerialized_Password = ardiaAccount.TestingOnly_NotSerialized_Password;
-                ardia_TestingOnly_NotSerialized_Role = ardiaAccount.TestingOnly_NotSerialized_Role;
+                _ardia_TestingOnly_NotSerialized_Username = ardiaAccount.TestingOnly_NotSerialized_Username;
+                _ardia_TestingOnly_NotSerialized_Password = ardiaAccount.TestingOnly_NotSerialized_Password;
+                _ardia_TestingOnly_NotSerialized_Role = ardiaAccount.TestingOnly_NotSerialized_Role;
             }
         }
 
@@ -95,9 +95,9 @@ namespace pwiz.Skyline.ToolsUI
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbDeleteRawAfterImport.Checked);
 
                 //  Ardia Test Only Pass Through
-                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(ardia_TestingOnly_NotSerialized_Username);
-                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Password(ardia_TestingOnly_NotSerialized_Password);
-                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Role(ardia_TestingOnly_NotSerialized_Role);
+                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(_ardia_TestingOnly_NotSerialized_Username);
+                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Password(_ardia_TestingOnly_NotSerialized_Password);
+                ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Role(_ardia_TestingOnly_NotSerialized_Role);
 
                 remoteAccount = ardiaAccount;
             }
