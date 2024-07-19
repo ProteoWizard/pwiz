@@ -388,17 +388,17 @@ namespace pwiz.Skyline.Alerts
 
                         //  Start over at Client Registration if needed
                         StartAtClientRegistrationIfNeeded();
+
+                        return; // Exit since event handled
                     }
                     else
                     {
+                        //  NOT First Time executing Registration.  Show Error message
+
                         MessageDlg.Show(
                             webView,
                             "Load Login page failed with HTTP status code 401.  Likely that the Client Registration Code is invalid.  A new Client Registration Code was just received from the server so this is likely a bug.");
-
                     }
-
-                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
-
                 }
                 else if (eventArgs.HttpStatusCode == 404)
                 {
