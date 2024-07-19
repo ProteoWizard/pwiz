@@ -621,9 +621,9 @@ namespace pwiz.Skyline.Alerts
                 // var eMessage = e.Message;
 
 
-                if (e.Message == "Response status code does not indicate success: 403 (Forbidden).")
+                if (e.Message.Contains("403"))
                 {
-                    MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Matched 403 Forbidden message.  Exception Message: " + e.Message);
+                    MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
                 }
                 else
                 {
