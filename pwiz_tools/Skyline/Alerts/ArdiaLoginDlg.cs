@@ -309,6 +309,10 @@ namespace pwiz.Skyline.Alerts
 
             //   END:  Stuffing in launch Register Device here to see if can get working
 
+            //  Start of User Login
+
+            Reset_ProgrammaticLoginFlags();
+
             var _baseUrl = Account.ServerUrl.Replace("https://", "");
 
 
@@ -837,6 +841,16 @@ namespace pwiz.Skyline.Alerts
         
         private bool _doAutomatedLogin = true;
         private bool _programmaticLogin_HaveEnteredUsername = false;
+        private bool _programmaticLogin_HaveEnteredPassword = false;
+        private bool _programmaticLogin_HaveEnteredRole = false;
+
+        private void Reset_ProgrammaticLoginFlags()
+        {
+            _programmaticLogin_HaveEnteredUsername = false;
+            _programmaticLogin_HaveEnteredPassword = false;
+            _programmaticLogin_HaveEnteredRole = false;
+        }
+
         private async void DOMContentLoaded_CheckForSessionCookie_ProgrammaticLoginForTesting(object sender, CoreWebView2DOMContentLoadedEventArgs e)
         {
             bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
@@ -905,6 +919,17 @@ namespace pwiz.Skyline.Alerts
                 }
                 else if (buttonText == @"Sign In")
                 {
+                    if (_programmaticLogin_HaveEnteredPassword)
+                    {
+                        // Have already entered password.  Is an error that arrived here again for same instance of this Dialog so log error and exit.
+
+                        //  Possibly Failed login for invalid password.
+
+                        throw new Exception("Already entered Password so appears to be stuck in login loop");
+                    }
+
+                    _programmaticLogin_HaveEnteredPassword= true;
+
                     if (hasPassword)
                     {
                         await ExecuteScriptAsync(passwordSelector + @".value=" + Account.TestingOnly_NotSerialized_Password.Quote());
@@ -919,6 +944,18 @@ namespace pwiz.Skyline.Alerts
                 }
                 else if (buttonText == @"Next") // select role
                 {
+
+                    if (_programmaticLogin_HaveEnteredRole)
+                    {
+                        // Have already entered role.  Is an error that arrived here again for same instance of this Dialog so log error and exit.
+
+                        //  Possibly Failed login for invalid password.
+
+                        throw new Exception("Already entered Role so appears to be stuck in login loop");
+                    }
+
+                    _programmaticLogin_HaveEnteredRole = true;
+
                     if (hasRole)
                     {
                         const string clickDropDownBox = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#roleSelection\").shadowRoot.firstChild.click()";
