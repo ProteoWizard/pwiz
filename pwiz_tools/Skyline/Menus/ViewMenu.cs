@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Menus
             spectrumGridForm.Show(SkylineWindow);
         }
 
-        private void otherGridsMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void liveReportsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             // The "Spectrum Grid" menu item is only visible if the user was holding down shift
             spectrumGridMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);

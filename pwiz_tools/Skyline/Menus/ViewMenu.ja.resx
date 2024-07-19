@@ -796,10 +796,10 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>ドキュメントグリッド(&amp;G)</value>
   </data>
-  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="liveReportsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+  <data name="liveReportsMenuItem.Text" xml:space="preserve">
     <value>その他のグリッド(&amp;H)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
@@ -1432,10 +1432,10 @@
   <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;otherGridsMenuItem.Name" xml:space="preserve">
-    <value>otherGridsMenuItem</value>
+  <data name="&gt;&gt;liveReportsMenuItem.Name" xml:space="preserve">
+    <value>liveReportsMenuItem</value>
   </data>
-  <data name="&gt;&gt;otherGridsMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;liveReportsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
