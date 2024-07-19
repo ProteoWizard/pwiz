@@ -166,7 +166,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
         double selectedMz = 0, intensity, collisionEnergy = 0, electronKineticEnergy = 0;
         double centerMz = 0, lowerLimit, upperLimit;
         int charge;
-		FragmentationMode fragmentationMode = FragmentationMode_CID;
+        FragmentationMode fragmentationMode = FragmentationMode_CID;
         spectrum->getPrecursorInfo(selectedMz, intensity, charge);
 
         if (spectrum->getHasIsolationInfo())
@@ -185,8 +185,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
                 product.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
                 if (lowerLimit > 0 && upperLimit > 0)
                 {
-	                product.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-                	product.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+                    product.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+                    product.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
                 }
             }
 
@@ -202,8 +202,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
                 if (lowerLimit > 0 && upperLimit > 0)
                 {
-	                precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-                	precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+                    precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+                    precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
                 }
             }
 
@@ -211,16 +211,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             if (charge > 0)
                 selectedIon.set(MS_charge_state, charge);
 
-			if(fragmentationMode == FragmentationMode_CID)
-				precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
-			else if(fragmentationMode == FragmentationMode_EAD)
-			{
-				precursor.activation.set(MS_EAD);
-				// wait for psi-ms-CCV #288 to add term for EAD electron beam energy
-				//if(electronKineticEnergy > 0)
-				//	precursor.activation.set(MS_Electron_Beam_Energy, electronKineticEnergy, UO_electronvolt);
-			}
-			
+            if(fragmentationMode == FragmentationMode_CID)
+                precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
+            else if(fragmentationMode == FragmentationMode_EAD)
+            {
+                precursor.activation.set(MS_EAD);
+                // wait for psi-ms-CCV #288 to add term for EAD electron beam energy
+                //if(electronKineticEnergy > 0)
+                //    precursor.activation.set(MS_Electron_Beam_Energy, electronKineticEnergy, UO_electronvolt);
+            }
+            
             if (collisionEnergy > 0)
                 precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
 

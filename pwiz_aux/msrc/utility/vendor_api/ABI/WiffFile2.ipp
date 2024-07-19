@@ -750,15 +750,15 @@ void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, doubl
             collisionEnergy = collisionEnergyRamp->CollisionEnergyRampStart;
         else
             collisionEnergy = (collisionEnergyRamp->CollisionEnergyRampEnd + collisionEnergyRamp->CollisionEnergyRampStart) / 2;
-			
-		fragmentationMode = FragmentationMode_CID;
+            
+        fragmentationMode = FragmentationMode_CID;
         IExperiment^ msExperiment = experiment->msExperiment;
-		if(msExperiment->FragmentationMode.HasValue && (msExperiment->FragmentationMode.Value == SCIEX::Apis::Data::v1::Types::FragmentationMode::EAD || msExperiment->FragmentationMode.Value == Types::FragmentationMode::EAD_Conventional_Trapping))
-		{
-			fragmentationMode = FragmentationMode_EAD;
-			if(msExperiment->ElectronKe.HasValue)
-				electronKineticEnergy = msExperiment->ElectronKe.Value;			
-		}
+        if(msExperiment->FragmentationMode.HasValue && (msExperiment->FragmentationMode.Value == SCIEX::Apis::Data::v1::Types::FragmentationMode::EAD || msExperiment->FragmentationMode.Value == Types::FragmentationMode::EAD_Conventional_Trapping))
+        {
+            fragmentationMode = FragmentationMode_EAD;
+            if(msExperiment->ElectronKe.HasValue)
+                electronKineticEnergy = msExperiment->ElectronKe.Value;            
+        }
     }
     CATCH_AND_FORWARD
 }

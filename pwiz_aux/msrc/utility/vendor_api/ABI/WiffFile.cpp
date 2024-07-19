@@ -789,8 +789,8 @@ void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double
         }
         else
             collisionEnergy = 0;
-		
-		fragmentationMode = FragmentationMode_CID;		
+        
+        fragmentationMode = FragmentationMode_CID;        
     }
     CATCH_AND_FORWARD
 }

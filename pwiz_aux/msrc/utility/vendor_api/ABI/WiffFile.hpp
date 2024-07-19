@@ -127,8 +127,8 @@ PWIZ_API_DECL enum Polarity
 
 enum PWIZ_API_DECL FragmentationMode 
 {
-	FragmentationMode_CID,
-	FragmentationMode_EAD
+    FragmentationMode_CID,
+    FragmentationMode_EAD
 };
 
 
