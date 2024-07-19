@@ -837,7 +837,7 @@ namespace pwiz.Skyline.Alerts
 
         //////////////////////////////////////////////////////
         ///
-        ///   Programatic Login for Testing Purposes only
+        ///   Programmatic Login for Testing Purposes only
         
         private bool _doAutomatedLogin = true;
         private bool _programmaticLogin_HaveEnteredUsername = false;
