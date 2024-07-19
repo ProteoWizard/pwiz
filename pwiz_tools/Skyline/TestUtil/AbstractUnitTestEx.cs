@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestUtil
         /// <example>GetSystemResourceString("IO.FileNotFound_FileName", "SomeFilepath")</example>
         public string GetSystemResourceString(string resourceId, params object[] args)
         {
-            if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
+            if (!_systemResources.TryGetValue(CultureInfo.CurrentUICulture, out var resourceSet))
             {
                 var assembly = Assembly.GetAssembly(typeof(object));
                 var assemblyName = assembly.GetName().Name;
@@ -221,18 +221,27 @@ namespace pwiz.SkylineTestUtil
                 foreach (string lang in _testLanguages)
                 {
                     var culture = new CultureInfo(lang);
-                    _systemResources[culture] = manager.GetResourceSet(culture, true, true);
+                    resourceSet = _systemResources[culture] = manager.GetResourceSet(culture, true, true);
+                    _systemResourceString[resourceSet] = new Dictionary<string, string>();
                 }
                 if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
-                    _systemResources[CultureInfo.CurrentUICulture] = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                {
+                    resourceSet = _systemResources[CultureInfo.CurrentUICulture] = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                    _systemResourceString[resourceSet] = new Dictionary<string, string>();
+                }
+
+                resourceSet = _systemResources[CultureInfo.CurrentUICulture];
             }
 
-            return string.Format(
-                _systemResources[CultureInfo.CurrentUICulture].GetString(resourceId) ??
-                throw new ArgumentException(nameof(resourceId)), args);
+            if (!_systemResourceString[resourceSet!].TryGetValue(resourceId, out var formatString))
+                formatString = _systemResourceString[resourceSet][resourceId] = resourceSet.GetString(resourceId) ??
+                    throw new ArgumentException(nameof(resourceId));
+            return string.Format(formatString, args);
         }
 
         private readonly string[] _testLanguages = { "en", "fr", "tr", "ja", "zh-CHS" };
         private static Dictionary<CultureInfo, ResourceSet> _systemResources = new Dictionary<CultureInfo, ResourceSet>();
+        private static Dictionary<ResourceSet, Dictionary<string, string>> _systemResourceString =
+            new Dictionary<ResourceSet, Dictionary<string, string>>();
     }
 }
