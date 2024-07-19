@@ -1678,17 +1678,26 @@ namespace pwiz.ProteowizardWrapper
             {
                 if (!scanWindow.userParam(CENTROIDED_MIN_MAX).empty())
                 {
-                    continue;
+                    // The upper and lower window limits cannot be trusted.
+                    // Just return a MsPrecursor whose IsolationWindowTargetMz can be used
+                    // to determine the polarity of the spectrum.
+                    yield return new MsPrecursor
+                    {
+                        IsolationWindowTargetMz = new SignedMz(1, negativePolarity)
+                    };
                 }
-                double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
-                double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
-                double isolationWidth = (windowEnd - windowStart) / 2;
-                yield return new MsPrecursor
+                else
                 {
-                    IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
-                    IsolationWindowLower = isolationWidth,
-                    IsolationWindowUpper = isolationWidth
-                };
+                    double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
+                    double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
+                    double isolationWidth = (windowEnd - windowStart) / 2;
+                    yield return new MsPrecursor
+                    {
+                        IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
+                        IsolationWindowLower = isolationWidth,
+                        IsolationWindowUpper = isolationWidth
+                    };
+                }
             }
         }
 
