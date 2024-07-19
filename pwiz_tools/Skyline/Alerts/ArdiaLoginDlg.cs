@@ -860,7 +860,7 @@ namespace pwiz.Skyline.Alerts
 
             if ( ( ! hasUsername ) || ( ! hasPassword ) )
             {
-                //  No TestingOnly Username for Programtic Login for Testing so exit
+                //  No TestingOnly Username or no TestingOnly Password for Programtic Login for Testing so exit
                 return;
             }
 
