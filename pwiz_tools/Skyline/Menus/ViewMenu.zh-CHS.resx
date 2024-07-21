@@ -248,10 +248,10 @@
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
-  <data name="spectralLibrariesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="libraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="spectralLibrariesToolStripMenuItem.Text" xml:space="preserve">
+  <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
     <value>谱图库(&amp;L)</value>
   </data>
   <data name="toolStripSeparator32.Size" type="System.Drawing.Size, System.Drawing">
@@ -994,10 +994,10 @@
   <data name="&gt;&gt;toolStripSeparator41.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;spectralLibrariesToolStripMenuItem.Name" xml:space="preserve">
-    <value>spectralLibrariesToolStripMenuItem</value>
+  <data name="&gt;&gt;libraryExplorerMenuItem.Name" xml:space="preserve">
+    <value>libraryExplorerMenuItem</value>
   </data>
-  <data name="&gt;&gt;spectralLibrariesToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;libraryExplorerMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator32.Name" xml:space="preserve">
