@@ -197,7 +197,7 @@
     <value>Koina出力のEncyclopeDIAライブラリへの変換</value>
   </data>
   <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
-    <value>Waiting for chromatogram library</value>
+    <value>クロマトグラムライブラリの待機中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
@@ -292,11 +292,11 @@
     <value>TFRatio</value>
   </data>
   <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
-    <value>An EncyclopeDIA task failed.</value>
+    <value>EncyclopeDIAタスクが失敗しました。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
-    <value>Demultiplexing spectra: {0}/{1}</value>
+    <value>スペクトルの逆多重化：{0}/{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">

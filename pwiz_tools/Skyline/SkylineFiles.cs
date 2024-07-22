@@ -2991,6 +2991,10 @@ namespace pwiz.Skyline
                                                          prediction.RetentionTime.IsAutoCalculated);
             if (null == prediction.RetentionTime)
             {
+                // If there are any explicit retention times assume this filtering will be meaningful
+                if (document.Molecules.Any(m => m.ExplicitRetentionTime != null))
+                    return true;
+
                 if (!prediction.UseMeasuredRTs || !anyImportedResults)
                 {
                     MessageDlg.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm);
