@@ -240,9 +240,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide or molecule
-                var sequences = new List<Tuple<string, bool>>();
+                var sequences = new List<UniquePrefixGenerator.TargetLabel>();
                 foreach (var nodePep in document.Molecules)
-                    sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
+                    sequences.Add(new UniquePrefixGenerator.TargetLabel(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
                 var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
 
                 int pointListCount = 0;

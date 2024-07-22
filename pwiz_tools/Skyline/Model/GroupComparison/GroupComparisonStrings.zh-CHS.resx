@@ -288,7 +288,7 @@
     <value>肽段序列</value>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
-    <value>格式化...</value>
+    <value>格式化…</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression" xml:space="preserve">
     <value>表达式</value>
