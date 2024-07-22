@@ -400,7 +400,7 @@
     <value>7</value>
   </data>
   <data name="radioUseList.Text" xml:space="preserve">
-    <value>別々のトランジションリストから新しいiRTカルキュレータを作成(&amp;C):</value>
+    <value>別々のトランジションリストから新しいiRTカルキュレータを作成(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;radioUseList.Name" xml:space="preserve">
     <value>radioUseList</value>
@@ -451,7 +451,7 @@
     <value>11</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>iRTデータベース(&amp;D):</value>
+    <value>iRTデータベース(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -481,7 +481,7 @@
     <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>トランジションリスト(&amp;T):</value>
+    <value>トランジションリスト(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -556,7 +556,7 @@
     <value>14</value>
   </data>
   <data name="radioUseProtein.Text" xml:space="preserve">
-    <value>インポートされたトランジションリストのタンパク質から新しいiRTカルキュレータを作成(&amp;W):</value>
+    <value>インポートされたトランジションリストのタンパク質から新しいiRTカルキュレータを作成(&amp;W)：</value>
   </data>
   <data name="&gt;&gt;radioUseProtein.Name" xml:space="preserve">
     <value>radioUseProtein</value>
@@ -586,7 +586,7 @@
     <value>17</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>iRTデータベース(&amp;D):</value>
+    <value>iRTデータベース(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
