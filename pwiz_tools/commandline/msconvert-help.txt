@@ -264,9 +264,10 @@ Predicts MSn spectrum precursor charge based on the isotopic distribution associ
   <half-width of isolation window> (default: 1.25): half-width of the isolation window (in Th.) from which precursor is derived. Window is centered at target m/z with a total size of +/- the value entered.
   <defaultMinCharge> (default: 0) and <defaultMaxCharge> (default: 0): in the event that no isotope is found in the isolation window, a range of charges between these two values will be assigned to the spectrum. If both values are left at zero, no charge will be assigned to the spectrum.
 
-activation <precursor_activation_type>
-Keeps only spectra whose precursors have the specifed activation type.  It doesn't affect non-MS spectra, and doesn't affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
+activation <precursor_activation_type> [mode=<include|exclude (include)>]
+Keeps only spectra whose precursors have the specified activation type. It doesn't affect non-MS spectra, and doesn't affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
    <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI.
+   <mode> is optional and must be either "include" (the default) or "exclude". If "exclude" is used, the filter drops spectra that match the activation type instead of keeping them.
 
 collisionEnergy low=<real> high=<real> [mode=<include|exclude (include)>] [acceptNonCID=<true|false (true)] [acceptMissingCE=<true|false (false)]
 Includes/excludes MSn spectra with CID collision energy within the specified range [<low>, <high>].

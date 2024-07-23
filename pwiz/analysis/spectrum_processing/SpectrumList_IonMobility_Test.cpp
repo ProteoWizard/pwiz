@@ -72,6 +72,29 @@ void test(const string& filepath, const ReaderList& readerList, int& testCount)
         unit_assert_to_stream(slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
         unit_assert_to_stream(!slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
     }
+    else if (bal::ends_with(filepath, "ExampleTuneMix_binned5.mbi")) // TODO: fix these values when this finally actually runs
+    {
+        unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec == slim.getIonMobilityUnits(), failedTests);
+        unit_assert_to_stream(slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
+        unit_assert_to_stream(!slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
+        unit_assert_equal_to_stream(242.55569, slim.ionMobilityToCCS(32.62, 922.01, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(195.69509, slim.ionMobilityToCCS(25.78, 400.1755, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(243.57694, slim.ionMobilityToCCS(31.55, 254.0593, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(202.32441, slim.ionMobilityToCCS(26.98, 622.0291, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(254.05743, slim.ionMobilityToCCS(33.92, 609.2808, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(172.09947, slim.ionMobilityToCCS(22.38, 294.1601, 1), EPSILON, failedTests);
+
+        unit_assert_equal_to_stream(32.62, slim.ccsToIonMobility(242.55569, 922.01, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(25.78, slim.ccsToIonMobility(195.69509, 400.1755, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(31.55, slim.ccsToIonMobility(243.57694, 254.0593, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(26.98, slim.ccsToIonMobility(202.32441, 622.0291, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(33.92, slim.ccsToIonMobility(254.05743, 609.2808, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(22.38, slim.ccsToIonMobility(172.09947, 294.1601, 1), EPSILON, failedTests);
+
+        unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec == slim2.getIonMobilityUnits(), failedTests);
+        unit_assert_to_stream(slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec), failedTests);
+        unit_assert_to_stream(!slim2.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2), failedTests);
+    }
     else if (bal::ends_with(filepath, "HDMSe_Short_noLM.raw"))
     {
         unit_assert_to_stream(SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec == slim.getIonMobilityUnits(), failedTests);

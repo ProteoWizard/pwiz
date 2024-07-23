@@ -38,15 +38,14 @@ if $(.dll-location)
 constant dll-files :
     hdf5.dll
     hdf5_cpp.dll
-    MBICore.dll
-    python37.dll
+    MBI_SDK.dll
     ;
 
-searched-lib MBICore
+searched-lib MBI_SDK
     : # sources
     : # requirements
         <link>shared:<define>PWIZ_DYN_LINK
-        <name>MBICore
+        <name>MBI_SDK
         <address-model>64
         <search>$(.dll-location)
     : # default-build
@@ -76,7 +75,7 @@ rule vendor-api-usage-requirements ( properties * )
         result += <include>$(.dll_location) ;
         result += <include>$(PWIZ_LIBRARIES_PATH)/hdf5-1.12.0/c++/src ;
         result += <include>$(PWIZ_LIBRARIES_PATH)/hdf5-1.12.0/src ;
-        result += <library>MBICore ;
+        result += <library>MBI_SDK ;
     }
     return $(result) ;
 }

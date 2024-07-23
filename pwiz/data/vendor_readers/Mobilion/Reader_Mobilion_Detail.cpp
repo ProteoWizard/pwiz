@@ -38,7 +38,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const MBIFilePtr&
 }
 
 
-PWIZ_API_DECL CVID translateAsInstrumentModel(const MBIFilePtr& rawdata)
+PWIZ_API_DECL CVID translateAsInstrumentModel(const string& model)
 {
     return CVID_Unknown;
 }
