@@ -220,7 +220,7 @@ using SharedBatch.Properties;
         public void DisplayLogFromFile()
         {
             if (!File.Exists(_filePath)) return;
-            var startBlockRegex = new Regex(DATE_PATTERN);
+            var startBlockRegex = new Regex(DATE_PATTERN, RegexOptions.Compiled);
             lock (_uiBufferLock)
             {
                 _uiBuffer.Clear();
@@ -234,8 +234,10 @@ using SharedBatch.Properties;
                             if (line == null) continue;
                             if (startBlockRegex.IsMatch(line)) // add check for 0 len
                                 _uiBuffer.Add(line);
-                            else
+                            else if (_uiBuffer.Count > 0)
                                 _uiBuffer[_uiBuffer.Count - 1] += Environment.NewLine + line;
+                            else
+                                _uiBuffer.Add(line);
                         }
                     }
                     _lines = _uiBuffer.Count;
