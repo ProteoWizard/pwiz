@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Properties
 
         public override RemoteAccount EditItem(Control owner, RemoteAccount item, IEnumerable<RemoteAccount> existing, object tag)
         {
-            using (EditRemoteAccountDlg editRemoteAccountDlg = new EditRemoteAccountDlg(item ?? UnifiAccount.DEFAULT, existing ?? this))
+            using (EditRemoteAccountDlg editRemoteAccountDlg = new EditRemoteAccountDlg(item, existing ?? this))
             {
                 if (editRemoteAccountDlg.ShowDialog(owner) == DialogResult.OK)
                     return editRemoteAccountDlg.GetRemoteAccount();

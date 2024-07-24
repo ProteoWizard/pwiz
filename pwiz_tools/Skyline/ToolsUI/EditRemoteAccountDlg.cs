@@ -57,11 +57,13 @@ namespace pwiz.Skyline.ToolsUI
             comboAccountType.Items.AddRange(RemoteAccountType.ALL.ToArray());
             if (remoteAccount == null)
             {
+                _originalAccount = UnifiAccount.DEFAULT;
                 SetRemoteAccount(UnifiAccount.DEFAULT);
             }
             else
             {
                 SetRemoteAccount(remoteAccount);
+                comboAccountType.Enabled = false;
             }
         }
 
@@ -84,10 +86,18 @@ namespace pwiz.Skyline.ToolsUI
                 if (ardiaAccount.authenticatedHttpClientFactoryIsPopulated())
                 {
                     btnLogoutArdia.Visible = true;
+                    textUsername.Enabled = false;
+                    textServerURL.Enabled = false;
+                    cbDeleteRawAfterImport.Enabled = false;
+                    btnOK.Enabled = false;
                 }
                 else
                 {
                     btnLogoutArdia.Visible = false;
+                    textUsername.Enabled = true;
+                    textServerURL.Enabled = true;
+                    cbDeleteRawAfterImport.Enabled = true;
+                    btnOK.Enabled = true;
                 }
 
                 cbDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
@@ -155,7 +165,24 @@ namespace pwiz.Skyline.ToolsUI
             // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
             //   Getting removed regardless of what the user does in the child window
             _ardiaAccount_PassedIntoEdit.ResetAuthenticatedHttpClientFactory();
-            
+
+            if (_ardiaAccount_PassedIntoEdit.authenticatedHttpClientFactoryIsPopulated())
+            {
+                btnLogoutArdia.Visible = true;
+                textUsername.Enabled = false;
+                textServerURL.Enabled = false;
+                cbDeleteRawAfterImport.Enabled = false;
+                btnOK.Enabled = false;
+            }
+            else
+            {
+                btnLogoutArdia.Visible = false;
+                textUsername.Enabled = true;
+                textServerURL.Enabled = true;
+                cbDeleteRawAfterImport.Enabled = true;
+                btnOK.Enabled = true;
+            }
+
             var y = 0;
         }
 
@@ -378,6 +405,8 @@ namespace pwiz.Skyline.ToolsUI
                 pnlUsernameLabel.Visible = false;
                 pnlPassword.Visible = false;
             }
+
+            textServerURL.Text = "";
         }
 
         private void flowLayoutPanel_Resize(object sender, EventArgs e)
