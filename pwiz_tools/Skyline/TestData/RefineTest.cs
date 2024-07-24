@@ -279,7 +279,7 @@ namespace pwiz.SkylineTestData
             }
             var docPath = TestFilesDir.GetTestPath("SRM_mini_single_replicate.sky");
             var dataPaths = new[] { TestFilesDir.GetTestPath("worm1.mzML") };
-            var converted = ConvertToSmallMolecules(null, ref docPath, dataPaths, mode);
+            var converted = AsSmallMoleculeTestUtil.ConvertToSmallMolecules(null, ref docPath, dataPaths, mode);
             AssertEx.IsDocumentState(converted, null, 4, 36, 38, 334);
             return converted;
 
