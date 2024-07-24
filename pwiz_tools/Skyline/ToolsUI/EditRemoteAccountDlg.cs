@@ -43,15 +43,26 @@ namespace pwiz.Skyline.ToolsUI
         private string _ardia_TestingOnly_NotSerialized_Password;
         private string _ardia_TestingOnly_NotSerialized_Role;
 
+        private RemoteAccount _remoteAccount_PassedIntoEdit;
+        private ArdiaAccount _ardiaAccount_PassedIntoEdit;
+
 
         public EditRemoteAccountDlg(RemoteAccount remoteAccount, IEnumerable<RemoteAccount> existing)
         {
+            _remoteAccount_PassedIntoEdit = remoteAccount;
+
             InitializeComponent();
             _existing = ImmutableList.ValueOf(existing);
             _originalAccount = remoteAccount;
             comboAccountType.Items.AddRange(RemoteAccountType.ALL.ToArray());
-            SetRemoteAccount(UnifiAccount.DEFAULT);
-            SetRemoteAccount(remoteAccount);
+            if (remoteAccount == null)
+            {
+                SetRemoteAccount(UnifiAccount.DEFAULT);
+            }
+            else
+            {
+                SetRemoteAccount(remoteAccount);
+            }
         }
 
         public void SetRemoteAccount(RemoteAccount remoteAccount)
@@ -68,6 +79,17 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (remoteAccount is ArdiaAccount ardiaAccount)
             {
+                _ardiaAccount_PassedIntoEdit = ardiaAccount;
+
+                if (ardiaAccount.authenticatedHttpClientFactoryIsPopulated())
+                {
+                    btnLogoutArdia.Visible = true;
+                }
+                else
+                {
+                    btnLogoutArdia.Visible = false;
+                }
+
                 cbDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
                 //  Ardia Test Only Pass Through
                 _ardia_TestingOnly_NotSerialized_Username = ardiaAccount.TestingOnly_NotSerialized_Username;
@@ -116,6 +138,25 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
             DialogResult = DialogResult.OK;
+        }
+
+        private void btnLogoutArdia_Click(object sender, EventArgs e)
+        {
+            // MessageDlg.Show(this, "Logout Clicked");
+
+            var z = 0;
+
+            using var logoutDlg = new ArdiaLogoutDlg(_ardiaAccount_PassedIntoEdit);
+            if (DialogResult.Cancel == logoutDlg.ShowDialog(this))
+            {
+                z = 1;
+            }
+
+            // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
+            //   Getting removed regardless of what the user does in the child window
+            _ardiaAccount_PassedIntoEdit.ResetAuthenticatedHttpClientFactory();
+            
+            var y = 0;
         }
 
         private void btnTest_Click(object sender, EventArgs e)
@@ -350,5 +391,6 @@ namespace pwiz.Skyline.ToolsUI
             pnlArdiaSettings.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
             groupBoxUnifi.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
         }
+
     }
 }

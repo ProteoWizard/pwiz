@@ -42,6 +42,7 @@
             this.tbxIdentityServer = new System.Windows.Forms.TextBox();
             this.lblIdentityServer = new System.Windows.Forms.Label();
             this.pnlArdiaSettings = new System.Windows.Forms.Panel();
+            this.btnLogoutArdia = new System.Windows.Forms.Button();
             this.cbDeleteRawAfterImport = new System.Windows.Forms.CheckBox();
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.pnlAccountTypeSelect = new System.Windows.Forms.Panel();
@@ -149,9 +150,17 @@
             // pnlArdiaSettings
             // 
             resources.ApplyResources(this.pnlArdiaSettings, "pnlArdiaSettings");
+            this.pnlArdiaSettings.Controls.Add(this.btnLogoutArdia);
             this.pnlArdiaSettings.Controls.Add(this.cbDeleteRawAfterImport);
             this.flowLayoutPanel.SetFlowBreak(this.pnlArdiaSettings, true);
             this.pnlArdiaSettings.Name = "pnlArdiaSettings";
+            // 
+            // btnLogoutArdia
+            // 
+            resources.ApplyResources(this.btnLogoutArdia, "btnLogoutArdia");
+            this.btnLogoutArdia.Name = "btnLogoutArdia";
+            this.btnLogoutArdia.UseVisualStyleBackColor = true;
+            this.btnLogoutArdia.Click += new System.EventHandler(this.btnLogoutArdia_Click);
             // 
             // cbDeleteRawAfterImport
             // 
@@ -314,5 +323,6 @@
         private System.Windows.Forms.Label lblUsername;
         private System.Windows.Forms.Panel pnlUsernameAliasLabel;
         private System.Windows.Forms.Label lblUsernameAlias;
+        private System.Windows.Forms.Button btnLogoutArdia;
     }
 }

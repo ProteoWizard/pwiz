@@ -319,6 +319,9 @@ namespace pwiz.Skyline.Alerts
             // Navigate to the login page
             var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=https://{_baseUrl}/";
 
+            //  TODO.  Test returnURL of localhost with port for possibly log in with system browser
+            // var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=http://localhost:8888/";
+
             // MessageDlg.Show(this, "loginUrl: " + loginUrl);
 
             //  NOTE:  Opening the Login URL with invalid "applicationcode" results in 401 HTTP status code along with returned contents of:  "Unknown Client. Please register/activate the client"

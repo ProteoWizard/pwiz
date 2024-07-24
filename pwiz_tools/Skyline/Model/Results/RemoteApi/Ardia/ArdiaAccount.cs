@@ -83,6 +83,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         private Func<HttpClient> _authenticatedHttpClientFactory;
 
+        public bool authenticatedHttpClientFactoryIsPopulated()
+        {
+            if (_authenticatedHttpClientFactory != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public HttpClient GetAuthenticatedHttpClient()
         {
             if (_authenticatedHttpClientFactory != null)
