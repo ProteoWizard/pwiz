@@ -3,6 +3,7 @@ Summary   : Imported a transition list from the clipboard
 All Info  :
 Imported a transition list from the clipboard
 Extra Info: 36 transitions added
+Columns identified as 'Molecule List Name','Molecule Name','Label Type','Precursor m/z','Precursor Charge','Product m/z','Product Charge','Cone Voltage','Explicit Collision Energy','Explicit Retention Time'
 Molecule List Name,Precursor Name,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Cone Voltage,Explicit Collision Energy,Explicit Retention Time
 Central Metabolism,Acetyl-CoA,light,808,-1,408,-1,25,37,
 Central Metabolism,Acetyl-CoA,heavy,831,-1,418,-1,25,37,
@@ -40,6 +41,7 @@ Nucleotide metabolism,Orotate,light,155,-1,111,-1,25,9,
 Nucleotide metabolism,Orotate,heavy,160,-1,115,-1,25,9,
 Nucleotide metabolism,UDP,light,403,-1,79,-1,25,69,
 Nucleotide metabolism,UDP,heavy,412,-1,79,-1,25,69,
+
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed

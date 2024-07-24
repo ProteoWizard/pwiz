@@ -249,7 +249,13 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor = null)
         {
-            IProgressStatus status = new ProgressStatus(IrtResources.IrtDb_UpdatePeptides_Updating_peptides);
+            var docType = newPeptides.Any(p => !(p?.Target?.IsProteomic ?? true))
+                ? SrmDocument.DOCUMENT_TYPE.mixed
+                : SrmDocument.DOCUMENT_TYPE.proteomic;
+
+            var msg = Helpers.PeptideToMoleculeTextMapper.Translate(IrtResources.IrtDb_UpdatePeptides_Updating_peptides, docType); // Perform "peptide"->"molecule" translation as needed
+
+            IProgressStatus status = new ProgressStatus(msg);
             monitor?.UpdateProgress(status);
             return UpdatePeptides(newPeptides, monitor, ref status);
         }
