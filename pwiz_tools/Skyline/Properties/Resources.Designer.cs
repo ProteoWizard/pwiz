@@ -4503,6 +4503,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string FormulaBox_FormulaBox_Help {
+            get {
+                return ResourceManager.GetString("FormulaBox_FormulaBox_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Fragment {
