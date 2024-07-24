@@ -190,8 +190,11 @@ namespace AutoQC
                 return true;
             }
 
-            if (message.Contains(
-                    @"QC folders allow new imports to add or remove peptides, but not completely change the list"))
+            if (message.Contains(@"QC folders allow new imports to add or remove peptides, but not completely change the list")
+                || message.Contains(@"QC folders allow new imports to add or remove molecules, but not completely change the list")
+                || message.Contains(@"Invalid audit log")
+                || message.Contains(@"does not have permissions to upload to the Panorama folder")
+                || message.Contains(@"You do not have permission to delete runs "))
             {
                 _fatalPanoramaError = true;
                 return true;
