@@ -816,4 +816,7 @@ Needs Review:New resource</comment>
     <value>検出されたフィーチャー</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>ライブラリ強度</value>
+  </data>
 </root>
