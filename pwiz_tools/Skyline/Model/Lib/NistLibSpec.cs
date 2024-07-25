@@ -1837,7 +1837,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
-            ILookup<LibKey, IonMobilityAndCCS[]> ionMobilitiesLookup;
+            ILookup<LibKey, IonMobilityAndCCS> ionMobilitiesLookup;
             if (targetIons != null)
             {
                 if (!targetIons.Any())
@@ -1848,19 +1848,19 @@ namespace pwiz.Skyline.Model.Lib
 
                 ionMobilitiesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
                     entry => entry.Key,
-                    entry => new[] {entry.IonMobility});
+                    entry => entry.IonMobility);
             }
             else
             {
                 ionMobilitiesLookup = _libraryEntries.ToLookup(
                     entry => entry.Key,
-                    entry => new[] { entry.IonMobility });
+                    entry => entry.IonMobility);
             }
             var ionMobilitiesDict = ionMobilitiesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
                 grouping => grouping.Key,
                 grouping =>
                 {
-                    var array = grouping.SelectMany(values => values).Where(v => v != null && !v.IsEmpty).ToArray();
+                    var array = grouping.Distinct().ToArray();
                     Array.Sort(array);
                     return array;
                 });
