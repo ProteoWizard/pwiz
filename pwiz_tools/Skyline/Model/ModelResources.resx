@@ -815,4 +815,7 @@
   <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
     <value>detected features</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
+  </data>
 </root>
