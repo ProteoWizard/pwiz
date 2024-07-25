@@ -2361,7 +2361,7 @@ namespace pwiz.Skyline.Properties
             var ionMobilityFilteringUserControl = (owner as IonMobilityFilteringUserControl) ??
                                                   ((owner as TransitionSettingsUI)?.IonMobilityControl) ??  // Accessed via Settings>TransitionSettings>IonMobility>Add
                                                   ((owner as Form)?.Owner as TransitionSettingsUI)?.IonMobilityControl; // Accessed via Settings>TransitionSettings>IonMobility>EditList>Add|EditCurrent
-                var ionMobilityWindowWidthCalculator = ionMobilityFilteringUserControl!.IonMobilityWindowWidthCalculator;
+            var ionMobilityWindowWidthCalculator = ionMobilityFilteringUserControl!.IonMobilityWindowWidthCalculator;
             using var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing, ionMobilityWindowWidthCalculator);
             if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
             {
