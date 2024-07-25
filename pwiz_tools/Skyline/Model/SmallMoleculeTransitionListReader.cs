@@ -2567,7 +2567,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idSMILES, idSMILES),
                     Tuple.Create(idKEGG, idKEGG),
                     Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
-                    Tuple.Create(libraryIntensity, Resources.PasteDlg_UpdateMoleculeType_Library_Intensity),
+                    Tuple.Create(libraryIntensity, ModelResources.PasteDlg_UpdateMoleculeType_Library_Intensity),
                     Tuple.Create(ignoreColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column),
                     // ReSharper restore StringLiteralTypo
                 })
