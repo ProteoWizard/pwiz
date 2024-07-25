@@ -319,4 +319,17 @@
   <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
     <value>予期しない文字「{0}」が{1}行目で見つかりました。</value>
   </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_" xml:space="preserve">
+    <value>このドキュメントにデコイを追加してもよろしいですか？ 
+このドキュメントはスペクトルライブラリから得たピーク境界を使用します。このような境界を使用している場合、Skylineで独自のピーク検出は実行されません。
+ピークスコアモデルを効果的にトレーニングできるようにするには、以下の手順に従います。
+
+1. [設定] &gt; [ペプチド設定 - ライブラリ] タブに移動して [リストの編集] をクリックします。
+2. ライブラリのアイテムを選択して [編集] をクリックし、[指定されたピーク境界を使用する] チェックボックスをオフにします。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
+    <value>デコイを追加</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

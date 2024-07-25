@@ -208,7 +208,11 @@ namespace pwiz.Skyline.Model
                 foreach (var mod in modifications[i])
                 {
                     var formula = mod.Formula;
-                    if (formula == null)
+                    if (formula != null)
+                    {
+                        yield return formula.GetMoleculeMassOffset();
+                    }
+                    else
                     {
                         var staticMod = mod.StaticMod;
                         var aa = unmodifiedSequence[i];
@@ -216,14 +220,10 @@ namespace pwiz.Skyline.Model
                         {
                             yield return SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms).GetMoleculeMassOffset();
                         }
-                    }
-                    if (formula != null)
-                    {
-                        yield return formula.GetMoleculeMassOffset();
-                    }
-                    else
-                    {
-                        yield return MoleculeMassOffset.Create(null, mod.MonoisotopicMass, mod.AverageMass);
+                        else
+                        {
+                            yield return MoleculeMassOffset.Create(null, mod.MonoisotopicMass, mod.AverageMass);
+                        }
                     }
                 }
             }

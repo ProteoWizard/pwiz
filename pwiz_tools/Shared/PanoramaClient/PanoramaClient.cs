@@ -183,6 +183,7 @@ namespace pwiz.PanoramaClient
 
             // Wait for import to finish before returning.
             var startTime = DateTime.UtcNow;
+            var importFailed = false;
             while (true)
             {
                 if (progressMonitor.IsCanceled)
@@ -196,6 +197,7 @@ namespace pwiz.PanoramaClient
                 if (row == null)
                     continue;
 
+                var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
                 var status = new ImportStatus((string)row[@"Status"]);
                 if (status.IsComplete)
                 {
@@ -203,13 +205,29 @@ namespace pwiz.PanoramaClient
                     return new Uri(ServerUri, (string)row[@"_labkeyurl_Description"]);
                 }
 
-                else if (status.IsError || status.IsCancelled)
+                else if (status.IsCancelled)
                 {
-                    var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
-                    var e = new PanoramaImportErrorException(ServerUri, jobUrl, status.IsCancelled);
+                    var e = new PanoramaImportErrorException(ServerUri, jobUrl, null, status.IsCancelled);
                     progressMonitor.UpdateProgress(
                         _progressStatus = _progressStatus.ChangeErrorException(e));
                     throw e;
+                }
+                else if (status.IsError )
+                {
+                    var error = (string)row[@"Info"];
+                    if (@"Import failed".Equals(error) && !importFailed)
+                    {
+                        // We will see "Import failed" if we happen to query the status before the actual error message is set on job on the Panorama server.
+                        // Check the status one more time.
+                        importFailed = true;
+                    }
+                    else
+                    {
+                        var e = new PanoramaImportErrorException(ServerUri, jobUrl, error, status.IsCancelled);
+                        progressMonitor.UpdateProgress(
+                            _progressStatus = _progressStatus.ChangeErrorException(e));
+                        throw e;
+                    }
                 }
 
                 UpdateProgressAndWait(status, progressMonitor, startTime);
@@ -439,8 +457,33 @@ namespace pwiz.PanoramaClient
 
         protected virtual LabKeyError ParseUploadFileCompletedEventArgs(UploadFileCompletedEventArgs e)
         {
-            var serverResponse = e?.Result;
-            return serverResponse != null ? PanoramaUtil.GetIfErrorInResponse(Encoding.UTF8.GetString(serverResponse)) : null;
+            if (e == null) return null;
+            // Check the Error and Cancelled properties first to determine whether the asynchronous upload completed.
+            // If the upload file operation did not complete correctly, the Result property's value is not valid
+            // and accessing it to read the server response throws a TargetInvocationException.
+            if (e.Error != null)
+            {
+                return new LabKeyError(e.Error.ToString(), null);
+            }
+            if (e.Cancelled)
+            {
+                return new LabKeyError(Resources.AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled, null);
+            }
+
+            try
+            {
+                var serverResponse = e.Result;
+                return serverResponse != null ? PanoramaUtil.GetIfErrorInResponse(Encoding.UTF8.GetString(serverResponse)) : null;
+            }
+            catch (Exception ex)
+            {
+                // Asynchronous file upload runs on a worker thread. Handle any exceptions that are thrown otherwise the Skyline window will crash.
+                return new LabKeyError(CommonTextUtil.LineSeparate(
+                    Resources
+                        .AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_,
+                    ex.ToString()), null);
+            }
+            
         }
 
         public virtual JObject SupportedVersionsJson()

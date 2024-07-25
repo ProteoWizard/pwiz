@@ -157,6 +157,7 @@
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
+    <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />

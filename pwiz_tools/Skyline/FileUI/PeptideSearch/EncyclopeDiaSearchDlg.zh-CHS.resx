@@ -223,7 +223,7 @@
     <value>23</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>默认电荷：</value>
+    <value>默认电荷:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -397,7 +397,7 @@
     <value>25</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>最大电荷：</value>
+    <value>最大电荷:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -448,7 +448,7 @@
     <value>21</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>最小电荷：</value>
+    <value>最小电荷:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -478,7 +478,7 @@
     <value>20</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>默认 &amp;NCE：</value>
+    <value>默认 NCE(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -913,7 +913,7 @@
     <value>36</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>单位：</value>
+    <value>单位:</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -943,7 +943,7 @@
     <value>35</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>单位：</value>
+    <value>单位:</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -1024,7 +1024,7 @@
     <value>31</value>
   </data>
   <data name="lblMs2Tolerance.Text" xml:space="preserve">
-    <value>MS2 耐受性(&amp;2)：</value>
+    <value>MS2 耐受性(&amp;2):</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.Name" xml:space="preserve">
     <value>lblMs2Tolerance</value>
@@ -1096,7 +1096,7 @@
     <value>28</value>
   </data>
   <data name="lblMs1Tolerance.Text" xml:space="preserve">
-    <value>MS1 耐受性(&amp;1)：</value>
+    <value>MS1 耐受性(&amp;1):</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.Name" xml:space="preserve">
     <value>lblMs1Tolerance</value>

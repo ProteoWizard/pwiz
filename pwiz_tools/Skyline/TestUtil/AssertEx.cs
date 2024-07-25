@@ -902,6 +902,18 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // No way we're cleaning this up to make a match
             }
+
+            if (colsExpected.Length == 1 && lineActual.Contains(@"""")) // Is path embedded in a simple string?
+            {
+                // e.g. 'Import Molecule Search > Extract Chromatograms > Found results files : contains "C:\Users\bspratt\Downloads\Perftests\Label-free\Orbi3_SA_IP_pHis3_01.RAW"'
+                colsActual = lineActual.Split('\"');
+                colsExpected = lineExpected.Split('\"');
+                if (colsExpected.Length != colsActual.Length)
+                {
+                    return; // No way we're cleaning this up to make a match
+                }
+            }
+
             for (var col = 0; col < colsActual.Length; col++)
             {
                 var pathE = colsExpected[col];
@@ -911,20 +923,40 @@ namespace pwiz.SkylineTestUtil
                     continue;
                 }
 
-                try  // Was column a filename?
+                // Did column contain a filename?
+                var partsE = pathE.Trim().Split('"'); // e.g. 'value="c:\foo\bar.baz",' => {'value=', '"c:\foo\bar.baz"', ','}
+                var partsA = pathA.Trim().Split('"'); 
+                if (partsE.Length != partsA.Length)
                 {
-                    var fileE = Path.GetFileName(pathE.Trim('"')); // Unquote if needed
-                    var fileA = Path.GetFileName(pathA.Trim('"')); // Unquote if needed
-                    if (string.Equals(fileE, fileA) ||
-                        (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
-                    {
-                        lineExpected = lineExpected.Replace(pathE, string.Empty);
-                        lineActual = lineActual.Replace(pathA, string.Empty);
-                    }
+                    return; // No way we're cleaning this up to make a match
                 }
-                catch
+
+                for (var p = 0; p < partsE.Length; p++)
                 {
-                    // ignored
+                    var partE = partsE[p];
+                    var partA = partsA[p];
+                    if (string.Equals(partE, partA))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var fileE = Path.GetFileName(partE);
+                        var fileA = Path.GetFileName(partA);
+                        var tmpExt = @".tmp";
+                        if (string.Equals(fileE, fileA) || // Same filename, different path
+                            (Path.GetExtension(fileE) == tmpExt) && Path.GetExtension(fileA) == tmpExt) // Tmp file names will always vary
+                        {
+                            var ignoredPath = @"<ignored_path_difference>";
+                            lineExpected = lineExpected.Replace(partE, ignoredPath);
+                            lineActual = lineActual.Replace(partA, ignoredPath);
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
         }
@@ -1069,10 +1101,12 @@ namespace pwiz.SkylineTestUtil
 
             var sep1 = DetermineDsvDelimiter(lines1, out var colCount1);
             var sep2 = DetermineDsvDelimiter(lines2, out var colCount2);
+            var errors = new List<string>();
             for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
             {
                 var cols1 = lines1[lineNum].ParseDsvFields(sep1);
                 var cols2 = lines2[lineNum].ParseDsvFields(sep2);
+
                 colCount1 = cols1.Length;
                 colCount2 = cols2.Length;
 
@@ -1087,6 +1121,7 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 AreEqual(colCount1, colCount2, $"Expected same column count at line {lineNum}");
+
                 if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
                 {
                     continue; // Don't expect localized headers to match 
@@ -1112,10 +1147,11 @@ namespace pwiz.SkylineTestUtil
 
                     if (!same)
                     {
-                        AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
+                        errors.Add($"Difference at row {lineNum} column {colNum}: expected \"{cols1[colNum]}\" got \"{cols2[colNum]}\"");
                     }
                 }
             }
+            AreEqual(0, errors.Count, string.Join("\n", errors));
         }
 
         /// <summary>

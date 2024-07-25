@@ -166,11 +166,13 @@
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
+    <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
+    <Compile Include="AutoZoomTest.cs" />
     <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
@@ -221,6 +223,7 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="RenameMoleculeTest.cs" />
     <Compile Include="ReplicateNameMetadataRuleTest.cs" />
+    <Compile Include="RescoreInPlaceTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />

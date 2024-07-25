@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 document = docContainer.Document;
             }
-            document = ConvertToSmallMolecules(document, ref docPath, new[] {mz5Path}, asSmallMolecules);
+            document = AsSmallMoleculeTestUtil.ConvertToSmallMolecules(document, ref docPath, new[] {mz5Path}, asSmallMolecules);
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
                 float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;

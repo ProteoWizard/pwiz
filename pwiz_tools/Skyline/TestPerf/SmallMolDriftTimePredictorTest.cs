@@ -66,9 +66,7 @@ namespace TestPerf
             var docCurrent = SkylineWindow.Document;
             var transitionList = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
             // Transition list is suitably formatted with headers to just drop into the targets tree
-            SetCsvFileClipboardText(transitionList);
-            PasteSmallMoleculeListNoAutoManage(); // Paste the clipboard text, dismiss the offer to enable automanage
-            var document = WaitForDocumentLoaded();
+            var document = PasteSmallMoleculeListNoAutoManage(transitionList); // Paste the clipboard text, dismiss the offer to enable automanage
             AssertEx.IsDocumentState(document, null, 1, 4, 4, 4);
             {
                 var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);

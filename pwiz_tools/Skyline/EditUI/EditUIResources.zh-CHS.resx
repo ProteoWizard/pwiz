@@ -134,7 +134,7 @@
     <value>无</value>
   </data>
   <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
-    <value>保留时间计算器...</value>
+    <value>保留时间计算器…</value>
   </data>
   <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
     <value>保留时间计算器 ({0})</value>
@@ -461,5 +461,17 @@ Example: Looplink: T [4]
   </data>
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
     <value>这些蛋白质包含：</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>查找可以解释所有肽段的最小基因组列表(&amp;M)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
+    <value>每个基因的最少肽段数(&amp;N)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
+    <value>删除子集基因(&amp;R)</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

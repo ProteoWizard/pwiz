@@ -55,18 +55,21 @@ namespace pwiz.SkylineTestConnected
                 toolsOptionsUi.KoinaRetentionTimeModelCombo = KoinaRetentionTimeModel.Models.First();
             });
             OkDialog(toolsOptionsUi, toolsOptionsUi.OkDialog);
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Modifications);
+            const string OXIDATION_M = "Oxidation (M)";
+            AddStaticMod(OXIDATION_M, peptideSettings);
+            RunUI(() =>
+            {
+                peptideSettings.PickedStaticMods = peptideSettings.PickedStaticMods.Union(new[] { OXIDATION_M }).ToArray();
+                peptideSettings.OkDialog();
+            });
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
             {
-                SetClipboardText("ELVIS\r\nLIVES\r\nFISANLPC[+57.02146]NKFC[+57.02146]K");
+                SetClipboardText("ELVIS\r\nLIVES\r\nFISAM[Oxidation (M)]LPC[+57.02146]NKFC[+57.02146]K");
                 pasteDlg.PastePeptides();
                 pasteDlg.OkDialog();
             });
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
-            {
-                peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library;
-            });
-
+            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             const string libraryWithoutIrt = "LibraryWithoutIrt";
             RunUI(() =>

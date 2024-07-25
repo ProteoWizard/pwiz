@@ -1216,11 +1216,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 groupBoxRetentionTimeToKeep.Enabled = true;
             }
-            if (radioKeepAllTime.Checked && !disabled && ShouldAdviseAgainstFullGradientChromatograms(AcquisitionMethod))
+
+            var filterTypeWarning = GetRetentionTimeFilterWarning();
+            if (radioKeepAllTime.Checked && !disabled && filterTypeWarning != null)
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,
-                    SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
+                    SettingsUIResources
+                        .FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
             }
             else
             {
@@ -1229,7 +1232,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             var timeAroundMs2IdsControls = new List<Control> {radioTimeAroundMs2Ids};
             timeAroundMs2IdsControls.AddRange(flowLayoutPanelTimeAroundMs2Ids.Controls.Cast<Control>());
-            string strWarning = null;
+            string strTimeAroundMs2IdsWarning = null;
             if (radioTimeAroundMs2Ids.Checked && !disabled)
             {
                 tbxTimeAroundMs2Ids.Enabled = true;
@@ -1239,52 +1242,77 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!document.Settings.HasLibraries)
                     {
-                        strWarning = SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
+                        strTimeAroundMs2IdsWarning = SettingsUIResources
+                            .FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
-                    else if (document.Molecules.All(
-                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget, peptide.SourceExplicitMods).Length == 0))
+                    else if (document.Molecules.All(peptide =>
+                                 document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget,
+                                     peptide.SourceExplicitMods).Length == 0))
                     {
-                        strWarning = SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
+                        strTimeAroundMs2IdsWarning = SettingsUIResources
+                            .FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
                     }
                 }
+
+                strTimeAroundMs2IdsWarning ??= filterTypeWarning;
             }
             else
             {
                 tbxTimeAroundMs2Ids.Enabled = false;
             }
 
-            Color foreColor = strWarning == null ? DefaultForeColor : Color.Red;
+            Color foreColor = strTimeAroundMs2IdsWarning == null ? DefaultForeColor : Color.Red;
             foreach (var control in timeAroundMs2IdsControls)
             {
                 control.ForeColor = foreColor;
-                toolTip.SetToolTip(control, strWarning);
+                toolTip.SetToolTip(control, strTimeAroundMs2IdsWarning);
             }
 
-            if (radioUseSchedulingWindow.Checked && !disabled)
+            tbxTimeAroundPrediction.Enabled = radioUseSchedulingWindow.Checked && !disabled;
+            foreach (var control in flowLayoutPanelUseSchedulingWindow.Controls.Cast<Control>()
+                         .Append(radioUseSchedulingWindow))
             {
-                tbxTimeAroundPrediction.Enabled = true;
-            }
-            else
-            {
-                tbxTimeAroundPrediction.Enabled = false;
+                if (radioUseSchedulingWindow.Checked && filterTypeWarning != null)
+                {
+                    control.ForeColor = Color.Red;
+                    toolTip.SetToolTip(control, filterTypeWarning);
+                }
+                else
+                {
+                    control.ForeColor = DefaultForeColor;
+                    toolTip.SetToolTip(control, null);
+                }
             }
         }
 
         /// <summary>
-        /// Returns true if the user should be encouraged to use one of the retention time filtering
-        /// options to prevent full gradient chromatograms from being extracted.
+        /// Returns a warning to show based on acquisition method and retention time filtering.
+        /// Retention time filtering is encouraged for untargeted methods and discouraged
+        /// for targeted methods.
         /// </summary>
-        private bool ShouldAdviseAgainstFullGradientChromatograms(
-            FullScanAcquisitionMethod fullScanAcquisitionMethod)
+        private string GetRetentionTimeFilterWarning()
         {
-            if (fullScanAcquisitionMethod == FullScanAcquisitionMethod.PRM ||
-                fullScanAcquisitionMethod == FullScanAcquisitionMethod.SureQuant ||
-                fullScanAcquisitionMethod == FullScanAcquisitionMethod.Targeted)
+            if (AcquisitionMethod == FullScanAcquisitionMethod.PRM ||
+                AcquisitionMethod == FullScanAcquisitionMethod.SureQuant ||
+                AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
             {
-                return false;
+                if (RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids ||
+                    RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+                {
+                    return string.Format(
+                        SettingsUIResources.FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient, AcquisitionMethod);
+                }
+
+                return null;
             }
 
-            return true;
+            if (RetentionTimeFilterType == RetentionTimeFilterType.none)
+            {
+                return SettingsUIResources
+                    .FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_;
+            }
+
+            return null;
         }
 
         public int GroupBoxMS2Height { get { return groupBoxMS2.Height; } }

@@ -90,5 +90,11 @@ namespace pwiz.Skyline.Alerts
             return ShowDialog(parent);
         }
         private const int TIMEOUT_SECONDS = 10;
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            GetModeUIHelper().OnLoad(this);
+        }
     }
 }

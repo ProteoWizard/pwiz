@@ -155,6 +155,7 @@ namespace pwiz.Skyline.Model
                 var key = new AAModKey
                 {
                     Name = modInfo.Name,
+                    UniModId = modInfo.Mod?.UnimodId,
                     Mass = mass,
                     AA = modInfo.AA,
                     Terminus = modInfo.ModTerminus,
