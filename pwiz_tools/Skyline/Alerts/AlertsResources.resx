@@ -259,4 +259,10 @@
   <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
     <value>No update was found.</value>
   </data>
+  <data name="ArdiaLoginDlg_Error_interacting_with_web_page" xml:space="preserve">
+    <value>Error interacting with web page</value>
+  </data>
+  <data name="ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_" xml:space="preserve">
+    <value>Role '{0}' is not an available option. Pick your role manually.</value>
+  </data>
 </root>

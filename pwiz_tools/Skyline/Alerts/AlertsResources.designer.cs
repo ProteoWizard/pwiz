@@ -79,6 +79,24 @@ namespace pwiz.Skyline.Alerts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error interacting with web page.
+        /// </summary>
+        public static string ArdiaLoginDlg_Error_interacting_with_web_page {
+            get {
+                return ResourceManager.GetString("ArdiaLoginDlg_Error_interacting_with_web_page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Role &apos;{0}&apos; is not an available option. Pick your role manually..
+        /// </summary>
+        public static string ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_ {
+            get {
+                return ResourceManager.GetString("ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} files have not been located..
         /// </summary>
         public static string AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_ {

@@ -44,6 +44,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using log4net.Filter;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -1300,6 +1301,26 @@ namespace pwiz.Skyline.Properties
             set
             {
                 NormalizeOptionValue = value.PersistedName;
+            }
+        }
+
+        [UserScopedSetting]
+        public SerializableDictionary<string, string> ArdiaRegistrationCodes
+        {
+            get
+            {
+                var value = (SerializableDictionary<string, string>)this[nameof(ArdiaRegistrationCodes)];
+                if (value == null)
+                {
+                    value = new SerializableDictionary<string, string>();
+                    this[nameof(ArdiaRegistrationCodes)] = value;
+                }
+
+                return value;
+            }
+            set
+            {
+                this[nameof(ArdiaRegistrationCodes)] = value;
             }
         }
     }

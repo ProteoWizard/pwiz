@@ -213,6 +213,7 @@
     <Compile Include="PanoramaClientDownloadTest.cs" />
     <Compile Include="KoinaBuildLibraryTest.cs" />
     <Compile Include="KoinaConnectionTest.cs" />
+    <Compile Include="ArdiaFunctionalTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="Results\RemoteApi\UnifiTest.cs" />
     <Compile Include="KoinaBuildLibraryFromCsvTest.cs" />

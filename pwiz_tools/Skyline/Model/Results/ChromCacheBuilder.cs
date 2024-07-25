@@ -187,13 +187,21 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
-                        bool enableSimSpectrum = fullScan.IsEnabled; // And chromatogram extraction requires SIM as spectra
-                        bool preferOnlyMs1 = fullScan.IsEnabledMs && !fullScan.IsEnabledMsMs; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
-                        bool centroidMs1 = fullScan.IsCentroidedMs;
-                        bool centroidMs2 = fullScan.IsCentroidedMsMs;
-                        const bool ignoreZeroIntensityPoints = true; // Omit zero intensity points during extraction
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMs1,
-                            centroidMs1, centroidMs2, ignoreZeroIntensityPoints);
+                        string docDir = Path.GetDirectoryName(CachePath) ?? Directory.GetCurrentDirectory();
+                        using var cancellationTokenSource = new PollingCancellationToken(() => _loader.IsCanceled);
+                        var openMsDataFileParams = new OpenMsDataFileParams(cancellationTokenSource.Token, _loader, _status)
+                        {
+                            SimAsSpectra = fullScan.IsEnabled, // And chromatogram extraction requires SIM as spectra
+                            PreferOnlyMs1 =
+                                fullScan.IsEnabledMs &&
+                                !fullScan
+                                    .IsEnabledMsMs, // If we don't want MS2, ask reader to totally skip it (not guaranteed)
+                            CentroidMs1 = fullScan.IsCentroidedMs,
+                            CentroidMs2 = fullScan.IsCentroidedMsMs,
+                            DownloadPath = docDir
+                        };
+                        inFile = MSDataFilePath.OpenMsDataFile(openMsDataFileParams);
+                        _status = openMsDataFileParams.ProgressStatus;
                     }
 
                     // Check for cancellation

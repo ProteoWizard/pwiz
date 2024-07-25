@@ -47,8 +47,10 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -63,11 +65,13 @@ namespace TestPerf
     public class OrbiPrmTutorialTest : AbstractFunctionalTestEx
     {
         private const string EXT_ZIP = ".zip";
-        private const string ROOT_DIR = "PRM-Orbi";
+        private static string ROOT_DIR = "PRM-OrbiRaw";
         private static string LIBRARY_DIR = Path.Combine(ROOT_DIR, "Heavy Library");
         private static string DATA_DIR = Path.Combine(ROOT_DIR, "PRM data");
         private static string SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
         private static string STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
+
+        private static string[] SAMPLE_NAMES = { "G1_rep1", "G1_rep2", "G1_rep3", "G2M_rep1", "G2M_rep2", "G2M_rep3", "S_rep1", "S_rep2", "S_rep3" };
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOrbiPrmTutorial()
@@ -82,7 +86,7 @@ namespace TestPerf
 
             TestFilesZipPaths = new[]
             {
-                @"http://skyline.ms/tutorials/PRM-Orbi.zip",
+                @"http://skyline.ms/tutorials/PRM-OrbiRaw.zip",
                 @"TestPerf\OrbiPrmViews.zip",
             };
 
@@ -92,19 +96,49 @@ namespace TestPerf
                 Path.Combine(LIBRARY_DIR, "heavy-01.pep.xml"),
                 Path.Combine(LIBRARY_DIR, "heavy-02.mzXML"),
                 Path.Combine(LIBRARY_DIR, "heavy-02.pep.xml"),
-                Path.Combine(SAMPLES_DIR, "G1_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G1_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G1_rep3.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep3.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep3.mzXML"),
-                Path.Combine(STANDARDS_DIR, "heavy-PRM.mzXML"),
+                Path.Combine(STANDARDS_DIR, "heavy-PRM.raw"),
+            }.Union(SAMPLE_NAMES.Select(s => Path.Combine(SAMPLES_DIR, s + ".raw"))).ToArray();
+
+            RunFunctionalTest();
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        public void TestOrbiPrmArdia()
+        {
+            if (!ArdiaTestUtil.EnableArdiaTests)
+            {
+                Console.Error.WriteLine($"NOTE: skipping {TestContext.TestName} because username/password for Ardia is not configured in environment variables");
+                return;
+            }
+
+            IsArdiaTest = true;
+
+            //            IsPauseForScreenShots = true;
+            //            RunPerfTests = true;
+            //            IsCoverShotMode = true;
+            //            IsRecordMode = true;
+            CoverShotName = "PRM-Orbitrap";
+
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRMOrbitrap-22_2.pdf";
+
+            ROOT_DIR = "PRM-OrbiRaw";
+            LIBRARY_DIR = Path.Combine(ROOT_DIR, "Heavy Library");
+
+            TestFilesZipPaths = new[]
+            {
+                @"http://skyline.ms/tutorials/PRM-OrbiRaw.zip",
+                @"TestPerf\OrbiPrmViews.zip",
             };
 
-            RunFunctionalTest();            
+            TestFilesPersistent = new[]
+            {
+                Path.Combine(LIBRARY_DIR, "heavy-01.mzXML"),
+                Path.Combine(LIBRARY_DIR, "heavy-01.pep.xml"),
+                Path.Combine(LIBRARY_DIR, "heavy-02.mzXML"),
+                Path.Combine(LIBRARY_DIR, "heavy-02.pep.xml"),
+            };
+
+            RunFunctionalTest();
         }
 
         private string DataPath => TestFilesDirs.Last().PersistentFilesDir;
@@ -127,6 +161,8 @@ namespace TestPerf
         private const string REPORT_SCHEDULED_METHOD = "PRM_precursor_list_scheduled";
         private const string REPORT_QUANT = "PRM-Quant";
         private const string INSTRUMENT_METHOD = "PRM_mass_list";
+
+        private bool IsArdiaTest;
 
         protected override void DoTest()
         {
@@ -421,6 +457,17 @@ namespace TestPerf
             }
         }
 
+        private void OpenFile(OpenDataSourceDialog openDataSourceDialog, params string[] names)
+        {
+            WaitForConditionUI(() => names.All(n => openDataSourceDialog.ListItemNames.Contains(n)));
+            RunUI(() =>
+            {
+                foreach (string name in names)
+                    openDataSourceDialog.SelectFile(name);
+                openDataSourceDialog.Open();
+            });
+        }
+
         private void ExportScheduledMethodReport()
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -428,8 +475,22 @@ namespace TestPerf
 
             using (new WaitDocumentChange(null, true))
             {
-                RunUI(() => SetNamedPathSets(importResultsDlg, STANDARDS_DIR));
-                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                if (IsArdiaTest)
+                {
+                    var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
+                    var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+                    RunUI(() => editAccountDlg.SetRemoteAccount(ArdiaTestUtil.GetTestAccount()));
+                    OkDialog(editAccountDlg, editAccountDlg.OkDialog);
+                    OpenFile(openDataSourceDialog, "Skyline");
+                    OpenFile(openDataSourceDialog, "PRM data");
+                    OpenFile(openDataSourceDialog, "Standards");
+                    OpenFile(openDataSourceDialog, "heavy-PRM");
+                }
+                else
+                {
+                    RunUI(() => SetNamedPathSets(importResultsDlg, STANDARDS_DIR));
+                    OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                }
             }
             RunUI(SkylineWindow.RemoveMissingResults);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 19, 31, 62, 518);
@@ -568,7 +629,19 @@ namespace TestPerf
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             using (new WaitDocumentChange(null, true))
             {
-                RunUI(() => SetNamedPathSets(importResultsDlg, SAMPLES_DIR));
+                if (IsArdiaTest)
+                {
+                    var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
+                    RunUI(() => openDataSourceDialog.CurrentDirectory = ArdiaTestUtil.GetTestAccount().GetRootUrl());
+                    OpenFile(openDataSourceDialog, "Skyline");
+                    OpenFile(openDataSourceDialog, "PRM data");
+                    OpenFile(openDataSourceDialog, "Samples");
+                    OpenFile(openDataSourceDialog, SAMPLE_NAMES);
+                }
+                else
+                {
+                    RunUI(() => SetNamedPathSets(importResultsDlg, SAMPLES_DIR));
+                }
                 OkDialog(importResultsDlg, importResultsDlg.OkDialog);
             }
             Assert.IsNotNull(SkylineWindow.Document.MeasuredResults);
@@ -801,18 +874,18 @@ namespace TestPerf
 
         private double[] _g2mVsG1ExpectedValues =
         {
-            1.5286469630745583, 4.8741132982321638, 5.1286240708373816, 222.57571290469059, 15.126911528599191,
-            9.9395636452638971, 6.7226217812200444, 3.1161290456155295, 1.8189607341782479, 2.0644594385791533,
-            3.7649084396237988, double.NaN, 6.4036330881755932, 4.2893196515692162, 1.6064068091869139, 
-            1.6279242168512782, 6.9216032397063252, 3.0280590759043315, double.NaN
+            1.528510079634777, 4.87622040882419, 5.1245171706826191, 157.8874761371041, 15.126435638748436,
+            9.9401207922661516, 6.7171888203631713, 3.1182833052233843, 1.834029774983525, 2.0636716298760676,
+            3.771919848476029, double.NaN, 6.3429881898675351, 4.290559167925335, 1.60724563272982,
+            1.6269738518915562, 6.9432033098486974, 3.0050871084215092, double.NaN
         };
 
         private double[] _sVsG1ExpectedValues =
         {
-            1.1419407670991968, 1.6314748321839396, 2.3479516230598838, 73.797435137111023, 4.8909495278818422,
-            3.481615683066742, 2.5340983622413926, 1.5713835038262798, 1.017217922772327, 1.4498342648347344,
-            1.6399900918403256, double.NaN, 2.9069057246796444, 1.5243589451007142, 0.71120569210287388, 
-            0.97698625825824836, 2.0368203476787818, 1.7926980750326083, 1.0616604140485391
+            1.1423134805156718, 1.6383612450709037, 2.34901015907596, 55.093518365792264, 4.890918144610418,
+            3.4817218208941645, 2.5354791821055742, 1.5641165595174502, 1.0205319399843016, 1.4501168531001631,
+            1.6368253653805855, double.NaN, 2.9028947756274786, 1.5399915319077673, 0.71089106062313645,
+            0.97888788592787168, 2.0311981078801971, 1.7874272295370937, 1.0485726453095885
         };
 
         private void GroupComparison()
