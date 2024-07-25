@@ -59,7 +59,7 @@ lib pwiz_data_vendor_readers
 build-project-if-exists ABI ;
 build-project-if-exists Agilent ;
 build-project-if-exists Bruker ;
-# wait for MBI CCS<->DT conversion capability # build-project-if-exists Mobilion ;
+build-project-if-exists Mobilion ;
 build-project-if-exists Shimadzu ;
 build-project-if-exists Thermo ;
 build-project-if-exists UIMF ;
