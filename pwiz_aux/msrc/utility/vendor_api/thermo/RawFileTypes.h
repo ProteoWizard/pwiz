@@ -134,6 +134,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Eclipse,
     InstrumentModelType_Orbitrap_GC,
     InstrumentModelType_Orbitrap_Astral,
+    InstrumentModelType_Stellar,
 
     InstrumentModelType_Count,
 };
@@ -252,6 +253,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"ASCEND", InstrumentModelType_Orbitrap_Ascend, Contains},
     {"SURVEYOR PDA", InstrumentModelType_Surveyor_PDA, Exact},
     {"ACCELA PDA", InstrumentModelType_Accela_PDA, Exact},
+    {"STELLAR", InstrumentModelType_Stellar, Contains},
 };
 
 inline InstrumentModelType parseInstrumentModelType(const std::string& instrumentModel)
@@ -341,6 +343,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Astral:
+		case InstrumentModelType_Stellar:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
@@ -546,6 +549,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             return MassAnalyzerType_Linear_Ion_Trap;
 
         case InstrumentModelType_DFS:
@@ -687,6 +691,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
 
@@ -817,6 +822,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_Stellar:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 
