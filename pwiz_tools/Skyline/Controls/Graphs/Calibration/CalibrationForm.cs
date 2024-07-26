@@ -99,6 +99,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
+        public CalibrationGraphControl CalibrationGraphControl
+        {
+            get
+            {
+                return calibrationGraphControl1;
+            }
+        }
+
         public CalibrationCurve CalibrationCurve
         {
             get { return calibrationGraphControl1.CalibrationCurve; }

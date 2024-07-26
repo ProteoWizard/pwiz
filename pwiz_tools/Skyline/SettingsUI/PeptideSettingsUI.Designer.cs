@@ -445,6 +445,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
             this.comboLodMethod.Name = "comboLodMethod";
             this.helpTip.SetToolTip(this.comboLodMethod, resources.GetString("comboLodMethod.ToolTip"));
+            this.comboLodMethod.SelectedIndexChanged += new System.EventHandler(this.comboLodMethod_SelectedIndexChanged);
             // 
             // tbxMaxLoqCv
             // 

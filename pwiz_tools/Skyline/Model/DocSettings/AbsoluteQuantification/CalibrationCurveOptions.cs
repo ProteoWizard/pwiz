@@ -25,7 +25,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -43,7 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             ShowLegend = true,
             ShowSelection = true,
             ShowFiguresOfMerit = true,
-            FontSize = GraphFontSize.NORMAL.PointSize,
+            FontSize = Controls.Graphs.GraphFontSize.NORMAL.PointSize,
             LineWidth = 2
         };
         public bool LogXAxis { get; private set; }
@@ -174,7 +173,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             ShowFiguresOfMerit = reader.GetBoolAttribute(ATTR.show_legend);
             ShowBootstrapCurves = reader.GetBoolAttribute(ATTR.show_bootstrap_curves);
             LineWidth = reader.GetFloatAttribute(ATTR.line_width, 1);
-            FontSize = reader.GetFloatAttribute(ATTR.font_size, GraphFontSize.NORMAL.PointSize);
+            FontSize = reader.GetFloatAttribute(ATTR.font_size, DEFAULT.FontSize);
             bool isEmpty = reader.IsEmptyElement;
             reader.Read();
             var displaySampleTypes = new List<SampleType>();

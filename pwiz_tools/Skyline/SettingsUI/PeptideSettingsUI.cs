@@ -189,6 +189,7 @@ namespace pwiz.Skyline.SettingsUI
 
             comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
             comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
+            ComboHelper.AutoSizeDropDown(comboLodMethod);
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
@@ -1907,6 +1908,11 @@ namespace pwiz.Skyline.SettingsUI
                 _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
             }
             ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
+        }
+
+        private void comboLodMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            tbxMaxLoqBias.Enabled = comboLodMethod.SelectedItem != LodCalculation.TURNING_POINT_STDERR;
         }
     }
 }

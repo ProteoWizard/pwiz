@@ -234,7 +234,6 @@
     <Compile Include="SkydFileModifiedTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
-    <Compile Include="TransitionOptimizationTest.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />

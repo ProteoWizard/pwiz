@@ -44,11 +44,16 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Settings.Default.CalibrationCurveOptions =
-                Settings.Default.CalibrationCurveOptions.ChangeDisplaySampleTypes(new[]
-                    { SampleType.UNKNOWN, SampleType.QC, SampleType.STANDARD });
             RunUI(() => SkylineWindow.ShowCalibrationForm());
             var calibrationForm = FindOpenForm<CalibrationForm>();
+            RunDlg<CalibrationCurveOptionsDlg>(calibrationForm.CalibrationGraphControl.ShowCalibrationCurveOptions,
+                calibrationCurveOptionsDlg =>
+                {
+                    calibrationCurveOptionsDlg.DisplaySampleTypes = new[]
+                        { SampleType.UNKNOWN, SampleType.QC, SampleType.STANDARD };
+                    calibrationCurveOptionsDlg.OkDialog();
+                });
+
             Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available,
                 calibrationForm.ZedGraphControl.GraphPane.Title.Text);
             PauseForScreenShot("Blank document");
@@ -92,7 +97,6 @@ namespace pwiz.SkylineTestFunctional
                 documentGrid.DataGridView.Rows[0].Cells[colInternalStandardQuantification.Index].Value = 80.0;
                 SkylineWindow.ShowCalibrationForm();
             });
-
             Assert.IsNull(GetGraphTitle(calibrationForm));
             PauseForScreenShot("Internal calibration only");
             RunUI(() =>

@@ -44,7 +44,6 @@ using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.EditUI.OptimizeTransitions;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
@@ -77,7 +76,6 @@ namespace pwiz.Skyline
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
-        private OptimizeTransitionsForm _optimizeTransitionsForm;
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
@@ -664,10 +662,6 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
                 return _immediateWindow ?? CreateImmediateWindow();
-            }
-            if (Equals(persistentString, typeof(OptimizeTransitionsForm).ToString()))
-            {
-                return _optimizeTransitionsForm ?? CreateOptimizeTransitionsForm();
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
@@ -6036,47 +6030,5 @@ namespace pwiz.Skyline
             _candidatePeakForm = null;
         }
         #endregion
-        #region OptimizeTransitionsForm
-        public void ShowOptimizeTransitionsForm()
-        {
-            if (_optimizeTransitionsForm != null)
-            {
-                _optimizeTransitionsForm.Activate();
-            }
-            else
-            {
-                _optimizeTransitionsForm = CreateOptimizeTransitionsForm();
-                _optimizeTransitionsForm.Show(dockPanel, GetFloatingRectangleForNewWindow());
-            }
-        }
-
-        private OptimizeTransitionsForm CreateOptimizeTransitionsForm()
-        {
-            _optimizeTransitionsForm = new OptimizeTransitionsForm(this);
-            _optimizeTransitionsForm.FormClosed += OptimizeTransitionsForm_OnFormClosed;
-
-            return _optimizeTransitionsForm;
-        }
-
-        private void OptimizeTransitionsForm_OnFormClosed(object sender, FormClosedEventArgs e)
-        {
-            _optimizeTransitionsForm = null;
-        }
-        #endregion  
-        #region OptimizeDocumentTransitionsForm
-        public void ShowOptimizeDocumentTransitionsForm()
-        {
-            var optimizeDocumentTransitionsForm = OwnedForms.OfType<OptimizeDocumentTransitionsForm>().FirstOrDefault();
-            if (optimizeDocumentTransitionsForm != null)
-            {
-                optimizeDocumentTransitionsForm.Activate();
-                return;
-            }
-
-            optimizeDocumentTransitionsForm = new OptimizeDocumentTransitionsForm(this) { Owner = this };
-            optimizeDocumentTransitionsForm.Show(this);
-        }
-        #endregion  
-
     }
 }

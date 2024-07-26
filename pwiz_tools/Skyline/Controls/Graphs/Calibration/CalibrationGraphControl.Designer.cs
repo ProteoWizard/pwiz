@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CalibrationGraphControl));
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.logXContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -38,19 +39,18 @@
             this.showLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFiguresOfMeritContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showBootstrapCurvesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showBootstrapCurvesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.moreDisplayOptionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // zedGraphControl
             // 
-            this.zedGraphControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.zedGraphControl, "zedGraphControl");
             this.zedGraphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.zedGraphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.zedGraphControl.IsShowCopyMessage = false;
             this.zedGraphControl.IsZoomOnMouseCenter = true;
-            this.zedGraphControl.Location = new System.Drawing.Point(0, 0);
             this.zedGraphControl.Name = "zedGraphControl";
             this.zedGraphControl.ScrollGrace = 0D;
             this.zedGraphControl.ScrollMaxX = 0D;
@@ -59,8 +59,6 @@
             this.zedGraphControl.ScrollMinX = 0D;
             this.zedGraphControl.ScrollMinY = 0D;
             this.zedGraphControl.ScrollMinY2 = 0D;
-            this.zedGraphControl.Size = new System.Drawing.Size(150, 150);
-            this.zedGraphControl.TabIndex = 1;
             this.zedGraphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseDownEvent);
             this.zedGraphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseMoveEvent);
             // 
@@ -74,76 +72,67 @@
             this.showLegendContextMenuItem,
             this.showSelectionContextMenuItem,
             this.showFiguresOfMeritContextMenuItem,
-            this.showBootstrapCurvesToolStripMenuItem,
+            this.showBootstrapCurvesContextMenuItem,
             this.moreDisplayOptionsContextMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(198, 224);
+            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             // 
             // logXContextMenuItem
             // 
             this.logXContextMenuItem.Name = "logXContextMenuItem";
-            this.logXContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.logXContextMenuItem.Text = "Log X Axis";
+            resources.ApplyResources(this.logXContextMenuItem, "logXContextMenuItem");
             this.logXContextMenuItem.Click += new System.EventHandler(this.logXAxisContextMenuItem_Click);
             // 
             // logYAxisContextMenuItem
             // 
             this.logYAxisContextMenuItem.Name = "logYAxisContextMenuItem";
-            this.logYAxisContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.logYAxisContextMenuItem.Text = "Log Y Axis";
+            resources.ApplyResources(this.logYAxisContextMenuItem, "logYAxisContextMenuItem");
             this.logYAxisContextMenuItem.Click += new System.EventHandler(this.logYAxisContextMenuItem_Click);
             // 
             // showSampleTypesContextMenuItem
             // 
             this.showSampleTypesContextMenuItem.Name = "showSampleTypesContextMenuItem";
-            this.showSampleTypesContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.showSampleTypesContextMenuItem.Text = "Show Sample Types";
+            resources.ApplyResources(this.showSampleTypesContextMenuItem, "showSampleTypesContextMenuItem");
             // 
             // singleBatchContextMenuItem
             // 
             this.singleBatchContextMenuItem.Name = "singleBatchContextMenuItem";
-            this.singleBatchContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.singleBatchContextMenuItem.Text = "Single Batch";
+            resources.ApplyResources(this.singleBatchContextMenuItem, "singleBatchContextMenuItem");
             this.singleBatchContextMenuItem.Click += new System.EventHandler(this.singleBatchContextMenuItem_Click);
             // 
             // showLegendContextMenuItem
             // 
             this.showLegendContextMenuItem.Name = "showLegendContextMenuItem";
-            this.showLegendContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.showLegendContextMenuItem.Text = "Show Legend";
+            resources.ApplyResources(this.showLegendContextMenuItem, "showLegendContextMenuItem");
             this.showLegendContextMenuItem.Click += new System.EventHandler(this.showLegendContextMenuItem_Click);
             // 
             // showSelectionContextMenuItem
             // 
             this.showSelectionContextMenuItem.Name = "showSelectionContextMenuItem";
-            this.showSelectionContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.showSelectionContextMenuItem.Text = "Show Selection";
+            resources.ApplyResources(this.showSelectionContextMenuItem, "showSelectionContextMenuItem");
             this.showSelectionContextMenuItem.Click += new System.EventHandler(this.showSelectionContextMenuItem_Click);
             // 
             // showFiguresOfMeritContextMenuItem
             // 
             this.showFiguresOfMeritContextMenuItem.Name = "showFiguresOfMeritContextMenuItem";
-            this.showFiguresOfMeritContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.showFiguresOfMeritContextMenuItem.Text = "Show Figures of Merit";
+            resources.ApplyResources(this.showFiguresOfMeritContextMenuItem, "showFiguresOfMeritContextMenuItem");
             this.showFiguresOfMeritContextMenuItem.Click += new System.EventHandler(this.showFiguresOfMeritContextMenuItem_Click);
             // 
-            // showBootstrapCurvesToolStripMenuItem
+            // showBootstrapCurvesContextMenuItem
             // 
-            this.showBootstrapCurvesToolStripMenuItem.Name = "showBootstrapCurvesToolStripMenuItem";
-            this.showBootstrapCurvesToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.showBootstrapCurvesToolStripMenuItem.Text = "Show Bootstrap Curves";
-            this.showBootstrapCurvesToolStripMenuItem.Click += new System.EventHandler(this.showBootstrapCurvesToolStripMenuItem_Click);
+            this.showBootstrapCurvesContextMenuItem.Name = "showBootstrapCurvesContextMenuItem";
+            resources.ApplyResources(this.showBootstrapCurvesContextMenuItem, "showBootstrapCurvesContextMenuItem");
+            this.showBootstrapCurvesContextMenuItem.Click += new System.EventHandler(this.showBootstrapCurvesToolStripMenuItem_Click);
             // 
             // moreDisplayOptionsContextMenuItem
             // 
             this.moreDisplayOptionsContextMenuItem.Name = "moreDisplayOptionsContextMenuItem";
-            this.moreDisplayOptionsContextMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.moreDisplayOptionsContextMenuItem.Text = "More Display Options...";
+            resources.ApplyResources(this.moreDisplayOptionsContextMenuItem, "moreDisplayOptionsContextMenuItem");
             this.moreDisplayOptionsContextMenuItem.Click += new System.EventHandler(this.moreDisplayOptionsContextMenuItem_Click);
             // 
             // CalibrationGraphControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.zedGraphControl);
             this.Name = "CalibrationGraphControl";
@@ -163,7 +152,7 @@
         private System.Windows.Forms.ToolStripMenuItem showLegendContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showFiguresOfMeritContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showBootstrapCurvesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showBootstrapCurvesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moreDisplayOptionsContextMenuItem;
     }
 }

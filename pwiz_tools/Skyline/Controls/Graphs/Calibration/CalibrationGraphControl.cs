@@ -139,8 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             var mainPeptideQuantifier = curveFitter.PeptideQuantifier;
             if (mainPeptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
-                var peptide = mainPeptideQuantifier.PeptideDocNode;
-                if (!(peptide.NormalizationMethod is NormalizationMethod.RatioToLabel))
+                if (!(mainPeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
                     zedGraphControl.GraphPane.Title.Text =
                         TextUtil.LineSeparate(displaySettings.GraphTitle,
@@ -149,6 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 else
                 {
+                    var peptide = mainPeptideQuantifier.PeptideDocNode;
                     if (!peptide.InternalStandardConcentration.HasValue)
                     {
                         zedGraphControl.GraphPane.Title.Text =
@@ -710,7 +710,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             showLegendContextMenuItem.Checked = Options.ShowLegend;
             showSelectionContextMenuItem.Checked = Options.ShowSelection;
             showFiguresOfMeritContextMenuItem.Checked = Options.ShowFiguresOfMerit;
-            showBootstrapCurvesToolStripMenuItem.Checked = Options.ShowBootstrapCurves;
+            showBootstrapCurvesContextMenuItem.Checked = Options.ShowBootstrapCurves;
+            showBootstrapCurvesContextMenuItem.Visible = HasBootstrapCurves;
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
             if (!menuStrip.Items.Contains(logXContextMenuItem))
             {
@@ -722,10 +723,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 menuStrip.Items.Insert(index++, showLegendContextMenuItem);
                 menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
                 menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
-                menuStrip.Items.Insert(index++, showBootstrapCurvesToolStripMenuItem);
+                menuStrip.Items.Insert(index++, showBootstrapCurvesContextMenuItem);
                 menuStrip.Items.Insert(index++, moreDisplayOptionsContextMenuItem);
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
             }
+            
         }
         private bool IsEnableIsotopologResponseCurve()
         {
@@ -883,6 +885,21 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
 
             return max;
+        }
+
+        private bool HasBootstrapCurves
+        {
+            get
+            {
+                var quantificationSettings = DisplaySettings?.CalibrationCurveFitter?.QuantificationSettings;
+                if (quantificationSettings == null)
+                {
+                    return false;
+                }
+
+                return LodCalculation.TURNING_POINT_STDERR == quantificationSettings.LodCalculation &&
+                       quantificationSettings.MaxLoqCv.HasValue;
+            }
         }
     }
 }

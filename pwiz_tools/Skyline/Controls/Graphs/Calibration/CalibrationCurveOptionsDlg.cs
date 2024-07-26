@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -18,10 +20,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             GraphFontSize.PopulateCombo(textSizeComboBox, options.FontSize);
             cbxLogXAxis.Checked = options.LogXAxis;
             cbxLogYAxis.Checked = options.LogYAxis;
-            for (int i = 0; i < checkedListBoxSampleTypes.Items.Count; i++)
-            {
-                checkedListBoxSampleTypes.SetItemChecked(i, options.DisplaySampleTypes.Contains(checkedListBoxSampleTypes.Items[i]));
-            }
+            DisplaySampleTypes = options.DisplaySampleTypes;
 
             cbxSingleBatch.Checked = options.SingleBatch;
             cbxShowLegend.Checked = options.ShowLegend;
@@ -48,6 +47,22 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        public IEnumerable<SampleType> DisplaySampleTypes
+        {
+            get
+            {
+                return checkedListBoxSampleTypes.CheckedItems.OfType<SampleType>();
+            }
+            set
+            {
+                var sampleTypeSet = value.ToHashSet();
+                for (int i = 0; i < checkedListBoxSampleTypes.Items.Count; i++)
+                {
+                    checkedListBoxSampleTypes.SetItemChecked(i, sampleTypeSet.Contains(checkedListBoxSampleTypes.Items[i]));
+                }
+            }
         }
     }
 }
