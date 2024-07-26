@@ -216,9 +216,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             else if(fragmentationMode == FragmentationMode_EAD)
             {
                 precursor.activation.set(MS_EAD);
-                // wait for psi-ms-CCV #288 to add term for EAD electron beam energy
-                //if(electronKineticEnergy > 0)
-                //    precursor.activation.set(MS_Electron_Beam_Energy, electronKineticEnergy, UO_electronvolt);
+                if(electronKineticEnergy > 0)
+                    precursor.activation.set(MS_electron_beam_energy, electronKineticEnergy, UO_electronvolt);
             }
             
             if (collisionEnergy > 0)
