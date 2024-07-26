@@ -391,5 +391,10 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
+
+        private void optimizeTransitionsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowOptimizeTransitionsForm();
+        }
     }
 }

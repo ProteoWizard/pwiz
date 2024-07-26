@@ -28,6 +28,7 @@ BuildLibraryDlg.FilesPage,TestFullScanId
 BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
+CalibrationCurveOptionsDlg,TestTransitionOptimization
 CalibrationForm,TestCalibration
 CandidatePeakForm,TestCandidatePeaks
 ChangeIrtPeptidesDlg,IrtFunctionalTest
@@ -154,6 +155,8 @@ MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
 NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
+OptimizeDocumentTransitionsForm,TestTransitionOptimization
+OptimizeTransitionsForm,TestTransitionOptimization
 PanoramaFilePicker, TestPanorama
 PanoramaDirectoryPicker, TestPanorama
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
