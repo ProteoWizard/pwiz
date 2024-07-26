@@ -182,14 +182,13 @@ namespace pwiz.Skyline.SettingsUI
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;
+
             comboRegressionFit.Items.AddRange(RegressionFit.All.Cast<object>().ToArray());
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
+            UpdateLodOptions(_peptideSettings.Quantification.LodCalculation ?? LodCalculation.NONE);
+
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
-
-            comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
-            comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
-            ComboHelper.AutoSizeDropDown(comboLodMethod);
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
@@ -1913,6 +1912,28 @@ namespace pwiz.Skyline.SettingsUI
         private void comboLodMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
             tbxMaxLoqBias.Enabled = comboLodMethod.SelectedItem != LodCalculation.TURNING_POINT_STDERR;
+        }
+
+        private void comboRegressionFit_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateLodOptions(comboLodMethod.SelectedItem as LodCalculation);
+        }
+
+        private void UpdateLodOptions(LodCalculation current)
+        {
+            var  options = new List<object>();
+            options.AddRange(LodCalculation.ForRegressionFit(comboRegressionFit.SelectedItem as RegressionFit));
+            comboLodMethod.Items.Clear();
+            comboLodMethod.Items.AddRange(options.ToArray());
+            if (options.Contains(current))
+            {
+                comboLodMethod.SelectedItem = current;
+            }
+            else
+            {
+                comboLodMethod.SelectedItem = LodCalculation.NONE;
+            }
+            ComboHelper.AutoSizeDropDown(comboLodMethod);
         }
     }
 }

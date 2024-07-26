@@ -39,7 +39,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public static readonly RegressionFit QUADRATIC = new QuadraticFit();
 
-        //public static readonly RegressionFit LEGACY_BILINEAR = new LegacyBilinearFit();
         public static readonly RegressionFit BILINEAR = new BilinearRegressionFit();
 
         public static readonly RegressionFit LINEAR_IN_LOG_SPACE = new LinearInLogSpace();

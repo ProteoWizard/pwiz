@@ -41,10 +41,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly LodCalculation TURNING_POINT_STDERR = new LodCalculation(@"turning_point_stderr",
             () => QuantificationStrings.LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error, CalculateLodFromTurningPointWithStdErr);
 
-        public static readonly ImmutableList<LodCalculation> ALL = ImmutableList.ValueOf(new[]
+        private static readonly ImmutableList<LodCalculation> ALL =
+            ImmutableList.ValueOf(new[]
+            {
+                NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT, TURNING_POINT_STDERR
+            });
+
+        public static IEnumerable<LodCalculation> ForRegressionFit(RegressionFit regressionFit)
         {
-            NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT, TURNING_POINT_STDERR
-        });
+            if (regressionFit == RegressionFit.BILINEAR)
+            {
+                return new[]
+                {
+                    NONE, TURNING_POINT_STDERR, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT
+                };
+            }
+
+            return new[] { NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD };
+        }
 
         private readonly Func<LodCalculationArgs, double?> _calculateLodFunc;
 

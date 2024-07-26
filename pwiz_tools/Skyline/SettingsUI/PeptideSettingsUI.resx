@@ -1056,7 +1056,7 @@ times from a peptide specific hydrophobicity score.</value>
     <value>0</value>
   </data>
   <data name="tbxMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>192, 106</value>
+    <value>130, 85</value>
   </data>
   <data name="tbxMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1079,13 +1079,13 @@ of quantification (LOQ)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;tbxMaxLoqBias.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="comboLodMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 39</value>
   </data>
   <data name="comboLodMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>133, 21</value>
+    <value>208, 21</value>
   </data>
   <data name="comboLodMethod.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1103,10 +1103,10 @@ of quantification (LOQ)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="tbxMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 109</value>
+    <value>6, 85</value>
   </data>
   <data name="tbxMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1128,7 +1128,7 @@ the lower limit of quantification (LOQ)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;tbxMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 239</value>
@@ -1152,7 +1152,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>All</value>
@@ -1185,7 +1185,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 83</value>
@@ -1209,7 +1209,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1233,7 +1233,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 145</value>
@@ -1257,10 +1257,10 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="tbxIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>195, 36</value>
+    <value>29, 408</value>
   </data>
   <data name="tbxIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1280,7 +1280,7 @@ The Target Qualitative Ion Ratio is the average of the Qualitative Ion Ratios ac
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.Parent" xml:space="preserve">
-    <value>groupBoxFiguresOfMerit</value>
+    <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -1314,7 +1314,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1796,9 +1796,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1806,7 +1803,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>NoControl</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>298, 39</value>
+    <value>131, 415</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -1824,37 +1821,13 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
-    <value>groupBoxFiguresOfMerit</value>
+    <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblIonRatioThreshold.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>167, 16</value>
-  </data>
-  <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 13</value>
-  </data>
-  <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="lblIonRatioThreshold.Text" xml:space="preserve">
-    <value>Qu&amp;alitative ion ratio threshold:</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
-    <value>lblIonRatioThreshold</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
-    <value>groupBoxFiguresOfMerit</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.ZOrder" xml:space="preserve">
-    <value>3</value>
+  <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="lblCaclulateLodBy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1881,13 +1854,13 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblCaclulateLodBy.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="lblMaxLoqBias.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>189, 88</value>
+    <value>127, 67</value>
   </data>
   <data name="lblMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
@@ -1908,13 +1881,13 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBias.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="lblMaxLoqBiasPct.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqBiasPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>298, 109</value>
+    <value>236, 88</value>
   </data>
   <data name="lblMaxLoqBiasPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -1935,7 +1908,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBiasPct.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="lblMaxLoqCvPct.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1944,7 +1917,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>NoControl</value>
   </data>
   <data name="lblMaxLoqCvPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>115, 112</value>
+    <value>109, 88</value>
   </data>
   <data name="lblMaxLoqCvPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -1965,13 +1938,13 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCvPct.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>5</value>
   </data>
   <data name="lblMaxLoqCv.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 91</value>
+    <value>8, 67</value>
   </data>
   <data name="lblMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
@@ -1992,13 +1965,13 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 270</value>
+    <value>22, 270</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>327, 137</value>
+    <value>288, 118</value>
   </data>
   <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -2016,7 +1989,34 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
+  </data>
+  <data name="lblIonRatioThreshold.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 392</value>
+  </data>
+  <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 13</value>
+  </data>
+  <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblIonRatioThreshold.Text" xml:space="preserve">
+    <value>Qu&amp;alitative ion ratio threshold:</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
+    <value>lblIonRatioThreshold</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2046,7 +2046,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2073,7 +2073,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2100,7 +2100,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2127,7 +2127,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>12</value>
   </data>
   <data name="lblRegressionWeighting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2154,7 +2154,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionWeighting.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>14</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

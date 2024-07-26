@@ -60,12 +60,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 var baselinePoints = points.Where(pt => pt.X <= bilinear.TurningPoint).ToList();
                 var baselineStats = new Statistics(baselinePoints.Select(pt => pt.Y));
-                if (baselineStats.Length == 0)
+                if (baselineStats.Length <= 1)
                 {
                     fit.StdDevBaseline = 0;
                 }
                 else
                 {
+                    fit.StdDevBaseline = baselineStats.StdDev();
                     var minBaselineWeight = baselinePoints.Min(pt => pt.Weight);
                     reweightedPoints = points.Where(pt => pt.X > bilinear.TurningPoint)
                         .Concat(baselinePoints.Select(pt => new WeightedPoint(pt.X, pt.Y, minBaselineWeight))).ToList();

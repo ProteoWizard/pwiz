@@ -388,7 +388,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Raw, xSelected.Value,
                                     ySelected.Raw)
-                            { Line = { Color = GraphSummary.ColorSelected } };
+                                { Line = { Color = GraphSummary.ColorSelected } };
                             zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                             var verticalLine = new LineObj(xSelected.Value, ySelected.Raw, xSelected.Value,
                                 options.LogYAxis ? minY / 10 : 0)
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                                 // If the point has a specified concentration, then use that.
                                 ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Raw, xSpecified.Value,
                                         ySelected.Raw)
-                                { Line = { Color = GraphSummary.ColorSelected } };
+                                    { Line = { Color = GraphSummary.ColorSelected } };
                                 zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                             }
                             else
@@ -465,69 +465,68 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         labelLines.Add(ySelected.Message);
                     }
                 }
+            }
 
-                List<CurveItem> bootstrapCurveItems = new List<CurveItem>();
-                if (options.ShowBootstrapCurves)
+            List<CurveItem> bootstrapCurveItems = new List<CurveItem>();
+            if (options.ShowBootstrapCurves)
+            {
+                var color = Color.FromArgb(40, Color.Teal);
+                foreach (var points in bootstrapCurves)
                 {
-                    var color = Color.FromArgb(40, Color.Teal);
-                    foreach (var points in bootstrapCurves)
-                    {
-                        // Only assign a title to the first curve so that only one item appears in the Legend
-                        string title = bootstrapCurveItems.Count == 0
-                            ? QuantificationStrings.CalibrationGraphControl_DoUpdate_Bootstrap_Curve
-                            : null;
+                    // Only assign a title to the first curve so that only one item appears in the Legend
+                    string title = bootstrapCurveItems.Count == 0
+                        ? QuantificationStrings.CalibrationGraphControl_DoUpdate_Bootstrap_Curve
+                        : null;
 
-                        var curve = new LineItem(title, new PointPairList(points), color,
-                            SymbolType.None, options.LineWidth);
-                        maxY = Math.Max(maxY, GetMaxY(curve.Points));
-                        bootstrapCurveItems.Add(curve);
-                    }
+                    var curve = new LineItem(title, new PointPairList(points), color,
+                        SymbolType.None, options.LineWidth);
+                    maxY = Math.Max(maxY, GetMaxY(curve.Points));
+                    bootstrapCurveItems.Add(curve);
+                }
+            }
+
+            if (options.ShowFiguresOfMerit)
+            {
+                if (IsNumber(FiguresOfMerit.LimitOfDetection))
+                {
+                    var lod = FiguresOfMerit.LimitOfDetection.Value;
+                    var points = new PointPairList(new[] { lod, lod }, new[] { minY, maxY });
+                    var lodLine =
+                        new LineItem(QuantificationStrings.CalibrationGraphControl_DoUpdate_Limit_of_Detection,
+                            points, Color.Black, SymbolType.None)
+                        {
+                            Line = { Style = DashStyle.Dot, Width = options.LineWidth }
+                        };
+                    zedGraphControl.GraphPane.CurveList.Add(lodLine);
                 }
 
-                if (options.ShowFiguresOfMerit)
+                if (IsNumber(FiguresOfMerit.LimitOfQuantification))
                 {
-                    if (IsNumber(FiguresOfMerit.LimitOfDetection))
-                    {
-                        var lod = FiguresOfMerit.LimitOfDetection.Value;
-                        var points = new PointPairList(new[] { lod, lod }, new[] { minY, maxY });
-                        var lodLine =
-                            new LineItem(QuantificationStrings.CalibrationGraphControl_DoUpdate_Limit_of_Detection,
-                                points, Color.Black, SymbolType.None)
-                            {
-                                Line = { Style = DashStyle.Dot, Width = options.LineWidth }
-                            };
-                        zedGraphControl.GraphPane.CurveList.Add(lodLine);
-                    }
-
-                    if (IsNumber(FiguresOfMerit.LimitOfQuantification))
-                    {
-                        var loq = FiguresOfMerit.LimitOfQuantification.Value;
-                        var points = new PointPairList(new[] { loq, loq }, new[] { minY, maxY });
-                        var loqLine =
-                            new LineItem(
-                                QuantificationStrings.CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification,
-                                points, Color.Black, SymbolType.None)
-                            {
-                                Line = { Style = DashStyle.Dash, Width = options.LineWidth }
-                            };
-                        zedGraphControl.GraphPane.CurveList.Add(loqLine);
-                    }
+                    var loq = FiguresOfMerit.LimitOfQuantification.Value;
+                    var points = new PointPairList(new[] { loq, loq }, new[] { minY, maxY });
+                    var loqLine =
+                        new LineItem(
+                            QuantificationStrings.CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification,
+                            points, Color.Black, SymbolType.None)
+                        {
+                            Line = { Style = DashStyle.Dash, Width = options.LineWidth }
+                        };
+                    zedGraphControl.GraphPane.CurveList.Add(loqLine);
                 }
+            }
 
-                zedGraphControl.GraphPane.CurveList.AddRange(bootstrapCurveItems);
-                if (labelLines.Any())
+            zedGraphControl.GraphPane.CurveList.AddRange(bootstrapCurveItems);
+            if (labelLines.Any())
+            {
+                TextObj text = new TextObj(TextUtil.LineSeparate(labelLines), .01, 0,
+                    CoordType.ChartFraction, AlignH.Left, AlignV.Top)
                 {
-                    TextObj text = new TextObj(TextUtil.LineSeparate(labelLines), .01, 0,
-                        CoordType.ChartFraction, AlignH.Left, AlignV.Top)
-                    {
-                        IsClippedToChartRect = true,
-                        ZOrder = ZOrder.E_BehindCurves,
-                        FontSpec = GraphSummary.CreateFontSpec(Color.Black),
-                    };
-                    text.FontSpec.Size = options.FontSize;
-                    zedGraphControl.GraphPane.GraphObjList.Add(text);
-                }
-
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                };
+                text.FontSpec.Size = options.FontSize;
+                zedGraphControl.GraphPane.GraphObjList.Add(text);
             }
         }
 
