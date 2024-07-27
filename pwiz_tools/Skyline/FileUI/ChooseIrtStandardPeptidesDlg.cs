@@ -69,7 +69,15 @@ namespace pwiz.Skyline.FileUI
                 comboProteins.Items.Add(new PeptideGroupItem(protein));
             
             if (proteinsContainingCommonIrts.Any())
+            {
                 comboProteins.SelectedIndex = 0;
+            }
+            else
+            {
+                comboProteins.Enabled = radioProtein.Checked = radioProtein.Enabled = false; // No matching iRT standards
+                toolTip1.SetToolTip(radioProtein, FileUIResources.ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found);
+                radioTransitionList.Checked = true;
+            }
 
             UpdateSelection(this, null);
         }
@@ -204,11 +212,11 @@ namespace pwiz.Skyline.FileUI
             }
 
             var protein = ((PeptideGroupItem)comboProteins.SelectedItem).PeptideGroup;
-            SetStandards(protein.Peptides.Select(pep => pep.ModifiedTarget));
-            if (Document.PeptideGroupCount > 0)
+            SetStandards(protein.Molecules.Select(pep => pep.ModifiedTarget));
+            if (Document.MoleculeGroupCount > 0)
             {
                 var pathFrom = Document.GetPathTo(Document.FindNodeIndex(protein.Id));
-                var pathTo = Document.GetPathTo(Document.FindNodeIndex(Document.PeptideGroups.First().Id));
+                var pathTo = new IdentityPath(Document.MoleculeGroups.First().Id);
                 if (!Equals(pathFrom, pathTo))
                 {
                     Document = Document.MoveNode(pathFrom, pathTo, out _);
@@ -226,13 +234,35 @@ namespace pwiz.Skyline.FileUI
                 return false;
             }
 
+            var inputs = new MassListInputs(txtTransitionList.Text);
+            var identityPath = new IdentityPath(Document.MoleculeGroups.First().Id); // Insert at head of document
             try
             {
-                var inputs = new MassListInputs(txtTransitionList.Text);
-                Document = Document.ImportMassList(inputs, new IdentityPath(Document.PeptideGroups.First().Id), out _, out _irtAdd, out _librarySpectra, out var errorList);
+                Document = Document.ImportMassList(inputs, identityPath, out _, out _irtAdd, out _librarySpectra, out var errorList);
                 if (errorList.Any())
-                    throw new InvalidDataException(errorList[0].ErrorMessage);
+                {
+                    throw new InvalidDataException(errorList.First().ErrorMessage);
+                }
                 IrtFile = txtTransitionList.Text;
+            }
+            catch(InvalidDataException x)
+            {
+                // Allow the user to assign column types
+                var importer = Document.PreImportMassList(inputs, null, true, SrmDocument.DOCUMENT_TYPE.none, true, ModeUI);
+                using var columnDlg = new ImportTransitionListColumnSelectDlg(importer, Document, inputs, identityPath, false);
+                if (columnDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var insParams = columnDlg.InsertionParams;
+                    Document = insParams.Document;
+                    _irtAdd = insParams.IrtPeptides;
+                    _librarySpectra = insParams.LibrarySpectra;
+                    IrtFile = txtTransitionList.Text;
+                }
+                else
+                {
+                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
+                    return false;
+                }
             }
             catch (Exception x)
             {
@@ -299,15 +329,33 @@ namespace pwiz.Skyline.FileUI
         #region Functional test support
         public IEnumerable<string> ProteinNames => from PeptideGroupItem protein in comboProteins.Items select protein.PeptideGroup.Name;
 
-        public void OkDialogStandard(IrtStandard standard)
+        public void SetDialogStandard(IrtStandard standard)
         {
             for (var i = 0; i < comboExisting.Items.Count; i++)
             {
                 if (ReferenceEquals((IrtStandard) comboExisting.Items[i], standard))
                 {
-                    radioExisting.Checked = true;
+                    radioExisting.Checked = radioExisting.Enabled = true;
                     comboExisting.SelectedIndex = i;
-                    OkDialog();
+                    return;
+                }
+            }
+        }
+
+        public void OkDialogStandard(IrtStandard standard)
+        {
+            SetDialogStandard(standard);
+            OkDialog();
+        }
+
+        public void SetDialogProtein(string proteinName)
+        {
+            for (var i = 0; i < comboProteins.Items.Count; i++)
+            {
+                if (((PeptideGroupItem)comboProteins.Items[i]).PeptideGroup.Name.Equals(proteinName))
+                {
+                    radioProtein.Checked = radioProtein.Enabled = true;
+                    comboProteins.SelectedIndex = i;
                     return;
                 }
             }
@@ -315,22 +363,19 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialogProtein(string proteinName)
         {
-            for (var i = 0; i < comboProteins.Items.Count; i++)
-            {
-                if (((PeptideGroupItem) comboProteins.Items[i]).PeptideGroup.Name.Equals(proteinName))
-                {
-                    radioProtein.Checked = true;
-                    comboProteins.SelectedIndex = i;
-                    OkDialog();
-                    return;
-                }
-            }
+            SetDialogProtein(proteinName);
+            OkDialog();
+        }
+
+        public void SetDialogFile(string filename)
+        {
+            radioTransitionList.Checked = radioTransitionList.Enabled = true;
+            SetTransitionListFile(filename);
         }
 
         public void OkDialogFile(string filename)
         {
-            radioTransitionList.Checked = true;
-            SetTransitionListFile(filename);
+            SetDialogFile(filename);
             OkDialog();
         }
         #endregion
