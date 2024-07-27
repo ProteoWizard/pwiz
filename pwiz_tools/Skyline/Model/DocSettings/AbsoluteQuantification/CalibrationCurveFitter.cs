@@ -364,7 +364,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 completeTransitionSet = GetTransitionsToQuantifyOn();
             }
-            return PeptideQuantifier.SumTransitionQuantities(completeTransitionSet, allTransitionQuantities);
+
+            return GetPeptideQuantifier(calibrationPoint).SumTransitionQuantities(completeTransitionSet, allTransitionQuantities);
         }
 
         public CalibrationCurve GetCalibrationCurve()

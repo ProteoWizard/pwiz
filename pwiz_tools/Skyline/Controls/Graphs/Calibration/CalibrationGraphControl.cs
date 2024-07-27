@@ -260,10 +260,15 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         maxY = Math.Max(maxY, normalizedArea.Raw);
                     }
                 }
+                string curveLabel = sampleType.ToString();
+                if (!ReferenceEquals(samplePeptideQuantifier, mainPeptideQuantifier))
+                {
+                    curveLabel = QualifyCurveNameWithSurrogate(curveLabel, samplePeptideQuantifier.PeptideDocNode);
+                }
 
                 if (pointPairList.Any())
                 {
-                    var lineItem = zedGraphControl.GraphPane.AddCurve(sampleType.ToString(), pointPairList,
+                    var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairList,
                         sampleType.Color, sampleType.SymbolType);
                     lineItem.Line.IsVisible = false;
                     lineItem.Symbol.Fill = new Fill(sampleType.Color);
@@ -281,8 +286,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         symbolType = SymbolType.Circle;
                     }
 
-                    string curveLabel = pointPairList.Any() ? null : sampleType.ToString();
-                    var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairListExcluded,
+                    var lineItem = zedGraphControl.GraphPane.AddCurve(pointPairList.Any() ? null : curveLabel, pointPairListExcluded,
                         sampleType.Color, symbolType);
                     lineItem.Line.IsVisible = false;
                     _scatterPlots.Add(lineItem);
@@ -749,16 +753,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
-            var measuredResults = SkylineWindow?.DocumentUI.Settings.MeasuredResults;
-            if (measuredResults == null)
+            var document = SkylineWindow.DocumentUI;
+            if (!document.Settings.HasResults)
             {
                 return null;
             }
             ChromatogramSet chromatogramSet = null;
             if (replicateIndex >= 0 &&
-                replicateIndex < measuredResults.Chromatograms.Count)
+                replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count)
             {
-                chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
             }
             if (chromatogramSet == null)
             {
@@ -769,21 +773,27 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 return null;
             }
 
-            var idPeptideDocNode = GetSelectedPeptide();
+            IdPeptideDocNode idPeptideDocNode = GetSelectedPeptide();
             if (idPeptideDocNode == null)
             {
                 return null;
+            }
+
+            if (idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve != null)
+            {
+                idPeptideDocNode =
+                    document.Settings.GetSurrogateStandards(idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve)
+                        .FirstOrDefault() ?? idPeptideDocNode;
             }
 
             var peptideDocNode = idPeptideDocNode.PeptideDocNode;
             bool isExcluded = peptideDocNode.IsExcludeFromCalibration(replicateIndex);
             var menuItemText = isExcluded ? QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard
                 : QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard;
-            var peptideIdPath = idPeptideDocNode.IdentityPath;
             var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
             {
                 SkylineWindow.ModifyDocument(menuItemText,
-                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded), docPair =>
+                    doc => SetExcludeStandard(doc, idPeptideDocNode.IdentityPath, replicateIndex, !isExcluded), docPair =>
                     {
                         var msgType = isExcluded
                             ? MessageType.set_included_standard
@@ -899,6 +909,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 return LodCalculation.TURNING_POINT_STDERR == quantificationSettings.LodCalculation &&
                        quantificationSettings.MaxLoqCv.HasValue;
             }
+        }
+        public static string QualifyCurveNameWithSurrogate(string curveName, PeptideDocNode surrogateMolecule)
+        {
+            return string.Format(@"{0} ({1})", curveName, surrogateMolecule.ModifiedSequenceDisplay);
         }
     }
 }

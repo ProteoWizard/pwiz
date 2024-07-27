@@ -272,10 +272,5 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
             }
         }
-
-        public static string QualifyCurveNameWithSurrogate(string curveName, PeptideDocNode surrogateMolecule)
-        {
-            return string.Format(@"{0} ({1})", curveName, surrogateMolecule.ModifiedSequenceDisplay);
-        }
     }
 }
