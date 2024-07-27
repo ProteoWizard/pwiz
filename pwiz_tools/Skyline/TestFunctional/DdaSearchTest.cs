@@ -180,7 +180,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        //[TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFraggerBadFasta()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -405,7 +405,8 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
                 // Cancel search
-                importPeptideSearchDlg.SearchControl.Cancel();
+                if (!errorExpected)
+                    importPeptideSearchDlg.SearchControl.Cancel();
             });
 
             if (errorExpected)
