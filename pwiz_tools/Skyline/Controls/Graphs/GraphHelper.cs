@@ -26,6 +26,7 @@ using ZedGraph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 
@@ -162,7 +163,35 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-            switch (chromDisplayState.AutoZoomChrom)
+
+            var autoZoom = chromDisplayState.AutoZoomChrom;
+            if (!bestPeaks.Any())
+            {
+                if (autoZoom == AutoZoomChrom.both)
+                {
+                    autoZoom = AutoZoomChrom.window;
+                }
+                if (autoZoom == AutoZoomChrom.peak)
+                {
+                    autoZoom = AutoZoomChrom.none;
+                }
+            }
+            var chromGraphItem = GetRetentionTimeGraphItem(chromDisplayState);
+            double? predictedRT = chromGraphItem?.RetentionPrediction;
+            double? windowHalf = chromGraphItem?.RetentionWindow * 2 / 3;
+            if (!predictedRT.HasValue)
+            {
+                if (autoZoom == AutoZoomChrom.both)
+                {
+                    autoZoom = AutoZoomChrom.peak;
+                }
+
+                if (autoZoom == AutoZoomChrom.window)
+                {
+                    autoZoom = AutoZoomChrom.none;
+                }
+            }
+            switch (autoZoom)
             {
                 case AutoZoomChrom.none:
                     foreach (var graphPane in GraphPanes)
@@ -183,51 +212,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     break;
                 case AutoZoomChrom.window:
-                    {
-                        var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
-                        if (chromGraph != null)
-                        {
-                            // Put predicted RT in center with window occupying 2/3 of the graph
-                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
-                            double predictedRT = chromGraph.RetentionPrediction.HasValue
-                                                     ? // ReSharper
-                                                     chromGraph.RetentionPrediction.Value
-                                                     : 0;
-                            ZoomXAxis(predictedRT - windowHalf, predictedRT + windowHalf);
-                        }
-                    }
+                    ZoomXAxis((predictedRT - windowHalf).Value, (predictedRT + windowHalf).Value);
                     break;
                 case AutoZoomChrom.both:
-                    {
-                        double start = double.MaxValue;
-                        double end = 0;
-                        if (bestPeaks.Any())
-                        {
-                            start = bestPeaks.Min(peak => peak.StartRetentionTime);
-                            end = bestPeaks.Max(peak=>peak.EndRetentionTime);
-                        }
-                        var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
-                        if (chromGraph != null)
-                        {
-                            // Put predicted RT in center with window occupying 2/3 of the graph
-                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
-                            double predictedRT = chromGraph.RetentionPrediction.HasValue
-                                                     ? // ReSharper
-                                                     chromGraph.RetentionPrediction.Value
-                                                     : 0;
-                            // Make sure the peak has enough room to display, since it may be
-                            // much narrower than the retention time window.
-                            if (end != 0)
-                            {
-                                start -= windowHalf / 8;
-                                end += windowHalf / 8;
-                            }
-                            start = Math.Min(start, predictedRT - windowHalf);
-                            end = Math.Max(end, predictedRT + windowHalf);
-                        }
-                        if (end > 0)
-                            ZoomXAxis(start, end);
-                    }
+                    double start = bestPeaks.Min(peak => peak.StartRetentionTime);
+                    double end = bestPeaks.Max(peak => peak.EndRetentionTime);
+                    // Make sure the peak has enough room to display, since it may be
+                    // much narrower than the retention time window.
+                    start -= windowHalf.Value / 8;
+                    end += windowHalf.Value / 8;
+                    start = Math.Min(start, (predictedRT - windowHalf).Value);
+                    end = Math.Max(end, (predictedRT + windowHalf).Value);
+                    ZoomXAxis(start, end);
                     break;
             }
             foreach (var graphPane in GraphPanes)
@@ -630,8 +626,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                double tMinX, tMinY, tMaxX, tMaxY;
-                curveList.GetCurveRange(g, curve, out tMinX, out tMaxX, out tMinY, out tMaxY);
+                double tMaxY;
+                curveList.GetCurveRange(g, curve, out _, out _, out _, out tMaxY);
 
                 maxY = Math.Max(maxY, tMaxY);
             }
@@ -657,6 +653,7 @@ namespace pwiz.Skyline.Controls.Graphs
                    nodeGroup != null ? nodeGroup.TransitionGroup.LabelType : null,
                    false)
         {
+            SpectrumClassFilter = nodeGroup?.SpectrumClassFilter ?? default;
         }
 
         public PaneKey(IsotopeLabelType isotopeLabelType)
@@ -674,11 +671,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public Adduct PrecursorAdduct { get; private set; }
         public IsotopeLabelType IsotopeLabelType { get; private set; }
+        public SpectrumClassFilter? SpectrumClassFilter { get; private set; }
         public bool? IsProducts { get; private set; }
 
-        private Tuple<Adduct, IsotopeLabelType, bool?> AsTuple()
+        private Tuple<Adduct, IsotopeLabelType, SpectrumClassFilter?, bool?> AsTuple()
         {
-            return new Tuple<Adduct, IsotopeLabelType, bool?>(PrecursorAdduct, IsotopeLabelType, IsProducts);
+            return Tuple.Create(PrecursorAdduct, IsotopeLabelType, SpectrumClassFilter, IsProducts);
         }
 
         public int CompareTo(object other)
@@ -695,6 +693,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (null != IsotopeLabelType &&
                 !Equals(IsotopeLabelType, transitionGroupDocNode.TransitionGroup.LabelType))
+            {
+                return false;
+            }
+
+            if (SpectrumClassFilter.HasValue && !Equals(SpectrumClassFilter, transitionGroupDocNode.SpectrumClassFilter))
             {
                 return false;
             }

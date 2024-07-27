@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation" xml:space="preserve">
+    <value>未能发现有效的 Analyst 安装</value>
+  </data>
+  <data name="AbiMethodExporter_EnsureAnalyst_Waiting_for_Analyst_to_start" xml:space="preserve">
+    <value>等待 Analyst 开始…</value>
+  </data>
+  <data name="AbiMethodExporter_EnsureAnalyst_Working" xml:space="preserve">
+    <value>工作中…</value>
+  </data>
+  <data name="AbstractDiaExporter_Export_Cannot_save_to__0__" xml:space="preserve">
+    <value>无法保存至{0}。</value>
+  </data>
+  <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List" xml:space="preserve">
+    <value>导出采集列表</value>
+  </data>
+  <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__" xml:space="preserve">
+    <value>导出采集列表（来自{0}的 {0} 个周期）</value>
+  </data>
+  <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__" xml:space="preserve">
+    <value>导出采集列表（来自{1}的 {0} 个周期）</value>
+  </data>
+  <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
+    <value>采集离子对的数目 {0} 超出最大值 {1}</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count" xml:space="preserve">
+    <value>核选最大并行{0}计数。</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
+    <value>核选最大并行{0}计数和优步计数。</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings" xml:space="preserve">
+    <value>采用当前设置安排下列肽段失败：</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required" xml:space="preserve">
+    <value>每个采集的文件之最大离子对</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_precursors" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled" xml:space="preserve">
+    <value>采集的肽段{0}无法被安排</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_transitions" xml:space="preserve">
+    <value>离子对</value>
+  </data>
+  <data name="AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted" xml:space="preserve">
+    <value>下列修饰无法解释。</value>
+  </data>
+  <data name="AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__" xml:space="preserve">
+    <value>值“{1}”中发现无效氨基酸“{0}”。</value>
+  </data>
+  <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
+    <value>氨基酸“{0}”在值“{1}”中重复。</value>
+  </data>
+  <data name="Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations" xml:space="preserve">
+    <value>针对“{0}”的注释冲突经发现尝试合并注释。</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
+    <value>{0} ({1} - {2})</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+    <value>所有目标的离子迁移值必须介于此模板方法中指定的 {0} 和 {1} 之间。请使用其他模板方法，或更改下列目标的离子迁移值:</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___" xml:space="preserve">
+    <value>正在获取时序安排…</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
+    <value>时序安排故障（无目标？）</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_" xml:space="preserve">
+    <value>方法导出需要模板。</value>
+  </data>
+  <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
+    <value>针对肽段{1}在电荷{0}态下的不适当色谱图数据</value>
+  </data>
+  <data name="ChromatogramExporter_Export_Exporting_Chromatograms_for__0_" xml:space="preserve">
+    <value>针对{0}导出色谱图</value>
+  </data>
+  <data name="ChromatogramExporter_ExportGroupNode_One_or_more_missing_chromatograms_at_charge_state__0__of__1_" xml:space="preserve">
+    <value>{1}在电荷态{0}下的一个或多个缺失色谱图</value>
+  </data>
+  <data name="ChromatogramExporter_GetExtractorName_Invalid_extractor_name_" xml:space="preserve">
+    <value>无效的提取器名称。</value>
+  </data>
+  <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
+    <value>定制分子必须指定一个公式或有效的单一同位素和平均质量。</value>
+  </data>
+  <data name="DecoyGeneration_ADD_RANDOM_Random_Mass_Shift" xml:space="preserve">
+    <value>随机质量偏移</value>
+  </data>
+  <data name="DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence" xml:space="preserve">
+    <value>反向序列</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>为 {0} 重新使用现有 DIA-Umpire 文件（具有等效设置）</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>正在启动 DIA-Umpire 转换</value>
+  </data>
+  <data name="DisplayModificationOption_FULL_NAME_Full_Name" xml:space="preserve">
+    <value>全名</value>
+  </data>
+  <data name="DisplayModificationOption_MASS_DELTA_Mass_Difference" xml:space="preserve">
+    <value>质量差异</value>
+  </data>
+  <data name="DisplayModificationOption_NOT_SHOWN_Not_Shown" xml:space="preserve">
+    <value>未显示</value>
+  </data>
+  <data name="DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code" xml:space="preserve">
+    <value>三字母代码</value>
+  </data>
+  <data name="DisplayModificationOption_UNIMOD_ID_Unimod_ID" xml:space="preserve">
+    <value>Unimod ID</value>
+  </data>
+  <data name="DocNodeParent_GetPathTo_Index__0__exceeds_length__1__" xml:space="preserve">
+    <value>指数 {0} 超过长度 {1}</value>
+  </data>
+  <data name="DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only__2__" xml:space="preserve">
+    <value>节点报告在深度 {1} 位置有 {0} 个派生物，但仅发现 {2} 个。</value>
+  </data>
+  <data name="ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__" xml:space="preserve">
+    <value>无效的扩展的肽段结构式{0}</value>
+    <comment>Protein or peptide sequence</comment>
+  </data>
+  <data name="ExPeptideRowReader_Create_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
+    <value>同位素标记的条目经发现没有匹配设置。</value>
+  </data>
+  <data name="ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
+    <value>在“离子对设置”中核选“修饰”标签。</value>
+  </data>
+  <data name="ExportFileTypeExtension_LOCALIZED_VALUES_IsolationList" xml:space="preserve">
+    <value>分离列表</value>
+  </data>
+  <data name="ExportFileTypeExtension_LOCALIZED_VALUES_List" xml:space="preserve">
+    <value>列表</value>
+  </data>
+  <data name="ExportFileTypeExtension_LOCALIZED_VALUES_Method" xml:space="preserve">
+    <value>方法</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
+    <value>所有目标均必须有一个离子迁移值。这些值可以明确设置，也可以包含在离子迁移库或谱图库中。缺少以下离子迁移值：</value>
+  </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled" xml:space="preserve">
+    <value>预定的</value>
+  </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Standard" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered" xml:space="preserve">
+    <value>触发</value>
+  </data>
+  <data name="ExportOptimize_CE_Collision_Energy" xml:space="preserve">
+    <value>碰撞能量</value>
+  </data>
+  <data name="ExportOptimize_COV_Compensation_Voltage" xml:space="preserve">
+    <value>补偿电压</value>
+  </data>
+  <data name="ExportOptimize_COV_FINE_Fine_Tune" xml:space="preserve">
+    <value>精细调谐</value>
+  </data>
+  <data name="ExportOptimize_COV_MEDIUM_Medium_Tune" xml:space="preserve">
+    <value>中等调谐</value>
+  </data>
+  <data name="ExportOptimize_COV_ROUGH_Rough_Tune" xml:space="preserve">
+    <value>粗略调谐</value>
+  </data>
+  <data name="ExportOptimize_DP_Declustering_Potential" xml:space="preserve">
+    <value>去簇电压</value>
+  </data>
+  <data name="ExportOptimize_NONE_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="ExportProperties_ExportFile_Unrecognized_instrument_type__0__" xml:space="preserve">
+    <value>未识别的仪器类型{0}。</value>
+  </data>
+  <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Single" xml:space="preserve">
+    <value>单一</value>
+  </data>
+  <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends" xml:space="preserve">
+    <value>趋势</value>
+  </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_Buckets" xml:space="preserve">
+    <value>存储桶</value>
+  </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_Protein" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_Single" xml:space="preserve">
+    <value>单一</value>
+  </data>
+  <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
+    <value>第 {0} 行出错：在 {2} 位置出现无效的非 ASCII 字符 '{1}' ；确定这是 FASTA 文件吗？</value>
+  </data>
+  <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
+    <value>已添加 {0} 个蛋白质和 {1} 个肽段</value>
+  </data>
+  <data name="FastaImporter_Import_Adding_protein__0__" xml:space="preserve">
+    <value>添加蛋白质{0}</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>检查您的设置，确保正在使用库。</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>检查您的设置，确保正在使用库和有足够限制性的离子对选择。</value>
+  </data>
+  <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
+    <value>在 {0}: {1} 行上或其附近发生错误</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
+    <value>此次导入会引起文档在第 {1:n0} 行包含超过 {0:n0} 个肽段。</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
+    <value>此次导入会引起文档在第 {2:n0} 行的 {1:n0} 个肽段包含超过 {0:n0} 个离子对。</value>
+  </data>
+  <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
+    <value>最后一列不包含有效的蛋白质序列</value>
+  </data>
+  <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
+    <value>发现的列过少</value>
+  </data>
+  <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
+    <value>FASTA 序列不同的肽段不可比较。</value>
+  </data>
+  <data name="FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared" xml:space="preserve">
+    <value>没有 FASTA 序列信息的肽段不可被比较。</value>
+  </data>
+  <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
+    <value>蛋白质序列可能不为空。</value>
+  </data>
+  <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__" xml:space="preserve">
+    <value>蛋白质序列可能不包括{1}的字符“{0}”。</value>
+  </data>
+  <data name="FileIterator_Init_Cannot_save_to__0__" xml:space="preserve">
+    <value>无法保存至{0}。</value>
+  </data>
+  <data name="FileIterator_WriteTransition_Unexpected_failure_writing_transitions" xml:space="preserve">
+    <value>写入离子对的意外失败。</value>
+  </data>
+  <data name="GeneralRowReader_Create_No_valid_precursor_m_z_column_found" xml:space="preserve">
+    <value>未发现有效的母离子质荷比列。</value>
+  </data>
+  <data name="GeneralRowReader_Create_No_valid_product_m_z_column_found" xml:space="preserve">
+    <value>未发现有效的子离子质荷比列。</value>
+  </data>
+  <data name="IdentityNotFoundException_IdentityNotFoundException_Failed_to_find_document_node" xml:space="preserve">
+    <value>未能发现文档节点。</value>
+  </data>
+  <data name="IdentityPath_GetPathTo_Index__0__out_of_range_1_to__1__" xml:space="preserve">
+    <value>指数 {0} 超出范围 -1 至 {1}</value>
+  </data>
+  <data name="IdentityPathTraversal_Traverse_Invalid_attempt_to_perform_parent_operation_on_leaf_node" xml:space="preserve">
+    <value>在叶节点执行亲代操作尝试失败。</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
+    <value>iRT 标准</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
+    <value>去簇电压</value>
+  </data>
+  <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
+  <data name="IonTypeExtension_LOCALIZED_VALUES_precursor" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
+    <value>正在读取 {0} 的分离方案</value>
+  </data>
+  <data name="IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications" xml:space="preserve">
+    <value>正在置换同位素修饰</value>
+  </data>
+  <data name="LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_" xml:space="preserve">
+    <value>数字“{0}”不是正确格式。</value>
+  </data>
+  <data name="MassListImporter_Import_Importing__0__" xml:space="preserve">
+    <value>导入{0}</value>
+  </data>
+  <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
+    <value>正在检查肽段序列信息</value>
+  </data>
+  <data name="MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence" xml:space="preserve">
+    <value>无效的离子对列表。离子对列表必须至少包含母离子质荷比、子离子质荷比和肽段序列。</value>
+  </data>
+  <data name="MassListImporter_Import_Reading_transition_list" xml:space="preserve">
+    <value>正在读取离子对列表</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_" xml:space="preserve">
+    <value>请查看离子对设置全扫描标签下的分离方案。</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_" xml:space="preserve">
+    <value>肽段{1}的母离子质荷比 {0} 超出此仪器设置范围。</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_" xml:space="preserve">
+    <value>肽段{1}的母离子质荷比 {0} 超出 DIA 分离窗口方案覆盖的范围。</value>
+  </data>
+  <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
+    <value>在“离子对设置”中核选“修饰”标签。</value>
+  </data>
+  <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_" xml:space="preserve">
+    <value>同位素标记的条目经发现没有匹配设置。</value>
+  </data>
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
+    <value>未指定肽段修饰序列的列</value>
+  </data>
+  <data name="MethodExporter_ExportMethod_Exporting_method__0__" xml:space="preserve">
+    <value>方法{0}导出中…</value>
+  </data>
+  <data name="MethodExporter_ExportMethod_Exporting_methods" xml:space="preserve">
+    <value>方法导出中…</value>
+  </data>
+  <data name="Metrics_Col1K0LowerLimit__1_K0_lower_limit" xml:space="preserve">
+    <value>1/K0 下限</value>
+  </data>
+  <data name="Metrics_Col1K0UpperLimit__1_K0_upper_limit" xml:space="preserve">
+    <value>1/K0 上限</value>
+  </data>
+  <data name="Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_" xml:space="preserve">
+    <value>最大抽样时间（秒）</value>
+  </data>
+  <data name="Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_" xml:space="preserve">
+    <value>平均抽样时间（秒）</value>
+  </data>
+  <data name="Metrics_ColMz_m_z" xml:space="preserve">
+    <value>质荷比</value>
+  </data>
+  <data name="Metrics_ColRtBegin_RT_begin" xml:space="preserve">
+    <value>RT 起始</value>
+  </data>
+  <data name="Metrics_ColRtEnd_RT_end" xml:space="preserve">
+    <value>RT 结束</value>
+  </data>
+  <data name="Metrics_ColTarget_Target" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>正在匹配修饰</value>
+  </data>
+  <data name="ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___" xml:space="preserve">
+    <value>修饰的肽段序列{1}（氨基酸 {2}, {3}）中 Unimod id {0}有未识别的修饰位置。</value>
+  </data>
+  <data name="ModificationMatcher_ThrowUnimodException_Unrecognized_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___" xml:space="preserve">
+    <value>修饰的肽段序列{1}中的未识别 Unimod id {0}（氨基酸 {2}, {3}）。</value>
+  </data>
+  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
+    <value>调整峰边界</value>
+  </data>
+  <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
+    <value>子离子质荷比{0}无法使用您当前的仪器设置进行测量。</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_" xml:space="preserve">
+    <value>无效漂移时间高能偏置值{0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_" xml:space="preserve">
+    <value>无效漂移时间值{0}</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Energy" xml:space="preserve">
+    <value>碰撞能量</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_" xml:space="preserve">
+    <value>碰撞横截面（平方埃）</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>明确的去簇电压</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_" xml:space="preserve">
+    <value>明确的漂移时间 （毫秒）</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_" xml:space="preserve">
+    <value>明确漂移时间高能偏置（毫秒）</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecule_List_Name" xml:space="preserve">
+    <value>分子列名称</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Charge" xml:space="preserve">
+    <value>母离子电荷</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
+    <value>母离子公式</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_m_z" xml:space="preserve">
+    <value>母离子质荷比</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_m_z" xml:space="preserve">
+    <value>子离子质荷比</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Importing_Peak_Boundaries" xml:space="preserve">
+    <value>导入峰值边界</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_" xml:space="preserve">
+    <value>第 {1}行肽段有未识别修饰{0}</value>
+  </data>
+  <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__" xml:space="preserve">
+    <value>无法针对文件{1}中的肽段{0}读取顶点保留时间值。</value>
+  </data>
+  <data name="Peptide_ToString_missed__0__" xml:space="preserve">
+    <value>（缺少{0}）</value>
+  </data>
+  <data name="Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence" xml:space="preserve">
+    <value>肽段序列超出蛋白质序列的范围。</value>
+  </data>
+  <data name="Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values" xml:space="preserve">
+    <value>来自蛋白质序列的肽段必须具备起始和最终值。</value>
+  </data>
+  <data name="Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties" xml:space="preserve">
+    <value>没有蛋白质序列的肽段不支持起始和结束属性。</value>
+  </data>
+  <data name="Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__" xml:space="preserve">
+    <value>肽段序列{0}与 ({2}：{3})的蛋白质序列{1}不匹配.</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_Normalization" xml:space="preserve">
+    <value>全球标准</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_QC" xml:space="preserve">
+    <value>质量控制(QC)</value>
+  </data>
+  <data name="PeptideDocNodeToString__0__rank__1__" xml:space="preserve">
+    <value>{0}（排名 {1}）</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor" xml:space="preserve">
+    <value>未能借助单一母离子解释针对质荷比 {0}（肽段{1}）的所有离子对。</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__" xml:space="preserve">
+    <value>序列{1}中未发现肽段{0}。</value>
+  </data>
+  <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_" xml:space="preserve">
+    <value>针对肽段{0}、母离子质荷比 {1} 缺失 iRT 值。</value>
+  </data>
+  <data name="PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_" xml:space="preserve">
+    <value>当前文档设置可能会导致肽段数量超过{0:n0}。文档设置必须更具限制性或添加较少的蛋白质。</value>
+  </data>
+  <data name="PersistedViews_ExternalToolsGroup_External_Tools" xml:space="preserve">
+    <value>外部工具</value>
+  </data>
+  <data name="PersistedViews_MainGroup_Main" xml:space="preserve">
+    <value>主要</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins" xml:space="preserve">
+    <value>{0}  蛋白质组</value>
+  </data>
+  <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
+    <value>转换为分子</value>
+  </data>
+  <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
+    <value>该文档不包括给定的参考类别。</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_" xml:space="preserve">
+    <value>该文档没有一个可以归一化的全球标准。</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
+    <value>找不到安装的有效 SCIEX OS。</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
+    <value>正在等待启动 SCIEX OS</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
+    <value>工作中…</value>
+  </data>
+  <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
+    <value>SCIEX OS 方法导出的仪器类型无效。</value>
+  </data>
+  <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
+    <value>母离子同位素{0}在同位素分布{1}至{2}之外。</value>
+  </data>
+  <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__" xml:space="preserve">
+    <value>未针对氨基酸“{0}”发现任何公式</value>
+  </data>
+  <data name="SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_" xml:space="preserve">
+    <value>修饰定义{0}缺少右方括号。</value>
+  </data>
+  <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
+    <value>修饰{0}无效。预期出现数字增量质量。</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>值 '{0}' 对于参数 {1} 无效，该参数的值必须为 'True' 或 'False'。</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
+    <value>开发者版本</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>最新 ({0})</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
+    <value>您尝试打开的文件（“{0}”）似乎不是 Skyline 文档。Skyline 文档通常具有“{1}”或“{2}”文件扩展名，并且是 XML 格式。</value>
+  </data>
+  <data name="SkypFile_FILTER_SKYP_Skyline_Document_Pointer" xml:space="preserve">
+    <value>Skyline 文档指示器</value>
+  </data>
+  <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
+    <value>共享 Skyline 存档的名称不得无效或空。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound" xml:space="preserve">
+    <value>化合物</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
+    <value>保留时间（分钟）</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units" xml:space="preserve">
+    <value>缺失离子迁移单位</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error" xml:space="preserve">
+    <value>未知错误</value>
+  </data>
+  <data name="SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides" xml:space="preserve">
+    <value>必须具有有效的 iRT 计算器才能添加 iRT 肽段。</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_No_replicate_named__0__was_found" xml:space="preserve">
+    <value>未发现命名为{0}的重复测定</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
+    <value>在文件{1}中未发现关于母离子{0}的任何结果。</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__" xml:space="preserve">
+    <value>在重复测定{1}中未针对母离子{0}发现任何结果</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_The_file__0__was_not_found_in_the_replicate__1__" xml:space="preserve">
+    <value>文件{0}未在重复测定{1}中发现。</value>
+  </data>
+  <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files" xml:space="preserve">
+    <value>Skyline 文件</value>
+  </data>
+  <data name="SrmDocument_FILTER_DOC_Skyline_Documents" xml:space="preserve">
+    <value>Skyline 文档</value>
+  </data>
+  <data name="SrmDocument_GetPeptideGroupId_peptides" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="SrmDocument_GetPeptideGroupId_sequence" xml:space="preserve">
+    <value>序列</value>
+  </data>
+  <data name="SrmDocument_GetSmallMoleculeGroupId_molecules" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
+    <value>肽段{0}经多次发现带有用户修饰。</value>
+  </data>
+  <data name="SrmDocument_MoveNode_Invalid_move_source" xml:space="preserve">
+    <value>无效的移动源。</value>
+  </data>
+  <data name="SrmDocument_MoveNode_Invalid_move_target" xml:space="preserve">
+    <value>无效的移动目标。</value>
+  </data>
+  <data name="SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__" xml:space="preserve">
+    <value>压缩文件用于共享档案{0}</value>
+  </data>
+  <data name="SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__" xml:space="preserve">
+    <value>从共享档案{0}中提取文件</value>
+  </data>
+  <data name="SrmDocumentSharing_FILTER_SHARING_Shared_Files" xml:space="preserve">
+    <value>共享文件</value>
+  </data>
+  <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_contains_multiple_Skyline_documents" xml:space="preserve">
+    <value>压缩文件不是共享文件。文件包含多个 Skyline 文档。</value>
+  </data>
+  <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents" xml:space="preserve">
+    <value>压缩文件不是共享文件。文件不包含任何 Skyline 文档。</value>
+  </data>
+  <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
+    <value>正在写入色谱图</value>
+  </data>
+  <data name="SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__" xml:space="preserve">
+    <value>删除临时目录{0}失败。</value>
+  </data>
+  <data name="SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__" xml:space="preserve">
+    <value>压缩{0}</value>
+  </data>
+  <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
+    <value>文档中发现的结果没有重复测定。</value>
+  </data>
+  <data name="StandardType_SURROGATE_STANDARD_Surrogate_Standard" xml:space="preserve">
+    <value>替代标准</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
+    <value>无法解析“{0}”中的分子。</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
+    <value>无法解析“{0}”中的分子：可能是 {1} 中的任何一个</value>
+    <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_" xml:space="preserve">
+    <value>无法找到有效的 Thermo 仪器安装。</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_" xml:space="preserve">
+    <value>可能未正确安装 Thermo 仪器软件。库{0}无法找到。</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_" xml:space="preserve">
+    <value>可能未正确安装 Thermo 方法创建软件。</value>
+  </data>
+  <data name="Transition_ToString_precursor" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="Transition_Validate_A_transition_of_ion_type__0__can_t_have_a_custom_ion" xml:space="preserve">
+    <value>离子类型{0}离子对不能拥有自定义离子</value>
+  </data>
+  <data name="Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_" xml:space="preserve">
+    <value>离子类型{0}离子对必须拥有自定义离子。</value>
+  </data>
+  <data name="Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>片段诱饵质量偏移 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__" xml:space="preserve">
+    <value>针对肽段{2}的片段序数 {0} 超过最大值 {1}。</value>
+  </data>
+  <data name="Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__" xml:space="preserve">
+    <value>片段序数 {0} 不得小于 1。</value>
+  </data>
+  <data name="Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>母离子电荷{0}必须在{1}和{2}之间。</value>
+  </data>
+  <data name="Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide" xml:space="preserve">
+    <value>母离子序数必须是肽段的长度。</value>
+  </data>
+  <data name="Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>子离子电荷{0}必须在{1}和{2}之间。</value>
+  </data>
+  <data name="TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_" xml:space="preserve">
+    <value>离子对{0}中的重复或失序峰</value>
+  </data>
+  <data name="TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>母离子电荷{0}必须在{1}和{2}之间。</value>
+  </data>
+  <data name="TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>母离子诱饵质量偏移 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__" xml:space="preserve">
+    <value>借助文件{1}从文件{0}分组离子对</value>
+  </data>
+  <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
+    <value>尝试针对缺失的文件添加整合信息。</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak" xml:space="preserve">
+    <value>更改峰中缺失终止时间</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak" xml:space="preserve">
+    <value>更改峰中缺失起始时间</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__" xml:space="preserve">
+    <value>在{0:F01}未发现峰值</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
+    <value>文件 Id {0}不匹配文档中的任何文件。</value>
+  </data>
+  <data name="UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo" xml:space="preserve">
+    <value>撤销处理不可以在撤销/恢复中开始。</value>
+  </data>
+  <data name="UndoManager_Commit_Commit_called_with_no_pending_undo_record" xml:space="preserve">
+    <value>要求的提交没有未决的撤销记录。</value>
+  </data>
+  <data name="UndoManager_Restore_Attempt_to_index__0__beyond_length__1__" xml:space="preserve">
+    <value>尝试在长度 {1} 外将{0}编入索引。</value>
+  </data>
+  <data name="UndoManager_Restore_Attempting_undo_redo_inside_undo_transaction" xml:space="preserve">
+    <value>尝试在撤销处理中撤销/恢复。</value>
+  </data>
+  <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
+    <value>未能发现有效的 MassLynx 安装。</value>
+  </data>
+  <data name="WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found" xml:space="preserve">
+    <value>MassLynx 可能安装不正确。库{0}无法找到。</value>
+  </data>
+  <data name="WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly" xml:space="preserve">
+    <value>Waters 方法创建软件可能安装不正确。</value>
+  </data>
+  <data name="ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_" xml:space="preserve">
+    <value>尝试添加文件 {0} 失败</value>
+  </data>
+  <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
+    <value>在路径 {1} 中已经使用了名称“{0}”</value>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
+    <value>发现多个 UniMod 匹配项；添加末端和/或氨基酸特异性以选择单个匹配项</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_" xml:space="preserve">
+    <value>发现一个以上的 UniMod 匹配项，但给定的特异性 ({0}) 不匹配其中任何一项。</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_no_UniMod_match" xml:space="preserve">
+    <value>无 UniMod 匹配项</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
+    <value>检测到的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>库强度</value>
+  </data>
+</root>

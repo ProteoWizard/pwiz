@@ -51,9 +51,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void FullScanFilterTestCentroided()
         {
-            List<SrmDocument> docCheckpoints;
             if (ExtensionTestContext.CanImportThermoRaw)
-                DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints, true);
+                DoFullScanFilterTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out _, true);
         }
 
         [TestMethod]
@@ -395,7 +394,7 @@ namespace pwiz.SkylineTestData.Results
             {
                 var oldDoc = doc;
                 AssertEx.Serializable(oldDoc);
-                doc = ConvertToSmallMolecules(doc, ref docPath, null, smallMoleculeTestMode);
+                doc = AsSmallMoleculeTestUtil.ConvertToSmallMolecules(doc, ref docPath, null, smallMoleculeTestMode);
                 AssertEx.Serializable(doc);
                 expectedRevisionNumber = null;
 
@@ -410,8 +409,7 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void FullScanSettingsTest()
         {
-            List<SrmDocument> docCheckpoints;
-            DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out docCheckpoints);
+            DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode.none, out _);
         }
 
         [TestMethod]

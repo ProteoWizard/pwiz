@@ -368,6 +368,7 @@ ASALocalRun/
 /libraries/freetype*
 /libraries/libgd*
 /libraries/libpng*
+/libraries/msparser_2_8_1_x86_win64
 /libraries/zlib*
 Version.cpp
 /pwiz_tools/BiblioSpec/tests/inputs
@@ -380,8 +381,13 @@ Version.cpp
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
 /pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
 
+# Vendor reader test data extracted from tarballs (newer data should be committed directly to git)
+/pwiz/data/vendor_readers/*/Reader*Test.data/**/1SRef
+/pwiz/data/vendor_readers/*/Reader*Test.data/**.raw
+/pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data
+/pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data
+
 # Files that get extracted from vendor reader distros
-Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/**/*.dll
 /pwiz_aux/msrc/utility/vendor_api/*/EULA.*
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
@@ -455,6 +461,7 @@ SkylineTester Results
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp
 /pwiz_aux/msrc/utility/vendor_api/ABI/SCIEX.Apis.Data.v1.xml
+
 Enolase_repeats_AQv1.4.2-试验.wiff.scan
 PressureTrace1-试验.wiff.scan
 swath.api-试验.wiff.scan
@@ -465,3 +472,5 @@ temp.MSDataFileTest.mgf
 temp.MSDataFileTest.mzXML
 temp.RAMPAdapterTest.tiny.mzML
 pwiz_aux/msrc/utility/vendor_api/thermo/x64/MSFileReader.XRawfile2.SxS.manifest
+pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.mzMLb
+pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/Thyrxox 5 TS Diff Scan B.mzMLb

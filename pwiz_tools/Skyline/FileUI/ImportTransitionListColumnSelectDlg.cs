@@ -56,6 +56,8 @@ namespace pwiz.Skyline.FileUI
         private readonly MassListInputs _inputs;
         private readonly IdentityPath _insertPath;
 
+        private List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+
         // For associating proteins
         private string[] _originalLines;
         private readonly NodeTip _proteinTip;
@@ -104,13 +106,13 @@ namespace pwiz.Skyline.FileUI
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,SrmDocument.DOCUMENT_TYPE.proteomic),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,SrmDocument.DOCUMENT_TYPE.proteomic),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
@@ -176,7 +178,7 @@ namespace pwiz.Skyline.FileUI
 
             if (assayLibrary) // Dialog title should be "Import Assay Library:Identify Columns" instead of "Transition List:Identify Columns"
             {
-                Text = Resources.ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns;
+                Text = FileUIResources.ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns;
             }
 
             fileLabel.Text = Importer.Inputs.InputFilename;
@@ -233,7 +235,7 @@ namespace pwiz.Skyline.FileUI
                        false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
-                filterDlg.Text = Resources.ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins; // This title makes more sense in this context
+                filterDlg.Text = FileUIResources.ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins; // This title makes more sense in this context
                 if (filterDlg.ShowDialog(this) != DialogResult.OK)
                 {
                     // If they cancel do not change the document or the transition list
@@ -275,8 +277,9 @@ namespace pwiz.Skyline.FileUI
             var peptides = new List<string>(count);
             var stripped = new Dictionary<string, string>(); // Map peptide -> stripped peptide
 
-            using (var longWaitDlg = new LongWaitDlg() { Message = checkBoxAssociateProteins.Text })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Message = checkBoxAssociateProteins.Text;
                 longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                 {
                     // If there are headers, add one describing the protein name column we will add - if we haven't already
@@ -469,16 +472,16 @@ namespace pwiz.Skyline.FileUI
                 {
                     dataGrid.Columns[i].HeaderText = headers[i];
                     dataGrid.Columns[i].ToolTipText =
-                        string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_, headers[i]);
+                        string.Format(FileUIResources.ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_, headers[i]);
                     dataGrid.ColumnHeadersVisible = true;
                 }
                 else
                 {
                     // In this case when we don't have user provided headers, we still want localized headers that can be translated,
                     // this replaces the auto generated strings with a localized version
-                    dataGrid.Columns[i].HeaderText = string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_Column__0_, (i+1));
+                    dataGrid.Columns[i].HeaderText = string.Format(FileUIResources.ImportTransitionListColumnSelectDlg_DisplayData_Column__0_, (i+1));
                     dataGrid.Columns[i].ToolTipText =
-                        string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_);
+                        string.Format(FileUIResources.ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_);
                 }
             }
 
@@ -537,15 +540,15 @@ namespace pwiz.Skyline.FileUI
             // Set the combo boxes using the detected columns first. They will be changed if the saved column positions are determined to be correct
             _considered = new HashSet<string>(){Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column };
             SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
-            SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
+            SetComboBoxText(columns.IrtColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-            SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
+            SetComboBoxText(columns.LibraryColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
             SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
             SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
             SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
             SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-            SetComboBoxText(columns.ProteinDescriptionColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
+            SetComboBoxText(columns.ProteinDescriptionColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
             SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
             SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             SetComboBoxText(columns.MoleculeListNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
@@ -655,7 +658,7 @@ namespace pwiz.Skyline.FileUI
                 Importer.RowReader.Lines = savedLines.Take(N_DISPLAY_LINES).ToArray();
                 // Try importing that list to check for errors
                 docImport = _docCurrent.ImportMassList(Importer.Inputs, Importer, null,
-                    _insertPath, out _, out _, out _, out _, out _, null,
+                    _insertPath, out _, out _, out _, out _, out _, false, null,
                     SrmDocument.DOCUMENT_TYPE.none, false);
             }
             finally
@@ -969,9 +972,9 @@ namespace pwiz.Skyline.FileUI
             }
 
             if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy, nameof(columns.DecoyColumn))) {}
-            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT, nameof(columns.IrtColumn))) {}
+            else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT, nameof(columns.IrtColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type, nameof(columns.LabelTypeColumn))) {}
-            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity, nameof(columns.LibraryColumn))) {}
+            else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity, nameof(columns.LibraryColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name, nameof(columns.MoleculeNameColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, nameof(columns.PrecursorColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn))) {}
@@ -986,7 +989,7 @@ namespace pwiz.Skyline.FileUI
             else if (SetIonMobilityColumns()) {} // Ion mobility column interactions are somewhat complex
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, nameof(columns.ExplicitDeclusteringPotentialColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, nameof(columns.ExplicitCollisionCrossSectionColumn))) {}
-            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description, nameof(columns.ProteinDescriptionColumn))) {}
+            else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description, nameof(columns.ProteinDescriptionColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct, nameof(columns.PrecursorAdductColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge, nameof(columns.PrecursorChargeColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Name, nameof(columns.ProductNameColumn))) {}
@@ -1064,11 +1067,9 @@ namespace pwiz.Skyline.FileUI
             Assume.IsTrue(isAssociated || !isAssociateProteins, @"expected a complete associate proteins preview");
 
             // Check for errors is expensive with associate proteins, if a known good check exists
-            if (IsCheckForErrorsNecessary(isAssociateProteins)) // Something changed in headers selection since last association
-            {
-                if (CheckForErrors(true)) // Look for errors, be silent on success
-                    return;
-            }
+            var needsCheck = IsCheckForErrorsNecessary(isAssociateProteins); // Only recheck if something changed in headers selection since last association
+            if (CheckForErrors(true, needsCheck)) // Look for errors, be silent on success
+                return;
 
             if (InsertionParams == null && isAssociateProteins && !checkBoxAssociateProteins.Checked)
             {
@@ -1102,7 +1103,7 @@ namespace pwiz.Skyline.FileUI
 
         public void CheckForErrors()
         {
-            CheckForErrors(false);
+            CheckForErrors(false, true); // Look for errors, update cached errors
         }
 
         private List<string> MissingEssentialColumns { get; set; }
@@ -1120,12 +1121,12 @@ namespace pwiz.Skyline.FileUI
             var columns = Importer.RowReader.Indices;
             if (columns.PrecursorAdductColumn == -1 && columns.PrecursorChargeColumn == -1)
             {
-                MissingEssentialColumns.Add(Resources.ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge);
+                MissingEssentialColumns.Add(FileUIResources.ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge);
             }
 
             if (columns.MolecularFormulaColumn == -1 && columns.PrecursorColumn == -1)
             {
-                MissingEssentialColumns.Add(Resources.ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z);
+                MissingEssentialColumns.Add(FileUIResources.ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z);
             }
         }
 
@@ -1176,8 +1177,8 @@ namespace pwiz.Skyline.FileUI
             
             // Set Peptide only columns
             SetBoxesForMode(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
-            SetBoxesForMode(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
-            SetBoxesForMode(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
+            SetBoxesForMode(columns.IrtColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
+            SetBoxesForMode(columns.LibraryColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
             SetBoxesForMode(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
             SetBoxesForMode(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetBoxesForMode(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
@@ -1214,7 +1215,7 @@ namespace pwiz.Skyline.FileUI
             SetBoxesForMode(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
             SetBoxesForMode(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
             SetBoxesForMode(columns.ExplicitCollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_);
-            SetBoxesForMode(columns.ProteinDescriptionColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
+            SetBoxesForMode(columns.ProteinDescriptionColumn, FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
             if (radioPeptide.Checked)
             {
                 // Set the column headers to what they were last time we were in peptide mode
@@ -1276,71 +1277,78 @@ namespace pwiz.Skyline.FileUI
         /// Return false if no errors found.
         /// </summary>
         /// <param name="silentSuccess">If true, don't show the confirmation dialog when there are no errors</param>
+        /// <param name="needsCheck">If true, always repopulate errorList</param>
         /// <returns>True if list contains any errors and user does not elect to ignore them</returns>
-        private bool CheckForErrors(bool silentSuccess)
+        private bool CheckForErrors(bool silentSuccess, bool needsCheck)
         {
-            var insertionParams = new DocumentChecked();
-            bool hasHeaders = Importer.RowReader.Indices.Headers != null;
-            List<TransitionImportErrorInfo> testErrorList = null;
-            var errorCheckCanceled = true;
-            insertionParams.ColSelections = CurrentColSelections();
-
-            if (checkBoxAssociateProteins.Checked)
+            var errorCheckCanceled = needsCheck; // If we're checking, assume the worst until proven otherwise
+            var insertionParams = needsCheck? new DocumentChecked() : InsertionParams;
+            var isPeptideList = radioPeptide.Checked;
+            if (needsCheck)
             {
-                if (!UpdateProteinAssociationState(AssociateProteinsMode.all_interactive))
-                {
-                    // User canceled
-                    _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
-                    return false;
-                }
-            }
+                bool hasHeaders = Importer.RowReader.Indices.Headers != null;
+                insertionParams.ColSelections = CurrentColSelections();
 
-            try
-            {
-                using var longWaitDlg = new LongWaitDlg
-                    {Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___};
-                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                var isAssociateProteins = checkBoxAssociateProteins.Checked;
+                if (isAssociateProteins)
                 {
-
-                    var columns = Importer.RowReader.Indices;
-                    MissingEssentialColumns = new List<string>();
-                    if (radioPeptide.Checked)
+                    if (!UpdateProteinAssociationState(AssociateProteinsMode.all_interactive))
                     {
-                        CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
-                        CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
-                        CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                        // User canceled
+                        _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
+                        return false;
                     }
-                    else
+                }
+
+                try
+                {
+                    errorList?.Clear(); // Looking for a new set of errors
+                    var readerType = GetRadioType();
+
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.Text = FileUIResources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___;
+                    longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
-                        CheckMoleculeColumns();
-                    }
 
-                    insertionParams.ProteinAssociations = checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0
-                        ? _dictNameSeq
-                        : new Dictionary<string, FastaSequence>();
-                    insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
-                        _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, GetRadioType(), hasHeaders, 
-                        insertionParams.ProteinAssociations);
-                    errorCheckCanceled = progressMonitor.IsCanceled;
-                });
-            }
-            catch (Exception exception)
-            {
-                if (ExceptionUtil.IsProgrammingDefect(exception))
-                {
-                    Program.ReportException(exception);
-                }
-                else
-                {
-                    MessageDlg.ShowWithException(this, exception.Message, exception);
-                }
-                Assume.IsTrue(errorCheckCanceled);
-            }
+                        var columns = Importer.RowReader.Indices;
+                        MissingEssentialColumns = new List<string>();
+                        if (isPeptideList)
+                        {
+                            CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+                            CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+                            CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                        }
+                        else
+                        {
+                            CheckMoleculeColumns();
+                        }
 
+                        insertionParams.ProteinAssociations = isAssociateProteins && Importer.RowReader.Indices.ProteinColumn == 0
+                            ? _dictNameSeq
+                            : new Dictionary<string, FastaSequence>();
+                        insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
+                            _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
+                            out insertionParams.LibrarySpectra, out var testErrorList, out insertionParams.PeptideGroups, true, insertionParams.ColSelections, readerType, hasHeaders, 
+                            insertionParams.ProteinAssociations);
+                        errorCheckCanceled = progressMonitor.IsCanceled;
+                        if (!errorCheckCanceled)
+                        {
+                            if (testErrorList != null && testErrorList.Any())
+                            {
+                                errorList?.AddRange(testErrorList);
+                            }
+                        }
+                    });
+                }
+                catch (Exception exception)
+                {
+                    ExceptionUtil.DisplayOrReportException(this, exception);
+                    Assume.IsTrue(errorCheckCanceled);
+                }
+            }
             var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);
 
             // If there is at least one valid transition, the document is being imported, and a combo box has been changed,
@@ -1357,7 +1365,7 @@ namespace pwiz.Skyline.FileUI
                 return true; // User cancelled, we can't say that there are no errors
             }
 
-            if (testErrorList != null && testErrorList.Any())
+            if (errorList != null && errorList.Any())
             {
                 _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
                 // There are errors, show them to user
@@ -1372,7 +1380,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
+                    using (var dlg = new ImportTransitionListErrorDlg(errorList, isErrorAll, silentSuccess))
                     {
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return true; // There are errors, and user does not want to ignore them
@@ -1386,7 +1394,7 @@ namespace pwiz.Skyline.FileUI
             }
             
             insertionParams.ColSelections = CurrentColSelections();
-            insertionParams.IsSmallMoleculeList = !radioPeptide.Checked;
+            insertionParams.IsSmallMoleculeList = !isPeptideList;
             InsertionParams = insertionParams;
             return false; // No errors
         }
@@ -1499,6 +1507,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Items.Clear();
+                comboBox.SelectedIndex = -1;
                 UpdateCombo(comboBox);
             }
             checkBoxAssociateProteins.Visible = CheckboxVisible();

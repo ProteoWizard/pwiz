@@ -127,10 +127,9 @@ namespace pwiz.Skyline.Model
                 {
                     var line = reader.ReadLine();
                     var fieldNames = PeakBoundaryImporter.FIELD_NAMES.ToList();
-                    int fieldsTotal;
                     int[] fieldIndices;
                     var separator = PeakBoundaryImporter.DetermineCorrectSeparator(line, fieldNames,
-                        PeakBoundaryImporter.REQUIRED_NO_CHROM, out fieldIndices, out fieldsTotal);
+                        PeakBoundaryImporter.REQUIRED_NO_CHROM, out fieldIndices, out _);
                     ApexPresent = separator != null && fieldIndices[(int) PeakBoundaryImporter.Field.apex_time] != -1;
                 }
                 _docCompare = Importer.Import(FilePath, progressMonitor, lineCount, true, !ApexPresent);
@@ -394,7 +393,7 @@ namespace pwiz.Skyline.Model
             if (timeText == null || timeText.Equals(TextUtil.EXCEL_NA))
                 return null;
 
-            throw new IOException(string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, ModifiedSequence, FileName));
+            throw new IOException(string.Format(ModelResources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, ModifiedSequence, FileName));
         }
 
         public static double? GetScoreValue(TransitionGroupChromInfo groupChromInfo, string annotationName, Func<TransitionGroupChromInfo, double?> getNativeValue)

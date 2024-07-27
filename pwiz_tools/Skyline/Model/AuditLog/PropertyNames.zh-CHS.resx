@@ -309,6 +309,9 @@
   <data name="StaticMod_IsCrosslinker" xml:space="preserve">
     <value>交联剂</value>
   </data>
+  <data name="StaticMod_RelativeRT" xml:space="preserve">
+    <value>相对保留时间</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>使用高选择性提取</value>
   </data>
@@ -1100,6 +1103,25 @@
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
+  <data name="HardklorSettings_Charges" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
+    <value>最小强度 PPM</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSettings_MinIdotP" xml:space="preserve">
+    <value>最小同位素点积</value>
+  </data>
+  <data name="HardklorSettings_Instrument" xml:space="preserve">
+    <value>仪器</value>
+  </data>
+  <data name="HardklorSettings_Resolution" xml:space="preserve">
+    <value>分辨率</value>
+  </data>
+  <data name="HardklorSettings_SignalToNoise" xml:space="preserve">
+    <value>噪声信号</value>
+  </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
     <value>自动训练 mProphet 模型</value>
   </data>
@@ -1126,6 +1148,10 @@
   </data>
   <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
     <value>配置全扫描设置</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
+    <value>Hardklor 搜索设置</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
     <value>导入 FASTA</value>
@@ -1708,5 +1734,77 @@
   </data>
   <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
     <value>蛋白质关联设置</value>
+  </data>
+  <data name="GroupComparisonDef_MsLevel" xml:space="preserve">
+    <value>MS 级别</value>
+  </data>
+  <data name="EncyclopeDiaSettings" xml:space="preserve">
+    <value>EncyclopeDIA 搜索</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaChromLibrary" xml:space="preserve">
+    <value>色谱图库</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaConfig" xml:space="preserve">
+    <value>EncyclopeDIA 设置</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaQuantLibrary" xml:space="preserve">
+    <value>定量库</value>
+  </data>
+  <data name="EncyclopeDiaSettings_FastaSettings" xml:space="preserve">
+    <value>FASTA 设置</value>
+  </data>
+  <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
+    <value>窄窗口结果</value>
+  </data>
+  <data name="EncyclopeDiaSettings_KoinaSettings" xml:space="preserve">
+    <value>Koina 设置</value>
+  </data>
+  <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
+    <value>宽窗口结果</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_DefaultCharge" xml:space="preserve">
+    <value>默认电荷</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_DefaultNCE" xml:space="preserve">
+    <value>默认 NCE</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MaxCharge" xml:space="preserve">
+    <value>最大电荷</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+    <value>最大的漏切酶解位点数</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MinCharge" xml:space="preserve">
+    <value>最小电荷</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_Enzyme" xml:space="preserve">
+    <value>酶</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MaxMz" xml:space="preserve">
+    <value>最大质荷比</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
+    <value>最小质荷比</value>
+  </data>
+  <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
+    <value>按基因水平分组</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
+    <value>相对丰度格式</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
+    <value>格式化行</value>
+  </data>
+  <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
+    <value>最大 Q 值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">
+    <value>得分阈值</value>
+  </data>
+  <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
+    <value>得分类型</value>
   </data>
 </root>

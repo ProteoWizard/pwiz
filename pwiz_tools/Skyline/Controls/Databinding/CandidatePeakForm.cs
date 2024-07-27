@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 new ViewInfo(rootColumn, GetDefaultViewSpec()));
             var viewContext = new SkylineViewContext(_dataSchema, new []{rowSourceInfo});
             BindingListSource.SetViewContext(viewContext);
-            Text = TabText = Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
+            Text = TabText = DatabindingResources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
             DataboundGridControl.DataGridView.CellFormatting += DataGridView_OnCellFormatting;
             DataboundGridControl.DataGridView.CurrentCellDirtyStateChanged += DataGridView_OnCurrentCellDirtyStateChanged;
             _originalPeakColor = GetOriginalPeakColor();
@@ -176,7 +176,17 @@ namespace pwiz.Skyline.Controls.Databinding
 
             _selector = newSelector;
             _candidatePeakGroups.Clear();
-            _candidatePeakGroups.AddRange(GetCandidatePeakGroups(newSelector));
+            try
+            {
+                _candidatePeakGroups.AddRange(GetCandidatePeakGroups(newSelector));
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(ex))
+                {
+                    Program.ReportException(ex);
+                }
+            }
             _bindingList.ResetBindings();
         }
 
@@ -239,7 +249,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private ViewSpec GetDefaultViewSpec()
         {
-            var viewSpec = new ViewSpec().SetName(Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
+            var viewSpec = new ViewSpec().SetName(DatabindingResources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
             {
                 new ColumnSpec(PropertyPath.Root),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupRetentionTime))),

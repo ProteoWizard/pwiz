@@ -42,6 +42,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/MzShiftFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
@@ -851,6 +852,7 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
     string optimization = parseKeyValuePair<string>(arg, "optimization=", "none");
     demuxParams.interpolateRetentionTime = parseKeyValuePair<LocaleBool>(arg, "interpolateRT=", k_defaultDemuxParams.interpolateRetentionTime);
     demuxParams.minimumWindowSize = parseKeyValuePair<double>(arg, "minWindowSize=", k_defaultDemuxParams.minimumWindowSize);
+    demuxParams.removeNonOverlappingEdges = parseKeyValuePair<LocaleBool>(arg, "removeNonOverlappingEdges=", k_defaultDemuxParams.removeNonOverlappingEdges);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
@@ -875,7 +877,8 @@ UsageInfo usage_demux = {
     " noSumNormalize=<bool (false)>"
     " optimization=<(none)|overlap_only>"
     " interpolateRT=<bool (true)>"
-    " minWindowSize=<real (0.2)>",
+    " minWindowSize=<real (0.2)>"
+    " removeNonOverlappingEdges=<bool (false)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
 
 SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
@@ -1281,8 +1284,15 @@ UsageInfo usage_chargeFromIsotope = {"[minCharge=<minCharge>] [maxCharge=<maxCha
   *   output files containing only ETD or CID MSn data where both activation modes have been
   *   interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
   */ 
-SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
+    const string modeToken("mode=");
+
+    string arg = carg;
+
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, modeToken, SpectrumList_Filter::Predicate::FilterMode_Include);
+    bool hasNot = mode == SpectrumList_Filter::Predicate::FilterMode_Exclude;
+
     istringstream parser(arg);
     string activationType;
     parser >> activationType;
@@ -1302,13 +1312,11 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
 
     set<CVID> cvIDs;
 
-    bool hasNot = false;
-
     // TODO: replace hand-written code with CVTranslator
 
     if (activationType == "CID") // HACK: CID means neither of HCD or ETD
     {
-        hasNot = true;
+        hasNot = !hasNot;
         cvIDs.insert(MS_higher_energy_beam_type_collision_induced_dissociation);
         cvIDs.insert(MS_HCD);
         cvIDs.insert(MS_BIRD);
@@ -1343,11 +1351,12 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, 
                                                    SpectrumList_FilterPredicate_ActivationType(cvIDs, hasNot), ilr));
 }
-UsageInfo usage_activation = { "<precursor_activation_type>",
-    "Keeps only spectra whose precursors have the specifed activation type.  It doesn't affect non-MS spectra, and doesn't "
+UsageInfo usage_activation = { "<precursor_activation_type> [mode=<include|exclude (include)>]",
+    "Keeps only spectra whose precursors have the specified activation type. It doesn't affect non-MS spectra, and doesn't "
     "affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes "
     "have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).\n"
-    "   <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI."
+    "   <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI.\n"
+    "   <mode> is optional and must be either \"include\" (the default) or \"exclude\". If \"exclude\" is used, the filter drops spectra that match the activation type instead of keeping them."
     };
 
 SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
@@ -1563,6 +1572,34 @@ UsageInfo usage_thermoScanFilter = { "<exact|contains> <include|exclude> <match 
     "   <match string> specifies the search string to be compared to each scan filter (it may contain spaces)\n"
 };
 
+SpectrumListPtr filterCreator_mzShift(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    const string msLevelsToken("msLevels=");
+    const string mzNegIonsToken("mzNegIons=");
+    const string toleranceToken("tol=");
+
+    string arg = carg;
+    string msLevels = parseKeyValuePair<string>(arg, msLevelsToken, "");
+    bal::trim(arg);
+
+    MZTolerance mzShift = lexical_cast<MZTolerance>(arg);
+    IntegerSet msLevelSet;
+    if (!msLevels.empty())
+        msLevelSet.parse(msLevels);
+    else
+        msLevelSet = IntegerSet::positive;
+
+    SpectrumDataFilterPtr filter(new MzShiftFilter(mzShift, msLevelSet));
+
+    return boost::make_shared<SpectrumList_PeakFilter>(msd.run.spectrumListPtr, filter);
+}
+UsageInfo usage_mzShift = { "<m/z shift as number and units (e.g. 10ppm or 1Da)> [msLevels=int_set (1-)]",
+    "Shifts all m/z values by the specified amount if a spectrum's ms level is in the msLevels set.\n"
+    "Both metadata (e.g. scan window, base peak m/z) and binary data (m/z array) are shifted.\n"
+    "Precursor metadata is only shifted if the spectrum's precursor ms level (ms level - 1) is in the msLevels set.\n"
+    "This allows applying different shifts for different ms levels."
+};
+
 struct JumpTableEntry
 {
     const char* command;
@@ -1597,6 +1634,7 @@ JumpTableEntry jumpTable_[] =
     {"mzPresent", usage_mzPresent, filterCreator_mzPresent},
     {"scanSumming", usage_scanSummer, filterCreator_scanSummer},
     {"thermoScanFilter", usage_thermoScanFilter, filterCreator_thermoScanFilterFilter},
+    {"mzShift", usage_mzShift, filterCreator_mzShift},
 
     // MSn Spectrum Processing/Filtering
     {"MS2Denoise", usage_MS2Denoise, filterCreator_MS2Denoise},
@@ -1743,15 +1781,15 @@ string SpectrumListFactory::usage(bool detailedHelp, const char *morehelp_prompt
     else
     {
         oss << endl;
-        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order\n";
-        oss << "can make a large difference in your output.  In particular, the peakPicking filter must be first\n";
-        oss << "in line if you wish to use the vendor-supplied centroiding algorithms since these use the vendor\n";
+        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order ";
+        oss << "can make a large difference in your output.  In particular, the peakPicking filter must be first ";
+        oss << "in line if you wish to use the vendor-supplied centroiding algorithms since these use the vendor ";
         oss << "DLLs, which only operate on raw untransformed data.\n\n";
         oss << "Many filters take 'int_set' arguments.  An \'int_set\' is a list of intervals of the form [a,b] or a[-][b].\n";
         oss << "For example \'[0,3]\' and \'0-3\' both mean \'the set of integers from 0 to 3 inclusive\'.\n";
         oss << "\'1-\' means \'the set of integers from 1 to the largest allowable number\'.  \n";
         oss << "\'9\' is also an integer set, equivalent to \'[9,9]\'.\n";
-        oss << "\'[0,2] 5-7\' is the set \'0 1 2 5 6 7\'. \n";
+        oss << "\'[0,2] 5-7\' is the set \'0 1 2 5 6 7\'. \n\n";
     }
 
     for (JumpTableEntry* it=jumpTable_; it!=jumpTableEnd_; ++it)

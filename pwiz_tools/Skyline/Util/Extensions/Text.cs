@@ -40,12 +40,12 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static string FILTER_CSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
         }
 
         public static string FILTER_TSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
         }
 
         public const char SEPARATOR_CSV = ',';
@@ -70,8 +70,8 @@ namespace pwiz.Skyline.Util.Extensions
         /// The CSV separator character for a given culture.  Like Excel, a comma
         /// is used unless the decimal separator is a comma.  This allows exported CSV
         /// files to be imported directly into Excel on the same system.
-        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         /// </summary>
+        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         public static char GetCsvSeparator(IFormatProvider cultureInfo)
         {
             var numberFormat = cultureInfo.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -338,9 +338,8 @@ namespace pwiz.Skyline.Util.Extensions
                 string fieldConverted = field
                     .Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator,
                              CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                double fieldValue;
                 // Convert if the field is numeric or contains modifications
-                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
+                if (double.TryParse(fieldConverted, out _) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
                     fields[i] = fieldConverted;
             }
             return string.Join(separator.ToString(), fields);
@@ -369,14 +368,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns>A single string containing the original set separated by new lines</returns>
         public static string LineSeparate(IEnumerable<string> lines)
         {
-            var sb = new StringBuilder();
-            foreach (string line in lines)
-            {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(line);
-            }
-            return sb.ToString();
+            return CommonTextUtil.LineSeparate(lines);
         }
 
         /// <summary>
@@ -390,20 +382,28 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Utility function for <see cref="string"/> like <see cref="File"/> ReadLines().
+        /// </summary>
+        /// <param name="text">Text possibly multi-line</param>
+        /// <returns>Enumerable lines without line endings</returns>
+        public static IEnumerable<string> ReadLines(this string text)
+        {
+            using var reader = new StringReader(text);
+            var lines = new List<string>();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                lines.Add(line);
+            return lines;
+        }
+
+        /// <summary>
         /// This function can be used as a replacement for String.Join(" ", ...)
         /// </summary>
         /// <param name="values">A set of strings to be separated by spaces</param>
         /// <returns>A single string containing the original set separated by spaces</returns>
         public static string SpaceSeparate(IEnumerable<string> values)
         {
-            var sb = new StringBuilder();
-            foreach (string value in values)
-            {
-                if (sb.Length > 0)
-                    sb.Append(SEPARATOR_SPACE);
-                sb.Append(value);
-            }
-            return sb.ToString();
+            return CommonTextUtil.SpaceSeparate(values);
         }
 
         /// <summary>
@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string AppendColon(string left)
         {
-            return left + Resources.ColonEndOfLine;
+            return left + ExtensionsResources.ColonEndOfLine;
         }
 
         /// <summary>
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string ColonSeparate(string left, string right)
         {
-            return string.Format(Resources.ColonSeparator, left, right);
+            return string.Format(ExtensionsResources.ColonSeparator, left, right);
         }
 
         /// <summary>
@@ -617,7 +617,7 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FileDialogFiltersAll(params string[] filters)
         {
             var listFilters = filters.ToList();
-            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
+            listFilters.Add(FileDialogFilter(ExtensionsResources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
             return string.Join(@"|", listFilters);
         }
 
@@ -731,6 +731,28 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 return false;
             }
+        }
+
+        // Try to read a string as a double in InvariantCulture, failing that try to read it as a double using "," as the decimal separator
+        public static bool TryParseDoubleUncertainCulture(string valString, out double dval)
+        {
+            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&
+                !double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        // Try to read a string as a float in InvariantCulture, failing that try to read it as a float using "," as the decimal separator
+        public static bool TryParseFloatUncertainCulture(string valString, out float fval)
+        {
+            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval) &&
+                !float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
+            {
+                return false;
+            }
+            return true;
         }
     }
 
@@ -945,9 +967,9 @@ namespace pwiz.Skyline.Util.Extensions
         private static string FormatMessage(string message, long lineNum, int colIndex)
         {
             if (colIndex == -1)
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
             else
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
         }
 
         public string PlainMessage { get; private set; }

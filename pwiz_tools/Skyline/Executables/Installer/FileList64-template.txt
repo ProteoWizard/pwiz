@@ -149,8 +149,40 @@ Method\AbSciex\TQ\Interop.ROTMan.dll
 Method\AbSciex\TQ\QueueDispatcherLib.dll
 Method\AbSciex\TQ\ROTMANLib.dll
 Method\AbSciex\TQ\StdType.dll
-Method\Agilent\BuildAgilentMethod.exe
-Method\Agilent\MethodCreator.dll
+Method\Agilent\6400\BuildAgilentMethod.exe
+Method\Agilent\6400\MethodCreator.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ESW.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodCreator.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorage.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSIF.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll
+Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll
+Method\Agilent\MH12\BaseCommon.dll
+Method\Agilent\MH12\BaseError.dll
+Method\Agilent\MH12\BaseMSUtils.dll
+Method\Agilent\MH12\BaseTof.dll
+Method\Agilent\MH12\BuildAgilentMH12Method.exe
+Method\Agilent\MH12\BuildAgilentMH12Method.pdb
+Method\Agilent\MH12\Newtonsoft.Json.dll
+Method\Agilent\MH12\Newtonsoft.Json.pdb
+Method\Agilent\MH12\Newtonsoft.Json.xml
+Method\Agilent\MH12\ESWShared.dll
+Method\Agilent\MH12\RapidControlIF.dll
 Method\Bruker\BDal.Submethod.Wrapper.dll
 Method\Bruker\BdalRetentionTimeMassList.dll
 Method\Bruker\BuildBrukerMethod.exe
@@ -209,10 +241,10 @@ pwiz.Common.pdb
 pwiz.CommonUtil.dll
 pwiz.CommonUtil.pdb
 pwiz_data_cli.dll
+PanoramaClient.dll
+PanoramaClient.pdb
 QTFLDebugLog.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-quantitation_1.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-quantitation_2.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Remotion.Linq.dll
 Remotion.Linq.EagerFetching.dll
 ru\ZedGraph.resources.dll
@@ -250,8 +282,6 @@ tr\ZedGraph.resources.dll
 ucrtbase.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 UIMFLibrary.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 unimod.obo (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-unimod.xml
-unimod_2.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcomp110.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcomp140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcruntime140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

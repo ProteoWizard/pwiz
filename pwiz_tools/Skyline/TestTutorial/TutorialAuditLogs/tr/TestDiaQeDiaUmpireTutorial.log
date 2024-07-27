@@ -8,7 +8,6 @@ Undo Redo : Added spectral library "DIA-QE-tutorial"
 Summary   : Added spectral library "DIA-QE-tutorial"
 All Info  :
 Added spectral library "DIA-QE-tutorial"
-Build Spectral Library > Cut-off score is "0,95"
 Build Spectral Library > Search files : contains { File = "collinsb_X1803_171-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0,05" }
 Build Spectral Library > Search files : contains { File = "collinsb_X1803_172-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0,05" }
 Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
@@ -16,8 +15,7 @@ Build Spectral Library > Include ambiguous matches is True
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
 Build Spectral Library > Input File Type is "DIA raw (deconvolute, search, and build library)"
-Extra Info: Cut-off score = "0,95",
-Search files = 
+Extra Info: Search files = 
 [
     {
         File = "collinsb_X1803_171-A-diaumpire.mzid.gz",
@@ -44,7 +42,6 @@ Import Peptide Search > Extract Chromatograms > Found results files : contains "
 Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_X1803_172-B.mzML"
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "collinsb_X1803_17"
-Import Peptide Search > Extract Chromatograms > Removed suffix is ".mzML"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
 Import Peptide Search > Import FASTA > FASTA file is "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
@@ -58,14 +55,16 @@ Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
 Import Peptide Search > Associate Proteins > Proteins mapped is "9"
-Import Peptide Search > Associate Proteins > Peptides mapped is "81"
+Import Peptide Search > Associate Proteins > Peptides mapped is "82"
 Import Peptide Search > Associate Proteins > Proteins unmapped is "24709"
 Import Peptide Search > Associate Proteins > Protein targets is "9"
-Import Peptide Search > Associate Proteins > Peptide targets is "82"
+Import Peptide Search > Associate Proteins > Peptide targets is "83"
 Import Peptide Search > DDA search settings > Precursor tolerance is "10" ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is "20" ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
 Import Peptide Search > DDA search settings > Fragment ion types is "b, y"
+Import Peptide Search > DDA search settings > Score type is "Max q-value"
+Import Peptide Search > DDA search settings > Score threshold is "0,05"
 Import Peptide Search > DDA converter settings > DDA conversion protocol is "DIA-Umpire"
 Import Peptide Search > DDA converter settings > Instrument preset is "Q Exactive"
 Import Peptide Search > DDA converter settings > DDA conversion non-default settings : contains EstimateBG = True
@@ -77,8 +76,7 @@ Extra Info: Extract Chromatograms =
         "collinsb_X1803_172-B.mzML"
     ],
     Files to import simultaneously = "Many",
-    Removed prefix = "collinsb_X1803_17",
-    Removed suffix = ".mzML"
+    Removed prefix = "collinsb_X1803_17"
 },
 Add Modifications = 
 {
@@ -104,17 +102,19 @@ Associate Proteins =
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
     Proteins mapped = "9",
-    Peptides mapped = "81",
+    Peptides mapped = "82",
     Proteins unmapped = "24709",
     Protein targets = "9",
-    Peptide targets = "82"
+    Peptide targets = "83"
 },
 DDA search settings = 
 {
     Precursor tolerance = "10" ppm,
     Fragment tolerance = "20" ppm,
     Max variable mods per peptide = "3",
-    Fragment ion types = "b, y"
+    Fragment ion types = "b, y",
+    Score type = "Max q-value",
+    Score threshold = "0,05"
 },
 DDA converter settings = 
 {

@@ -197,10 +197,7 @@ namespace pwiz.Skyline.Model
             var newAnnotations = (_annotations != null ?
                 new Dictionary<string, string>(_annotations) :
                 new Dictionary<string, string>());
-            if (newAnnotations.ContainsKey(name))
-                newAnnotations[name] = value;
-            else
-                newAnnotations.Add(name, value);      
+            newAnnotations[name] = value;      
             return new Annotations(Note, newAnnotations, ColorIndex);
         }
 
@@ -236,11 +233,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (KeyValuePair<string, string> annotation in newAnnotations)
                 {
-                    string value;
-                    if (dictNodeAnnotations.TryGetValue(annotation.Key, out value))
-                        dictNodeAnnotations[annotation.Key] = annotation.Value;
-                    else
-                        dictNodeAnnotations.Add(annotation.Key, annotation.Value);
+                    dictNodeAnnotations[annotation.Key] = annotation.Value;
                 }
             }
             newColorIndex = newColorIndex != -1 ? newColorIndex : ColorIndex;
@@ -279,11 +272,11 @@ namespace pwiz.Skyline.Model
                 annotationsNew = new Dictionary<string, string>(annotationsNew);
                 foreach (var annotation in annotations._annotations)
                 {
-                    if (annotationsNew.ContainsKey(annotation.Key))
+                    if (annotationsNew.TryGetValue(annotation.Key, out var value))
                     {
-                        if (Equals(annotation.Value, annotationsNew[annotation.Key]))
+                        if (Equals(annotation.Value, value))
                             continue;
-                        throw new InvalidDataException(string.Format(Resources.Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations,
+                        throw new InvalidDataException(string.Format(ModelResources.Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations,
                                                                      annotation.Key));
                     }
                     annotationsNew.Add(annotation);

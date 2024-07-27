@@ -155,6 +155,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertColor(colors[18], Color.RoyalBlue);
                 OkDialog(editCustomThemeDlg, editCustomThemeDlg.save); // Now save changes
                 Assert.IsNull(ColorScheme.ColorSchemeDemo);
+                // ReSharper disable once HeuristicUnreachableCode
                 AssertColor(ColorScheme.CurrentColorScheme.TransitionColors[0], Color.Blue);
                 AssertColor(ColorScheme.CurrentColorScheme.TransitionColors[1], Color.Gray);
                 OkDialog(toolOptionsUI, toolOptionsUI.OkDialog);

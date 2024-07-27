@@ -367,9 +367,9 @@ namespace ZedGraph
 			if ( pt.IsInvalid )
 				return false;
 
-			double x, y, z;
+			double x, y;
 			ValueHandler valueHandler = new ValueHandler( pane, false );
-			valueHandler.GetValues( this, i, out x, out z, out y );
+			valueHandler.GetValues( this, i, out x, out _, out y );
 
 			Axis yAxis = GetYAxis( pane );
 			Axis xAxis = GetXAxis( pane );

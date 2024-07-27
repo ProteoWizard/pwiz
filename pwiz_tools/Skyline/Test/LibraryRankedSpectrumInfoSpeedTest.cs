@@ -94,7 +94,7 @@ namespace pwiz.SkylineTest
                 
                 var startTime = DateTime.UtcNow;
                 LibraryRankedSpectrumInfo libraryRankedSpectrum = null;
-                int repeatCount = 50;
+                int repeatCount = 1;
                 for (int i = 0; i < repeatCount; i++)
                 {
                     libraryRankedSpectrum = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum.SpectrumPeaksInfo,

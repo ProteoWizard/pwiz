@@ -164,7 +164,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     if (nodeTran.Results[0].First().Area != nodeTran.Results[1].First().Area)
                     {
                         diffs++;
-                        var diff =
+                        var diff = 100 *
                             Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
                             Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
                         sb.AppendLine(string.Format("{0}% difference {3} vs {4}(mz5) in precursor {1} transition {2}",
@@ -196,8 +196,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Show anyone watching that work is being performed
             RunUI(() => {
-                using (var longWait = new LongWaitDlg(SkylineWindow) { Message = "Running command-line import" })
+                using (var longWait = new LongWaitDlg(SkylineWindow))
                 {
+                    longWait.Message = "Running command-line import";
                     longWait.PerformWork(SkylineWindow, 500, () =>
                         RunCommand("--in=" + skyFile,
                             "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),

@@ -52,11 +52,16 @@ namespace pwiz.SkylineTestUtil
             Assert.Fail("Could not find results {0}", resultsName);
         }
 
-        public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, bool group, double rt)
+        public static void SelectPeak(string modifiedSequence, double? precursorMz, string resultsName, double rt)
         {
             Select(modifiedSequence, precursorMz, resultsName, out var path, out var chromSet);
             Program.MainWindow.ModifyDocument("change peak", document =>
                 document.ChangePeak(path, chromSet.Name, chromSet.MSDataFilePaths.First(), null, rt, UserSet.TRUE));
+        }
+
+        public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, bool group, double rt)
+        {
+            SelectPeak(modifiedSequence, precursorMz, resultsName, rt);
             Program.MainWindow.ApplyPeak(subsequent, group);
         }
 
@@ -81,8 +86,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var chromSet = chromatograms[resultsIndex];
                 Assert.IsTrue(chromSet.FileCount == 1);
-                ChromatogramGroupInfo[] chromGroupInfos;
-                Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out chromGroupInfos));
+                Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out _));
                 var rt = nodeTranGroup.Results[resultsIndex][0].RetentionTime;
                 Assert.IsTrue(rt.HasValue);
                 var chromName = chromSet.Name;

@@ -102,8 +102,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     return;
                 }
                 _responses.Remove(key);
-                RemoteServerException exceptionIgnore;
-                AsyncFetch(requestUri, fetcher, out exceptionIgnore);
+                AsyncFetch(requestUri, fetcher, out _);
             }
 
         }

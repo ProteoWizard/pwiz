@@ -95,8 +95,6 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
         int process;
         int scan;
         int block; // block < 0 is not ion mobility
-        float setMass; // DDA-only
-        float precursorMass; // DDA-only
     };
 
     mutable vector<IndexEntry> index_;
@@ -105,6 +103,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 
     void getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTimeOrSonarRangeLow, BinaryData<double>& sonarRangeHigh, bool doCentroid) const;
 
+    static void calculatePeakMetadata(SpectrumPtr& spectrum, const vector<float>& mz, const vector<float>& intensity);
     void initializeCoefficients() const;
     double calibrate(const double &mz) const;
     mutable vector<double> calibrationCoefficients_;
@@ -116,7 +115,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 
     void createIndex();
     void createDDAIndex();
-    void getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities) const;
+    void getDDAScan(unsigned int index, bool doCentroid, vector<float>& masses, vector<float>& intensities) const;
+    void getDDAPrecursorMasses(int index, double& setMass, double& precursorMass) const;
 
 #endif // PWIZ_READER_WATERS
 

@@ -367,24 +367,24 @@ namespace pwiz.Skyline.Controls.Clustering
         {
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
             menuStrip.Items.Insert(0, new ToolStripSeparator());
-            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels, null, ShowYAxisLabelsOnClick)
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(ClusteringResources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Y_Axis_Labels, null, ShowYAxisLabelsOnClick)
             {
                 Checked = ShowYAxisLabels
             });
-            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels, null, ShowXAxisLabelsOnClick)
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(ClusteringResources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_X_Axis_Labels, null, ShowXAxisLabelsOnClick)
             {
                 Checked = ShowXAxisLabels
             });
-            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection, null, ShowSelectionOnClick)
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(ClusteringResources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Show_Selection, null, ShowSelectionOnClick)
             {
                 Checked = ShowSelection
             });
             menuStrip.Items.Insert(0, new ToolStripSeparator());
-            menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh, null, (o, args)=>RefreshData()));
+            menuStrip.Items.Insert(0, new ToolStripMenuItem(ClusteringResources.HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh, null, (o, args)=>RefreshData()));
             var pointObject = PointFromMousePoint(mousePt);
             if (pointObject?.ReplicateName != null || pointObject?.IdentityPath != null)
             {
-                menuStrip.Items.Insert(0, new ToolStripMenuItem(Resources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select, null, (o, args)=>SelectPoint(pointObject)));
+                menuStrip.Items.Insert(0, new ToolStripMenuItem(ClusteringResources.HierarchicalClusterGraph_zedGraphControl1_ContextMenuBuilder_Select, null, (o, args)=>SelectPoint(pointObject)));
             }
         }
 

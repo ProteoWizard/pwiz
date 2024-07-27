@@ -331,7 +331,16 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (getNumberOfControllersOfType(Controller_MS) == 0)
             return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
-        setCurrentController(Controller_MS, 1);
+        try
+        {
+	        setCurrentController(Controller_MS, 1);
+        }
+        catch (const runtime_error& e)
+        {
+            if (bal::contains(e.what(), "Instrument index not available for requested device"))
+                throw gcnew System::Exception("Error initializing MS controller (\"Instrument index not available for requested device\"); this usually means the RAW file is corrupt");
+            throw;
+        }
 
         auto trailerExtraInfo = raw_->GetTrailerExtraHeaderInformation();
         for (int i = 0; i < trailerExtraInfo->Length; ++i)
@@ -375,7 +384,8 @@ RawFileImpl::RawFileImpl(const string& filename)
 #endif
         }
 
-        instrumentModel_ = parseInstrumentModelType(modelString);
+        if (instrumentModel_ == InstrumentModelType_Unknown)
+            instrumentModel_ = parseInstrumentModelType(modelString);
         if (instrumentModel_ == InstrumentModelType_Unknown)
             instrumentModel_ = parseInstrumentModelType(nameString);
 
@@ -1917,6 +1927,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
     sregex reportedMassRegex = sregex::compile("\\s*Reported Mass =\\s*(\\S+) Mass\\s*");
     sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
+    sregex statusLogInstrumentModelRegex = sregex::compile("\\s*Instrument model\\s*-\\s*(.+)\\s*");
 
     smatch what;
     string line;
@@ -1929,6 +1940,12 @@ void RawFileImpl::parseInstrumentMethod()
         if (regex_match(line, what, scanSegmentRegex))
         {
             scanSegment = lexical_cast<int>(what[1]);
+            continue;
+        }
+
+        if (regex_match(line, what, statusLogInstrumentModelRegex))
+        {
+            instrumentModel_ = parseInstrumentModelType(what[1]);
             continue;
         }
 
@@ -2281,6 +2298,9 @@ vector<string> RawFileImpl::getInstrumentMethods() const
 #else
         for (int i = 0; i < raw_->InstrumentMethodsCount; ++i)
             result.emplace_back(ToStdString(raw_->GetInstrumentMethod(i)));
+        auto firstStatusLog = raw_->GetStatusLogForRetentionTime(0);
+        for (int i = 0; i < firstStatusLog->Length; ++i)
+            result.emplace_back(ToStdString(firstStatusLog->Labels[i] + " " + firstStatusLog->Values[i]));
 #endif
         return result;
     }

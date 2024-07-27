@@ -42,6 +42,8 @@
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.lblGroupProteins = new System.Windows.Forms.Label();
             this.lnkHelpProteinGroups = new System.Windows.Forms.LinkLabel();
+            this.cbGeneLevel = new System.Windows.Forms.CheckBox();
+            this.lblGroupAtGeneLevel = new System.Windows.Forms.Label();
             this.lblSharedPeptides = new System.Windows.Forms.Label();
             this.lnkHelpSharedPeptides = new System.Windows.Forms.LinkLabel();
             this.cbMinimalProteinList = new System.Windows.Forms.CheckBox();
@@ -126,6 +128,8 @@
             this.flowLayoutPanel.Controls.Add(this.cbGroupProteins);
             this.flowLayoutPanel.Controls.Add(this.lblGroupProteins);
             this.flowLayoutPanel.Controls.Add(this.lnkHelpProteinGroups);
+            this.flowLayoutPanel.Controls.Add(this.cbGeneLevel);
+            this.flowLayoutPanel.Controls.Add(this.lblGroupAtGeneLevel);
             this.flowLayoutPanel.Controls.Add(this.lblSharedPeptides);
             this.flowLayoutPanel.Controls.Add(this.lnkHelpSharedPeptides);
             this.flowLayoutPanel.Controls.Add(this.comboSharedPeptides);
@@ -154,6 +158,21 @@
             this.lnkHelpProteinGroups.Name = "lnkHelpProteinGroups";
             this.lnkHelpProteinGroups.TabStop = true;
             this.lnkHelpProteinGroups.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkHelp_LinkClicked);
+            // 
+            // cbGeneLevel
+            // 
+            resources.ApplyResources(this.cbGeneLevel, "cbGeneLevel");
+            this.cbGeneLevel.Name = "cbGeneLevel";
+            this.cbGeneLevel.UseVisualStyleBackColor = true;
+            this.cbGeneLevel.CheckedChanged += new System.EventHandler(this.cbGeneLevel_CheckedChanged);
+            // 
+            // lblGroupAtGeneLevel
+            // 
+            resources.ApplyResources(this.lblGroupAtGeneLevel, "lblGroupAtGeneLevel");
+            this.flowLayoutPanel.SetFlowBreak(this.lblGroupAtGeneLevel, true);
+            this.lblGroupAtGeneLevel.Name = "lblGroupAtGeneLevel";
+            this.helpTip.SetToolTip(this.lblGroupAtGeneLevel, resources.GetString("lblGroupAtGeneLevel.ToolTip"));
+            this.lblGroupAtGeneLevel.Click += new System.EventHandler(this.lblGroupAtGeneLevel_Click);
             // 
             // lblSharedPeptides
             // 
@@ -474,5 +493,7 @@
         private System.Windows.Forms.Label lblRemoveSubsetProteins;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.Panel proteinSourcePanel;
+        private System.Windows.Forms.CheckBox cbGeneLevel;
+        private System.Windows.Forms.Label lblGroupAtGeneLevel;
     }
 }

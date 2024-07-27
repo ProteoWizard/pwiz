@@ -1150,18 +1150,20 @@ namespace pwiz.SkylineTest
                                                         "    <peptide_settings>\n" +
                                                         "      <protein_association min_peptides_per_protein=\"0\" " +
                                                         "group_proteins=\"true\" " +
+                                                        "gene_level_parsimony=\"true\" " +
                                                         "find_minimal_protein_list=\"true\" " +
                                                         "remove_subset_proteins=\"true\" " +
                                                         "shared_peptides=\"AssignedToBestProtein\" />\n" +
                                                         "    </peptide_settings>\n" +
                                                         "  </settings_summary>\n" +
                                                         "</srm_settings>";
-            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.PROTEIN_GROUPS);
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.CURRENT);
 
             var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
             var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
             Assert.AreEqual(0, parsimonySettings.MinPeptidesPerProtein);
             Assert.AreEqual(true, parsimonySettings.GroupProteins);
+            Assert.AreEqual(true, parsimonySettings.GeneLevelParsimony);
             Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
             Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
@@ -1262,6 +1264,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("20", "-1"),Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            // ReSharper disable once PossibleLossOfFraction
             Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
 
             // Test ability to roundtrip to older doc formats

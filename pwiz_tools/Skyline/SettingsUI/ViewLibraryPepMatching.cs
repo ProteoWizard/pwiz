@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,7 +32,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 
@@ -676,7 +675,7 @@ namespace pwiz.Skyline.SettingsUI
                     // ignore it.
                     if (peptideGroupDocNode.Children.Contains(nodePep => Equals(((PeptideDocNode) nodePep).Key, newNodePep.Key)))
                     {
-                        Console.WriteLine(Resources.ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present, newNodePep.Peptide.Target);
+                        Console.WriteLine(SettingsUIResources.ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present, newNodePep.Peptide.Target);
                         continue;
                     }
                     // Otherwise, add it to the list of children for the PeptideGroupNode.
@@ -725,9 +724,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             // Sort the proteins.
             nodePepGroupsSortedChildren.Sort((node1, node2) => Comparer<string>.Default.Compare(node1.Name, node2.Name));
-            IdentityPath selPathTemp = selectedPath, nextAdd;
+            IdentityPath selPathTemp = selectedPath;
             document = document.AddPeptideGroups(nodePepGroupsSortedChildren, false,
-                toPath, out selectedPath, out nextAdd);
+                toPath, out selectedPath, out _);
             selectedPath = PeptideMatches.Count == 1 ? selPathTemp : selectedPath;
             return document;
         }
@@ -782,8 +781,8 @@ namespace pwiz.Skyline.SettingsUI
                 // If library provides a RefSpectraProteins table, use that to name the group
                 // TODO(bspratt) for now we will use RefSpectraProteins names only for small molecules
                 var genericLibraryPeptidesGroupName = hasSmallMolecules
-                    ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
-                    : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
+                    ? SettingsUIResources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
+                    : SettingsUIResources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
                 var nodeName = string.IsNullOrEmpty(proteinName) || 
                                listPeptides.Any(p => p.IsProteomic) // TODO(bspratt) revisit this caution-driven decision
                     ? genericLibraryPeptidesGroupName
@@ -806,9 +805,8 @@ namespace pwiz.Skyline.SettingsUI
                         string.Empty, listPeptides.ToArray());
                     if (hasVariable)
                         nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
-                    IdentityPath nextAdd;
                     document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true,
-                        toPath, out selectedPath, out nextAdd);
+                        toPath, out selectedPath, out _);
                     selectedPath = new IdentityPath(selectedPath, nodePepGroupNew.Children[0].Id);
                 }
             }

@@ -133,7 +133,7 @@
     <value>12, 9</value>
   </data>
   <data name="lblReportError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>406, 48</value>
+    <value>405, 48</value>
   </data>
   <data name="lblReportError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -246,7 +246,7 @@
     <value>5</value>
   </data>
   <data name="textBoxMsg.Text" xml:space="preserve">
-    <value />
+    <value></value>
   </data>
   <data name="&gt;&gt;textBoxMsg.Name" xml:space="preserve">
     <value>textBoxMsg</value>
@@ -297,13 +297,13 @@
     <value>15, 256</value>
   </data>
   <data name="checkBoxSkyFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 17</value>
+    <value>145, 17</value>
   </data>
   <data name="checkBoxSkyFile.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="checkBoxSkyFile.Text" xml:space="preserve">
-    <value>提交 Skyline 文档。</value>
+    <value>提交 Skyline 文档</value>
   </data>
   <data name="&gt;&gt;checkBoxSkyFile.Name" xml:space="preserve">
     <value>checkBoxSkyFile</value>
@@ -324,13 +324,13 @@
     <value>15, 280</value>
   </data>
   <data name="checkBoxScreenShot.Size" type="System.Drawing.Size, System.Drawing">
-    <value>323, 17</value>
+    <value>206, 17</value>
   </data>
   <data name="checkBoxScreenShot.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="checkBoxScreenShot.Text" xml:space="preserve">
-    <value>仅提交 Skyline 窗口的截图。（非全部截图）</value>
+    <value>提交 Skyline 窗口的截图</value>
   </data>
   <data name="&gt;&gt;checkBoxScreenShot.Name" xml:space="preserve">
     <value>checkBoxScreenShot</value>

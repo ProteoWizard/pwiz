@@ -67,6 +67,8 @@ namespace pwiz.Skyline.Model.Results
         {
             if (timesNew.Count == 0)
                 return this;
+            if (NumPoints == 0)
+                return new TimeIntensities(timesNew, Enumerable.Repeat(0.0f, timesNew.Count));
             double intervalDelta = 0;
             if (timesNew.Count > 1)
             {
@@ -437,7 +439,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // The element before the passed in value of "index" is not allowed to be greater than "time".
                 // If that happens, then it means that the times for which this function was called were not in order.
-                Assume.IsTrue(Times[index - 1] < time);
+                Assume.IsTrue(Times[index - 1] <= time);
             }
             if (Times.Count == 0)
             {

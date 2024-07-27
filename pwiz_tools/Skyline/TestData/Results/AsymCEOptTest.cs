@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestData.Results
             var chromSet = new ChromatogramSet("Optimize", new[] {resultsUri}, Annotations.EMPTY, optRegression);
             var measuredResults = new MeasuredResults(new[] { chromSet });
 
-            docContainer.ChangeMeasuredResults(measuredResults, 2, optSteps1 + optSteps2, 5*optSteps1 + 5*optSteps2);
+            docContainer.ChangeMeasuredResults(measuredResults, 2, optSteps1 + optSteps2, 86);
 
             // Check expected optimization data with missing values for steps below 10 volts CE
             int expectedMissingSteps = optSteps - optSteps1;

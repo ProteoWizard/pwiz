@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -62,12 +63,12 @@ namespace TestPerf
         protected override void DoTest()
         {
 /* Waiting for CCS<->DT support in .mbi reader
-            Test(@"PerfMobilIonTest.sky", 2, 163, 163, 1006, ".mbi", null, 95.07976, 6028.9375, true); // Mobilion HD5 format
+            Test(@"PerfMobilIonTest.sky", 2, 163, 163, 1006, ".mbi", 0, null, 95.07976, 6028.9375, true); // Mobilion HD5 format
 */            
-            Test(@"slim.sky", 12, 12, 30, 30, ".d", 258.3, 308.71, 4450.05859, false); // Agilent SLIM format
+            Test(@"slim.sky", 12, 12, 30, 30, ".d", 1, 258.3, 308.71, 4450.05859, false); // Agilent SLIM format
         }
 
-        void Test(string docFile, int groups, int peptides, int tranGroups, int transitions, string dataExt, double? ccs, double drift, double areaExpected,  bool findDriftPeaks)
+        void Test(string docFile, int groups, int peptides, int tranGroups, int transitions, string dataExt, int precursorIndex, double? ccs, double drift, double areaExpected,  bool findDriftPeaks)
         {
 
             // Empty doc with suitable full scan settings
@@ -79,6 +80,24 @@ namespace TestPerf
 
             var document = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(document, null, groups, peptides, tranGroups, transitions);
+
+            // Change the indicated precursor so that it has explicit drift time instead of explicit CCS
+            RunUI(() =>
+            {
+                // Select the precursor
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode.Nodes[precursorIndex];
+            });
+            RunDlg<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup, editMoleculeDlgA =>
+            {
+                editMoleculeDlgA.IonMobility = 308.71;
+                editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.drift_time_msec;
+                editMoleculeDlgA.CollisionalCrossSectionSqA = null;
+                editMoleculeDlgA.OkDialog();
+            });
+            document = WaitForDocumentChange(document);
+            var im = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.ExplicitValues;
+            AssertEx.AreEqual(308.71, im.IonMobility, .01); // As set above
+            AssertEx.IsFalse(im.CollisionalCrossSectionSqA.HasValue); // As set above
 
             // Importing raw data
             var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -93,7 +112,7 @@ namespace TestPerf
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             document = WaitForDocumentLoaded();
 
-            var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
+            var area = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.Results.First().First().AreaMs1;
             AssertEx.IsTrue(area > 0);
 
             if (findDriftPeaks)
@@ -132,13 +151,13 @@ namespace TestPerf
                 docFiltered = WaitForDocumentChangeLoaded(docFiltered);
 
                 // If drift filtering was engaged, peak area should be less
-                var transitionGroupChromInfo = docFiltered.MoleculePrecursorPairs.First().NodeGroup.Results.First().First();
+                var transitionGroupChromInfo = docFiltered.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.Results.First().First();
                 var areaFiltered = transitionGroupChromInfo.AreaMs1;
                 AssertEx.IsTrue(area > areaFiltered);
                 AssertEx.IsTrue(areaFiltered > 0);
             }
             document = WaitForDocumentLoaded();
-            var chromInfo = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First();
+            var chromInfo = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.Results.First().First();
             AssertEx.AreEqual(ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection, .01);
             AssertEx.AreEqual(drift, chromInfo.IonMobilityInfo.DriftTimeMS1, .01);
             AssertEx.AreEqual(areaExpected, (double) chromInfo.AreaMs1, .01);

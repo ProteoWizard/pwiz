@@ -133,13 +133,11 @@ namespace pwiz.Skyline
                 if (!ShowUpgradeForm(_updateInfo.AvailableVersion, true, true))
                     return;
 
-                using (var longWaitUpdate = new LongWaitDlg
+                using (var longWaitUpdate = new LongWaitDlg())
                 {
-                    Text = string.Format(Resources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name),
-                    Message = GetProgressMessage(0, _updateInfo.UpdateSizeBytes ?? 0),
-                    ProgressValue = 0
-                })
-                {
+                    longWaitUpdate.Text = string.Format(SkylineResources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
+                    longWaitUpdate.Message = GetProgressMessage(0, _updateInfo.UpdateSizeBytes ?? 0);
+                    longWaitUpdate.ProgressValue = 0;
                     AutoResetEvent endUpdateEvent = null;
                     try
                     {
@@ -199,8 +197,9 @@ namespace pwiz.Skyline
                 ? GetVersionDiff(AppDeployment.CurrentVersion, availableVersion)
                 : null;
 
-            using (var dlgUpgrade = new UpgradeDlg(versionText, automatic, updateFound) {Text = Program.Name})
+            using (var dlgUpgrade = new UpgradeDlg(versionText, automatic, updateFound))
             {
+                dlgUpgrade.Text = Program.Name;
                 try
                 {
                     return dlgUpgrade.ShowDialog(ParentWindow) == DialogResult.OK;
@@ -241,7 +240,7 @@ namespace pwiz.Skyline
 
         private string GetProgressMessage(long bytesCompleted, long totalBytes)
         {
-            return string.Format(Resources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
+            return string.Format(SkylineResources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
                 new FileSize(bytesCompleted), new FileSize(totalBytes));
         }
 

@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="BiblioSpecLibrary_Load_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
+    <value>ライブラリヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted" xml:space="preserve">
+    <value>スペクトルヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted" xml:space="preserve">
+    <value>スペクトルシークエンスでのデータ切り捨て。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
+    <value>ライブラリ「{0}」の読み込みに失敗しました。</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
+    <value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Loading__0__library" xml:space="preserve">
+    <value>{0}ライブラリの読み込み中</value>
+  </data>
+  <data name="BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
+    <value>ピークを読み取る試みに失敗</value>
+  </data>
+  <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library" xml:space="preserve">
+    <value>レガシーBiblioSpecライブラリ</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Building__0__library" xml:space="preserve">
+    <value>{0}ライブラリの構築中</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__" xml:space="preserve">
+    <value>ライブラリ{0}の構築の試みに失敗しました。</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__" xml:space="preserve">
+    <value>冗長ライブラリ{0}の構築の試みに失敗しました。</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library" xml:space="preserve">
+    <value>ライブラリ構築の準備中</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
+    <value>ライブラリ保持時間をアライン中</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__" xml:space="preserve">
+    <value>{0}のライブラリヘッダーの読み取りに失敗しました。</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__" xml:space="preserve">
+    <value>ライブラリ{0}内の有効なスペクトル数を取得できません</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_" xml:space="preserve">
+    <value>冗長ライブラリ{0}から{1}へのフィルタリングに失敗しました</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_" xml:space="preserve">
+    <value>ドキュメントライブラリからライブラリ実行の削除中。</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library" xml:space="preserve">
+    <value>{0}ライブラリのバイナリキャッシュを構築中</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist" xml:space="preserve">
+    <value>冗長ライブラリ{0}は存在しません。</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__" xml:space="preserve">
+    <value>ライブラリ{0}内のすべての有効なスペクトル数を取得できません</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library" xml:space="preserve">
+    <value>BiblioSpecライブラリ</value>
+  </data>
+  <data name="BiblioSpecLiteLibraryLoadLoading__0__library" xml:space="preserve">
+    <value>{0}ライブラリの読み込み中、</value>
+  </data>
+  <data name="BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library" xml:space="preserve">
+    <value>BiblioSpecライブラリ</value>
+  </data>
+  <data name="CachedLibrary_LoadSpectrum_Library_entry_not_found__0__" xml:space="preserve">
+    <value>ライブラリエントリが見つかりません{0}。</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" xml:space="preserve">
+    <value>FASTAのKoina入力への変換</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library" xml:space="preserve">
+    <value>Koina出力のEncyclopeDIAライブラリへの変換</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
+    <value>クロマトグラムライブラリの待機中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
+    <value>クロマトグラムライブラリ({1}の{0})：{2}の生成</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2" xml:space="preserve">
+    <value>定量化ライブラリ({1}の{0})：{2}の生成</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML" xml:space="preserve">
+    <value>DIAデータのmzMLへの変換</value>
+  </data>
+  <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
+    <value>EncyclopeDIAライブラリ</value>
+  </data>
+  <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
+    <value>EncyclopeDIAライブラリ</value>
+  </data>
+  <data name="FastaToKoina_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
+    <value>対応していない酵素「{0}」、許可されている値：{1}</value>
+  </data>
+  <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
+    <value>ライブラリヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+    <value>表示されたピーク境界を無視</value>
+  </data>
+  <data name="LibrarySpec_PEP_RANK_COPIES_Spectrum_count" xml:space="preserve">
+    <value>スペクトル数</value>
+  </data>
+  <data name="LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity" xml:space="preserve">
+    <value>選択強度</value>
+  </data>
+  <data name="LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity" xml:space="preserve">
+    <value>総強度</value>
+  </data>
+  <data name="LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_" xml:space="preserve">
+    <value>ドキュメントライブラリ仕様をXMLまで持続できません。</value>
+  </data>
+  <data name="LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML" xml:space="preserve">
+    <value>ドキュメントローカルライブラリ仕様がXMLまで持続できません。</value>
+  </data>
+  <data name="NistLibrary_SpecFilter_NIST_Spectral_Library" xml:space="preserve">
+    <value>NISTスペクトルライブラリ</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
+    <value>プリカーサーm/z値「{0}」を読み込めませんでした</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__" xml:space="preserve">
+    <value>{1}のピーク{0}の無効な形式。</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_molecule_adduct" xml:space="preserve">
+    <value>分子+付加イオン</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__" xml:space="preserve">
+    <value>ペプチド{0}のピークが見つかりませんでした。</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__" xml:space="preserve">
+    <value>MS/MSスペクトルのピーク数が最大数{0}を超えています。</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_peptide_charge" xml:space="preserve">
+    <value>ペプチド+電荷</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Unexpected_end_of_file" xml:space="preserve">
+    <value>予期しないファイルの終了。</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__" xml:space="preserve">
+    <value>{0}のピークで予期しないファイルの終了。</value>
+  </data>
+  <data name="NistLibraryBase_Load_Building_binary_cache_for__0__library" xml:space="preserve">
+    <value>{0}ライブラリのバイナリキャッシュを構築中</value>
+  </data>
+  <data name="NistLibraryBase_Load_Failed_loading_library__0__" xml:space="preserve">
+    <value>ライブラリ「{0}」の読み込みに失敗しました。</value>
+  </data>
+  <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
+    <value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="NistLibraryBase_Load_Loading__0__library" xml:space="preserve">
+    <value>{0}ライブラリの読み込み中</value>
+  </data>
+  <data name="NistLibraryBase_Load_The_file___0___is_not_a_valid_library_" xml:space="preserve">
+    <value>ファイル「{0}」は有効なライブラリではありません。</value>
+  </data>
+  <data name="NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
+    <value>ピークを読み取る試みに失敗</value>
+  </data>
+  <data name="NistLibraryBase_ThrowIOException__0__line__1__2__" xml:space="preserve">
+    <value>{0}（行{1}）：{2}</value>
+    <comment>FilePath (line #): message</comment>
+  </data>
+  <data name="NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio" xml:space="preserve">
+    <value>TFRatio</value>
+  </data>
+  <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
+    <value>EncyclopeDIAタスクが失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
+    <value>スペクトルの逆多重化：{0}/{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
+    <value>平均質量</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass" xml:space="preserve">
+    <value>モノアイソトピック質量</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
+    <value>分子は化学式ならびに少なくとも1つの名前、InChiKeyまたは他のキー（HMDBなど）によって定義されます</value>
+  </data>
+  <data name="SpectrastLibrary_SpecFilter_SpectraST_Library" xml:space="preserve">
+    <value>SpectraSTライブラリ</value>
+  </data>
+  <data name="SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__" xml:space="preserve">
+    <value>シークエンス{0}、プリカーサーm/z{1}に対する2つの互換性のないトランジショングループ。</value>
+  </data>
+  <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
+    <value>シークエンスに対するライブラリスペクトルが{0}欠損しています。</value>
+  </data>
+  <data name="XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
+    <value>ライブラリヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
+  </data>
+  <data name="XHunterLibrary_Load_Building_binary_cache_for__0__library" xml:space="preserve">
+    <value>{0}ライブラリのバイナリキャッシュを構築中</value>
+  </data>
+  <data name="XHunterLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
+    <value>ライブラリ「{0}」の読み込みに失敗しました。</value>
+  </data>
+  <data name="XHunterLibrary_Load_Loading__0__library" xml:space="preserve">
+    <value>{0}ライブラリの読み込み中</value>
+  </data>
+  <data name="XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
+    <value>ピークを読み取る試みに失敗</value>
+  </data>
+  <data name="XHunterLibrary_SpecFilter_GPM_Spectral_Library" xml:space="preserve">
+    <value>GPMスペクトルライブラリ</value>
+  </data>
+  <data name="XHunterLibSpec_PEP_RANK_EXPECT_Expect" xml:space="preserve">
+    <value>予想</value>
+  </data>
+  <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
+    <value>処理強度</value>
+  </data>
+</root>

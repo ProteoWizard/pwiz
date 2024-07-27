@@ -26,7 +26,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -106,11 +105,10 @@ namespace pwiz.Skyline.FileUI
 
         public ExportAnnotationSettings GetExportAnnotationSettings()
         {
-            return ExportAnnotationSettings.EMPTY
-                .ChangeElementTypes(SelectedHandlers.Select(handler=>handler.Name))
-                .ChangeAnnotationNames(SelectedAnnotationNames)
-                .ChangePropertyNames(SelectedProperties)
-                .ChangeRemoveBlankRows(cbxRemoveBlankRows.Checked);
+            return ExportAnnotationSettings.GetExportAnnotationSettings(SelectedHandlers, 
+                SelectedAnnotationNames, 
+                SelectedProperties,
+                cbxRemoveBlankRows.Checked);
         }
 
         public void UpdateUi()
@@ -135,12 +133,9 @@ namespace pwiz.Skyline.FileUI
         private void UpdateAnnotations()
         {
             var selectedAnnotations = new HashSet<string>(SelectedAnnotationNames);
-            var annotationTargets = SelectedHandlers.Aggregate(AnnotationDef.AnnotationTargetSet.EMPTY,
-                (value, handler) => value.Union(handler.AnnotationTargets));
-            var newAnnotations = Document.Settings.DataSettings.AnnotationDefs.Where(
-                    annotationDef =>
-                        annotationDef.AnnotationTargets.Intersect(annotationTargets).Any())
-                .Select(annotationDef => annotationDef.Name).OrderBy(name => name).ToArray();
+            var newAnnotations =
+                ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs,
+                    SelectedHandlers.ToList());
             if (newAnnotations.SequenceEqual(listBoxAnnotations.Items.OfType<string>()))
             {
                 return;
@@ -228,15 +223,13 @@ namespace pwiz.Skyline.FileUI
             }
             strSaveFileName += @"Annotations.csv";
             bool success;
-            using (var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog())
             {
-                FileName = strSaveFileName,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
-                InitialDirectory = Settings.Default.ExportDirectory,
-                OverwritePrompt = true,
-            })
-            {
+                dlg.FileName = strSaveFileName;
+                dlg.DefaultExt = TextUtil.EXT_CSV;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV);
+                dlg.InitialDirectory = Settings.Default.ExportDirectory;
+                dlg.OverwritePrompt = true;
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                 {
                     return;

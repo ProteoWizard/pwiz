@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdint>
 #include "pwiz/data/common/cv.hpp"
 
 
@@ -51,6 +52,10 @@ class PWIZ_API_DECL BinaryDataEncoder
     enum Compression {Compression_None, Compression_Zlib};
     enum Numpress {Numpress_None, Numpress_Linear, Numpress_Pic, Numpress_Slof}; // lossy numerical representations
 
+    enum Prediction {Prediction_None, Prediction_Delta, Prediction_Linear};
+    enum Format {Format_MzML, Format_MzMLb}; // if Format_MzMLb, we do not base64 encode, endianise or compress
+    enum Type {Type_None, Type_Spectrum, Type_Chromatogram}; // mzMLb needs to know whether this BinaryDataArray is a spectrum or chromatogram (for HDF5 dataset name) [*this not essential*]
+    
     /// encoding/decoding configuration 
     struct PWIZ_API_DECL Config
     {
@@ -63,8 +68,15 @@ class PWIZ_API_DECL BinaryDataEncoder
         double numpressSlofErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
         double numpressLinearAbsMassAcc;  // absolute mass error for lossy linear compression in Th (e.g. use 1e-4 for 1ppm @ 100 Th)
 
+        Prediction prediction;
+        Format format;
+        Type type;
+        int truncation; // how many bits mantissa to truncate (and hence not store)      
+
         std::map<cv::CVID, Precision> precisionOverrides;
-        std::map<cv::CVID, Numpress> numpressOverrides; 
+        std::map<cv::CVID, Numpress> numpressOverrides;
+        std::map<cv::CVID, Prediction> predictionOverrides;
+        std::map<cv::CVID, int> truncationOverrides;
 
         Config()
         :   precision(Precision_64),
@@ -74,7 +86,11 @@ class PWIZ_API_DECL BinaryDataEncoder
             numpressFixedPoint(0.0),
             numpressLinearErrorTolerance(BinaryDataEncoder_default_numpressLinearErrorTolerance),
             numpressSlofErrorTolerance(BinaryDataEncoder_default_numpressSlofErrorTolerance),
-            numpressLinearAbsMassAcc(-1.0)
+            numpressLinearAbsMassAcc(-1.0),
+            prediction(Prediction_None),
+            format(Format_MzML),
+            type(Type_None),
+            truncation(0)
         {}
     };
 

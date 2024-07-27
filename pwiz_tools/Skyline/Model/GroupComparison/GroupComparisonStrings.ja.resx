@@ -359,7 +359,13 @@
     <comment>Example: TIC Normalized Peak Area</comment>
   </data>
   <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
-	  <value>中間正規化{0}</value>
-      <comment>Example: Median Normalized Peak Area</comment>
+    <value>中央値の正規化{0}</value>
+    <comment>Example: Median Normalized Peak Area</comment>
+  </data>
+  <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
+    <value>バッチ校正曲線</value>
+  </data>
+  <data name="EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_" xml:space="preserve">
+    <value>校正値を使用したタンパク質レベルでのグループ比較は、Skylineではまだ対応していません。</value>
   </data>
 </root>

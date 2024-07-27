@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ChromatogramContextMenu_Collision_Cross_Section" xml:space="preserve">
+    <value>Collision Cross Section</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage" xml:space="preserve">
+    <value>Compensation Voltage</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time" xml:space="preserve">
+    <value>Drift Time</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility" xml:space="preserve">
+    <value>Inverse Ion Mobility</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
+    <value>Change spectrum filter</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>Adding spectrum filter to {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>Adding spectrum filter to {0} precursors</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>Editing spectrum filter on {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>Editing spectrum filter on {0} precursors</value>
+  </data>
+  <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
+    <value>Change synchronized integration to {0}</value>
+  </data>
+  <data name="SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides" xml:space="preserve">
+    <value>Accept peptides</value>
+  </data>
+  <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
+    <value>All Replicates</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Applying_Peak" xml:space="preserve">
+    <value>Applying Peak</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Failed_to_apply_peak_" xml:space="preserve">
+    <value>Failed to apply peak.</value>
+  </data>
+  <data name="SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_" xml:space="preserve">
+    <value>Apply Peak to </value>
+  </data>
+  <data name="SkylineWindow_EditDelete_Delete__0__" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="SkylineWindow_EditDelete_items" xml:space="preserve">
+    <value>items</value>
+  </data>
+  <data name="SkylineWindow_EditNote_Edit_Note" xml:space="preserve">
+    <value>Edit Note</value>
+  </data>
+  <data name="SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group" xml:space="preserve">
+    <value>Apply Peak to Group</value>
+  </data>
+  <data name="SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_" xml:space="preserve">
+    <value>The number of targets exceeds the limit for this operation.</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue" xml:space="preserve">
+    <value>Are you sure you want to continue?</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
+    <value>The document must contain peptides to generate decoys.</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys" xml:space="preserve">
+    <value>This operation will replace the existing decoys.</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
+    <value>Modify {0}</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
+    <value>Modify Molecule</value>
+  </data>
+  <data name="SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor" xml:space="preserve">
+    <value>Modify Custom Ion Precursor</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_product_ion__0_" xml:space="preserve">
+    <value>Modify product ion {0}</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_Transition" xml:space="preserve">
+    <value>Modify Transition</value>
+  </data>
+  <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
+    <value>Empty sequence found at line {0}.</value>
+  </data>
+  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_" xml:space="preserve">
+    <value>Failed reading Skyline document from the clipboard.</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste__0__" xml:space="preserve">
+    <value>Paste {0}</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_FASTA" xml:space="preserve">
+    <value>Paste FASTA</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_peptide_list" xml:space="preserve">
+    <value>Paste peptide list</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
+    <value>Paste proteins</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_transition_list" xml:space="preserve">
+    <value>Paste transition list</value>
+  </data>
+  <data name="SkylineWindow_Paste_peptides" xml:space="preserve">
+    <value>peptides</value>
+  </data>
+  <data name="SkylineWindow_Paste_Protein_sequence_not_found" xml:space="preserve">
+    <value>Protein sequence not found.</value>
+  </data>
+  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+    <value>proteins</value>
+  </data>
+  <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
+    <value>The protein sequence must be the last value in each line.</value>
+  </data>
+  <data name="SkylineWindow_Paste_Unexpected_character_period_found" xml:space="preserve">
+    <value>Unexpected character '.' found.</value>
+  </data>
+  <data name="SkylineWindow_PickPeakInChromatograms_Apply_picked_peak" xml:space="preserve">
+    <value>Apply picked peak</value>
+  </data>
+  <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
+    <value>Remove duplicate peptides</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides" xml:space="preserve">
+    <value>Remove empty peptides</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins" xml:space="preserve">
+    <value>Remove empty proteins</value>
+  </data>
+  <data name="SkylineWindow_RemoveMissingResults_Remove_missing_results" xml:space="preserve">
+    <value>Remove missing results</value>
+  </data>
+  <data name="SkylineWindow_RemovePeak_Remove_all_peaks_from__0__" xml:space="preserve">
+    <value>Remove all peaks from {0}</value>
+  </data>
+  <data name="SkylineWindow_RemovePeak_Remove_peak_from__0__" xml:space="preserve">
+    <value>Remove peak from {0}</value>
+  </data>
+  <data name="SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_" xml:space="preserve">
+    <value>Remove all peaks from {0}</value>
+  </data>
+  <data name="SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides" xml:space="preserve">
+    <value>Remove repeated peptides</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>The document must be fully loaded in order to compare model peak picking.</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>The document must have targets in order to compare model peak picking.</value>
+  </data>
+  <data name="SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys" xml:space="preserve">
+    <value>Generate Decoys</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refine" xml:space="preserve">
+    <value>Refine</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
+    <value>Refining document</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
+    <value>Reintegrate peaks</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_" xml:space="preserve">
+    <value>The document must be fully loaded before it can be re-integrated.</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
+    <value>Unexpected document change during operation.</value>
+  </data>
+  <data name="SkylineWindow_ShowRenameProteinsDlg_Rename_proteins" xml:space="preserve">
+    <value>Rename proteins</value>
+  </data>
+  <data name="SkylineWindow_ShowUniquePeptidesDlg_Choose_a_background_proteome_in_the_Digestions_tab_of_the_Peptide_Settings" xml:space="preserve">
+    <value>Choose a background proteome in the Digestions tab of the Peptide Settings.</value>
+  </data>
+  <data name="SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome" xml:space="preserve">
+    <value>Inspecting peptide uniqueness requires a background proteome.</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession" xml:space="preserve">
+    <value>Sort proteins by accession</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene" xml:space="preserve">
+    <value>Sort proteins by gene</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name" xml:space="preserve">
+    <value>Sort proteins by preferred name</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
+    <value>Sort proteins by name</value>
+  </data>
+  <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
+    <value>Unexpected character '{0}' found on line {1}.</value>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_" xml:space="preserve">
+    <value>Are you sure you want to add decoys to this document?
+    
+This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+
+To be ready to train a peak scoring model effectively, follow these steps:
+
+1. Navigate to the "Settings &gt; Peptide Settings - Libraries" tab and click "Edit List".
+2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.</value>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
+    <value>Add Decoys</value>
+  </data>
+</root>

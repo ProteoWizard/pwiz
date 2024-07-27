@@ -610,6 +610,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max q-value.
+        /// </summary>
+        public static string CutoffScore_PERCOLATOR_QVALUE {
+            get {
+                return ResourceManager.GetString("CutoffScore_PERCOLATOR_QVALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotations.
         /// </summary>
         public static string DataSettings_AnnotationDefs {
@@ -660,6 +669,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string DataSettings_PanoramaPublishUri {
             get {
                 return ResourceManager.GetString("DataSettings_PanoramaPublishUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Formatting.
+        /// </summary>
+        public static string DataSettings_RelativeAbundanceFormatting {
+            get {
+                return ResourceManager.GetString("DataSettings_RelativeAbundanceFormatting", resourceCulture);
             }
         }
         
@@ -732,6 +750,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string DdaSearchSettings_PrecursorTolerance {
             get {
                 return ResourceManager.GetString("DdaSearchSettings_PrecursorTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold.
+        /// </summary>
+        public static string DdaSearchSettings_ScoreThreshold {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_ScoreThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score type.
+        /// </summary>
+        public static string DdaSearchSettings_ScoreType {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_ScoreType", resourceCulture);
             }
         }
         
@@ -921,6 +957,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string EnabledFeatureScores_Weight {
             get {
                 return ResourceManager.GetString("EnabledFeatureScores_Weight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EncyclopeDIA Search.
+        /// </summary>
+        public static string EncyclopeDiaSettings {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram library.
+        /// </summary>
+        public static string EncyclopeDiaSettings_EncyclopeDiaChromLibrary {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_EncyclopeDiaChromLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EncyclopeDIA settings.
+        /// </summary>
+        public static string EncyclopeDiaSettings_EncyclopeDiaConfig {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_EncyclopeDiaConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantification library.
+        /// </summary>
+        public static string EncyclopeDiaSettings_EncyclopeDiaQuantLibrary {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_EncyclopeDiaQuantLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FASTA settings.
+        /// </summary>
+        public static string EncyclopeDiaSettings_FastaSettings {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_FastaSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Koina settings.
+        /// </summary>
+        public static string EncyclopeDiaSettings_KoinaSettings {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_KoinaSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Narrow window results.
+        /// </summary>
+        public static string EncyclopeDiaSettings_NarrowWindowResults {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_NarrowWindowResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wide window results.
+        /// </summary>
+        public static string EncyclopeDiaSettings_WideWindowResults {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_WideWindowResults", resourceCulture);
             }
         }
         
@@ -1146,6 +1254,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ExplicitTransitionValues_SLens {
             get {
                 return ResourceManager.GetString("ExplicitTransitionValues_SLens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default charge.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_DefaultCharge {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_DefaultCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default NCE.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_DefaultNCE {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_DefaultNCE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enzyme.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_Enzyme {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_Enzyme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max charge.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_MaxCharge {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max missed cleavages.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_MaxMissedCleavage {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxMissedCleavage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max m/z.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_MaxMz {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min charge.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_MinCharge {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MinCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min m/z.
+        /// </summary>
+        public static string FastaToKoinaInputCsvConfig_MinMz {
+            get {
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MinMz", resourceCulture);
             }
         }
         
@@ -1420,6 +1600,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charges.
+        /// </summary>
+        public static string HardklorSettings_Charges {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        public static string HardklorSettings_Instrument {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min idotp.
+        /// </summary>
+        public static string HardklorSettings_MinIdotP {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIdotP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min intensity PPM.
+        /// </summary>
+        public static string HardklorSettings_MinIntensityPPM {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIntensityPPM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string HardklorSettings_Resolution {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signal to noise.
+        /// </summary>
+        public static string HardklorSettings_SignalToNoise {
+            get {
+                return ResourceManager.GetString("HardklorSettings_SignalToNoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation.
         /// </summary>
         public static string IFilterOperation_DisplayName {
@@ -1614,6 +1848,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportPeptideSearchSettings_FullScanSettings {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_FullScanSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor Search Settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_HardklorSearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_HardklorSearchSettings", resourceCulture);
             }
         }
         
@@ -2496,6 +2739,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ParsimonySettings_FindMinimalProteinList {
             get {
                 return ResourceManager.GetString("ParsimonySettings_FindMinimalProteinList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group at gene level.
+        /// </summary>
+        public static string ParsimonySettings_GeneLevelParsimony {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_GeneLevelParsimony", resourceCulture);
             }
         }
         
@@ -3657,6 +3909,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ReintegrateDlgSettings_ReintegrateQCutoff {
             get {
                 return ResourceManager.GetString("ReintegrateDlgSettings_ReintegrateQCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Formatting rows.
+        /// </summary>
+        public static string RelativeAbundanceFormatting_ColorRows {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceFormatting_ColorRows", resourceCulture);
             }
         }
         

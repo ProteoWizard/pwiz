@@ -20,8 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -33,100 +36,99 @@ namespace pwiz.Skyline.Model.GroupComparison
     /// </summary>
     public class NormalizationData
     {
-        public static readonly NormalizationData EMPTY = new NormalizationData(new Dictionary<DataKey, DataValue>());
-        private readonly IDictionary<DataKey, DataValue> _data;
+        public static readonly NormalizationData EMPTY = new NormalizationData(new Dictionary<FileDataKey, FileDataValue>());
+        private readonly IDictionary<FileDataKey, FileDataValue> _data;
         private readonly double _medianMedians;
 
-        private NormalizationData(IDictionary<DataKey, DataValue> data)
+        private NormalizationData(IDictionary<FileDataKey, FileDataValue> data)
         {
             _data = data;
             if (data.Count > 0)
             {
                 _medianMedians = data.Values.Select(value => value.Median).Median();
-
             }
         }
 
-        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
+        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero,
+            double? qValueCutoff)
         {
+            return GetNormalizationData(CancellationToken.None, new Parameters(document, treatMissingValuesAsZero, qValueCutoff));
+        }
+
+        public static NormalizationData GetNormalizationData(CancellationToken cancellationToken, Parameters parameters)
+        {
+            var document = parameters.Document;
             if (!document.Settings.HasResults)
             {
                 return EMPTY;
             }
-            var chromatogramSets = document.Settings.MeasuredResults.Chromatograms;
-            var areaAccumulators = Enumerable.Range(0, chromatogramSets.Count).Select(replicateIndex =>
-                new AreaAccumulator(replicateIndex, chromatogramSets[replicateIndex])).ToList();
+
             var internalStandardLabelTypes =
                 document.Settings.PeptideSettings.Modifications.InternalStandardTypes.ToHashSet();
+            var endogenousAreas = new Dictionary<FileDataKey, List<double>>();
+            var internalStandardAreas = new Dictionary<FileDataKey, List<double>>();
 
-            foreach (var peptideGroup in document.MoleculeGroups)
+            ParallelEx.ForEach(document.Molecules, peptide =>
             {
-                foreach (var peptide in peptideGroup.Molecules)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    if (peptide.IsDecoy)
+                    return;
+                }
+                if (peptide.IsDecoy)
+                {
+                    return;
+                }
+                if (PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
+                {
+                    // Skip all iRT standards because they are excluded in MSstatsGC.R
+                    return;
+                }
+
+                foreach (var transitionGroup in peptide.TransitionGroups)
+                {
+                    bool isInternalStandard = internalStandardLabelTypes.Contains(transitionGroup.LabelType);
+                    foreach (var dataFileAreas in GetAreasFromTransitionGroup(parameters, transitionGroup)
+                                 .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2))
                     {
-                        continue;
-                    }
-                    if (PeptideDocNode.STANDARD_TYPE_IRT == peptide.GlobalStandardType)
-                    {
-                        // Skip all iRT standards because they are excluded in MSstatsGC.R
-                        continue;
-                    }
-                    foreach (var transitionGroup in peptide.TransitionGroups)
-                    {
-                        bool isInternalStandard = internalStandardLabelTypes.Contains(transitionGroup.LabelType);
-                        foreach (var transition in transitionGroup.Transitions)
+                        var dictionary = isInternalStandard ? internalStandardAreas : endogenousAreas;
+                        lock (dictionary)
                         {
-                            if (!transition.HasResults)
+                            if (!dictionary.TryGetValue(dataFileAreas.Key, out var list))
                             {
-                                continue;
+                                list = new List<double>();
+                                dictionary.Add(dataFileAreas.Key, list);
                             }
-
-                            int msLevel = transition.IsMs1 ? 1 : 2;
-                            for (int iResult = 0; iResult < transition.Results.Count && iResult < chromatogramSets.Count; iResult++)
-                            {
-                                var results = transition.Results[iResult];
-                                foreach (var chromInfo in results)
-                                {
-                                    if (chromInfo.OptimizationStep != 0)
-                                    {
-                                        continue;
-                                    }
-                                    double? area = PeptideQuantifier.GetArea(treatMissingValuesAsZero, qValueCutoff,
-                                        false, transitionGroup, transition, iResult, chromInfo);
-                                    if (!area.HasValue)
-                                    {
-                                        continue;
-                                    }
-
-                                    areaAccumulators[iResult].AddArea(chromInfo.FileId, msLevel, isInternalStandard, area.Value);
-                                }
-                            }
-                        }
-
-                        foreach (var areaAccumulator in areaAccumulators)
-                        {
-                            areaAccumulator.FinishTransitionGroup(isInternalStandard);
+                            list.AddRange(dataFileAreas);
                         }
                     }
                 }
-            }
-            var data = new Dictionary<DataKey, DataValue>();
-            foreach (var areaAccumulator in areaAccumulators)
+            });
+            var allFileData = new Dictionary<FileDataKey, FileDataValue>();
+            ParallelEx.ForEach(endogenousAreas.Keys.Concat(internalStandardAreas.Keys).Distinct(), dataKey =>
             {
-                foreach (var entry in areaAccumulator.GetAreaLists())
+                internalStandardAreas.TryGetValue(dataKey, out var fileAreas);
+                if (!(fileAreas?.Count > 0))
                 {
-                    var log2Areas = entry.Value.Select(area => Math.Log(Math.Max(area, 1), 2.0));
-                    data.Add(entry.Key, new DataValue(log2Areas));
+                    endogenousAreas.TryGetValue(dataKey, out fileAreas);
                 }
-            }
-            return new NormalizationData(data);
+
+                if (fileAreas?.Count > 0)
+                {
+                    var log2Areas = fileAreas.Select(area => Math.Log(Math.Max(area, 1), 2.0));
+                    var fileData = new FileDataValue(log2Areas);
+                    lock (allFileData)
+                    {
+                        allFileData.Add(dataKey, fileData);
+                    }
+                }
+            });
+            return new NormalizationData(allFileData);
         }
 
         public double? NormalizeQuantile(int replicateIndex, ChromFileInfoId chromFileInfoId, double value)
         {
-            DataValue dataValue;
-            if (!_data.TryGetValue(new DataKey(replicateIndex, chromFileInfoId), out dataValue))
+            FileDataValue dataValue;
+            if (!_data.TryGetValue(new FileDataKey(replicateIndex, chromFileInfoId), out dataValue))
             {
                 return null;
             }
@@ -136,8 +138,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double? Percentile(int replicateIndex, ChromFileInfoId chromFileInfoId, double percentile)
         {
-            var dataKey = new DataKey(replicateIndex, chromFileInfoId);
-            DataValue dataValue;
+            var dataKey = new FileDataKey(replicateIndex, chromFileInfoId);
+            FileDataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
                 return null;
@@ -147,8 +149,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double? GetLog2Median(int replicateIndex, ChromFileInfoId chromFileInfoId)
         {
-            var dataKey = new DataKey(replicateIndex, chromFileInfoId);
-            DataValue dataValue;
+            var dataKey = new FileDataKey(replicateIndex, chromFileInfoId);
+            FileDataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
                 return null;
@@ -178,17 +180,17 @@ namespace pwiz.Skyline.Model.GroupComparison
             return values.Mean();
         }
 
-        private struct DataKey
+        private class FileDataKey
         {
-            public DataKey(int replicateIndex, ChromFileInfoId chromFileInfoId)
-                : this()
+            public FileDataKey(int replicateIndex, ChromFileInfoId chromFileInfoId)
             {
                 ReplicateIndex = replicateIndex;
                 ChromFileInfoId = chromFileInfoId;
             }
-            public int ReplicateIndex { get; private set; }
-            public ChromFileInfoId ChromFileInfoId { get; private set; }
-            public bool Equals(DataKey other)
+            public int ReplicateIndex { get; }
+            public ChromFileInfoId ChromFileInfoId { get; }
+
+            protected bool Equals(FileDataKey other)
             {
                 return ReplicateIndex == other.ReplicateIndex && ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId);
             }
@@ -196,25 +198,25 @@ namespace pwiz.Skyline.Model.GroupComparison
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
-                return obj is DataKey && Equals((DataKey)obj);
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((FileDataKey)obj);
             }
 
             public override int GetHashCode()
             {
                 unchecked
                 {
-                    int result = ReplicateIndex;
-                    result = (result * 397) ^ (ChromFileInfoId != null ? RuntimeHelpers.GetHashCode(ChromFileInfoId) : 0);
-                    return result;
+                    return (ReplicateIndex * 397) ^ RuntimeHelpers.GetHashCode(ChromFileInfoId);
                 }
             }
         }
 
-        private struct DataValue
+        private readonly struct FileDataValue
         {
             internal readonly double[] _sortedIntensities;
 
-            public DataValue(IEnumerable<double> intensities) : this()
+            public FileDataValue(IEnumerable<double> intensities) : this()
             {
                 _sortedIntensities = intensities.ToArray();
                 Array.Sort(_sortedIntensities);
@@ -223,7 +225,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public double Median
             {
-                get; private set;
+                get;
             }
 
             public double GetValueAtPercentile(double percentile)
@@ -273,132 +275,105 @@ namespace pwiz.Skyline.Model.GroupComparison
             return (index - 1 + fraction) / (sortedValues.Count - 1);
         }
 
-        /// <summary>
-        /// Keeps track of a list of transition peak areas for a single replicate.
-        /// </summary>
-        private class AreaAccumulator
+        public static Lazy<NormalizationData> LazyNormalizationData(SrmDocument document)
         {
-            private IDictionary<DataKey, FileData> _fileDataDictionary = new Dictionary<DataKey, FileData>();
+            return new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));
+        }
 
-            private ChromFileInfoId _firstFileId;
-            private FileData _firstFileData = new FileData();
-            public AreaAccumulator(int replicateIndex, ChromatogramSet chromatogramSet)
+        public static readonly Producer<Parameters, NormalizationData> PRODUCER =
+            Producer.FromFunction<Parameters, NormalizationData>((progressCallback, parameters) =>
+                GetNormalizationData(progressCallback.CancellationToken, parameters));
+        /// <summary>
+        /// For the MS2 transitions, returns all the Area values for each of the Transitions for each of the replicates.
+        /// For the MS1 transitions, returns the sum of the MS1 Area values for each of the replicates.
+        /// </summary>
+        private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(Parameters parameters, TransitionGroupDocNode transitionGroup)
+        {
+            var transitionsByMsLevel = transitionGroup.Transitions.Where(transition => null != transition.Results)
+                .GroupBy(transition => transition.IsMs1);
+            return transitionsByMsLevel.SelectMany(msLevelGroup =>
             {
-                ReplicateIndex = replicateIndex;
-                ChromatogramSet = chromatogramSet;
-                _firstFileId = chromatogramSet.MSDataFileInfos.First().FileId;
-            }
-            public int ReplicateIndex { get; private set; }
-
-            public ChromatogramSet ChromatogramSet { get; private set; }
-
-            public void AddArea(ChromFileInfoId fileId, int msLevel, bool isInternalStandard, double area)
-            {
-                GetFileData(fileId).AddArea(msLevel, isInternalStandard, area);
-            }
-
-            private FileData GetFileData(ChromFileInfoId fileId)
-            {
-                if (ReferenceEquals(fileId, _firstFileId))
+                bool areMs1 = msLevelGroup.Key;
+                var areaValues = msLevelGroup.SelectMany(transition => GetAreasFromTransition(parameters, transitionGroup, transition));
+                if (areMs1)
                 {
-                    // Avoid a dictionary lookup for the most common case where the fileId is the first one in the replicate
-                    return _firstFileData;
+                    // The MS1 transition peak areas should be summed together before returning.
+                    return areaValues.GroupBy(areaValue => areaValue.Item1, areaValue => areaValue.Item2)
+                        .Select(group => Tuple.Create(group.Key, group.Sum()));
                 }
-
-                var key = MakeDataKey(fileId);
-                if (!_fileDataDictionary.TryGetValue(key, out var fileData))
+                else
                 {
-                    fileData = new FileData();
-                    _fileDataDictionary.Add(key, fileData);
+                    return areaValues;
                 }
+            });
+        }
 
-                return fileData;
-            }
-
-            private DataKey MakeDataKey(ChromFileInfoId fileId)
+        private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransition(Parameters parameters, TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
+        {
+            for (int iResult = 0; iResult < transition.Results.Count; iResult++)
             {
-                return new DataKey(ReplicateIndex, fileId);
-            }
-
-            /// <summary>
-            /// After processing all of the transitions in a transition group, the observed MS1 areas should be summed,
-            /// and then added to the list of areas.
-            /// </summary>
-            public void FinishTransitionGroup(bool isInternalStandard)
-            {
-                foreach (var fileData in _fileDataDictionary.Values.Prepend(_firstFileData))
+                foreach (var chromInfo in transition.Results[iResult])
                 {
-                    fileData.FinishTransitionGroup(isInternalStandard);
-                }
-            }
-
-            public IEnumerable<KeyValuePair<DataKey, List<double>>> GetAreaLists()
-            {
-                var result = _fileDataDictionary.Select(entry=>new KeyValuePair<DataKey, List<double>>(entry.Key, entry.Value.GetAreasList()));
-                var firstFileAreas = _firstFileData.GetAreasList();
-                if (firstFileAreas.Any())
-                {
-                    result = result.Prepend(new KeyValuePair<DataKey, List<double>>(MakeDataKey(_firstFileId), firstFileAreas));
-                }
-                return result;
-            }
-
-            private class FileData
-            {
-                private double? _ms1Area;
-                private List<double> _areasList = new List<double>();
-                private List<double> _internalStandardAreaList = new List<double>();
-
-                public void AddArea(int msLevel, bool internalStandard, double area)
-                {
-                    if (msLevel == 1)
+                    if (chromInfo.OptimizationStep != 0)
                     {
-                        _ms1Area = (_ms1Area ?? 0) + area;
+                        continue;
                     }
-                    else
+                    double? area = GetTransitionArea(parameters, transitionGroup, transition, iResult, chromInfo);
+                    if (area.HasValue)
                     {
-                        if (internalStandard)
-                        {
-                            _internalStandardAreaList.Add(area);
-                        }
-                        else
-                        {
-                            _areasList.Add(area);
-                        }
+                        yield return Tuple.Create(new FileDataKey(iResult, chromInfo.FileId), area.Value);
                     }
                 }
+            }
+        }
 
-                public void FinishTransitionGroup(bool internalStandard)
+        private static double? GetTransitionArea(Parameters parameters, TransitionGroupDocNode transitionGroup,
+            TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
+        {
+            return PeptideQuantifier.GetArea(parameters.TreatMissingValuesAsZero, parameters.QValueCutoff,
+                false, transitionGroup, transition, replicateIndex, chromInfo);
+        }
+
+        public class Parameters
+        {
+            public Parameters(SrmDocument document) : this(document, false, null)
+            {
+            }
+            public Parameters(SrmDocument document, bool treatMissingAsZero, double? qValueCutoff)
+            {
+                Document = document;
+                TreatMissingValuesAsZero = treatMissingAsZero;
+                QValueCutoff = qValueCutoff;
+            }
+
+            public bool TreatMissingValuesAsZero { get; }
+            public double? QValueCutoff { get; }
+            public SrmDocument Document { get; }
+
+            protected bool Equals(Parameters other)
+            {
+                return TreatMissingValuesAsZero == other.TreatMissingValuesAsZero &&
+                       Nullable.Equals(QValueCutoff, other.QValueCutoff) && ReferenceEquals(Document, other.Document);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Parameters)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
                 {
-                    if (_ms1Area.HasValue)
-                    {
-                        if (internalStandard)
-                        {
-                            _internalStandardAreaList.Add(_ms1Area.Value);
-                        }
-                        else
-                        {
-                            _areasList.Add(_ms1Area.Value);
-                        }
-
-                        _ms1Area = null;
-                    }
-                }
-
-                /// <summary>
-                /// If there are any internal standard peak areas, then return them, otherwise return all of the areas.
-                /// </summary>
-                public List<double> GetAreasList()
-                {
-                    if (_internalStandardAreaList.Count != 0)
-                    {
-                        return _internalStandardAreaList;
-                    }
-
-                    return _areasList;
+                    var hashCode = TreatMissingValuesAsZero.GetHashCode();
+                    hashCode = (hashCode * 397) ^ QValueCutoff.GetHashCode();
+                    hashCode = (hashCode * 397) ^ RuntimeHelpers.GetHashCode(Document);
+                    return hashCode;
                 }
             }
         }
     }
-
 }

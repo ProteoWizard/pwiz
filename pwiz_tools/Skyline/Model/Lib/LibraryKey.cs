@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model.Lib
                 KeyType = LibraryKeyProto.Types.KeyType.SmallMolecule,
                 Adduct = Adduct.AdductFormula ?? string.Empty,
                 MoleculeName = SmallMoleculeLibraryAttributes.MoleculeName ?? string.Empty,
-                ChemicalFormula = SmallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty,
+                ChemicalFormula = SmallMoleculeLibraryAttributes.ChemicalFormulaOrMasses.ToString(),
                 InChiKey = SmallMoleculeLibraryAttributes.InChiKey ?? string.Empty,
                 OtherKeys = SmallMoleculeLibraryAttributes.OtherKeys ?? string.Empty
             };
@@ -393,13 +393,13 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             if (null == smallMoleculeLibraryAttributes.MoleculeName ||
-                null == smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ||
+                null == smallMoleculeLibraryAttributes.ChemicalFormulaOrMasses ||
                 null == smallMoleculeLibraryAttributes.InChiKey || 
                 null == smallMoleculeLibraryAttributes.OtherKeys)
             {
                 smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(
                     smallMoleculeLibraryAttributes.MoleculeName ?? string.Empty,
-                    smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty,
+                    smallMoleculeLibraryAttributes.ChemicalFormulaOrMasses ?? ParsedMolecule.EMPTY,
                     smallMoleculeLibraryAttributes.InChiKey ?? string.Empty,
                     smallMoleculeLibraryAttributes.OtherKeys ?? string.Empty);
             }
@@ -409,7 +409,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     smallMoleculeLibraryAttributes = valueCache.CacheValue(SmallMoleculeLibraryAttributes.Create(
                         valueCache.CacheValue(smallMoleculeLibraryAttributes.MoleculeName),
-                        valueCache.CacheValue(smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString),
+                        valueCache.CacheValue(smallMoleculeLibraryAttributes.ChemicalFormulaOrMasses),
                         valueCache.CacheValue(smallMoleculeLibraryAttributes.InChiKey),
                         valueCache.CacheValue(smallMoleculeLibraryAttributes.OtherKeys)
                     ));

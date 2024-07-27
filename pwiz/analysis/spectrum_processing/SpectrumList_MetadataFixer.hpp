@@ -43,6 +43,19 @@ class PWIZ_API_DECL SpectrumList_MetadataFixer : public msdata::SpectrumListWrap
     static bool accept(const msdata::SpectrumListPtr& inner);
 
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
+
+    struct PeakMetadata
+    {
+        double basePeakY = 0;
+        double basePeakX = 0;
+        double totalY = 0;
+        double lowestX = 0;
+        double highestX = 0;
+    };
+
+    static PeakMetadata calculatePeakMetadata(const std::vector<float>& x, const std::vector<float>& y);
+    static PeakMetadata calculatePeakMetadata(const std::vector<double>& x, const std::vector<float>& y);
+    static PeakMetadata calculatePeakMetadata(const std::vector<double>& x, const std::vector<double>& y);
 };
 
 

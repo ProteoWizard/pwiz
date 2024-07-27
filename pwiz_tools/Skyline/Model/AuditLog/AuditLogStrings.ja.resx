@@ -676,4 +676,7 @@
   <data name="permuted_isotope_label_complete" xml:space="preserve">
     <value>同位体修飾「{0}」の完全置換を追加</value>
   </data>
+  <data name="added_spectrum_filter" xml:space="preserve">
+    <value>スペクトルフィルタを追加しました</value>
+  </data>
 </root>

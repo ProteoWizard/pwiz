@@ -42,6 +42,7 @@ set(pwiz_LIBS_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_msdata_core.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_msdata_examples.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_msdata_mz5.lib
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_msdata_mzmlb.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_msdata_version.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_obo.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_proteome.lib
@@ -117,6 +118,7 @@ set(pwiz_LIBS_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_msdata_core.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_msdata_examples.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_msdata_mz5.lib
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_msdata_mzmlb.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_msdata_version.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_obo.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_proteome.lib
@@ -206,6 +208,7 @@ set(pwiz_REDISTR_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/MassSpecDataReader.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/mfc90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/MIDAC.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msparserD.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcm90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp110.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp120.dll
@@ -281,6 +284,7 @@ set(pwiz_REDISTR_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MassSpecDataReader.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/mfc90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MIDAC.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msparser.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcm90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp110.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp120.dll

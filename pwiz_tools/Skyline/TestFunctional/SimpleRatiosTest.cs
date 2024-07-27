@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -54,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SimpleRatiosTest.sky"));
                 SkylineWindow.ExpandPrecursors();
             });
+            WaitForGraphs();
             Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Quantification.SimpleRatios);
             Assert.AreEqual(new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy),
                 SkylineWindow.Document.Settings.PeptideSettings.Quantification.NormalizationMethod);
@@ -137,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
                 var colNormalizedArea = resultsGridForm.FindColumn(propertyPathNormalizedArea);
                 var row = resultsGridForm.DataGridView.Rows[0];
                 AssertEx.AreEqual(expectedRatio, (double)row.Cells[colRatio.Index].Value, 1e-5);
-                AssertEx.AreEqual(expectedRatio, (double)row.Cells[colNormalizedArea.Index].Value, 1e-5);
+                AssertEx.AreEqual(expectedRatio, Convert.ToDouble(row.Cells[colNormalizedArea.Index].Value), 1e-5);
             });
 
         }

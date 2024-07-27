@@ -23,7 +23,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -67,7 +66,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument PermuteIsotopeModifications(IProgressMonitor progressMonitor, SrmDocument document)
         {
-            var progressStatus = new ProgressStatus(Resources.IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications);
+            var progressStatus = new ProgressStatus(ModelResources.IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications);
             progressMonitor.UpdateProgress(progressStatus.ChangePercentComplete(0));
             int maxPermutationCount = 0;
             foreach (var peptide in document.Peptides)

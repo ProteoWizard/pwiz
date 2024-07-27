@@ -29,8 +29,8 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -260,10 +260,13 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
             }
             writer.WriteAttributeIfString(ATTR.attribute_group_id, node.AttributeGroupId);
+            writer.WriteAttributeIfString(ATTR.surrogate_calibration_curve, node.SurrogateCalibrationCurve);
 
             if (isCustomIon)
             {
                 peptide.CustomMolecule.WriteXml(writer, Adduct.EMPTY);
+                // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
+                writer.WriteAttributeIfString(ATTR.chromatogram_target, node.OriginalMoleculeTarget?.ToSerializableString());
             }
             else
             {
@@ -317,7 +320,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         catch (Exception ex)
                         {
-                            throw new NotSupportedException(string.Format(Resources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
+                            throw new NotSupportedException(string.Format(SerializationResources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
                         }
                     }
                 }
@@ -604,10 +607,17 @@ namespace pwiz.Skyline.Model.Serialization
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
+            node.SpectrumClassFilter.WriteXml(writer);
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
-                writer.WriteElements(new[] { node.LibInfo }, helpers);
+                var libInfo = node.LibInfo;
+                if (libInfo is EncyclopeDiaLibrary.ElibSpectrumHeaderInfo && DocumentFormat < DocumentFormat.VERSION_22_25)
+                {
+                    // Older versions of Skyline used ChromLibSpectrumHeaderInfo instead of ElibSpectrumHeaderInfo
+                    libInfo = new ChromLibSpectrumHeaderInfo(libInfo.LibraryName, 0, null);
+                }
+                writer.WriteElements(new[] { libInfo }, helpers);
             }
 
             if (node.HasResults)
@@ -779,22 +789,19 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (nodeTransition.HasResults)
             {
-                if (nodeTransition.HasResults)
+                if (UseCompactFormat())
                 {
-                    if (UseCompactFormat())
-                    {
-                        var protoResults = new SkylineDocumentProto.Types.TransitionResults();
-                        protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
-                        byte[] bytes = protoResults.ToByteArray();
-                        writer.WriteStartElement(EL.results_data);
-                        writer.WriteBase64(bytes, 0, bytes.Length);
-                        writer.WriteEndElement();
-                    }
-                    else
-                    {
-                        WriteResults(writer, Settings, nodeTransition.Results,
-                            EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
-                    }
+                    var protoResults = new SkylineDocumentProto.Types.TransitionResults();
+                    protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
+                    byte[] bytes = protoResults.ToByteArray();
+                    writer.WriteStartElement(EL.results_data);
+                    writer.WriteBase64(bytes, 0, bytes.Length);
+                    writer.WriteEndElement();
+                }
+                else
+                {
+                    WriteResults(writer, Settings, nodeTransition.Results,
+                        EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
                 }
             }
 
@@ -881,6 +888,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
+                writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
                 writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);

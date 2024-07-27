@@ -6,7 +6,6 @@ using System.Threading;
 using System.Windows.Forms;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 
 namespace SharedBatchTest

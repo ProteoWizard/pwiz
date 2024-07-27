@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size" xml:space="preserve">
+    <value>最小化后，缓存文件将减少到当前大小的 {0:0%}</value>
+  </data>
+  <data name="BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete" xml:space="preserve">
+    <value>节约空间计算中（{0}%已完成）</value>
+  </data>
+  <data name="BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs" xml:space="preserve">
+    <value>缓存文件的当前大小是 {0:fs}</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_" xml:space="preserve">
+    <value>导入离子对列表（iRT 标准）</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_ImportTextFile_Transition_List" xml:space="preserve">
+    <value>离子对列表</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
+    <value>离子对列表字段必须包含至有效文件的路径。</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs" xml:space="preserve">
+    <value>已知 iRT</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs" xml:space="preserve">
+    <value>库 iRT</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression" xml:space="preserve">
+    <value>线性回归</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_" xml:space="preserve">
+    <value>请针对 iRT 计算器选择一个包含标准肽段列表的蛋白质。</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_" xml:space="preserve">
+    <value>本文档中的重复测定集已改变。请针对保留时间过滤器再次选择使用哪个重复测定。</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
+    <value>您必须至少选择一个重复测定</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_" xml:space="preserve">
+    <value>无法读取数据库文件{0}。</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_" xml:space="preserve">
+    <value>请针对 iRT 计算器选择一个包含标准肽段列表的蛋白质。</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files" xml:space="preserve">
+    <value>色谱图导出文件</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Export_Chromatogram" xml:space="preserve">
+    <value>导出色谱图</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Exporting_Chromatograms" xml:space="preserve">
+    <value>导出色谱图</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__" xml:space="preserve">
+    <value>尝试将色谱图保存至{0}失败。</value>
+  </data>
+  <data name="ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export" xml:space="preserve">
+    <value>尝试导出时出现错误。</value>
+  </data>
+  <data name="ExportDlgProperties_PerformLongExport_Exporting_Methods" xml:space="preserve">
+    <value>方法导出中</value>
+  </data>
+  <data name="ExportMethodDlg_ACCUMULATION_TIME_TXT" xml:space="preserve">
+    <value>积累时间(秒):</value>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
+    <value>选定的文件夹无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>所选文件夹似乎不包含 Agilent MassHunter 12 方法模板。该文件夹的扩展名应为 .m。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
+    <value>Agilent 6400 系列仪器类型方法的扩展名应为 .m，并且应当包含文件 qqqacqmethod.xsd。如果是采用 Agilent TQ 方法，请选择“Agilent MassHunter 12 或更高版本”作为仪器类型。</value>
+    <comment>Needs Review:English text changed
+Old English:The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.
+Current English:Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose "Agilent MassHunter 12 or higher" as your instrument type.
+Old Localized:选定的文件夹无 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</comment>
+  </data>
+  <data name="ExportMethodDlg_btnGraph_Click_An_error_occurred_" xml:space="preserve">
+    <value>发生了错误。</value>
+  </data>
+  <data name="ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_" xml:space="preserve">
+    <value>尚未对预定的方法实施按蛋白质对肽段进行分组。</value>
+  </data>
+  <data name="ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__" xml:space="preserve">
+    <value>{0}当前不支持 DIA 采集列表的导出。</value>
+  </data>
+  <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_" xml:space="preserve">
+    <value>导出带有额外离子对的方法，以找到最优值。</value>
+  </data>
+  <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
+    <value>优化 {0} 将为每一离子对产生额外的 {1} 离子对。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings" xml:space="preserve">
+    <value>查看计算器设置。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides" xml:space="preserve">
+    <value>检查以确保文档包含全部所需标准肽段的保留时间。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
+    <value>保留时间预测计算器无法评分。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_predictor_is_unable_to_auto_calculate_a_regression" xml:space="preserve">
+    <value>保留时间预测器无法自动计算回归。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text" xml:space="preserve">
+    <value>预定方法不支持选定的仪器。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction" xml:space="preserve">
+    <value>如要导出预定方法，您必须首先在肽段设置/预测中选择一个保留时间预测器。</value>
+  </data>
+  <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document" xml:space="preserve">
+    <value>如要导出预定方法，您必须首先在文档中导入针对所有肽段的结果。</value>
+  </data>
+  <data name="ExportMethodDlg_CONCUR_PREC_TXT" xml:space="preserve">
+    <value>最大并行母离子(&amp;X)：</value>
+  </data>
+  <data name="ExportMethodDlg_CONCUR_TRANS_TXT" xml:space="preserve">
+    <value>最大并行离子对(&amp;X)：</value>
+  </data>
+  <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
+    <value>驻留时间（毫秒）(&amp;D)：</value>
+  </data>
+  <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
+    <value>导出分离列表</value>
+  </data>
+  <data name="ExportMethodDlg_ExportMethodDlg_Export_Transition_List" xml:space="preserve">
+    <value>导出离子对列表</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method" xml:space="preserve">
+    <value>需要模板文件来导出方法。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue" xml:space="preserve">
+    <value>您确定想要继续？</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>您确定想要继续？</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Collision_Energy" xml:space="preserve">
+    <value>碰撞能量：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Declustering_Potential" xml:space="preserve">
+    <value>去簇电压：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Export__0__Method" xml:space="preserve">
+    <value>导出{0}方法</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Isolation_List" xml:space="preserve">
+    <value>分离列表</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Method_File" xml:space="preserve">
+    <value>方法文件</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Orbitrap" xml:space="preserve">
+    <value>Orbitrap （轨道陷）</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" xml:space="preserve">
+    <value>通过导入的结果、谱图库，或仅选择每个母离子的一个目标离子对来提供离子对排名信息。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides" xml:space="preserve">
+    <value>文档不包含所有保留时间标准肽段。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
+    <value>文件夹{0}无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>文件夹 {0} 似乎不包含 Agilent MassHunter 12 方法模板。该文件夹的扩展名应为 .m。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
+    <value>文件夹{0}无 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab" xml:space="preserve">
+    <value>子离子质量分析器类型在“离子对设置”（在“全扫描”标签下）中未设定为{0}。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__" xml:space="preserve">
+    <value>此文档的设置不匹配仪器类型{0}：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist" xml:space="preserve">
+    <value>模板文件{0}不存在。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_" xml:space="preserve">
+    <value>本文档的离子对预测设置设定为使用离子对的优化值。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
+    <value>TOF</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Transition_List" xml:space="preserve">
+    <value>离子对列表</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_" xml:space="preserve">
+    <value>使用离子对的优化值对此类仪器无效。您想改为使用母离子的优化值吗?</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead" xml:space="preserve">
+    <value>您是否愿意使用默认值替代？</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>您缺失了对于以下的任何最优补偿电压：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>您缺失了对于以下的补偿电压：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>您缺失了对于以下的中等调谐最优补偿电压：</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_" xml:space="preserve">
+    <value>您可以为它们设置明示补偿电压，或将它们的值添加到预测选项卡下离子对设置中的文档优化库。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results" xml:space="preserve">
+    <value>您将不可以连同采集结果使用保留时间预测。</value>
+  </data>
+  <data name="ExportMethodDlg_PREC_PER_SAMPLE_INJ_TXT" xml:space="preserve">
+    <value>每次样品注射的最大母离子(&amp;X)：</value>
+  </data>
+  <data name="ExportMethodDlg_RUN_DURATION_TXT" xml:space="preserve">
+    <value>运行时间（分钟）(&amp;D)：</value>
+  </data>
+  <data name="ExportMethodDlg_SetMethodType_Scheduled" xml:space="preserve">
+    <value>预定的</value>
+  </data>
+  <data name="ExportMethodDlg_SetMethodType_Standard" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__" xml:space="preserve">
+    <value>{0} 尚不支持多种方法。</value>
+  </data>
+  <data name="ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode" xml:space="preserve">
+    <value>只有一种方法可以在 DIA 模式中被导出。</value>
+  </data>
+  <data name="ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT" xml:space="preserve">
+    <value>每次样品允许的最多离子对数(&amp;X)：</value>
+  </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_" xml:space="preserve">
+    <value>绝对相对强度阈值。</value>
+  </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
+    <value>用作强度阈值的峰值最大高度的百分比。</value>
+  </data>
+  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__" xml:space="preserve">
+    <value>针对{1}的母离子{0}拥有 {2} 个离子对，这超过了当前最大数值{3}。</value>
+  </data>
+  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__requires__2__transitions_to_optimize__which_exceeds_the_current_maximum__3__" xml:space="preserve">
+    <value>针对{1}的母离子{0}需要优化 {2} 个离子对，这超过了当前最大数值{3}。</value>
+  </data>
+  <data name="ExportMethodDlg_ValidateSettings__0__must_contain_a_value" xml:space="preserve">
+    <value>{0}必须包含一个值。</value>
+  </data>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
+    <value>仪器类型{0}不支持触发采集。</value>
+  </data>
+  <data name="ImportResultsDlg_CanCreateMultiInjectionMethods_The_current_document_does_not_appear_to_have_enough_transitions_to_require_multiple_injections" xml:space="preserve">
+    <value>当前文档看起来并不具有需要多次注射的足够离子对数。
+您确定想要继续？</value>
+  </data>
+  <data name="ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__" xml:space="preserve">
+    <value>文件夹{0}中未发现结果。</value>
+  </data>
+  <data name="ImportResultsDlg_GetDataSourcePathsDir_Results_Directory" xml:space="preserve">
+    <value>结果目录</value>
+  </data>
+  <data name="ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files" xml:space="preserve">
+    <value>导入结果文件</value>
+  </data>
+  <data name="ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
+    <value>尝试从文件{0}中读取样品信息出现错误。</value>
+  </data>
+  <data name="ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__" xml:space="preserve">
+    <value>从{0}阅读样品名称</value>
+  </data>
+  <data name="ImportResultsDlg_GetWiffSubPaths_Sample_Names" xml:space="preserve">
+    <value>样品名称</value>
+  </data>
+  <data name="ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
+    <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
+  </data>
+  <data name="ImportResultsDlg_OkDialog_A_result_name_may_not_contain_any_of_the_characters___0___" xml:space="preserve">
+    <value>结果名称可能不包含“{0}”的任何字符。</value>
+  </data>
+  <data name="ImportResultsDlg_OkDialog_The_specified_name_already_exists_for_this_document" xml:space="preserve">
+    <value>指定的名称已经针对此文档存在。</value>
+  </data>
+  <data name="ImportResultsDlg_OkDialog_You_must_select_an_existing_set_of_results_to_which_to_append_new_data" xml:space="preserve">
+    <value>您必须选择一个能够向其附加新数据的现有结果集。</value>
+  </data>
+  <data name="ImportResultsNameDlg_CommonPrefix_and_Suffix" xml:space="preserve">
+    <value>您所选择的文件含有共同前缀和后缀。
+您希望删除某些或所有此前缀或后缀以便缩短用于 Skyline 的名称吗？</value>
+  </data>
+  <data name="ImportResultsNameDlg_CommonSuffix" xml:space="preserve">
+    <value>您所选择的文件含有共同后缀。
+您希望删除某些或所有此后缀以便缩短用于 Skyline 的名称吗？</value>
+  </data>
+  <data name="ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_prefix_of_the_files_chosen" xml:space="preserve">
+    <value>文本“{0}”并不是选定文件的前缀。</value>
+  </data>
+  <data name="ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_suffix_of_the_files_chosen" xml:space="preserve">
+    <value>文本“{0}”并不是选定文件的后缀。</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
+    <value>正在检查错误…</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z" xml:space="preserve">
+    <value>分子式和/或母离子质荷比</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
+    <value>母离子加合物和/或母离子电荷</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_Column__0_" xml:space="preserve">
+    <value>列 {0}</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_The_input_text_did_not_appear_to_contain_column_headers__Use_the_dropdown_control_to_assign_column_meanings_for_import_" xml:space="preserve">
+    <value>输入文本似乎不包含列标题。使用下拉控件指定列的导入含义。</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_" xml:space="preserve">
+    <value>此列在输入文本中用标题 '{0}' 进行标记。使用下拉控件指定导入含义。</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
+    <value>导入分析库：识别列</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity" xml:space="preserve">
+    <value>库强度</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
+    <value>蛋白质描述</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
+    <value>关联蛋白质</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_" xml:space="preserve">
+    <value>一个离子对包含错误。</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_" xml:space="preserve">
+    <value>离子对包含一个错误。跳过该离子对并导入剩余离子对？</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_" xml:space="preserve">
+    <value>所有 {0} 个离子对包含错误。 请查看离子对寻找错误并尝试重新导入。</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_and_try_importing_again_" xml:space="preserve">
+    <value>导入的离子对包含一个错误。请查看离子对和 Skyline 设置并尝试重新导入。</value>
+  </data>
+  <data name="ManageResultsDlg_ReimportResults_All_results_must_be_completely_imported_before_any_can_be_re_imported" xml:space="preserve">
+    <value>所有结果都必须在任何结果可能被重新导入前完全导入。</value>
+  </data>
+  <data name="ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document" xml:space="preserve">
+    <value>无法查找下列文件，无论是在其原始位置还是在当前文档的文件夹中：</value>
+  </data>
+  <data name="MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet" xml:space="preserve">
+    <value>缓存文件还未加载。</value>
+  </data>
+  <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
+    <value>所有结果都必须在任何结果可能被最小化前完全导入。</value>
+  </data>
+  <data name="MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue" xml:space="preserve">
+    <value>您还未选择任何选项来最小化您的缓存文件。您确定想要继续？</value>
+  </data>
+  <data name="MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__" xml:space="preserve">
+    <value>保存数据缓存文件{0}时出现意外错误。</value>
+  </data>
+  <data name="MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file" xml:space="preserve">
+    <value>保存新的缓存文件</value>
+  </data>
+  <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number" xml:space="preserve">
+    <value>噪声时间限制必须是十进位正数。</value>
+  </data>
+  <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_valid_decimal_number" xml:space="preserve">
+    <value>噪声时间限制必须是有效的十进位数。</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_Export_mProphet_Features" xml:space="preserve">
+    <value>导出 mProphet 特性</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__" xml:space="preserve">
+    <value>尝试将 mProphet 特性保存至{0}失败。</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files" xml:space="preserve">
+    <value>mProphet 特性文件</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_" xml:space="preserve">
+    <value>如要导出 MProphet 特性，首先训练一个 MProphet 模型。</value>
+  </data>
+  <data name="OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources" xml:space="preserve">
+    <value>请选择一个或多个数据源。</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format" xml:space="preserve">
+    <value>任何谱图格式</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Desktop" xml:space="preserve">
+    <value>桌面</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_My_Computer" xml:space="preserve">
+    <value>我的电脑</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_My_Documents" xml:space="preserve">
+    <value>我的文档</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>远程账户</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_access_failure" xml:space="preserve">
+    <value>访问失败</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Local_Drive" xml:space="preserve">
+    <value>本地驱动器</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
+    <value>网络共享</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Optical_Drive" xml:space="preserve">
+    <value>光驱</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Removable_Drive" xml:space="preserve">
+    <value>可移动驱动器</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_access_failure" xml:space="preserve">
+    <value>访问失败</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory" xml:space="preserve">
+    <value>尝试检索本目录内容时出现错误。</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_Local_Drive" xml:space="preserve">
+    <value>本地驱动器</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_Network_Share" xml:space="preserve">
+    <value>网络共享</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_Optical_Drive" xml:space="preserve">
+    <value>光驱</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_Removable_Drive" xml:space="preserve">
+    <value>可移动驱动器</value>
+  </data>
+  <data name="OpenDataSourceDialog_populateListViewFromDirectory_Retry" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_" xml:space="preserve">
+    <value>忽视这些电荷态，继续峰边界导入？</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_" xml:space="preserve">
+    <value>忽视该电荷态，继续峰边界导入？</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_" xml:space="preserve">
+    <value>以下{0}肽段、文件和电荷态组合未被验证：</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_" xml:space="preserve">
+    <value>以下肽段、文件和电荷态组合未被验证：</value>
+  </data>
+  <data name="PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders" xml:space="preserve">
+    <value>检索服务器文件夹出错：</value>
+  </data>
+  <data name="PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents" xml:space="preserve">
+    <value>Skyline 共享文档</value>
+  </data>
+  <data name="PublishDocumentDlg_btnBrowse_Click_Upload_Document" xml:space="preserve">
+    <value>上传文档</value>
+  </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers" xml:space="preserve">
+    <value>从服务器检索信息</value>
+  </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
+    <value>尝试从下列服务器检索信息失败：</value>
+  </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
+    <value>转到工具&gt;选项&gt;Panorama 选项卡，更新用户名和密码。</value>
+  </data>
+  <data name="PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information" xml:space="preserve">
+    <value>获取服务器信息出错。</value>
+  </data>
+  <data name="RenameResultDlg_OkDialog_Please_use_a_different_name" xml:space="preserve">
+    <value>请使用不同的名称。</value>
+  </data>
+  <data name="RenameResultDlg_ReplicateName_The_name__0__is_already_in_use" xml:space="preserve">
+    <value>名称{0}已在使用中。</value>
+  </data>
+  <data name="RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_" xml:space="preserve">
+    <value>所有结果都必须在被重新评分前完全导入。</value>
+  </data>
+  <data name="RescoreResultsDlg_Rescore_There_are_not_results_in_this_document" xml:space="preserve">
+    <value>本文档中不含结果</value>
+  </data>
+  <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
+    <value>在部分情况下，您可能想要 Skyline 重新计算峰值并基于现有的色谱图数据为其重新排名。色谱图不会从原始数据文件重新导入，但峰整合信息可能发生改变。</value>
+  </data>
+  <data name="SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
+    <value>重复测定{0}包含的肽段不具有足够信息，无法针对触发采集排名离子对。</value>
+  </data>
+  <data name="SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0__replicates" xml:space="preserve">
+    <value>在时序安排中使用趋势至少需要 {0} 个重复测定。</value>
+  </data>
+  <data name="ShareListDlg_ImportFile_Do_you_want_to_replace_them" xml:space="preserve">
+    <value>您是否想要替换它们？</value>
+  </data>
+  <data name="ShareListDlg_ImportFile_The_following_names_already_exist" xml:space="preserve">
+    <value>下列名称已经存在：</value>
+  </data>
+  <data name="ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it" xml:space="preserve">
+    <value>名称“{0}”已经存在。您是否想要替换它？</value>
+  </data>
+  <data name="ShareListDlg_Label_Save__0__" xml:space="preserve">
+    <value>保存{0}</value>
+  </data>
+  <data name="ShareListDlg_Label_Select_the__0__you_want_to_save_to_a_file" xml:space="preserve">
+    <value>选择您想要保存至文件的{0}。</value>
+  </data>
+  <data name="ShareListDlg_ShareListDlg_Skyline_Settings" xml:space="preserve">
+    <value>Skyline 设置</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors_" xml:space="preserve">
+    <value>{0} 个离子对包含错误。</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_" xml:space="preserve">
+    <value>{0} 个离子对包含错误。跳过这些{0}离子对并导入剩余离子对？</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_" xml:space="preserve">
+    <value>继续峰边界导入忽视这些文件？</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_" xml:space="preserve">
+    <value>继续峰边界导入忽视这些肽段？</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_" xml:space="preserve">
+    <value>峰边界文件中的下列 {0} 个文件名称没有被识别：</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__" xml:space="preserve">
+    <value>峰边界文件中的下列 {0} 个肽段没有被识别：</value>
+  </data>
+  <data name="SkypSupport_Download_Downloading__0__from__1_" xml:space="preserve">
+    <value>正在从 {1} 下载 {0}</value>
+  </data>
+  <data name="SkypSupport_Open_Downloading_Skyline_Document_Archive" xml:space="preserve">
+    <value>下载 Skyline 文档存档</value>
+  </data>
+  <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
+    <value>打开 skyp 文件失败。</value>
+  </data>
+  <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
+    <value>从 {1} 下载 Skyline 文档 {0} 时出错。</value>
+  </data>
+</root>

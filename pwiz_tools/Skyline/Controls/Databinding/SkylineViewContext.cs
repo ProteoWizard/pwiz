@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -161,7 +160,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 var skylineWindow = SkylineDataSchema.SkylineWindow;
                 if (skylineWindow != null)
                 {
-                    skylineWindow.ModifyDocument(Resources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
+                    skylineWindow.ModifyDocument(DatabindingResources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
                     {
                         var oldViewNames = new HashSet<string>(
                             doc.Settings.DataSettings.ViewSpecList.ViewSpecs.Select(spec => spec.Name));
@@ -182,7 +181,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var skylineWindow = SkylineDataSchema.SkylineWindow;
             if (skylineWindow != null)
             {
-                skylineWindow.ModifyDocument(Resources.SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports, doc =>
+                skylineWindow.ModifyDocument(DatabindingResources.SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports, doc =>
                 {
                     var oldViewSpecList = doc.Settings.DataSettings.ViewSpecList;
                     var newViewSpecList = changeViewSpecFunc(oldViewSpecList);
@@ -255,15 +254,13 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool Export(Control owner, ViewInfo viewInfo)
         {
-            using (var saveFileDialog = new SaveFileDialog
+            using (var saveFileDialog = new SaveFileDialog())
             {
-                InitialDirectory = GetExportDirectory(),
-                OverwritePrompt = true,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV),
-                FileName = GetDefaultExportFilename(viewInfo),
-            })
-            {
+                saveFileDialog.InitialDirectory = GetExportDirectory();
+                saveFileDialog.OverwritePrompt = true;
+                saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
+                saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
+                saveFileDialog.FileName = GetDefaultExportFilename(viewInfo);
                 // TODO: If document has been saved, initial directory should be document directory
                 if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
                 {
@@ -305,15 +302,12 @@ namespace pwiz.Skyline.Controls.Databinding
                 return SafeWriteToFile(owner, fileName, stream =>
                 {
                     bool success = false;
-                    using (
-                        var longWait = new LongWaitDlg
-                        {
-                            Text = Resources.ExportReportDlg_ExportReport_Generating_Report
-                        })
+                    using (var longWait = new LongWaitDlg())
                     {
+                        longWait.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
                         var action = new Action<IProgressMonitor>(progressMonitor =>
                         {
-                            IProgressStatus status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
+                            IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
                             progressMonitor.UpdateProgress(status);
                             using (var writer = new StreamWriter(stream))
                             {
@@ -332,9 +326,8 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             catch (Exception x)
             {
-                Trace.TraceWarning(@"Error exporting to file: {0}", x);
                 MessageDlg.ShowWithException(owner,
-                    string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
+                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
                 return false;
             }
         }
@@ -358,6 +351,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
             progressMonitor ??= new SilentProgressMonitor(cancellationToken);
+            RowItemEnumerator rowItemEnumerator;
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
@@ -368,16 +362,17 @@ namespace pwiz.Skyline.Controls.Databinding
                         bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
                     }
                 }
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
-                    .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
-                if (progressMonitor.IsCanceled)
-                    return false;
-
-                writer.Flush();
-                progressMonitor.UpdateProgress(status = status.Complete());
+                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
             }
+
+            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
+                .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
+            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
+            if (progressMonitor.IsCanceled)
+                return false;
+            writer.Flush();
+            progressMonitor.UpdateProgress(status = status.Complete());
             return true;
         }
 
@@ -498,6 +493,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AttributeGroupId)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.SurrogateExternalStandard)));
                     foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
                         columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
                     if (docHasOnlyCustomIons)
@@ -550,6 +546,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.SpectrumFilter)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Transition))
@@ -638,13 +635,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
-            using (var saveFileDialog = new SaveFileDialog
+            using (var saveFileDialog = new SaveFileDialog())
             {
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS)
-            })
-            {
+                saveFileDialog.InitialDirectory = Settings.Default.ActiveDirectory;
+                saveFileDialog.CheckPathExists = true;
+                saveFileDialog.Filter = TextUtil.FileDialogFilterAll(DatabindingResources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS);
                 saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
                 if (!string.IsNullOrEmpty(saveFileDialog.FileName))
                 {
@@ -655,24 +650,30 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override void ExportViewsToFile(Control owner, ViewSpecList viewSpecList, string fileName)
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
-            SafeWriteToFile(owner, fileName, stream =>
+            try
             {
-                xmlSerializer.Serialize(stream, viewSpecList);
-                return true;
-            });
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+                SafeWriteToFile(owner, fileName, stream =>
+                {
+                    xmlSerializer.Serialize(stream, viewSpecList);
+                    return true;
+                });
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(owner,
+                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
+            }
         }
 
         public override void ImportViews(Control owner, ViewGroup group)
         {
-            using (var importDialog = new OpenFileDialog
+            using (var importDialog = new OpenFileDialog())
             {
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports,
-                    ReportSpecList.EXT_REPORTS)
-            })
-            {
+                importDialog.InitialDirectory = Settings.Default.ActiveDirectory;
+                importDialog.CheckPathExists = true;
+                importDialog.Filter = TextUtil.FileDialogFilterAll(DatabindingResources.ExportReportDlg_ShowShare_Skyline_Reports,
+                    ReportSpecList.EXT_REPORTS);
                 importDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
 
                 if (string.IsNullOrEmpty(importDialog.FileName))
@@ -693,13 +694,13 @@ namespace pwiz.Skyline.Controls.Databinding
             catch (Exception x)
             {
                 new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(
-                    string.Format(Resources.SkylineViewContext_ImportViews_Failure_loading__0__, fileName),
+                    string.Format(DatabindingResources.SkylineViewContext_ImportViews_Failure_loading__0__, fileName),
                     fileName, x.InnerException ?? x);
                 return;
             }
             if (!views.ViewSpecs.Any())
             {
-                ShowMessageBox(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
+                ShowMessageBox(owner, DatabindingResources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
                     MessageBoxButtons.OK);
                 return;
             }
@@ -724,7 +725,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             bool proteomic = dataSchema.DefaultUiMode == UiModes.PROTEOMIC;
             yield return MakeRowSource<Protein>(dataSchema, 
-                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : DatabindingResources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
                 () => new Proteins(dataSchema));
             yield return MakeRowSource<Model.Databinding.Entities.Peptide>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,

@@ -23,7 +23,6 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Themes;
@@ -41,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            YAxis.Title.Text = Resources.RTReplicateGraphPane_RTReplicateGraphPane_Measured_Time;
+            YAxis.Title.Text = GraphsResources.RTReplicateGraphPane_RTReplicateGraphPane_Measured_Time;
         }
 
         public bool UpdateUIOnLibraryChanged()
@@ -62,7 +61,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Clear();
             if (!resultsAvailable)
             {
-                Title.Text = Resources.RTReplicateGraphPane_UpdateGraph_No_results_available;
+                Title.Text = GraphsResources.RTReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -106,7 +105,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is PeptideGroupTreeNode) && !(selectedTreeNode is TransitionGroupTreeNode))
             {
-                Title.Text = Resources.RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph;
+                Title.Text = GraphsResources.RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph;
                 CanShowRTLegend = false;
                 return;
             }
@@ -148,8 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int selectedReplicateIndex = SelectedIndex;
             double minRetentionTime = double.MaxValue;
             double maxRetentionTime = -double.MaxValue;
-            int iColor = 0, iCharge = -1;
-            var charge = Adduct.EMPTY;
+            int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             int colorOffset = 0;
             var transitionGroupDocNode = parentNode as TransitionGroupDocNode;
@@ -190,11 +188,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             isSelected = true;
                         }
                     }
-                    else if (parentNode is PeptideDocNode)
+                    else if (parentNode is PeptideDocNode peptideDocNode)
                     {
                         // Resharper code inspection v9.0 on TC gets this one wrong
                         // ReSharper disable ExpressionIsAlwaysNull
-                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        int iColorGroup = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                         // ReSharper restore ExpressionIsAlwaysNull
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }
@@ -215,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
+                        label = string.Format(GraphsResources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     
                     CurveItem curveItem;
                     if(IsMultiSelect)
@@ -365,8 +363,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 Assume.IsNotNull(chromInfoData, @"chromInfoData");
                 Assume.IsNotNull(chromInfoData.ChromFileInfo, @"chromInfoData.ChromFileInfo");
-                RegressionLine regressionFunction;
-                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
+                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out _);
             }
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfoData)
@@ -384,7 +381,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var chromInfoData in chromInfoDatas)
                 {
                     var retentionTimeValues = getRetentionTimeValues(chromInfoData);
-                    RegressionLine regressionFunction = null;
+                    AlignmentFunction regressionFunction = null;
                     if (null != RetentionTimeTransform.RtTransformOp)
                     {
                         RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);

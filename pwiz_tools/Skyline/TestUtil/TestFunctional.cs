@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Excel;
@@ -34,9 +35,8 @@ using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
-using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
@@ -102,6 +102,22 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for use with odd characters in the TMP path (e.g. ^ and &amp;)
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with odd TMP paths
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoOddTmpPathTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
+
+        public NoOddTmpPathTestingAttribute(string reason)
+        {
+            Reason = reason; // e.g. "uses Java"[
+        }
+
+    }
+
+    /// <summary>
     /// Test method attribute which specifies a test is not suitable for parallel testing
     /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
     /// Note that the constructor expects a string explaining why a test is unsuitable for parallel use 
@@ -133,6 +149,10 @@ namespace pwiz.SkylineTestUtil
         public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
+        public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
+        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
+        public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
+        public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
     }
 
     /// <summary>
@@ -161,11 +181,6 @@ namespace pwiz.SkylineTestUtil
     {
         private const int SLEEP_INTERVAL = 100;
         public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
-
-        static AbstractFunctionalTest()
-        {
-            IsCheckLiveReportsCompatibility = false;
-        }
 
         private bool _testCompleted;
         private ScreenshotManager _shotManager;
@@ -240,7 +255,7 @@ namespace pwiz.SkylineTestUtil
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
             {
-                var messageDlg = existingDialog as AlertDlg;
+                var messageDlg = existingDialog as CommonAlertDlg;
                 if (messageDlg == null)
                     AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
@@ -269,7 +284,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected static TDlg ShowNestedDlg<TDlg>(Action act) where TDlg : Form
         {
-            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
+            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().Select(ReferenceValue.Of).ToHashSet();
             SkylineBeginInvoke(act);
             TDlg result = null;
             WaitForCondition(() => null != (result =
@@ -521,8 +536,7 @@ namespace pwiz.SkylineTestUtil
                     string[] fields = line.ParseDsvFields(TextUtil.SEPARATOR_CSV);
                     for (int i = 0; i < fields.Length; i++)
                     {
-                        double result;
-                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out result))
+                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out _))
                             fields[i] = fields[i].Replace(decimalSep, decimalIntl);
                     }
                     sb.AppendLine(fields.ToCsvLine());
@@ -973,16 +987,20 @@ namespace pwiz.SkylineTestUtil
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
             WaitForConditionUI(millis, () =>
-            {
-                var alertDlg = FindOpenForm<AlertDlg>();
-                if (alertDlg != null)
                 {
-                    AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
-                        TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
-                        new string('\n', 3), GetOpenFormsString());
-                }
-                return SkylineWindow.DocumentUI.IsLoaded;
-            });
+                    var alertDlg = FindOpenForm<CommonAlertDlg>();
+                    if (alertDlg != null)
+                    {
+                        AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
+                            TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
+                            new string('\n', 3), GetOpenFormsString());
+                    }
+
+                    return SkylineWindow.DocumentUI.IsLoaded;
+                },
+                () => TextUtil.LineSeparate(
+                    $"Expecting loaded document but still not loaded after {millis / 1000} seconds",
+                    TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptionsFull)));
             WaitForProteinMetadataBackgroundLoaderCompletedUI(millis);  // make sure document is stable
             return SkylineWindow.Document;
         }
@@ -1249,8 +1267,6 @@ namespace pwiz.SkylineTestUtil
 
         public bool IsFullData { get { return IsPauseForScreenShots || IsCoverShotMode || IsDemoMode || IsPass0; } }
 
-        public static bool IsCheckLiveReportsCompatibility { get; set; }
-
         public string LinkPdf { get; set; }
 
         private string LinkPage(int? pageNum)
@@ -1285,8 +1301,6 @@ namespace pwiz.SkylineTestUtil
             if (Program.SkylineOffscreen)
                 return;
 
-            if (IsCheckLiveReportsCompatibility)
-                CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             if (IsDemoMode)
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
@@ -1389,6 +1403,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form, Action cancelAction)
+        {
+            RunUI(cancelAction);
+            WaitForClosedForm(form);
+        }
+
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
@@ -1482,16 +1502,7 @@ namespace pwiz.SkylineTestUtil
             Program.TestExceptions = new List<Exception>();
             LocalizationHelper.InitThread();
 
-            // Unzip test files.
-            if (TestFilesZipPaths != null)
-            {
-                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                {
-                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
-                }
-            }
+            UnzipTestFiles();
 
             _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
 
@@ -1510,7 +1521,6 @@ namespace pwiz.SkylineTestUtil
             threadTest.Join();
 
             // Were all windows disposed?
-            FormEx.CheckAllFormsDisposed();
             CommonFormEx.CheckAllFormsDisposed();
         }
 
@@ -1791,6 +1801,9 @@ namespace pwiz.SkylineTestUtil
             return result.ToString();
         }
 
+        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
         private void WaitForSkyline()
         {
             try
@@ -1816,6 +1829,27 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
+                // if it's a file locking issue, wrap the exception to report the locking process
+                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
+                {
+                    var match = Regex.Match(ioException.Message, "'(.*)'");
+                    if (match.Success)
+                    {
+                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                        if (!File.Exists(lockedFilepath))
+                        {
+                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+                        }
+                        else
+                        {
+                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
+                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+                        }
+                    }
+                }
                 // Save exception for reporting from main thread.
                 Program.AddTestException(x);
             }
@@ -1978,7 +2012,7 @@ namespace pwiz.SkylineTestUtil
                 CloseOpenForm(ownedForm, openForms);
             }
 
-            var messageDlg = formToClose as AlertDlg;
+            var messageDlg = formToClose as CommonAlertDlg;
             // ReSharper disable LocalizableElement
             if (messageDlg == null)
                 Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
@@ -2152,8 +2186,7 @@ namespace pwiz.SkylineTestUtil
         public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)
         {
             // In a functional test we expect the protein metadata search to at least pretend to have gone to the web
-            WaitForCondition(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document)); // Make sure doc is stable
-            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI)); // Then make sure UI ref is current
+            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI));
             return SkylineWindow.Document;
         }
 
@@ -2174,22 +2207,88 @@ namespace pwiz.SkylineTestUtil
             ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
-        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
+        private static SrmDocument DoSmallMoleculeListPaste(string text)
+        {
+            var docOrig = SkylineWindow.Document;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (!text.Contains(Environment.NewLine) && File.Exists(text))
+                {
+                    text = File.ReadAllText(text); // That was a filename rather than a transition list
+                }
+                SetClipboardText(text);
+            }
+            var confirmColumnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            OkDialog(confirmColumnsDlg, confirmColumnsDlg.OkDialog);
+            return docOrig;
+        }
+
+        // Paste a small molecule transition list with no expectation of an offer to automanage
+        public static SrmDocument PasteSmallMoleculeList(string text = null)
+        {
+            var docOrig = DoSmallMoleculeListPaste(text);
+            return WaitForDocumentChangeLoaded(docOrig);
+        }
+
+        // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
+        // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
+        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
+        {
+            var docOrig = DoSmallMoleculeListPaste(text);
+            DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+            return WaitForDocumentChangeLoaded(docOrig);
+        }
+
+        // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
+        // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
+        public static void DismissAutoManageDialog()
+        {
+            var autoManageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            // Make sure it has the right message
+            AssertEx.AreComparableStrings(Resources
+                    .SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                autoManageDlg.Message, 4);
+            OkDialog(autoManageDlg, autoManageDlg.ClickNo); // Just use the transitions as given in the list
+        }
+
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true, bool expectAutoManageDialog = false)
         {
             var columnSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
-
+            var currentDoc = SkylineWindow.Document;
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+
+                // When asked about automanage, decline
+                if (expectAutoManageDialog)
+                {
+                    DismissAutoManageDialog();
+                }
             }
             else
             {
                 // We're expecting errors, collect them then move on
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
+
+                // Check for a scenario discovered 7-5-23 where interaction of "check for errors" dialog results in improper
+                // error handling: user isn't given the chance to cancel after OK if errors were previously reviewed
+                // 
+                // In column select dialog, hit OK
+                // Get the error dialog, hit cancel - takes you back to column select
+                // In column select, hit "Check for Errors"
+                // Get the error dialog, hit OK - takes you back to column select
+                // In column select dialog, hit OK - skips right over the expected error check dialog
+                OkDialog(errDlg, errDlg.CancelDialog); // Cancel the error window rather than accepting - should take us back to column select dialog
+                WaitForClosedForm(errDlg);
+                errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.CheckForErrors);
+                OkDialog(errDlg, errDlg.OkDialog); // Acknowledge the error should take us back to column select dialog
+                WaitForClosedForm(errDlg);
+                errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog); // Should take us back to the error dialog that asks about proceeding with errors
+
                 errorList.Clear();
                 foreach (var err in errDlg.ErrorList)
                 {
@@ -2199,6 +2298,11 @@ namespace pwiz.SkylineTestUtil
                 {
                     OkDialog(errDlg, errDlg.AcceptButton.PerformClick);
                     WaitForClosedForm(columnSelectDlg);
+                    // When asked about automanage, decline
+                    if (expectAutoManageDialog)
+                    {
+                        DismissAutoManageDialog();
+                    }
                 }
                 else
                 {
@@ -2219,22 +2323,22 @@ namespace pwiz.SkylineTestUtil
             AssertEx.IsTrue(!items.Any(forbidden.Contains));
         }
 
-        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true, bool expectAutoManageDialog = false)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors, expectAutoManageDialog);
         }
 
-        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)
+        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true, bool expectAutoManageDialog = false)
         {
-            PasteTransitionListSkipColumnSelect(SkylineWindow.Paste, expectColumnSelectDialog);
+            PasteTransitionListSkipColumnSelect(SkylineWindow.Paste, expectColumnSelectDialog, expectAutoManageDialog);
         }
 
-        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true)
+        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true, bool expectAutoManageDialog = false)
         {
-            PasteTransitionListSkipColumnSelect(() => SkylineWindow.Paste(text), expectColumnSelectDialog);
+            PasteTransitionListSkipColumnSelect(() => SkylineWindow.Paste(text), expectColumnSelectDialog, expectAutoManageDialog);
         }
 
-        private static void PasteTransitionListSkipColumnSelect(Action pasteAction, bool expectColumnSelectDialog)
+        private static void PasteTransitionListSkipColumnSelect(Action pasteAction, bool expectColumnSelectDialog, bool expectAutoManageDialog = false)
         {
             if (expectColumnSelectDialog)
             {
@@ -2247,12 +2351,17 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(pasteAction);
             }
+            // When asked about automanage, decline
+            if (expectAutoManageDialog)
+            {
+                DismissAutoManageDialog();
+            }
         }
 
         public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
         {
             var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
-            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
             Assert.IsTrue(match.Success);
             string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
             if (sign == "+") sign = string.Empty;
@@ -2264,6 +2373,11 @@ namespace pwiz.SkylineTestUtil
         public static PeptideSettingsUI ShowPeptideSettings()
         {
             return ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+        }
+
+        public static PeptideSettingsUI ShowPeptideSettings(PeptideSettingsUI.TABS settingsTab)
+        {
+            return ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(settingsTab));
         }
 
         public static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditStaticModsDlg(PeptideSettingsUI peptideSettingsUI)
@@ -2311,24 +2425,24 @@ namespace pwiz.SkylineTestUtil
             OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
-        public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
+        public static void AddStaticMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, isVariable, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
         public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, false, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
-        private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        private static void AddMod(string uniModName, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            RunUI(() => addStaticModDlg.SetModification(uniModName));
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
             OkDialog(editModsDlg, editModsDlg.OkDialog);
@@ -2385,8 +2499,11 @@ namespace pwiz.SkylineTestUtil
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
-                Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelDialog();
+                OkDialog(dlg, () =>
+                {
+                    StringAssert.Contains(dlg.Message, expectedErrorMessage);
+                    dlg.CancelButton.PerformClick();
+                });
             }
             else
             {
@@ -2483,119 +2600,46 @@ namespace pwiz.SkylineTestUtil
             WaitForDocumentChange(doc);
         }
 
+        public void VerifyAllTransitionsHaveChromatograms()
+        {
+            var doc = WaitForDocumentLoaded();
+            var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            foreach (var molecule in doc.Molecules)
+            {
+                foreach (var precursor in molecule.TransitionGroups)
+                {
+                    foreach (var chromatogramSet in doc.MeasuredResults.Chromatograms)
+                    {
+                        ChromatogramGroupInfo[] chromatogramGroups;
+                        Assert.IsTrue(doc.MeasuredResults.TryLoadChromatogram(chromatogramSet, molecule, precursor, tolerance, out chromatogramGroups));
+                        Assert.AreEqual(1, chromatogramGroups.Length);
+                        foreach (var transition in precursor.Transitions)
+                        {
+                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(transition, tolerance);
+                            Assert.IsNotNull(chromatogram);
+                        }
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region Spectral library test helpers
 
         public static IList<DbRefSpectra> GetRefSpectra(string filename)
         {
-            using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", filename)))
-            {
-                connection.Open();
-                return GetRefSpectra(connection);
-            }
-        }
-
-        private static double? ParseNullable(SQLiteDataReader reader, int ordinal)
-        {
-            if (ordinal < 0)
-                return null;
-            var str = reader[ordinal].ToString();
-            if (string.IsNullOrEmpty(str))
-                return null;
-            return double.Parse(str);
+            return SpectralLibraryTestUtil.GetRefSpectraFromPath(filename);
         }
 
         public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
         {
-            var list = new List<DbRefSpectra>();
-            var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
-            using (var reader = @select.ExecuteReader())
-            {
-                var iAdduct = reader.GetOrdinal("precursorAdduct");
-                var iIonMobility = reader.GetOrdinal("ionMobility");
-                var iIonMobilityHighEnergyOffset = reader.GetOrdinal("ionMobilityHighEnergyOffset");
-                var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
-                var noMoleculeDetails = reader.GetOrdinal("moleculeName") < 0; // Also a cue for presence of chemicalFormula, inchiKey, and otherKeys
-                while (reader.Read())
-                {
-                    var refSpectrum = new DbRefSpectra
-                    {
-                        PeptideSeq = reader["peptideSeq"].ToString(),
-                        PeptideModSeq = reader["peptideModSeq"].ToString(),
-                        PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
-                        PrecursorAdduct = iAdduct < 0 ? string.Empty : reader[iAdduct].ToString(),
-                        PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
-                        RetentionTime = double.Parse(reader["retentionTime"].ToString()),
-                        IonMobility = ParseNullable(reader, iIonMobility),
-                        IonMobilityHighEnergyOffset = ParseNullable(reader, iIonMobilityHighEnergyOffset),
-                        CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
-                        MoleculeName = noMoleculeDetails ? string.Empty : reader["moleculeName"].ToString(),
-                        ChemicalFormula = noMoleculeDetails ? string.Empty : reader["chemicalFormula"].ToString(),
-                        InChiKey = noMoleculeDetails ? string.Empty : reader["inchiKey"].ToString(),
-                        OtherKeys = noMoleculeDetails ? string.Empty : reader["otherKeys"].ToString(),
-                        NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
-                    };
-                    if (hasAnnotations)
-                    {
-                        var id = int.Parse(reader["id"].ToString());
-                        var annotations = GetRefSpectraPeakAnnotations(connection, refSpectrum, id);
-                        refSpectrum.PeakAnnotations = annotations;
-                    }
-                    list.Add(refSpectrum);
-                }
-
-                return list;
-            }
-        }
-
-        private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection, DbRefSpectra refSpectrum, int refSpectraId)
-        {
-            var list = new List<DbRefSpectraPeakAnnotations>();
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId })
-            using (var reader = @select.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    list.Add(new DbRefSpectraPeakAnnotations
-                    {
-
-                        RefSpectra = refSpectrum,
-                        Id = int.Parse(reader["id"].ToString()),
-                        PeakIndex = int.Parse(reader["peakIndex"].ToString()),
-                        Charge = int.Parse(reader["charge"].ToString()),
-                        Adduct = reader["adduct"].ToString(),
-                        mzTheoretical = double.Parse(reader["mzTheoretical"].ToString()),
-                        mzObserved = double.Parse(reader["mzObserved"].ToString()),
-                        Name = reader["name"].ToString(),
-                        Formula = reader["formula"].ToString(),
-                        InchiKey = reader["inchiKey"].ToString(),
-                        OtherKeys = reader["otherKeys"].ToString(),
-                        Comment = reader["comment"].ToString(),
-                    });
-                }
-                return list;
-            }
+            return SpectralLibraryTestUtil.GetRefSpectra(connection);
         }
 
         public static void CheckRefSpectra(IList<DbRefSpectra> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, ushort numPeaks, double rT, IonMobilityAndCCS im = null)
         {
-            for (var i = 0; i < spectra.Count; i++)
-            {
-                var spectrum = spectra[i];
-                if (spectrum.PeptideSeq.Equals(peptideSeq) &&
-                    spectrum.PeptideModSeq.Equals(peptideModSeq) &&
-                    spectrum.PrecursorCharge.Equals(precursorCharge) &&
-                    Math.Abs((spectrum.RetentionTime ?? 0) - rT) < 0.001 &&
-                    Math.Abs(spectrum.PrecursorMZ - precursorMz) < 0.001 &&
-                    spectrum.NumPeaks.Equals(numPeaks))
-                {
-                    spectra.RemoveAt(i);
-                    return;
-                }
-            }
-            Assert.Fail("{0} [{1}], precursor charge {2}, precursor m/z {3}, RT {4} with {5} peaks not found", peptideSeq, peptideModSeq, precursorCharge, precursorMz, rT, numPeaks);
+            SpectralLibraryTestUtil.CheckRefSpectra(spectra, peptideSeq, peptideModSeq, precursorCharge, precursorMz, numPeaks, rT, im);
         }
 
         #endregion

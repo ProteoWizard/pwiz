@@ -51,7 +51,7 @@ namespace SkylineTester
         public const string SkylineTesterFiles = "SkylineTester Files";
 
         public const string DocumentationLink =
-            "https://skyline.gs.washington.edu/labkey/wiki/home/development/page.view?name=SkylineTesterDoc";
+            "https://skyline.ms/wiki/home/development/page.view?name=SkylineTesterDoc";
 
         public string Git { get; private set; }
         public string Devenv { get; private set; }
@@ -477,9 +477,7 @@ namespace SkylineTester
                 var myId = Process.GetCurrentProcess().Id;
                 var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
                 var search = new ManagementObjectSearcher("root\\CIMV2", query);
-                var results = search.Get().GetEnumerator();
-                results.MoveNext();
-                var queryObj = results.Current;
+                var queryObj = search.Get().Cast<ManagementBaseObject>().First();
                 var parentId = (uint) queryObj["ParentProcessId"];
                 var parent = Process.GetProcessById((int) parentId);
                 // Only go interactive if our parent process is not named "SkylineNightly"
@@ -1088,6 +1086,7 @@ namespace SkylineTester
                 runParallel,
                 runSerial,
                 parallelWorkerCount,
+                coverageCheckbox,
 
                 // Build
                 buildTrunk,
@@ -1517,6 +1516,7 @@ namespace SkylineTester
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
         public RadioButton      RunParallel                 { get { return runParallel; } }
+        public CheckBox         RunCoverage                 { get { return coverageCheckbox; } }
         public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
@@ -1949,6 +1949,29 @@ namespace SkylineTester
             labelParallelOffscreenHint.Location = Offscreen.Location;
             Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
             labelParallelOffscreenHint.Visible = !Offscreen.Visible;
+
+            if (runSerial.Checked)
+            {
+                coverageCheckbox.Checked = false;
+                coverageCheckbox.Enabled = false;
+            }
+            else
+            {
+                coverageCheckbox.Enabled = true;
+            }
+        }
+
+        private void coverageCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (coverageCheckbox.Checked)
+            {
+                runSerial.Enabled = false;
+                runParallel.Checked = true;
+            }
+            else
+            {
+                runSerial.Enabled = true;
+            }
         }
 
         #endregion Control events

@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>Z:\html\software\SkylineBatch-daily\</PublishUrl>
+    <PublishUrl>T:\www\site\skyline.ms\html\software\SkylineBatch24\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,14 +23,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-daily/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch24/</InstallUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline Batch</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>312</ApplicationRevision>
-    <ApplicationVersion>21.1.1.312</ApplicationVersion>
+    <ApplicationRevision>459</ApplicationRevision>
+    <ApplicationVersion>23.1.1.459</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -60,7 +60,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>19870CA6C934F1DFEADFC678B704FD5CEF4C7F0B</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>
@@ -102,6 +102,8 @@
     </Content>
     <None Include="Resources\Panorama.png" />
     <None Include="Resources\PanoramaSelected.png" />
+    <None Include="Resources\Panorama.bmp" />
+    <None Include="Resources\OpenRemoteFolder.png" />
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -115,6 +117,9 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="DownloadDlg.resx">
+      <DependentUpon>DownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DownloadingFileControl.resx">
       <DependentUpon>DownloadingFileControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -123,6 +128,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RemoteFileControl.resx">
       <DependentUpon>RemoteFileControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="RemoteFileForm.resx">
       <DependentUpon>RemoteFileForm.cs</DependentUpon>
@@ -184,6 +190,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DownloadDlg.Designer.cs">
+      <DependentUpon>DownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="DownloadingFileControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -195,6 +207,11 @@
     </Compile>
     <Compile Include="EditRemoteFileSourcesForm.Designer.cs">
       <DependentUpon>EditRemoteFileSourcesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="RemoteFileControl.cs">
       <SubType>UserControl</SubType>
@@ -221,11 +238,6 @@
       <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DataServerInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="RDirectorySelector.cs" />
     <Compile Include="CommandArgNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -395,6 +407,14 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
       <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
       <Name>SharedBatch</Name>

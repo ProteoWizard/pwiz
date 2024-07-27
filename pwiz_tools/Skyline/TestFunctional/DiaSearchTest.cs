@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 104, PeptideCount = 109, PrecursorCount = 128, TransitionCount = 1152 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 79, PeptideCount = 84, PrecursorCount = 99, TransitionCount = 891 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0")
@@ -259,7 +259,7 @@ namespace pwiz.SkylineTestFunctional
             //    FileEx.SafeDelete(file);
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestFunctional
                     ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
                 RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
                 {
-                    editModDlg.SetModification("Oxidation (M)", true); // Not L10N
+                    editModDlg.SetModification("Oxidation (M)"); // Not L10N
                     editModDlg.OkDialog();
                 });
 
@@ -367,6 +367,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -442,7 +443,7 @@ namespace pwiz.SkylineTestFunctional
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
                 // Cancel search
@@ -500,8 +501,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;    // default q value is 0.01
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
             });
 

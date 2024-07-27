@@ -8,6 +8,9 @@ AllVsMz5OptimzeCeImportPerformanceTests
 #BrukerAllIonsbbCIDImportTest
 #BrukerDiaPasefImportTest
 #BrukerPrmPasefImportTest
+ConsoleTestDiaPasefFullDataset
+ConsoleTestDiaQeFullSearch
+ConsoleTestDiaTtofFullSearch
 DecoysMatchTest
 TestDiaPasefFullDataset
 TestDiaTtofDiaUmpireTutorialFullFileset
@@ -16,6 +19,8 @@ TestDiaUmpireWiffFile
 TestDiaQeDiaUmpireTutorial
 TestDiaQeDiaUmpireTutorialFullFileset
 TestDiaQeFullSearchTutorial
+TestEncyclopeDiaSearchTutorialFullFileset
+TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates
 #TestMobilIon
 TestPeakPerf

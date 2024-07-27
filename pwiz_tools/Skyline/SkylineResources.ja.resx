@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool" xml:space="preserve">
+    <value> があり、</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_" xml:space="preserve">
+    <value>競合レポート：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_" xml:space="preserve">
+    <value>競合レポート：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_" xml:space="preserve">
+    <value>競合ツール：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports" xml:space="preserve">
+    <value>エラー： ファイルには{0}個の競合するレポート</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report" xml:space="preserve">
+    <value>エラー： 競合するレポートがあります。</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_" xml:space="preserve">
+    <value>上書きレポート：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_" xml:space="preserve">
+    <value>上書きレポート：{0}</value>
+  </data>
+  <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
+    <value>--background-proteome-file操作でインポートされたprotdbに与える名前</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>ドウェル時間{0}は{1}から{2}の間でなければなりません。</value>
+  </data>
+  <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
+    <value>エラー：引数{0}と{1}のオプションは併用できません。</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_" xml:space="preserve">
+    <value>下記の引数を使用して[ツール]メニューにツールをインストールできます。これらの引数は特定のSkylineドキュメントには依存していないので、「--in」引数に依存することはありません。</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_Tools_Installation" xml:space="preserve">
+    <value>ツールのインストール</value>
+  </data>
+  <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
+    <value>装置タイプ{0}が単離リストエクスポートに対し、有効ではありません</value>
+  </data>
+  <data name="CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export" xml:space="preserve">
+    <value>装置タイプ{0}がメソッドエクスポートに対し、有効ではありません</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0}または「{1}」</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
+    <value>エラー： 正規表現{0}には構文解析を行うことができません。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
+    <value>エラー： 指定の作業ディレクトリ{0}は存在しません。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
+    <value>エラー： 予期しない引数 --{0}</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
+    <value>単離リストはエクスポートされません。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_method_will_be_exported_" xml:space="preserve">
+    <value>メソッドはエクスポートされません。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_" xml:space="preserve">
+    <value>トランジションリストはエクスポートされません。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_" xml:space="preserve">
+    <value>警告： --tool-program-macroコマンドの間違った使用。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_" xml:space="preserve">
+    <value>警告： 装置タイプ{0}が有効ではありません。次から選択してください：</value>
+  </data>
+  <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>エラー：不明なオブジェクト名「{0}」を除外しようとしています。次のいずれかをお試しください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>プライマリトランジション数{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>実行長さ{0}は{1}から{2}の間でなければなりません。</value>
+  </data>
+  <data name="CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_" xml:space="preserve">
+    <value>装置パラメータ{0}は最適化に有効ではありません。</value>
+  </data>
+  <data name="CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export" xml:space="preserve">
+    <value>装置タイプ{0}がトランジションリストエクスポートに対し、有効ではありません</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__" xml:space="preserve">
+    <value>エラー：モデルカットオフ({0})は、ゼロより大きく{1}未満で、降順でなければなりません。</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_" xml:space="preserve">
+    <value>エラー：モデルカットオフはSkylineデフォルトモデルの校正に適用できません。</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
+    <value>引数{0}を使用するには、以下のいずれかの引数が必要です。</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_" xml:space="preserve">
+    <value>エラー：{0}が正規表現と一致しません。</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__" xml:space="preserve">
+    <value>エラー： 正規表現に一致が{0}に対して空です。</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>試料名「{0}」がパターン「{1}」と一致しません。{2}を無視します</value>
+  </data>
+  <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
+    <value>イオン移動度ライブラリ「{0}」を「{1}」に作成しています...</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>エラー： スコアモデルの作成に失敗しました。</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>エラー： ドキュメントにデコイペプチドがありません。スコアモデルの作成に失敗しました。</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>フィーチャースコア「{0}」を除外中</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>フィーチャースコアを除外中：</value>
+  </data>
+  <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
+    <value>エラー：デフォルトのSkylineモデルではフィーチャースコアを除外できません。</value>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
+    <value>エラー：注釈ファイル{0}の保存に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_" xml:space="preserve">
+    <value>クロマトグラムファイル{0}が正常にエクスポートされました。</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
+    <value>エラー： 1つ以上のクロマトグラムタイプを選択しなければなりません</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_" xml:space="preserve">
+    <value>エラー： クロマトグラムファイル{0}の保存に失敗しました</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results" xml:space="preserve">
+    <value>エラー： ドキュメントには、インポート結果が必要です</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
+    <value>クロマトグラムファイル{0}をエクスポート中...</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
+    <value>エラー： --exp-file=path/to/fileパラメータを使用して書き込む出力ファイルを指定しなければなりません。トランジションリストはエクスポートされません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
+    <value>エラー：{0}装置は、トリガーされた取得に対する直接メソッドエクスポートをサポートしていません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_" xml:space="preserve">
+    <value>エラー： ファイル{0}を保存できませんでした。 指定されたファイルディレクトリが存在し、書き込みが可能か確認します。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_" xml:space="preserve">
+    <value>エラー： フォルダ{0}には、Agilent QQQメソッドテンプレートが含まれていないようです。 フォルダには.m拡張子が付き、qqqacqmethod.xsdファイルを含むと予測されています。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
+    <value>エラー：装置タイプ{0}はトリガーされた取得をサポートしていません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_" xml:space="preserve">
+    <value>エラー：保持時間予測カルキュレータではスコアすることができません。 カルキュレータ設定を確認します。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_" xml:space="preserve">
+    <value>エラー：保持時間予測式では回帰を自動計算できません。 必要なすべての標準ペプチドに対する時間がドキュメントに含まれていることを確認します。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_" xml:space="preserve">
+    <value>エラー：指定された繰り返し測定{0}がドキュメントに存在していません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_" xml:space="preserve">
+    <value>エラー： テンプレートの拡張子{0}が装置{1}に期待されている拡張子と一致しません。メソッドはエクスポートされません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>エラー：スケジュールメソッドをエクスポートするには、まず [ペプチド設定/予測] で保持時間予測を選択する必要があります。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_" xml:space="preserve">
+    <value>エラー： スケジュールメソッドをエクスポートするには、まずドキュメント内のすべてのペプチドに対する結果をインポートする必要があります。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>フォルダ{0}にはAgilent MassHunter 12メソッドテンプレートが含まれていないようです。このフォルダには拡張子.mが必要です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
+    <value>警告： インジェクション毎の最大トランジションは、エクスポート方法「タンパク質」と「バケット」、またスケジュールメソッドに対し、{0}と{1}の間の値に設定されなければなりません。{3}が指定されました。{2}にデフォルト中。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
+    <value>警告： エクスポート方法が指定されていません（「単一」、「タンパク質」、「バケット」の中から）。「単一」にデフォルト中。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_" xml:space="preserve">
+    <value>警告： add-energy-rampパラメータはThermoトランジションリストに対してのみ適用可能です。このパラメータは無視されます。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___" xml:space="preserve">
+    <value>警告： ベンダー{0}はCEまたはDP予測設定のどちらかのベンダーと一致しません。 とりあえずトランジションリストのエクスポートの続行中...</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
+    <value>{0}トランジションリストをエクスポートし、ベンダーソフトウェアを使用して手動でメソッドファイルにインポートする必要があります。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_" xml:space="preserve">
+    <value>読み取り専用でないことを確認します。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
+    <value>エラー： {0}レポートの{1}への保存に失敗しました。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
+    <value>エラー： レポート{0}を{1}に保存できませんでした。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
+    <value>エラー： レポート{0}が存在していません。名前に空白がある場合、コマンドパラメータのリスト全体に「二重引用符」を使用します。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Exporting_report__0____" xml:space="preserve">
+    <value>レポート{0}のエクスポート中...</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__" xml:space="preserve">
+    <value>レポート{0}が{1}に正常にエクスポートされました。</value>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
+    <value>エラー：mProphetフィーチャーファイル{0}の保存に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__" xml:space="preserve">
+    <value>エラー：スペクトルライブラリファイル{0}の保存に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__" xml:space="preserve">
+    <value>警告： バックグラウンドプロテオームファイル{0}が見つかりませんでした。</value>
+  </data>
+  <data name="CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__" xml:space="preserve">
+    <value>エラー： イオン移動度ライブラリ{0}を見つけることができませんでした。</value>
+  </data>
+  <data name="CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__" xml:space="preserve">
+    <value>エラー： iRTデータベース{0}が見つかりませんでした。</value>
+  </data>
+  <data name="CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__" xml:space="preserve">
+    <value>最適化ライブラリ{0}を見つけることができませんでした。</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__" xml:space="preserve">
+    <value>エラー： ディレクトリ{0}からのファイル情報の読み取りに失敗しました。</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__" xml:space="preserve">
+    <value>エラー： ディレクトリ{0}内でデータソースが見つかりませんでした。</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
+    <value>エラー：注釈の読み取り中に失敗しました。</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_" xml:space="preserve">
+    <value>エラー： ピーク境界のインポートに失敗しました。</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_" xml:space="preserve">
+    <value>{0}からピーク境界をインポート</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
+    <value>{0} -&gt; {1} メモ： ファイルは既にインポートされています。無視...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Adding_results___" xml:space="preserve">
+    <value>結果の追加中...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___" xml:space="preserve">
+    <value>ファイル書き込み日{0}が、--import-before日{1}より後です。無視...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
+    <value>ファイル書き込み日{0}が、--import-on-or-after日{1}より前です。無視...</value>
+  </data>
+  <data name="CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__" xml:space="preserve">
+    <value>エラー： ファイル{0}の最終書き込み時間が取得できませんでした。</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
+    <value>1修飾を追加中。</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Loading_library" xml:space="preserve">
+    <value>ライブラリの読み込み中</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__" xml:space="preserve">
+    <value>警告： 結果ファイル'{0}'を特定できません</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+    <value>iRT標準は{0}に設定されていますが、複数のiRT標準が見つかりました。iRT標準は明示的に設定される必要があります。</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
+    <value>iRT標準名「{0}」は無効です。</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
+    <value>エラー：{0}の読み込みに失敗しました。</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_" xml:space="preserve">
+    <value>エラー：{0}は存在していません。--report-addコマンドに失敗しました。</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+    <value>エラー：{0}からレポートをインポートできませんでした</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__" xml:space="preserve">
+    <value>エラー：{0}からのツールのインストールがキャンセルされました。</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_" xml:space="preserve">
+    <value>エラー：zipからツールをインポートするには、パスを指定しなければなりません。--tool-add-zipが既存のパスの後に続かなければなりません。</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Installing_tools_from__0_" xml:space="preserve">
+    <value>{0}からツールのインストール中</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_" xml:space="preserve">
+    <value>エラー：インポート済みのアッセイライブラリ{0}にはイオン存在量の値がありません。</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_" xml:space="preserve">
+    <value>エラー：インポート済みのアッセイライブラリ{0}にはiRTおよびイオン付加物の値がありません。</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_" xml:space="preserve">
+    <value>エラー：インポート済みのアッセイライブラリ{0}にはiRT値がありません。</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_" xml:space="preserve">
+    <value>iRTトランジションリスト{0}をインポート中</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
+    <value>追加されました：{0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
+    <value>削除されました：{0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
+    <value>クロマトグラムノイズを:ピーク周り+/- {0}分に制限しています...</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
+    <value>結果を{0}に最小化</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
+    <value>使用していないクロマトグラムを削除しています...</value>
+  </data>
+  <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
+    <value>エラー：新しく追加された結果はありません。パノラマインポートをスキップします。</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
+    <value>{0}の1つを選択します。</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_" xml:space="preserve">
+    <value>エラー：標識タイプ「{0}」がドキュメントに見つかりませんでした。</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_" xml:space="preserve">
+    <value>エラー： 正常なピーク再積分に失敗しました。</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_" xml:space="preserve">
+    <value>エラー： 現在のピークスコアモデルは、ドキュメント内の1つ以上のペプチドと互換性がありません。新しいモデルをトレーニングしてください。</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__" xml:space="preserve">
+    <value>エラー： 不明なピークスコアモデル'{0}'</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
+    <value>エラー： 再積分の前にまず結果をドキュメントにインポートしなければなりません。</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removed__0__" xml:space="preserve">
+    <value>削除{0}。</value>
+    <comment>Context is removed file</comment>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_all_results" xml:space="preserve">
+    <value>すべての結果を削除中</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
+    <value>前に結果を削除中 </value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_" xml:space="preserve">
+    <value>エラー： 最適化機能{0}の取得に失敗しました。{1}</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_open_log_file__0_" xml:space="preserve">
+    <value>エラー：ログファイル{0}を開くのに失敗しました</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
+    <value>エラー：不具合が発生しました。終了します...</value>
+  </data>
+  <data name="CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__" xml:space="preserve">
+    <value>エラー： トランジションリストとメソッドを同時にエクスポートすることはできません。 どちらもエクスポートされません。コマンド行パラメータを変更してください。</value>
+  </data>
+  <data name="CommandLine_Run_Exiting___" xml:space="preserve">
+    <value>終了中...</value>
+  </data>
+  <data name="CommandLine_Run_Not_setting_library_" xml:space="preserve">
+    <value>設定ライブラリではありません。</value>
+  </data>
+  <data name="CommandLine_Run_Writing_to_log_file__0_" xml:space="preserve">
+    <value>ログファイル{0}に書き込み中</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_" xml:space="preserve">
+    <value>エラー：{0}は存在していません。--batch-commandsに失敗しました。</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_" xml:space="preserve">
+    <value>エラー：ファイル{0}を開く際に失敗しました。--batch-commandsコマンドに失敗しました。</value>
+  </data>
+  <data name="CommandLine_SaveFile_Saving_file___" xml:space="preserve">
+    <value>ファイルの保存中...</value>
+  </data>
+  <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
+    <value>エラー：ユーザー設定ファイルへの保存に失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetAnnotations_" xml:space="preserve">
+    <value>エラー：「{0}」というタイトルの注釈が既に存在しています。--annotation-conflict-resolution= &lt;overwrite | skip&gt;を使用してください。「{0}」というタイトルの注釈は追加されませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
+    <value>エラー：トランジションフィルタ設定の変更に失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_" xml:space="preserve">
+    <value>エラー： トランジションフルスキャン設定の変更に失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__" xml:space="preserve">
+    <value>イオン移動度スペクトルライブラリの分解能を{0}に変更しています。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_" xml:space="preserve">
+    <value>スペクトルライブラリにおけるイオン移動度の値に基づいて抽出を有効にします。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
+    <value>エラー：イオン移動度の設定を変更できませんでした。</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>エラー：トランジション装置設定を変更しようとして失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
+    <value>エラー： ファイル{0}は非冗長ライブラリのようです。</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>エラー：トランジションライブラリ設定を変更しようとして失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
+    <value>エラー：ペプチド消化設定の変更に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
+    <value>エラー：ペプチドフィルタ設定の変更に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
+    <value>エラー：トランジション予測設定の変更に失敗しました。</value>
+  </data>
+  <data name="CommandProgressMonitor_UpdateProgressInternal_Message__" xml:space="preserve">
+    <value>メッセージ：</value>
+  </data>
+  <data name="CommandWaitBroker_UpdateProgress_Waiting___" xml:space="preserve">
+    <value>待機中...</value>
+  </data>
+  <data name="CommandWaitBroker_Wait_Done" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_" xml:space="preserve">
+    <value>以下の名前が既に存在しています：
+
+{0}
+
+</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_" xml:space="preserve">
+    <value>「{0}」という名前が既に存在しています。</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
+    <value>エラー：サーバー{1}にあるパノラマフォルダー「{0}」へのアクセスを確認しようとして不明なエラーが発生しました。
+{2}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
+    <value>エラー：パノラマフォルダーへのアクセスを確認できません。
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
+    <value>エラー：パノラマサーバー情報を確認できません。
+{0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>Panoramaにアップロードしようとした際に不明なエラーが発生しました。
+{0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>エラー：パノラマサーバー{0}でインポートエラーが発生しました。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>エラー：パノラマサーバー{0}でドキュメントのインポートがキャンセルされました。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_" xml:space="preserve">
+    <value>エラー詳細は{0}で確認可能です</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
+    <value>ジョブの詳細は{0}で見ることができます。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>ドキュメントをPanoramaにアップロード中</value>
+  </data>
+  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
+    <value>以前のインストールからの外部ツールのコピーエラー</value>
+  </data>
+  <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
+    <value>以前のインストールから外部ツールのコピー中</value>
+  </data>
+  <data name="Program_Main_Install_32_bit__0__" xml:space="preserve">
+    <value>32ビット{0}をインストール</value>
+  </data>
+  <data name="Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version" xml:space="preserve">
+    <value>32ビットOSで{0}の64ビットバージョンを実行しようとしています。32ビットバージョンをインストールしてください。</value>
+  </data>
+  <data name="SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching" xml:space="preserve">
+    <value>切り替える前に現在の設定を保存しますか？</value>
+  </data>
+  <data name="SkylineWindow_Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_custom_product_ion__0_" xml:space="preserve">
+    <value>カスタムプロダクトイオン{0}を追加</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_Transition" xml:space="preserve">
+    <value>トランジションを追加</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
+    <value>カスタム分子はペプチドリストに追加できません。</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_protein_" xml:space="preserve">
+    <value>カスタム分子はタンパク質に追加できません。</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Precursor" xml:space="preserve">
+    <value>プリカーサーを追加</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
+    <value>分子{0}を追加</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
+    <value>分子とプリカーサーを追加</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
+    <value>分子プリカーサー{0}を追加</value>
+  </data>
+  <data name="SkylineWindow_AddStandardsToDocument_Add_standard_peptides" xml:space="preserve">
+    <value>標準ペプチドを追加</value>
+  </data>
+  <data name="SkylineWindow_BuildAreaGraphMenu_Show_Expected" xml:space="preserve">
+    <value>期待値を表示</value>
+  </data>
+  <data name="SkylineWindow_BuildAreaGraphMenu_Show_Library" xml:space="preserve">
+    <value>ライブラリを表示</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>Panoramaアップロード場所を保管</value>
+  </data>
+  <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
+    <value>設定を変更</value>
+  </data>
+  <data name="SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway" xml:space="preserve">
+    <value>OKをクリックしてドキュメントを開きます。</value>
+  </data>
+  <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
+    <value>データファイル「{0}」が欠損しており、以下の元の装置出力が見つかりませんでした：</value>
+  </data>
+  <data name="SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction" xml:space="preserve">
+    <value>トランジション設定のフルスキャン保持時間フィルタは予測保持時間を使用するように設定されていますが、予測アルゴリズムが校正されていません。全グラジエントクロマトグラムを生成しますか？</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes" xml:space="preserve">
+    <value>変更を保存しますか？</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_No" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_Yes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_" xml:space="preserve">
+    <value>このドキュメントのスペクトルライブラリ{0}が見つかりませんでした。ライブラリなしでは、スペクトルID情報が利用できません。</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリを検索</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリ</value>
+  </data>
+  <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
+    <value>Skylineを終了しますか？保存されていない作業はすべて失われます。</value>
+  </data>
+  <data name="SkylineWindow_CreateRegression_Set_regression__0__" xml:space="preserve">
+    <value>回帰{0}を設定</value>
+  </data>
+  <data name="SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread" xml:space="preserve">
+    <value>DocumentUIプロパティは、UIスレッド以外ではアクセスできません。</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
+    <value>バックグラウンドプロテオーム</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Find_Background_Proteome" xml:space="preserve">
+    <value>バックグラウンドプロテオームを検索</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Proteome_File" xml:space="preserve">
+    <value>プロテオームファイル</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files" xml:space="preserve">
+    <value>イオン移動度ライブラリファイル</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_" xml:space="preserve">
+    <value>指定されたイオン移動度ライブラリファイルを開くことができませんでした：</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library" xml:space="preserve">
+    <value>イオン移動度ライブラリを検索</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library" xml:space="preserve">
+    <value>イオン移動度ライブラリ</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_Find_iRT_Calculator" xml:space="preserve">
+    <value>iRTカルキュレータを検索</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator" xml:space="preserve">
+    <value>iRTカルキュレータ</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Database_Files" xml:space="preserve">
+    <value>iRTデータベースファイル</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened" xml:space="preserve">
+    <value>指定されたデータベースファイルは開けませんでした：</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library" xml:space="preserve">
+    <value>最適化ライブラリを検索</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Optimization_Library" xml:space="preserve">
+    <value>最適化ライブラリ</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Optimization_Library_Files" xml:space="preserve">
+    <value>最適化ライブラリファイル</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_" xml:space="preserve">
+    <value>指定されたデータベースファイルは開けませんでした：</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_" xml:space="preserve">
+    <value>ピークの終了を{0:F01}に変更</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_" xml:space="preserve">
+    <value>ピークの開始を{0:F01}に変更</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_" xml:space="preserve">
+    <value>ピークを{0:F01}-{1:F01}に変更</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks" xml:space="preserve">
+    <value>ピークを変更</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak" xml:space="preserve">
+    <value>ピークを削除</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_" xml:space="preserve">
+    <value>フルスキャンを表示するには、生ファイルを再インポートしなければなりません：{0}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_" xml:space="preserve">
+    <value>ピーク{0:F01}を選択</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
+    <value>ZIPファイル内のドキュメントを開くことはサポートされていません。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
+    <value>開くファイルへのパスが長すぎます。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__" xml:space="preserve">
+    <value>ファイル{0}を先に解凍し、次に解凍済みのファイル{1}を開きます。</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>注釈をインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_" xml:space="preserve">
+    <value>作成するドキュメントライブラリと同じ名前「{0}」のライブラリが既に存在します。上書きしますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_" xml:space="preserve">
+    <value>アッセイライブラリをインポートするには、Skylineドキュメントを保存する必要があります。</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library" xml:space="preserve">
+    <value>アッセイライブラリ</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
+    <value>アッセイライブラリのインポート</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Failed_importing_file__0__1__" xml:space="preserve">
+    <value>ファイル{0}のインポートに失敗しました。{1}</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Failed_importing_files" xml:space="preserve">
+    <value>ファイルのインポートに失敗しました：</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document" xml:space="preserve">
+    <value>Skylineドキュメントをインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>以下の修飾にUnimod定義を使用しますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportFiles_Import_Skyline_document_data" xml:space="preserve">
+    <value>Skylineドキュメントデータをインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_added" xml:space="preserve">
+    <value>{0}個のトランジションが追加されました</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
+    <value>作成(&amp;C)...</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Keep" xml:space="preserve">
+    <value>保持(&amp;K)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Overwrite" xml:space="preserve">
+    <value>上書き(&amp;O)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
+    <value>スキップ(&amp;S)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
+    <value>iRT値の計算中</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>入力{0}を分析しています</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Associate_Proteins_enabled" xml:space="preserve">
+    <value>タンパク質の関連付けが有効になっています</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
+    <value>{0}と特定されている列</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>無効化(&amp;D)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>有効化(&amp;E)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
+    <value>インポートの終了中</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_" xml:space="preserve">
+    <value>既存のiRT値を保持しますか、それともインポートされた値を上書きしますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_" xml:space="preserve">
+    <value>このファイルには強度が含まれていません。強度の有効な列名は次の通りです：</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_" xml:space="preserve">
+    <value>このファイルにはiRTが含まれていません。iRTの有効な列名は次の通りです：</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_" xml:space="preserve">
+    <value>操作中に予期しないドキュメントの変更がありました：{0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_" xml:space="preserve">
+    <value>トランジションリストからスペクトルライブラリを作成するには、Skylineドキュメントを保存しなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリの作成中</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_" xml:space="preserve">
+    <value>標準ペプチドがiRT-C18目盛り上にないようです。この目盛りに対して再校正しますか？</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_transition_list" xml:space="preserve">
+    <value>トランジションリストをインポート</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title" xml:space="preserve">
+    <value>トランジションリストをインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries" xml:space="preserve">
+    <value>ピーク境界をインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation" xml:space="preserve">
+    <value>操作中の予期しないドキュメントの変更。</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__" xml:space="preserve">
+    <value>ファイル{0}の読み取りに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_" xml:space="preserve">
+    <value>よろしいですか？一致しないターゲットとデコイでトレーニングされたピークスコアモデルは間違った結果を生成する可能性があります。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
+    <value>続行(&amp;C)</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_continue_" xml:space="preserve">
+    <value>続行しますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
+    <value>新しいデコイを生成しますか、それとも現在のデコイで続行しますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
+    <value>生成(&amp;G)</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Import__0__" xml:space="preserve">
+    <value>{0}をインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Import_results" xml:space="preserve">
+    <value>結果をインポート</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_" xml:space="preserve">
+    <value>ドキュメントに以下のターゲットと一致しないデコイが含まれています：</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_" xml:space="preserve">
+    <value>ドキュメントに次のiRT標準ペプチドがありません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
+    <value>本ドキュメントには、デコイペプチドは含まれません。クロマトグラムを抽出する前にデコイペプチドを追加しますか？クロマトグラム抽出が終了したら、Skylineは優れたピークが選択できるよう、デコイとターゲットクロマトグラムを使用してピークスコアモデルをトレーニングします。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__" xml:space="preserve">
+    <value>{0}個の標準ペプチドがある場合、{1}個には{2}の相関関係が必要です。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_" xml:space="preserve">
+    <value>結果をインポートする前に1つ以上のターゲットトランジションを追加しなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results" xml:space="preserve">
+    <value>結果をインポートする前にこのドキュメントを保存しなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_IntegrateAll_Clear_integrate_all" xml:space="preserve">
+    <value>すべて積分をクリア</value>
+  </data>
+  <data name="SkylineWindow_IntegrateAll_Set_integrate_all" xml:space="preserve">
+    <value>すべて積分を設定</value>
+  </data>
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
+    <value>ペプチド設定の予測タブで、カルキュレータボタンをクリックして現在のiRTカルキュレータを編集します。</value>
+  </data>
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
+    <value>iRTカルキュレータの標準ペプチドは、iRTカルキュレータエディタでのみ設定可能です。</value>
+  </data>
+  <data name="SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread" xml:space="preserve">
+    <value>イベントスレッドから呼び出されなければなりません</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results" xml:space="preserve">
+    <value>結果を再インポートしようとした際にエラーが発生しました。</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_" xml:space="preserve">
+    <value>ドキュメントライブラリからのライブラリ実行の削除に失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_" xml:space="preserve">
+    <value>MIDASライブラリからのライブラリ実行の削除に失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Manage_results" xml:space="preserve">
+    <value>結果を管理</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_" xml:space="preserve">
+    <value>結果を管理するためには、ドキュメントに質量仕様データが含まれていなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>トランジションを非定量にマーク</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>トランジションを定量にマーク</value>
+  </data>
+  <data name="SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document" xml:space="preserve">
+    <value>ドキュメントの変更に失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved" xml:space="preserve">
+    <value>予期しないエラーにより、このセッションのグローバル設定の変更を保存できませんでした。</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_Failure_opening__0__" xml:space="preserve">
+    <value>{0}を開くのに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
+    <value>読み込み中...</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
+    <value>ファイル{0}をダウンロード中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Loading_remote_server_folders" xml:space="preserve">
+    <value>リモートサーバーのフォルダを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_" xml:space="preserve">
+    <value>Panoramaサーバーが見つかりませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Panoramaから開く</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_" xml:space="preserve">
+    <value>[追加] を押して新規サーバーを追加してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read" xml:space="preserve">
+    <value>zipファイル{0}を読み取れません。</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>このファイルの前回アップロード先：{0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>同じ場所にアップロードしますか？</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
+    <value>クロマトグラムを再インポートしています</value>
+  </data>
+  <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
+    <value>CVカットオフを上回るペプチドを削除</value>
+  </data>
+  <data name="SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers" xml:space="preserve">
+    <value>保持時間の異常値を削除</value>
+  </data>
+  <data name="SkylineWindow_ResetDefaultSettings_Reset_default_settings" xml:space="preserve">
+    <value>デフォルト設定をリセット</value>
+  </data>
+  <data name="SkylineWindow_RestoreDocument_Failed_to_restore_document" xml:space="preserve">
+    <value>ドキュメントの復元に失敗しました</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Failed_writing_to__0__" xml:space="preserve">
+    <value>{0}への書き込みに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Optimizing_data_file___" xml:space="preserve">
+    <value>データファイルの最適化中...</value>
+  </data>
+  <data name="SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name" xml:space="preserve">
+    <value>新しい名前を付けて保存する前に、ドキュメントを完全に読み込まなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_SaveSettings_Name_settings" xml:space="preserve">
+    <value>名前の設定</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>以下の修飾にUnimod定義を使用しますか？</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__" xml:space="preserve">
+    <value>{0}を追加</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__" xml:space="preserve">
+    <value>名前{0}を編集</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_DragDrop_Drag_and_drop" xml:space="preserve">
+    <value>ドラッグアンドドロップ</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__" xml:space="preserve">
+    <value>{0}を選択</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Clear_standard_type" xml:space="preserve">
+    <value>標準タイプをクリア</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Set_standard_type_to__0_" xml:space="preserve">
+    <value>標準タイプを{0}に設定</value>
+  </data>
+  <data name="SkylineWindow_SetupCalculatorChooser_Auto" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="SkylineWindow_ShareDocument_Compressing_Files" xml:space="preserve">
+    <value>ファイルの圧縮中</value>
+  </data>
+  <data name="SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__" xml:space="preserve">
+    <value>共有ファイル{0}の作成に失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_Share_Document" xml:space="preserve">
+    <value>ドキュメントを共有</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents" xml:space="preserve">
+    <value>Skyline共有ドキュメント</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared" xml:space="preserve">
+    <value>共有する前に、ドキュメントを完全に読み込まなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings" xml:space="preserve">
+    <value>ドキュメント設定を変更</value>
+  </data>
+  <data name="SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator" xml:space="preserve">
+    <value>{0}カルキュレータをアップデート</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_ESP_Feature_Files" xml:space="preserve">
+    <value>ESP機能ファイル</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
+    <value>ESP機能をエクスポート</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_Failed_attempting_to_save_ESP_features_to__0__" xml:space="preserve">
+    <value>ESP機能の{0}への保存に失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>ドキュメントには、機能をエクスポートするターゲットが含まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリをエクスポート</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>スペクトルライブラリ{0}をエクスポートしています...</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>スペクトルライブラリの{0}へのエクスポートに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索をインポートする前に、ドキュメントを完全に読み込む必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索のインポート前に、このドキュメントを保存しなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>ドキュメントには、機能をエクスポートするターゲットが含まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
+    <value>ドキュメントには、インポート結果が必要です。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
+    <value>続行</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
+    <value>ユーザーアカウントがないと、ドキュメントをPanoramaサーバーにアップロードできません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Edit_existing" xml:space="preserve">
+    <value>既存の編集</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
+    <value>続行を押して選択したサーバーを使用します。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
+    <value>登録</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>ドキュメントはアップロードする前に、完全に読み込まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>ドキュメントはアップロードする前に、保存されている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>アップロード先となるPanoramaサーバーがありません。</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_Invalid_file_specified" xml:space="preserve">
+    <value>無効なファイルが指定されました。</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_Must_have_a_window_handle_to_begin_processing" xml:space="preserve">
+    <value>処理を開始するにはウィンドウハンドルが必要です。</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file" xml:space="preserve">
+    <value>URI{0}はファイルではありません。</value>
+  </data>
+  <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
+    <value>未処理のエラーレポートを送信</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>[1% FDRにおけるターゲット]を表示すると、繰り返し測定の表示タイプを「単一」に設定します。続行しますか？</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR" xml:space="preserve">
+    <value>{0}% FDRにおけるターゲット</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__" xml:space="preserve">
+    <value>ウィンドウレイアウトファイル{0}の読み込みに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Rename_or_delete_this_file_to_restore_the_default_layout" xml:space="preserve">
+    <value>デフォルトレイアウトを復元するには、このファイルの名前を変更するか、削除します。</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Skyline_may_also_need_to_be_restarted" xml:space="preserve">
+    <value>Skylineを再起動しなければならない場合もあります。</value>
+  </data>
+  <data name="SkylineWindow_UpdateProgressUI_Ready" xml:space="preserve">
+    <value>準備完了</value>
+  </data>
+  <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
+    <value>表示するライブラリがありません。ライブラリを追加しますか？</value>
+  </data>
+  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+    <value>{0}にアップグレードしています（{1}/{2}をダウンロードしています）</value>
+  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+    <value>{0}をアップグレードしています</value>
+  </data>
+  <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
+    <value>値「{0}」は、注釈ターゲット{2}のカンマ区切りリストを必要とする引数{1}には有効ではありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
+    <value>[既存の編集] をクリックして、既存のサーバーのユーザーアカウント情報を追加します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
+    <value>エラー：ペプチド修飾設定の変更に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
+    <value>フィーチャー検出を実行する前に、ドキュメントを完全に読み込む必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
+    <value>フィーチャー検出を実行する前に、このドキュメントを保存する必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
+    <value>{0}は、Panoramaにアップロードできる有効なファイル名ではありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>ペプチドをタンパク質に関連付け</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" xml:space="preserve">
+    <value>DIA-Umpireを使用したDIA</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
+    <value>ペプチド検索の実行</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索の実行前に、このドキュメントを保存する必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索を実行する前に、ドキュメントを完全に読み込む必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
+    <value>シングルプリカーサーMS/MSスペクトルにデコンボリューションしたDIAから得られたライブラリと、同じランの生DIAスペクトルから得られたクロマトグラム</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

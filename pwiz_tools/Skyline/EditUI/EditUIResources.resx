@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Imported_Files" xml:space="preserve">
+    <value>Comparing Imported Files</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Models" xml:space="preserve">
+    <value>Comparing Models</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_" xml:space="preserve">
+    <value>Document has no eligible chromatograms for analysis.  Valid chromatograms must not be decoys or iRT standards.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_" xml:space="preserve">
+    <value>Error comparing model peak boundaries: {0}</value>
+  </data>
+  <data name="AlignItem_ToString_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
+    <value>Retention time calculator...</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
+    <value>Retention time calculator ({0})</value>
+  </data>
+  <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
+    <value>Shared Peptides</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>Find &amp;minimal protein group list that explains all peptides</value>
+  </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_" xml:space="preserve">
+    <value>No matches were found using the imported fasta file.</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
+    <value>Mi&amp;n peptides per protein group</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
+    <value>Existing protein associations will be discarded.</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
+    <value>Organize all document peptides into associated proteins or protein groups.</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
+    <value>&amp;Remove subset protein groups</value>
+  </data>
+  <data name="AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_" xml:space="preserve">
+    <value>No matches were found using the background proteome.</value>
+  </data>
+  <data name="ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="ChromChartPropertyDlg_cbRelative_CheckedChanged_widths" xml:space="preserve">
+    <value>widths</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Label__Model_or_File_" xml:space="preserve">
+    <value>&amp;Model or File:</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons" xml:space="preserve">
+    <value>Edit Peak Boundary Comparisons</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_" xml:space="preserve">
+    <value>Observed FPR:</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
+    <value>Q value cutoff:</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_" xml:space="preserve">
+    <value>Unable to find the peptide {0} with charge state {1}</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
+    <value>Fraction of Peak Groups</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks" xml:space="preserve">
+    <value>Total Correct Peaks</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
+    <value>Add models/files for comparison to see a q-Q plot</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
+    <value>Add models/files for comparison to see a ROC plot.</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_an_analysis_of_runs" xml:space="preserve">
+    <value>Add models/files for comparison to see an analysis of runs</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Expected_False_Positive_Rate" xml:space="preserve">
+    <value>Expected False Positive Rate</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate" xml:space="preserve">
+    <value>Observed False Positive Rate</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Replicate_Name" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
+    <value>Refresh {0}</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
+    <value>{0} observed false positive rate</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
+    <value>{0} significance threshold</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Equality" xml:space="preserve">
+    <value>Equality</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Q_Q_Comparison" xml:space="preserve">
+    <value>Q-Q Comparison</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__" xml:space="preserve">
+    <value>Replicate Comparison (Observed FPR &lt; {0})</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__" xml:space="preserve">
+    <value>Replicate Comparison (q value &lt; {0})</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_ROC_Plot_Comparison" xml:space="preserve">
+    <value>ROC Plot Comparison</value>
+  </data>
+  <data name="CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard" xml:space="preserve">
+    <value>Metafile image copied to clipboard</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row" xml:space="preserve">
+    <value>Row</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled" xml:space="preserve">
+    <value>Tiled</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
+    <value>Edit Modifications</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_" xml:space="preserve">
+    <value>Both ends of this crosslink cannot be the same.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
+    <value>Invalid crosslinker</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_" xml:space="preserve">
+    <value>The crosslinker '{0}' cannot attach to this amino acid position.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_" xml:space="preserve">
+    <value>This amino acid position cannot be blank.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_" xml:space="preserve">
+    <value>This amino acid position in this peptide is already being used by another crosslink.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_" xml:space="preserve">
+    <value>This is not a valid amino acid position in this peptide.</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_" xml:space="preserve">
+    <value>This peptide is not valid.</value>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard" xml:space="preserve">
+    <value>Discard</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks" xml:space="preserve">
+    <value>Edit Crosslinks</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks" xml:space="preserve">
+    <value>Removing the crosslink on this amino acid will result in a crosslinked peptide no longer being connected. Would you like to edit the crosslinks now or discard the disconnected peptides?</value>
+  </data>
+  <data name="EditPepModsDlg_GetIsotopeLabelText_Isotope__0__" xml:space="preserve">
+    <value>Isotope {0}:</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__" xml:space="preserve">
+    <value>Crosslink to {0}: {1} [{2}]</value>
+    <comment>{0} is a peptide sequence, {1} is an amino acid letter and {2} is a number
+Example: Crosslink to PEPTIDE: T [4]</comment>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Invalid_crosslink___0_" xml:space="preserve">
+    <value>Invalid crosslink: {0}</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Looplink___0____1__" xml:space="preserve">
+    <value>Looplink: {0} [{1}]</value>
+    <comment>{0} is a single amino acid letter and {1} is a number
+Example: Looplink: T [4]
+</comment>
+  </data>
+  <data name="EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__" xml:space="preserve">
+    <value>One or more of the crosslinked peptides are no longer attached to this peptide. </value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>Case {0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
+  </data>
+  <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
+    <value>&lt;&lt; Hide Ad&amp;vanced</value>
+  </data>
+  <data name="FindNodeDlg_AdvancedVisible_Show_Advanced" xml:space="preserve">
+    <value>Show Ad&amp;vanced &gt;&gt;</value>
+  </data>
+  <data name="GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_" xml:space="preserve">
+    <value>The number of peptides {0} must be less than the number of peptide precursor models for decoys {1}, or use the '{2}' decoy generation method.</value>
+  </data>
+  <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns" xml:space="preserve">
+    <value>On line {0}, row has more than 2 columns</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Document" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
+    <value>'{0}' is not a capital letter that corresponds to an amino acid.</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_An_unexpected_error_occurred__" xml:space="preserve">
+    <value>An unexpected error occurred: </value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_There_is_no_name_for_this_protein" xml:space="preserve">
+    <value>There is no name for this protein</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_This_must_start_with____" xml:space="preserve">
+    <value>This must start with '&gt;'</value>
+  </data>
+  <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
+    <value>There is no sequence for this protein</value>
+  </data>
+  <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
+    <value>FASTA files</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_This_peptide_sequence_was_not_found_in_the_protein_sequence" xml:space="preserve">
+    <value>This peptide sequence was not found in the protein sequence</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
+    <value>Unable to interpret peptide modifications</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>Would you like to use the Unimod definitions for the following modifications?</value>
+  </data>
+  <data name="PasteDlg_AddProteins_Invalid_protein_sequence__0__" xml:space="preserve">
+    <value>Invalid protein sequence: {0}</value>
+  </data>
+  <data name="PasteDlg_AddProteins_Missing_protein_sequence" xml:space="preserve">
+    <value>Missing protein sequence</value>
+  </data>
+  <data name="PasteDlg_AddProteins_This_protein_was_not_found_in_the_background_proteome_database" xml:space="preserve">
+    <value>This protein was not found in the background proteome database.</value>
+  </data>
+  <data name="PasteDlg_Description_Insert" xml:space="preserve">
+    <value>Insert</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_FASTA" xml:space="preserve">
+    <value>Insert FASTA</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_peptide_list" xml:space="preserve">
+    <value>Insert peptide list</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_protein_list" xml:space="preserve">
+    <value>Insert protein list</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
+    <value>The peptide sequence cannot be blank.</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline" xml:space="preserve">
+    <value>The structure of this crosslinked peptide is not supported by Skyline</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters" xml:space="preserve">
+    <value>This peptide sequence contains invalid characters.</value>
+  </data>
+  <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
+    <value>Must select a model for comparison.</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications" xml:space="preserve">
+    <value>Permute isotope modifications</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications" xml:space="preserve">
+    <value>Permuting Isotope Modifications</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Updating_settings" xml:space="preserve">
+    <value>Updating settings</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Add_label_type" xml:space="preserve">
+    <value>Add la&amp;bel type:</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>Precursors of the chosen isotope label type will be added if they are missing</value>
+  </data>
+  <data name="RefineDlg_MSLevel_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="RefineDlg_MSLevel_2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio" xml:space="preserve">
+    <value>{0} must be less than min peak found ratio.</value>
+  </data>
+  <data name="RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type" xml:space="preserve">
+    <value>The label type '{0}' cannot be added. There are no modifications for this type.</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
+    <value>all</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_best" xml:space="preserve">
+    <value>best</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_" xml:space="preserve">
+    <value>You must train and select a model in order to reintegrate peaks.</value>
+  </data>
+  <data name="RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File" xml:space="preserve">
+    <value>Add FASTA File</value>
+  </data>
+  <data name="RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available" xml:space="preserve">
+    <value>No protein metadata available</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
+    <value>Failed reading the file {0}. {1}</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_" xml:space="preserve">
+    <value>No protein sequence matches found between the current document and the FASTA file {0}</value>
+  </data>
+  <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
+    <value>Template file is not valid.</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_" xml:space="preserve">
+    <value>This operation discarded {0} proteins with no peptides matching the current filter settings.</value>
+  </data>
+  <data name="SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>To align to retention time prediction, you must first set up a retention time predictor in Peptide Settings / Prediction.</value>
+  </data>
+  <data name="UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_" xml:space="preserve">
+    <value>Adding rows to grid.</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__" xml:space="preserve">
+    <value>Failed querying background proteome {0}.</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences" xml:space="preserve">
+    <value>Looking for proteins with matching peptide sequences</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database" xml:space="preserve">
+    <value>Querying Background Proteome Database</value>
+  </data>
+  <data name="UniquePeptidesDlg_OkDialog_Exclude_peptides" xml:space="preserve">
+    <value>Exclude peptides</value>
+  </data>
+  <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
+    <value>These proteins include:</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>Find &amp;minimal gene group list that explains all peptides</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
+    <value>Mi&amp;n peptides per gene</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
+    <value>&amp;Remove subset genes</value>
+  </data>
+</root>

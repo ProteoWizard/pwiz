@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static Adduct CalcProductCharge(TypedMass productMassH, int? productZ, double productMz, double tolerance, bool isCustomIon,
-                                             Adduct maxCharge, MassShiftType massShiftType, out int massShift, out int nearestCharge)
+                                             Adduct maxCharge, MassShiftType massShiftType, out int massShift)
         {
             return CalcCharge(productMassH, productMz, tolerance, isCustomIon,
                 productZ ?? Transition.MIN_PRODUCT_CHARGE,
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model
                 Transition.MassShifts,
                 massShiftType,
                 out massShift,
-                out nearestCharge);
+                out _);
         }
 
         public enum MassShiftType { none, shift_only, either }
@@ -177,9 +177,8 @@ namespace pwiz.Skyline.Model
                     maxLoss = Math.Max(maxLoss ?? 0, lossesTrial.Mass);
                 }
                 int potentialMassShift;
-                int nearestCharge;
                 var charge = CalcProductCharge(productMass, productZ, productMz, tolerance, false, precursorCharge,
-                                               massShiftType, out potentialMassShift, out nearestCharge);
+                                               massShiftType, out potentialMassShift);
                 if (Equals(charge, precursorCharge))
                 {
                     double potentialMz = SequenceMassCalc.GetMZ(productMass, charge) + potentialMassShift;
@@ -232,9 +231,8 @@ namespace pwiz.Skyline.Model
                         if (lossesTrial != null)
                             productMass -= lossesTrial.Mass;
                         int potentialMassShift;
-                        int nearestCharge;
                         var chargeFound = CalcProductCharge(productMass, productZ, productMz, tolerance, false, precursorCharge,
-                                                       massShiftType, out potentialMassShift, out nearestCharge);
+                                                       massShiftType, out potentialMassShift);
                         if (!chargeFound.IsEmpty)
                         {
                             var charge = chargeFound;

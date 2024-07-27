@@ -143,12 +143,10 @@ namespace SkylineTester
         /// </summary>
         public void ExportCSV()
         {
-            using (var openFileDlg = new OpenFileDialog
-                   {
-                       Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                       Title = @"Export Run Stats"
-                   })
+            using (var openFileDlg = new SaveFileDialog())
             {
+                openFileDlg.Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                openFileDlg.Title = @"Export Run Stats";
                 if (openFileDlg.ShowDialog() != DialogResult.OK)
                     return;
                 using (var report = new StreamWriter(openFileDlg.FileName))
@@ -164,11 +162,14 @@ namespace SkylineTester
                     AddHeaderPair(paired, header, $@"MedianTime");
 
                     report.WriteLine(string.Join(@",",header));
-                    foreach (var test in TestNames)
+                    if (TestNames != null)
                     {
-                        var columns = new List<string>(){test};
-                        AddColumns(TestSummaries, TestSummariesCompare, test, columns);
-                        report.WriteLine(string.Join(@",", columns));
+                        foreach (var test in TestNames)
+                        {
+                            var columns = new List<string>(){test};
+                            AddColumns(TestSummaries, TestSummariesCompare, test, columns);
+                            report.WriteLine(string.Join(@",", columns));
+                        }
                     }
                 }
             }

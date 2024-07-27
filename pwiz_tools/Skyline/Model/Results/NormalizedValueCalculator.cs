@@ -19,22 +19,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class NormalizedValueCalculator
     {
+        public static readonly NormalizedValueCalculator DEFAULT =
+            new NormalizedValueCalculator(new SrmDocument(SrmSettingsList.GetDefault()));
         private readonly Lazy<NormalizationData> _normalizationData;
-        private readonly Dictionary<ChromFileInfoId, FileInfo> _fileInfos;
-        public NormalizedValueCalculator(SrmDocument document)
+        private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
+
+        public NormalizedValueCalculator(SrmDocument document, NormalizationData normalizationData = null)
         {
             Document = document;
-            _normalizationData = new Lazy<NormalizationData>(()=>NormalizationData.GetNormalizationData(document, false, null));
-            _fileInfos = new Dictionary<ChromFileInfoId, FileInfo>(new IdentityEqualityComparer<ChromFileInfoId>());
+            if (normalizationData == null)
+            {
+                _normalizationData = new Lazy<NormalizationData>(() =>
+                    NormalizationData.GetNormalizationData(document, false, null));
+            }
+            else
+            {
+                _normalizationData = new Lazy<NormalizationData>(()=>normalizationData);
+            }
+            _fileInfos = new Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo>();
             if (document.MeasuredResults != null)
             {
                 var chromatograms = document.Settings.MeasuredResults.Chromatograms;
@@ -46,6 +60,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+
         }
 
         public SrmDocument Document { get; private set; }
@@ -428,9 +443,12 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public NormalizationData GetNormalizationData()
+        public Lazy<NormalizationData> LazyNormalizationData
         {
-            return _normalizationData.Value;
+            get
+            {
+                return _normalizationData;
+            }
         }
 
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)
@@ -508,6 +526,71 @@ namespace pwiz.Skyline.Model.Results
                     value = ratioToSurrogate.GetStandardArea(SrmSettings, ResultsIndex, ChromFileInfo.FileId);
                     _surrogateStandardAreas.Add(ratioToSurrogate, value);
                     return value;
+                }
+            }
+        }
+
+        public static readonly Producer<Params,
+            NormalizedValueCalculator> PRODUCER = new NormalizedValueCalculatorProducer();
+
+        public static WorkOrder MakeWorkOrder(SrmDocument document, NormalizeOption normalizeOption)
+        {
+            return PRODUCER.MakeWorkOrder(new Params(document, normalizeOption));
+        }
+            
+        private class NormalizedValueCalculatorProducer : Producer<Params,
+            NormalizedValueCalculator>
+        {
+            public override NormalizedValueCalculator ProduceResult(ProductionMonitor productionMonitor, Params parameter, IDictionary<WorkOrder, object> dependencies)
+            {
+                var document = parameter.Document;
+                return new NormalizedValueCalculator(document,
+                    NormalizationData.PRODUCER.GetResult(dependencies, new NormalizationData.Parameters(document)));
+            }
+
+            public override IEnumerable<WorkOrder> GetInputs(Params workParameter)
+            {
+                var normalizeOption = workParameter.NormalizeOption;
+                SrmDocument document = workParameter.Document;
+                
+                if (Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption?.NormalizationMethod) || Equals(NormalizationMethod.EQUALIZE_MEDIANS, document.Settings.PeptideSettings.Quantification.NormalizationMethod))
+                {
+                    return ImmutableList.Singleton(NormalizationData.PRODUCER.MakeWorkOrder(new NormalizationData.Parameters(document)));
+                }
+
+                return Array.Empty<WorkOrder>();
+            }
+        }
+
+        public class Params
+        {
+            public Params(SrmDocument document, NormalizeOption normalizeOption)
+            {
+                Document = document;
+                NormalizeOption = normalizeOption;
+            }
+            
+            public SrmDocument Document { get; }
+            public NormalizeOption NormalizeOption { get; }
+
+            protected bool Equals(Params other)
+            {
+                return ReferenceEquals(Document, other.Document) && NormalizeOption.Equals(other.NormalizeOption);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Params)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (RuntimeHelpers.GetHashCode(Document) * 397) ^ NormalizeOption.GetHashCode();
                 }
             }
         }

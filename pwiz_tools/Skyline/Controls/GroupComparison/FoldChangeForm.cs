@@ -138,6 +138,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        public virtual bool IsComplete
+        {
+            get
+            {
+                return FoldChangeBindingSource.IsComplete;
+            }
+        }
 
         public static T FindForm<T>(IDocumentContainer documentContainer, string groupComparisonName) 
             where T : FoldChangeForm
@@ -244,12 +251,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
 
             var index = 0;
-            menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Grid, null, OnGridClick));
+            menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Grid, null, OnGridClick));
             if (!(sender.ParentForm is FoldChangeVolcanoPlot))
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Volcano_Plot, null, OnVolcanoPlotClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Volcano_Plot, null, OnVolcanoPlotClick));
             if(!(sender.ParentForm is FoldChangeBarGraph))
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Bar_Graph, null, OnBarGraphClick));
-            menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Settings, null, OnSettingsClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Bar_Graph, null, OnBarGraphClick));
+            menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Settings, null, OnSettingsClick));
             menuStrip.Items.Insert(index++, new ToolStripSeparator());
         }
 

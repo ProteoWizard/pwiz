@@ -72,7 +72,7 @@ namespace pwiz.ProteomeDatabase.API
             CancellationToken = cancellationToken;
             using (var session = OpenSession())
             {
-                // Is this even a proper protDB file? (https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?rowId=14893)
+                // Is this even a proper protDB file? (https://skyline.ms/announcements/home/issues/exceptions/thread.view?rowId=14893)
                 if (!SqliteOperations.TableExists(session.Connection, @"ProteomeDbProteinName"))
                 {
                     throw new FileLoadException(
@@ -263,8 +263,7 @@ namespace pwiz.ProteomeDatabase.API
 
         public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status, bool delayAnalyzeDb)
         {
-            int duplicateSequenceCount;
-            AddFastaFile(reader, progressMonitor, ref status, delayAnalyzeDb, out duplicateSequenceCount);
+            AddFastaFile(reader, progressMonitor, ref status, delayAnalyzeDb, out _);
         }
 
         public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status,

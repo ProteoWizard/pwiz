@@ -22,7 +22,6 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -82,7 +81,7 @@ namespace pwiz.Skyline.SettingsUI
                 string lowerCaseId = Helpers.MakeId(labelType.Name).ToLowerInvariant();
                 if (Equals(lowerCaseId, IsotopeLabelType.light.Name))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditLabelTypeListDlg_OkDialog_The_name__0__conflicts_with_the_default_light_isotope_label_type,
+                    MessageDlg.Show(this, string.Format(SettingsUIResources.EditLabelTypeListDlg_OkDialog_The_name__0__conflicts_with_the_default_light_isotope_label_type,
                                                         labelType.Name));
                     textLabelTypes.Focus();
                     return;
@@ -91,9 +90,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (dictIdsToNames.TryGetValue(lowerCaseId, out nameExisting))
                 {
                     if (Equals(nameExisting, labelType.Name))
-                        MessageDlg.Show(this, string.Format(Resources.EditLabelTypeListDlg_OkDialog_The_label_name__0__may_not_be_used_more_than_once, labelType.Name));
+                        MessageDlg.Show(this, string.Format(SettingsUIResources.EditLabelTypeListDlg_OkDialog_The_label_name__0__may_not_be_used_more_than_once, labelType.Name));
                     else
-                        MessageDlg.Show(this, string.Format(Resources.EditLabelTypeListDlg_OkDialog_The_label_names__0__and__1__conflict_Use_more_unique_names, nameExisting, labelType.Name));
+                        MessageDlg.Show(this, string.Format(SettingsUIResources.EditLabelTypeListDlg_OkDialog_The_label_names__0__and__1__conflict_Use_more_unique_names, nameExisting, labelType.Name));
                     textLabelTypes.Focus();
                     return;
                 }

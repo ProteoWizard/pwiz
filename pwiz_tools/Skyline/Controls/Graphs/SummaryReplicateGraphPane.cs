@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            XAxis.Title.Text = Resources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate;
+            XAxis.Title.Text = GraphsResources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate;
             XAxis.Type = AxisType.Text;
             IsRepeatRemovalAllowed = true;
         }
@@ -673,7 +673,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     var optimizationSteps = chromInfoLists
                         .SelectMany(chromInfoList => from chromInfoData in chromInfoList
-                                                     where chromInfoData.ChromInfo != null
                                                      select chromInfoData.OptimizationStep)
                         .Distinct()
                         .ToArray();
@@ -739,7 +738,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 int? fileIndex = null;
                 int maxStep = 0;
-                foreach (var chromInfoData in result.Where(chromInfoData => chromInfoData.ChromInfo != null))
+                foreach (var chromInfoData in result)
                 {
                     if (fileIndex.HasValue)
                     {

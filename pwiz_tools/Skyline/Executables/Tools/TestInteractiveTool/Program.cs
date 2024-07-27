@@ -37,7 +37,6 @@ namespace TestInteractiveTool
         {
             // Useful for debugging the tool after it starts.
             //Debugger.Launch();
-
             var toolConnection = args[0];
 
             // Open connection to Skyline.
@@ -160,9 +159,14 @@ namespace TestInteractiveTool
                 return _documentChangeCount;
             }
 
-            public int Quit()
+            public int GetProcessId()
             {
                 return Process.GetCurrentProcess().Id;
+            }
+
+            public void Quit()
+            {
+                Stop();
             }
         }
 

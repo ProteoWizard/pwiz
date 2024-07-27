@@ -28,7 +28,6 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -127,11 +126,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                 var neutralFormula = GetNeutralProductFormula();
                 var adduct = DocNode.Transition.Adduct;
-                var formulaWithAdductApplied = adduct.ApplyToMolecule(neutralFormula.Molecule);
-                var moleculeMassOffsetWithAdductApplied = new MoleculeMassOffset(
-                    Molecule.FromDict(formulaWithAdductApplied), neutralFormula.MonoMassOffset,
-                    neutralFormula.AverageMassOffset);
-                return moleculeMassOffsetWithAdductApplied.Molecule.ToString();
+                var formulaWithAdductApplied = adduct.ApplyToMolecule(neutralFormula);
+                return formulaWithAdductApplied.ToString();
             }
         }
         public string ProductNeutralFormula
@@ -178,13 +174,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
-        public char? CleavageAa
+        public string CleavageAa
         {
             get
             {
                 return IsCustomTransition()
-                    ? default(char?) 
-                    : DocNode.Transition.AA;
+                    ? null 
+                    : DocNode.Transition.AA.ToString();
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
@@ -356,9 +352,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (nodeCount == 1)
             {
-                return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___, this);
+                return string.Format(EntitiesResources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___, this);
             }
-            return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_, nodeCount);
+            return string.Format(EntitiesResources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_, nodeCount);
         }
 
         [InvariantDisplayName("TransitionLocator")]

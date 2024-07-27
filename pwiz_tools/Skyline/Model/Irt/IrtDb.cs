@@ -54,22 +54,20 @@ namespace pwiz.Skyline.Model.Irt
     {
         public const string EXT = ".irtdb";
 
-        public static string FILTER_IRTDB => TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
+        public static string FILTER_IRTDB => TextUtil.FileDialogFilter(IrtResources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
 
         public const int SCHEMA_VERSION_CURRENT = 2;
 
         private readonly string _path;
-        private readonly ISessionFactory _sessionFactory;
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
         private TargetMap<double> _dictStandards;
         private TargetMap<TargetInfo> _dictLibrary;
 
-        private IrtDb(string path, ISessionFactory sessionFactory)
+        private IrtDb(string path)
         {
             _path = path;
-            _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
         }
 
@@ -123,9 +121,9 @@ namespace pwiz.Skyline.Model.Irt
             set => _dictLibrary = new TargetMap<TargetInfo>(value);
         }
 
-        private ISession OpenWriteSession()
+        private ISession OpenWriteSession(ISessionFactory sessionFactory)
         {
-            return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
+            return new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, true);
         }
 
         public IEnumerable<Target> StandardPeptides => DictStandards.Keys;
@@ -180,7 +178,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public IList<DbIrtPeptide> ReadPeptides()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = new StatelessSessionWithLock(sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 return session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>();
             }
@@ -188,7 +187,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public IList<DbIrtHistory> ReadHistories()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = new StatelessSessionWithLock(sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 return SqliteOperations.TableExists(session.Connection, @"IrtHistory")
                     ? session.CreateCriteria(typeof(DbIrtHistory)).List<DbIrtHistory>()
@@ -198,7 +198,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public string ReadDocumentXml()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = new StatelessSessionWithLock(sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
                     return null;
@@ -213,7 +214,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtRegressionType ReadRegressionType()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = new StatelessSessionWithLock(sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml") ||
                     !SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
@@ -247,14 +249,21 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor = null)
         {
-            IProgressStatus status = new ProgressStatus(Resources.IrtDb_UpdatePeptides_Updating_peptides);
+            var docType = newPeptides.Any(p => !(p?.Target?.IsProteomic ?? true))
+                ? SrmDocument.DOCUMENT_TYPE.mixed
+                : SrmDocument.DOCUMENT_TYPE.proteomic;
+
+            var msg = Helpers.PeptideToMoleculeTextMapper.Translate(IrtResources.IrtDb_UpdatePeptides_Updating_peptides, docType); // Perform "peptide"->"molecule" translation as needed
+
+            IProgressStatus status = new ProgressStatus(msg);
             monitor?.UpdateProgress(status);
             return UpdatePeptides(newPeptides, monitor, ref status);
         }
 
         public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor, ref IProgressStatus status)
         {
-            using (var session = OpenWriteSession())
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = OpenWriteSession(sessionFactory))
             using (var transaction = session.BeginTransaction())
             {
                 var newTargets = newPeptides.Select(pep => pep.ModifiedTarget).ToHashSet();
@@ -332,7 +341,8 @@ namespace pwiz.Skyline.Model.Irt
                 histories = new TargetMap<double>(histories.Select(h => new KeyValuePair<Target, double>(h.Key, h.Value)));
 
             var newDict = new Dictionary<Target, TargetInfo>(DictLibrary.Count);
-            using (var session = OpenWriteSession())
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = OpenWriteSession(sessionFactory))
             using (var transaction = session.BeginTransaction())
             {
                 foreach (var existing in DictLibrary)
@@ -398,7 +408,8 @@ namespace pwiz.Skyline.Model.Irt
         {
             var documentXml = GenerateDocumentXml(StandardPeptides, doc, oldXml);
 
-            using (var session = OpenWriteSession())
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = OpenWriteSession(sessionFactory))
             using (var transaction = session.BeginTransaction())
             {
                 EnsureDocumentXmlTable(session);
@@ -418,7 +429,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb SetRegressionType(IrtRegressionType regressionType)
         {
-            using (var session = OpenWriteSession())
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = OpenWriteSession(sessionFactory))
             using (var transaction = session.BeginTransaction())
             {
                 EnsureDocumentXmlTable(session);
@@ -449,7 +461,8 @@ namespace pwiz.Skyline.Model.Irt
             }
             else
             {
-                using (var session = OpenWriteSession())
+                using var sessionFactory = GetSessionFactory(_path);
+                using (var session = OpenWriteSession(sessionFactory))
                 {
                     SqliteOperations.DropTable(session.Connection, @"IrtHistory");
                 }
@@ -523,16 +536,16 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, out IList<DbIrtPeptide> dbPeptides)
         {
-            var status = new ProgressStatus(string.Format(Resources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
+            var status = new ProgressStatus(string.Format(IrtResources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
             loadMonitor?.UpdateProgress(status);
 
             try
             {
                 if (path == null)
-                    throw new DatabaseOpeningException(Resources.IrtDb_GetIrtDb_Database_path_cannot_be_null);
+                    throw new DatabaseOpeningException(IrtResources.IrtDb_GetIrtDb_Database_path_cannot_be_null);
 
                 if (!File.Exists(path))
-                    throw new DatabaseOpeningException(string.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
+                    throw new DatabaseOpeningException(string.Format(IrtResources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
                 Exception xInner;
@@ -540,32 +553,26 @@ namespace pwiz.Skyline.Model.Irt
                 {
                     //Check for a valid SQLite file and that it has our schema
                     //Allow only one thread at a time to read from the same path
-                    using (var sessionFactory = GetSessionFactory(path))
-                    {
-                        lock (sessionFactory)
-                        {
-                            return new IrtDb(path, sessionFactory).Load(loadMonitor, status, out dbPeptides);
-                        }
-                    }
+                    return new IrtDb(path).Load(loadMonitor, status, out dbPeptides);
                 }
                 catch (UnauthorizedAccessException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_, path);
                     xInner = x;
                 }
                 catch (DirectoryNotFoundException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_The_path_containing__0__does_not_exist, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_The_path_containing__0__does_not_exist, path);
                     xInner = x;
                 }
                 catch (FileNotFoundException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges, path);
                     xInner = x;
                 }
                 catch (SQLiteException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file, path);
                     xInner = x;
                 }
                 catch (Exception x)
@@ -717,7 +724,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb RemoveDuplicateLibraryPeptides()
         {
-            using (var session = OpenWriteSession())
+            using var sessionFactory = GetSessionFactory(_path);
+            using (var session = OpenWriteSession(sessionFactory))
             {
                 using (var cmd = session.Connection.CreateCommand())
                 {

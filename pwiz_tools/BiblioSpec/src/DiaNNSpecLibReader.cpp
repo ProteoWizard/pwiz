@@ -191,7 +191,11 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
             i += modPrefixLength;
             mod = name.substr(i, end-i);
             CVID unimodCvid = (CVID) (UNIMOD_unimod_root_node + lexical_cast<int>(mod));
-            mods.emplace_back(SeqMod((int) j, pwiz::data::unimod::modification(unimodCvid).deltaMonoisotopicMass()));
+            int position = max(1, static_cast<int>(j));
+            if (!mods.empty() && mods.back().position == position)
+                mods.back().deltaMass += unimod::modification(unimodCvid).deltaMonoisotopicMass();
+            else 
+                mods.emplace_back(position, unimod::modification(unimodCvid).deltaMonoisotopicMass());
             continue;
         }
         ++j;
@@ -595,12 +599,31 @@ bool DiaNNSpecLibReader::parseFile()
 
     typedef io::CSVReader<9, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> ReportReaderType;
 
-    auto diannReportFilepath = bal::replace_last_copy(string(impl_->specLibFile_), "-lib.tsv.speclib", "-report.tsv");
+    string specLibFile = impl_->specLibFile_;
+    bfs::path specLibFilePath(specLibFile);
+
+    auto diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.tsv.speclib", "-report.tsv");
+
+    // special case for FragPipe
+    if (specLibFilePath.filename().string() == "library.tsv.speclib" || specLibFilePath.filename().string() == "lib.predicted.speclib")
+    {
+        for (auto filename : vector<string>{ "diann-output.tsv", "report.tsv" })
+        {
+            auto fragpipeDiannReport = specLibFilePath.parent_path() / "diann-output" / filename;
+            if (bfs::exists(fragpipeDiannReport))
+            {
+                Verbosity::debug("Found DIA-NN tsv/speclib from FragPipe.");
+                diannReportFilepath = fragpipeDiannReport.string();
+                break;
+            }
+        }
+    }
+
     /*if (diannReportFilepath == impl_->specLibFile_)
         throw BlibException(true, "unable to determine DIA-NN report filename for '%s': speclib must end in -lib.tsv.speclib and report must end in -report.tsv", impl_->specLibFile_);
     if (!bfs::exists(diannReportFilepath))
         throw BlibException(true, "could not find DIA-NN report file '%s' for '%s'", bfs::path(diannReportFilepath).filename().string().c_str(), impl_->specLibFile_);*/
-    if (diannReportFilepath == impl_->specLibFile_ || !bfs::exists(diannReportFilepath))
+    if (diannReportFilepath == specLibFile || !bfs::exists(diannReportFilepath))
     {
         // iterate all TSV files in the same directory as the speclib, check the ones sharing the most leading characters, and look for the report headers in them
         vector<bfs::path> siblingTsvFiles;

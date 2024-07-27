@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
@@ -130,14 +131,17 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0})
+                using (var dlg = new LongWaitDlg())
                 {
+                    dlg.Message = ToolsUIResources.RInstaller_InstallR_Downloading_R;
+                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadR);
                 }
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.RInstaller_GetR_Installing_R})
+                using (var dlg = new LongWaitDlg(null, false))
                 {
+                    dlg.Message = ToolsUIResources.RInstaller_GetR_Installing_R;
                     dlg.PerformWork(this, 50, InstallR);
                 }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
@@ -156,7 +160,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private string DownloadPath { get; set; }
 
-        private void DownloadR(ILongWaitBroker longWaitBroker)
+        private void DownloadR(IProgressMonitor longWaitBroker)
         {
             // the repository containing the downloadable R exes
             const string baseUri = "http://cran.r-project.org/bin/windows/base/";
@@ -201,8 +205,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.RInstaller_GetPAckages_Installing_Packages})
+                using (var dlg = new LongWaitDlg(null, false))
                 {
+                    dlg.Message = ToolsUIResources.RInstaller_GetPAckages_Installing_Packages;
                     dlg.PerformWork(this, 1000, InstallPackages);
                 }
             }
@@ -232,7 +237,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string failedMessage = string.IsNullOrEmpty(checkedSite)
                     ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
-                    : string.Format(Resources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
+                    : string.Format(ToolsUIResources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
                 throw new ToolExecutionException(
                     TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
@@ -262,7 +267,7 @@ namespace pwiz.Skyline.ToolsUI
                     if (failedPackages.Count == 1)
                     {
                         throw new ToolExecutionException(
-                            string.Format(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
+                            string.Format(TextUtil.LineSeparate(ToolsUIResources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
                                                                 string.Empty,
                                                                 Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_), failedPackages.First().Name));
                     }

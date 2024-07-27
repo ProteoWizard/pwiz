@@ -35,7 +35,7 @@ namespace pwiz.Skyline.FileUI
             DocumentUIContainer = documentUIContainer;
 
             labelMessage.Text =
-                Resources.RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_;
+                FileUIResources.RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_;
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
@@ -55,12 +55,12 @@ namespace pwiz.Skyline.FileUI
             var document = DocumentUIContainer.DocumentUI;
             if (!document.Settings.HasResults)
             {
-                MessageDlg.Show(this, Resources.RescoreResultsDlg_Rescore_There_are_not_results_in_this_document);
+                MessageDlg.Show(this, FileUIResources.RescoreResultsDlg_Rescore_There_are_not_results_in_this_document);
                 return;
             }
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_);
+                MessageDlg.Show(this, FileUIResources.RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_);
                 return;
             }
 
@@ -69,15 +69,13 @@ namespace pwiz.Skyline.FileUI
             if (asNewFile || string.IsNullOrEmpty(targetFile))
             {
                 using (var saveFileDialog =
-                    new SaveFileDialog
-                    {
-                        InitialDirectory = Settings.Default.ActiveDirectory,
-                        OverwritePrompt = true,
-                        DefaultExt = SrmDocument.EXT,
-                        Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC),
-                        FileName = Path.GetFileName(targetFile),
-                    })
+                    new SaveFileDialog())
                 {
+                    saveFileDialog.InitialDirectory = Settings.Default.ActiveDirectory;
+                    saveFileDialog.OverwritePrompt = true;
+                    saveFileDialog.DefaultExt = SrmDocument.EXT;
+                    saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
+                    saveFileDialog.FileName = Path.GetFileName(targetFile);
                     if (saveFileDialog.ShowDialog(this) != DialogResult.OK)
                     {
                         return;

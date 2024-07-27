@@ -396,7 +396,9 @@ namespace ZedGraph
 			_isZooming = false;
 			_isEditing = false;
 			_isSelecting = false;
+			_isTextDragging = false;
 			_dragPane = null;
+			_dragText = null;
 
 			Point mousePt = new Point( e.X, e.Y );
 
@@ -504,6 +506,16 @@ namespace ZedGraph
 					_dragStartPair = _dragCurve[_dragIndex];
 				}
 			}
+			else if (pane != null && pane.IsOverLabel(mousePt, out var label) && Control.ModifierKeys == _editModifierKeys &&
+					e.Button == _selectButtons)
+			{
+				_isTextDragging = true;
+				_dragPane = pane;
+				_dragText = label; 
+				_dragText.UpdatePositions();
+				_dragStartPt = mousePt;
+				_dragPane.Layout.ShowToolTip(mousePt);
+			}
 		}
 
 		/// <summary>
@@ -525,6 +537,13 @@ namespace ZedGraph
 				if ( ( _isEnableHPan || _isEnableVPan ) && ( Control.ModifierKeys == Keys.Shift || _isPanning ) &&
 					( pane != null || _isPanning ) )
 					this.Cursor = Cursors.Hand;
+				else if (pane != null && pane.IsOverLabel(mousePt, out var _))
+				{
+					if (Control.ModifierKeys == _editModifierKeys)
+						this.Cursor = Cursors.SizeAll;
+					else
+						this.Cursor = Cursors.Hand;
+				}
 				else if ( ( _isEnableVZoom || _isEnableHZoom ) && ( pane != null || _isZooming ) )
 					this.Cursor = Cursors.Cross;
 				else if ( _isEnableSelection && ( pane != null || _isSelecting ) )
@@ -604,6 +623,8 @@ namespace ZedGraph
 				//Revision: JCarpenter 10/06
 				else if ( _isSelecting )
 					HandleSelectionFinish( sender, e );
+				else if( _isTextDragging )
+					HandleLabelDragFinish();
 			}
 
 			// Reset the rectangle.
@@ -613,6 +634,7 @@ namespace ZedGraph
 			_isPanning = false;
 			_isEditing = false;
 			_isSelecting = false;
+			_isTextDragging = false;
 
 			Invalidate();
 
@@ -679,8 +701,11 @@ namespace ZedGraph
 				SetCursor( mousePt );
 
 				// Provide Callback for MouseMove events
-				if ( this.MouseMoveEvent != null && this.MouseMoveEvent( this, e ) )
-					return;
+				if( !_isTextDragging )
+				{
+					if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
+						return;
+				}
 
 				//Point tempPt = this.PointToClient( Control.MousePosition );
 
@@ -700,6 +725,8 @@ namespace ZedGraph
 				//Revision: JCarpenter 10/06
 				else if ( _isSelecting )
 					HandleZoomDrag( mousePt );
+				else if( _isTextDragging )
+					HandleLabelDrag(mousePt);
 			}
 		}
 
@@ -760,13 +787,13 @@ namespace ZedGraph
 									label = (string)pt.Tag;
 								else
 								{
-									double xVal, yVal, lowVal;
+									double xVal, yVal;
 									ValueHandler valueHandler = new ValueHandler( pane, false );
 									if ( ( curve is BarItem || curve is ErrorBarItem || curve is HiLowBarItem )
 											&& pane.BarSettings.Base != BarBase.X )
-										valueHandler.GetValues( curve, iPt, out yVal, out lowVal, out xVal );
+										valueHandler.GetValues( curve, iPt, out yVal, out _, out xVal );
 									else
-										valueHandler.GetValues( curve, iPt, out xVal, out lowVal, out yVal );
+										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 
 									string xStr = MakeValueLabel( curve.GetXAxis( pane ), xVal, iPt,
 										curve.IsOverrideOrdinal );
@@ -821,8 +848,8 @@ namespace ZedGraph
 				}
 				else
 				{
-					double x, x2, y, y2;
-					pane.ReverseTransform( mousePt, out x, out x2, out y, out y2 );
+					double x, y, y2;
+					pane.ReverseTransform( mousePt, out x, out _, out y, out y2 );
 					string xStr = MakeValueLabel( pane.XAxis, x, -1, true );
 					string yStr = MakeValueLabel( pane.YAxis, y, -1, true );
 					string y2Str = MakeValueLabel( pane.Y2Axis, y2, -1, true );
@@ -1149,6 +1176,24 @@ namespace ZedGraph
 
 	#region Edit Point Events
 
+		private void HandleLabelDrag(Point mousePt)
+		{
+			_dragPane.ReverseTransform(mousePt, out var mouseX, out var mouseY);
+			_dragPane.ReverseTransform(_dragStartPt, out var startX, out var startY);
+			var xScale = _dragText.Curve.GetXAxis(_dragPane).Scale;
+			var yScale = _dragText.Curve.GetYAxis(_dragPane).Scale;
+
+			_dragText.UpdateLabelLocation(xScale.AddInterval(_dragText.LabelPosition.X, startX, mouseX),
+				yScale.AddInterval(_dragText.LabelPosition.Y, startY, mouseY), _dragPane);
+
+			Invalidate();
+		}
+
+		private void HandleLabelDragFinish()
+		{
+			_dragText.UpdatePositions();
+		}
+
 		private void HandleEditDrag( Point mousePt )
 		{
 			// get the scale values that correspond to the current point
@@ -1413,12 +1458,12 @@ namespace ZedGraph
 
 				#region New Code to Select on Rubber Band
 
-				double x1, x2, xx1, xx2;
+				double x1, x2;
 				double[] y1, y2, yy1, yy2;
 				PointF startPoint = ( (Control)sender ).PointToClient( new Point( Convert.ToInt32( this._dragPane.Rect.X ), Convert.ToInt32( this._dragPane.Rect.Y ) ) );
 
-				_dragPane.ReverseTransform( _dragStartPt, out x1, out xx1, out y1, out yy1 );
-				_dragPane.ReverseTransform( mousePtF, out x2, out xx2, out y2, out yy2 );
+				_dragPane.ReverseTransform( _dragStartPt, out x1, out _, out y1, out yy1 );
+				_dragPane.ReverseTransform( mousePtF, out x2, out _, out y2, out yy2 );
 
 				CurveList objects = new CurveList();
 
@@ -1468,12 +1513,11 @@ namespace ZedGraph
 				//Point mousePt = new Point( e.X, e.Y );
 
 				int iPt;
-				GraphPane pane;
 				object nearestObj;
 
 				using ( Graphics g = this.CreateGraphics() )
 				{
-					if ( this.MasterPane.FindNearestPaneObject( mousePt, g, out pane,
+					if ( this.MasterPane.FindNearestPaneObject( mousePt, g, out _,
 								out nearestObj, out iPt ) )
 					{
 						if ( nearestObj is CurveItem && iPt >= 0 )

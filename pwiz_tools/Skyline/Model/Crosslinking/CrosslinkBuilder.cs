@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
             }
-            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public TypedMass GetFragmentMass(NeutralFragmentIon complexFragmentIon)
@@ -164,8 +164,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (_precursorMassDistribution == null)
             {
                 var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(Settings);
+                var moleculeMassOffset = GetPrecursorFormula();
                 _precursorMassDistribution = fragmentedMoleculeSettings
-                    .GetMassDistribution(GetPrecursorFormula().Molecule, 0, 0);
+                    .GetMassDistribution(moleculeMassOffset.Molecule, moleculeMassOffset.MonoMassOffset, 0);
             }
 
             return _precursorMassDistribution;
@@ -183,7 +184,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
-            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public FragmentedMolecule.Settings GetFragmentedMoleculeSettings()

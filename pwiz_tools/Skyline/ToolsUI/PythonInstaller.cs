@@ -27,6 +27,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
@@ -141,14 +142,16 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
                     waitDlg.PerformWork(this, 50, DownloadPython);
                 }
-                using (var waitDlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPython_Installing_Python})
+                using (var waitDlg = new LongWaitDlg(null, false))
                 {
+                    waitDlg.Message = ToolsUIResources.PythonInstaller_GetPython_Installing_Python;
                     waitDlg.PerformWork(this, 50, InstallPython);
                 }
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed_);
@@ -163,7 +166,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private string DownloadPath { get; set; }
 
-        private void DownloadPython(ILongWaitBroker waitBroker)
+        private void DownloadPython(IProgressMonitor waitBroker)
         {
             // the base Url for python releases
             const string baseUri = "http://python.org/ftp/python/";
@@ -207,8 +210,9 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 // download packages
-                using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.ProgressValue = 0;
                     waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
                 }
 
@@ -226,8 +230,9 @@ namespace pwiz.Skyline.ToolsUI
                 // first install executable packages, if any
                 if (exePaths.Count != 0)
                 {
-                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    using (var waitDlg = new LongWaitDlg(null, false))
                     {
+                        waitDlg.Message = ToolsUIResources.PythonInstaller_GetPackages_Installing_Packages;
                         waitDlg.PerformWork(this, 500, () => InstallExecutablePackages(exePaths));
                     }   
                 }
@@ -244,7 +249,7 @@ namespace pwiz.Skyline.ToolsUI
                         DialogResult result = MultiButtonMsgDlg.Show(
                             this,
                             Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
-                            Resources.PythonInstaller_InstallPackages_Install);
+                            ToolsUIResources.PythonInstaller_InstallPackages_Install);
                         if (result == DialogResult.OK && GetPip())
                         {
                             pipPath = PythonUtil.GetPipPath(_version);
@@ -257,8 +262,9 @@ namespace pwiz.Skyline.ToolsUI
                         }
                     }
 
-                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    using (var waitDlg = new LongWaitDlg(null, false))
                     {
+                        waitDlg.Message = ToolsUIResources.PythonInstaller_GetPackages_Installing_Packages;
                         waitDlg.PerformWork(this, 500, () => InstallSourcePackages(sourcePaths, pipPath));
                     }   
                 }
@@ -291,7 +297,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private IEnumerable<string> DownloadPackages(ILongWaitBroker waitBroker, IEnumerable<string> packagesToDownload)
+        private IEnumerable<string> DownloadPackages(IProgressMonitor waitBroker, IEnumerable<string> packagesToDownload)
         {
             ICollection<string> downloadPaths = new Collection<string>();
             ICollection<string> failedDownloads = new Collection<string>();
@@ -394,14 +400,16 @@ namespace pwiz.Skyline.ToolsUI
         {   
             try
             {
-                using (var dlg = new LongWaitDlg{ProgressValue = 0})
+                using (var dlg = new LongWaitDlg())
                 {
+                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadPip);
                 }
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPip_Installing_Pip})
+                using (var dlg = new LongWaitDlg(null, false))
                 {
+                    dlg.Message = ToolsUIResources.PythonInstaller_GetPip_Installing_Pip;
                     dlg.PerformWork(this, 50, InstallPip);
                 }
             }
@@ -423,7 +431,7 @@ namespace pwiz.Skyline.ToolsUI
         // Consider: the location of the following python links is assumed to be relatively stable, but could change. We
         // might want to package these scripts with Skyline itself to assure that they are available
 
-        private void DownloadPip(ILongWaitBroker longWaitBroker)
+        private void DownloadPip(IProgressMonitor longWaitBroker)
         {
             // location of the setuptools install script
             const string setupToolsScript = "https://bitbucket.org/pypa/setuptools/downloads/ez_setup.py";

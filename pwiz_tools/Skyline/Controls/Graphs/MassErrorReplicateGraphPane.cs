@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (!document.Settings.HasResults)
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
+                Title.Text = GraphsResources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -75,8 +75,8 @@ namespace pwiz.Skyline.Controls.Graphs
             Title.Text = null;
             var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
             YAxis.Title.Text = aggregateOp.Cv
-                ? aggregateOp.AnnotateTitle(Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm)
-                : Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
+                ? aggregateOp.AnnotateTitle(GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error_No_Ppm)
+                : GraphsResources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
             DocNode selectedNode = selectedTreeNode.Model;
             DocNode parentNode = selectedNode;
             IdentityPath identityPath = selectedTreeNode.Path;
@@ -130,8 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
            double minRetentionTime = double.MaxValue;
            double maxRetentionTime = double.MinValue;
            
-           int iColor = 0, iCharge = -1;
-           var charge = Adduct.EMPTY;
+           int iColor = 0;
            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
            int colorOffset = 0;
            var transitionGroupDocNode = parentNode as TransitionGroupDocNode;
@@ -154,9 +153,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     Color color;
                     // ReSharper disable ExpressionIsAlwaysNull
                     var nodeGroup = docNode as TransitionGroupDocNode;
-                    if (parentNode is PeptideDocNode)
+                    if (parentNode is PeptideDocNode peptideDocNode)
                     {
-                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        int iColorGroup = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }
                     else if (displayType == DisplayTypeChrom.total)
@@ -176,7 +175,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
+                        label = string.Format(GraphsResources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     BarItem curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
 
                     if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)

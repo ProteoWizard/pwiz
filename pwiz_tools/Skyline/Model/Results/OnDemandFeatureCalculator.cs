@@ -30,8 +30,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public class OnDemandFeatureCalculator
     {
-        private Dictionary<TransitionGroup, ChromatogramGroupInfo> _chromatogramGroupInfos =
-            new Dictionary<TransitionGroup, ChromatogramGroupInfo>(new IdentityEqualityComparer<TransitionGroup>());
+        private Dictionary<ReferenceValue<TransitionGroup>, ChromatogramGroupInfo> _chromatogramGroupInfos =
+            new Dictionary<ReferenceValue<TransitionGroup>, ChromatogramGroupInfo>();
 
         private ScoreQValueMap _scoreQValueMap;
 
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.Results
             double minStartTime = double.MaxValue;
             double maxEndTime = double.MinValue;
             double apexTime = double.MinValue;
-            double apexHeight = 0;
+            double? apexHeight = null;
             for (int iTransition = 0; iTransition < transitionChromInfos.Count; iTransition++)
             {
                 var transitionChromInfo = transitionChromInfos[iTransition];
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.Results
 
                     minStartTime = Math.Min(minStartTime, chromPeak.StartTime);
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
-                    if (chromPeak.Height > apexHeight)
+                    if (!apexHeight.HasValue || chromPeak.Height > apexHeight)
                     {
                         apexHeight = chromPeak.Height;
                         apexTime = chromPeak.RetentionTime;
@@ -357,9 +357,11 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
                     var rawTimeIntensities = chromatogramInfo.TimeIntensities;
-                    var chromKey = new ChromKey(PeptideDocNode.ModifiedTarget, transitionGroup.PrecursorMz, null,
+                    var chromKey = new ChromKey(
+                        new ChromatogramGroupId(PeptideDocNode.ChromatogramTarget, transitionGroup.SpectrumClassFilter),
+                        transitionGroup.PrecursorMz, null,
                         transition.Mz, 0, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
-                        ChromExtractor.summed, true, false);
+                        ChromExtractor.summed);
                     chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, rawTimeIntensities));
                 }
 

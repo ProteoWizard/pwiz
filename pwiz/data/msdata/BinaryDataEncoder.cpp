@@ -233,7 +233,10 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                 }
             }
             if (n>=0)
+            {
                 config_.numpress = Numpress_None; // excessive error, don't numpress
+                if (config_.format == Format_MzMLb) return;
+            }
             else
                 byteBuffer = reinterpret_cast<const void*>(&numpressed[0]);
         } catch (int e) {
@@ -311,27 +314,52 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
         }
     }
 
-    // Base64 encoding
-
-    result.resize(Base64::binaryToTextSize(byteCount));    
-
-    // std::string storage is not guaranteed contiguous in older C++ standards,
-    // and on long strings this has caused problems in the wild.  So test for
-    // actual contiguousness, and fall back to std::vector if needed
-    // thx Johan Teleman
-    size_t textSize;
-    char *first = &result[0];
-    char *last = &result[result.size()-1];
-    if ((int)result.size() == 1+(last-first)) // pointer math agrees with [] operator
-        textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
-    else 
+    if (config_.format == Format_MzMLb)
     {
-        std::vector<char> contig;  // work in this contiguous memory then copy to string
-        contig.resize(result.size());
-        textSize = Base64::binaryToText(byteBuffer, byteCount, &contig[0]);
-        copy(contig.begin(), contig.end(), result.begin());
+        // no base64 encoding as storing as binary in HDF5
+
+        result.resize(byteCount);
+
+        // std::string storage is not guaranteed contiguous in older C++ standards,
+        // and on long strings this has caused problems in the wild.  So test for
+        // actual contiguousness, and fall back to std::vector if needed
+        // thx Johan Teleman
+        char *first = &result[0];
+        char *last = &result[result.size() - 1];
+        if ((int)result.size() == 1 + (last - first)) // pointer math agrees with [] operator
+            memcpy(&result[0], byteBuffer, byteCount);
+        else
+        {
+            std::vector<char> contig;  // work in this contiguous memory then copy to string
+            contig.resize(result.size());
+            memcpy(&contig[0], byteBuffer, byteCount);
+            copy(contig.begin(), contig.end(), result.begin());
+        }
     }
-    result.resize(textSize);
+    else
+    {
+        // Base64 encoding
+
+        result.resize(Base64::binaryToTextSize(byteCount));
+
+        // std::string storage is not guaranteed contiguous in older C++ standards,
+        // and on long strings this has caused problems in the wild.  So test for
+        // actual contiguousness, and fall back to std::vector if needed
+        // thx Johan Teleman
+        size_t textSize;
+        char *first = &result[0];
+        char *last = &result[result.size() - 1];
+        if ((int)result.size() == 1 + (last - first)) // pointer math agrees with [] operator
+            textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
+        else
+        {
+            std::vector<char> contig;  // work in this contiguous memory then copy to string
+            contig.resize(result.size());
+            textSize = Base64::binaryToText(byteBuffer, byteCount, &contig[0]);
+            copy(contig.begin(), contig.end(), result.begin());
+        }
+        result.resize(textSize);
+    }
 
     if (binaryByteCount != NULL)
         *binaryByteCount = byteCount; // size before base64 encoding
@@ -467,17 +495,29 @@ void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, pwi
 
     if (!encodedData || !length) return;
 
-    // Base64 decoding
-
-    vector<unsigned char> binary(Base64::textToBinarySize(length));
-    size_t binarySize = Base64::textToBinary(encodedData, length, &binary[0]);
-    binary.resize(binarySize);
-
     // buffer abstractions
 
-    void* byteBuffer = &binary[0];
-    size_t byteCount = binarySize;
+    vector<unsigned char> binary;
+    void* byteBuffer;
+    size_t byteCount;
     size_t initialSize;
+
+    if (config_.format == Format_MzMLb)
+    {
+        byteBuffer = (void*) encodedData;
+        byteCount = length;
+    }
+    else
+    {
+        // Base64 decoding
+
+        binary.resize(Base64::textToBinarySize(length));
+        size_t binarySize = Base64::textToBinary(encodedData, length, &binary[0]);
+        binary.resize(binarySize);
+
+        byteBuffer = &binary[0];
+        byteCount = binarySize;
+    }
 
     // decompression
 

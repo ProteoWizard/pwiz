@@ -20,9 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.CompilerServices;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -105,13 +103,13 @@ namespace pwiz.Skyline.Controls.Graphs
             _templatePane.Border.IsVisible = false;
             _templatePane.Title.IsVisible = true;
 
-            _templatePane.XAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
+            _templatePane.XAxis.Title.Text = GraphsResources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
             _templatePane.XAxis.MinorTic.IsOpposite = false;
             _templatePane.XAxis.MajorTic.IsOpposite = false;
             _templatePane.XAxis.Scale.Min = 0.0;
             _templatePane.XAxis.Scale.Max = X_AXIS_START;
 
-            _templatePane.YAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity;
+            _templatePane.YAxis.Title.Text = GraphsResources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity;
             _templatePane.YAxis.MinorTic.IsOpposite = false;
             _templatePane.YAxis.MajorTic.IsOpposite = false;
             _templatePane.YAxis.Scale.Min = 0.0;
@@ -124,7 +122,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Location = { CoordinateFrame = CoordType.ChartFraction },
                 ZOrder = ZOrder.D_BehindAxis
             };
-            _canceledText = new TextObj(Resources.AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled, 0.5, 0.5)
+            _canceledText = new TextObj(GraphsResources.AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled, 0.5, 0.5)
             {
                 FontSpec = new FontSpec(@"Arial", 24, Color.Gray, true, false, false)
                 {
@@ -342,7 +340,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphInfo GetInfo(string key)
         {
-            return key != null && _graphs.ContainsKey(key) ? _graphs[key] : null;
+            return key != null && _graphs.TryGetValue(key, out var graph) ? graph : null;
         }
 
         private void AddUnfinishedLine(GraphPane graphPane, float? currentTime)
@@ -421,7 +419,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 CurveInfo curve = null;
                 foreach (var activeCurve in info.ActiveCurves)
                 {
-                    if (ReferenceEquals(peak.ModifiedSequence, activeCurve.ModifiedSequence))
+                    if (Equals(peak.ChromatogramGroupId, activeCurve.ChromatogramGroupId))
                     {
                         curve = activeCurve;
                         break;
@@ -431,7 +429,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Add a new curve.
                 if (curve == null)
                 {
-                    curve = new CurveInfo(bin[i].ModifiedSequence, bin[i].Color, retentionTime, intensity);
+                    curve = new CurveInfo(bin[i].ChromatogramGroupId, bin[i].Color, retentionTime, intensity);
                     info.GraphPane.CurveList.Insert(0, curve.Curve);
                     info.ActiveCurves.Add(curve);
                 }
@@ -475,9 +473,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 info.MaxY = Math.Max(info.MaxY, intensity);
 
                 // New peptide curve.
-                if (info.LastCurve == null || !ReferenceEquals(peak.ModifiedSequence, info.LastCurve.ModifiedSequence))
+                if (info.LastCurve == null || !Equals(peak.ChromatogramGroupId, info.LastCurve.ChromatogramGroupId))
                 {
-                    info.LastCurve = new CurveInfo(peak.ModifiedSequence, peak.Color, retentionTime, intensity);
+                    info.LastCurve = new CurveInfo(peak.ChromatogramGroupId, peak.Color, retentionTime, intensity);
                     info.GraphPane.CurveList.Add(info.LastCurve.Curve);
                     continue;
                 }
@@ -517,10 +515,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private class CurveInfo
         {
             public LineItem Curve { get; private set; }
-            public Target ModifiedSequence { get; private set; }
+            public ChromatogramGroupId ChromatogramGroupId { get; private set; }
             public bool IsActive { get; set; }
 
-            public CurveInfo(Target modifiedSequence, Color peptideColor, double retentionTime, float intensity)
+            public CurveInfo(ChromatogramGroupId chromatogramGroupId, Color peptideColor, double retentionTime, float intensity)
             {
                 var fillColor = Color.FromArgb(
                     175 + 80 * peptideColor.R / 255,
@@ -534,7 +532,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
                 Curve.AddPoint(retentionTime, intensity);
                 Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
-                ModifiedSequence = modifiedSequence;
+                ChromatogramGroupId = chromatogramGroupId;
             }
 
             public void InsertAt(int index, double retentionTime, double intensity)

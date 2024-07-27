@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -674,5 +674,8 @@ For reference, the audit log is located here: "{0}"</value>
   </data>
   <data name="permuted_isotope_label_complete" xml:space="preserve">
     <value>Added complete permutations of isotope modification '{0}'</value>
+  </data>
+  <data name="added_spectrum_filter" xml:space="preserve">
+    <value>Added spectrum filter</value>
   </data>
 </root>

@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -32,7 +32,6 @@ namespace pwiz.Skyline.Model.Results
         private int _scoreTypesCount = -1;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
-        private readonly Dictionary<Target, int> _dictTextIdToByteIndex = new Dictionary<Target, int>();
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest, IList<string> cacheFilePaths,
             ILoadMonitor loader, IProgressStatus status, Action<ChromatogramCache, IProgressStatus> completed) : base(cachePath, loader, status, completed)
@@ -75,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
 
             // If not cancelled, update progress.
             string cacheFilePath = CacheFilePaths[_currentPartIndex];
-            string message = string.Format(Resources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
+            string message = string.Format(ResultsResources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
             int percent = _currentPartIndex * 100 / CacheFilePaths.Count;
             _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
             _loader.UpdateProgress(_status);
@@ -105,6 +104,14 @@ namespace pwiz.Skyline.Model.Results
                     // Scan ids
                     long offsetScanIds = _fsScans.Stream.Position;
                     _listCachedFiles.AddRange(rawData.ChromCacheFiles.Select(f => f.RelocateScanIds(f.LocationScanIds + offsetScanIds)));
+                    if (null != rawData.ResultFileDatas)
+                    {
+                        _listResultFileDatas.AddRange(rawData.ResultFileDatas);
+                    }
+                    else
+                    {
+                        _listResultFileDatas.AddRange(new ResultFileMetaData[rawData.ChromCacheFiles.Count]);
+                    }
                     if (rawData.CountBytesScanIds > 0)
                     {
                         inStream.Seek(rawData.LocationScanIds, SeekOrigin.Begin);
@@ -137,8 +144,7 @@ namespace pwiz.Skyline.Model.Results
                                             offsetPeaks,
                                             offsetScores,
                                             offsetPoints,
-                                            _dictTextIdToByteIndex,
-                                            _listTextIdBytes)));
+                                            _chromatogramGroupIds)));
                     }
 
                     inStream.Seek(0, SeekOrigin.Begin);
@@ -165,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception x)
             {
-                Complete(new Exception(String.Format(Resources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
+                Complete(new Exception(String.Format(ResultsResources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
             }
             return false;
         }

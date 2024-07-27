@@ -28,6 +28,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -141,8 +142,8 @@ namespace pwiz.Skyline.Model.Results
             MsDataFileUri dataFilePathRecalc = GetRecalcDataFilePath(MSDataFilePath, out dataFilePathPart);
 
             string format = dataFilePathRecalc == null
-                                ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
-                                : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
+                                ? ResultsResources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
+                                : ResultsResources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
             string message = string.Format(format, MSDataFilePath.GetSampleName() ?? MSDataFilePath.GetFileName());
             _status = _status
                 .ChangeMessage(message)
@@ -240,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        throw new InvalidDataException(String.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
+                        throw new InvalidDataException(String.Format(ResultsResources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
                                 dataFilePath.GetSampleOrFileName()));
                     }
 
@@ -353,7 +354,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             int i = _cacheRecalc.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePathRecalc));
             if (i == -1)
-                throw new ArgumentException(string.Format(Resources.ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_, dataFilePathRecalc));
+                throw new ArgumentException(string.Format(ResultsResources.ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_, dataFilePathRecalc));
             var cachedFile = _cacheRecalc.CachedFiles[i];
             return new FileBuildInfo(cachedFile);
         }
@@ -400,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!doSecondPass && listChromData.Any(data => null != data && !IsFirstPassPeptide(data)))
                 {
                     _status = _status.ChangeWarningMessage(
-                        Resources.ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_);
+                        ResultsResources.ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_);
                     _loader.UpdateProgress(_status);
                 }
                 // Let the provider know that it is now safe to use retention time prediction
@@ -434,14 +435,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Write scan ids
-            var scanIdBytes = provider.MSDataFileScanIdBytes;
-            if (scanIdBytes.Length > 0)
-            {
-                _currentFileInfo.LocationScanIds = _fsScans.Stream.Position;
-                _currentFileInfo.SizeScanIds = scanIdBytes.Length;
-                _fsScans.Stream.Write(scanIdBytes, 0, scanIdBytes.Length);
-            }
-
+            _currentFileInfo.WriteResultFileMetadata(provider.ResultFileData, _fsScans.Stream);
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
 
@@ -467,6 +461,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
+            _listResultFileDatas.Add(provider.ResultFileData as ResultFileMetaData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,
@@ -587,6 +582,15 @@ namespace pwiz.Skyline.Model.Results
 
             public PeptideDocNode NodePeptide { get; private set; }
             public TransitionGroupDocNode NodeGroup { get; private set; }
+
+            public ChromatogramGroupId ChromatogramGroupId
+            {
+                get
+                {
+                    return ChromatogramGroupId.ForPeptide(NodePeptide, NodeGroup);
+                }
+            }
+
             public SignedMz PrecursorMz { get; private set; }
         }
 
@@ -887,12 +891,12 @@ namespace pwiz.Skyline.Model.Results
 
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
-            var modSeq = chromDataSet.ModifiedSequence;
+            var chromatogramGroupId = chromDataSet.ChromatogramGroupId;
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
-                if (modSeq != null && !Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedTarget)) // ModifiedSequence for peptides, other id for customIons
+                if (chromatogramGroupId != null && !Equals(chromatogramGroupId, peptidePrecursorMz.ChromatogramGroupId))
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
@@ -1299,7 +1303,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (_fs.Stream == null)
                     throw new InvalidDataException(
-                        Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+                        ResultsResources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
                 WriteChromDataSet(chromDataSets.IndexInFile, chromDataSet, dictScoresToIndex, saveRawTimes, chromDataSets.IsProcessedScans);
             }
         }
@@ -1317,7 +1321,7 @@ namespace pwiz.Skyline.Model.Results
             int lenUncompressed = (int)pointsMemoryStream.Length;
             if (_fs.Stream == null)
                 throw new InvalidDataException(
-                    Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+                    ResultsResources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
             _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
 
             // Use existing scores, if they have already been added
@@ -1344,7 +1348,11 @@ namespace pwiz.Skyline.Model.Results
             // Add to header list
             var header = chromDataSet.MakeChromGroupHeaderInfo(groupOfTimeIntensities, lenCompressed, lenUncompressed);
             header.Offset(0, _listTransitions.Count, _peakCount, scoresIndex, location);
-            header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
+            if (chromDataSet.ChromatogramGroupId != null)
+            {
+                header = header.ChangeTextIdIndex(
+                    _chromatogramGroupIds.AddId(chromDataSet.ChromatogramGroupId));
+            }
 
             int? transitionPeakCount = null;
             foreach (var chromData in chromDataSet.Chromatograms)
@@ -1363,7 +1371,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     throw new InvalidDataException(
                         string.Format(
-                            Resources
+                            ResultsResources
                                 .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
                             transitionPeakCount, chromData.Peaks.Count));
                 }
@@ -1484,5 +1492,21 @@ namespace pwiz.Skyline.Model.Results
 
         public int SizeScanIds { get; set; }
         public long LocationScanIds { get; set; }
+
+        public void WriteResultFileMetadata(IResultFileMetadata resultFileMetadata, Stream stream)
+        {
+            if (resultFileMetadata == null)
+            {
+                SizeScanIds = 0;
+                return;
+            }
+
+            var locationScanIds = stream.Position;
+            var bytes = resultFileMetadata.ToByteArray();
+            stream.Write(bytes, 0, bytes.Length);
+            Assume.AreEqual(locationScanIds + bytes.Length, stream.Position);
+            SizeScanIds = bytes.Length;
+            SetFlag(resultFileMetadata is ResultFileMetaData, ChromCachedFile.FlagValues.result_file_data);
+        }
     }
 }

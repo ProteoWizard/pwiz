@@ -92,8 +92,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             else if (!docCurrent.Molecules.Any(molecule => molecule.IsDecoy))
                 // user removed the decoys
                 return End(TextUtil.LineSeparate(
-                    Resources.ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_,
-                    Resources.ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_));
+                    ScoringResources.ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_,
+                    ScoringResources.ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_));
 
             var modelName = Path.GetFileNameWithoutExtension(container.DocumentFilePath);
             var scoringModel = Equals(document.Settings.PeptideSettings.Integration.AutoTrain, PeptideIntegration.AutoTrainType.mprophet_model)
@@ -106,12 +106,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             targetDecoyGenerator.GetTransitionGroups(out var targetTransitionGroups, out var decoyTransitionGroups);
             if (!targetTransitionGroups.Any())
                 return End(string.Format(
-                    Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
-                    Resources.AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_));
+                    ScoringResources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
+                    ScoringResources.AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_));
             else if (!decoyTransitionGroups.Any())
                 return End(string.Format(
-                    Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
-                    Resources.AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_));
+                    ScoringResources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
+                    ScoringResources.AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_));
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
@@ -131,23 +131,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             catch (Exception x)
             {
-                return End(string.Format(Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_, x.Message));
+                return End(string.Format(ScoringResources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_, x.Message));
             }
 
             do
             {
                 docCurrent = container.Document;
-                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i =>
-                    i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.none).ChangePeakScoringModel((PeakScoringModelSpec)scoringModel)));
-
-                // Reintegrate peaks
-                var resultsHandler = new MProphetResultsHandler(docNew, (PeakScoringModelSpec)scoringModel, _cachedFeatureScores);
-                resultsHandler.ScoreFeatures(loadMonitor);
-                if (resultsHandler.IsMissingScores())
+                try
                 {
-                    return End(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                    docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i =>
+                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.none)
+                            .ChangePeakScoringModel((PeakScoringModelSpec)scoringModel)));
+
+                    // Reintegrate peaks
+                    var resultsHandler = new MProphetResultsHandler(docNew, (PeakScoringModelSpec)scoringModel, _cachedFeatureScores);
+                    resultsHandler.ScoreFeatures(loadMonitor);
+                    if (resultsHandler.IsMissingScores())
+                    {
+                        return End(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                    }
+                    docNew = resultsHandler.ChangePeaks(loadMonitor);
                 }
-                docNew = resultsHandler.ChangePeaks(loadMonitor);
+                catch (OperationCanceledException)
+                {
+                    // Document probably changed while we were auto-training
+                    // Do nothing right now and if the current document still needs to
+                    // be auto-trained we will do it again later.
+                    docNew = docCurrent;
+                }
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
 
