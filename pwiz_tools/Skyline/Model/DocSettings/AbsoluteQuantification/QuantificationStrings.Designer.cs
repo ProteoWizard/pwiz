@@ -485,20 +485,20 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Bilinear turning point (obsolete).
+        ///   Looks up a localized string similar to Bilinear turning point (legacy).
         /// </summary>
-        public static string LodCalculation_TURNING_POINT_Bilinear_turning_point {
+        public static string LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy {
             get {
-                return ResourceManager.GetString("LodCalculation_TURNING_POINT_Bilinear_turning_point", resourceCulture);
+                return ResourceManager.GetString("LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Bilinear turning point standard error.
+        ///   Looks up a localized string similar to Bilinear turning point.
         /// </summary>
-        public static string LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error {
+        public static string LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point {
             get {
-                return ResourceManager.GetString("LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error", resourceCulture);
+                return ResourceManager.GetString("LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point", resourceCulture);
             }
         }
         

@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly LodCalculation NONE = new LodCalculation(@"none",
             () => QuantificationStrings.LodCalculation_NONE_None, args => null);
         public static readonly LodCalculation TURNING_POINT = new LodCalculation(@"turning_point",
-            () => QuantificationStrings.LodCalculation_TURNING_POINT_Bilinear_turning_point, CalculateLodFromTurningPoint);
+            () => QuantificationStrings.LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy, CalculateLodFromTurningPoint);
         public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation(@"blank_plus_2_sd",
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD,
             args=>BlankPlusSdMultiple(args, 2.0));
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             args=>BlankPlusSdMultiple(args, 3.0));
 
         public static readonly LodCalculation TURNING_POINT_STDERR = new LodCalculation(@"turning_point_stderr",
-            () => QuantificationStrings.LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error, CalculateLodFromTurningPointWithStdErr);
+            () => QuantificationStrings.LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point, CalculateLodFromTurningPointWithStdErr);
 
         private static readonly ImmutableList<LodCalculation> ALL =
             ImmutableList.ValueOf(new[]
