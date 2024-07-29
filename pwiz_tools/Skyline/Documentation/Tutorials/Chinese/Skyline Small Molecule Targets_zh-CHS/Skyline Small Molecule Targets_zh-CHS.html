@@ -1,0 +1,868 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline 小分子目标</h1>
+    <p>Skyline 靶向质谱环境能直观呈现导入 Skyline 文档的原始质谱仪数据信息。Skyline 最初系为蛋白质组学应用而开发，其应用范畴现已延伸到普遍分子领域。您可以参阅多种教程，这些教程可帮助您将 Skyline 用于各种各样的分析（SRM、PRM、MS1 筛选、DIA
+        等）。本教程重点介绍对靶向非蛋白质组分子使用 Skyline 的差异。</p>
+    <p>在本教程中，您将针对一组甲硫氨酸代谢途径化合物建立 SRM 分析。</p>
+    <p>Skyline 旨在提供一个不区分质谱仪供应商且可用于靶向定量质谱研究的平台。该平台可以导入在不同仪器供应商的质谱仪上采集的原始数据， 例如 Agilent、Bruker、SCIEX、Shimadzu、Thermo-Scientific 和
+        Waters。通过导入不同仪器平台的数据，可极大地促进可重现方法的传播、实验室间的技能转移、不同仪器之间的比较以及大型多站点研究。这种方法在蛋白质组学领域已使用多年，所以在将 Skyline 用于普遍的目标小分子时同样奏效。</p>
+    <h1>入门指南</h1>
+    <p>要开始本教程，请下载下列 ZIP 文件：</p>
+    <p><a href="https://skyline.ms/tutorials/SmallMolecule_3_6.zip">https://skyline.ms/tutorials/SmallMolecule_3_6.zip</a></p>
+    <p>将文件解压到您电脑上的某个文件夹，比如：</p>
+    <p>C:\Users\bspratt\Documents</p>
+    <p>该操作将创建一个新文件夹：</p>
+    <p>C:\Users\bspratt\Documents\SmallMolecule</p>
+    <p>其中将包含本教程所需的所有文件。</p>
+    <p>如果您在开始学习本教程之前就一直在用 Skyline，最好将 Skyline 恢复为默认设置。要恢复默认设置： </p>
+    <ul>
+        <li>启动 Skyline。</li>
+        <li>在<strong>起始页上</strong>单击<strong>空白文档</strong>，显示如下： </li>
+    </ul>
+    <p><img src="image-0.png" /></p>
+    <ul>
+        <li>在<strong>设置</strong>菜单中单击<strong>默认值。</strong></li>
+        <li>在询问您是否保存当前设置时，单击表单上的<strong>否</strong>。</li>
+    </ul>
+    <p>该 Skyline 实例中的文档设置现已重置为默认值。</p>
+    <p>由于本教程涵盖小分子主题，您可以执行以下操作来选择分子界面：</p>
+    <ul>
+        <li>单击 Skyline 窗口右上角的用户界面控件，然后单击类似于如下的<strong>分子界面</strong>： </li>
+    </ul>
+    <p><img src="image-1.png" /></p>
+    <p>Skyline 将在分子模式下运行，Skyline 窗口右上角 随之显示分子图标<img src="image-2.png" />。原始蛋白质组学菜单和控件现已隐藏，便于您专心从事小分子分析。</p>
+    <h1>将分子离子对列表导入 Skyline 文档</h1>
+    <p>将分子离子对列表导入 Skyline 文档的捷径是从一个空白文档开始，然后使用<strong>编辑 &gt; 插入 &gt; 离子对列表</strong>菜单项。 </p>
+    <p>Skyline 至少需要了解每个母离子和子离子的电荷数以及离子的分子式或<em>质荷比</em>。如果离子对列表中没有任何子离子信息，则视之为母离子目标列表。与肽段一样，Skyline认为具有不同子离子信息的重复母离子信息表示单个母离子的多个离子对。</p>
+    <h3>关于离子分子式和加合物描述的注释 </h3>
+    <p>在蛋白质组学应用中，Skyline 可以有把握地假定离子化通过质子化完成。因此，只需其序列和电荷数便足以描述带电荷的肽段。但普通分子可以通过多种方式（钠增加、氢损等）实现离子化。在 Skyline 中，可以使用 <a
+            href="http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/">http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/</a>
+        中介绍的加合物样式描述指定这样的离子化模式，例如“[M+Na]”、“[M-2H]”、“[2M+ACN+H]”等。</p>
+    <p>加合物描述也可用于指示同位素标记的分子。例如，加合物“[M3Cl374H2-Na]”表示该分子有三个由 37Cl 取代的 Cl 原子，四个由氘取代的 H 原子，并且该分子由于 Na 损失而离子化。</p>
+    <p>对于分子式未知的分子，可以通过加合物显示质量变化。例如，“[M(-1.23)+H]”表示该分子的质量比未改变的形式小 1.23 AMU，并且该分子通过获取氢而实现离子化。</p>
+    <p>对于离子化方式未知的分子，加合物可仅指示电荷。例如，“[M+3]”表示电荷数为三。<em>质荷比</em>值为分子质量的 1/3。尽管可以同时使用母离子和子离子的<em>质荷比</em>值完整描述离子对列表，但如果没有化学式，Skyline
+        就无法提供同位素分布。因此，最好提供中性分子和加合物描述的化学式。</p>
+    <h2>插入离子对列表</h2>
+    <p>要开始创建第一个以非蛋白质组分子为目标的 Skyline 文档，请执行以下操作：</p>
+    <ul>
+        <li>在教程文件夹中找到“SMTutorial_TransitionList.csv”文件，然后在 Excel 中打开。 </li>
+    </ul>
+    <p>您会看到以下值：</p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>
+                    <p>Molecule List Name</p>
+                </td>
+                <td>
+                    <p>Precursor Name</p>
+                </td>
+                <td>
+                    <p>Precursor Formula</p>
+                </td>
+                <td>
+                    <p>Precursor Adduct</p>
+                </td>
+                <td>
+                    <p>Precursor Charge</p>
+                </td>
+                <td>
+                    <p>Precursor RT</p>
+                </td>
+                <td>
+                    <p>Precursor CE</p>
+                </td>
+                <td>
+                    <p>Product m/z</p>
+                </td>
+                <td>
+                    <p>Product Charge</p>
+                </td>
+                <td>
+                    <p>Label</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Methionine</p>
+                </td>
+                <td>
+                    <p>C5H11NO2S</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.5</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>104.07</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Methionine</p>
+                </td>
+                <td>
+                    <p>C5H8H'3NO2S</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.5</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>107.09</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Isoleucine</p>
+                </td>
+                <td>
+                    <p>C6H13NO2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.9</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>86.096</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Leucine</p>
+                </td>
+                <td>
+                    <p>C6H13NO2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>86.096</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Leucine</p>
+                </td>
+                <td>
+                    <p>C6H10H'3NO2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>89.1</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Phenylalanine</p>
+                </td>
+                <td>
+                    <p>C9H11NO2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3.1</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>120.08</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Phenylalanine</p>
+                </td>
+                <td>
+                    <p>C9H11NO2</p>
+                </td>
+                <td>
+                    <p>[M6C13+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3.1</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>126.11</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Arginine</p>
+                </td>
+                <td>
+                    <p>C6H14N4O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.01</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>116.07</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Arginine</p>
+                </td>
+                <td>
+                    <p>C1C'5H14N4O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.01</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>121.11</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Ornithine</p>
+                </td>
+                <td>
+                    <p>C5H12N2O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>0.85</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>70.07</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Ornithine</p>
+                </td>
+                <td>
+                    <p>C5H12N2O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>0.85</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>116.07</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Ornithine</p>
+                </td>
+                <td>
+                    <p>C5H10H'2N2O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>0.85</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>72.07</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Amino Acid</p>
+                </td>
+                <td>
+                    <p>Ornithine</p>
+                </td>
+                <td>
+                    <p>C5H10H'2N2O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>0.85</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>118.07</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Organic Acid</p>
+                </td>
+                <td>
+                    <p>creatine</p>
+                </td>
+                <td>
+                    <p>C4H9N3O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>1.1</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>90.06</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Organic Acid</p>
+                </td>
+                <td>
+                    <p>creatine</p>
+                </td>
+                <td>
+                    <p>C4H6H'3N3O2</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>1.1</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>93.06</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>5'-methylthioadenosine</p>
+                </td>
+                <td>
+                    <p>MTA</p>
+                </td>
+                <td>
+                    <p>C11H15N5O3S</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3.4</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>136.1</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>5'-methylthioadenosine</p>
+                </td>
+                <td>
+                    <p>MTA</p>
+                </td>
+                <td>
+                    <p>C11H12H'3N5O3S</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3.4</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>136.1</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>heavy</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>S-adenosyl methionine</p>
+                </td>
+                <td>
+                    <p>SAM</p>
+                </td>
+                <td>
+                    <p>C15H22N6O5S</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.9</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>250.11</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>S-Adenosyl homocysteine</p>
+                </td>
+                <td>
+                    <p>SAH</p>
+                </td>
+                <td>
+                    <p>C14H20N6O5S</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>2.9</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>136.08</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Polyamine</p>
+                </td>
+                <td>
+                    <p>Spermidine</p>
+                </td>
+                <td>
+                    <p>C7H19N3[M+H]</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3.3</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>129.15</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Polyamine</p>
+                </td>
+                <td>
+                    <p>Spermine</p>
+                </td>
+                <td>
+                    <p>C10H26N4</p>
+                </td>
+                <td>
+                    <p>[M+H]</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>3.5</p>
+                </td>
+                <td>
+                    <p>15</p>
+                </td>
+                <td>
+                    <p>112.112</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p> </p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <ul>
+        <li>在 Excel 中选择该离子对列表的行和列，包括标题行，然后<strong>复制</strong> (Ctrl-C)。</li>
+        <li>在 Skyline <strong>编辑</strong>菜单上选择<strong>插入</strong>，然后单击<strong>离子对列表</strong>。</li>
+    </ul>
+    <p class="keep-next">Skyline 将显示<strong>插入离子对列表</strong>表单，如下所示：</p>
+    <p><img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-3.png" /></p>
+    <ul>
+        <li>按 <strong>Ctrl-V </strong>将剪贴板上的信息粘贴到 Skyline 中。</li>
+    </ul>
+    <p class="keep-next">Skyline 将显示<strong>导入离子对列表：标识列</strong>表单：</p>
+    <p><img alt="Graphical user interface, table
+
+Description automatically generated" src="image-4.png" /></p>
+    <ul>
+        <li>确保按下<strong>分子</strong>按钮。</li>
+    </ul>
+    <p>请注意，每一列都有一个下拉控件，用于指定列的类型。在本例中，Skyline 成功确认了所有必要的列。</p>
+    <ul>
+        <li>单击<strong>确定</strong>按钮。</li>
+    </ul>
+    <h3>关于离子的分子式和加合物描述的进一步注释</h3>
+    <p>本例中有一些成对的轻/重同位素标记，例如 Methionine 和 d3-Methionine。在离子对列表中，它们描述为 <strong>C5H11NO2S [M+H]</strong> 和 <strong>C5H8H'3NO2S
+            [M+H]</strong>，但也可以使用加合物描述的方式描述为 <strong>C5H11NO2S [M+H]</strong> 和<strong> C5H11NO2S [M3H2+H]。</strong>您可以在轻/重 Phenylalanine
+        对中看到一个这样的例子：虽然分子式相同，但重加合物描述指定了 6 个碳原子由 C13 取代。注意，加合物列供选填：例如在 Spermidine 的例子中，加合物可以作为离子分子式的一部分提供。还要注意，Precursor Charge
+        列其实并无存在的必要：从加合物描述中就可以推断出电荷数。标签列也非必需列：从母离子的离子公式和/或加合物可以推断出来重标。</p>
+    <table>
+        <tr>
+            <td>
+                <p>请注意：您也可以使用<strong>文件</strong> &gt; <strong>导入</strong> &gt; <strong>离子对列表</strong>菜单项来直接导入文件，无需打开文件并复制和粘贴其内容。</p>
+            </td>
+        </tr>
+    </table>
+    <p class="keep-next">现在 Skyline 窗口将显示如下： </p>
+    <p><img alt="Graphical user interface, application, Word
+
+Description automatically generated" src="image-5.png" /></p>
+    <p>此时可以导出原生仪器方法、母离子分离列表（用于 PRM）或离子对列表（用于 SRM）。有关如何执行此步的更多详细信息，请参见<a href="https://skyline.ms/tutorial_method_edit.url">靶向方法编辑</a>、<a
+            href="https://skyline.ms/tutorial_existing_quant.url">现有实验与定量实验</a>或<a href="https://skyline.ms/tutorial_targeted_msms.url">靶向 MS/MS
+            (PRM)</a> 教程。</p>
+    <h2>导入质谱仪运行结果</h2>
+    <p>在本教程中，您只需导入在 Waters Xevo TQS 仪器上使用 Skyline 导出的 MassLynx 仪器方法获取的原始数据。若现在要导入，请执行下列步骤。</p>
+    <ul>
+        <li>在<strong>文件</strong>菜单上，单击<strong>保存</strong>。(Ctrl-S)</li>
+        <li><a id="_Hlk37853282"></a>将该文档以名称“Amino Acid Metabolism.sky”另存到您创建的教程文件夹中。</li>
+        <li>在<strong>文件</strong>菜单中选择<strong>导入</strong>，然后单击<strong>结果</strong>。</li>
+        <li>在<strong>导入结果</strong>表单中，选择<strong>在文件中导入单次注射重复测定</strong>。</li>
+        <li>在表单底部的<strong>要同步导入的文件</strong>下拉列表中，单击<strong>许多个</strong>，使用该选项可以提供最佳导入性能。</li>
+        <li>单击<strong>确定</strong>按钮。</li>
+        <li>单击列出的第一个文件夹，然后在按住 Shift 键的情况下单击最后一个文件夹，即可将教程文件夹中的 18 个原始数据文件夹全部选定。 </li>
+    </ul>
+    <p class="keep-next"><strong>导入结果文件</strong>表单应显示如下：</p>
+    <p> <img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-6.png" /></p>
+    <ul>
+        <li>单击<strong>打开</strong>按钮。</li>
+        <li>在<strong>导入结果</strong>表单中，当系统询问您是否删除公共前缀时，选择<strong>请勿删除</strong>选项。</li>
+        <li>单击<strong>确定</strong>按钮。 </li>
+    </ul>
+    <p>这些文件包含在去除特定氨基酸条件下，从癌细胞系中提取的代谢产物。与对照（所有氨基酸）相比，细胞缺少了氨基酸甲硫氨酸或精氨酸，或二者皆已去除，持续时间为 3 小时。<sup>1</sup></p>
+    <p>文件名与条件：</p>
+    <p>ID15739_01_WAA263_3976_020415 – 双空白</p>
+    <p>ID15740_01_WAA263_3976_020415 – 提取空白（含 SIL 标准品）</p>
+    <p>ID15740_02_WAA263_3976_020415 – 提取空白（含 SIL 标准品）</p>
+    <p>ID15740_04_WAA263_3976_020415 – 提取空白（含 SIL 标准品）</p>
+    <p>ID15655_01_WAA263_3976_020415 – 全部 AA 样品 1</p>
+    <p>ID15656_01_WAA263_3976_020415 – 全部 AA 样品 2</p>
+    <p>ID15657_01_WAA263_3976_020415 – 全部 AA 样品 3</p>
+    <p>ID15658_01_WAA263_3976_020415 – Minus Met 样品 1</p>
+    <p>ID15659_01_WAA263_3976_020415 – Minus Met 样品 2</p>
+    <p>ID15660_01_WAA263_3976_020415 – Minus Met 样品 3</p>
+    <p>ID15661_01_WAA263_3976_020415 – Minus Arg 样品 1</p>
+    <p>ID15662_01_WAA263_3976_020415 – Minus Arg 样品 2</p>
+    <p>ID15663_01_WAA263_3976_020415 – Minus Arg 样品 3</p>
+    <p>ID15664_01_WAA263_3976_020415 – Minus Arg, Minus Met 样品 1</p>
+    <p>ID15665_01_WAA263_3976_020415 – Minus Arg, Minus Met 样品 2</p>
+    <p>ID15666_01_WAA263_3976_020415 – Minus Arg, Minus Met 样品 3</p>
+    <p>ID15741_01_WAA263_3976_020415 – 储集的 QC 样品 1</p>
+    <p>ID15741_02_WAA263_3976_020415 – 储集的 QC 样品 2</p>
+    <p class="keep-next">这些文件应在短短数秒内导入，之后 Skyline 窗口将显示如下：</p>
+    <p><img alt="Histogram
+
+Description automatically generated with medium confidence" src="image-7.png" /></p>
+    <p>要利用 Skyline 摘要图查看各个目标，请执行以下操作：</p>
+    <ul>
+        <li>在<strong>视图</strong>菜单中选择<strong>峰面积</strong>，然后单击<strong>重复测定比较</strong>。</li>
+        <li>在<strong>视图</strong>菜单中选择<strong>保留时间</strong>，然后单击<strong>重复测定比较</strong>。</li>
+        <li>单击并拖动这些视图，以将其停靠在色谱图上方。</li>
+        <li>在<strong>目标</strong>视图中，选择第一个目标“Methionine”。</li>
+    </ul>
+    <p class="keep-next">此时 Skyline 窗口将显示如下：</p>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-8.png" /></p>
+    <h1>结语</h1>
+    <p>在本教程中，您了解了如何创建以分子为目标的 Skyline 文档，这些小分子被它们的母离子分子式、加合物以及子离子<em>质荷比</em>值所标识。您导入了由代谢组学研究人员收集的多重重复测定数据集，了解了最初为靶向蛋白质组学应用而创建的 Skyline
+        功能中，有多少现成的功能可以应用于非蛋白质组分子数据。</p>
+    <h1>参考书目</h1>
+    <p class="bibliography">1. Tang, X. <em>et al.</em> Comprehensive Profiling of Amino Acid Response Uncovers Unique Methionine-Deprived Response
+        Dependent on Intact Creatine Biosynthesis. <em>PLoS Genet</em> <strong>11,</strong> e1005158 (2015).</p>
+</body>
+
+</html>

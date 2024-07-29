@@ -1,0 +1,596 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline MS1フルスキャンフィルタ</h1>
+    <p>Skylineの使用で質量分析計（マススぺクトロメトリー）の生データはドキュメントにインポートされ、視覚的に表示されます。測定対象となるペプチドとそのMS/MSトランジションの設定、その最適化および積分境界の選択（もしくは修正）も可能です。 SkylineはSRM（selected
+        reaction monitoring: 選択反応モニタリング）またはMRM（multiple reaction monitoring:
+        複数反応モニタリング）と呼ばれるマススぺクトロメトリーデータの定量解析ソフトとして開発されたのですが、新たにMS1スペクトルの時間-強度クロマトグラムが抽出できるように機能が拡張され、DDA（data dependent acquisition:
+        データ依存的取得）モード<br />で計測されたデータのペプチド定量データも使用できるようになりました。</p>
+    <p>Skyline MS1フルスキャンフィルタ<sup>1</sup>は、DDAモードで測定した（ターゲット分析ではなくDiscovery
+        basedの）プロテオミクスデータセットのインポートを対象としています。生データの<br />インポート後にSkylineの機能を利用し、複数の測定データファイルのプリカーサーイオンの定量が可能となります。Skylineはデータの視覚化が非常に優れており、安定同位体標識を用いない定量法にも応用が可能となっています。
+    </p>
+    <p>本チュートリアルではSkylineのMS1フィルタの効果的な利用に不可欠な項目について説明します。 </p>
+    <ul>
+        <li>MS1フィルタ用のドキュメント作成</li>
+        <li>生データのインポートと（MS1フィルタの時の）プリカーサーイオンのピーク選択に必要な（スペクトルライブラリからの）保持時間情報の使用方法</li>
+        <li>複数の測定データの定量のためMS1フィルタされたペプチドデータを処理する方法</li>
+    </ul>
+    <p>Skylineは質量分析装置を用いたデータ解析のプラットフォームの提供をしており、使用する測定装置（装置メーカー）に依存しない点が大きな特徴（利点）となっています実際Agilent、Bruker、SCIEX、島津製作所、Thermo-Scientific、Watersと市場で見かける大手質量分析メーカーをカバーしており、質量分析装置を使用しているほとんどの研究室で使用可能なソフトです。
+    </p>
+    <h1>はじめに</h1>
+    <p>本チュートリアルを始める前にzipファイルを以下のリンクからダウンロードしてください。</p>
+    <p><a href="https://skyline.ms/tutorials/MS1Filtering-22_2.zip">https://skyline.ms/tutorials/MS1Filtering-22_2.zip</a></p>
+    <p>この中のファイルを、コンピュータ上のフォルダへ解凍します。</p>
+    <p>C:\Users\brendanx\Documents</p>
+    <p>これにより次の新しいフォルダが作成されます。</p>
+    <p>C:\Users\brendanx\Documents\MS1Filtering</p>
+    <p>本チュートリアルを始める前にSkylineをすでに使用していた場合は、Skylineをデフォルト設定に戻してください。デフォルト設定に戻すには、以下の操作を行います。 </p>
+    <ul>
+        <li>Skylineを起動します。</li>
+        <li><strong>開始ページ</strong>で、以下のような<strong>空のドキュメント</strong>をクリックします。 </li>
+    </ul>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-0.png" /></p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>デフォルト</strong> ] をクリックします。</li>
+        <li>現在の設定を保存するかどうかを尋ねるフォームで [ <strong>いいえ</strong> ] をクリックします。</li>
+    </ul>
+    <p>これでSkylineのドキュメント設定がデフォルトにリセットされました。</p>
+    <p>本チュートリアルはプロテオミクスに関するものであるため、以下の操作を行うとプロテオミクス用インターフェイスを選択できます。</p>
+    <ul>
+        <li>Skylineウィンドウの右上隅にあるユーザーインターフェイス管理をクリックし、[ <strong>プロテオミクス用インターフェイス</strong> ] をクリックします。 </li>
+    </ul>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-1.png" /></p>
+    <p>ウィンドウの右上隅のタンパク質アイコン <img src="image-2.png" />が表示されている時はプロテオミクスモードでの動作となります。</p>
+    <p>この空のドキュメントは多数の方法で編集開始できますが、本チュートリアルではペプチド検索結果の処理、ターゲットペプチドの設定、MS（マススぺクトロメトリー）データファイルのインポートという一連の流れをガイドするフォームを使用します。これをSkylineではウィザードと呼びます。</p>
+    <h1>DDA （data dependent acquisition: データ依存的取得）モードのペプチド検索のインポート</h1>
+    <p>まずDDAデータのペプチド検索を行うには[ <strong>ペプチド検索のインポート</strong> ] ウィザードを使用して、ペプチド検索結果をSkylineドキュメントに取り込んでください。</p>
+    <p>以下の操作を行って新しいドキュメントを保存します。</p>
+    <ul>
+        <li>ツールバーの [ <strong>保存</strong> ] ボタン(Ctrl+S)をクリックします。</li>
+        <li>本チュートリアル用に作成したMS1Filteringフォルダに移動します。</li>
+        <li>[ <strong>ファイル名</strong> ] フィールドに「MS1FilterTutorial.sky」と入力します。</li>
+        <li>[ <strong>保存</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>[ <strong>ペプチド検索をインポート</strong> ] ウィザードを以下のように開始します。</p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで [ <strong>インポート</strong> ] を選択し、[ <strong>ペプチド検索</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">以下のようなフォームが表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-3.png" /></p>
+    <p>このウィザードを使用して複数のペプチド検索エンジンの<br />1つからスペクトルライブラリを作成します。サポートされている検索パイプラインの詳細については「<a
+            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">ターゲットメソッドの編集</a>」チュートリアルをご覧ください。なお本チュートリアルで使用するファイルは最低限の情報のみを含む縮小版となります。ご注意ください。
+    </p>
+    <p>以下の操作を行い、検索結果をライブラリに追加します。</p>
+    <ul>
+        <li>[ <strong>ファイルを追加</strong> ] ボタンをクリックします。</li>
+        <li>本チュートリアル用に作成したMS1Filteringフォルダにある .group.xmlファイルを両方とも（100803_0001_MCF7_TiB_Lと100803_0005b_MCF7_TiTip3_L）選択します。</li>
+        <li>[ <strong>開く</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">ウィザードフォームは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-4.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>MS1FilterTutorial.skyドキュメントに新たにスペクトルライブラリが構築されます（進行状況が表示されます）。新しいスペクトルライブラリが保存されたMS1Filteringフォルダに以下の2つの新しいファイルが表示されます。</p>
+    <ul>
+        <li>最良の一致スペクトルを含むライブラリ（Non-redundant library）「MS1FilteringTutorial.blib」。</li>
+        <li>すべての一致スペクトルを含むライブラリ（Redundant library）「MS1FilteringTutorial.redundant.blib」。</li>
+    </ul>
+    <p><img src="image-5.png" /></p>
+    <p>ファイル「MS1FilterTutorial.slc」も表示されます。 これはライブラリの読み込み時間を短縮するためのCacheファイルとなります。これは削除可能ですが必要であれば再度作成もできます。</p>
+    <p>Skylineをすでに使用していてスペクトルライブラリを構築したことがある場合は.skyファイルと同じ名前のライブラリが作成されます。 これはクロマトグラムのドキュメント保存と同じです。クロマトグラムデータ同様に検索結果の追加や削除が可能です。</p>
+    <p class="keep-next">ライブラリ構築が完了すると以下のように表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-6.png" /></p>
+    <p>この場合は自動的にライブラリ構築に利用したスペクトルのソースファイルと一致するWIFFデータファイルが見つかります。ライブラリにはMS/MSスペクトル同定の際に必要なクロマトグラムの保持時間情報（retention
+        time）が含まれます。クロマトグラム抽出の際に必要なデータファイルが見つからない場合は検索がSkyline上に表示されます。またライブラリ構築の際にインポートされたペプチド検索ファイル中に保持時間情報が含まれていない場合、同様にSkyline上に表示されます。ペプチド検索結果ファイルからスペクトルソースファイルや保持時間情報を特定する際にエラーが発生することがありますが、そうした問題のトラブルシューティングについて後述の「ライブラリ保持時間の検証」セクションを参照してください。本チュートリアルを続けるため以下の操作を行います。
+    </p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">2つのWIFFファイルに共通のプリフィックスをどう取り扱うかを尋ねるフォームが表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-7.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードは [ <strong>修飾を追加</strong> ] ページに進みます。
+        ここでは、検索結果では見つかったものの、ドキュメントにはないアミノ酸修飾もすべてリストアップされています。場合によっては、Unimodデータベースサイトでの検索でアミノ酸、質量の組み合わせが一致する修飾が表示されます。</p>
+    <p>*Unimodとはコミュニティが支援する、質量分析計用途のタンパク質修飾の総合データベースです（<a href="https://www.unimod.org">https://www.unimod.org</a>）。</p>
+    <p class="keep-next">本チュートリアルで登場する修飾は、「Phospho (ST)」（SerineもしくはThreonine残基のリン酸化）、「Phospho (Y)」（Tyrosine残基のリン酸化）および「Oxidation
+        (M)」（Methionine残基の酸化）のみです。リストでこれらのチェックをオンにすると、ウィザードは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-8.png" /></p>
+    <p>ドキュメントによっては、いくつかの修飾（例: Oxidation (M)）がすでに定義済みで表示が異なる可能性があります。</p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードが [ <strong>MS1フルスキャン設定を行う</strong> ] ページに進みます。そこで以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>プリカーサーの電荷</strong> ] フィールドに「2, 3, 4」と入力します。</li>
+    </ul>
+    <p class="keep-next">このページの他のフィールドはデフォルト設定のままにしてください。ウィザードは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-9.png" /></p>
+    <p>[ <strong>MS1フィルタ</strong> ]セクションのデフォルト設定は以下のようになります。</p>
+    <ol>
+        <li>[ <strong>含まれる同位体ピーク</strong> ] はドロップダウンリストの「数」。</li>
+        <li>[ <strong>ピーク</strong> ] フィールドは「3」。3つの同位体ピーク（M、M+1、およびM+2）が、データから選択される。</li>
+        <li>[ <strong>プリカーサー質量アナライザー</strong> ] ドロップダウンリストは「TOF」を選択（装置がQSTAR Elite（Applied Biosystems）のToF-MSのため）。</li>
+        <li>[ <strong>分解能</strong> ]
+            フィールドのデフォルト値は「10,000」。このフィールドで各プリカーサー<em>m/z</em>のMS1フィルタウィンドウ幅が規定されます。Skylineでは、この値を用いて<em>m/z</em>のピーク半値全幅（FWHM）を予測し、また以下に示すように、そのFWHM値の2倍の値をフィルタウィンドウとして使用します。
+        </li>
+    </ol>
+    <div style="margin-left : 20px;">
+        <table>
+            <tr>
+                <td>
+                    <p>注：[ <strong>高選択性の抽出を使用します</strong> ] チェックボックスをオンにして抽出範囲をFWHMに限定することもできます。夾雑物が多く含まれるような試料での解析には推奨されます。また装置の性能によって分解能も変更できます。</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p><img src="image-10.png" /></p>
+    <p class="keep-next">Skylineに表示されるクロマトグラム（Extracted ion chromatogram）は各保持時間における選択されたフラグメントイオン（<em>m/z</em> 521.27）の強度となっています。</p>
+    <p><img src="image-11.png" /></p>
+    <p>[ <strong>保持時間のフィルタ</strong> ] セクションが[<strong>MS/MS ID のスキャンの中で [5] 分前後のスキャンのもののみを使用</strong> ]
+        を選択していることに注意してください。つまりIDが1つだけのペプチドの場合、そのIDペプチドの保持時間周辺10分（前後それぞれ5分）のクロマトグラムが抽出されるということです。IDがもし複数あって保持時間が3分程度のばらつきを示す場合は、IDペプチドの保持時間前後に5分追加されるため合計で13分のクロマトグラムが抽出されることになります。もし特定のペプチドIDがない場合は他の測定のIDの保持時間との比較が自動的に行われクロマトグラムからの抽出時間範囲が決定されます。
+    </p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードの [ <strong>FASTAををインポート</strong> ] ページに移動します。SwissProtのヒトタンパク質全エントリのFASTAファイルをインポートし、
+        既知のペプチドの包括的リストを入手します（この実験では、MCF7（ヒト乳がん細胞）とそのリン酸化ペプチド濃縮物を使用しています）。ファイルサイズの大きさの問題があるため以下の操作で12個のヒトタンパク質のみを含むより小さいサイズのFASTAファイルをインポートします。</p>
+    <ul>
+        <li>[ <strong>最大未切断数</strong> ] ドロップダウンリストで、「2」を選択します。</li>
+        <li>[ <strong>参照</strong> ] ボタンをクリックします。</li>
+        <li>本チュートリアル用に作成したMS1Filteringフォルダの「11_proteins.062011.fasta」<br />ファイルを選択します。</li>
+        <li>[ <strong>FASTAを開く</strong> ] の [ <strong>開く</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">ウィザードは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-12.png" /></p>
+    <ul>
+        <li>[ <strong>完了</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p><a id="_Hlk136480856"></a>Skylineはコンピュータを使ってこのファイルにある11個のタンパク質を消化し、インポートしたペプチド検索結果での一致スペクトルを使ってFASTAファイルから50個のペプチドとペプチド価を持つ51個のプリカーサーの追加を提案します。
+    </p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-13.png" /></p>
+    <ul>
+        <li>[<strong>タンパク質の関連付け</strong> ] の[ <strong>OK </strong>] ボタンをクリックします。</li>
+    </ul>
+    <p>Skylineが2つのWIFFファイルのインポートとそこからのクロマトグラムの抽出を開始します。</p>
+    <p class="keep-next">進行状況は以下のように表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-14.png" /></p>
+    <p>インポートが完了したらクロマトグラムデータを吟味する前に、まず今回作成したスペクトルライブラリの詳細を見てみましょう。</p>
+    <h2>ライブラリ保持時間の検証</h2>
+    <p>ペプチド検索結果をもとにMS1フィルタのためのスペクトルライブラリ構築を新たにする場合は作成したライブラリに保持時間情報が含まれていることが必須となりますので、必ず確認してください。[ <strong>ペプチド検索のインポート</strong> ]
+        ウィザードを使用するメリットはライブラリ作成に必要な情報が欠けていることを自動的に通知するシステムがある点です。</p>
+    <p>MS1フィルタでのピークの選択とピークの推定（もしくは同定）に必要な保持時間情報が作成したライブラリに含まれているかをチェックするため以下の手順を実施します。</p>
+    <ul>
+        <li>[ <strong>ビュー</strong> ] メニューで [ <strong>スペクトルライブラリ</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">ここでライブラリでヒットしたタンパク質の修飾候補リストが表示されます。これらは [ <strong>ペプチド検索のインポート</strong> ] ウィザードではドキュメントに追加されてなかった修飾です。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-15.png" /></p>
+    <p>[ <strong>スペクトルライブラリエクスプローラー</strong> ] でこれらの修飾情報を使用するにしても[ <strong>スペクトルライブラリエクスプローラー</strong> ]
+        で（その修飾があるペプチドを）ドキュメントに追加しない限り、これらは“現在のドキュメント”へ反映はされません。タンパク質の修飾は今回のチュートリアルでは問題ではないので次の操作に移行します。</p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">[ <strong>スペクトルライブラリエクスプローラー</strong> ] は以下のように表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-16.png" /></p>
+    <p>ペプチドリストの中でシークエンス文字列の左側にアイコンの付いていないペプチドは<br />上記リストで選択しなかった修飾を含むペプチドになります。</p>
+    <p>スペクトルグラフの下に、「ファイル: <a id="OLE_LINK1"></a><a id="OLE_LINK2"></a>100803_005b_MCF7_TiTip3.wiff」および「RT: <a id="OLE_LINK3"></a><a
+            id="OLE_LINK4"></a>35.21」と表示されています。「RT:」は保持時間情報で、この場合は35.21minとなります。 また「ファイル:
+        100803_005b_MCF7_TiTip3.wiff」は表示されているMSスペクトルがSkylineにインポートされたファイルに正しく紐づけされているということを示しています。「ファイル
+        」名とインポートしたファイル名を完全に一致させる必要はありません。Skylineでは多くのペプチド検索パイプラインで生の装置データがmzXML、mzML、MGF、MS2などのフォーマットに変換されます。通常Skylineは「basename.mgf」と「basename.wiff」との一致、すなわちベース名（ファイル名。この場合はbasenameと表示されている）の一致を検索します。<br />パイプラインには柔軟性が必要とされることが多く、「BASENAME.mzML」が「Basename.RAW」のように大文字と小文字の区別なく一致の検索が行われます。また複数のドット拡張子の処理も含まれています。例えば、「basename.c.mzXML」と「basename.raw」は一致することになります。ただし、「F011852.dat」のようにSkylineにインポートするデータファイルとベース名を共有できない場合は、検索パイプラインの見直しを検討するか（別の検索を使用するなど）、Skylineチームと協力してこの問題を解決することを検討してください。またMascot
+        .dat<br />ファイルについては、別途Skylineウェブサイトの「<a
+            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=mascot_missing_rt">Mascot検索で見つからないID（Peptide推定）推定</a>」ページを参照することをお薦めします。その他の問題については、Skylineサポート掲示板（[
+        <strong>ヘルプ</strong> ] メニューで [ <strong>サポート</strong> ] をクリック）に、問題を投稿することをお薦めします。</p>
+    <p>ここで、下向き矢印キーを押して別のペプチドを選択すると、「ファイル: 」値および「RT:」<br />値が変わります。MS/MSスペクトル、そのソースファイルや保持時間を確認したら、以下の操作を行って作成したドキュメントへ戻ります。</p>
+    <ul>
+        <li>[ <strong>スペクトルライブラリエクスプローラー</strong> ] の [ <strong>閉じる</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <h1>ターゲットペプチドとそのクロマトグラム、MSスペクトル</h1>
+    <p>Skyline [ターゲット] 表示に50個のペプチドが表示されます（ステータスにカウントで表示されます）。</p>
+    <ul>
+        <li>一番上に表示されているK.DIDIS<strong>S</strong>PEFK.I（このペプチドはリン酸ペプチド）のシークエンスをクリックすると、MS/MSスペクトルが表示されます。（なお太字の下線付きの残基「<strong>S</strong>」は、セリン残基がリン酸化されていることを示します）
+        </li>
+        <li>[ <strong>ビュー</strong> ] メニュー上にMS/MSスペクトルが見られない場合は、[ <strong>ライブラリ一致</strong> ] をクリックしてください。</li>
+        <li>もしターゲットの一致度が悪く、ペプチドの推定配列リストが（下図の画像のように）十分な数表示されない場合は、[ <strong>ビュー</strong> ] メニューで [ <strong>イオンタイプ</strong> ] を選択し、[ <strong>A</strong>
+            ]、[ <strong>B</strong> ]、[ <strong>Y</strong> ] および [ <strong>プリカーサー</strong> ] のチェックをオンにしてみてください。</li>
+        <li>ペプチドの全クロマトグラムが見られない場合は、[ <strong>ビュー</strong> ] メニューで [ <strong>自動ズーム</strong> ] から[ <strong>なし</strong> ]（Shift+F11）をクリックします。</li>
+        <li>[ <strong>編集</strong> ] メニューで [ <strong>すべて展開</strong> ] を選択し、[ <strong>プリカーサー</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">Skylineドキュメントは以下のようになります。</p>
+    <p class="keep-next"><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-17.png" /></p>
+    <p>このドキュメントはMS1フィルタ向けの設定で、DDAモードでの測定結果2件がインポートされています。インポートウィザードで [ <strong>MS/MSのIDの時間（5分）のスキャンのみを使用します</strong>
+        ]設定のため、このビューのクロマトグラムの表示時間範囲が約10分（31～41分）となっています。SkylineドキュメントをMS1フィルタ向けに設定しているため、プロダクトイオンである（b-イオンとy-イオンなど）が表示されるSRM測定結果のMS/MSスペクトラにペプチドDIDIS<strong>S</strong>PEFKのプリカーサーイオン
+        - 615.7681++と同位体イオン（[M+1] - 616.2696++、[M+2] - 616.7710++）が表示されますので注意してください。</p>
+    <p>有用なサマリーグラフで、測定結果全体でのピーク面積を比較できます。</p>
+    <ul>
+        <li>[ <strong>ビュー</strong> ] メニューで [ <strong>ピーク面積</strong> ] を選択し、[ <strong>繰り返し測定の比較</strong>] をクリックします。</li>
+        <li>[ <strong>ピーク面積</strong> ] ウィンドウで右クリックし、[ <strong>正規化</strong> ] から [ <strong>なし</strong> ] をクリックします。</li>
+        <li>[ <strong>ピーク面積</strong> ] ウィンドウで右クリックし、[ <strong>期待値を表示</strong> ] をクリックします（下記に説明）。</li>
+        <li>[ <strong>ピーク面積</strong> ] ウィンドウで右クリックし、[ <strong>内積を表示</strong> ] を選択し、[ <strong>ラベル</strong> ] をクリックします。</li>
+    </ul>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-18.png" /></p>
+    <p class="keep-next">以下の操作で[ <strong>ピーク面積</strong> ] ウィンドウを好きな場所にドッキングすることができます。</p>
+    <ul class="keep-next">
+        <li>マウスの左ボタンを押したまま、マウスのカーソルを [ <strong>ライブラリの一致</strong> ]へとドラッグします。</li>
+    </ul>
+    <ul>
+        <li>十字形に並んだ5個のアイコンのセットが表示されたら、マウスを下部アイコンに移動させ、左マウスのボタンから指を離してSkylineウィンドウの右端で、[ <strong>ピーク面積</strong> ]と [ <strong>ライブラリの一致</strong>
+            ]を上下に分割表示します。</li>
+        <li>[ <strong>ビュー</strong> ] メニューで [ <strong>自動ズーム</strong> ] を選択し、[ <strong>最適ピーク</strong> ]（F11）をクリックします。</li>
+        <li>[ <strong>ビュー</strong> ] メニューで [ <strong>グラフを配置</strong> ] を選択し、[ <strong>タイル</strong> ]（Ctrl+T）をクリックします。</li>
+    </ul>
+    <p class="keep-next">Skylineファイルは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-19.png" /></p>
+    <p>クロマトグラム表示には、すべてのプリカーサーとその同位体イオンM（青）、M+1（紫）、M+2（赤茶）のMS1イオンクロマトグラム（Extracted ion
+        chromatogram）が表示されます。SRM用にSkylineを使用してきた人は見慣れているかもしれませんが、選択したピークの保持時間の下には質量誤差が新たに表示されます。これはクロマトグラム中のすべての積分ポイントにおける質量誤差の加重平均となります（この場合、Mまたは青線のもの）。質量誤差が表示されない場合はクロマトグラム表示で右クリックして
+        [ <strong>質量誤差</strong> ] をクリックします。ここで使用しているデータは（現在では古いバージョンである）QSTAR Eliteのものであり質量精度（Mass Resolution）は最新の高分解能装置で期待できるほどのものではありません。</p>
+    <p>またイオンクロマトグラム上に<strong>ID</strong>注釈（保持時間）のある縦線が表示されています。<strong>ID</strong>は表示されているMS/MSスペクトルのクロマトグラム上での保持時間を指し、このターゲットペプチドが信頼性をもって同定されていることを示しています。5b_MCF7_TiTip3ウィンドウ上の赤線（ID
+        35.8）はこれが [ <strong>ライブラリの一致</strong> ] 表示で現在表示されているMS/MSスペクトルのクロマトグラム上での位置（保持時間）であることを示します。グラフ上部の<strong>ID</strong>をクリックすると、[
+        <strong>ライブラリの一致</strong> ] 表示に5b_MCF7_TiTip3繰り返し測定の同定されたスペクトルが表示されます。これらは以前インポート時に作成したライブラリに保存されています。また繰り返し測定名および保持時間（36分）は（
+        <strong>ID</strong>をクリックする前に選択された）ライブラリ（この場合はNon-Redundant library）から得られた最良スペクトルではなく、[ <strong>ライブラリの一致</strong> ] 表示の上部にある [
+        <strong>スペクトル</strong> ] ドロップダウンリストからの選択となります。IDをクリックするか[ <strong>スペクトル</strong> ]
+        ドロップダウンリストを使用して2つのMS/MSスペクトルを比較して見ると、これらの2つのスペクトルがかなり類似していることがわかります。</p>
+    <p>本ドキュメント内の他の50個のペプチドをいくつか精査する前に以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>編集</strong> ] メニューで [ <strong>すべて折り畳む</strong> ] を選択し、[ <strong>ペプチド</strong> ] をクリックします（Ctrl+shift+D）。</li>
+    </ul>
+    <p>次に [ <strong>ターゲット</strong> ] ウィンドウにてキーボードの下向き矢印キーを使用して1つずつペプチドを選択します。最初の3つのリン酸化ペプチドについては、それぞれ各繰り返し測定で1回同定されており、 [ <strong>ライブラリの一致</strong> ]
+        スペクトルグラフでは、「-98」（-H<sub>3</sub>PO<sub>4</sub>）のニュートラルロス（Neutral loss）も複数見られます。</p>
+    <p>上から4番目のペプチドI<strong>S</strong>MSEVDLNVAAPKには、繰り返し測定5b_MCF7_TiTip3のみにIDが付いていることがわかります。繰り返し測定1_MCF7_TiB_Lのピークは、5b_MCF7_TiTip3のIDの保持時間のアライメントによって選択されました。アライメントされたIDを確認するため次の操作を行います。
+    </p>
+    <ul>
+        <li>クロマトグラム上で右クリックし、[ <strong>ペプチドが同定された回数</strong> ] を選択して、<br />[ <strong>調整済み</strong> ] のチェックがまだオンになっていなければクリックしてオンにします。</li>
+    </ul>
+    <p>繰り返し測定1_MCF7_TiB_L のピーク積分境界の内側に水色の線が表示されます。このクロマトグラムを見ると<br />ピークトップが水色の線より左側にあります。これを修正するため以下の操作を行います。</p>
+    <ul>
+        <li>X軸の下約38.8分から約39.4分のところまでドラッグします（下画面紫部分）。</li>
+    </ul>
+    <p class="keep-next">クロマトグラム表示は以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-20.png" /></p>
+    <p>保持時間アライメントがどのように動作しているのかを知るため、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>ビュー</strong> ] メニューで [ <strong>保持時間</strong> ] を選択し、[ <strong>アライン</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">Skylineには以下のようなウィンドウが表示されます。</p>
+    <p><img alt="A screen shot of a graph
+
+Description automatically generated with medium confidence" src="image-21.png" /></p>
+    <p>このウィンドウに保持時間のアライメントに使用した線形回帰の（各測定間での）各ポイントが<br />表示されます。スペクトルライブラリ内の各スペクトルのソースファイルやその他すべてのスペクトルソースファイルからこのような線形回帰が計算されます。測定結果が2つ以上存在する場合ですが[
+        <strong>繰り返し測定</strong>] ドロップダウンリストで選択されているもの以外のすべての結果が1行ずつ表示されます。上図のようにある測定でIDが存在しない場合でもピーク選択改善のため、計算された一次方程式を用いて、各測定間でのMS/MS
+        ID時間マッピングができます。保持時間スケール間マッピングに線形回帰を利用する場合は<a href="https://skyline.ms/tutorial_irt.url"><strong>iRT保持時間予測</strong></a>チュートリアルをご覧ください。</p>
+    <p>2回の測定における保持時間の再現性は、傾き1.005、切片-0.3972、相関係数（R）0.9998のためかなり良好であることがわかります。当該フォーム上部にあるパラグラフで述べられているように、Rが0.99未満の場合、SkylineはRが0.99より大きい一連のペプチドが見つかるまで自動的に異常値を破棄し、その後一次方程式が表示されます。
+    </p>
+    <ul>
+        <li>グラフを右クリックし[ <strong>プロット</strong> ] から [ <strong>残余</strong> ] をクリックすると、線の30秒以内にすべてのポイントが収まることがわかります。</li>
+    </ul>
+    <p>この回帰は230個のポイントに基づき計算されていることに気付かれたかもしれません。ドキュメントには50個のペプチドしかないのですが、50個すべてがどの測定でも同定できたわけではありません。構築したこのライブラリには合計552個のペプチドがあり、多くは本ドキュメントで使用されない修飾も含んでいます。つまり、552個中230個のペプチドはどちらのファイルでも同定されたということです。Skylineはこの回帰分析を行うにあたり、2つの検索結果ファイルどちらにも存在するIDすべてを利用しようとします。1回の測定に複数のIDがある場合は保持時間が早いIDが選択されます。これは、保持時間の長いペプチドの方が比較的安定していることを重視しているためです。（ペプチドがカラム洗浄工程で再び溶出される例もあります）。
+    </p>
+    <ul>
+        <li>[ <strong>保持時間のアライメント</strong> ] ウィンドウの右上隅の赤いX印をクリックしてウィンドウを閉じます。</li>
+    </ul>
+    <h1>データの再確認（レビュー）</h1>
+    <p>このようにSkylineではドキュメントにある50個のペプチドを以下の手順で素早くすべて確認することができます。そのためには [ <strong>ターゲット</strong> ]
+        表示をクリックし、下向き矢印キーを使って各ペプチドを順に選択してください。50個あるペプチドのうちどれが現在選択されているかは、
+        Skylineウィンドウ右下にあるステータスバーで確認できます（下図の場合は4番目のペプチド（51個中）、4番目のプリカーサー（52個中）、10番目のトランジション（156個中）が選択されていることになります）。</p>
+    <p><img src="image-22.png" /></p>
+    <p>ペプチドISMSEVDLNVAAPKの下には、 ピーク積分が可能なペプチドが4つあります（VSVGAPDLSLEA<strong>S</strong>EGSIKLPKのように5b_MCF7_TiTip3に対して微修正されたものもあります）。両測定でIDのつくペプチドもあれば
+        、1つの測定でしかIDがつかないものもあります。Skylineはアライメントを利用して正しいピークを選びます。</p>
+    <h2>クロマトグラフィー環境の基礎知識</h2>
+    <p>9番目のペプチド、SSKA<strong>S</strong>LG<strong>S</strong>LEGEAEAEASSPKについては、測定1_MCF7_TiB_LではペプチドIDがつかず、ピーク面積積分も多少ずれています。</p>
+    <table>
+        <tr>
+            <td>
+                <p><strong>5b_MCF7_TiTip3</strong></p>
+                <p><img src="image-23.svg" /></p>
+            </td>
+            <td>
+                <p><strong>1_MCF7_TiB_L</strong></p>
+                <p><img src="image-24.svg" /></p>
+            </td>
+        </tr>
+    </table>
+    <p>スクロールホイール（マウスホイール）で（手前にスクロール）、5b_MCF7_TiTip3のグラフと同じピークが見えるまで、1_MCF_TiB_Lのグラフをズームアウトします。</p>
+    <p><img src="image-25.svg" /></p>
+    <p>これはクロマトグラフィーデータを扱う際に非常に重要なことです。ターゲットペプチドが一連の測定において毎回同じような時間に溶出すると予想されるますが、これは他のペプチドでも同じです。一方で、共溶出の可能性にも注意しましょう。ターゲット（37分）の両側（33分および40.5分）にある2つのピークは実は2つの他のペプチドによるピークとなりますが、もしターゲットペプチドと共溶出した場合には干渉を考慮せねばいけません。また逆に共溶出しない場合でも、他のペプチドの由来で再現性あるピークが、ピーク強度の低いターゲットペプチドの保持時間判別に役だつことがあります。クロマトグラム抽出範囲内に検出されるペプチドがより多くなるため、MS1フィルタのような選択性が低いメソッドでは特に効果を発揮します。
+    </p>
+    <p>以下の操作を行って1_MC7_TiB_Lの積分範囲を修正します。</p>
+    <ul>
+        <li>保持時間軸の下36.5分のところでクリックし、38分のところまでドラッグします。</li>
+    </ul>
+    <p>ピークのidotp（同位体の内積）値が0.87から0.9に改善され、また質量誤差もわずかですが-10.8ppmから-9.4ppmに改善されたことが [ <strong>ピーク面積</strong> ] グラフで確認できます。</p>
+    <p>他のペプチドの解析に進む前に、抽出クロマトグラムにより取り込まれた別の2つのピークを検討しましょう。40.5分のピークでは3つのプリカーサーチャンネル（M、M+1、M+2）すべてにおいて、良好なシグナルが得られています。ただし、質量誤差を見ると、予測される質量よりも低質量側にずれていることがわかります（-20.9ppmおよび-38.3ppm）。
+    </p>
+    <ul>
+        <li>40.5分のピークの上にあるラベルをクリックします。</li>
+    </ul>
+    <p>Skylineはこれらのピークを選択し、[ <strong>ピーク面積</strong> ] のidotp値が以前に選択されたピークよりも低い（0.9および0.99に対して0.86および0.87）ことが表示されます。</p>
+    <p><img src="image-26.svg" /></p>
+    <p>棒グラフ上の[ 期待値 ]分布をみるとM+1ピークとM+2ピークがターゲットペプチドに対して予測される同位体分布より小さいことがわかります。このピークのペプチドは、約37分にもMS/MS IDがあるターゲットペプチドより炭素数が少なく13Cの取り込み数が小さいためと予想されます。
+    </p>
+    <p>次に33分のピークを見てみると、ターゲットペプチドのモノアイソトピック<em>m/zの</em>シグナルが一切見られません。一方でM+1とM+2はターゲットペプチドのMとM+1の予測同位体分布とよく似た同じ強度のピークがあります
+        。5b_MCF7_TiTip3の質量誤差は+25.8ppmであり、完全に積分された場合の1_MC7_TiB_Lの質量誤差は+5.6ppmです。40.5分のピークほど悪くはありませんが、それでも、平均誤差+15.7ppmは37分のピークの平均誤差-3.5ppmよりも大きいずれとなっています。
+    </p>
+    <p>33分のピーク同位体分布問題を理解するため以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>ターゲット</strong> ] 表示のペプチドの左側の+アイコンをクリックして展開します。</li>
+        <li>マウスカーソルを732.3099+++プリカーサー上に合わせます。</li>
+        <li>プリカーサーの右側に表示されるドロップダウン矢印をクリックします。</li>
+    </ul>
+    <p>Skylineに以下のようなポップアップが表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-27.png" /></p>
+    <p>これら3つのプリカーサートランジションしか表示されない場合は以下の操作を行います。</p>
+    <ul>
+        <li>漏斗型のアイコンをクリックし、トランジションフィルタをオフにします。</li>
+    </ul>
+    <p>この操作でこのペプチドプリカーサーについて考えられるすべてのトランジションがSkylineに表示されます。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-28.png" /></p>
+    <p>緑の丸はクロマトグラムデータがSkylineに存在するトランジションを意味します。同位体分布があると予測されるピーク（すくなくても全体の1％以上のピークとなります）に対してクロマトグラムが自動的に抽出されます。また[M-1]のクロマトグラムも自動的に抽出されますが、干渉を受けていない正しく選択されたピークでは通常この<em>m/z</em>のシグナルは検出されません。
+    </p>
+    <ul>
+        <li>M+3トランジションとM+4トランジションのチェックをオンにします。</li>
+        <li>左上の緑のチェックボタンをクリックするかEnterを押します。</li>
+    </ul>
+    <p>これにより、M+3とM+4のクロマトグラムが追加表示され、33分のピークで37分のピークより多くのシグナルが表示されるようになります。Skylineでのあらゆるクロマトグラムデータ解析作業で保持時間再現性がどれだけ重要かは言うまでもありません。</p>
+    <p><img src="image-29.svg" /></p>
+    <p>33分のピークはターゲットに非常によく似た元素組成の別のペプチドであり、モノアイソトピック質量が1ダルトン大きい3価のペプチド（M+3のデータから見て）であることがわかります。</p>
+    <ul>
+        <li>元の積分修正へ戻るまで、[元に戻す] ボタン(Ctrl+Z）を3回クリックします。</li>
+    </ul>
+    <h2>MS1スペクトル精査</h2>
+    <p>クロマトグラム抽出元のMS1スペクトルも、単純なポイント＆クリックインターフェイスを使って精査できます。これで33.2分のピークと37.4分のピークの違いも迅速に把握できます。これを行うにあたり、以下の操作を行います。</p>
+    <ul>
+        <li>マウスカーソルを37.4分にある5b_MCF7_TiTip3クロマトグラフピーク上に合わせます。</li>
+        <li>カーソルの下に表示される円をクリックします。</li>
+    </ul>
+    <p class="keep-next">Skyline上で以下のようなプロットの<strong>フルスキャン</strong>が表示されます。</p>
+    <p><img src="image-30.svg" /></p>
+    <ul>
+        <li>この操作を33.2分のピークについても同様に行います。</li>
+    </ul>
+    <p class="keep-next">表示が以下のように変化します。</p>
+    <p><img src="image-31.svg" /></p>
+    <p>クロマトグラフで観測された違いもこのMSスペクトル上で明確になります。</p>
+    <h2>干渉の検知と理解</h2>
+    <p>Skylineを利用することで容易に共溶出するペプチドの影響も検出することができます。例えば、二重リン酸化ペプチド（リン酸化部位が2か所）ASLG<strong>S</strong>LEGEAEAEAS<strong>S</strong>PKGKのクロマトグラムの場合、</p>
+    <table>
+        <tr>
+            <td>
+                <p><strong>5b_MCF7_TiTip3</strong></p>
+                <p><img src="image-32.svg" /></p>
+            </td>
+            <td>
+                <p><strong>1_MCF7_TiB_L</strong></p>
+                <p><img src="image-33.svg" /></p>
+            </td>
+        </tr>
+    </table>
+    <p>1_MCF7_TiB_LではなくMCF7_TiTip3のペプチドにIDがあります。1_MCF7_TiB_Lにあるピークは、5b_MCF7_TiTip3のIDとのアライメントに基づいて選択されました。M+2クロマトグラムでは、ピークからその右側までからの干渉はほとんどなさそうであり、最も大きなピークでの質量誤差は-33.7ppm（画面右37.5分）となっています。マウスのスクロールホイールを使用して再度ズームアウトすると36分のあたりに、質量誤差が+20.7ppmでidotp値が0.78のもの（画面左）と、質量誤差が+27.5ppmでidotp値が0.76の非常に似たピークが含まれています（これは保持時間IDをクリックしてピークを選択した後に、[
+        <strong>ピーク面積</strong> ] 表示すると見られます）。</p>
+    <p>5b_MCF7TiTip3の積分境界では共溶出した夾雑物のM+2シグナルが含まれているようです。実際このクロマトグラムの他のピークは保持時間が非常に近く手作業で積分（マニュアル積分）してもそのシグナル排除は不可能に見えます。調べてみると、idotp値0.94および質量誤差-9.7ppmのピーク積分が得られます。
+    </p>
+    <p>上記M+3とM+4の追加を利用すると、干渉ピークはおそらく質量が2 Da大きい3価ペプチドであろうと予想できます。</p>
+    <p><img src="image-34.svg" /></p>
+    <ul>
+        <li>[ <strong>元に戻す</strong> ] ボタンをクリックしてこの変更を元に戻します。</li>
+    </ul>
+    <p>さらに2つのペプチドの下にあるAEGEWEDQEALDYF<strong>S</strong>DKESGKではより強い干渉が見られ、そのシグナルの排除はさらに難しくなっています。</p>
+    <table>
+        <tr>
+            <td>
+                <p><strong>5b_MCF7_TiTip3</strong></p>
+                <p><img src="image-35.svg" /></p>
+            </td>
+            <td>
+                <p><strong>1_MCF7_TiB_L</strong></p>
+                <p><img src="image-36.svg" /></p>
+            </td>
+        </tr>
+    </table>
+    <p>M+3、M+4、M+5の各クロマトグラムを追加することで、この質量と保持時間の組み合わせがプリカーサーイオンのクロマトグラム上でどれだけ複雑かがはっきりわかります。</p>
+    <table>
+        <tr>
+            <td>
+                <p><strong>5b_MCF7_TiTip3</strong></p>
+                <p><img src="image-37.svg" /></p>
+            </td>
+            <td>
+                <p><strong>1_MCF7_TiB_L</strong></p>
+                <p><img src="image-38.svg" /></p>
+            </td>
+        </tr>
+    </table>
+    <p>このペプチドに対して明確なピーク積分値を得るためMとM+1を除くすべてのクロマトグラムを削除します。その後積分境界を調整します。より選択性の高いメソッドを使用する方法もありますが、MS1スペクトルのみからでも有用な定量データを多数取得することは可能です。定量解析については、明確な干渉のない、ランキングも高いプリカーサーイオンに絞ることをお勧めします。<br />本チュートリアルのデータで見てきたようにピーク同定を工夫すれば使用すると、干渉の影響を小さくすることもできます。
+    </p>
+    <p>ペプチドの精査を続けます。わずかな積分調整を1つ行うだけで22番目のペプチド ALVEFESNPEETREPG<strong>S</strong>PPSVQRまで到達します。</p>
+    <h2>翻訳後修飾が特殊なペプチドの解析</h2>
+    <p>ドキュメントにはALVEFESNPEETREPG<strong>S</strong>PPSVQRおよびその下のALVEFESNPEETREPGSPP<strong>S</strong>VQR（どちらも879.0727のプリカーサー<em>m/z</em>を有する）が含まれています。検索エンジン（この場合はProtein
+        Pilot）が前者を5b_MCF7_TiTip3で、後者を1_MCF7_TiB_Lで同定しました。しかしクロマトグラムを見ればどちらも約32.5分で同定されているピークとなっています。</p>
+    <p>興味深いことに、2つのピークは同じ<em>m/z</em>値（Isobaric）でかつ保持時間が非常に近接しています。さらに良く似た同位体分布をもっていることがわかります。 </p>
+    <table>
+        <tr>
+            <td>
+                <p><strong>5b_MCF7_TiTip3</strong></p>
+                <p><img src="image-39.svg" /></p>
+            </td>
+            <td>
+                <p><strong>1_MCF7_TiB_L</strong></p>
+                <p><img src="image-40.svg" /></p>
+            </td>
+        </tr>
+    </table>
+    <p>同位体分布と質量誤差を見ると、1_MCF7_TiB_Lにおける2つのピーク（どちらも31.5分と33分の間に出現しています）は5b_MCF7_TiTip3でのピークと異なるように見えますが、これは単に実験のばらつきが原因である可能性もあります。そこでM+3、M+4、M+5を追加してみると、両方のデータにおいて0.9を超えるidotp値が維持できることが確認できます（再度それぞれを積分して
+        [ <strong>ピーク面積</strong> ] 表示を確認し[ <strong>元に戻す</strong>
+        ]）。このペプチドにはリン酸化部位が4か所あるため、2つのピークは同一ペプチドでリン酸化部位が異なるものである可能性、あるいはリン酸アイソフォームの溶出プロファイルが重複している可能性などが考えられます。MS1フィルタ使用時には検索エンジン出力結果を鵜呑みにせずに、考えられるアイソフォームを慎重に評価することも行ってください。
+    </p>
+    <h2>その他のデータ解析ツール</h2>
+    <p>ペプチド25まで下がっていくと、このドキュメントで最長かつ初めての4価のペプチドプリカーサーであるYGPADVEDTTGSGATDSKDDDDIDLFG<strong>S</strong>DDEEESEEAKRが見つかります。このペプチドは非常に大きく、その同位体分布も今まで見てきた典型的な2価のペプチドや3価ペプチドとかなり異なります。この場合13C原子取り込みのないモノアイソトピックペプチドM+はM+1やM+2よりも存在率が低くなると予測できます。実際クロマトグラムでも予測される分布のidotp値が1.0および0.99になっています。
+    </p>
+    <p><img src="image-41.svg" /></p>
+    <p>今までと同じようにトランジション選択リストを利用し、M+3からM+7までのクロマトグラムを追加します。これらのイオンはすべて同位体分布全体で1%以上となっており、idotp値も高めの0.98であることがわかります。</p>
+    <p><img src="image-42.svg" /></p>
+    <p>（クロマトグラムグラフをみると）このペプチドは本ドキュメント内で唯一、1回の測定で複数回検出、同定されたものであることがわかります（5b_MCF7_TiTip3において3回）。</p>
+    <p>以下の操作を行ってクロマトグラムを同じスケールにすると、これらのIDが繰り返し測定間でどうアライメントされているかわかりやすくなります。</p>
+    <ul>
+        <li>クロマトグラム上で右クリックし [ <strong>拡大縮小幅の同期</strong> ] のチェックをオンにします。</li>
+        <li>クロマトグラム上で右クリックし [ <strong>自動スケールY軸</strong> ] のチェックをオフにします。</li>
+        <li>5b_MCF7_TiTip3クロマトグラムで右クリックし、[ <strong>100807_0005b_MCF7_TiTip3に時間をアラインする</strong> ]
+            のチェックをオンにします。（これにより、この現在のペプチドのみでなく、再度これをオフにするまでこのデータセットのすべてのペプチドがアライメントされることに注意してください。）</li>
+        <li>マウスカーソルをプロット面積上に合わせ、マウスのスクロールホイールを手前にロールしてズームアウトします。</li>
+        <li>5b_MCF7_TiTip3の積分範囲周りの細長い長方形をクリックしてドラッグします。</li>
+    </ul>
+    <p class="keep-next">クロマトグラムは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated with medium confidence" src="image-43.png" /></p>
+    <p>クロマトグラフの抽出元MS1スペクトル内の同位体分布を確認するため以下の操作を行います。</p>
+    <ul>
+        <li>5b_MFC7_TiTip3のピーク頂点にマウスカーソルを合わせ、表示される丸をクリックします。</li>
+    </ul>
+    <p>以下のプロットで[ <strong>フルスキャン</strong> ]ビューが表示されます。</p>
+    <p><img src="image-44.svg" /></p>
+    <ul>
+        <li>[ <strong>フルスキャン</strong> ] 表示の右上隅のXをクリックし表示を閉じます。</li>
+    </ul>
+    <p>アライメントによりクロマトグラフのプロットでIDとピークがきれいに並びました。Y軸自動スケーリングによる拡大縮小幅の同期をオフにすればピークの相対的な高さもわかります。</p>
+    <p>クロマトグラム中のID注釈をクリックすると、検索エンジンがこのペプチドとして同定したMSスペクトルも確認できます。別のやりかたとしては[ <strong>ライブラリの一致</strong> ]
+        表示の上部にあるドロップダウンリストをクリックし、矢印キーを使用して一致したMSスペクトルのページを上下に移動する方法もあります。異なる測定からのMSスペクトルが同一ペプチドからのものであると確認できるまでもう少し解析が必要なこともあり得ます。</p>
+    <p class="keep-next"><strong>5b_MCF7_TiTip3（37.61分）</strong></p>
+    <p><img src="image-45.svg" /></p>
+    <p class="keep-next"><strong>1_MCF_TiB_L（37.03分）</strong></p>
+    <p><img src="image-46.svg" /></p>
+    <p>ただし、2つの測定のクロマトグラムピークは同一のペプチド分子を測定していると大いに確信できるはずです。</p>
+    <h2>干渉に関する詳細</h2>
+    <p>ペプチドDQVANSAFVERのピーク近傍には別の興味深い干渉があります。</p>
+    <table>
+        <tr>
+            <td>
+                <p><strong>5b_MCF7_TiTip3</strong></p>
+                <p><img src="image-47.svg" /></p>
+            </td>
+            <td>
+                <p><strong>1_MCF7_TiB_L</strong></p>
+                <p><img src="image-48.svg" /></p>
+            </td>
+        </tr>
+    </table>
+    <p>1_MCF7_TiB_Lでは、ペプチドは24.5分で同定されましたが、どちらの繰り返し測定でも、25分のあたりで強い干渉ピークが検出されています。しかしながら、干渉が観察されるのはMおよびM+2のみです。ターゲットペプチドは2価であるため、これは干渉１価ペプチドと予想されます。5b_MCF_TiTip3ではターゲットのシグナルが弱い一方、く干渉シグナルは相対的に強く、ターゲットのピークはM+1クロマトグラム上でも検出、同定が難しくなっています。
+    </p>
+    <p>どちらの繰り返し測定においても取得における干渉は深刻な問題であるためこのペプチドはMS1定量化には適用できないと判断すべきです。もしこの特定のペプチドをどうしても測定したい場合は、PRM（Parallel reaction monitoring）やSRM（Selected
+        reaction monitoring）など選択性の高いメソッドでの測定をお勧めします。 </p>
+    <p>＊SRMもしくはMRMではプリカーサーから生じるプロダクトイオンの中で選択されたもののみを測定するのに対し、PRMでは選択されたプリカーサーから生じるすべてのフラグメントイオンを測定する</p>
+    <p>以下の7つの問題についてはこれまで学習してきたことのおさらいです。以下の問題を理解し解決できる力は身に付けられているはずです。 </p>
+    <ol>
+        <li>ETERA<strong>S</strong>PIK<strong>M</strong>DLAPSK（31および32）同一タンパク質の反復（1つを削除）</li>
+        <li>K<strong>T</strong>GSYGALAEITASKおよびKTG<strong>S</strong>YGALAEITASK（34および35）配列が同じペプチドだがリン酸化部位が異なる</li>
+        <li>TPSPKEEDEEPE<strong>S</strong>PPEKK(41)ピーク分離が悪く、ピーク積分が上手くいっていない（ズームしてマニュアル積分で対応）</li>
+        <li>KEK<strong>T</strong>PELPEPSVK(46)M+1とM+2に干渉あり</li>
+        <li>EK<strong>T</strong>PELPEPSVK(47)M+2に干渉あり</li>
+        <li>VPKPEPIPEPKEP<strong>S</strong>PEKNSKおよびVPKPEPIPEPKEPSPEKN<strong>S</strong>K（49および50）配列は同じペプチドだがリン酸化部位が異なるケース</li>
+        <li>KETE<strong>S</strong>EAEDNLDDLEK(51)M+1に別の1価ペプチドの共溶出</li>
+    </ol>
+    <h1>クロマトグラムキャッシュファイルの最小化</h1>
+    <p>ドキュメントにある50個のペプチドの解析が一通り完了すると、すべてがかなり良好な積分結果が得られているはずです。先へ進む前にまずは現在のドキュメントを保存します。</p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで [ <strong>保存</strong> ]（Ctrl+S）をクリックします。</li>
+    </ul>
+    <p>次に、以下の手順を実施して、このドキュメントと無関係なクロマトグラムデータを破棄し、ドキュメントをできる限り小さく共有しやすくなるようにします。</p>
+    <ul>
+        <li>[ <strong>編集</strong> ] メニューで [ <strong>結果を管理</strong> ] をクリックします。</li>
+        <li>[ <strong>最小化</strong> ] ボタンをクリックします。</li>
+        <li>[<strong>ノイズを制限</strong> ] チェックボックスをオンにします。</li>
+        <li>フィールドに「2」を入力して、<strong>クロマトグラフピークの前後（分）</strong>のノイズを指定します。</li>
+        <li>タブキーを押して、フォームによるサイズ縮小の再推定を実行します。</li>
+    </ul>
+    <p>[ <strong>結果を最小化</strong> ] フォームは以下のようになります。</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-49.png" /></p>
+    <p>フォームはこの操作によってキャッシュファイルのサイズが約947KBから約464KB、つまり現在のサイズの49%に縮小される見込みであることを示します。</p>
+    <ul>
+        <li>[ <strong>最小化してファイル名を付けて保存</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>ファイル名を付けて保存</strong> ] の [ <strong>ファイル名</strong> ] フィールドに、「Ms1FilteringTutorial-2min.sky」という名前を入力します。</li>
+        <li>[ <strong>保存</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>再度Shift+F11を押して縮小すると、この新しいドキュメントのペプチドのクロマトグラムが確認でき、積分境界から保持時間が両方向に2分拡大されていることがわかります。</p>
+    <p>クロマトグラムの最小化は、大規模な実験のためにドキュメントを作成する際に非常に便利です。ドキュメントは論文の補足データとしても共有ができます。生データのオンライン利用ももちろんできますが、最小化されたSkylineドキュメントの方がダウンロードも楽でかつ多面的なデータを提供することが可能です。
+    </p>
+    <h1>MS1フィルタ用インクルージョンリストのエクスポート</h1>
+    <p>上述のDDA法を用いた複数の繰り返し測定ではMS/MSスペクトルデータが不足しており、各1回の取得繰り返し測定ではMS/MSでのペプチド同定がされないケースがあることも示されています。この問題については、既に説明したように、MS1フィルタでRTアライメントを使用すると解決可能です。ただしプロファイル型の測定から多数のターゲットペプチドを同時定量解析したい場合は、SkylineでDDA実験用にインクルージョンリストメソッドをエクスポートし、「インクルージョンリストを用いたスクリーニング」<sup>2</sup>を取ることもできます。このインクルージョンリストを用いたメソッドでは、DDA法と比べてターゲットペプチドを測定できる可能性がより高くなります。
+    </p>
+    <p>＊DDAでは感度が低く選択されない場合は、インクルージョンリストにあらかじめ測定したいペプチドのプリカーサーイオン<em>m/z</em>を入れておくことで、感度に影響されることなくデータ取得ができます。</p>
+    <p>チュートリアルSkylineドキュメントから次のMS1フィルタ用のインクルージョンリストメソッドをエクス<br />ポートするため以下の手順を実施します。</p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>ペプチド設定</strong> ] をクリックします。</li>
+        <li>[ <strong>予測</strong> ] タブをクリックします。</li>
+        <li>[ <strong>保持時間の実測値があれば使用</strong>] チェックボックスをオンにします。</li>
+        <li>[ <strong>時間ウィンドウ</strong> ] フィールドで、たとえば「10」分といった予測される保持時間範囲を入力します。範囲の重複を少なくすることは、（SRMの場合と比較して）それほど重要ではありません。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>ファイル</strong> ] メニューで [<strong> エクスポート</strong> ] を選択し、[ <strong>メソッド</strong> ] をクリックします。</li>
+        <li>[ <strong>装置タイプ</strong> ] ドロップダウンリストで「SCIEX QTOF」を選択します。</li>
+        <li>[ <strong>メソッドタイプ</strong> ] ドロップダウンリストで「スケジュール」を選択します。</li>
+        <li>[ <strong>テンプレートファイル</strong> ] フィールドで、QSTARシステムの取得メソッドテンプレート<br />ファイルへのパスを入力します。</li>
+    </ul>
+    <p>SCIEX AnalystまたはThermo
+        Xcaliburのいずれかの装置ソフトウェアがインストールされている場合を除き、装置メソッドエクスポートについて行う作業はこのように行います。Skylineからのすべてのメソッドエクスポートはメソッドを実行しようとする装置の制御用コンピュータ上にあるSkylineのインスタンスのエクスポート機能を実行すれば可能です。サポート対象の装置をお持ちの場合も、必要に応じて上記手順を実行して問題ありません。
+    </p>
+    <h1>結論</h1>
+    <p>本チュートリアルでは、DDA実験データのMS1スキャンから定量情報を抽出するための機能について学びました。元々SRM解析のために考案されたSkylineの既存の機能の多くがそのままMS1抽出クロマトグラムに転用できます。その他のSkylineチュートリアルで提示される資料（動画資料も）での学習もお奨めします。MS1スキャンからクロマトグラムピーク面積（プリカーサーイオンのピーク面積）を抽出して定量するという昔から存在している手法をSkylineはより効率的かつ視覚的に実現しているということです。MS1定量を他の定量ツールで行った場合もSkylineを使用して結果の確認、検証が可能です。さらにSkylineでDDAデータを精査してDIAなど異なる測定メソッドのスペクトルライブラリ作成をするというのもよいでしょう。データの品質、問題点もよりよく理解できるようになるでしょう。
+    </p>
+    <h1>補足</h1>
+    <p>MS1フィルタの原著論文で実際に使われたデータセットを自分で確認したい場合は<sup>1</sup>以下のリンクからドキュメントをダウンロードしてください。</p>
+    <p><a
+            href="http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/">http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/</a>
+    </p>
+    <p>必要なSkylineドキュメントおよび生データがすべて含まれています。</p>
+    <h1>参考文献</h1>
+    <p class="bibliography">1. Schilling, B. <em>et al.</em> Platform-independent and Label-free Quantitation of Proteomic Data Using MS1 Extracted
+        Ion Chromatograms in Skyline APPLICATION TO PROTEIN ACETYLATION AND PHOSPHORYLATION. <em>Mol Cell Proteomics</em><strong> 11,</strong> 202–214
+        (2012).</p>
+    <p class="bibliography">2. Jaffe, J. D. <em>et al.</em> Accurate Inclusion Mass Screening. <em>Mol Cell Proteomics</em><strong> 7,</strong>
+        1952–1962 (2008).</p>
+</body>
+
+</html>

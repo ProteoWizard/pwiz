@@ -1,0 +1,456 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Library-Free DIA/SWATH with Skyline</h1>
+    <table>
+        <tr>
+            <td>
+                <p>Note: This tutorial uses data from a Sciex TripleTOF 6600 instrument. If you prefer to use the data from a Thermo Q-Exactive Plus,
+                    see the version of this tutorial entitled Skyline DIA QE. </p>
+            </td>
+        </tr>
+    </table>
+    <p>In this tutorial you will learn how to use Skyline to perform targeted post-acquisition analysis for peptide and inferred protein detection and
+        quantification using a SWATH-MS dataset acquired on a QqTOF instrument (6600 TripleTOF, Sciex) using a 64 variable width window precursor
+        isolation scheme and a 1 hour gradient.</p>
+    <p>The data are from samples replicating the <a href="http://www.nature.com/nbt/journal/v34/n11/full/nbt.3685.html">LFQBench<em> </em>study</a>
+        where quantitative benchmarking samples were created by mixing proteomes of 3 organisms in defined ratios (figure). </p>
+    <p>Initially, you will set all the parameters in the Skyline session required to work with data-independent datasets and then you will proceed to
+        extract the quantification information from the raw data files. You will tell Skyline to deconvolute the DIA spectra to pseudo-DDA spectra
+        using the DIA-Umpire algorithm, then search those spectra with MSAmanda to create a spectral library in order to generate peptide query
+        parameters to analyze the DIA data. No pre-existing spectral library is required for this data analysis method.</p>
+    <p><img src="image-0.png" /><img src="image-1.png" /> </p>
+    <p>[figure adapted from Navarro, P. et al. A multicenter study benchmarks software tools for label-free proteome quantification. <em>Nature
+            Biotech</em> 34, 1130–1136 (2016)]</p>
+    <h1>Getting Started</h1>
+    <p>To start this tutorial, download the following ZIP file:</p>
+    <p><a href="https://skyline.ms/tutorials/DIA-TTOF.zip">https://skyline.ms/tutorials/DIA-TTOF.zip</a></p>
+    <p>Extract the files in it to a folder on your computer, like:</p>
+    <p>C:\Users\brendanx\Documents</p>
+    <p>This will create a new folder:</p>
+    <p>C:\Users\brendanx\Documents\DIA-TTOF</p>
+    <p>If you have been using Skyline prior to starting this tutorial, it’s a good idea to revert Skyline to its default settings. To do so: </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <strong>Start Page, </strong>click <strong>Blank Document </strong>which looks like this: </li>
+    </ul>
+    <p><img src="image-2.png" /></p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Default. </strong></li>
+        <li>Click <strong>No </strong>on the form asking to save the current settings.</li>
+    </ul>
+    <p>The settings in your current instance of Skyline have now been reset to the default. </p>
+    <p>Since this tutorial covers a proteomics topic, ensure that the user interface is set to the “Proteomics interface” </p>
+    <ul>
+        <li>Click the user interface button in the upper right hand corner on the Skyline toolbar and select <strong>Proteomics Interface
+            </strong>which looks like this: </li>
+    </ul>
+    <p><img src="image-3.png" /></p>
+    <p>Skyline is operating in Proteomics mode which is displayed by the protein icon <img src="image-4.png" /> in the upper right-hand corner of
+        Skyline.</p>
+    <p>For DIA analysis, you will want to force Skyline to integrate peak areas for all extracted quantitative transitions. To do that:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Integrate all.</strong></li>
+    </ul>
+    <h1>Using the Import Peptide Search wizard</h1>
+    <p>If you know where to look, you could perform all of the following steps through various menu options on Skyline. To simplify the normal
+        workflow for DIA, you will instead use a “wizard” which will step you through the critical choices required for Skyline to run the analysis.
+        You will start by telling Skyline to deconvolute the DIA spectra to pseudo-DDA spectra using the DIA-Umpire algorithm, specifying various
+        settings and the FASTA targets which you are interested in querying, searching the DDA spectra with MS Amanda, and finally building a spectral
+        library from the DDA search results. Skyline will then automatically extract chromatograms from the original DIA files.</p>
+    <p>To get started do the following: </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Search</strong>, and click <strong>Run Peptide Search</strong>.</li>
+    </ul>
+    <p>Skyline tells you that you need to save the current document so that it will know where you want to perform the analysis on your computer disk
+        drive.</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Navigate to the DIA-TTOF folder created earlier.</li>
+        <li>In the <strong>File name </strong>field, type “DIA-TTOF-tutorial”.</li>
+        <li>Click the <strong>Save</strong> button.</li>
+    </ul>
+    <p class="keep-next">The <strong>Run Peptide Search</strong> wizard should appear looking like this:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-5.png" /></p>
+    <ul>
+        <li>Click the <strong>Add Files</strong> button.</li>
+        <li>Navigate to the DIA-TTOF folder created earlier and into its DIA subfolder.</li>
+        <li>Drag a selection box around the first 2 mzML files, “...001_SW-A” and “...002_SW-B”.</li>
+        <li>In the <strong>iRT standard peptides</strong> dropdown list, click “Biognosys-11 (iRT-C18)”.</li>
+        <li>In the <strong>Workflow</strong> box, click the <strong>DIA with DIA-Umpire</strong> option.</li>
+    </ul>
+    <p class="keep-next">The <strong>Spectral Library</strong> page of the wizard should now look like this:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-6.png" /></p>
+    <ul>
+        <li>Click the <strong>Next</strong> button.</li>
+    </ul>
+    <p class="keep-next">The <strong>Import Results </strong>form should appear asking you how to handle the prefix and suffix shared by the two mzML
+        files: </p>
+    <p><img alt="Graphical user interface, text, application, email
+
+Description automatically generated" src="image-7.png" /></p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>The wizard will advance to the <strong>Add Modifications</strong> page, where it lists all of the amino acid modifications in the document that
+        you might want to include in the DDA search. It is important to distinguish here between fixed and variable modifications: fixed (sometimes
+        called static) modifications are always applied to the specified amino acids. For example, Carbamidomethyl C is usually treated as a fixed
+        modification because all cysteines in the data are expected to be alkylated. Oxidation M is almost always treated as a variable modification
+        because oxidation is hit-or-miss depending on sample handling. Skyline’s search always treats isotopic labels as variable, but you can change
+        whether other modifications are treated as fixed or variable by clicking on the <strong>Edit modifications</strong> button.</p>
+    <p>You can also add modifications to the document from this page. Since this Skyline document was reset to defaults, the list starts with only
+        Carbamidomethyl (C) and Oxidation (M):</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-8.png" /></p>
+    <ul>
+        <li>Make sure the checkboxes for both modifications are checked.</li>
+        <li>Click the <strong>Next</strong> button.</li>
+    </ul>
+    <p>The wizard will advance In the <strong>Configure Transition Settings</strong> page. Make the following changes from the default values:</p>
+    <ul>
+        <li>For <strong>Precursor charges</strong>, enter “2, 3, 4”.</li>
+        <li>For <strong>Ion types</strong>, enter “y, b”.</li>
+    </ul>
+    <table>
+        <tr>
+            <td>
+                <p>NOTE: You could leave the ion type “p” which stands for precursor, and Skyline would extract chromatograms covering the precursor
+                    isotope distribution from the MS1 spectra in the DIA data files. However, to simplify this tutorial and reduce processing time and
+                    output file size, the description below deals only with fragment ion chromatograms extracted from the DIA MS/MS spectra.</p>
+            </td>
+        </tr>
+    </table>
+    <p class="keep-next">The <strong>Import Peptide Search</strong> form should look like:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-9.png" /></p>
+    <ul>
+        <li>Click the <strong>Next</strong> button.</li>
+    </ul>
+    <p>Skyline presents the <strong>Configure Full-Scan Settings </strong>page. </p>
+    <p><strong>Note:</strong> These extraction settings depend on the type and settings of the instrument used for data acquisition. The optimal
+        extraction settings may be slightly different for each dataset. In this analysis you will use centroided data to save space. So you should
+        select ‘Centroided’ and specify a ‘20’ ppm mass accuracy for extraction. With profile mode data the resolving power of the instrument can be
+        specified.</p>
+    <p>Make the following changes to the default values:</p>
+    <ul>
+        <li>In the <strong>Mass accuracy</strong> field, use “20” ppm.</li>
+    </ul>
+    <p>Now you need to define a new isolation scheme according to the parameters defined on the instrument for data-independent acquisition.</p>
+    <p><strong>Note:</strong> In this example, we used 64 variable width windows that covered the range from 400 to 1200 m/z with 1 m/z overlap to
+        support 0.5 m/z excluded margins at the edges of the quadrupole range.</p>
+    <ul>
+        <li>In the <strong>Isolation scheme</strong> dropdown list, click “&lt;Add…&gt;”.</li>
+    </ul>
+    <p>This brings up the <strong>Edit Isolation Scheme</strong> form in which you should do the following.</p>
+    <ul>
+        <li>In the <strong>Name</strong> field, enter “ETH TTOF (64 variable)”.</li>
+        <li>Click the <strong>Prespecified isolation windows</strong> option.</li>
+        <li>Click the <strong>Import</strong> button.</li>
+        <li>Navigate to the DIA-TTOF folder created earlier and into its DIA subfolder.</li>
+        <li>Double-click the file “collinsb_I180316_001_SW-A.mzML”.</li>
+    </ul>
+    <p>The <strong>Edit Isolation Scheme</strong> form should now look like this:</p>
+    <p><img src="image-10.png" /></p>
+    <p>Skyline has worked out the <strong>Start</strong> and <strong>End</strong> <em>m/z</em> values for the DIA isolation ranges measured on the
+        mass spectrometer. You can see that they overlap by 1.0 <em>m/z</em> to compensate for the overlap, Skyline has added a 0.5 <em>m/z</em>
+        margin to each side of the isolation windows, which it will exclude from consideration during chromatogram extraction. To see this in action:
+    </p>
+    <ul>
+        <li>In the dropdown list beneath <strong>Prespecified isolation window</strong>, click “Extraction”.</li>
+    </ul>
+    <p>You will see the <strong>Start</strong> and <strong>End</strong> values shift inward by 0.5 <em>m/z</em> and the ranges will no longer overlap.
+        These are the ranges that Skyline will use when matching peptide precursor <em>m/z</em> values to acquired spectra for fragment ion
+        chromatogram extraction.</p>
+    <p>To visualize the isolation scheme:</p>
+    <ul>
+        <li>Click the <strong>Graph</strong> button.</li>
+    </ul>
+    <p>You will see a form like the one below:</p>
+    <p><img src="image-11.png" /></p>
+    <p>You can click-and-drag a rectangle to zoom in or use the mouse scroll-wheel, and see the margins. If you uncheck and re-check <strong>Show
+            margins</strong>, the graph title will switch between <strong>Measurement Windows</strong> and <strong>Extraction Windows</strong>, and
+        the pink margin bars will disappear and re-appear. There is no red for <strong>Show gaps</strong> or yellow for <strong>Show single cycle
+            overlaps</strong>, which are both errors DIA isolation scheme design.</p>
+    <ul>
+        <li>Click the <strong>Close</strong> button.</li>
+        <li>Click the <strong>OK </strong>button in the <strong>Edit Isolation Scheme</strong> form.</li>
+    </ul>
+    <p>The <strong>Import Peptide Search </strong>wizard should now look like this:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-12.png" /></p>
+    <ul>
+        <li>Click the <strong>Next</strong> button.</li>
+    </ul>
+    <p class="keep-next">You will see the <strong>Import FASTA</strong> page, which should look like:</p>
+    <p><img alt="A screenshot of a search box
+
+Description automatically generated" src="image-13.png" /></p>
+    <ul>
+        <li>Click the <strong>Browse</strong> button.</li>
+        <li>Navigate to the DIA-TTOF folder created earlier and into its DDA_search subfolder.</li>
+        <li>Double-click on the “nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta” file.</li>
+    </ul>
+    <p>The <strong>Import target proteins from a separate FASTA</strong> option tells Skyline that you want to import a (usually smaller) set of
+        proteins as targets but run the MS Amanda search on a different FASTA (usually a full proteome). This is useful because doing a DDA search on
+        a small FASTA introduces problems with estimating FDR.</p>
+    <table>
+        <tr>
+            <td>
+                <p>NOTE: At this point, you could choose to perform a proteome-wide analysis by instead navigating to the DDA_search subfolder and
+                    double-clicking the full FASTA sequence file “nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta” that will be used in the
+                    peptide search. This would produce quite a lot more targets and take more time to process, but is still feasible on most modern
+                    laptops.</p>
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li>Check <strong>Import target proteins from a separate FASTA</strong>.</li>
+        <li>Navigate to the DIA-TTOF folder created earlier and into its DIA subfolder.</li>
+        <li>Double-click on the “target_protein_sequences.fasta” file.</li>
+        <li>In the <strong>Decoy generation method</strong> dropdown list, click “Shuffle Sequence”.</li>
+        <li>Check <strong>Automatically train mProphet model</strong>.</li>
+    </ul>
+    <p class="keep-next">After setting these options, the page should look like:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-14.png" /></p>
+    <ul>
+        <li>Click the <strong>Next</strong> button.</li>
+    </ul>
+    <p class="keep-next">The wizard will advance to the <strong>Adjust Conversion Settings</strong> page. For this tutorial, this page will show
+        DIA-Umpire settings:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-15.png" /></p>
+    <p>The main setting here is “Instrument preset” which sets some established defaults for DIA-Umpire parameters according to what kind of
+        instrument collected the data. All DIA-Umpire parameters can be viewed and changed by clicking on the “Additional Settings” button. The <a
+            href="https://diaumpire.nesvilab.org/DIA_Umpire_Manual_v2.0.pdf">DIA-Umpire manual</a> should help to understand what these settings do.
+    </p>
+    <ul>
+        <li>Click <strong>Estimate Background</strong>, which will sacrifice a small number of peptides for a significant improvement in speed.</li>
+        <li>Click the <strong>Next</strong> button.</li>
+    </ul>
+    <p>The wizard will advance to the <strong>Adjust Search Settings</strong> page. Here you can set the most important parameters for the DDA search.
+        For this tutorial, do the following:</p>
+    <ul>
+        <li>In the <strong>MS1 tolerance</strong> field, enter “5”. (Note that when you leave the text box the form will assume you mean ppm and set
+            the unit box accordingly.)</li>
+        <li>In the <strong>MS2 tolerance</strong> field, enter “10”.</li>
+    </ul>
+    <p class="keep-next">The form should now look like this:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-16.png" /></p>
+    <p>The <strong>Max q-value</strong> field sets a false discovery rate (FDR) limit allowed for the peptide matches in the search results. In this
+        tutorial, you will use a 5% FDR because this is a small dataset.</p>
+    <p>Note: The field often uses a 1% FDR (maximum q value of 0.01) for searches like this.</p>
+    <ul>
+        <li>In the <strong>Max q-value</strong> field, enter “0.05”.</li>
+        <li>Click the <strong>Next</strong> button to start the search.</li>
+    </ul>
+    <p class="keep-next">The <strong>DDA Search</strong> page will show you the progress of the DIA-Umpire deconvolution and MS Amanda search. You may
+        also cancel the process here.</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-17.png" /></p>
+    <p>After the search is finished:</p>
+    <ul>
+        <li>Click the <strong>Finish</strong> button.</li>
+    </ul>
+    <p>Skyline should begin building the library, showing progress in a form titled <strong>Build Peptide Search Library</strong>. When the library
+        build is complete will attempt to calibrate iRT values from the peptide search results based on the Biognosys iRT standards which were spiked
+        into these samples. This should succeed and present a summary form like the one below:</p>
+    <p><img alt="Graphical user interface, text, application, table
+
+Description automatically generated" src="image-18.png" /></p>
+    <ul>
+        <li>Click the <strong>Success</strong> link (highlighted in blue) to see the linear regression.</li>
+    </ul>
+    <p><img alt="Chart, line chart
+
+Description automatically generated" src="image-19.png" /></p>
+    <ul>
+        <li>Click the <strong>Close</strong> button.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>Skyline will ask if you want to recalibrate the iRT standard values onto the regression line calculated and shown in the graph above.</p>
+    <ul>
+        <li>Click the <strong>No</strong> button.</li>
+    </ul>
+    <p>Skyline presents a long list of peptides with ambiguous matches. In other words, the only evidence for these peptides came from spectra which
+        were matched to multiple peptides, making those spectra and matching peptides not ideal for subsequent targeted analysis.</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p class="keep-next">You should be presented with a form describing the targets calculated based on your settings and the FASTA sequence text
+        provided that looks like this:</p>
+    <p><img alt="Graphical user interface, text, application, email
+
+Description automatically generated" src="image-20.png" /></p>
+    <p>Notice that with a <strong>Min peptides per protein</strong> filter of “1” the 13 proteins found in the FASTA file produce 9
+        <strong>Remaining</strong> proteins. This is because four proteins have no peptides which are found in the spectral library. If you click
+        <strong>Keep all</strong>, you will see a warning “4 empty proteins will be added”, but switch back before continuing to avoid adding the
+        empty proteins to your targets list.</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p class="keep-next">Skyline begins extracting chromatograms:</p>
+    <p><img alt="Graphical user interface
+
+Description automatically generated" src="image-21.png" /></p>
+    <p class="keep-next">After the import is completed, Skyline will show you the mProphet model you requested on the <strong>Import FASTA</strong>
+        page of the <strong>Import Peptide Search</strong> wizard. It should look like this:</p>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-22.png" /></p>
+    <p>It has already been used to re-score the 10 best peaks Skyline found in each set of chromatograms, using its default score, and re-choose the
+        peaks to be the ones with the best mProphet scores. These mProphet scores (given the name <strong>Detection Z Score</strong> in Skyline) are
+        scaled such that 1.0 is 1 standard deviation from the mean mProphet score for the distribution of similar best peaks for the sequence shuffled
+        decoy peptides you requested. Each has also been assigned a q value (given the name <strong>Detection Q Value</strong> in Skyline).</p>
+    <h1>Inspect the data manually</h1>
+    <p>Next you will manually inspect some of the chromatography and underlying spectra. To do that, you will want the <strong>Retention
+            Times</strong> and <strong>Peak Areas</strong> views are showing:</p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Retention Times</strong>,<strong> </strong>and click <strong>Replicate
+                Comparison</strong> (F8).</li>
+        <li>On the<strong> View </strong>menu, choose <strong>Peak Areas</strong>, and click <strong>Replicate Comparison</strong> (F7). </li>
+    </ul>
+    <p>Now both views should be visible. You can configure them optimally on the screen by doing the following: </p>
+    <ul>
+        <li>If these new windows are floating you can dock them to the main window by clicking on the top border of the floating window, holding the
+            left mouse button down, and dragging this window. </li>
+    </ul>
+    <p>You can perform that same operations shown below with the <strong>Library Match</strong> window.</p>
+    <p>Note: In order to dock a window like this, the mouse arrow cursor must be placed inside one of the docking icons, in this case, at the top.
+        Once you begin dragging with the left-mouse button held down, Skyline will show the docking icons and a transparent blue rectangle where the
+        window will be placed if you were to release the left-mouse button at that moment.</p>
+    <p><img src="image-23.png" /><img src="image-24.png" /> </p>
+    <ul>
+        <li>Similarly, dock the <strong>Peak Area: Replicate Comparison</strong> and <strong>Library Match</strong> windows so that all information is
+            easily viewable, as below: </li>
+    </ul>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-25.png" /></p>
+    <ul>
+        <li>Click on the first E. coli protein: “<a id="OLE_LINK1"></a><a id="OLE_LINK2"></a>sp|P63284|CLPB_ECOLI”.</li>
+    </ul>
+    <p>You should see all of the peptides for this protein shown on the various plots (chromatogram, peak areas, and retention time replicate graphs).
+        The screenshot above is an example of when one protein is selected and all of the peptides for this protein are summarized in each of these
+        views (except library match window where nothing is shown).</p>
+    <p>Based on what you see in the <strong>Peak Area - Replicate Comparison</strong> plot, does this protein appear to be differentially regulated?
+        Recall that the expected fold-change ratio between A:B is 4:1 for E. coli.</p>
+    <ul>
+        <li>Select the peptide <a id="OLE_LINK3"></a><a id="OLE_LINK4"></a>TDINQALNR in this protein.</li>
+    </ul>
+    <p>You get specific information for this peptide in all of the views, as shown below:</p>
+    <p><img alt="Graphical user interface
+
+Description automatically generated" src="image-26.png" /></p>
+    <p>Examine the peak area patterns for the rest of the peptides belonging to this protein. Is the quantitative pattern for the peptides from this
+        protein consistent with the expected differential regulation pattern (4:1)?</p>
+    <p><strong>NOTE:</strong> If there is more than one precursor charge state for a given peptide sequence these are extracted and scored separately.
+        You can look at these by clicking the <strong>+</strong> next to the peptide sequence and clicking on the individual charge states.</p>
+    <ul>
+        <li>Click on some of the human proteins in the document.</li>
+    </ul>
+    <p>Examine the replicate peak areas from the protein level view and the peptide level view. Are the peak areas consistent with the expected ratio
+        (1:1)? What about the yeast proteins (1:2)?</p>
+    <ul>
+        <li>Click again on the <a id="OLE_LINK31"></a><a id="OLE_LINK41"></a>TDINQALNR<strong> </strong>peptide in the first protein again.</li>
+        <li>On the <strong>Views</strong> menu, choose<strong> Auto-Zoom</strong>, and click <strong>Best Peak</strong> (F11).</li>
+    </ul>
+    <p class="keep-next">Notice that if you hover the cursor over a chromatogram curve a circle appears on the curve with the same color as the curve.
+    </p>
+    <p><img src="image-27.svg" /></p>
+    <ul>
+        <li>Click the circle on a chromatogram point.</li>
+    </ul>
+    <p>Skyline will open the <strong>Full-Scan</strong> view on the spectrum from which the chromatogram point was extracted zoomed on the ion that
+        you selected.</p>
+    <p><img alt="Chart
+
+Description automatically generated with low confidence" src="image-28.png" /></p>
+    <ul>
+        <li>Click the magnifying glass button in the <strong>Full-Scan</strong> toolbar to view the full spectrum.</li>
+    </ul>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-29.png" /></p>
+    <p>Explore the data further manually (including some decoys).</p>
+    <h1>Mass error and retention time deviation </h1>
+    <p>You can examine the mass accuracy and retention time prediction accuracy to determine whether the optimal extraction parameters have been used
+        or whether some adjustment may improve the results.</p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Mass Errors</strong>, and click <strong>Histogram</strong>.</li>
+    </ul>
+    <p>This will show the distribution of mass errors over the data set. Could the extraction window (±20 ppm) have been further optimized? Generally
+        the mean error +/- 3 standard deviations is sufficient. If the histogram appears cut off, however, with high counts at the extremes then you
+        may want to widen your extraction windows. </p>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-30.png" /></p>
+    <p>Note that the distribution appears to have two peaks, one around 0 and one around 5. To understand this better, it helps to know that these are
+        the mass error values across all 6 runs.</p>
+    <ul>
+        <li>Right-click the graph, choose <strong>Replicates</strong>, and click <strong>Single</strong>.</li>
+        <li>Click in the <strong>Replicates</strong> dropdown list at the top of the <strong>Targets</strong> view.</li>
+        <li>Use the up and down arrow keys on your keyboard to review the mass error values in all 6 replicates.</li>
+    </ul>
+    <p>You will see that the mean value ranges from -0.4 to 4.5, while the standard deviation value ranges from 3.7 to 4.5. Using the simple
+        calculation Mean + 3 * SD = 4.5 + 4.5*3 = 18 PPM at the most extreme, this seems to indicate that a 20 PPM tolerance is a pretty good
+        approximation of what these data require.</p>
+    <p>To view the mass errors for the decoys also:</p>
+    <ul>
+        <li>Right-click the graph, choose <strong>Points</strong>, and click <strong>Decoys</strong>.</li>
+        <li>Right-click the graph, choose <strong>Replicates</strong>, and click <strong>All</strong>.<br />(and then switch back to
+            <strong>Targets</strong>)</li>
+    </ul>
+    <p>To the see the linear regression used to predict the target peptide retention times based on the iRT peptides and library iRT values from the
+        target peptides:</p>
+    <ul>
+        <li>On the <strong>View </strong>menu, choose <strong>Retention Times</strong>, then <strong>Regression</strong>, and click <strong>Score to
+                Run</strong>. </li>
+    </ul>
+    <p><a id="_Hlk23864603"></a><img alt="Chart, line chart
+
+Description automatically generated" src="image-31.png" /></p>
+    <ul>
+        <li>Right-click the graph, choose <strong>Plot</strong>,<strong> </strong>and click <strong>Residuals</strong>.</li>
+    </ul>
+    <p>This will show the deviations from the predicted retention times in this data set. Could the extraction window (± 5 minutes) have been further
+        optimized for this analysis? Check the decoys as well.</p>
+    <p><img alt="Chart, scatter chart
+
+Description automatically generated" src="image-32.png" /></p>
+    <p><strong>Note:</strong> The spectral library for this analysis was constructed from the DIA-Umpire pseudo-DDA spectra. As such, the accuracy of
+        the retention time predictions are very good. Retention times from external spectral libraries acquired on different instruments, at different
+        times, from different samples would lead to larger errors in these predictions.</p>
+    <h1>Further Reading</h1>
+    <p>At this point, this tutorial may be continued at another tutorial, <a
+            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dia_swath">Analysis of DIA/SWATH Data</a>. If you have not
+        viewed that tutorial before, we recommend that you do it now, starting at the <strong>Sample Annotation</strong> and <strong>Quantitative
+            Comparison</strong> sections, to learn how to perform a quantitative analysis once some DIA data has been imported into Skyline.</p>
+    <h1>Conclusion</h1>
+    <p>Congratulations! You have completed your first analysis using Skyline’s DIA-Umpire implementation. You have learned how to use the
+        <strong>Import Peptide Search</strong> wizard to seamlessly make a spectral library out of DIA data, extract quantitative chromatograms from
+        them, and create and apply an mProphet statistical peak detection model to improve peak selection and assign q values which can be used to
+        control the false discovery rate among the peak areas you used in your group comparison. You learned to first assess the DIA data quality with
+        the mass error and retention time regression plots. </p>
+    <p>Now consider retrying these steps with the proteome-wide FASTA file, using all 6 DIA files as input, and/or including precursor ions to see how
+        this works with a broader target set and/or another dimension (precursor ions in MS1 spectra). Or move on to trying this with your own data.
+    </p>
+</body>
+
+</html>

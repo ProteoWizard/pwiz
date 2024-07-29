@@ -1,0 +1,1976 @@
+<?xml version="1.0"  encoding="UTF-8" standalone="no"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="375.0000" height="417.0000">
+<g transform="translate(-0.0000, -0.0000)">
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 0.0000,0.0000 L 0.0000,6672.0000 L 6000.0000,6672.0000 L 6000.0000,0.0000 L 0.0000,0.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 0.0000,0.0000 L 0.0000,417.0000 L 375.0000,417.0000 L 375.0000,0.0000 L 0.0000,0.0000 Z M 72.0000,55.0000 L 72.0000,357.0000 L 355.0000,357.0000 L 355.0000,55.0000 L 72.0000,55.0000 Z " fill="none" stroke="none" />
+<defs><clipPath id="clip-41"><path d="M 0.0000,0.0000 L 0.0000,417.0000 L 375.0000,417.0000 L 375.0000,0.0000 L 0.0000,0.0000 Z M 72.0000,55.0000 L 72.0000,357.0000 L 355.0000,357.0000 L 355.0000,55.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-41)" d="M 0.0000,0.0000 L 0.0000,6672.0000 L 6000.0000,6672.0000 L 6000.0000,0.0000 L 0.0000,0.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 71.0000,54.0000 L 71.0000,356.0000 L 354.0000,356.0000 L 354.0000,54.0000 L 71.0000,54.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+<defs><clipPath id="clip-18467"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-18467)" d="M 2778.0000,872.0000 L 2778.0000,5698.0000 L 4287.0000,5698.0000 L 4287.0000,872.0000 L 2778.0000,872.0000 Z" stroke-width="1px" stroke="#FAFAD2"  fill="#FAFAD2" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-6334"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-6334)" d="M 2778.0000,872.0000 L 4287.0000,872.0000 L 4287.0000,5698.0000 L 2778.0000,5698.0000 Z" stroke="#FAFAD2" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-26500"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-26500)" d="M 2778.0000,872.0000 L 2778.0000,5698.0000 L 4287.0000,5698.0000 L 4287.0000,872.0000 L 2778.0000,872.0000 Z" stroke-width="1px" stroke="#FAFAD2"  fill="#FAFAD2" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-19169"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-19169)" d="M 2778.0000,872.0000 L 4287.0000,872.0000 L 4287.0000,5698.0000 L 2778.0000,5698.0000 Z" stroke="#FAFAD2" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1300.0000,5698.0000 L 1300.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1300.0000,5698.0000 L 1300.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1450.0000,5698.0000 L 1450.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1450.0000,5698.0000 L 1450.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1601.0000,5698.0000 L 1601.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1601.0000,5698.0000 L 1601.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1752.0000,5698.0000 L 1752.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1752.0000,5698.0000 L 1752.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2054.0000,5698.0000 L 2054.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2054.0000,5698.0000 L 2054.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2205.0000,5698.0000 L 2205.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2205.0000,5698.0000 L 2205.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2356.0000,5698.0000 L 2356.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2356.0000,5698.0000 L 2356.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2507.0000,5698.0000 L 2507.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2507.0000,5698.0000 L 2507.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2808.0000,5698.0000 L 2808.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2808.0000,5698.0000 L 2808.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2959.0000,5698.0000 L 2959.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2959.0000,5698.0000 L 2959.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3110.0000,5698.0000 L 3110.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3110.0000,5698.0000 L 3110.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3261.0000,5698.0000 L 3261.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3261.0000,5698.0000 L 3261.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3563.0000,5698.0000 L 3563.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3563.0000,5698.0000 L 3563.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3714.0000,5698.0000 L 3714.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3714.0000,5698.0000 L 3714.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3864.0000,5698.0000 L 3864.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3864.0000,5698.0000 L 3864.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4015.0000,5698.0000 L 4015.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4015.0000,5698.0000 L 4015.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4317.0000,5698.0000 L 4317.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4317.0000,5698.0000 L 4317.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4468.0000,5698.0000 L 4468.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4468.0000,5698.0000 L 4468.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4619.0000,5698.0000 L 4619.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4619.0000,5698.0000 L 4619.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4770.0000,5698.0000 L 4770.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4770.0000,5698.0000 L 4770.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5071.0000,5698.0000 L 5071.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5071.0000,5698.0000 L 5071.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5222.0000,5698.0000 L 5222.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5222.0000,5698.0000 L 5222.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5373.0000,5698.0000 L 5373.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5373.0000,5698.0000 L 5373.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5524.0000,5698.0000 L 5524.0000,5738.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5524.0000,5698.0000 L 5524.0000,5658.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5457.0000 L 1109.0000,5457.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5457.0000 L 1189.0000,5457.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5216.0000 L 1109.0000,5216.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5216.0000 L 1189.0000,5216.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4974.0000 L 1109.0000,4974.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4974.0000 L 1189.0000,4974.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4733.0000 L 1109.0000,4733.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4733.0000 L 1189.0000,4733.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4250.0000 L 1109.0000,4250.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4250.0000 L 1189.0000,4250.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4009.0000 L 1109.0000,4009.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4009.0000 L 1189.0000,4009.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3768.0000 L 1109.0000,3768.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3768.0000 L 1189.0000,3768.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3527.0000 L 1109.0000,3527.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3527.0000 L 1189.0000,3527.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3044.0000 L 1109.0000,3044.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3044.0000 L 1189.0000,3044.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2803.0000 L 1109.0000,2803.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2803.0000 L 1189.0000,2803.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2561.0000 L 1109.0000,2561.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2561.0000 L 1189.0000,2561.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2320.0000 L 1109.0000,2320.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2320.0000 L 1189.0000,2320.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1838.0000 L 1109.0000,1838.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1838.0000 L 1189.0000,1838.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1596.0000 L 1109.0000,1596.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1596.0000 L 1189.0000,1596.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1355.0000 L 1109.0000,1355.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1355.0000 L 1189.0000,1355.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1114.0000 L 1109.0000,1114.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,1114.0000 L 1189.0000,1114.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 188.0000,58.0000 L 254.0000,58.0000 L 254.0000,92.0000 L 188.0000,92.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<defs><image id="img-1" x="0" y="0" width="8" height="8" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJElEQVQYldWMoQEAAAiDmP//jMW6A6RAAlXA5lxUBiAJzS8OC3xNJAut7pxxAAAAAElFTkSuQmCC"  preserveAspectRatio="none" /><pattern id="img-1-ref" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse" >
+<use id="img-1-ign" xlink:href="#img-1" /></pattern></defs>
+<path style="fill:url(#img-1-ref);" d="M 3008.0000,934.0000 L 4057.0000,934.0000 L 4057.0000,1477.0000 L 3008.0000,1477.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 188.0000,58.0000 L 254.0000,58.0000 L 254.0000,92.0000 L 188.0000,92.0000 Z" /><path style="fill:#ffffff" d="M 187.0000,57.0000 L 256.0000,57.0000 L 256.0000,94.0000 L 187.0000,94.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2992.0000,918.0000 L 4073.0000,918.0000 L 4073.0000,1493.0000 L 2992.0000,1493.0000 L 2992.0000,918.0000 Z M 3024.0000,1477.0000 L 3008.0000,1461.0000 L 4057.0000,1461.0000 L 4041.0000,1477.0000 L 4041.0000,934.0000 L 4057.0000,950.0000 L 3008.0000,950.0000 L 3024.0000,934.0000 L 3024.0000,1477.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 187.0000,57.0000 L 256.0000,57.0000 L 256.0000,94.0000 L 187.0000,94.0000 Z" /><text font-family="Arial" fill="#808080" style ="white-space:pre;" font-weight="400" text-anchor="start" x="191.0000" y="71.0000" font-size="14.0000" ><![CDATA[Predicted]]></text>
+<text font-family="Arial" fill="#808080" style ="white-space:pre;" font-weight="400" text-anchor="start" x="207.0000" y="87.0000" font-size="14.0000" ><![CDATA[18.2]]></text>
+<path style="fill:#ffffff" d="M 188.0000,58.0000 L 254.0000,58.0000 L 254.0000,92.0000 L 188.0000,92.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 3008.0000,934.0000 L 4057.0000,934.0000 L 4057.0000,1477.0000 L 3008.0000,1477.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 188.0000,58.0000 L 254.0000,58.0000 L 254.0000,92.0000 L 188.0000,92.0000 Z" /><path style="fill:#ffffff" d="M 187.0000,57.0000 L 256.0000,57.0000 L 256.0000,94.0000 L 187.0000,94.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2992.0000,918.0000 L 4073.0000,918.0000 L 4073.0000,1493.0000 L 2992.0000,1493.0000 L 2992.0000,918.0000 Z M 3024.0000,1477.0000 L 3008.0000,1461.0000 L 4057.0000,1461.0000 L 4041.0000,1477.0000 L 4041.0000,934.0000 L 4057.0000,950.0000 L 3008.0000,950.0000 L 3024.0000,934.0000 L 3024.0000,1477.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 187.0000,57.0000 L 256.0000,57.0000 L 256.0000,94.0000 L 187.0000,94.0000 Z" /><text font-family="Arial" fill="#808080" style ="white-space:pre;" font-weight="400" text-anchor="start" x="191.0000" y="71.0000" font-size="14.0000" ><![CDATA[Predicted]]></text>
+<text font-family="Arial" fill="#808080" style ="white-space:pre;" font-weight="400" text-anchor="start" x="207.0000" y="87.0000" font-size="14.0000" ><![CDATA[18.2]]></text>
+<defs><clipPath id="clip-15724"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-15724)" d="M 3533.0000,1546.0000 L 3533.0000,5698.0000 " stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-11478"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-11478)" d="M 3533.0000,1546.0000 L 3533.0000,5698.0000 " stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-29358"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-29358)" d="M 2064.0000,5696.0000 L 2080.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2080.0000,5664.0000 L 2112.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2112.0000,5648.0000 L 2144.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2144.0000,5648.0000 L 2160.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2160.0000,5584.0000 L 2192.0000,5552.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2192.0000,5552.0000 L 2208.0000,5520.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2208.0000,5520.0000 L 2240.0000,5504.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2240.0000,5504.0000 L 2272.0000,5488.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2272.0000,5488.0000 L 2288.0000,5488.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2288.0000,5488.0000 L 2320.0000,5552.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2320.0000,5552.0000 L 2336.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2336.0000,5616.0000 L 2368.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2368.0000,5648.0000 L 2400.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2400.0000,5648.0000 L 2416.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2416.0000,5648.0000 L 2448.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2448.0000,5632.0000 L 2464.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2464.0000,5632.0000 L 2496.0000,5600.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2496.0000,5600.0000 L 2528.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2528.0000,5616.0000 L 2544.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2544.0000,5584.0000 L 2576.0000,5552.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2576.0000,5552.0000 L 2592.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2592.0000,5584.0000 L 2624.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2624.0000,5616.0000 L 2656.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2656.0000,5632.0000 L 2672.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2672.0000,5648.0000 L 2704.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2704.0000,5648.0000 L 2736.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2736.0000,5664.0000 L 2752.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2752.0000,5664.0000 L 2784.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2784.0000,5648.0000 L 2800.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2800.0000,5664.0000 L 2832.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-26962"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-26962)" d="M 2832.0000,5664.0000 L 2864.0000,5680.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-24464"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-24464)" d="M 2864.0000,5680.0000 L 2880.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2880.0000,5664.0000 L 2912.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2912.0000,5648.0000 L 2928.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2928.0000,5648.0000 L 2960.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2960.0000,5648.0000 L 2992.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2992.0000,5648.0000 L 3008.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3008.0000,5632.0000 L 3040.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3040.0000,5632.0000 L 3056.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3056.0000,5616.0000 L 3088.0000,5600.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3088.0000,5600.0000 L 3120.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3120.0000,5584.0000 L 3136.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3136.0000,5584.0000 L 3168.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3168.0000,5616.0000 L 3184.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3184.0000,5616.0000 L 3216.0000,5568.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3216.0000,5568.0000 L 3248.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3248.0000,5616.0000 L 3264.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3264.0000,5632.0000 L 3296.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3296.0000,5616.0000 L 3328.0000,5536.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3328.0000,5536.0000 L 3344.0000,5312.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3344.0000,5312.0000 L 3376.0000,4944.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3376.0000,4944.0000 L 3392.0000,4592.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3392.0000,4592.0000 L 3424.0000,4416.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3424.0000,4416.0000 L 3456.0000,4544.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3456.0000,4544.0000 L 3472.0000,4960.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3472.0000,4960.0000 L 3504.0000,5264.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3504.0000,5264.0000 L 3520.0000,5472.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3520.0000,5472.0000 L 3552.0000,5600.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3552.0000,5600.0000 L 3584.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3584.0000,5632.0000 L 3600.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3600.0000,5648.0000 L 3632.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3632.0000,5648.0000 L 3648.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3648.0000,5616.0000 L 3680.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3680.0000,5632.0000 L 3712.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3712.0000,5648.0000 L 3728.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3728.0000,5632.0000 L 3760.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3760.0000,5632.0000 L 3776.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3776.0000,5616.0000 L 3808.0000,5600.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3808.0000,5600.0000 L 3840.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3840.0000,5616.0000 L 3856.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3856.0000,5616.0000 L 3888.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3888.0000,5584.0000 L 3904.0000,5536.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3904.0000,5536.0000 L 3936.0000,5424.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3936.0000,5424.0000 L 3968.0000,5328.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3968.0000,5328.0000 L 3984.0000,5312.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3984.0000,5312.0000 L 4016.0000,5376.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4016.0000,5376.0000 L 4048.0000,5424.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4048.0000,5424.0000 L 4064.0000,5456.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4064.0000,5456.0000 L 4096.0000,5488.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4096.0000,5488.0000 L 4112.0000,5520.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4112.0000,5520.0000 L 4144.0000,5536.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4144.0000,5536.0000 L 4176.0000,5536.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4176.0000,5536.0000 L 4192.0000,5552.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4192.0000,5552.0000 L 4224.0000,5568.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4224.0000,5568.0000 L 4240.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4240.0000,5584.0000 L 4272.0000,5600.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4272.0000,5600.0000 L 4304.0000,5616.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4304.0000,5616.0000 L 4320.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4320.0000,5648.0000 L 4352.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4352.0000,5648.0000 L 4368.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4368.0000,5648.0000 L 4400.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4400.0000,5632.0000 L 4432.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4432.0000,5648.0000 L 4448.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4448.0000,5648.0000 L 4480.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4480.0000,5632.0000 L 4496.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4496.0000,5648.0000 L 4528.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4528.0000,5632.0000 L 4560.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4560.0000,5632.0000 L 4576.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4576.0000,5632.0000 L 4608.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4608.0000,5648.0000 L 4624.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4624.0000,5632.0000 L 4656.0000,5600.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4656.0000,5600.0000 L 4688.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4688.0000,5632.0000 L 4704.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4704.0000,5632.0000 L 4736.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4736.0000,5632.0000 L 4768.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4768.0000,5632.0000 L 4784.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4784.0000,5632.0000 L 4816.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-5705"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-5705)" d="M 4816.0000,5648.0000 L 4832.0000,5680.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-28145"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-28145)" d="M 4832.0000,5680.0000 L 4864.0000,5680.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-23281"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-23281)" d="M 4864.0000,5680.0000 L 4896.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4896.0000,5664.0000 L 4912.0000,5664.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4912.0000,5664.0000 L 4944.0000,5648.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4944.0000,5648.0000 L 4960.0000,5632.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4960.0000,5632.0000 L 4992.0000,5584.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4992.0000,5584.0000 L 5024.0000,5552.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5024.0000,5552.0000 L 5040.0000,5520.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-16827"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-16827)" d="M 2064.0000,5696.0000 L 2080.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2080.0000,5648.0000 L 2112.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2112.0000,5632.0000 L 2144.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2144.0000,5616.0000 L 2160.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2160.0000,5616.0000 L 2192.0000,5536.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2192.0000,5536.0000 L 2208.0000,5456.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2208.0000,5456.0000 L 2240.0000,5408.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2240.0000,5408.0000 L 2272.0000,5392.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2272.0000,5392.0000 L 2288.0000,5440.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2288.0000,5440.0000 L 2320.0000,5552.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2320.0000,5552.0000 L 2336.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2336.0000,5600.0000 L 2368.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2368.0000,5600.0000 L 2400.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2400.0000,5600.0000 L 2416.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2416.0000,5632.0000 L 2448.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2448.0000,5616.0000 L 2464.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2464.0000,5616.0000 L 2496.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2496.0000,5616.0000 L 2528.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2528.0000,5648.0000 L 2544.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2544.0000,5648.0000 L 2576.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2576.0000,5632.0000 L 2592.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2592.0000,5648.0000 L 2624.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2624.0000,5632.0000 L 2656.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2656.0000,5616.0000 L 2672.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2672.0000,5632.0000 L 2704.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2704.0000,5632.0000 L 2736.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2736.0000,5632.0000 L 2752.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2752.0000,5632.0000 L 2784.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2784.0000,5616.0000 L 2800.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2800.0000,5616.0000 L 2832.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2832.0000,5600.0000 L 2864.0000,5584.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2864.0000,5584.0000 L 2880.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2880.0000,5600.0000 L 2912.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2912.0000,5600.0000 L 2928.0000,5584.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2928.0000,5584.0000 L 2960.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2960.0000,5616.0000 L 2992.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2992.0000,5632.0000 L 3008.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3008.0000,5632.0000 L 3040.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3040.0000,5616.0000 L 3056.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3056.0000,5632.0000 L 3088.0000,5568.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3088.0000,5568.0000 L 3120.0000,5552.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3120.0000,5552.0000 L 3136.0000,5488.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3136.0000,5488.0000 L 3168.0000,5152.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3168.0000,5152.0000 L 3184.0000,4416.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3184.0000,4416.0000 L 3216.0000,3344.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3216.0000,3344.0000 L 3248.0000,1824.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3248.0000,1824.0000 L 3264.0000,3472.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3264.0000,3472.0000 L 3296.0000,4016.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3296.0000,4016.0000 L 3328.0000,4672.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3328.0000,4672.0000 L 3344.0000,5040.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3344.0000,5040.0000 L 3376.0000,4992.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3376.0000,4992.0000 L 3392.0000,4720.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3392.0000,4720.0000 L 3424.0000,4448.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3424.0000,4448.0000 L 3456.0000,4496.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3456.0000,4496.0000 L 3472.0000,4864.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3472.0000,4864.0000 L 3504.0000,5200.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3504.0000,5200.0000 L 3520.0000,5456.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3520.0000,5456.0000 L 3552.0000,5552.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3552.0000,5552.0000 L 3584.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3584.0000,5600.0000 L 3600.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3600.0000,5616.0000 L 3632.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-9961"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-9961)" d="M 3632.0000,5632.0000 L 3648.0000,5680.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-491"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-491)" d="M 3648.0000,5680.0000 L 3680.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3680.0000,5648.0000 L 3712.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3712.0000,5632.0000 L 3728.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3728.0000,5632.0000 L 3760.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3760.0000,5632.0000 L 3776.0000,5584.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3776.0000,5584.0000 L 3808.0000,5568.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3808.0000,5568.0000 L 3840.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3840.0000,5600.0000 L 3856.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3856.0000,5600.0000 L 3888.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3888.0000,5600.0000 L 3904.0000,5584.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3904.0000,5584.0000 L 3936.0000,5520.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3936.0000,5520.0000 L 3968.0000,5472.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3968.0000,5472.0000 L 3984.0000,5472.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3984.0000,5472.0000 L 4016.0000,5504.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4016.0000,5504.0000 L 4048.0000,5520.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4048.0000,5520.0000 L 4064.0000,5552.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4064.0000,5552.0000 L 4096.0000,5568.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4096.0000,5568.0000 L 4112.0000,5568.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4112.0000,5568.0000 L 4144.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4144.0000,5600.0000 L 4176.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4176.0000,5616.0000 L 4192.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4192.0000,5616.0000 L 4224.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4224.0000,5600.0000 L 4240.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4240.0000,5600.0000 L 4272.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4272.0000,5616.0000 L 4304.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4304.0000,5616.0000 L 4320.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4320.0000,5632.0000 L 4352.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4352.0000,5648.0000 L 4368.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4368.0000,5648.0000 L 4400.0000,5648.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4400.0000,5648.0000 L 4432.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4432.0000,5632.0000 L 4448.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4448.0000,5632.0000 L 4480.0000,5664.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4480.0000,5664.0000 L 4496.0000,5664.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4496.0000,5664.0000 L 4528.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4528.0000,5616.0000 L 4560.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4560.0000,5600.0000 L 4576.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4576.0000,5632.0000 L 4608.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4608.0000,5616.0000 L 4624.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4624.0000,5616.0000 L 4656.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4656.0000,5632.0000 L 4688.0000,5616.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4688.0000,5616.0000 L 4704.0000,5568.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4704.0000,5568.0000 L 4736.0000,5536.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4736.0000,5536.0000 L 4768.0000,5504.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4768.0000,5504.0000 L 4784.0000,5536.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4784.0000,5536.0000 L 4816.0000,5520.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4816.0000,5520.0000 L 4832.0000,5472.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4832.0000,5472.0000 L 4864.0000,5488.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4864.0000,5488.0000 L 4896.0000,5520.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4896.0000,5520.0000 L 4912.0000,5552.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4912.0000,5552.0000 L 4944.0000,5536.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4944.0000,5536.0000 L 4960.0000,5568.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4960.0000,5568.0000 L 4992.0000,5584.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4992.0000,5584.0000 L 5024.0000,5600.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5024.0000,5600.0000 L 5040.0000,5632.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5698.0000 L 5675.0000,5698.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5698.0000 L 1149.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5698.0000 L 1149.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="64.0000" y="379.0000" font-size="14.0000" ><![CDATA[15]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1903.0000,5698.0000 L 1903.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1903.0000,5698.0000 L 1903.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="111.0000" y="379.0000" font-size="14.0000" ><![CDATA[16]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2657.0000,5698.0000 L 2657.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2657.0000,5698.0000 L 2657.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="158.0000" y="379.0000" font-size="14.0000" ><![CDATA[17]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3412.0000,5698.0000 L 3412.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3412.0000,5698.0000 L 3412.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="205.0000" y="379.0000" font-size="14.0000" ><![CDATA[18]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4166.0000,5698.0000 L 4166.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4166.0000,5698.0000 L 4166.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="252.0000" y="379.0000" font-size="14.0000" ><![CDATA[19]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4921.0000,5698.0000 L 4921.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 4921.0000,5698.0000 L 4921.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="300.0000" y="379.0000" font-size="14.0000" ><![CDATA[20]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5675.0000,5698.0000 L 5675.0000,5778.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 5675.0000,5698.0000 L 5675.0000,5618.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="347.0000" y="379.0000" font-size="14.0000" ><![CDATA[21]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="700" text-anchor="start" x="161.0000" y="402.0000" font-size="14.0000" ><![CDATA[Retention Time]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,872.0000 L 1149.0000,5698.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5698.0000 L 1069.0000,5698.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,5698.0000 L 1229.0000,5698.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="43.0000" y="360.0000" font-size="14.0000" ><![CDATA[0]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4492.0000 L 1069.0000,4492.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,4492.0000 L 1229.0000,4492.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="39.0000" y="285.0000" font-size="14.0000" ><![CDATA[50]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3285.0000 L 1069.0000,3285.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,3285.0000 L 1229.0000,3285.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="209.0000" font-size="14.0000" ><![CDATA[100]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2079.0000 L 1069.0000,2079.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,2079.0000 L 1229.0000,2079.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="134.0000" font-size="14.0000" ><![CDATA[150]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,872.0000 L 1069.0000,872.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,872.0000 L 1229.0000,872.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="59.0000" font-size="14.0000" ><![CDATA[200]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 270.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="258.0000" font-size="14.0000" ><![CDATA[I]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 266.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="254.0000" font-size="14.0000" ><![CDATA[n]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 257.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="245.0000" font-size="14.0000" ><![CDATA[t]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 252.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="240.0000" font-size="14.0000" ><![CDATA[e]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 244.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="232.0000" font-size="14.0000" ><![CDATA[n]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 235.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="223.0000" font-size="14.0000" ><![CDATA[s]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 227.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="215.0000" font-size="14.0000" ><![CDATA[i]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 223.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="211.0000" font-size="14.0000" ><![CDATA[t]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 218.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="206.0000" font-size="14.0000" ><![CDATA[y]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 211.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="199.0000" font-size="14.0000" ><![CDATA[ ]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 207.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="195.0000" font-size="14.0000" ><![CDATA[(]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 202.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="190.0000" font-size="14.0000" ><![CDATA[1]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 194.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="182.0000" font-size="14.0000" ><![CDATA[0]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 186.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="174.0000" font-size="14.0000" ><![CDATA[^]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 178.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="166.0000" font-size="14.0000" ><![CDATA[3]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 170.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="158.0000" font-size="14.0000" ><![CDATA[)]]></text>
+<defs><clipPath id="clip-2995"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-2995)" d="M 3285.0000,5566.0000 L 3285.0000,5614.0000 L 3269.0000,5614.0000 L 3269.0000,5566.0000 L 3285.0000,5566.0000 Z M 3285.0000,5630.0000 L 3285.0000,5678.0000 L 3269.0000,5678.0000 L 3269.0000,5630.0000 L 3285.0000,5630.0000 Z M 3285.0000,5694.0000 L 3285.0000,5698.0000 L 3269.0000,5698.0000 L 3269.0000,5694.0000 L 3285.0000,5694.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-11942"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-11942)" d="M 2410.0000,5566.0000 L 2410.0000,5614.0000 L 2394.0000,5614.0000 L 2394.0000,5566.0000 L 2410.0000,5566.0000 Z M 2410.0000,5630.0000 L 2410.0000,5678.0000 L 2394.0000,5678.0000 L 2394.0000,5630.0000 L 2410.0000,5630.0000 Z M 2410.0000,5694.0000 L 2410.0000,5698.0000 L 2394.0000,5698.0000 L 2394.0000,5694.0000 L 2410.0000,5694.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-4827"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-4827)" d="M 2359.0000,5490.0000 L 2359.0000,5538.0000 L 2343.0000,5538.0000 L 2343.0000,5490.0000 L 2359.0000,5490.0000 Z M 2359.0000,5554.0000 L 2359.0000,5602.0000 L 2343.0000,5602.0000 L 2343.0000,5554.0000 L 2359.0000,5554.0000 Z M 2359.0000,5618.0000 L 2359.0000,5666.0000 L 2343.0000,5666.0000 L 2343.0000,5618.0000 L 2359.0000,5618.0000 Z M 2359.0000,5682.0000 L 2359.0000,5698.0000 L 2343.0000,5698.0000 L 2343.0000,5682.0000 L 2359.0000,5682.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-5436"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-5436)" d="M 2076.0000,5490.0000 L 2076.0000,5538.0000 L 2060.0000,5538.0000 L 2060.0000,5490.0000 L 2076.0000,5490.0000 Z M 2076.0000,5554.0000 L 2076.0000,5602.0000 L 2060.0000,5602.0000 L 2060.0000,5554.0000 L 2076.0000,5554.0000 Z M 2076.0000,5618.0000 L 2076.0000,5666.0000 L 2060.0000,5666.0000 L 2060.0000,5618.0000 L 2076.0000,5618.0000 Z M 2076.0000,5682.0000 L 2076.0000,5698.0000 L 2060.0000,5698.0000 L 2060.0000,5682.0000 L 2076.0000,5682.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-32391"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-32391)" d="M 3285.0000,1830.0000 L 3285.0000,1878.0000 L 3269.0000,1878.0000 L 3269.0000,1830.0000 L 3285.0000,1830.0000 Z M 3285.0000,1894.0000 L 3285.0000,1942.0000 L 3269.0000,1942.0000 L 3269.0000,1894.0000 L 3285.0000,1894.0000 Z M 3285.0000,1958.0000 L 3285.0000,2006.0000 L 3269.0000,2006.0000 L 3269.0000,1958.0000 L 3285.0000,1958.0000 Z M 3285.0000,2022.0000 L 3285.0000,2070.0000 L 3269.0000,2070.0000 L 3269.0000,2022.0000 L 3285.0000,2022.0000 Z M 3285.0000,2086.0000 L 3285.0000,2134.0000 L 3269.0000,2134.0000 L 3269.0000,2086.0000 L 3285.0000,2086.0000 Z M 3285.0000,2150.0000 L 3285.0000,2198.0000 L 3269.0000,2198.0000 L 3269.0000,2150.0000 L 3285.0000,2150.0000 Z M 3285.0000,2214.0000 L 3285.0000,2262.0000 L 3269.0000,2262.0000 L 3269.0000,2214.0000 L 3285.0000,2214.0000 Z M 3285.0000,2278.0000 L 3285.0000,2326.0000 L 3269.0000,2326.0000 L 3269.0000,2278.0000 L 3285.0000,2278.0000 Z M 3285.0000,2342.0000 L 3285.0000,2390.0000 L 3269.0000,2390.0000 L 3269.0000,2342.0000 L 3285.0000,2342.0000 Z M 3285.0000,2406.0000 L 3285.0000,2454.0000 L 3269.0000,2454.0000 L 3269.0000,2406.0000 L 3285.0000,2406.0000 Z M 3285.0000,2470.0000 L 3285.0000,2518.0000 L 3269.0000,2518.0000 L 3269.0000,2470.0000 L 3285.0000,2470.0000 Z M 3285.0000,2534.0000 L 3285.0000,2582.0000 L 3269.0000,2582.0000 L 3269.0000,2534.0000 L 3285.0000,2534.0000 Z M 3285.0000,2598.0000 L 3285.0000,2646.0000 L 3269.0000,2646.0000 L 3269.0000,2598.0000 L 3285.0000,2598.0000 Z M 3285.0000,2662.0000 L 3285.0000,2710.0000 L 3269.0000,2710.0000 L 3269.0000,2662.0000 L 3285.0000,2662.0000 Z M 3285.0000,2726.0000 L 3285.0000,2774.0000 L 3269.0000,2774.0000 L 3269.0000,2726.0000 L 3285.0000,2726.0000 Z M 3285.0000,2790.0000 L 3285.0000,2838.0000 L 3269.0000,2838.0000 L 3269.0000,2790.0000 L 3285.0000,2790.0000 Z M 3285.0000,2854.0000 L 3285.0000,2902.0000 L 3269.0000,2902.0000 L 3269.0000,2854.0000 L 3285.0000,2854.0000 Z M 3285.0000,2918.0000 L 3285.0000,2966.0000 L 3269.0000,2966.0000 L 3269.0000,2918.0000 L 3285.0000,2918.0000 Z M 3285.0000,2982.0000 L 3285.0000,3030.0000 L 3269.0000,3030.0000 L 3269.0000,2982.0000 L 3285.0000,2982.0000 Z M 3285.0000,3046.0000 L 3285.0000,3094.0000 L 3269.0000,3094.0000 L 3269.0000,3046.0000 L 3285.0000,3046.0000 Z M 3285.0000,3110.0000 L 3285.0000,3158.0000 L 3269.0000,3158.0000 L 3269.0000,3110.0000 L 3285.0000,3110.0000 Z M 3285.0000,3174.0000 L 3285.0000,3222.0000 L 3269.0000,3222.0000 L 3269.0000,3174.0000 L 3285.0000,3174.0000 Z M 3285.0000,3238.0000 L 3285.0000,3286.0000 L 3269.0000,3286.0000 L 3269.0000,3238.0000 L 3285.0000,3238.0000 Z M 3285.0000,3302.0000 L 3285.0000,3350.0000 L 3269.0000,3350.0000 L 3269.0000,3302.0000 L 3285.0000,3302.0000 Z M 3285.0000,3366.0000 L 3285.0000,3414.0000 L 3269.0000,3414.0000 L 3269.0000,3366.0000 L 3285.0000,3366.0000 Z M 3285.0000,3430.0000 L 3285.0000,3478.0000 L 3269.0000,3478.0000 L 3269.0000,3430.0000 L 3285.0000,3430.0000 Z M 3285.0000,3494.0000 L 3285.0000,3542.0000 L 3269.0000,3542.0000 L 3269.0000,3494.0000 L 3285.0000,3494.0000 Z M 3285.0000,3558.0000 L 3285.0000,3606.0000 L 3269.0000,3606.0000 L 3269.0000,3558.0000 L 3285.0000,3558.0000 Z M 3285.0000,3622.0000 L 3285.0000,3670.0000 L 3269.0000,3670.0000 L 3269.0000,3622.0000 L 3285.0000,3622.0000 Z M 3285.0000,3686.0000 L 3285.0000,3734.0000 L 3269.0000,3734.0000 L 3269.0000,3686.0000 L 3285.0000,3686.0000 Z M 3285.0000,3750.0000 L 3285.0000,3798.0000 L 3269.0000,3798.0000 L 3269.0000,3750.0000 L 3285.0000,3750.0000 Z M 3285.0000,3814.0000 L 3285.0000,3862.0000 L 3269.0000,3862.0000 L 3269.0000,3814.0000 L 3285.0000,3814.0000 Z M 3285.0000,3878.0000 L 3285.0000,3926.0000 L 3269.0000,3926.0000 L 3269.0000,3878.0000 L 3285.0000,3878.0000 Z M 3285.0000,3942.0000 L 3285.0000,3990.0000 L 3269.0000,3990.0000 L 3269.0000,3942.0000 L 3285.0000,3942.0000 Z M 3285.0000,4006.0000 L 3285.0000,4054.0000 L 3269.0000,4054.0000 L 3269.0000,4006.0000 L 3285.0000,4006.0000 Z M 3285.0000,4070.0000 L 3285.0000,4118.0000 L 3269.0000,4118.0000 L 3269.0000,4070.0000 L 3285.0000,4070.0000 Z M 3285.0000,4134.0000 L 3285.0000,4182.0000 L 3269.0000,4182.0000 L 3269.0000,4134.0000 L 3285.0000,4134.0000 Z M 3285.0000,4198.0000 L 3285.0000,4246.0000 L 3269.0000,4246.0000 L 3269.0000,4198.0000 L 3285.0000,4198.0000 Z M 3285.0000,4262.0000 L 3285.0000,4310.0000 L 3269.0000,4310.0000 L 3269.0000,4262.0000 L 3285.0000,4262.0000 Z M 3285.0000,4326.0000 L 3285.0000,4374.0000 L 3269.0000,4374.0000 L 3269.0000,4326.0000 L 3285.0000,4326.0000 Z M 3285.0000,4390.0000 L 3285.0000,4438.0000 L 3269.0000,4438.0000 L 3269.0000,4390.0000 L 3285.0000,4390.0000 Z M 3285.0000,4454.0000 L 3285.0000,4502.0000 L 3269.0000,4502.0000 L 3269.0000,4454.0000 L 3285.0000,4454.0000 Z M 3285.0000,4518.0000 L 3285.0000,4566.0000 L 3269.0000,4566.0000 L 3269.0000,4518.0000 L 3285.0000,4518.0000 Z M 3285.0000,4582.0000 L 3285.0000,4630.0000 L 3269.0000,4630.0000 L 3269.0000,4582.0000 L 3285.0000,4582.0000 Z M 3285.0000,4646.0000 L 3285.0000,4694.0000 L 3269.0000,4694.0000 L 3269.0000,4646.0000 L 3285.0000,4646.0000 Z M 3285.0000,4710.0000 L 3285.0000,4758.0000 L 3269.0000,4758.0000 L 3269.0000,4710.0000 L 3285.0000,4710.0000 Z M 3285.0000,4774.0000 L 3285.0000,4822.0000 L 3269.0000,4822.0000 L 3269.0000,4774.0000 L 3285.0000,4774.0000 Z M 3285.0000,4838.0000 L 3285.0000,4886.0000 L 3269.0000,4886.0000 L 3269.0000,4838.0000 L 3285.0000,4838.0000 Z M 3285.0000,4902.0000 L 3285.0000,4950.0000 L 3269.0000,4950.0000 L 3269.0000,4902.0000 L 3285.0000,4902.0000 Z M 3285.0000,4966.0000 L 3285.0000,5014.0000 L 3269.0000,5014.0000 L 3269.0000,4966.0000 L 3285.0000,4966.0000 Z M 3285.0000,5030.0000 L 3285.0000,5078.0000 L 3269.0000,5078.0000 L 3269.0000,5030.0000 L 3285.0000,5030.0000 Z M 3285.0000,5094.0000 L 3285.0000,5142.0000 L 3269.0000,5142.0000 L 3269.0000,5094.0000 L 3285.0000,5094.0000 Z M 3285.0000,5158.0000 L 3285.0000,5206.0000 L 3269.0000,5206.0000 L 3269.0000,5158.0000 L 3285.0000,5158.0000 Z M 3285.0000,5222.0000 L 3285.0000,5270.0000 L 3269.0000,5270.0000 L 3269.0000,5222.0000 L 3285.0000,5222.0000 Z M 3285.0000,5286.0000 L 3285.0000,5334.0000 L 3269.0000,5334.0000 L 3269.0000,5286.0000 L 3285.0000,5286.0000 Z M 3285.0000,5350.0000 L 3285.0000,5398.0000 L 3269.0000,5398.0000 L 3269.0000,5350.0000 L 3285.0000,5350.0000 Z M 3285.0000,5414.0000 L 3285.0000,5462.0000 L 3269.0000,5462.0000 L 3269.0000,5414.0000 L 3285.0000,5414.0000 Z M 3285.0000,5478.0000 L 3285.0000,5526.0000 L 3269.0000,5526.0000 L 3269.0000,5478.0000 L 3285.0000,5478.0000 Z M 3285.0000,5542.0000 L 3285.0000,5590.0000 L 3269.0000,5590.0000 L 3269.0000,5542.0000 L 3285.0000,5542.0000 Z M 3285.0000,5606.0000 L 3285.0000,5654.0000 L 3269.0000,5654.0000 L 3269.0000,5606.0000 L 3285.0000,5606.0000 Z M 3285.0000,5670.0000 L 3285.0000,5698.0000 L 3269.0000,5698.0000 L 3269.0000,5670.0000 L 3285.0000,5670.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-14604"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-14604)" d="M 2410.0000,1830.0000 L 2410.0000,1878.0000 L 2394.0000,1878.0000 L 2394.0000,1830.0000 L 2410.0000,1830.0000 Z M 2410.0000,1894.0000 L 2410.0000,1942.0000 L 2394.0000,1942.0000 L 2394.0000,1894.0000 L 2410.0000,1894.0000 Z M 2410.0000,1958.0000 L 2410.0000,2006.0000 L 2394.0000,2006.0000 L 2394.0000,1958.0000 L 2410.0000,1958.0000 Z M 2410.0000,2022.0000 L 2410.0000,2070.0000 L 2394.0000,2070.0000 L 2394.0000,2022.0000 L 2410.0000,2022.0000 Z M 2410.0000,2086.0000 L 2410.0000,2134.0000 L 2394.0000,2134.0000 L 2394.0000,2086.0000 L 2410.0000,2086.0000 Z M 2410.0000,2150.0000 L 2410.0000,2198.0000 L 2394.0000,2198.0000 L 2394.0000,2150.0000 L 2410.0000,2150.0000 Z M 2410.0000,2214.0000 L 2410.0000,2262.0000 L 2394.0000,2262.0000 L 2394.0000,2214.0000 L 2410.0000,2214.0000 Z M 2410.0000,2278.0000 L 2410.0000,2326.0000 L 2394.0000,2326.0000 L 2394.0000,2278.0000 L 2410.0000,2278.0000 Z M 2410.0000,2342.0000 L 2410.0000,2390.0000 L 2394.0000,2390.0000 L 2394.0000,2342.0000 L 2410.0000,2342.0000 Z M 2410.0000,2406.0000 L 2410.0000,2454.0000 L 2394.0000,2454.0000 L 2394.0000,2406.0000 L 2410.0000,2406.0000 Z M 2410.0000,2470.0000 L 2410.0000,2518.0000 L 2394.0000,2518.0000 L 2394.0000,2470.0000 L 2410.0000,2470.0000 Z M 2410.0000,2534.0000 L 2410.0000,2582.0000 L 2394.0000,2582.0000 L 2394.0000,2534.0000 L 2410.0000,2534.0000 Z M 2410.0000,2598.0000 L 2410.0000,2646.0000 L 2394.0000,2646.0000 L 2394.0000,2598.0000 L 2410.0000,2598.0000 Z M 2410.0000,2662.0000 L 2410.0000,2710.0000 L 2394.0000,2710.0000 L 2394.0000,2662.0000 L 2410.0000,2662.0000 Z M 2410.0000,2726.0000 L 2410.0000,2774.0000 L 2394.0000,2774.0000 L 2394.0000,2726.0000 L 2410.0000,2726.0000 Z M 2410.0000,2790.0000 L 2410.0000,2838.0000 L 2394.0000,2838.0000 L 2394.0000,2790.0000 L 2410.0000,2790.0000 Z M 2410.0000,2854.0000 L 2410.0000,2902.0000 L 2394.0000,2902.0000 L 2394.0000,2854.0000 L 2410.0000,2854.0000 Z M 2410.0000,2918.0000 L 2410.0000,2966.0000 L 2394.0000,2966.0000 L 2394.0000,2918.0000 L 2410.0000,2918.0000 Z M 2410.0000,2982.0000 L 2410.0000,3030.0000 L 2394.0000,3030.0000 L 2394.0000,2982.0000 L 2410.0000,2982.0000 Z M 2410.0000,3046.0000 L 2410.0000,3094.0000 L 2394.0000,3094.0000 L 2394.0000,3046.0000 L 2410.0000,3046.0000 Z M 2410.0000,3110.0000 L 2410.0000,3158.0000 L 2394.0000,3158.0000 L 2394.0000,3110.0000 L 2410.0000,3110.0000 Z M 2410.0000,3174.0000 L 2410.0000,3222.0000 L 2394.0000,3222.0000 L 2394.0000,3174.0000 L 2410.0000,3174.0000 Z M 2410.0000,3238.0000 L 2410.0000,3286.0000 L 2394.0000,3286.0000 L 2394.0000,3238.0000 L 2410.0000,3238.0000 Z M 2410.0000,3302.0000 L 2410.0000,3350.0000 L 2394.0000,3350.0000 L 2394.0000,3302.0000 L 2410.0000,3302.0000 Z M 2410.0000,3366.0000 L 2410.0000,3414.0000 L 2394.0000,3414.0000 L 2394.0000,3366.0000 L 2410.0000,3366.0000 Z M 2410.0000,3430.0000 L 2410.0000,3478.0000 L 2394.0000,3478.0000 L 2394.0000,3430.0000 L 2410.0000,3430.0000 Z M 2410.0000,3494.0000 L 2410.0000,3542.0000 L 2394.0000,3542.0000 L 2394.0000,3494.0000 L 2410.0000,3494.0000 Z M 2410.0000,3558.0000 L 2410.0000,3606.0000 L 2394.0000,3606.0000 L 2394.0000,3558.0000 L 2410.0000,3558.0000 Z M 2410.0000,3622.0000 L 2410.0000,3670.0000 L 2394.0000,3670.0000 L 2394.0000,3622.0000 L 2410.0000,3622.0000 Z M 2410.0000,3686.0000 L 2410.0000,3734.0000 L 2394.0000,3734.0000 L 2394.0000,3686.0000 L 2410.0000,3686.0000 Z M 2410.0000,3750.0000 L 2410.0000,3798.0000 L 2394.0000,3798.0000 L 2394.0000,3750.0000 L 2410.0000,3750.0000 Z M 2410.0000,3814.0000 L 2410.0000,3862.0000 L 2394.0000,3862.0000 L 2394.0000,3814.0000 L 2410.0000,3814.0000 Z M 2410.0000,3878.0000 L 2410.0000,3926.0000 L 2394.0000,3926.0000 L 2394.0000,3878.0000 L 2410.0000,3878.0000 Z M 2410.0000,3942.0000 L 2410.0000,3990.0000 L 2394.0000,3990.0000 L 2394.0000,3942.0000 L 2410.0000,3942.0000 Z M 2410.0000,4006.0000 L 2410.0000,4054.0000 L 2394.0000,4054.0000 L 2394.0000,4006.0000 L 2410.0000,4006.0000 Z M 2410.0000,4070.0000 L 2410.0000,4118.0000 L 2394.0000,4118.0000 L 2394.0000,4070.0000 L 2410.0000,4070.0000 Z M 2410.0000,4134.0000 L 2410.0000,4182.0000 L 2394.0000,4182.0000 L 2394.0000,4134.0000 L 2410.0000,4134.0000 Z M 2410.0000,4198.0000 L 2410.0000,4246.0000 L 2394.0000,4246.0000 L 2394.0000,4198.0000 L 2410.0000,4198.0000 Z M 2410.0000,4262.0000 L 2410.0000,4310.0000 L 2394.0000,4310.0000 L 2394.0000,4262.0000 L 2410.0000,4262.0000 Z M 2410.0000,4326.0000 L 2410.0000,4374.0000 L 2394.0000,4374.0000 L 2394.0000,4326.0000 L 2410.0000,4326.0000 Z M 2410.0000,4390.0000 L 2410.0000,4438.0000 L 2394.0000,4438.0000 L 2394.0000,4390.0000 L 2410.0000,4390.0000 Z M 2410.0000,4454.0000 L 2410.0000,4502.0000 L 2394.0000,4502.0000 L 2394.0000,4454.0000 L 2410.0000,4454.0000 Z M 2410.0000,4518.0000 L 2410.0000,4566.0000 L 2394.0000,4566.0000 L 2394.0000,4518.0000 L 2410.0000,4518.0000 Z M 2410.0000,4582.0000 L 2410.0000,4630.0000 L 2394.0000,4630.0000 L 2394.0000,4582.0000 L 2410.0000,4582.0000 Z M 2410.0000,4646.0000 L 2410.0000,4694.0000 L 2394.0000,4694.0000 L 2394.0000,4646.0000 L 2410.0000,4646.0000 Z M 2410.0000,4710.0000 L 2410.0000,4758.0000 L 2394.0000,4758.0000 L 2394.0000,4710.0000 L 2410.0000,4710.0000 Z M 2410.0000,4774.0000 L 2410.0000,4822.0000 L 2394.0000,4822.0000 L 2394.0000,4774.0000 L 2410.0000,4774.0000 Z M 2410.0000,4838.0000 L 2410.0000,4886.0000 L 2394.0000,4886.0000 L 2394.0000,4838.0000 L 2410.0000,4838.0000 Z M 2410.0000,4902.0000 L 2410.0000,4950.0000 L 2394.0000,4950.0000 L 2394.0000,4902.0000 L 2410.0000,4902.0000 Z M 2410.0000,4966.0000 L 2410.0000,5014.0000 L 2394.0000,5014.0000 L 2394.0000,4966.0000 L 2410.0000,4966.0000 Z M 2410.0000,5030.0000 L 2410.0000,5078.0000 L 2394.0000,5078.0000 L 2394.0000,5030.0000 L 2410.0000,5030.0000 Z M 2410.0000,5094.0000 L 2410.0000,5142.0000 L 2394.0000,5142.0000 L 2394.0000,5094.0000 L 2410.0000,5094.0000 Z M 2410.0000,5158.0000 L 2410.0000,5206.0000 L 2394.0000,5206.0000 L 2394.0000,5158.0000 L 2410.0000,5158.0000 Z M 2410.0000,5222.0000 L 2410.0000,5270.0000 L 2394.0000,5270.0000 L 2394.0000,5222.0000 L 2410.0000,5222.0000 Z M 2410.0000,5286.0000 L 2410.0000,5334.0000 L 2394.0000,5334.0000 L 2394.0000,5286.0000 L 2410.0000,5286.0000 Z M 2410.0000,5350.0000 L 2410.0000,5398.0000 L 2394.0000,5398.0000 L 2394.0000,5350.0000 L 2410.0000,5350.0000 Z M 2410.0000,5414.0000 L 2410.0000,5462.0000 L 2394.0000,5462.0000 L 2394.0000,5414.0000 L 2410.0000,5414.0000 Z M 2410.0000,5478.0000 L 2410.0000,5526.0000 L 2394.0000,5526.0000 L 2394.0000,5478.0000 L 2410.0000,5478.0000 Z M 2410.0000,5542.0000 L 2410.0000,5590.0000 L 2394.0000,5590.0000 L 2394.0000,5542.0000 L 2410.0000,5542.0000 Z M 2410.0000,5606.0000 L 2410.0000,5654.0000 L 2394.0000,5654.0000 L 2394.0000,5606.0000 L 2410.0000,5606.0000 Z M 2410.0000,5670.0000 L 2410.0000,5698.0000 L 2394.0000,5698.0000 L 2394.0000,5670.0000 L 2410.0000,5670.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-3902"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-3902)" d="M 2359.0000,5400.0000 L 2359.0000,5448.0000 L 2343.0000,5448.0000 L 2343.0000,5400.0000 L 2359.0000,5400.0000 Z M 2359.0000,5464.0000 L 2359.0000,5512.0000 L 2343.0000,5512.0000 L 2343.0000,5464.0000 L 2359.0000,5464.0000 Z M 2359.0000,5528.0000 L 2359.0000,5576.0000 L 2343.0000,5576.0000 L 2343.0000,5528.0000 L 2359.0000,5528.0000 Z M 2359.0000,5592.0000 L 2359.0000,5640.0000 L 2343.0000,5640.0000 L 2343.0000,5592.0000 L 2359.0000,5592.0000 Z M 2359.0000,5656.0000 L 2359.0000,5698.0000 L 2343.0000,5698.0000 L 2343.0000,5656.0000 L 2359.0000,5656.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-153"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-153)" d="M 2076.0000,5400.0000 L 2076.0000,5448.0000 L 2060.0000,5448.0000 L 2060.0000,5400.0000 L 2076.0000,5400.0000 Z M 2076.0000,5464.0000 L 2076.0000,5512.0000 L 2060.0000,5512.0000 L 2060.0000,5464.0000 L 2076.0000,5464.0000 Z M 2076.0000,5528.0000 L 2076.0000,5576.0000 L 2060.0000,5576.0000 L 2060.0000,5528.0000 L 2076.0000,5528.0000 Z M 2076.0000,5592.0000 L 2076.0000,5640.0000 L 2060.0000,5640.0000 L 2060.0000,5592.0000 L 2076.0000,5592.0000 Z M 2076.0000,5656.0000 L 2076.0000,5698.0000 L 2060.0000,5698.0000 L 2060.0000,5656.0000 L 2076.0000,5656.0000 Z "  fill="#808080" stroke="#808080" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-292"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-292)" d="M 3619.0000,4422.0000 L 3619.0000,4470.0000 L 3603.0000,4470.0000 L 3603.0000,4422.0000 L 3619.0000,4422.0000 Z M 3619.0000,4486.0000 L 3619.0000,4534.0000 L 3603.0000,4534.0000 L 3603.0000,4486.0000 L 3619.0000,4486.0000 Z M 3619.0000,4550.0000 L 3619.0000,4598.0000 L 3603.0000,4598.0000 L 3603.0000,4550.0000 L 3619.0000,4550.0000 Z M 3619.0000,4614.0000 L 3619.0000,4662.0000 L 3603.0000,4662.0000 L 3603.0000,4614.0000 L 3619.0000,4614.0000 Z M 3619.0000,4678.0000 L 3619.0000,4726.0000 L 3603.0000,4726.0000 L 3603.0000,4678.0000 L 3619.0000,4678.0000 Z M 3619.0000,4742.0000 L 3619.0000,4790.0000 L 3603.0000,4790.0000 L 3603.0000,4742.0000 L 3619.0000,4742.0000 Z M 3619.0000,4806.0000 L 3619.0000,4854.0000 L 3603.0000,4854.0000 L 3603.0000,4806.0000 L 3619.0000,4806.0000 Z M 3619.0000,4870.0000 L 3619.0000,4918.0000 L 3603.0000,4918.0000 L 3603.0000,4870.0000 L 3619.0000,4870.0000 Z M 3619.0000,4934.0000 L 3619.0000,4982.0000 L 3603.0000,4982.0000 L 3603.0000,4934.0000 L 3619.0000,4934.0000 Z M 3619.0000,4998.0000 L 3619.0000,5046.0000 L 3603.0000,5046.0000 L 3603.0000,4998.0000 L 3619.0000,4998.0000 Z M 3619.0000,5062.0000 L 3619.0000,5110.0000 L 3603.0000,5110.0000 L 3603.0000,5062.0000 L 3619.0000,5062.0000 Z M 3619.0000,5126.0000 L 3619.0000,5174.0000 L 3603.0000,5174.0000 L 3603.0000,5126.0000 L 3619.0000,5126.0000 Z M 3619.0000,5190.0000 L 3619.0000,5238.0000 L 3603.0000,5238.0000 L 3603.0000,5190.0000 L 3619.0000,5190.0000 Z M 3619.0000,5254.0000 L 3619.0000,5302.0000 L 3603.0000,5302.0000 L 3603.0000,5254.0000 L 3619.0000,5254.0000 Z M 3619.0000,5318.0000 L 3619.0000,5366.0000 L 3603.0000,5366.0000 L 3603.0000,5318.0000 L 3619.0000,5318.0000 Z M 3619.0000,5382.0000 L 3619.0000,5430.0000 L 3603.0000,5430.0000 L 3603.0000,5382.0000 L 3619.0000,5382.0000 Z M 3619.0000,5446.0000 L 3619.0000,5494.0000 L 3603.0000,5494.0000 L 3603.0000,5446.0000 L 3619.0000,5446.0000 Z M 3619.0000,5510.0000 L 3619.0000,5558.0000 L 3603.0000,5558.0000 L 3603.0000,5510.0000 L 3619.0000,5510.0000 Z M 3619.0000,5574.0000 L 3619.0000,5622.0000 L 3603.0000,5622.0000 L 3603.0000,5574.0000 L 3619.0000,5574.0000 Z M 3619.0000,5638.0000 L 3619.0000,5686.0000 L 3603.0000,5686.0000 L 3603.0000,5638.0000 L 3619.0000,5638.0000 Z "  fill="#000000" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-12382"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-12382)" d="M 3311.0000,4422.0000 L 3311.0000,4470.0000 L 3295.0000,4470.0000 L 3295.0000,4422.0000 L 3311.0000,4422.0000 Z M 3311.0000,4486.0000 L 3311.0000,4534.0000 L 3295.0000,4534.0000 L 3295.0000,4486.0000 L 3311.0000,4486.0000 Z M 3311.0000,4550.0000 L 3311.0000,4598.0000 L 3295.0000,4598.0000 L 3295.0000,4550.0000 L 3311.0000,4550.0000 Z M 3311.0000,4614.0000 L 3311.0000,4662.0000 L 3295.0000,4662.0000 L 3295.0000,4614.0000 L 3311.0000,4614.0000 Z M 3311.0000,4678.0000 L 3311.0000,4726.0000 L 3295.0000,4726.0000 L 3295.0000,4678.0000 L 3311.0000,4678.0000 Z M 3311.0000,4742.0000 L 3311.0000,4790.0000 L 3295.0000,4790.0000 L 3295.0000,4742.0000 L 3311.0000,4742.0000 Z M 3311.0000,4806.0000 L 3311.0000,4854.0000 L 3295.0000,4854.0000 L 3295.0000,4806.0000 L 3311.0000,4806.0000 Z M 3311.0000,4870.0000 L 3311.0000,4918.0000 L 3295.0000,4918.0000 L 3295.0000,4870.0000 L 3311.0000,4870.0000 Z M 3311.0000,4934.0000 L 3311.0000,4982.0000 L 3295.0000,4982.0000 L 3295.0000,4934.0000 L 3311.0000,4934.0000 Z M 3311.0000,4998.0000 L 3311.0000,5046.0000 L 3295.0000,5046.0000 L 3295.0000,4998.0000 L 3311.0000,4998.0000 Z M 3311.0000,5062.0000 L 3311.0000,5110.0000 L 3295.0000,5110.0000 L 3295.0000,5062.0000 L 3311.0000,5062.0000 Z M 3311.0000,5126.0000 L 3311.0000,5174.0000 L 3295.0000,5174.0000 L 3295.0000,5126.0000 L 3311.0000,5126.0000 Z M 3311.0000,5190.0000 L 3311.0000,5238.0000 L 3295.0000,5238.0000 L 3295.0000,5190.0000 L 3311.0000,5190.0000 Z M 3311.0000,5254.0000 L 3311.0000,5302.0000 L 3295.0000,5302.0000 L 3295.0000,5254.0000 L 3311.0000,5254.0000 Z M 3311.0000,5318.0000 L 3311.0000,5366.0000 L 3295.0000,5366.0000 L 3295.0000,5318.0000 L 3311.0000,5318.0000 Z M 3311.0000,5382.0000 L 3311.0000,5430.0000 L 3295.0000,5430.0000 L 3295.0000,5382.0000 L 3311.0000,5382.0000 Z M 3311.0000,5446.0000 L 3311.0000,5494.0000 L 3295.0000,5494.0000 L 3295.0000,5446.0000 L 3311.0000,5446.0000 Z M 3311.0000,5510.0000 L 3311.0000,5558.0000 L 3295.0000,5558.0000 L 3295.0000,5510.0000 L 3311.0000,5510.0000 Z M 3311.0000,5574.0000 L 3311.0000,5622.0000 L 3295.0000,5622.0000 L 3295.0000,5574.0000 L 3311.0000,5574.0000 Z M 3311.0000,5638.0000 L 3311.0000,5686.0000 L 3295.0000,5686.0000 L 3295.0000,5638.0000 L 3311.0000,5638.0000 Z "  fill="#000000" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-17421"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-17421)" d="M 3619.0000,4026.0000 L 3619.0000,4074.0000 L 3603.0000,4074.0000 L 3603.0000,4026.0000 L 3619.0000,4026.0000 Z M 3619.0000,4090.0000 L 3619.0000,4138.0000 L 3603.0000,4138.0000 L 3603.0000,4090.0000 L 3619.0000,4090.0000 Z M 3619.0000,4154.0000 L 3619.0000,4202.0000 L 3603.0000,4202.0000 L 3603.0000,4154.0000 L 3619.0000,4154.0000 Z M 3619.0000,4218.0000 L 3619.0000,4266.0000 L 3603.0000,4266.0000 L 3603.0000,4218.0000 L 3619.0000,4218.0000 Z M 3619.0000,4282.0000 L 3619.0000,4330.0000 L 3603.0000,4330.0000 L 3603.0000,4282.0000 L 3619.0000,4282.0000 Z M 3619.0000,4346.0000 L 3619.0000,4394.0000 L 3603.0000,4394.0000 L 3603.0000,4346.0000 L 3619.0000,4346.0000 Z M 3619.0000,4410.0000 L 3619.0000,4458.0000 L 3603.0000,4458.0000 L 3603.0000,4410.0000 L 3619.0000,4410.0000 Z M 3619.0000,4474.0000 L 3619.0000,4522.0000 L 3603.0000,4522.0000 L 3603.0000,4474.0000 L 3619.0000,4474.0000 Z M 3619.0000,4538.0000 L 3619.0000,4586.0000 L 3603.0000,4586.0000 L 3603.0000,4538.0000 L 3619.0000,4538.0000 Z M 3619.0000,4602.0000 L 3619.0000,4650.0000 L 3603.0000,4650.0000 L 3603.0000,4602.0000 L 3619.0000,4602.0000 Z M 3619.0000,4666.0000 L 3619.0000,4714.0000 L 3603.0000,4714.0000 L 3603.0000,4666.0000 L 3619.0000,4666.0000 Z M 3619.0000,4730.0000 L 3619.0000,4778.0000 L 3603.0000,4778.0000 L 3603.0000,4730.0000 L 3619.0000,4730.0000 Z M 3619.0000,4794.0000 L 3619.0000,4842.0000 L 3603.0000,4842.0000 L 3603.0000,4794.0000 L 3619.0000,4794.0000 Z M 3619.0000,4858.0000 L 3619.0000,4906.0000 L 3603.0000,4906.0000 L 3603.0000,4858.0000 L 3619.0000,4858.0000 Z M 3619.0000,4922.0000 L 3619.0000,4970.0000 L 3603.0000,4970.0000 L 3603.0000,4922.0000 L 3619.0000,4922.0000 Z M 3619.0000,4986.0000 L 3619.0000,5034.0000 L 3603.0000,5034.0000 L 3603.0000,4986.0000 L 3619.0000,4986.0000 Z M 3619.0000,5050.0000 L 3619.0000,5098.0000 L 3603.0000,5098.0000 L 3603.0000,5050.0000 L 3619.0000,5050.0000 Z M 3619.0000,5114.0000 L 3619.0000,5162.0000 L 3603.0000,5162.0000 L 3603.0000,5114.0000 L 3619.0000,5114.0000 Z M 3619.0000,5178.0000 L 3619.0000,5226.0000 L 3603.0000,5226.0000 L 3603.0000,5178.0000 L 3619.0000,5178.0000 Z M 3619.0000,5242.0000 L 3619.0000,5290.0000 L 3603.0000,5290.0000 L 3603.0000,5242.0000 L 3619.0000,5242.0000 Z M 3619.0000,5306.0000 L 3619.0000,5354.0000 L 3603.0000,5354.0000 L 3603.0000,5306.0000 L 3619.0000,5306.0000 Z M 3619.0000,5370.0000 L 3619.0000,5418.0000 L 3603.0000,5418.0000 L 3603.0000,5370.0000 L 3619.0000,5370.0000 Z M 3619.0000,5434.0000 L 3619.0000,5482.0000 L 3603.0000,5482.0000 L 3603.0000,5434.0000 L 3619.0000,5434.0000 Z M 3619.0000,5498.0000 L 3619.0000,5546.0000 L 3603.0000,5546.0000 L 3603.0000,5498.0000 L 3619.0000,5498.0000 Z M 3619.0000,5562.0000 L 3619.0000,5610.0000 L 3603.0000,5610.0000 L 3603.0000,5562.0000 L 3619.0000,5562.0000 Z M 3619.0000,5626.0000 L 3619.0000,5674.0000 L 3603.0000,5674.0000 L 3603.0000,5626.0000 L 3619.0000,5626.0000 Z M 3619.0000,5690.0000 L 3619.0000,5698.0000 L 3603.0000,5698.0000 L 3603.0000,5690.0000 L 3619.0000,5690.0000 Z "  fill="#000000" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<defs><clipPath id="clip-18716"><path d="M 72.0000,55.0000 L 355.0000,55.0000 L 355.0000,357.0000 L 72.0000,357.0000 L 72.0000,55.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-18716)" d="M 3311.0000,4026.0000 L 3311.0000,4074.0000 L 3295.0000,4074.0000 L 3295.0000,4026.0000 L 3311.0000,4026.0000 Z M 3311.0000,4090.0000 L 3311.0000,4138.0000 L 3295.0000,4138.0000 L 3295.0000,4090.0000 L 3311.0000,4090.0000 Z M 3311.0000,4154.0000 L 3311.0000,4202.0000 L 3295.0000,4202.0000 L 3295.0000,4154.0000 L 3311.0000,4154.0000 Z M 3311.0000,4218.0000 L 3311.0000,4266.0000 L 3295.0000,4266.0000 L 3295.0000,4218.0000 L 3311.0000,4218.0000 Z M 3311.0000,4282.0000 L 3311.0000,4330.0000 L 3295.0000,4330.0000 L 3295.0000,4282.0000 L 3311.0000,4282.0000 Z M 3311.0000,4346.0000 L 3311.0000,4394.0000 L 3295.0000,4394.0000 L 3295.0000,4346.0000 L 3311.0000,4346.0000 Z M 3311.0000,4410.0000 L 3311.0000,4458.0000 L 3295.0000,4458.0000 L 3295.0000,4410.0000 L 3311.0000,4410.0000 Z M 3311.0000,4474.0000 L 3311.0000,4522.0000 L 3295.0000,4522.0000 L 3295.0000,4474.0000 L 3311.0000,4474.0000 Z M 3311.0000,4538.0000 L 3311.0000,4586.0000 L 3295.0000,4586.0000 L 3295.0000,4538.0000 L 3311.0000,4538.0000 Z M 3311.0000,4602.0000 L 3311.0000,4650.0000 L 3295.0000,4650.0000 L 3295.0000,4602.0000 L 3311.0000,4602.0000 Z M 3311.0000,4666.0000 L 3311.0000,4714.0000 L 3295.0000,4714.0000 L 3295.0000,4666.0000 L 3311.0000,4666.0000 Z M 3311.0000,4730.0000 L 3311.0000,4778.0000 L 3295.0000,4778.0000 L 3295.0000,4730.0000 L 3311.0000,4730.0000 Z M 3311.0000,4794.0000 L 3311.0000,4842.0000 L 3295.0000,4842.0000 L 3295.0000,4794.0000 L 3311.0000,4794.0000 Z M 3311.0000,4858.0000 L 3311.0000,4906.0000 L 3295.0000,4906.0000 L 3295.0000,4858.0000 L 3311.0000,4858.0000 Z M 3311.0000,4922.0000 L 3311.0000,4970.0000 L 3295.0000,4970.0000 L 3295.0000,4922.0000 L 3311.0000,4922.0000 Z M 3311.0000,4986.0000 L 3311.0000,5034.0000 L 3295.0000,5034.0000 L 3295.0000,4986.0000 L 3311.0000,4986.0000 Z M 3311.0000,5050.0000 L 3311.0000,5098.0000 L 3295.0000,5098.0000 L 3295.0000,5050.0000 L 3311.0000,5050.0000 Z M 3311.0000,5114.0000 L 3311.0000,5162.0000 L 3295.0000,5162.0000 L 3295.0000,5114.0000 L 3311.0000,5114.0000 Z M 3311.0000,5178.0000 L 3311.0000,5226.0000 L 3295.0000,5226.0000 L 3295.0000,5178.0000 L 3311.0000,5178.0000 Z M 3311.0000,5242.0000 L 3311.0000,5290.0000 L 3295.0000,5290.0000 L 3295.0000,5242.0000 L 3311.0000,5242.0000 Z M 3311.0000,5306.0000 L 3311.0000,5354.0000 L 3295.0000,5354.0000 L 3295.0000,5306.0000 L 3311.0000,5306.0000 Z M 3311.0000,5370.0000 L 3311.0000,5418.0000 L 3295.0000,5418.0000 L 3295.0000,5370.0000 L 3311.0000,5370.0000 Z M 3311.0000,5434.0000 L 3311.0000,5482.0000 L 3295.0000,5482.0000 L 3295.0000,5434.0000 L 3311.0000,5434.0000 Z M 3311.0000,5498.0000 L 3311.0000,5546.0000 L 3295.0000,5546.0000 L 3295.0000,5498.0000 L 3311.0000,5498.0000 Z M 3311.0000,5562.0000 L 3311.0000,5610.0000 L 3295.0000,5610.0000 L 3295.0000,5562.0000 L 3311.0000,5562.0000 Z M 3311.0000,5626.0000 L 3311.0000,5674.0000 L 3295.0000,5674.0000 L 3295.0000,5626.0000 L 3311.0000,5626.0000 Z M 3311.0000,5690.0000 L 3311.0000,5698.0000 L 3295.0000,5698.0000 L 3295.0000,5690.0000 L 3311.0000,5690.0000 Z "  fill="#000000" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="bevel" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 71.0000,19.0000 L 71.0000,47.0000 L 328.0000,47.0000 L 328.0000,19.0000 L 71.0000,19.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="112.0000" y="31.0000" font-size="12.0000" ><![CDATA[LPDGNGIELCR - 622.3086++]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1205.0000,416.0000 L 1653.0000,416.0000 " stroke="#FF0000" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="112.0000" y="45.0000" font-size="12.0000" ><![CDATA[LPDGNGIELCR - 627.3127++ (heavy)]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1205.0000,640.0000 L 1653.0000,640.0000 " stroke="#0000FF" stroke-width="32.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1149.0000,312.0000 L 5248.0000,312.0000 L 5248.0000,760.0000 L 1149.0000,760.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 145.0000,325.0000 L 178.0000,325.0000 L 178.0000,343.0000 L 145.0000,343.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 2321.0000,5201.0000 L 2844.0000,5201.0000 L 2844.0000,5486.0000 L 2321.0000,5486.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 145.0000,325.0000 L 178.0000,325.0000 L 178.0000,343.0000 L 145.0000,343.0000 Z" /><path style="fill:#ffffff" d="M 144.0000,324.0000 L 180.0000,324.0000 L 180.0000,345.0000 L 144.0000,345.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2305.0000,5185.0000 L 2860.0000,5185.0000 L 2860.0000,5502.0000 L 2305.0000,5502.0000 L 2305.0000,5185.0000 Z M 2337.0000,5486.0000 L 2321.0000,5470.0000 L 2844.0000,5470.0000 L 2828.0000,5486.0000 L 2828.0000,5201.0000 L 2844.0000,5217.0000 L 2321.0000,5217.0000 L 2337.0000,5201.0000 L 2337.0000,5486.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 144.0000,324.0000 L 180.0000,324.0000 L 180.0000,345.0000 L 144.0000,345.0000 Z" /><text font-family="Arial" fill="#0000FF" style ="white-space:pre;" font-weight="400" text-anchor="start" x="147.0000" y="338.0000" font-size="14.0000" ><![CDATA[16.9]]></text>
+<path style="fill:#ffffff" d="M 125.0000,320.0000 L 158.0000,320.0000 L 158.0000,338.0000 L 125.0000,338.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 2012.0000,5124.0000 L 2536.0000,5124.0000 L 2536.0000,5410.0000 L 2012.0000,5410.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 125.0000,320.0000 L 158.0000,320.0000 L 158.0000,338.0000 L 125.0000,338.0000 Z" /><path style="fill:#ffffff" d="M 124.0000,319.0000 L 160.0000,319.0000 L 160.0000,340.0000 L 124.0000,340.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1996.0000,5108.0000 L 2552.0000,5108.0000 L 2552.0000,5426.0000 L 1996.0000,5426.0000 L 1996.0000,5108.0000 Z M 2028.0000,5410.0000 L 2012.0000,5394.0000 L 2536.0000,5394.0000 L 2520.0000,5410.0000 L 2520.0000,5124.0000 L 2536.0000,5140.0000 L 2012.0000,5140.0000 L 2028.0000,5124.0000 L 2028.0000,5410.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 124.0000,319.0000 L 160.0000,319.0000 L 160.0000,340.0000 L 124.0000,340.0000 Z" /><text font-family="Arial" fill="#0000FF" style ="white-space:pre;" font-weight="400" text-anchor="start" x="128.0000" y="333.0000" font-size="14.0000" ><![CDATA[16.5]]></text>
+<path style="fill:#ffffff" d="M 186.0000,91.0000 L 219.0000,91.0000 L 219.0000,109.0000 L 186.0000,109.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 2990.0000,1464.0000 L 3513.0000,1464.0000 L 3513.0000,1750.0000 L 2990.0000,1750.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 186.0000,91.0000 L 219.0000,91.0000 L 219.0000,109.0000 L 186.0000,109.0000 Z" /><path style="fill:#ffffff" d="M 185.0000,90.0000 L 221.0000,90.0000 L 221.0000,111.0000 L 185.0000,111.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 2974.0000,1448.0000 L 3529.0000,1448.0000 L 3529.0000,1766.0000 L 2974.0000,1766.0000 L 2974.0000,1448.0000 Z M 3006.0000,1750.0000 L 2990.0000,1734.0000 L 3513.0000,1734.0000 L 3497.0000,1750.0000 L 3497.0000,1464.0000 L 3513.0000,1480.0000 L 2990.0000,1480.0000 L 3006.0000,1464.0000 L 3006.0000,1750.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 185.0000,90.0000 L 221.0000,90.0000 L 221.0000,111.0000 L 185.0000,111.0000 Z" /><text font-family="Arial" fill="#FF0000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="189.0000" y="104.0000" font-size="14.0000" ><![CDATA[17.8]]></text>
+<path style="fill:#ffffff" d="M 125.0000,314.0000 L 158.0000,314.0000 L 158.0000,332.0000 L 125.0000,332.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 2012.0000,5034.0000 L 2536.0000,5034.0000 L 2536.0000,5320.0000 L 2012.0000,5320.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 125.0000,314.0000 L 158.0000,314.0000 L 158.0000,332.0000 L 125.0000,332.0000 Z" /><path style="fill:#ffffff" d="M 124.0000,313.0000 L 160.0000,313.0000 L 160.0000,334.0000 L 124.0000,334.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1996.0000,5018.0000 L 2552.0000,5018.0000 L 2552.0000,5336.0000 L 1996.0000,5336.0000 L 1996.0000,5018.0000 Z M 2028.0000,5320.0000 L 2012.0000,5304.0000 L 2536.0000,5304.0000 L 2520.0000,5320.0000 L 2520.0000,5034.0000 L 2536.0000,5050.0000 L 2012.0000,5050.0000 L 2028.0000,5034.0000 L 2028.0000,5320.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 124.0000,313.0000 L 160.0000,313.0000 L 160.0000,334.0000 L 124.0000,334.0000 Z" /><text font-family="Arial" fill="#FF0000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="128.0000" y="328.0000" font-size="14.0000" ><![CDATA[16.5]]></text>
+<path style="fill:#ffffff" d="M 198.0000,253.0000 L 231.0000,253.0000 L 231.0000,271.0000 L 198.0000,271.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 3170.0000,4057.0000 L 3693.0000,4057.0000 L 3693.0000,4342.0000 L 3170.0000,4342.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 198.0000,253.0000 L 231.0000,253.0000 L 231.0000,271.0000 L 198.0000,271.0000 Z" /><path style="fill:#ffffff" d="M 197.0000,252.0000 L 233.0000,252.0000 L 233.0000,273.0000 L 197.0000,273.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3154.0000,4041.0000 L 3709.0000,4041.0000 L 3709.0000,4358.0000 L 3154.0000,4358.0000 L 3154.0000,4041.0000 Z M 3186.0000,4342.0000 L 3170.0000,4326.0000 L 3693.0000,4326.0000 L 3677.0000,4342.0000 L 3677.0000,4057.0000 L 3693.0000,4073.0000 L 3170.0000,4073.0000 L 3186.0000,4057.0000 L 3186.0000,4342.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 197.0000,252.0000 L 233.0000,252.0000 L 233.0000,273.0000 L 197.0000,273.0000 Z" /><text font-family="Arial" fill="#0000FF" style ="white-space:pre;" font-weight="400" text-anchor="start" x="200.0000" y="267.0000" font-size="14.0000" ><![CDATA[18.0]]></text>
+<path style="fill:#ffffff" d="M 190.0000,228.0000 L 223.0000,228.0000 L 223.0000,246.0000 L 190.0000,246.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path style="fill:url(#img-1-ref);" d="M 3041.0000,3661.0000 L 3565.0000,3661.0000 L 3565.0000,3946.0000 L 3041.0000,3946.0000 Z" /></g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 190.0000,228.0000 L 223.0000,228.0000 L 223.0000,246.0000 L 190.0000,246.0000 Z" /><path style="fill:#ffffff" d="M 189.0000,227.0000 L 225.0000,227.0000 L 225.0000,248.0000 L 189.0000,248.0000 Z" /></g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3025.0000,3645.0000 L 3581.0000,3645.0000 L 3581.0000,3962.0000 L 3025.0000,3962.0000 L 3025.0000,3645.0000 Z M 3057.0000,3946.0000 L 3041.0000,3930.0000 L 3565.0000,3930.0000 L 3549.0000,3946.0000 L 3549.0000,3661.0000 L 3565.0000,3677.0000 L 3041.0000,3677.0000 L 3057.0000,3661.0000 L 3057.0000,3946.0000 Z " fill="#img-1-ref" stroke-width="1px" stroke="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path style="fill:#ffffff" d="M 189.0000,227.0000 L 225.0000,227.0000 L 225.0000,248.0000 L 189.0000,248.0000 Z" /><text font-family="Arial" fill="#FF0000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="192.0000" y="242.0000" font-size="14.0000" ><![CDATA[17.9]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3367.0000,4390.0000 L 3191.0000,4390.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3367.0000,4390.0000 L 3175.0000,4454.0000 L 3175.0000,4326.0000 L 3367.0000,4390.0000 Z" stroke-width="1px" stroke="#000000"  fill="#000000" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3239.0000,3994.0000 L 3063.0000,3994.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 3239.0000,3994.0000 L 3047.0000,4058.0000 L 3047.0000,3930.0000 L 3239.0000,3994.0000 Z" stroke-width="1px" stroke="#000000"  fill="#000000" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+</g>
+</svg>
