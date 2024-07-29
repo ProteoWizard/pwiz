@@ -4822,9 +4822,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.zh-CHS.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>

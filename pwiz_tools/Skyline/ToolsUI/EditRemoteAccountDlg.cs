@@ -35,6 +35,9 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class EditRemoteAccountDlg : FormEx
     {
+        private static readonly int UNIFI_WIZARD_PAGE_INDEX = 0;
+        private static readonly int ARDIA_WIZARD_PAGE_INDEX = 1;
+
         private readonly RemoteAccount _originalAccount;
         private readonly IList<RemoteAccount> _existing;
 
@@ -70,11 +73,15 @@ namespace pwiz.Skyline.ToolsUI
         public void SetRemoteAccount(RemoteAccount remoteAccount)
         {
             comboAccountType.SelectedIndex = RemoteAccountType.ALL.IndexOf(remoteAccount.AccountType);
-            textUsername.Text = remoteAccount.Username;
-            textPassword.Text = remoteAccount.Password;
-            textServerURL.Text = remoteAccount.ServerUrl;
+     
             if (remoteAccount is UnifiAccount unifiAccount)
             {
+                wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
+
+                textUsername.Text = remoteAccount.Username;
+                textPassword.Text = remoteAccount.Password;
+                textServerURL.Text = remoteAccount.ServerUrl;
+
                 tbxIdentityServer.Text = unifiAccount.IdentityServer;
                 tbxClientScope.Text = unifiAccount.ClientScope;
                 tbxClientSecret.Text = unifiAccount.ClientSecret;
@@ -83,24 +90,28 @@ namespace pwiz.Skyline.ToolsUI
             {
                 _ardiaAccount_PassedIntoEdit = ardiaAccount;
 
+                wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
+
+                textArdiaAlias_Username.Text = remoteAccount.Username;
+                textArdiaServerURL.Text = remoteAccount.ServerUrl;
+
                 if (ardiaAccount.authenticatedHttpClientFactoryIsPopulated())
                 {
-                    btnLogoutArdia.Visible = true;
-                    textUsername.Enabled = false;
-                    textServerURL.Enabled = false;
-                    cbDeleteRawAfterImport.Enabled = false;
-                    btnOK.Enabled = false;
+                    btnLogoutArdia.Enabled = true;
+                    textArdiaAlias_Username.Enabled = false;
+                    textArdiaServerURL.Enabled = false;
+                    cbArdiaDeleteRawAfterImport.Enabled = false;
                 }
                 else
                 {
-                    btnLogoutArdia.Visible = false;
-                    textUsername.Enabled = true;
-                    textServerURL.Enabled = true;
-                    cbDeleteRawAfterImport.Enabled = true;
-                    btnOK.Enabled = true;
+                    btnLogoutArdia.Enabled = false;
+                    textArdiaAlias_Username.Enabled = true;
+                    textArdiaServerURL.Enabled = true;
+                    cbArdiaDeleteRawAfterImport.Enabled = true;
                 }
 
-                cbDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
+                cbArdiaDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
+                
                 //  Ardia Test Only Pass Through
                 _ardia_TestingOnly_NotSerialized_Username = ardiaAccount.TestingOnly_NotSerialized_Username;
                 _ardia_TestingOnly_NotSerialized_Password = ardiaAccount.TestingOnly_NotSerialized_Password;
@@ -111,10 +122,12 @@ namespace pwiz.Skyline.ToolsUI
         public RemoteAccount GetRemoteAccount()
         {
             var accountType = (RemoteAccountType) comboAccountType.SelectedItem;
-            var remoteAccount = accountType.GetEmptyAccount().ChangeServerUrl(textServerURL.Text.Trim().TrimEnd('/'))
-                .ChangeUsername(textUsername.Text.Trim()).ChangePassword(textPassword.Text);
+            var remoteAccount = accountType.GetEmptyAccount();
             if (accountType == RemoteAccountType.UNIFI)
             {
+                remoteAccount = remoteAccount.ChangeServerUrl(textServerURL.Text.Trim().TrimEnd('/'))
+                    .ChangeUsername(textUsername.Text.Trim()).ChangePassword(textPassword.Text);
+
                 var unifiAccount = (UnifiAccount) remoteAccount;
                 unifiAccount = unifiAccount.ChangeIdentityServer(tbxIdentityServer.Text)
                     .ChangeClientScope(tbxClientScope.Text)
@@ -123,8 +136,11 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (accountType == RemoteAccountType.ARDIA)
             {
+                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'))
+                    .ChangeUsername(textArdiaAlias_Username.Text.Trim());
+
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
-                ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbDeleteRawAfterImport.Checked);
+                ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbArdiaDeleteRawAfterImport.Checked);
 
                 //  Ardia Test Only Pass Through
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(_ardia_TestingOnly_NotSerialized_Username);
@@ -134,20 +150,6 @@ namespace pwiz.Skyline.ToolsUI
                 remoteAccount = ardiaAccount;
             }
             return remoteAccount;
-        }
-
-        private void btnOK_Click(object sender, EventArgs e)
-        {
-            OkDialog();
-        }
-
-        public void OkDialog()
-        {
-            if (!ValidateValues())
-            {
-                return;
-            }
-            DialogResult = DialogResult.OK;
         }
 
         private void btnLogoutArdia_Click(object sender, EventArgs e)
@@ -169,21 +171,33 @@ namespace pwiz.Skyline.ToolsUI
             if (_ardiaAccount_PassedIntoEdit.authenticatedHttpClientFactoryIsPopulated())
             {
                 btnLogoutArdia.Visible = true;
-                textUsername.Enabled = false;
-                textServerURL.Enabled = false;
-                cbDeleteRawAfterImport.Enabled = false;
-                btnOK.Enabled = false;
+                textArdiaAlias_Username.Enabled = false;
+                textArdiaServerURL.Enabled = false;
+                cbArdiaDeleteRawAfterImport.Enabled = false;
             }
             else
             {
                 btnLogoutArdia.Visible = false;
-                textUsername.Enabled = true;
-                textServerURL.Enabled = true;
-                cbDeleteRawAfterImport.Enabled = true;
-                btnOK.Enabled = true;
+                textArdiaAlias_Username.Enabled = true;
+                textArdiaServerURL.Enabled = true;
+                cbArdiaDeleteRawAfterImport.Enabled = true;
             }
 
             var y = 0;
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
+            if (!ValidateValues())
+            {
+                return;
+            }
+            DialogResult = DialogResult.OK;
         }
 
         private void btnTest_Click(object sender, EventArgs e)
@@ -344,7 +358,14 @@ namespace pwiz.Skyline.ToolsUI
             if (string.IsNullOrEmpty(remoteAccount.ServerUrl))
             {
                 MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank);
-                textServerURL.Focus();
+                if (RemoteAccountType.UNIFI.Equals(AccountType))
+                {
+                    textServerURL.Focus();
+                }
+                else if (RemoteAccountType.ARDIA.Equals(AccountType))
+                {
+                    textArdiaServerURL.Focus();
+                }
                 return false;
             }
             if (remoteAccount.GetKey() != _originalAccount.GetKey())
@@ -360,14 +381,28 @@ namespace pwiz.Skyline.ToolsUI
                 if (uri.Scheme != @"https" && uri.Scheme != @"http")
                 {
                     MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___);
-                    textServerURL.Focus();
+                    if (RemoteAccountType.UNIFI.Equals(AccountType))
+                    {
+                        textServerURL.Focus();
+                    }
+                    else if (RemoteAccountType.ARDIA.Equals(AccountType))
+                    {
+                        textArdiaServerURL.Focus();
+                    }
                     return false;
                 }
             }
             catch
             {
                 MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
-                textServerURL.Focus();
+                if (RemoteAccountType.UNIFI.Equals(AccountType))
+                {
+                    textServerURL.Focus();
+                }
+                else if (RemoteAccountType.ARDIA.Equals(AccountType))
+                {
+                    textArdiaServerURL.Focus();
+                }
                 return false;
             }
             return true;
@@ -384,42 +419,15 @@ namespace pwiz.Skyline.ToolsUI
 
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType);
             if (RemoteAccountType.UNIFI.Equals(AccountType))
             {
-                pnlUsernameLabel.Visible = true;
-                pnlPassword.Visible = true;
-
-                //  Hide everything not needed
-                pnlUsernameAliasLabel.Visible = false;
+                wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
             }
-
-            pnlArdiaSettings.Visible = RemoteAccountType.ARDIA.Equals(AccountType);
 
             if (RemoteAccountType.ARDIA.Equals(AccountType))
             {
-                pnlUsernameAliasLabel.Visible = true;
-
-                //  Hide everything not needed
-
-                pnlUsernameLabel.Visible = false;
-                pnlPassword.Visible = false;
+                wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
             }
-
-            textServerURL.Text = "";
         }
-
-        private void flowLayoutPanel_Resize(object sender, EventArgs e)
-        {
-            pnlAccountTypeSelect.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlUsernameLabel.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlUsernameAliasLabel.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlUsernameInputField.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlPassword.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlServerURL.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            pnlArdiaSettings.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-            groupBoxUnifi.Width = flowLayoutPanel.Width - flowLayoutPanel.Padding.Left * 2;
-        }
-
     }
 }
