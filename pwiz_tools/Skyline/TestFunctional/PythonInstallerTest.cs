@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private static PythonInstaller FormatPythonInstaller(bool cancelDownload, bool downloadSuccess,
-                                                             bool installSuccess)
+            bool installSuccess)
         {
             var ppc = new ProgramPathContainer(PYTHON, VERSION_27);
             // ReSharper disable once CollectionNeverUpdated.Local
@@ -177,14 +177,14 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(ppc, packageUris, false));
             WaitForConditionUI(() => pythonInstaller.IsLoaded);
             RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
                 {
-                    pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = cancelDownload,
-                            DownloadSuccess = downloadSuccess
-                        };
-                    pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = installSuccess ? 0 : 1};
-                });
+                    CancelDownload = cancelDownload,
+                    DownloadSuccess = downloadSuccess
+                };
+                pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = installSuccess ? 0 : 1};
+            });
             return pythonInstaller;
         }
 
@@ -215,10 +215,10 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             var packages = new Collection<string> {EXE_PACKAGE};
             RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_, 
-                                                  string.Empty, 
-                                                  TextUtil.LineSeparate(packages), 
-                                                  string.Empty, 
-                                                  Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
+                string.Empty, 
+                TextUtil.LineSeparate(packages), 
+                string.Empty, 
+                Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForClosedForm(pythonInstaller);
         }
@@ -368,22 +368,22 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private static void SetPipInstallResults(PythonInstaller pythonInstaller, bool cancelDownload,
-                                                 bool downloadSuccess, bool connectSuccess, bool installSuccess)
+            bool downloadSuccess, bool connectSuccess, bool installSuccess)
         {
             RunUI(() =>
+            {
+                pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
                 {
-                    pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = cancelDownload,
-                            DownloadSuccess = downloadSuccess
-                        };
-                    pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
-                        {
-                            ConnectSuccess = connectSuccess,
-                            ExitCode = installSuccess ? 0 : 1
-                        };
-                    pythonInstaller.TestingPip = true;
-                });
+                    CancelDownload = cancelDownload,
+                    DownloadSuccess = downloadSuccess
+                };
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = connectSuccess,
+                    ExitCode = installSuccess ? 0 : 1
+                };
+                pythonInstaller.TestingPip = true;
+            });
         }
 
         private static void TestPackagesExecutablesOnly()
@@ -434,42 +434,42 @@ namespace pwiz.SkylineTestFunctional
         private static PythonInstaller FormatPackageInstallerOnlyExes(bool cancelDownload, bool downloadSuccess, bool installSuccess)
         {
             return FormatPackageInstaller(cancelDownload, downloadSuccess, true, installSuccess,
-                                          new Collection<string> {EXE_PACKAGE, LOCAL_EXE_PACKAGE});
+                new Collection<string> {EXE_PACKAGE, LOCAL_EXE_PACKAGE});
         }
 
         private static PythonInstaller FormatPackageInstallerOnlySources(bool cancelDownload, bool downloadSuccess,
-                                                                         bool connectSuccess, bool installSuccess)
+            bool connectSuccess, bool installSuccess)
         {
             return FormatPackageInstaller(cancelDownload, downloadSuccess, connectSuccess, installSuccess,
-                                          new Collection<string> {TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE});
+                new Collection<string> {TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE});
         }
 
         private static PythonInstaller FormatPackageInstallerBothTypes(bool cancelDownload, bool downloadSuccess,
-                                                                       bool connectSuccess, bool installSuccess)
+            bool connectSuccess, bool installSuccess)
         {
             return FormatPackageInstaller(cancelDownload, downloadSuccess, connectSuccess, installSuccess,
-                                          new Collection<string> {ZIP_PACKAGE, TARGZ_PACKAGE, EXE_PACKAGE, LOCAL_ZIP_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_EXE_PACKAGE});
+                new Collection<string> {ZIP_PACKAGE, TARGZ_PACKAGE, EXE_PACKAGE, LOCAL_ZIP_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_EXE_PACKAGE});
         }
 
         private static PythonInstaller FormatPackageInstaller(bool cancelDownload, bool downloadSuccess,
-                                                              bool connectSuccess, bool installSuccess, IEnumerable<string> packageUris)
+            bool connectSuccess, bool installSuccess, IEnumerable<string> packageUris)
         {
             var ppc = new ProgramPathContainer(PYTHON, VERSION_27);
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(ppc, packageUris, true));
             WaitForConditionUI(() => pythonInstaller.IsLoaded);
             RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
                 {
-                    pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = cancelDownload,
-                            DownloadSuccess = downloadSuccess
-                        };
-                    pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
-                        {
-                            ConnectSuccess = connectSuccess,
-                            ExitCode = installSuccess ? 0 : 1
-                        };
-                });
+                    CancelDownload = cancelDownload,
+                    DownloadSuccess = downloadSuccess
+                };
+                pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = connectSuccess,
+                    ExitCode = installSuccess ? 0 : 1
+                };
+            });
             return pythonInstaller;
         }
 
@@ -479,29 +479,29 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller =
                 ShowDialog<PythonInstaller>(
                     () =>
-                    InstallProgram(new ProgramPathContainer(PYTHON, VERSION_27),
-                                   new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_EXE_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE}, false));
+                        InstallProgram(new ProgramPathContainer(PYTHON, VERSION_27),
+                            new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_EXE_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE}, false));
             
             RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
                 {
-                    pythonInstaller.TestDownloadClient = pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = false,
-                            DownloadSuccess = true
-                        };
-                    pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = 0};
-                    pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = false,
-                            DownloadSuccess = true
-                        };
-                    pythonInstaller.TestPipeSkylineProcessRunner = pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
-                        {
-                            ConnectSuccess = true,
-                            ExitCode = 0
-                        };
-                    pythonInstaller.TestingPip = true;
-                });
+                    CancelDownload = false,
+                    DownloadSuccess = true
+                };
+                pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = 0};
+                pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = false,
+                    DownloadSuccess = true
+                };
+                pythonInstaller.TestPipeSkylineProcessRunner = pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 0
+                };
+                pythonInstaller.TestingPip = true;
+            });
 
             var pythonInstallSuccessDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_GetPython_Python_installation_completed_, pythonInstallSuccessDlg.Message));
