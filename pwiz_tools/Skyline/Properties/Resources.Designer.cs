@@ -4035,6 +4035,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connect.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestConnectButton_LabelText_Connect {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestConnectButton_LabelText_Connect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestConnectButton_LabelText_Test {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestConnectButton_LabelText_Test", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error connecting to server: .
         /// </summary>
         public static string EditRemoteAccountDlg_TestSettings_Error_connecting_to_server__ {

@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -76,6 +77,8 @@ namespace pwiz.Skyline.ToolsUI
             if (remoteAccount is UnifiAccount unifiAccount)
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
+
+                btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_LabelText_Test;
 
                 textUsername.Text = remoteAccount.Username;
                 textPassword.Text = remoteAccount.Password;
@@ -417,23 +420,35 @@ namespace pwiz.Skyline.ToolsUI
             if (RemoteAccountType.UNIFI.Equals(AccountType))
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
+
+                process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
             }
 
             if (RemoteAccountType.ARDIA.Equals(AccountType))
             {
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
+
+                process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
             }
         }
 
         private void process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls()
         {
+            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            {
+                btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_LabelText_Test;
 
+                return;
+            }
+    
             if (_ardiaAccount_CurrentlyLoggedIn != null)
             {
                 btnLogoutArdia.Enabled = true;
                 textArdiaAlias_Username.Enabled = false;
                 textArdiaServerURL.Enabled = false;
                 cbArdiaDeleteRawAfterImport.Enabled = false;
+
+                btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_LabelText_Test;
             }
             else
             {
@@ -441,8 +456,9 @@ namespace pwiz.Skyline.ToolsUI
                 textArdiaAlias_Username.Enabled = true;
                 textArdiaServerURL.Enabled = true;
                 cbArdiaDeleteRawAfterImport.Enabled = true;
-            }
 
+                btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_LabelText_Connect;
+            }
         }
     }
 }
