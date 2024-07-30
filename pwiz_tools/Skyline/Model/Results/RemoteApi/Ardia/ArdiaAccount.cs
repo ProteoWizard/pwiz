@@ -85,6 +85,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         private Func<HttpClient> _authenticatedHttpClientFactory;
 
+        public void copy_authenticatedHttpClientFactory(ArdiaAccount ardiaAccount)
+        {
+            _authenticatedHttpClientFactory = ardiaAccount._authenticatedHttpClientFactory;
+        }
+
         public bool authenticatedHttpClientFactoryIsPopulated()
         {
             if (_authenticatedHttpClientFactory != null)
@@ -145,25 +150,35 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         public ArdiaAccount ChangeDeleteRawAfterImport(bool deleteAfterImport)
         {
-            return ChangeProp(ImClone(this), im => im.DeleteRawAfterImport = deleteAfterImport);
+            var result = ChangeProp(ImClone(this), im => im.DeleteRawAfterImport = deleteAfterImport);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
         }
 
         public ArdiaAccount ChangeBffHostCookie(string bffHostCookie)
         {
-            return ChangeProp(ImClone(this), im => im.BffHostCookie = bffHostCookie);
+            var result = ChangeProp(ImClone(this), im => im.BffHostCookie = bffHostCookie);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
         }
 
         public ArdiaAccount ChangeTestingOnly_NotSerialized_Role(string role)
         {
-            return ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Role = role);
+            var result = ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Role = role);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
         }
         public ArdiaAccount ChangeTestingOnly_NotSerialized_Username(string username)
         {
-            return ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Username = username);
+            var result = ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Username = username);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
         }
         public ArdiaAccount ChangeTestingOnly_NotSerialized_Password(string password)
         {
-            return ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Password= password);
+            var result = ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Password= password);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
         }
 
         public ArdiaUrl GetRootArdiaUrl()

@@ -55,6 +55,9 @@ namespace pwiz.Skyline.ToolsUI
             // _remoteAccount_PassedIntoEdit = remoteAccount;
 
             InitializeComponent();
+
+            textArdiaServerURL.TextChanged += textArdiaServerURL_TextChanged;
+
             _existing = ImmutableList.ValueOf(existing);
             _originalAccount = remoteAccount;
             comboAccountType.Items.AddRange(RemoteAccountType.ALL.ToArray());
@@ -67,6 +70,21 @@ namespace pwiz.Skyline.ToolsUI
             {
                 SetRemoteAccount(remoteAccount);
                 comboAccountType.Enabled = false;
+            }
+        }
+
+        private void textArdiaServerURL_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                _ardiaAccount_CurrentlyLoggedIn = null;
+
+                process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+            }
+            catch
+            {
+                // If there is an error, 
+                
             }
         }
 
@@ -141,6 +159,12 @@ namespace pwiz.Skyline.ToolsUI
 
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbArdiaDeleteRawAfterImport.Checked);
+
+                if (_ardiaAccount_CurrentlyLoggedIn != null
+                    && _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Equals(_ardiaAccount_CurrentlyLoggedIn.ServerUrl))
+                {
+                    ardiaAccount.copy_authenticatedHttpClientFactory(_ardiaAccount_CurrentlyLoggedIn);
+                }
 
                 //  Ardia Test Only Pass Through
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(_ardia_TestingOnly_NotSerialized_Username);
@@ -444,18 +468,18 @@ namespace pwiz.Skyline.ToolsUI
             if (_ardiaAccount_CurrentlyLoggedIn != null)
             {
                 btnLogoutArdia.Enabled = true;
-                textArdiaAlias_Username.Enabled = false;
-                textArdiaServerURL.Enabled = false;
-                cbArdiaDeleteRawAfterImport.Enabled = false;
+                // textArdiaAlias_Username.Enabled = false;
+                // textArdiaServerURL.Enabled = false;
+                // cbArdiaDeleteRawAfterImport.Enabled = false;
 
                 btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_LabelText_Test;
             }
             else
             {
                 btnLogoutArdia.Enabled = false;
-                textArdiaAlias_Username.Enabled = true;
-                textArdiaServerURL.Enabled = true;
-                cbArdiaDeleteRawAfterImport.Enabled = true;
+                // textArdiaAlias_Username.Enabled = true;
+                // textArdiaServerURL.Enabled = true;
+                // cbArdiaDeleteRawAfterImport.Enabled = true;
 
                 btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_LabelText_Connect;
             }
