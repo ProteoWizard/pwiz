@@ -203,7 +203,7 @@
             resources.ApplyResources(this.tabPage2, "tabPage2");
             this.tabPage2.Name = "tabPage2";
             // 
-            // cbDeleteRawAfterImport
+            // cbArdiaDeleteRawAfterImport
             // 
             resources.ApplyResources(this.cbArdiaDeleteRawAfterImport, "cbArdiaDeleteRawAfterImport");
             this.cbArdiaDeleteRawAfterImport.Name = "cbArdiaDeleteRawAfterImport";

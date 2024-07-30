@@ -364,7 +364,7 @@
     <value>9</value>
   </data>
   <data name="btnTest.Text" xml:space="preserve">
-    <value>Test</value>
+    <value>Test/Cnnct</value>
   </data>
   <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
@@ -718,7 +718,7 @@
     <value>0, 94</value>
   </data>
   <data name="cbArdiaDeleteRawAfterImport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>158, 17</value>
+    <value>176, 17</value>
   </data>
   <data name="cbArdiaDeleteRawAfterImport.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -737,6 +737,9 @@
   </data>
   <data name="&gt;&gt;cbArdiaDeleteRawAfterImport.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="btnLogoutArdia.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="btnLogoutArdia.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, 118</value>

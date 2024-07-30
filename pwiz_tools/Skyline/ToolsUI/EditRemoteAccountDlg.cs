@@ -46,13 +46,12 @@ namespace pwiz.Skyline.ToolsUI
         private string _ardia_TestingOnly_NotSerialized_Password;
         private string _ardia_TestingOnly_NotSerialized_Role;
 
-        private RemoteAccount _remoteAccount_PassedIntoEdit;
-        private ArdiaAccount _ardiaAccount_PassedIntoEdit;
+        private ArdiaAccount _ardiaAccount_CurrentlyLoggedIn;
 
 
         public EditRemoteAccountDlg(RemoteAccount remoteAccount, IEnumerable<RemoteAccount> existing)
         {
-            _remoteAccount_PassedIntoEdit = remoteAccount;
+            // _remoteAccount_PassedIntoEdit = remoteAccount;
 
             InitializeComponent();
             _existing = ImmutableList.ValueOf(existing);
@@ -88,8 +87,6 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (remoteAccount is ArdiaAccount ardiaAccount)
             {
-                _ardiaAccount_PassedIntoEdit = ardiaAccount;
-
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
 
                 textArdiaAlias_Username.Text = remoteAccount.Username;
@@ -97,17 +94,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 if (ardiaAccount.authenticatedHttpClientFactoryIsPopulated())
                 {
-                    btnLogoutArdia.Enabled = true;
-                    textArdiaAlias_Username.Enabled = false;
-                    textArdiaServerURL.Enabled = false;
-                    cbArdiaDeleteRawAfterImport.Enabled = false;
-                }
-                else
-                {
-                    btnLogoutArdia.Enabled = false;
-                    textArdiaAlias_Username.Enabled = true;
-                    textArdiaServerURL.Enabled = true;
-                    cbArdiaDeleteRawAfterImport.Enabled = true;
+                    _ardiaAccount_CurrentlyLoggedIn = ardiaAccount;
                 }
 
                 cbArdiaDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
@@ -117,11 +104,21 @@ namespace pwiz.Skyline.ToolsUI
                 _ardia_TestingOnly_NotSerialized_Password = ardiaAccount.TestingOnly_NotSerialized_Password;
                 _ardia_TestingOnly_NotSerialized_Role = ardiaAccount.TestingOnly_NotSerialized_Role;
             }
+
+            process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
         }
 
         public RemoteAccount GetRemoteAccount()
         {
             var accountType = (RemoteAccountType) comboAccountType.SelectedItem;
+            if (accountType == RemoteAccountType.ARDIA)
+            {
+                if (_ardiaAccount_CurrentlyLoggedIn != null)
+                {
+                    return _ardiaAccount_CurrentlyLoggedIn;
+                }
+            }
+
             var remoteAccount = accountType.GetEmptyAccount();
             if (accountType == RemoteAccountType.UNIFI)
             {
@@ -158,7 +155,7 @@ namespace pwiz.Skyline.ToolsUI
 
             var z = 0;
 
-            using var logoutDlg = new ArdiaLogoutDlg(_ardiaAccount_PassedIntoEdit);
+            using var logoutDlg = new ArdiaLogoutDlg(_ardiaAccount_CurrentlyLoggedIn);
             if (DialogResult.Cancel == logoutDlg.ShowDialog(this))
             {
                 z = 1;
@@ -166,24 +163,11 @@ namespace pwiz.Skyline.ToolsUI
 
             // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
             //   Getting removed regardless of what the user does in the child window
-            _ardiaAccount_PassedIntoEdit.ResetAuthenticatedHttpClientFactory();
+            _ardiaAccount_CurrentlyLoggedIn.ResetAuthenticatedHttpClientFactory();
 
-            if (_ardiaAccount_PassedIntoEdit.authenticatedHttpClientFactoryIsPopulated())
-            {
-                btnLogoutArdia.Visible = true;
-                textArdiaAlias_Username.Enabled = false;
-                textArdiaServerURL.Enabled = false;
-                cbArdiaDeleteRawAfterImport.Enabled = false;
-            }
-            else
-            {
-                btnLogoutArdia.Visible = false;
-                textArdiaAlias_Username.Enabled = true;
-                textArdiaServerURL.Enabled = true;
-                cbArdiaDeleteRawAfterImport.Enabled = true;
-            }
+            _ardiaAccount_CurrentlyLoggedIn = null;
 
-            var y = 0;
+            process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -272,11 +256,21 @@ namespace pwiz.Skyline.ToolsUI
                 catch (Exception e)
                 {
                     MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
-                    tbxIdentityServer.Focus();
+                    textArdiaServerURL.Focus();
                     return false;
                 }
 
-                return TestAccount(ardiaSession);
+                var testResults = TestAccount(ardiaSession);
+
+                if (testResults && ardiaAccount.authenticatedHttpClientFactoryIsPopulated())
+                {
+                    _ardiaAccount_CurrentlyLoggedIn = ardiaAccount;
+                }
+
+                process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+
+
+                return testResults;
             }
         }
 
@@ -326,6 +320,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception e)
                 {
+                    //  Property has "_TestUnifiAccount_" but is used for all accounts.  Property text currently does not have Unifi in it so can use for all accounts for now.
                     MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_, e);
                     textServerURL.Focus();
                     return false;
@@ -428,6 +423,26 @@ namespace pwiz.Skyline.ToolsUI
             {
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
             }
+        }
+
+        private void process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls()
+        {
+
+            if (_ardiaAccount_CurrentlyLoggedIn != null)
+            {
+                btnLogoutArdia.Enabled = true;
+                textArdiaAlias_Username.Enabled = false;
+                textArdiaServerURL.Enabled = false;
+                cbArdiaDeleteRawAfterImport.Enabled = false;
+            }
+            else
+            {
+                btnLogoutArdia.Enabled = false;
+                textArdiaAlias_Username.Enabled = true;
+                textArdiaServerURL.Enabled = true;
+                cbArdiaDeleteRawAfterImport.Enabled = true;
+            }
+
         }
     }
 }
