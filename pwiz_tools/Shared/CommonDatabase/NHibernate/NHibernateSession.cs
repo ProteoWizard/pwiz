@@ -14,15 +14,20 @@ namespace CommonDatabase.NHibernate
             };
         }
 
-        protected NHibernateSession(NHibernateSessionFactory sessionFactory)
+        protected NHibernateSession(NHibernateSessionFactory sessionFactory, DbConnection dbConnection)
         {
             SessionFactory = sessionFactory;
+            DbConnection = dbConnection;
         }
 
         public NHibernateSessionFactory SessionFactory { get; }
 
         public bool LeaveOpen { get; protected set; }
-        public abstract IDbConnection Connection { get; }
+        public DbConnection DbConnection { get; private set; }
+        public IDbConnection Connection
+        {
+            get { return DbConnection.Connection; }
+        }
         public abstract ICriteria CreateCriteria(Type persistentClass);
 
         public virtual void Dispose()
@@ -31,17 +36,12 @@ namespace CommonDatabase.NHibernate
 
         public class Stateful : NHibernateSession
         {
-            public Stateful(NHibernateSessionFactory sessionFactory, ISession session) : base(sessionFactory)
+            public Stateful(NHibernateSessionFactory sessionFactory, ISession session) : base(sessionFactory, DbConnection.Of(session.Connection))
             {
                 Session = session;
             }
 
             public ISession Session { get; }
-
-            public override IDbConnection Connection
-            {
-                get { return Session.Connection; }
-            }
 
             public override ICriteria CreateCriteria(Type persistentClass)
             {
@@ -61,16 +61,12 @@ namespace CommonDatabase.NHibernate
         public class Stateless : NHibernateSession
         {
             public Stateless(NHibernateSessionFactory sessionFactory, IStatelessSession statelessSession) : base(
-                sessionFactory)
+                sessionFactory, DbConnection.Of(statelessSession.Connection))
             {
                 StatelessSession = statelessSession;
             }
 
             public IStatelessSession StatelessSession { get; }
-            public override IDbConnection Connection
-            {
-                get { return StatelessSession.Connection; }
-            }
             public override ICriteria CreateCriteria(Type persistentClass)
             {
                 return StatelessSession.CreateCriteria(persistentClass);
