@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public ArdiaAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;
+            Username = username;
+            Password = password;
         }
 
         public string GetFolderContentsUrl(ArdiaUrl ardiaUrl)
