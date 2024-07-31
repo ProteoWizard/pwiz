@@ -1,0 +1,724 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline Small Molecule Quantification</h1>
+    <p>The Skyline Targeted Mass Spectrometry Environment provides informative visual displays of the raw mass spectrometer data you import into your
+        Skyline documents. Originally developed for proteomics use, Skyline has been extended to work with generalized molecules. This tutorial
+        explores a relatively straightforward example of using Skyline for targeted quantification of a single small molecule using an external
+        calibration curve and stable-isotope labeled internal standard.</p>
+    <p>In this tutorial, you will learn about Targeted Quantification based on TQ-MS (in this example, out of crashed plasma) starting from a method
+        you may already be running (e.g. a pharmacokinetic assay). In the analysis of this dataset you will learn:</p>
+    <ul>
+        <li>Insertion of simple set of known transitions</li>
+        <li>Data Analysis and peak integration for non-proteomic molecules</li>
+        <li>Small Molecule Quantification workflow in Skyline</li>
+    </ul>
+    <p>You may also wish to view the second half of <a href="https://skyline.ms/webinar16.url">Skyline Tutorial Webinar 16</a>, on which this tutorial
+        is based.</p>
+    <p>Skyline aims to provide a vendor-neutral platform for targeted quantitative mass spectrometry research. It can import raw data from the
+        instrument vendors Agilent, SCIEX, Bruker, Shimadzu, Thermo-Scientific, and Waters. The ability to import data across various instrument
+        platforms facilitates cross-instrument comparisons and multi-site studies. This remains equally true in using it to target small molecules, as
+        it has been for years in the field of proteomics.</p>
+    <p>If you have not already looked at the “<a href="https://skyline.ms/tutorial_small_molecule.url">Skyline Small Molecule Targets</a>” tutorial
+        you should do so now, in order to pick up a few basics about how Skyline works with small molecule descriptions including chemical formulas
+        and adducts.</p>
+    <h1>Getting Started</h1>
+    <p>To start this tutorial, download the following ZIP file:</p>
+    <p><a href="https://skyline.ms/tutorials/SmallMoleculeQuantification.zip">https://skyline.ms/tutorials/SmallMoleculeQuantification.zip</a></p>
+    <p>Extract the files in it to a folder on your computer, like:</p>
+    <p>C:\Users\bspratt\Documents</p>
+    <p>This will create a new folder:</p>
+    <p>C:\Users\bspratt\Documents\SmallMoleculeQuant</p>
+    <p>It will contain all the files necessary for this tutorial.</p>
+    <p>If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <strong>Start Page, </strong>click <strong>Blank Document </strong>which looks like this: </li>
+    </ul>
+    <p><img src="image-0.png" /></p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Default. </strong></li>
+        <li>Click <strong>No </strong>on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>The document settings in this instance of Skyline have now been reset to the default.</p>
+    <p>Since this tutorial covers a small molecule topic, you can choose the molecule interface by doing the following:</p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <strong>Molecule interface </strong>which
+            looks like this: </li>
+    </ul>
+    <p><img src="image-1.png" /></p>
+    <p>Skyline is operating in molecule mode which is displayed by the molecule icon <img src="image-2.png" /> in the upper right-hand corner of the
+        Skyline window. Its original proteomics menus and controls are now hidden, allowing you to focus on small molecule analysis.</p>
+    <h1>Experimental Layout</h1>
+    <p>This experiment was designed according to the FDA Guidance on Bioanalytical Method Validation, and as such contains much more than just the
+        study samples. A full description of the plate layout and run order typically utilized for such a study has been published (<a
+            href="https://www.ncbi.nlm.nih.gov/pubmed/29039849">https://www.ncbi.nlm.nih.gov/pubmed/29039849</a>). Briefly, the samples for this
+        dataset were laid out in a 96 well plate as follows:</p>
+    <p><img src="image-3.png" /></p>
+    <p>Blanks, or “zero” standards, contain only the internal standard, double blanks contain no standard at all. </p>
+    <p>Calibration curve samples are a dilution series for calibration.</p>
+    <p>QC samples are “known unknowns”. These are quality control samples which are treated as unknowns in this study. In actuality, it is known what
+        the results should be and thus they can be used to check the accuracy of measurements.</p>
+    <p>Serum SPQC is a serum pooled QC, a pooling of all study samples which is run at several points at the start, middle and end of the experiment
+        to verify that quantitative reproducibility is constant across the study.</p>
+    <p>The NIST SRM 1950 is a pooled plasma standard from the National Institute for Standards and Technology, which is available to all researchers
+        as a reference standard for “normal” plasma metabolite measurements. It serves as a reference between studies in different laboratories.</p>
+    <p class="keep-next">Injections were performed in this order:</p>
+    <p><img src="image-4.svg" /></p>
+    <p>In all, 113 injections were used in collecting the mass spec data for these samples.</p>
+    <h1>Internal Standards</h1>
+    <p>For this study there are just two targets: a molecule and an internal standard, which is an isotopically labeled variant of the molecule and
+        thus co-elutes. It is also possible to establish a relationship between unrelated molecules by declaring one of the molecules as a surrogate
+        standard. The surrogate standard method is covered in the “<a href="https://skyline.ms/tutorial_hi_res_metabolomics.url">Skyline High
+            Resolution Metabolomics</a>” tutorial.</p>
+    <h1>Importing a Small Molecule Transition List into a Skyline Document</h1>
+    <p>The easiest way to get a small molecule transition list into a Skyline document is to start with an empty document and use the <strong>Edit
+            &gt; Insert &gt; Transition List </strong>menu item.</p>
+    <p>To begin, do the following:</p>
+    <ul>
+        <li>On the Skyline <strong>Edit</strong> menu, choose <strong>Insert </strong>and click <strong>Transition List</strong>.</li>
+    </ul>
+    <p class="keep-next">Skyline will show the <strong>Insert Transition List</strong> form:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-5.png" /></p>
+    <p>Normally, you would copy and paste a transition list from Excel or some other external source, but in this case, the transition list is small
+        enough that we can just show it here:</p>
+    <ul class="keep-next">
+        <li>Select the two rows below by dragging over them and then <strong>Copy </strong>(Ctrl-C).</li>
+    </ul>
+    <p>DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7<br />DrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7</p>
+    <ul>
+        <li>In Skyline, click on the blank area of the <strong>Insert Transition List</strong> form.</li>
+        <li>Press <strong>Ctrl-V</strong> to paste.</li>
+    </ul>
+    <p class="keep-next">Skyline shows the <strong>Import Transition List: Idenfity Columns</strong> form, where you can tell Skyline what each column
+        means.</p>
+    <p><img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-6.png" /></p>
+    <ul>
+        <li>Make sure that the <strong>Molecules</strong> radio button is selected.</li>
+    </ul>
+    <p>The data we copied did not have column headers, so initially each column is set as “Ignore Column”.</p>
+    <ul>
+        <li>Use the <strong>drop-down control in each column</strong> to set the column type. </li>
+        <li>The column order from left to right is: Molecule List Name, Molecule Name, Label Type, Precursor m/z, Precursor Charge, Product m/z,
+            Product Charge, Cone Voltage, Explicit Collision Energy, Explicit Retention Time.</li>
+    </ul>
+    <p class="keep-next">The <strong>Import Transition List: Identify Columns</strong> form should now look like this:</p>
+    <p><img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-7.png" /></p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <table>
+        <tr>
+            <td>
+                <p>NOTE: In this tutorial, you have provided only <em>m/z</em> and charge values for these targets. Skyline can accept higher level
+                    descriptions including chemical formulas and heavy isotope labels etc. Having the chemical formula is especially useful when
+                    working with full scan, high resolution data as it allows Skyline to calculate isotopic distributions, but for SRM data such as
+                    this, using <em>m/z</em> and charge is adequate.</p>
+            </td>
+        </tr>
+    </table>
+    <p>To see the newly imported targets in full detail:</p>
+    <ul>
+        <li>On the <strong>Edit</strong> menu, choose <strong>Expand All </strong>and click <strong>Precursors</strong>.</li>
+    </ul>
+    <p class="keep-next">Your Skyline window should now look like this:</p>
+    <p><img src="image-8.png" /> </p>
+    <h1>Transition Settings</h1>
+    <p>The next step is to make sure the transition settings are correct for importing the experimental mass spectrometer results. To do this, perform
+        the following steps:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
+        <li>On the <strong>Prediction </strong>tab, in the <strong>Collision energy </strong>dropdown list, choose “Waters Xevo”.</li>
+        <li>Check <strong>Use optimization values when present</strong>.</li>
+        <li>In the <strong>Optimize by</strong> dropdown list which appears when you do this, choose <strong>Transitions</strong>.</li>
+    </ul>
+    <p class="keep-next">The <strong>Transition Settings</strong> form should now look like this:</p>
+    <p><img src="image-9.png" /></p>
+    <ul>
+        <li>Click the <strong>Filter </strong>tab.</li>
+        <li>In the <strong>Precursor adduct </strong>field, change the text to “[M+H]”.</li>
+        <li>In the <strong>Fragment adduct </strong>field, change the text to “[M+]”.</li>
+    </ul>
+    <p class="keep-next">The <strong>Transition Settings </strong>form should now look like this: </p>
+    <p><img src="image-10.png" /></p>
+    <p>In the <strong>Ion types</strong> field, the value “f” indicates only fragment ion transitions will be measured. If you wanted to measure
+        precursor ions as well, you would use “f, p”.</p>
+    <p>In the <strong>Instrument </strong>tab, the default values will work for this experiment. In your own work, however, make sure that the minimum
+        and maximum <em>m/z</em> values make sense for your actual instrument. The purpose of these settings is to keep you from adding target
+        transitions that your mass spectrometer is not actually able to measure.</p>
+    <p><img src="image-11.png" /></p>
+    <p>The <strong>Method match tolerance</strong> is another important setting in the <strong>Instrument</strong> tab. It determines how closely the
+        <em>m/z</em> values from an instrument method – which get stored in the raw data files – must match the <em>m/z</em> values in the Skyline
+        <strong>Targets</strong> list. The default value in Skyline is 0.055 because original SRM files used in testing were specified to one decimal
+        place (e.g. 784.3) but included some slight rounding errors. If you export your methods from Skyline, you likely could use a much smaller
+        tolerance.</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>The next step is to import the experimental mass spectrometer results.</p>
+    <h1>Importing Mass Spectrometer Runs</h1>
+    <p>This experiment has 113 mass spectrometer data files associated with it. In cases like this, it can be useful to initially import just a
+        handful of the unknowns along with all of the calibration curve runs and quality control (QC) runs. Though, you may also wish to start out
+        with an even less complicated document to verify data quality, importing only a few runs to start, perhaps the calibration curve runs with the
+        highest concentrations.</p>
+    <p>Here you will take the more ambitious approach by performing the following steps:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save</strong>. (Ctrl-S)</li>
+        <li>Save this document as “<a id="OLE_LINK1"></a><a id="OLE_LINK2"></a>SMQuant_v1.sky” in the folder created for this tutorial.</li>
+        <li>On the <strong>File</strong> menu, select <strong>Import</strong> and click <strong>Results</strong>.</li>
+        <li>In the <strong>Import Results</strong> form, choose <strong>Add single-injection replicates in files</strong>. In the<strong> Files to
+                import simultaneously</strong> dropdown list at the bottom of the form, choose <strong>Many</strong> which will provide the best
+            import performance. </li>
+    </ul>
+    <p class="keep-next">The <strong>Import Results</strong> form should now look like this: </p>
+    <p><img src="image-12.png" /></p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>In the <strong>Import Results Files </strong>form that appears, select the last 16 unknown samples and all the QC samples by clicking the
+            “80_0_1_1_00_1021523383.raw” file and then holding down the shift key and clicking the last file in the list.</li>
+    </ul>
+    <p class="keep-next">The <strong>Import Results Files</strong> form should look like:</p>
+    <p><img src="image-13.png" /></p>
+    <ul>
+        <li>Click the <strong>Open</strong> button.</li>
+    </ul>
+    <p class="keep-next">The files should import within 30 seconds or so, leaving your Skyline window looking like this:</p>
+    <p><img src="image-14.png" /> </p>
+    <p>To take advantage of the Skyline summary graphs for viewing individual targets, do the following:</p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Retention Times</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>Click and drag these views to dock them above the chromatogram graphs.</li>
+        <li>In the <strong>Targets</strong> view select the first target “Drug”.</li>
+    </ul>
+    <p class="keep-next">The Skyline window should now look like this:</p>
+    <p><img src="image-15.png" /></p>
+    <h1>Checking Peak Integration</h1>
+    <p>Looking at the <strong>Retention Times – Replicate Comparison</strong> window, you can see by the outliers in replicates with “DoubleBlank” in
+        the name that Skyline has not chosen peaks at retention times consistent with the other replicates.</p>
+    <p>To have a closer look at the chromatograms for one of these runs do the following:</p>
+    <ul>
+        <li>In the <strong>Retention Times – Replicate Comparison </strong>view, click the bars for the first outlier DoubleBlank1.</li>
+    </ul>
+    <p>You would not actually expect Skyline to find a good peak for either the light or heavy form of the drug in this replicate, because the term
+        “DoubleBlank” implies that neither is present in the sample. The chromatogram graph now shows you what peaks Skyline had to choose from:</p>
+    <p><img src="image-16.png" /></p>
+    <ul>
+        <li>Click on the bars for the other two outliers in the <strong>Retention Times – Replicate Comparison</strong> view. </li>
+    </ul>
+    <p>This should reveal that DoubleBlank2 and DoubleBlank3 also lack any clear peak around the time 2.7 annotated with “Explicit”, meaning the
+        method explicitly specified 2.7 minutes as the expected elution time. As these are also double blanks, you should not expect any actual peaks
+        in these replicates, so you will next manually adjust the integration for each of the double blank replicates to center on the low signal area
+        at 2.7 minutes.</p>
+    <h1>Adjusting Peak Integration</h1>
+    <p>To adjust peak integration, follow these steps:</p>
+    <ul>
+        <li>In the <strong>Targets </strong>view <strong>Replicates </strong>dropdown list, select the “DoubleBlank1” replicate.</li>
+        <li>Position the mouse cursor below the <strong>Retention Time</strong> axis (the cursor will change east-west arrows:<img
+                src="image-17.png" />).</li>
+        <li>Click below the <strong>Retention Time</strong> axis at about 2.65 minutes and drag to about 2.75 minutes.</li>
+    </ul>
+    <p class="keep-next">The peak boundaries will change to these new values, and the original range will be marked by a shaded area, as shown below:
+    </p>
+    <p><img src="image-18.png" /></p>
+    <p>Repeat the steps above for the other two “DoubleBlank” replicates.</p>
+    <h1>Preparing for Quantitation</h1>
+    <p>Next to set up quantitative calibration, perform the following steps:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Molecule Settings</strong>.</li>
+        <li>Click the <strong>Quantification </strong>tab.</li>
+        <li>In the <strong>Regression fit </strong>dropdown list choose “Linear”.</li>
+        <li>In the <strong>Normalization method</strong> dropdown list, choose “Ratio to Heavy”.</li>
+        <li>In the <strong>Regression weighting </strong>dropdown list, choose “1 / (x*x)”</li>
+        <li>You may leave the <strong>MS level </strong>dropdown list showing “All”.</li>
+        <li>In the <strong>Units </strong>field, enter “uM”.</li>
+    </ul>
+    <p class="keep-next">The <strong>Molecule Settings </strong>form should look like this:</p>
+    <p><img src="image-19.png" /></p>
+    <p>This experiment uses a linear regression fit, normalizing to the heavy labeled drug. Skyline offers options for weighting across the curve as a
+        function of x: None, 1/x, and 1/(x*x). This tutorial uses a regression weighting of “1 / (x*x)” which increases the weight of the lower
+        concentration calibration samples. The <strong>Units</strong> field is for display purposes, and can be set to any value that makes sense for
+        your experiment. The concentrations in this experiment were calibrated in micromolar, so the <strong>Units </strong>field is set to “uM”.</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>The calibration curve is not quite ready to view yet. First you must declare the sample types and calibrated concentrations of various
+        replicates. </p>
+    <h1>Declaring Sample Types for Calibration Curve Display</h1>
+    <p>The <strong>Document Grid</strong> will be used to examine and add information about the various replicates. The <strong>Document Grid</strong>
+        is a highly useful tool in Skyline, providing spreadsheet-like views of many document details, many of which can be edited right in the grid.
+        In this case, you need to supply details for the various replicates as follows:</p>
+    <ul>
+        <li>On the <strong>View</strong> menu, click <strong>Document Grid</strong>.</li>
+        <li>Click <strong>Reports</strong> in the upper left corner of the grid, and choose <strong>Replicates</strong>.</li>
+    </ul>
+    <p class="keep-next">The <strong>Document Grid</strong> should look like this:</p>
+    <p><img src="image-20.png" /></p>
+    <ul>
+        <li>Expand the <strong>Document Grid</strong> if needed so that you can see all the replicates at once if you screen is large enough.</li>
+        <li>Sort the list alphabetically, by clicking on the “Replicate” column header and choosing “Sort Ascending”.</li>
+    </ul>
+    <p>By default all of the replicates have been given the <strong>Sample Type</strong> value of “Unknown”. This is the desired type for all of the
+        replicates with names beginning with a number. Beyond these, you should do the following:</p>
+    <ul>
+        <li>Click on the <strong>Sample Type</strong> field for “Blank_01”.</li>
+        <li>Change the value from “Unknown” to “Blank”.</li>
+        <li>Now shift+click on the <strong>Sample Type</strong> for “Blank_03” to select all three blank replicates at once.</li>
+        <li>Right-click the selection and click <strong>Fill Down</strong>. </li>
+    </ul>
+    <p>Everything in the multiple selection now has the same value as the first item in the selection.</p>
+    <p class="keep-next">Repeat as needed (or, skip ahead to the table below):</p>
+    <ul>
+        <li>Set the “Cal_” replicates to the “Standard” <strong>Sample Type</strong></li>
+        <li>Set the “DoubleBlank_” replicates to the “Double Blank” <strong>Sample Type</strong></li>
+        <li>Set the “QC_” replicates to the<strong> “</strong>Quality Control” <strong>Sample Type</strong></li>
+    </ul>
+    <p>Recall that the “SPCQC_” replicates are quality control in a different sense (a pooling of all study samples), so those are left as “Unknown”.
+    </p>
+    <p>Analyte concentrations can be entered by hand, but it is much easier to copy and paste them into the grid. </p>
+    <ul class="keep-next">
+        <li>Navigate to the “SmallMoleculeQuant” folder and open the “Concentrations.xlsx” file in Excel or any text editor. It should look like this:
+        </li>
+    </ul>
+    <table>
+        <tr>
+            <td>
+                <p><a id="_Hlk507063702"></a>Blank_01</p>
+            </td>
+            <td>
+                <p>Blank</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>Blank_02</p>
+            </td>
+            <td>
+                <p>Blank</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>Blank_03</p>
+            </td>
+            <td>
+                <p>Blank</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_1_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>10</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_1_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>10</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_2_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>20</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_2_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>20</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_3_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>100</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_3_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>100</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_4_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>200</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_4_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>200</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_5_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>400</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_5_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>400</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_6_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>600</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_6_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>600</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_7_01</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>800</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>Cal_7_02</p>
+            </td>
+            <td>
+                <p>Standard</p>
+            </td>
+            <td>
+                <p>800</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>DoubleBlank1</p>
+            </td>
+            <td>
+                <p>Double Blank</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>DoubleBlank2</p>
+            </td>
+            <td>
+                <p>Double Blank</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>DoubleBlank3</p>
+            </td>
+            <td>
+                <p>Double Blank</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_High_01</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>589</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_High_02</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>589</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_High_03</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>589</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_Low_01</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>121</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_Low_02</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>121</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_Low_03</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>121</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_Mid_01</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>346</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_Mid_02</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>346</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>QC_Mid_03</p>
+            </td>
+            <td>
+                <p>Quality Control</p>
+            </td>
+            <td>
+                <p>346</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>SPQC_01</p>
+            </td>
+            <td>
+                <p>Unknown</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>SPQC_02</p>
+            </td>
+            <td>
+                <p>Unknown</p>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <p>SPQC_03</p>
+            </td>
+            <td>
+                <p>Unknown</p>
+            </td>
+            <td></td>
+        </tr>
+    </table>
+    <ul>
+        <li>Make sure the column order matches the <strong>Document Grid</strong></li>
+        <li>In Excel, <strong>Select All </strong>(Ctrl-A), then <strong>Copy </strong>(Ctrl-C).</li>
+        <li>In the <strong>Document Grid, </strong>click on the “Blank_01” cell and click <strong>Paste</strong> (Ctrl-V).</li>
+    </ul>
+    <p class="keep-next">The <strong>Document Grid</strong> should look like this when done: <img src="image-21.png" /></p>
+    <h1>Inspecting the Calibration Curve</h1>
+    <p>It is time to examine the calibration curve graph.</p>
+    <ul>
+        <li>Close the <strong>Document Grid</strong>.</li>
+        <li>On the <strong>View</strong> menu, click <strong>Calibration Curve</strong>.</li>
+    </ul>
+    <p class="keep-next">The <strong>Calibration Curve </strong>form should appear looking like this:</p>
+    <p><img src="image-22.png" /></p>
+    <p>The note about the selected replicate missing transitions is expected, when the currently selected replicate is a double blank. </p>
+    <p>Looking at the graph, you can see the “Unknowns” appear as X marks mostly between the Light:Heavy ratios of 1.0 and 0. </p>
+    <p>You may also note that some of the calibration samples are not as close to the regression line as might have been hoped. By using the
+        <strong>Document Grid</strong> to get a qualitative sense of just how far off they are, you can exclude any samples that are not suitable. To
+        do that, follow these steps: </p>
+    <ul>
+        <li>On the <strong>View</strong> menu, click <strong>Document Grid</strong>.</li>
+        <li>Click on <strong>Reports</strong> in the upper left corner of the grid, and then click <strong>Replicates</strong>.</li>
+        <li>Click again on <strong>Reports</strong> in the upper left corner of the grid, and then click <strong>Customize Report</strong>.</li>
+        <li>Click on the search button <img src="image-23.png" /> and enter “accuracy” into the <strong>Find what </strong>field.</li>
+        <li>Click the <strong>Find Next</strong> button.</li>
+        <li>Click the <strong>Close</strong> button on the <strong>Find Column</strong> form. </li>
+        <li><a id="_Hlk36803128"></a>In the <strong>Customize Report</strong> form, <strong>Accuracy</strong> should be highlighted under the
+            <strong>Quantification</strong> subcategory.</li>
+        <li>Check the <strong>Accuracy</strong> checkbox<strong>.</strong></li>
+        <li>In <strong>Molecule Results </strong>(which is just above <strong>Quantification</strong>), check <strong>Exclude From
+                Calibration</strong>.</li>
+        <li>In the <strong>Report Name</strong> field at the top of the <strong>Customize Report</strong> form, enter <a id="OLE_LINK8"></a><a
+                id="OLE_LINK9"></a><a id="OLE_LINK10"></a>“Replicates_custom_quant”.</li>
+        <li>Click the <strong>OK </strong>button.</li>
+    </ul>
+    <p class="keep-next">The <strong>Document Grid</strong> should now look like this: <img src="image-24.png" /></p>
+    <p>The FDA Guidance on which this assay was based states that calibration points should have bias &lt; 15% (accuracy between 85% and 115%) between
+        the known concentration and the back-calculated concentration from the calibration curve. <strong>Accuracy </strong>column shows that “Cal_5”
+        does not meet that test. These replicates can be removed from consideration using the checkbox in the <strong>Exclude from
+            Calibration</strong> column in the <strong>Document Grid</strong>, or by right-clicking on the outlier in the <strong>Calibration
+            Curve</strong> form and clicking <strong>Exclude from Calibration. </strong>Follow these steps to remove the Cal_5 replicates from the
+        calibration regression:</p>
+    <ul>
+        <li>In the <strong>Document Grid</strong>, click on the checkbox in the <strong>Exclude from Calibration </strong>column for the “Cal5_01”
+            replicate, then press the down arrow key.</li>
+        <li>Repeat for “Cal5_02”.</li>
+    </ul>
+    <p class="keep-next">The Calibration Curve should now look like the image below. Note that the R-squared value improves from 0.97 to &gt;0.99 by
+        excluding the outlier “Cal_5” values. </p>
+    <p><img src="image-25.svg" /></p>
+    <p>Next you should import the rest of the unknowns using the following steps:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
+        <li>In the <strong>Import Results</strong> form, choose <strong>Import single-injection replicates in files</strong>.</li>
+        <li>In the<strong> Files to import simultaneously</strong> dropdown list at the bottom of the form, click <strong>Many</strong> which will
+            provide the best import performance.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>The <strong>Import Results Files </strong>form appears and displays a collection of raw data files. Select the unknown runs with file
+            names that begin with numbers lower than 80, i.e. up to the prefix “79_”. (Note: Skyline should ignore any overlap with the files you have
+            already imported.)</li>
+        <li>Click the <strong>OK </strong>button.</li>
+    </ul>
+    <p>A convenient way to view quantification data is to once again use the <strong>Document Grid</strong>, this time with the <strong>Molecule Ratio
+            Results</strong> view.</p>
+    <ul>
+        <li>In the <strong>View</strong> menu, click <strong>Document Grid</strong>.</li>
+        <li>In the <strong>Reports </strong>dropdown list, click <strong>Molecule Ratio Results</strong>.</li>
+        <li>Click the <strong>Replicate</strong> column header and select <strong>Sort Ascending</strong>.</li>
+    </ul>
+    <p class="keep-next">The <strong>Document Grid</strong> should look like this:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-26.png" /></p>
+    <p>After removal of the two “Cal_5” datapoints, further exploration of the data reveals that one of the “Cal_7” points has accuracy &lt;85% and
+        should likely be removed. This will have little effect on the measurement of the samples, since there are no samples above the level of
+        “Cal_6”, and only four samples have levels between “Cal 4” and “Cal 6”.</p>
+    <p>To enable easier visualization of the dynamic range of the samples along the calibration curve:</p>
+    <ul>
+        <li>Right-Click in the calibration curve window and click <strong>Log X Axis</strong>.</li>
+        <li>Right-Click in the calibration curve window and click <strong>Log Y Axis</strong>.</li>
+        <li>Click and drag a rectangle around the lowest and the highest Standard points (gray rectangles) to zoom into the range between them.</li>
+    </ul>
+    <p>The calibration curve should look like this:</p>
+    <p><img src="image-27.png" /></p>
+    <p>This presents a view which allows you to see at a glance that the samples mostly fall between “Cal_2” (20 uM) and “Cal_3” (100 uM), and well
+        within the linear calibration range of the assay. The Quality Control samples (known unknowns, green diamonds in the graph) all have accuracy
+        measured between 85 and 115%, which meets the FDA Guidance criteria.</p>
+    <p>From here, the next steps would be to export the data for external statistical processing, or to establish biological grouping within this
+        document and to utilize some of the statistical analysis tools or plugins within Skyline. These options are covered in other tutorials.</p>
+    <h1>Conclusion</h1>
+    <p>In this tutorial, you have learned how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas
+        and adducts, and product ion m/z values. You imported a multi-replicate data set collected using LC-MS/MS on a triple quadrupole, and saw how
+        many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data.</p>
+</body>
+
+</html>
