@@ -30,6 +30,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -381,7 +382,8 @@ namespace pwiz.Skyline.Model.Lib
         public const double DUMMY_GC_ESI_MASS = 1000; // Some GC libraries only offer fragment info (as there's no intact mass to measure after 100% fragmentation) so use a dummy mass
 
         // Version 6 adds peak annotations
-        private const int FORMAT_VERSION_CACHE = 6; 
+        // Version 7 adds ion mobility
+        private const int FORMAT_VERSION_CACHE = 7; 
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
@@ -721,8 +723,9 @@ namespace pwiz.Skyline.Model.Lib
                     int annotationsSize = ReadSize(stream);
                     long location = PrimitiveArrays.ReadOneValue<long>(stream);
                     LibKey key = LibKey.Read(valueCache, stream);
+                    IonMobilityAndCCS ionMobility = IonMobilityAndCCS.Read(stream);
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, rt, irt, totalIntensity,
-                                                              (ushort)copies, (ushort)numPeaks, compressedSize, annotationsSize, location);
+                        (ushort)copies, (ushort)numPeaks, compressedSize, annotationsSize, location, ionMobility);
                 }
                 // Checksum = checksum.ChecksumValue;
                 SetLibraryEntries(libraryEntries);
@@ -800,11 +803,13 @@ namespace pwiz.Skyline.Model.Lib
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_IONMODE = new Regex(@" ^ IonMode:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
-        private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
-        private const string MZVAULT_NEGATIVE_SCAN_INIDCATOR = @"Negative scan";
+        private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
+        private const string MZVAULT_NEGATIVE_SCAN_INDICATOR = @"Negative scan";
         private const string MZVAULT_FORMULA_UNKNOWN = @"unknown";
+        // Ion Mobility
+        private static readonly Regex REGEX_CCS = new Regex(@"^CCS(?:_Sqa)?:\s*(.*)", NOCASE); // Accept CCS or CCS_SqA
 
         // ReSharper restore LocalizableElement
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out string warning)
@@ -874,6 +879,7 @@ namespace pwiz.Skyline.Model.Lib
                     double? precursorMz = null;
                     double? molWeight = null;
                     bool? isPositive = null;
+                    IonMobilityAndCCS ionMobility = IonMobilityAndCCS.EMPTY;
 
                     // Process until the start of the peaks
                     while ((line = reader.ReadLine()) != null)
@@ -916,6 +922,11 @@ namespace pwiz.Skyline.Model.Lib
 
                         // MzVault has its own peculiarities, including scan polarity declarations, but rare so try this last
                         if (ParseMzVaultPolarity(line, ref isPositive, ref mzMatchTolerance))
+                        {
+                            continue;  // Line is fully consumed
+                        }
+
+                        if (ParseIonMobility(line, lineCount, ref ionMobility))
                         {
                             continue;  // Line is fully consumed
                         }
@@ -1142,7 +1153,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
                         info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
-                            (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location);
+                            (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location, ionMobility);
                         if (!isPeptide)
                         {
                             // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
@@ -1156,7 +1167,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         // If the key is invalid, build a representation of the key that can be used to note failures
                         var key = new LibKey(sequence ?? @"???", 0);
-                        info = new NistSpectrumInfo(key, 0, null, null, 0, 0, 0, 0, 0, location);
+                        info = new NistSpectrumInfo(key, 0, null, null, 0, 0, 0, 0, 0, location, null);
                     }
                     libraryEntries.Add(info);
                 }
@@ -1193,6 +1204,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(info.AnnotationsSize), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(info.Location), 0, sizeof(long));
                     info.Key.Write(outStream);
+                    info.IonMobility.Write(outStream);
                 }
 
                 outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
@@ -1269,12 +1281,12 @@ namespace pwiz.Skyline.Model.Lib
         private static bool ParseMzVaultPolarity(string line, ref bool? isPositive, ref double mzMatchTolerance)
         {
             var isMzVault = false;
-            if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
+            if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INDICATOR))
             {
                 isPositive = true;
                 isMzVault = true;
             }
-            else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
+            else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INDICATOR))
             {
                 isPositive = false;
                 isMzVault = true;
@@ -1287,6 +1299,27 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return isMzVault; // Line was consumed
+        }
+
+        private bool ParseIonMobility(string line, long lineCount, ref IonMobilityAndCCS im)
+        {
+            if (!im.HasCollisionalCrossSection)
+            {
+                var match = REGEX_CCS.Match(line);
+                if (match.Success)
+                {
+                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var ccs))
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__,
+                                line));
+                    }
+                    im = im.ChangeCollisionalCrossSection(ccs);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1474,9 +1507,9 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_IONMODE.Match(line);
                 if (match.Success)
                 {
-                    if (string.Equals(@"positive", match.Groups[1].Value))
+                    if (string.Equals(@"positive", match.Groups[1].Value, StringComparison.InvariantCultureIgnoreCase))
                         isPositive = true;
-                    else if (string.Equals(@"negative", match.Groups[1].Value))
+                    else if (string.Equals(@"negative", match.Groups[1].Value, StringComparison.InvariantCultureIgnoreCase))
                         isPositive = false;
                     return true;  // Line is fully consumed
                 }
@@ -1736,7 +1769,8 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new SpectrumInfoLibrary(this, labelType, i)
                 {
                     SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]),
-                    RetentionTime = _libraryEntries[i].RT
+                    RetentionTime = _libraryEntries[i].RT,
+                    IonMobilityInfo = _libraryEntries[i].IonMobility,
                 };
             }
         }
@@ -1787,6 +1821,91 @@ namespace pwiz.Skyline.Model.Lib
             
             retentionTimes = new LibraryRetentionTimes(null, dictionary);
             return dictionary.Any();
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
+        {
+            int i = FindEntry(key);
+            if (i != -1 && !IonMobilityAndCCS.IsNullOrEmpty(_libraryEntries[i].IonMobility))
+            {
+                ionMobilities = new[]{ _libraryEntries[i].IonMobility};
+                return true;
+            }
+
+            return base.TryGetIonMobilityInfos(key, filePath, out ionMobilities);
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ILookup<LibKey, IonMobilityAndCCS> ionMobilitiesLookup;
+            if (targetIons != null)
+            {
+                if (!targetIons.Any())
+                {
+                    ionMobilities = null;
+                    return true; // return value false means "that's not a proper file index"'
+                }
+
+                ionMobilitiesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
+                    entry => entry.Key,
+                    entry => entry.IonMobility);
+            }
+            else
+            {
+                ionMobilitiesLookup = _libraryEntries.ToLookup(
+                    entry => entry.Key,
+                    entry => entry.IonMobility);
+            }
+            var ionMobilitiesDict = ionMobilitiesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
+                grouping => grouping.Key,
+                grouping =>
+                {
+                    var array = grouping.Distinct().ToArray();
+                    Array.Sort(array);
+                    return array;
+                });
+            var nonEmptyIonMobilitiesDict = ionMobilitiesDict
+                .Where(kvp => kvp.Value.Length > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            ionMobilities = nonEmptyIonMobilitiesDict.Any() ? new LibraryIonMobilityInfo(filePath.GetFilePath(), false, nonEmptyIonMobilitiesDict) : null;
+            return true;  // return value false means "that's not a proper file index"'
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            if (targetIons != null && targetIons.Length > 0)
+            {
+                var ionMobilitiesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
+                foreach (var target in targetIons)
+                {
+                    foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
+                    {
+                        var matchedTarget = matchedItem.Key;
+                        var match = matchedItem.IonMobility;
+                        if (IonMobilityAndCCS.IsNullOrEmpty(match))
+                            continue;
+                        if (ionMobilitiesDict.TryGetValue(matchedTarget, out var mobilities))
+                        {
+                            var newMobilities = mobilities.Append(match).ToArray();
+                            Array.Sort(newMobilities);
+                            ionMobilitiesDict[matchedTarget] = newMobilities;
+                        }
+                        else
+                        {
+                            ionMobilitiesDict[matchedTarget] = new[]{match};
+                        }
+                    }
+                }
+                if (!ionMobilitiesDict.Values.Any(v => v.Any()))
+                {
+                    ionMobilities = null;
+                    return false;
+                }
+                ionMobilities = new LibraryIonMobilityInfo(FilePath, false, ionMobilitiesDict);
+                return true;
+            }
+
+            return base.TryGetIonMobilityInfos(targetIons, out ionMobilities);
         }
 
         #region Implementation of IXmlSerializable
@@ -1870,9 +1989,10 @@ namespace pwiz.Skyline.Model.Lib
         private readonly int _compressedSize;
         private readonly int _annotationsSize;
         private readonly long _location;
+        private readonly IonMobilityAndCCS _ionMobility;
 
         public NistSpectrumInfo(LibKey key, float tfRatio, double? rt, double? irt, float totalIntensity,
-            ushort copies, ushort numPeaks, int compressedSize, int annotationsSize, long location)
+            ushort copies, ushort numPeaks, int compressedSize, int annotationsSize, long location, IonMobilityAndCCS ionMobility)
         {
             _key = key;
             _totalIntensity = totalIntensity;
@@ -1884,6 +2004,7 @@ namespace pwiz.Skyline.Model.Lib
             _compressedSize = compressedSize;
             _annotationsSize = annotationsSize;
             _location = location;
+            _ionMobility = ionMobility ?? IonMobilityAndCCS.EMPTY;
         }
 
         public LibKey Key { get { return _key; } }
@@ -1898,5 +2019,6 @@ namespace pwiz.Skyline.Model.Lib
         public int CompressedSize { get { return _compressedSize; } }
         public int AnnotationsSize { get { return _annotationsSize; } }
         public long Location { get { return _location; } }
+        public IonMobilityAndCCS IonMobility { get { return _ionMobility; } }
     }
 }
