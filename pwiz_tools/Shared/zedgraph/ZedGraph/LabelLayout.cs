@@ -54,7 +54,7 @@ namespace ZedGraph
 
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
 
-        public LabelLayout(GraphPane graph, int cellSize, Control parentControl)
+        public LabelLayout(GraphPane graph, int cellSize)
         {
             _graph = graph;
             _cellSize = cellSize;
@@ -331,13 +331,11 @@ namespace ZedGraph
 
             var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height / 2);
             _graph.ReverseTransform(new PointF(labelLocation.X, labelLocation.Y), out var x, out var y);
-            //_graph.ReverseTransform(targetPoint, out var x, out var y);
 
             labPoint.Label.Location.X = x;
             labPoint.Label.Location.Y = y;
 
             // update density grid to prevent overlaps
-            var cellArea = _cellSize * _cellSize;
             var newScreenRectangle = _graph.GetRectScreen(labPoint.Label, g);
             var newLabelRectangle = ToRectangle(newScreenRectangle);
 

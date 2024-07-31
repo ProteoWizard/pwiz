@@ -1524,9 +1524,19 @@ namespace ZedGraph
 
 		#endregion
 
-	#region General Utility Methods
+		#region General Utility Methods
 
-        public void AdjustLabelSpacings(List<LabeledPoint> labPoints, Control parentControl)
+		/// <summary>
+		/// Performs the graph label layout. Places the labels into the coordinates specified in the savedLayoutString parameter
+		/// and performs the layout algorithm for the points that are not found there or whose user coordinates have changed.
+		/// Ignores the points not visible in the chart rectangle.
+		/// </summary>
+		/// <param name="labPoints">List of LabeledPoints objects prepared by the user graph. These should have
+		/// Point and Label components assigned.</param>
+		/// <param name="savedLayoutString">Json string with the list of saved label layout information provided by the
+		/// <see cref="PersistentLabelLayout.GetJsonString"/> method. Json is used to avoid cyclical reference between
+		/// ZedGraph and Skyline projects.</param>
+		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, string savedLayoutString = null)
         {
             if (!labPoints.Any())
                 return;
@@ -1537,7 +1547,7 @@ namespace ZedGraph
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
             {
                 var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
-                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight), parentControl);
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
 
                 var visiblePoints = new List<LabeledPoint>();
                 foreach (var labeledPoint in labPoints)
@@ -1583,8 +1593,8 @@ namespace ZedGraph
             }
             return null;
         }
-
-		public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
+        
+        public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
         {
             labPoint = OverLabel(mousePt, out _);
             return labPoint !=	null;

@@ -459,7 +459,7 @@ namespace ZedGraph
 
         public void DrawDraggingHandle(Graphics g, PaneBase pane, float scaleFactor)
         {
-			if(IsDraggable)
+			if (IsDraggable)
                 FontSpec.Border = new Border(Color.Black, 1);
 			else 
 				FontSpec.Border = new Border(Color.Transparent, 0);

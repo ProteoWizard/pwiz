@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
+                    AdjustLabelSpacings(_labeledPoints);
                     GraphSummary.GraphControl.Invalidate();
                 }
             }
@@ -164,17 +164,36 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 return true;
             }
-
+            
             IdentityPath identityPath = null;
-            if (GraphSummary.GraphControl.GraphPane.IsOverLabel(new Point(mouseEventArgs.X, mouseEventArgs.Y),
-                    out var labPoint))
-            {
-                var selectedRow = (GraphPointData)labPoint.Point.Tag;
-                identityPath = selectedRow.IdentityPath;
-            }
-            if (FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
+            var point = new Point(mouseEventArgs.X, mouseEventArgs.Y);
+            if (FindNearestPoint(point, out var nearestCurve, out iNearest))
             {
                 identityPath = GetIdentityPath(nearestCurve, iNearest);
+            }
+            else if (GraphSummary.GraphControl.GraphPane.EnableLabelLayout)
+            {
+                var labPoint = GraphSummary.GraphControl.GraphPane.OverLabel(point, out var isOverBoundary);
+                if (labPoint != null)
+                {
+                    if (!isOverBoundary)
+                        identityPath = (labPoint.Point.Tag as GraphPointData)?.IdentityPath;
+                    else
+                        return false;
+                }
+            }
+            else
+            {
+                using(var g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    GraphSummary.GraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
+                    if (nearestObj is TextObj nearestText)
+                    {
+                        var labels = _labeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
+                        if (labels.Any())
+                            identityPath = (labels.First().Point.Tag as GraphPointData)?.IdentityPath;
+                    }
+                }
             }
             if (identityPath == null)
                 return false;
@@ -280,7 +299,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-                AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
+                AdjustLabelSpacings(_labeledPoints);
             else
                 DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
         }
@@ -289,7 +308,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (Settings.Default.GroupComparisonAvoidLabelOverlap && !Settings.Default.GroupComparisonSuspendLabelLayout)
             {
-                AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
+                AdjustLabelSpacings(_labeledPoints);
             }
         }
 

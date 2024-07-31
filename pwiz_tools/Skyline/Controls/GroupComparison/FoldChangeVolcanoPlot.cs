@@ -140,7 +140,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
-                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                {
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
+                    //SaveLabelsLayout();
+                }
             }
             else
                 zedGraphControl.GraphPane.EnableLabelLayout = false;
@@ -670,7 +673,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
+                    //SaveLabelsLayout();
                     zedGraphControl.Invalidate();
                 }
             }
