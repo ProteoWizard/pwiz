@@ -1543,13 +1543,52 @@ namespace pwiz.Skyline.Menus
                                     if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
                                     {
                                         // We don't want the tree selection to change, so note this as a replacement.
-                                        var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode.ChangeReplacedId(nodePep.Id));
-                                        return (SrmDocument)newdoc.RemoveChild(nodePepTree.Path.Parent, nodePep);
+                                        newNode = (PeptideDocNode)newNode.ChangeReplacedId(nodePep.Id);
+                                        doc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode);
+                                        doc = (SrmDocument)doc.RemoveChild(nodePepTree.Path.Parent, nodePep);
                                     }
                                     else
                                     {
-                                        return (SrmDocument)doc.ReplaceChild(nodePepTree.Path.Parent, newNode);
+                                        doc = (SrmDocument)doc.ReplaceChild(nodePepTree.Path.Parent, newNode);
                                     }
+
+                                    // If there are unmanaged precursor transitions, those need to be adjusted too
+                                    if (!nodePep.AutoManageChildren &&
+                                        (!Equals(nodePep.Target.Molecule.Formula, newNode.Target.Molecule.Formula) ||
+                                         nodePep.Target.Molecule.MonoisotopicMass != newNode.Target.Molecule.MonoisotopicMass ||
+                                         nodePep.Target.Molecule.AverageMass != newNode.Target.Molecule.AverageMass))
+                                    {
+                                        var pepPath = new IdentityPath(nodePepTree.Path.Parent, newNode.Peptide);
+                                        
+                                        foreach (var tg in newNode.Children.Where(node =>
+                                                     ((TransitionGroupDocNode)node).Transitions.Any(t => t.IsMs1)))
+                                        {
+                                            var nodeGroupOld = (TransitionGroupDocNode)tg;
+                                            var groupPath = new IdentityPath(pepPath,  nodeGroupOld.TransitionGroup);
+                                            foreach (var nodeTranOld in nodeGroupOld.Transitions.Where(t => t.IsMs1))
+                                            {
+                                                var tranOld = nodeTranOld.Transition;
+                                                Assume.IsTrue(ReferenceEquals(((TransitionGroupDocNode)tg).TransitionGroup, tranOld.Group));
+                                                var newTransition = new Transition(nodeGroupOld.TransitionGroup, IonType.precursor, 
+                                                    tranOld.CleavageOffset, tranOld.MassIndex, tranOld.Adduct, tranOld.DecoyMassShift,
+                                                    newNode.Target.Molecule);
+                                                var newTransitionDocNode = new TransitionDocNode(newTransition,
+                                                    nodeTranOld.Annotations,
+                                                    nodeTranOld.Losses,
+                                                    newNode.Target.Molecule.MonoisotopicMass,
+                                                    nodeTranOld.QuantInfo,
+                                                    dlg.ResultExplicitTransitionValues,
+                                                    null);
+                                                // Note we can't just Replace the node, as it has a new Id that's not in the doc.
+                                                // But neither do we want the tree selection to change, so note this as a replacement.
+                                                var transitionPath = new IdentityPath(groupPath, tranOld);
+                                                doc = (SrmDocument)doc.Insert(transitionPath, newTransitionDocNode.ChangeReplacedId(nodeTranOld.Id));
+                                                doc = (SrmDocument)doc.RemoveChild(transitionPath.Parent, nodeTranOld);
+                                            }
+                                        }
+                                    }
+
+                                    return doc;
                                 }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
                                     AuditLogEntry.GetNodeName(docPair.OldDoc, nodePep)));
                         }
