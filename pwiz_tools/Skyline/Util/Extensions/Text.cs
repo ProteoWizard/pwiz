@@ -25,7 +25,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
