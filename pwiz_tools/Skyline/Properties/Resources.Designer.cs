@@ -4037,18 +4037,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Connect.
         /// </summary>
-        public static string EditRemoteAccountDlg_TestConnectButton_LabelText_Connect {
+        public static string EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect {
             get {
-                return ResourceManager.GetString("EditRemoteAccountDlg_TestConnectButton_LabelText_Connect", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test.
-        /// </summary>
-        public static string EditRemoteAccountDlg_TestConnectButton_LabelText_Test {
-            get {
-                return ResourceManager.GetString("EditRemoteAccountDlg_TestConnectButton_LabelText_Test", resourceCulture);
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect", resourceCulture);
             }
         }
         
