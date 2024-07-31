@@ -1,0 +1,554 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">SkylineでのDIA/SWATHデータ分析</h1>
+    <p>注：本チュートリアルはThermo Q-Exactive plus装置のデータを使用します。Sciex TripleTOF 6600のデータを使用したい場合は、Skyline DIA TTOFというタイトルのバージョンをご覧ください。 </p>
+    <p>本チュートリアルでは、質量範囲の異なる18のウィンドウでプレカーサーを単離する枠組設定（スキーム）（Bruderer R. et al. MCP 2015）と1時間のグラジエントによりQqOrbi装置 (Q-Exactive Plus、Thermo)
+        で取得されたSWATH-MSデータセットを用いて、Skyline を使用したペプチドと推測タンパク質の検出および定量化の取得後ターゲット分析を実施する方法を学びます。</p>
+    <p>使用するデータセットは、<a
+            href="http://www.nature.com/nbt/journal/v34/n11/full/nbt.3685.html">LFQBench調査</a>で用いられた定量的ベンチマーク試料と同様に3種の生物プロテオームを一定比率で混合した定量ベンチマーク試料が有機体3種のプロテオームを定義された比率で混合した試料から得られたものです
+        (図)。 </p>
+    <p>最初に、データ非依存性測定（DIA）のデータを解析するため、Skylineのパラメータを設定し、次に、生データファイルから定量化情報を抽出します。また、データ依存性解析（DDA）の結果をインポートしてスペクトルライブラリを作成し、DIAのデータを解析するための設定を行います。</p>
+    <p><img alt="Image result for q exactive plus" src="image-0.jpeg" /><img src="image-1.png" /><img src="image-2.png" /> </p>
+    <p>［図の出典： </p>
+    <p>Navarro, P. et al. A multicenter study benchmarks software tools for label-free proteome quantification.<em>Nature Biotech</em> 34, 1130–1136
+        (2016) </p>
+    <p>および </p>
+    <p>Bruderer, et al. Extending the Limits of Quantitative Proteome Profiling with Data-Independent Acquisition and Application to
+        Acetaminophen-Treated Three-Dimensional Liver Microtissues.”<em>Molecular &amp; Cellular Proteomics</em> 14, (2015)］</p>
+    <h1>はじめに</h1>
+    <p>チュートリアルを始める前に、以下のzipファイルをダウンロードしてください。</p>
+    <p><a href="https://skyline.ms/tutorials/DIA-QE.zip">https://skyline.ms/tutorials/DIA-QE.zip</a></p>
+    <p>この中のファイルを、以下の例のようにコンピュータ上のフォルダに解凍します。</p>
+    <p>C:\Users\brendanx\Documents</p>
+    <p>これにより以下の新しいフォルダが作成されます。</p>
+    <p>C:\Users\brendanx\Documents\DIA-QE</p>
+    <p>本チュートリアルを始める前にSkylineを使用していた場合は、Skylineをデフォルト設定に戻すことをお勧めします。デフォルト設定に戻すには、以下の操作を行います。 </p>
+    <ul>
+        <li>Skylineを起動します。</li>
+        <li><strong>開始ページ</strong>で、以下の<strong>空のドキュメント</strong>をクリックします。 </li>
+    </ul>
+    <p><img src="image-3.png" /></p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで、[ <strong>デフォルト</strong> ] をクリックします。</li>
+        <li>現在の設定を保存するかどうかを尋ねてくるフォームで [ <strong>いいえ</strong> ] をクリックします。</li>
+    </ul>
+    <p>Skylineの現在のインスタンスの設定がデフォルトにリセットされました。 </p>
+    <p>本チュートリアルではプロテオミクスのトピックを扱うため、ユーザーインターフェイスを必ず「プロテオミクス用インターフェイス」に設定してください。 </p>
+    <ul class="keep-next">
+        <li>Skylineツールバーの右上隅にあるユーザーインターフェイスボタンをクリックし、[ <strong>プロテオミクス用インターフェイス</strong> ] を選択します。 </li>
+    </ul>
+    <p><img src="image-4.png" /></p>
+    <p>これで、Skylineは、右上隅のプロテインアイコン <img src="image-5.png" />で示されるプロテオミクスモードで動作します。</p>
+    <p>DIA分析の場合では、Skylineに抽出したすべての定量トランジションのピーク領域を積分するようにします。このためには、以下のように操作して下さい。</p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで、[ <strong>すべてを積分</strong>] をクリックします。</li>
+    </ul>
+    <h1>ペプチド検索のインポートウィザードの使用</h1>
+    <p>Skylineの操作に慣れているユーザーは、以下のすべての手順はメニューオプションから行うことができますが、DIAの通常のワークフローをより簡単に実行するための「ウィザード」を利用することにより、選択肢を選ぶことで順をおって解析することが可能になります。最初に、DDA解析で得られたペプチド・スペクトル・マッチの結果からスペクトルライブラリを構築します。次に、クロマトグラムを抽出する対象となるDIA測定のデータセットを指定します。ついで条件設定を行い、最後に定量する対象を選びます。
+    </p>
+    <p>ここでは、試料AとBのそれぞれについて測定した1回のDDAランの解析結果からライブラリを構築します。この解析結果は、Comet検索エンジンを用いて検索し、PeptideProphetにより検証したものです。Skylineが対応しているその他のDDA検索エンジンについては、<a
+            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries">https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries</a>を参照して下さい。使用するファイルはinteract.pep.xmlです。このファイルはPeptidePrphetで作成されたもので、2つのDDAファイルのデータベース検索結果を含みます。
+    </p>
+    <p>開始するには、次の操作を行います。 </p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで、[ <strong>インポート</strong> ] を選択して [ <strong>ペプチド検索</strong> ] をクリックします。</li>
+    </ul>
+    <p>Skylineは現在のドキュメントを保存するか尋ねてきます。これは、コンピュータのどこのディスクドライブのどのフォルダで解析を実行するのかを決めておくためです。</p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>先ほど作成したDIA-QEフォルダに移動します。</li>
+        <li>[ <strong>ファイル名</strong>] フィールドに、「DIA-QE-tutorial」と入力します。</li>
+        <li>[ <strong>保存</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">すると、<strong>ペプチド検索のインポート</strong>ウィザードが表示されます。</p>
+    <p><img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-6.png" /></p>
+    <p>注：0.95は、DDAデータベース検索において、すべてのペプチド・スペクトル・マッチ（PSM）に対してPeptideProphetで設定した確率の閾値です。このチュートリアルで用いるデータセットでは、偽陽性率（false discovery rate,
+        FDR）0.2%に相当します。データセットが異なればこの値は変更する必要があります。ユーザーが設定したFDR値を与える閾値をここに入力してください。</p>
+    <ul>
+        <li>[ <strong>ファイルを追加</strong> ] ボタンをクリックします。</li>
+        <li>先ほど作成したDIA-QEフォルダに移動し、DDA_searchサブフォルダに移動します。</li>
+        <li>「interact.pep.xml」ファイルをダブルクリックします。</li>
+        <li>[ <strong>iRT標準ペプチド</strong> ] ドロップダウンリストで、「Biognosys-11 (iRT-C18)」をクリックします。</li>
+        <li>[ <strong>ワークフロー</strong> ] ボックスで [ <strong>DIA</strong> ] オプションをクリックします。</li>
+    </ul>
+    <p class="keep-next">ウィザードの [ <strong>スペクトルライブラリ</strong> ] ページは以下のようになります。</p>
+    <p><img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-7.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>Skylineはライブラリ構築を開始し、[ <strong>ペプチド検索ライブラリの構築</strong> ] フォームに進行状況が表示されます。ライブラリ構築が完了すると、これらの試料にスパイクされたBiognosys
+        iRT標準ペプチドに基づいて、ペプチド検索結果のiRT値が校正されます。校正が成功すると、以下のようなライブラリ構築の要約が表示されます。</p>
+    <p> <img alt="Graphical user interface, application, table
+
+Description automatically generated" src="image-8.png" /></p>
+    <ul class="keep-next">
+        <li><strong>成功</strong> (青でハイライト) をクリックすると線形回帰の結果が表示されます。</li>
+    </ul>
+    <p><img alt="Chart, line chart
+
+Description automatically generated" src="image-9.png" /></p>
+    <ul>
+        <li>[ <strong>閉じる</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>Skylineは、上記の回帰直線に追加されたペプチドに対してiRT標準値を再校正するかどうかをユーザーに尋ねます。</p>
+    <ul>
+        <li>[ <strong>いいえ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>Skylineは、曖昧に一致したペプチドの長いリストを表示します。これらのペプチドは、複数のペプチドにマッチするスペクトルが存在することから表示されたものであり、これらのスペクトルとマッチしたペプチドは定量的ターゲット解析には不適切なものです。</p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>[ <strong>クロマトグラムを抽出</strong> ] ページが表示されます。このページでは、クロマトグラムの抽出、ピーク検出、ピーク領域計算に使用するDIAデータファイルがどこにあるかを指定します。</p>
+    <ul>
+        <li>[ <strong>参照</strong> ] ボタンをクリックします。</li>
+        <li>DIA-QEフォルダ内のDIAサブフォルダをダブルクリックします。</li>
+        <li>このファイルにある6個のファイルをすべて選択します。</li>
+    </ul>
+    <p class="keep-next">[ <strong>結果ファイルを参照</strong> ] ページは以下のようになります。</p>
+    <p><img alt="Graphical user interface, text, application, email
+
+Description automatically generated" src="image-10.png" /></p>
+    <ul>
+        <li>[ <strong>開く</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next"><strong>ペプチド検索のインポート</strong>フォームは以下のようになります。</p>
+    <p><img alt="Graphical user interface, text
+
+Description automatically generated" src="image-11.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>Skylineは、データファイル名を短縮して作業しやすくするため、ファイル名に共通するプリフィックス「collinsb_X1803_17」を削除するかどうかユーザーに尋ねます。</p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p><a id="_Hlk88546403"></a>次の操作で [ <strong>修飾を追加 </strong>] ページをスキップします。</p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>[ <strong>トランジション設定を行う</strong> ] ページでデフォルト値を以下のように変更します。</p>
+    <ul>
+        <li>[ <strong>プリカーサーの電荷</strong> ] を「2, 3, 4」に設定します。</li>
+        <li>[ <strong>イオンタイプ</strong> ] を「y, b」に設定します。</li>
+    </ul>
+    <table>
+        <tr>
+            <td>
+                <p>注：イオンタイプは、プリカーサーを意味する「p」を残してもかまいません。この設定では、SkylineはDIAデータファイルのMS1スペクトルから同位体を含むプリカーサーのクロマトグラムを抽出します。ただし、このチュートリアルを簡潔にし、処理時間を短縮して出力ファイルサイズを小さくするため、以下の説明ではDIAのMS/MSスペクトルから抽出したフラグメントイオンのクロマトグラムのみを対象とします。
+                </p>
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li>[ <strong>DIAのプリカーサーウィンドウをexclusionに使用</strong> ] チェックボックスをオンにします。</li>
+    </ul>
+    <p class="keep-next">[ <strong>ペプチド検索のインポート</strong> ] フォームは以下のようになります。</p>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-12.png" /> </p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>Skylineは [ <strong>フルスキャン設定を行う </strong>] ページを表示します。 </p>
+    <p><strong>注：</strong>これらの抽出設定は、データ取得に使用した装置の種類や設定により変わります。至適な抽出設定は、それぞれのデータセットによって多少異なることがあります。この分析では、スペースを小さくするためにセントロイド化されたデータを使用します。したがって、「Centroided」を選択し、抽出の質量精度は「20」ppmを指定します。プロファイルモードデータでは、装置の分解能を指定できます。
+    </p>
+    <p>デフォルト値を以下のように変更します。</p>
+    <ul>
+        <li>両方の [ <strong>質量精度</strong> ] フィールドで「20」ppmを使用します。</li>
+    </ul>
+    <p>次に、DIA測定に使用した装置で設定したパラメータに従い、新規に単離スキームを定義する必要があります。</p>
+    <p><strong>注：</strong>この例では、400～1220 m/zの質量範囲をカバーする18に分割した可変幅のウィンドウを使用し、重複を2 m/zとして四重極の質量範囲の両端で1 m/zの除外マージンを設けるように設定してあります。</p>
+    <ul>
+        <li>[ <strong>単離スキーム</strong> ] ドロップダウンリストで、「&lt;追加…&gt;」をクリックします。</li>
+    </ul>
+    <p>この操作で [ <strong>単離スキームを編集</strong> ] フォームが表示されます。ここでは以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>名前</strong> ] フィールドに「ETH QE (18 variable)」と入力します。</li>
+        <li>[ <strong>事前に指定した単離ウィンドウ</strong> ] オプションをクリックします。</li>
+        <li>[ <strong>インポート</strong> ] ボタンをクリックします。</li>
+        <li>先ほど作成したDIA-QEフォルダに移動し、DIAサブフォルダに移動します。</li>
+        <li>「collinsb_X1803_171-A.mzML」ファイルをダブルクリックします。</li>
+    </ul>
+    <p class="keep-next">[ <strong>単離スキームを編集</strong> ] フォームは以下のようになります。</p>
+    <p><img alt="Table
+
+Description automatically generated" src="image-13.png" /></p>
+    <p>Skylineは、質量分析計で測定されたDIA単離範囲の [ <strong>開始</strong> ] および [ <strong>終了</strong> ]
+        <em>m/z</em>値を表示しています。これらの値は2<em>m/z</em>ずつ重複しています。この重複を相殺するため、Skylineは単離ウィンドウの各端に1<em>m/z</em>のマージンを追加しています。このマージンは、クロマトグラム抽出時に除外されます。これを表示するには、以下の操作を行います。
+    </p>
+    <ul>
+        <li>[ <strong>事前に指定した単離ウィンドウ</strong> ] の下にあるドロップダウンリストで、「抽出」をクリックします。</li>
+    </ul>
+    <p>[ <strong>開始</strong> ] 値および [ <strong>終了</strong> ]
+        値が1<em>m/z</em>内側にシフトし、範囲が重複しなくなります。これらは、フラグメントイオンクロマトグラムの抽出するために、、ペプチドプリカーサー<em>m/z</em>値を取得したスペクトルとマッチさせるときにSkylineが使用する範囲です。</p>
+    <p>単離スキームを視覚化するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>グラフ化</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">以下のようなフォームが表示されます。</p>
+    <p><img alt="Chart, line chart
+
+Description automatically generated" src="image-14.png" /></p>
+    <p>クリック・アンド・ドラッグして囲んだ長方形を使い部分拡大するか、マウスのスクロールホイールを使用して拡大すると、マージンの位置の詳細を見ることができます。[ <strong>マージンを表示</strong> ] チェックボックスをオフにし、再びオンにすると、グラフのタイトルが
+        [<strong>測定ウィンドウ</strong> ] と [ <strong>抽出ウィンドウ</strong> ] の間で切り替わり、ピンクのマージンバーが非表示になったり再表示されたりします。[ <strong>ギャップを表示</strong> ] の赤や、[
+        <strong>単一サイクルの重複を表示</strong> ] の黄色は、どちらもDIA単離スキームデザインのエラーであるため、この例では表示されません。</p>
+    <ul>
+        <li>[ <strong>閉じる</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>単離スキームを編集</strong> ] フォームで [ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next"><strong>ペプチド検索のインポート</strong>ウィザードは以下のようになります。</p>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-15.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>[ <strong>FASTAをインポート</strong> ] ページが表示されます。このページでは以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>参照</strong> ] ボタンをクリックします。</li>
+        <li>最初に作成したDIA-QEフォルダに移動し、DIAサブフォルダに移動します。</li>
+        <li>「target_protein_sequences.fasta」ファイルをダブルクリックします。</li>
+    </ul>
+    <table>
+        <tr>
+            <td>
+                <p>注：ここで、前に使用した「interact.pep.xml」ファイルがあるDDA_searchサブフォルダに移動して、ペプチド検索で使用した、検索対象のすべてのFASTAシークエンスファイルから構成される「napedro_3mixed_human_yeast_ecoli_20140403_iRT_reverse.fasta」をダブルクリックすると、検索対象とした全プロテオームの解析が可能になります。この選択によってずっと多くのターゲットペプチドが見つかるようになります。処理により長い時間がかかりますが、ほとんどの最新ラップトップで実行可能です。
+                </p>
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li>[ <strong>デコイ生成法</strong> ] ドロップダウンリストで、「シークエンスのシャッフル」をクリックします。</li>
+        <li>[ <strong>mProphetのモデルを自動的にトレーニングする</strong> ] チェックボックスをオンにします。</li>
+    </ul>
+    <p class="keep-next"><strong>ペプチド検索のインポート</strong>ウィザードは以下のようになります。</p>
+    <p><img alt="Text
+
+Description automatically generated" src="image-16.png" /></p>
+    <ul>
+        <li>[ <strong>完了</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">設定条件と使用したFASTAシークエンステキストを基に計算されたターゲットを記述したフォームが、以下のように表示されます。</p>
+    <p><img alt="Graphical user interface, text
+
+Description automatically generated" src="image-17.png" /></p>
+    <p>[<strong>タンパク質毎の最小ペプチド数</strong> ]
+        フィルタを「1」にした場合、FASTAファイルで見つかった13個のタンパク質のうち、<strong>残り</strong>で表示されるタンパク質は12個になります。これは、１つのタンパク質に帰属するペプチドがスペクトルライブラリの中に見つからないためです。[
+        <strong>すべてのデータを保持</strong> ] をクリックすると、「1個の空欄のタンパク質が追加されます。」と言う警告が表示されます。ここでは前の設定に戻り、空欄のタンパク質がターゲットリストに追加されないようにして下さい。</p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">Skylineはクロマトグラムの抽出を開始します。標準のi7 4コアプロセッサでは以下のようになります。</p>
+    <p><img alt="Graphical user interface, chart
+
+Description automatically generated" src="image-18.png" /></p>
+    <p>6コア以上ではすべてのファイルが並列処理され、2コアのほとんどのラップトップでは、インポートは2ファイルずつ処理されます。</p>
+    <p class="keep-next">インポートが完了すると、Skylineは<strong>ペプチド検索のインポート</strong>ウィザードの [ <strong>FASTAをインポート</strong> ]
+        ページで選択したmProhetモデルを表示します。これは以下のようになります。</p>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-19.png" /></p>
+    <p>mProphetモデルでは、それぞれのクロマトグラムセットの中から、Skylineがデフォルトとして使用するスコアに基づき選んだ10個のベストピークを見直し、最も高いmProphetスコアを与える10個のピークを選びます。これらのピークのmProphetスコア（Skylineでは<strong>Detection
+            Z
+            Score</strong>という名称になっています）は、用いたデコイペプチドシークエンスに対して同様な方法で得られる10個のベストピークのmProphetスコアの平均値の標準偏差が1.0になるように再計算されます。この値はq値となります（Skylineでは<strong>Detected
+            Q Value</strong>という名称になっています）。</p>
+    <h1>試料の注釈</h1>
+    <p>次に、どの試料がどの実験グループに属するかを定義する必要があります。</p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>ドキュメント設定</strong> ] をクリックします。</li>
+        <li>アクティブになっていない場合は、[<strong> 注釈</strong> ] タブをクリックします。 </li>
+        <li>[ <strong>追加</strong> ] ボタンをクリックして [ <strong>注釈を定義</strong> ] ウィンドウを表示します。</li>
+        <li>[ <strong>名前</strong> ] フィールドに「Condition」と入力します。 </li>
+        <li>[ <strong>タイプ</strong> ] フィールドで「値のリスト」を選択します。</li>
+        <li>リストの [ <strong>適用先</strong> ] の下で、[ <strong>繰り返し測定</strong> ] チェックボックスをオンにします。</li>
+    </ul>
+    <p>この実験では、2つの条件があります。条件AはE.coliが20％、酵母が15%、ヒトが65%のプロテオーム構成である試料、条件BはE.coliが5%、酵母が30%、ヒトが65%の構成です。</p>
+    <p class="keep-next">[ <strong>注釈を定義</strong> ] ウィンドウは以下のようになります。</p>
+    <p><img alt="A picture containing text
+
+Description automatically generated" src="image-20.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。 </li>
+        <li>上記ステップに従い、「BioReplicate」という名前の2つ目の注釈を作成します。 </li>
+        <li>[ <strong>タイプ</strong> ] ドロップダウンリストで、BioReplicate注釈に「テキスト」を選択します。 </li>
+        <li> [ <strong>適用先</strong> ] の下にあるリストで、[ <strong>繰り返し測定</strong> ] チェックボックスをオンにします。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。 </li>
+    </ul>
+    <p>[ <strong>ドキュメント設定</strong> ] ウィンドウに戻ります。 </p>
+    <ul>
+        <li>[ <strong>Condition</strong> ] チェックボックスと [ <strong>BioReplicate</strong> ] チェックボックスがオンになっていることを確認します。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>これでインポートした繰り返し測定に注釈を付ける準備ができました。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>ドキュメントグリッド</strong> ]（Alt+3）を選択します。</li>
+    </ul>
+    <p>[ <strong>ドキュメントグリッド</strong> ] ウィンドウが表示され、このウィンドウを初めて使用する場合は<strong>タンパク質</strong>レポートが表示されます。</p>
+    <ul>
+        <li>[<strong>ドキュメントグリッド: タンパク質</strong> ] ウィンドウで、[ <strong>レポート</strong> ] メニューをクリックし、[ <strong>繰り返し測定</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">キーボードのEnter、矢印キーを使って移動し、A、B、1、2、3キーを使って以下のスクリーンショットで示すように試料に注釈を付けます。</p>
+    <p><img alt="Table
+
+Description automatically generated" src="image-21.png" /></p>
+    <ul>
+        <li>フォームの右上隅にある赤いXをクリックして [ <strong>ドキュメントグリッド: 繰り返し測定</strong> ] ウィンドウを閉じます。 </li>
+    </ul>
+    <p>見やすくするため、Skylineウィンドウでデータを条件毎に分割して2つの枠で表示できるようになりました。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>グラフを配置</strong> ] を選択して [ <strong>グループ化</strong> ] をクリックします。</li>
+        <li>[ <strong>グループ化されたグラフを配置する</strong> ] フォームで [ <strong>枠のグループ化</strong> ] を「2」に設定します。</li>
+        <li>[ <strong>グループ間の分散グラフ</strong> ] オプションを選択します。</li>
+        <li>[ <strong>表示</strong> ] フィールドで「タイル」を選択します。</li>
+        <li>[ <strong>並べ順</strong> ] フィールドで「ドキュメント」を選択します。 </li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>注：この時点でデータがまだインポート中である場合は、インポートが完了するまで待ってからドキュメントを保存します。</p>
+    <ul>
+        <li>Skylineドキュメントを保存します。</li>
+    </ul>
+    <h1>データのマニュアル検証</h1>
+    <p>次に、クロマトグラフィーやその基になるスペクトルをマニュアルで検証します。この操作を行うには、<strong>保持時間</strong>表示と<strong>ピーク領域</strong>表示を表示させる必要があります。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>保持時間</strong> ] を選択して [ <strong>繰り返し測定比較</strong> ]（F8）をクリックします。</li>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>ピーク領域</strong> ] を選択して [ <strong>繰り返し測定比較</strong>]（F7）をクリックします。 </li>
+    </ul>
+    <p>これで両方が表示されます。以下の操作を行うと、画面上でこの表示を最適に配置できます。 </p>
+    <ul>
+        <li>この新しいウィンドウがフロート表示になっている場合は、フロート表示になっているウィンドウの上枠をクリックし、マウスの左ボタンを押したままウィンドウをドラッグすると、メインウィンドウにドッキングできます。 </li>
+    </ul>
+    <p>[ <strong>ライブラリの一致</strong> ] ウィンドウにも、以下に示すように同じ操作を行えます。</p>
+    <p>注：このようにウィンドウをドッキングさせるには、マウスの矢印カーソルをドッキングアイコンの内部に置く必要があります。この場合は上部にあります。マウスの左ボタンを押したままドラッグし始めると、Skylineがドッキングアイコンと、マウスの左ボタンから手を放したときにウィンドウが配置される位置を示す透明な青い長方形を表示します。
+    </p>
+    <p><img alt="Graphical user interface
+
+Description automatically generated with medium confidence" src="image-22.png" /><img alt="Graphical user interface, application, table
+
+Description automatically generated" src="image-23.png" /> </p>
+    <ul class="keep-next">
+        <li>同様に、[ <strong>ピーク領域: 繰り返し測定比較</strong> ] ウィンドウと [ <strong>ライブラリの一致</strong> ] ウィンドウをドッキングし、以下のようにすべての情報が見やすくなるようにします。 </li>
+    </ul>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-24.png" /></p>
+    <ul>
+        <li>最初のE. coliタンパク質である「<a id="OLE_LINK1"></a><a id="OLE_LINK2"></a>sp|P63284|CLPB_ECOLI」をクリックします。</li>
+    </ul>
+    <p>このタンパク質のすべてのペプチドがさまざまなプロット（クロマトグラム、ピーク領域、保持時間繰り返し測定グラフ）で表示されます。上記スクリーンショットは、あるタンパク質が選択された場合の例であり、このタンパク質のすべてのペプチドが各表示で要約されています（何も表示されない [
+        ライブラリの一致 ] ウィンドウを除く）。</p>
+    <p>[ <strong>ピーク領域 - 繰り返し測定比較</strong> ] のプロットを見て、このタンパク質の発現量が異なっているように見えるでしょうか？E. coliの場合、サンプルAとBでは、E. coliタンパク質の量比が4:1になるように調整されていることを思い出してください。
+    </p>
+    <ul>
+        <li>このタンパク質でペプチド<a id="OLE_LINK3"></a><a id="OLE_LINK4"></a>LPQVEGTGGDVQPSQDLVRを選択します。</li>
+    </ul>
+    <p class="keep-next">下に示すように、すべての表示でこのペプチドに関する情報が表示されます。</p>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-25.png" /></p>
+    <p>このタンパク質に属する残りのペプチドのピーク領域パターンを調べて下さい。このタンパク質のペプチドの定量パターンは、予想される差異発現パターン（4:1）と一致していますか？</p>
+    <p><strong>注：</strong>ペプチドシークエンスに対して2つ以上の電荷状態がある場合、それらは別々に抽出され、スコアが付けられています。これらは、ペプチドシークエンスの横にある <strong>+</strong>
+        をクリックしてから個々の電荷が異なるプリカーサーをクリックすれば参照できます。</p>
+    <ul>
+        <li>ドキュメント内のヒトタンパク質をいくつかクリックします。</li>
+    </ul>
+    <p>タンパク質レベルと、ペプチドレベルのそれぞれの繰り返し測定ピーク領域を調べます。ピーク領域は予想される比率（1:1）と一致していますか？酵母タンパク質（1:2）ではどうでしょうか？</p>
+    <ul>
+        <li>最初のタンパク質のLPQVEGTGGDVQPSQDLVRペプチドをもう一度クリックします。</li>
+        <li>[ <strong>表示</strong> ] メニューで、 [ <strong>自動ズーム</strong> ] を選択し、 [ <strong>最適ピーク</strong> ]（F11）をクリックします。</li>
+    </ul>
+    <p class="keep-next">クロマトグラム曲線上にカーソルを合わせると、曲線上に曲線と同じ色の丸が表示されます。</p>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-26.png" /></p>
+    <ul>
+        <li>クロマトグラムポイントにある丸をクリックします。</li>
+    </ul>
+    <p class="keep-next">Skylineは選択したクロマトグラムポイントが抽出されたスペクトルを、選択したイオンを拡大して [ <strong>フルスキャン</strong> ] 表示を開きます。</p>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-27.png" /></p>
+    <ul class="keep-next">
+        <li>[ <strong>フルスキャン</strong> ] ツールバーの虫眼鏡ボタンをクリックしてフルスペクトルを表示します。</li>
+    </ul>
+    <p><img alt="Chart
+
+Description automatically generated with low confidence" src="image-28.png" /></p>
+    <p>手作業でさらにデータを調べます（デコイを含む）。</p>
+    <h1>質量誤差と保持時間偏差 </h1>
+    <p>質量精度と保持時間予測精度を調べると、最適な抽出パラメータが使用されたか、調整によって結果の改善が期待できるかを判断できます。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで [ <strong>質量誤差</strong> ] を選択し、[ <strong>ヒストグラム</strong> ] をクリックします。</li>
+    </ul>
+    <p>この操作によってデータセットの質量誤差分布が表示されます。抽出ウィンドウ（±20 ppm）はさらに最適化できるでしょうか？一般的には、平均値 ± 3の標準偏差で十分です。ただし、両端の数字が高く、ヒストグラムが途切れているような場合は、抽出ウィンドウを広げた方がいいかもしれません。
+    </p>
+    <p><img alt="Chart, histogram
+
+Description automatically generated" src="image-29.png" /></p>
+    <p>この分布図は6回のランすべてを網羅していることにご注意ください。この分布図が各ランをどの程度よく表しているかを理解するには、以下の操作を行います。</p>
+    <ul>
+        <li>グラフを右クリックし、[ <strong>繰り返し測定</strong> ] を選択して [ <strong>単一</strong> ] をクリックします。</li>
+        <li>[ <strong>ターゲット</strong> ] 表示の上部にある [ <strong>繰り返し測定</strong> ] ドロップダウンリスト内をクリックします。</li>
+        <li>キーボードの上下矢印キーを使用して、6回の繰り返し測定すべてにおける質量誤差値を確認します。</li>
+    </ul>
+    <p>この確認操作により、平均値は1.3～1.8、標準偏差値は3.7～4.4であることがわかります。最大値を選び、平均 + 3 × 標準偏差 = 1.8 + 3 × 4.4 = 15 PPMという簡単な計算により、15　PPMの許容誤差がこれらのデータに対して十分であるようです。</p>
+    <p>デコイの質量誤差を表示する場合は、以下の操作を行います。</p>
+    <ul>
+        <li>グラフを右クリックし、[ <strong>点</strong> ] を選択して [ <strong>デコイ</strong> ] をクリックします。</li>
+        <li>グラフを右クリックし、[ <strong>繰り返し測定</strong> ] を選択して [ <strong>すべて</strong> ] をクリックします。<br />（その後再び [ <strong>ターゲット</strong> ] に切り替えます）</li>
+    </ul>
+    <p>iRTペプチドとそれらのライブラリにおけるiRTの値に基づいてターゲットペプチド保持時間の予測に使用する線形回帰を表示するには、以下の操作を行います。</p>
+    <ul class="keep-next">
+        <li><a id="_Hlk23864603"></a>[ <strong>表示</strong> ] メニューで、[ <strong>保持時間</strong> ]、続いて [ <strong>回帰</strong> ] を選択してから、最後に [
+            <strong>実行するスコア</strong> ] をクリックします。 </li>
+    </ul>
+    <p><img alt="Chart, line chart
+
+Description automatically generated" src="image-30.png" /></p>
+    <ul>
+        <li>グラフを右クリックし、[ <strong>プロット</strong> ] を選択して [ <strong>残余</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">これにより、このデータセットでの予測保持時間からのずれが表示されます。この分析に対し、抽出ウィンドウ（±5分）はさらに最適化できるでしょうか？デコイも確認してみましょう。</p>
+    <p><img alt="Chart, scatter chart
+
+Description automatically generated" src="image-31.png" /></p>
+    <p><strong>注：</strong>このチュートリアルのスペクトルライブラリは同じ試料を同時に測定した結果を用いて構築しました。そのため、保持時間予測の精度は非常に高くなっています。異なる装置、異なる時間、あるいは試料が異なる場合は、構築したスペクトルライブラリの保持時間の誤差はもっと大きくなると考えられます。
+    </p>
+    <h1>定量比較 </h1>
+    <p>ここまでのSkylineによるデータ処理に全般的に大きな問題があるかどうかについて検証してきました。作成されたmProphetスコアモデルには必要なすべての評価スコアがつき、ランダムマッチの程度を評価するのに用いられた標的ペプチドシークエンスとデコイペプチドシークエンスに対するマッチの分布も充分に分離していました。RTの抽出に使用された許容範囲を±5から±3に狭くできたのではないかと思うかも知れませんが、現在の設定でも明らかにうまくいっており、作成されたmProphetモデルは許容できるように見えます。
+    </p>
+    <p>ペプチドが数百種類にも及ぶ場合には、１つ１つのペプチドについてマニュアルで分析するのは時間がかかり、間違いを起こし易くなります。このチュートリアルで行っている解析を、３つの種すべてのFASTAファイルを対象とすると、いわゆるproteome-wide解析となり、数万のペプチドを解析することになります。このような場合は、個々のペプチドについて比較するより、何らかの方法で群間比較を行い、興味深い変化をしているペプチドあるいはタンパク質についてさらに詳細な解析を行うことが一般的です。
+    </p>
+    <p>Skylineで簡単な2群間比較を実施するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>その他のグリッド</strong> ]、続いて [ <strong>グループ比較</strong> ] を選択し、[ <strong>追加</strong> ] をクリックします。</li>
+        <li>[ <strong>名前</strong> ] フィールドに「By Condition」と入力します。</li>
+        <li>[ <strong>グループ注釈をコントロール</strong> ] フィールドで「Condition」を選択します。</li>
+        <li>[ <strong>グループ値をコントロール</strong> ] フィールドで「A」を選択します。</li>
+        <li>[ <strong>次に対して比較する値</strong> ] フィールドで「B」を選択します。</li>
+        <li>[ <strong>詳細</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>Q値のカットオフ</strong> ] フィールドに、「0.01」と入力します。</li>
+    </ul>
+    <p class="keep-next">[ <strong>グループ比較を編集</strong> ] フォームは以下のようになります。</p>
+    <p><img alt="Graphical user interface, text, application, email
+
+Description automatically generated" src="image-32.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>今作成したグループ間比較の結果を表示するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>その他のグリッド</strong> ]、続いて [ <strong>グループ比較</strong> ] を選択し、[ <strong>By Condition</strong> ]
+            をクリックします。</li>
+    </ul>
+    <p>AとBの試料混合物を比較した場合の、ペプチドの倍率変化と調整されたP値（偽発見率 FDRの推定値）を表示する表が表示されます。 </p>
+    <ul>
+        <li>タンパク質名とその生物種名が完全に表示されるよう、[ <strong>タンパク質</strong> ] 列ヘッダーの幅を広げます。 </li>
+        <li>[ <strong> 倍率変化結果</strong> ] 列のヘッダーをクリックし、[ <strong>昇順にソート</strong> ] をクリックします。</li>
+    </ul>
+    <p>どの生物種からのものか、またその予想比率（ヒト1:1、酵母1:2、E. coli 4:1）を念頭に、表内の複数のペプチドについて推定されている倍率変化を調べます。調整されたP値を調べ、予想される結果について考えてみましょう。</p>
+    <p><img alt="Table
+
+Description automatically generated" src="image-33.png" /></p>
+    <ul class="keep-next">
+        <li>グリッドウィンドウの左上隅にある [ <strong>ボルケーノプロット</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p><img alt="Graphical user interface, application
+
+Description automatically generated" src="image-34.png" /></p>
+    <p>表示されたボルケーノプロットでは、変化している点の多くが、予想される倍率変化の周辺に集まっており、また、5% FDRを示す水平線の上にあることがわかります。どの点がどの生物種に属するのかを明確にするため次の操作を行って下さい。</p>
+    <ul>
+        <li>[ <strong>ボルケーノプロット</strong> ] を右クリックし、[ <strong>形式</strong>] をクリックします。</li>
+        <li>[ <strong>表現</strong> ] 列の後の最初の行にある […] ボタンをクリックします。</li>
+        <li>[ <strong>一致式を作成します</strong> ] フォームで、[ <strong>合致</strong> ] ドロップダウンリストを「タンパク質名」に設定します。</li>
+        <li>[ <strong>正規表現</strong> ] フィールドに「ECOLI」と入力します。</li>
+    </ul>
+    <p class="keep-next">フォームには、以下のように一致するタンパク質名とともにペプチドの一覧が表示されます。</p>
+    <p><img alt="Graphical user interface, text, application, email
+
+Description automatically generated" src="image-35.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>RGB</strong> ] 列の後の最初の行にある […] ボタンをクリックします。</li>
+        <li>紫を選び、[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>「YEAS」について同じ処理を繰り返してオレンジにします。</li>
+        <li>「HUMAN」について同じ処理を繰り返して緑にします。</li>
+    </ul>
+    <p class="keep-next">これで [ <strong>ボルケーノプロット形式</strong> ] フォームは以下のようになります。</p>
+    <p><img alt="Graphical user interface, application, table
+
+Description automatically generated" src="image-36.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">これでボルケーノプロットは以下のようになります。</p>
+    <p><img src="image-37.svg" /></p>
+    <p>まだグレーのドットがいくつか残っていることに注意してください。これらのドットのどれかをクリックすると、 [ <strong>ターゲット</strong> ]
+        表示でそのペプチドが選択され、ボルケーノプロットでクリックしたドットが赤に変わります。また、任意のドットにマウスのカーソルを合わせると、そのドットに関する詳細情報が表示されます。これらの操作で、グレーのドットはiRT標準ペプチドであることがわかります。これらの標準ペプチドの情報は、以下の操作を行うと、グリッドとボルケーノプロットから除去できます。
+    </p>
+    <ul>
+        <li>[ <strong>タンパク質</strong> ] 列ヘッダーをクリックし、[ <strong>フィルタ</strong> ] をクリックします。</li>
+        <li>[ <strong>フィルタタイプ</strong> ] ドロップダウンリストで、「含まない」を選びます。</li>
+        <li>その下のフィールドに「standard」と入力します。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>すると、ボルケーノプロットからグレーのドットが削除されます。同様にして、タンパク質名に他のフィルタを適用することで、ボルケーノプロットに1つの生物種のペプチドだけを表示させることもできます。</p>
+    <p>Skylineはまた、倍率変化値に対して（未補正）信頼区間の誤差バーを示す棒グラフを表示させることもできます。それらは多重仮説検定により補正されてはいませんが、測定のバラツキを知るのに役に立つでしょう。棒グラフで倍率変化値を表示させるには、以下の操作を行います。</p>
+    <ul>
+        <li>グリッドウィンドウの左上隅にある [ <strong>棒グラフ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p><strong>棒グラフ</strong>が<strong>ボルケーノプロット</strong>の上に表示されます。もうすこし表示が広くなるように、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>By Condition:棒グラフ</strong> ] タブをクリックしたまま新しい場所にドラッグしてマウスから指を離します。</li>
+        <li>フロート表示になった [ <strong>By Condition:棒グラフ</strong> ] ウィンドウのサイズを変更します。</li>
+        <li>[ <strong>By Condition:グリッド</strong> ] で、[ <strong>倍率変化結果</strong> ] 列ヘッダーをクリックし、[ <strong>昇順にソート</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">グラフは以下のように表示されます。</p>
+    <p><img alt="Graphical user interface
+
+Description automatically generated" src="image-38.png" /></p>
+    <p>ボルケーノプロット同様、個々の棒をクリックすると [ <strong>ターゲット</strong> ] 表示で選択されます（グラフ内のさまざまなペプチドがどの生物種からのものかを確認できます）。</p>
+    <p>11のターゲットタンパク質（iRT標準とデコイの結果を除いています）のタンパク質レベルの倍率変化結果を表示するには、以下の操作を行います。</p>
+    <ul>
+        <li>グリッドウィンドウの右上隅にある [ <strong>設定</strong> ] ボタンをクリックし、[ <strong>グループ比較を編集</strong> ] フォームをもう一度開きます。</li>
+        <li>[ <strong>適用範囲</strong> ] オプションを [ <strong>ペプチド</strong> ] から [ <strong>タンパク質</strong> ] に変更します。</li>
+    </ul>
+    <p>Skylineはすぐに<strong>棒グラフ</strong>と<strong>ボルケーノプロット</strong>を変更します。<strong>棒グラフ</strong>には、棒の数が予想していた11本ではなく9本しかないことがわかります。これは、現在の設定では、t-検定を行うために必要な数の測定値が揃っていない状態であり、欠損値（Q値のカットオフ0.01による）に対応することができないためです。Skylineは欠損値を持つターゲットタンパク質を除去して表示しています。これを修正するには、以下の操作を行います。
+    </p>
+    <ul>
+        <li>グリッドウィンドウの右上隅にある [ <strong>設定</strong> ] ボタンをクリックし、[ <strong>グループ比較を編集</strong> ] フォームを開きます。</li>
+        <li>[ <strong>要約手法</strong> ] を「テューキーの中央値分散分析」に変更します。</li>
+    </ul>
+    <p class="keep-next">これで<strong>棒グラフ</strong>は11のタンパク質すべての倍率変化推定値を、以下のように表示するようになります。</p>
+    <p><img src="image-39.svg" /></p>
+    <ul>
+        <li>右上隅にあるXをクリックして [ <strong>グループ比較を編集</strong> ] を閉じます。</li>
+        <li>ドキュメントを保存します。</li>
+    </ul>
+    <p>また、MSstatsのような高機能の統計ツールも使用することができます。MSstatsはSkylineTool storeからインストールできます（Skylineメニューで [ <strong>ツール</strong> ] &gt; [ <strong>ストア</strong> ]
+        を使用するか、Skylineインストールウェブページで [Tool Store] ボタンをクリックして下さい）。インストール後は、Skylineの [ <strong>ツール</strong> ]
+        メニューから直接MSstatsを実行するか、以下の操作を行って、RまたはRStudioでMSstatsを実行して下さい。</p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで、[ <strong>エクスポート</strong> ] を選択して [ <strong>レポート</strong> ] をクリックします。 </li>
+        <li><strong>外部ツール</strong>フォルダで<strong>MSstats Input</strong>を選択します。 </li>
+        <li>「DIA_QE_ MSstats_Input.csv」として保存します。</li>
+    </ul>
+    <h1>まとめ</h1>
+    <p>おめでとうございます。これで、DIAデータを使用して、Skylineでプロテオームの差異発現比較解析を行うチュートリアルは終了です。ここでは、<strong>ペプチド検索のインポート</strong>ウィザードを利用して、DDAペプチド検索データからスペクトルライブラリを構築する過程から始めて、定量的DIA測定結果からクロマトグラムを抽出し、mProphetの統計学的ピーク検出モデルを使用して、ピーク選択を改善する方法と群間比較に使用するピーク領域値で偽陽性率（false
+        discovery
+        rate）を使用するためのq値を割り当てるところまで学びました。最初の段階で、DIAのデータの質を質量誤差と保持時間の回帰分析により評価することを学びました。最終段階では、Skylineを用いて単純な2群間比較を行う方法について学びました。Skylineは、インタラクティブな群間比較グリッド、ボルケーノプロット、棒グラフを表示することでユーザーの理解を容易にし、結果を検証することができます。また、MSstats
+        inputをエクスポートし、MSstatsを使用して異なる統計検定を行うことも可能です。</p>
+    <p>次の段階として、全ProteomeのFASTAファイルを用いて、多くのターゲットを対象にした解析を同様に行うことや、プレカーサーイオンを対象に含めることで異なるレベルでの定量解析（MS1スペクトルを用いるプレカーサーイオン）を行うこともできます。あるいは、ご自分の測定結果を用いて定量解析を行ってもいいでしょう。
+    </p>
+</body>
+
+</html>
