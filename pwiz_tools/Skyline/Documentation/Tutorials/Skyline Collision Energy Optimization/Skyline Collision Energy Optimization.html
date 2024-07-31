@@ -1,0 +1,1293 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline Collision Energy Optimization</h1>
+    <p>Skyline supports a rich user interface and fully automated pipeline for predicting and optimizing SRM instrument parameters like collision
+        energy (CE) and declustering potential (DP). This tutorial focuses on CE optimization, but the same principles apply to DP optimization. In
+        2016, concept was expanded to include compensation voltage (CoV) on the SCIEX SelexION and more recently Thermo FAIMS instruments. It could
+        eventually apply to other parameters, such as cone voltage and RF lens. This functionality described here has been tested and in use for over
+        a decade on instruments from Agilent, SCIEX, Shimadzu, Thermo, and Waters.</p>
+    <p>In most cases, the default method in Skyline of assigning CE values to transitions sacrifices very little peak area to full, empirical
+        optimization of each transition separately<sup>1</sup>, but Skyline provides ample support for performing per-transition CE optimization when
+        you feel the need. The default method in Skyline for calculating CE values is to use a linear equation of the form:</p>
+    <p>CE = slope * (precursor <em>m/z</em>) + intercept</p>
+    <p>Each charge state is allowed to have a separate equation.</p>
+    <p>The default equations provided with a new Skyline installation generally cover charges 2 and 3 for charge 1 fragments of peptides. If you are
+        working with higher charge state precursors or fragments, then individual fragment optimization is likely to provide greater
+        benefit<sup>2</sup>. If you are working with molecules other than peptides, you should consult the “<a
+            href="https://skyline.ms/tutorial_small_method_ce.url">Small Molecule Method Development and CE Optimization</a>” tutorial.</p>
+    <p>This tutorial will cover how to use Skyline both to derive your own linear equations for CE and to perform empirical, per-transition
+        optimization.</p>
+    <h1>Getting Started</h1>
+    <p>To start this tutorial, download the following ZIP file:</p>
+    <p><a href="https://skyline.ms/tutorials/OptimizeCE.zip">https://skyline.ms/tutorials/OptimizeCE.zip</a></p>
+    <p>Extract the files in it to a folder on your computer, like:</p>
+    <p>C:\Users\brendanx\Documents</p>
+    <p>This will create a new folder:</p>
+    <p>C:\Users\brendanx\Documents\OptimizeCE</p>
+    <p>It will contain all the files necessary for this tutorial. Open the file CE_Vantage_15mTorr.sky in this folder, either by double-clicking on it
+        in Windows Explorer, or by clicking <strong>Open</strong> in the <strong>File</strong> menu in Skyline.</p>
+    <h1>Deriving a New Linear Equation</h1>
+    <p>In most cases, you will be able to use an existing linear equation for calculating the CE of your SRM transitions for peptides. If you have
+        used Skyline to run any experiments before, then you have probably already done this. Skyline also makes it easy to derive your own linear
+        equation, or just to check that your system produces similar results to the linear equation you intend to use. This tutorial will walk you
+        through how we did this originally for our Thermo TSQ Vantage.</p>
+    <p>The file CE_Vantage_15mTorr.sky, which you have opened, contains 20 charge 2 precursors and 10 charge 3 precursors, which we measured
+        successfully in the Michrom bovine protein mix. After determining the CE values that produce the maximum peak area for each of these
+        precursors Skyline can perform a simple linear regression to derive the equation we seek. Skyline can also generate the methods containing the
+        measurements it needs to determine those optimal CE values.</p>
+    <p>The methods Skyline creates will contain multiple transitions for each product ion to be measured over a range of CE values centered at the CE
+        predicted by an existing linear equation.</p>
+    <p>To look at the linear equation settings used in this experiment do the following:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
+        <li>Click the <strong>Prediction</strong> tab.</li>
+        <li>From the <strong>Collision energy</strong> drop-list, Choose <strong>&lt;Edit list…&gt;</strong>.</li>
+        <li>In the <strong>Collision Energy Regression</strong> list, select “Thermo”.</li>
+        <li>Click the <strong>Edit</strong> button.</li>
+    </ul>
+    <p class="keep-next">You should be presented with a form that looks like this:</p>
+    <p><img src="image-0.png" /></p>
+    <p>In it you can see the slope and y-intercept values used for both charge 2 and charge 3 precursors. Any precursor charges that are not covered
+        will use the linear equation for the closest charge. At the bottom of the form, you can also see the fields <strong>Step count</strong> and
+        <strong>Step size</strong>. These tell Skyline how many transitions to measure for each product ion, at what voltage interval.</p>
+    <p>For this experiment, we used 5 steps on either side of the equation predicted value, for a total of 11 transitions per product ion, each 1 volt
+        apart. In your own experiments you may choose to change these values to better suit your instrument and your confidence in the original linear
+        equation.</p>
+    <p>For this tutorial, simply cancel out of the forms you have opened, and we will turn to method creation.</p>
+    <h2>Measuring Retention Times for Method Scheduling</h2>
+    <p>The optimization method for this tutorial will contain 11 transitions for every product ion or 1320 transitions total. Initial unscheduled
+        measurement of all 1320 transitions required 22 sample injections. By using the Skyline support for scheduled methods, we were able to
+        decrease this number to 5 and even 4 sample injections.</p>
+    <p>The first step in creating these scheduled methods is to acquire unscheduled SRM for the peptides in the document using the default equation CE
+        values. The unscheduled data will be used to record the peptide retention time ranges for building a scheduled SRM method for the actual CE
+        optimization. To create an unscheduled transition list do the following:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Export</strong>, and then click <strong>Transition List</strong>.</li>
+    </ul>
+    <p class="keep-next">Make sure the form looks like this:</p>
+    <p><img src="image-1.png" /></p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Specify your OptimizeCE folder as the location to save.</li>
+        <li>Name the file CE_Vantage_15mTorr_unscheduled.csv</li>
+        <li>Click the <strong>Save</strong> button.</li>
+    </ul>
+    <p>When you open the resulting CSV file in Excel, you will find it is an unscheduled Skyline transition list for a Thermo Scientific SRM
+        instrument (pre-Quantiva), as shown below, with 6 columns in the order precursor m/z, product m/z, CE, peptide sequence, protein name,
+        fragment ion:</p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3624</p>
+                </td>
+                <td>
+                    <p>18.9</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.3253</p>
+                </td>
+                <td>
+                    <p>18.9</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>504.2413</p>
+                </td>
+                <td>
+                    <p>18.9</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y4</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>390.1983</p>
+                </td>
+                <td>
+                    <p>18.9</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y3</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>853.4302</p>
+                </td>
+                <td>
+                    <p>21.4</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y7</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>754.3618</p>
+                </td>
+                <td>
+                    <p>21.4</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>641.2777</p>
+                </td>
+                <td>
+                    <p>21.4</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>526.2508</p>
+                </td>
+                <td>
+                    <p>21.4</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y4</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>623.2959</p>
+                </td>
+                <td>
+                    <p>1047.484</p>
+                </td>
+                <td>
+                    <p>24.5</p>
+                </td>
+                <td>
+                    <p>TPEVDDEALEK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y9</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p>We used this method to acquire SRM data for the 120 transitions with the default, predicted CE. You can import the resulting instrument output
+        file by doing the following:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Import</strong>, and then click <strong>Results</strong>.</li>
+        <li>Select <strong>Add one new replicate</strong>.</li>
+        <li>In the <strong>Name</strong> field, enter ‘Unscheduled’.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Select the file CE_Vantage_15mTorr_unscheduled.raw</li>
+        <li>Click the <strong>Open</strong> button.</li>
+    </ul>
+    <p class="keep-next">After the import is completed, Skyline should look like this:</p>
+    <p><img src="image-2.png" /></p>
+    <p>You can select a few of the peptides in the tree-view to see their chromatograms in the chart on the right.</p>
+    <h2>Creating Optimization Methods</h2>
+    <p>Skyline now has the information it needs to create scheduled optimization methods for the 1320 transitions required. To create these methods:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Export</strong>, and then click <strong>Transition List</strong>.</li>
+        <li>Edit the form to look like this:</li>
+    </ul>
+    <p><img src="image-3.png" /></p>
+    <p>NOTE: We eventually realized that 132 was a better value for <strong>Max concurrent transitions</strong>, because it allows 3 precursors * 4
+        transitions * 11 CE values to be measured concurrently. The number 110 used in this tutorial is a vestige of initial measurements made with 5
+        transitions. We encourage you to consider your transitions per precursor * CE values carefully in choosing this value to maximize your
+        measurements per method.</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Specify your OptimizeCE folder as the location to save.</li>
+        <li>Name the file CE_Vantage_15mTorr.csv</li>
+        <li>Click the <strong>Save</strong> button.</li>
+    </ul>
+    <p class="keep-next">These actions should cause Skyline to create 5 new transition lists of similar size, and Windows Explorer should show
+        something like the following for your OptimizeCE folder:</p>
+    <p><img src="image-4.png" /></p>
+    <p>If you open one of the CSV files in Excel, it should contain a transition list like the one below, with 9 columns in the order precursor m/z,
+        product m/z, CE, start time, stop time, polarity, peptide sequence, protein name, fragment ion:</p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3124</p>
+                </td>
+                <td>
+                    <p>13.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3224</p>
+                </td>
+                <td>
+                    <p>14.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3324</p>
+                </td>
+                <td>
+                    <p>15.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3424</p>
+                </td>
+                <td>
+                    <p>16.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3524</p>
+                </td>
+                <td>
+                    <p>17.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3624</p>
+                </td>
+                <td>
+                    <p>18.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3724</p>
+                </td>
+                <td>
+                    <p>19.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3824</p>
+                </td>
+                <td>
+                    <p>20.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.3924</p>
+                </td>
+                <td>
+                    <p>21.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.4024</p>
+                </td>
+                <td>
+                    <p>22.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>688.4124</p>
+                </td>
+                <td>
+                    <p>23.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.2753</p>
+                </td>
+                <td>
+                    <p>13.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.2853</p>
+                </td>
+                <td>
+                    <p>14.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.2953</p>
+                </td>
+                <td>
+                    <p>15.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.3053</p>
+                </td>
+                <td>
+                    <p>16.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.3153</p>
+                </td>
+                <td>
+                    <p>17.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>458.7404</p>
+                </td>
+                <td>
+                    <p>617.3253</p>
+                </td>
+                <td>
+                    <p>18.9</p>
+                </td>
+                <td>
+                    <p>7.81</p>
+                </td>
+                <td>
+                    <p>11.81</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>IDALNENK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p>There are 11 CE values for each product ion. The product m/z value is incremented slightly for each value as first described by Sherwood et
+        al., 2009<sup>3</sup>. This provides a platform independent means for Skyline to recognize the CE values when the measured data is imported.
+    </p>
+    <h2>Analyzing Optimization Data</h2>
+    <p>Once data for each of the exported methods is collected, you can import it into Skyline for subsequent analysis. For this tutorial, you will
+        import the instrument output files we have supplied by doing the following:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Import</strong>, and then click <strong>Results</strong>.</li>
+        <li>Select <strong>Add one new replicate</strong>.</li>
+        <li>In the <strong>Name</strong> field, enter “Optimize CE”.</li>
+        <li>From the <strong>Optimizing</strong> drop-list, choose “Collision Energy”.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>In the Import Results Files dialog use shift-click to select the 5 raw files<br />CE_Vantage_15mTorr_0001 – 0005.raw</li>
+        <li>Click the <strong>Open</strong> button.</li>
+    </ul>
+    <p>While the files are importing, do the following to prepare for viewing the collected data:</p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Transitions</strong>, and then click <strong>Single</strong> (F10).</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong>, and then click <strong>Replicate Comparison</strong> (F7).</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Auto-Zoom</strong>, and then click <strong>Best Peak</strong> (F11).</li>
+        <li>Arrange the graph windows for side-by-side viewing.</li>
+        <li>Select a peptide or precursor in the <strong>Targets</strong> view.</li>
+    </ul>
+    <p>Once the data is loaded, Skyline should look something like this:</p>
+    <p><img src="image-5.png" /></p>
+    <p>The red bar in the middle of the <strong>Peak Areas</strong> view and the red curve among the chromatograms is the measurement for the
+        transition with the CE calculated by the starting linear equation. In the image above, the maximum peak area was achieved at a CE value 4
+        volts lower (labeled Step -4 in the legend) than the calculated default CE.</p>
+    <p>You should now review the peaks for all of the peptide precursors to verify the integration boundaries for each peak. When you get to the
+        peptide EGIHAQQK, you will find that it measured very little signal. Given the quality of the unscheduled peak, this may be due to a retention
+        time shift that caused the peptide to elute outside the scheduling window. Before recalculating the linear equation for CE with these data,
+        you will want to delete this peptide.</p>
+    <p>The first peptide in the document, IDALNENK, is probably also questionable given its significant drop in intensity and its shift from a
+        retention time of 9.8 minutes to 11.0 minutes. But it is worth looking at from another perspective:</p>
+    <ul>
+        <li>Select IDALNENK in the <strong>Targets</strong> view.</li>
+        <li>Right-click in the peak area chart, choose <strong>Normalize To</strong> and click <strong>Total.</strong> </li>
+    </ul>
+    <p>In this view all peak areas are normalized to the area of the calculated CE value in red. The area of the peak with the calculated CE is given
+        100%, and the optimization values go from almost invisible beside the unscheduled peak to showing a curve a little less smooth than others,
+        but not that bad.</p>
+    <p><img src="image-6.png" /></p>
+    <p>For this tutorial, however, remove this peptide before calculating the new equation for the Thermo TSQ Vantage.</p>
+    <h2>Creating a New Equation for CE</h2>
+    <p>To create a newly optimized linear equation for CE using this data, perform the following steps:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, choose <strong>Transition Settings</strong>.</li>
+        <li>From the <strong>Collision energy</strong> drop-list, choose <strong>&lt;Add…&gt;</strong>.</li>
+        <li>In the <strong>Name</strong> field, enter ‘Thermo Vantage Tutorial’.</li>
+        <li>Click the <strong>Use Results</strong> button.</li>
+    </ul>
+    <p>If you deleted the two suggested peptides, Skyline should calculate the equation coefficients as:</p>
+    <table>
+        <tr>
+            <td>
+                <p>Charge</p>
+            </td>
+            <td>
+                <p>Slope</p>
+            </td>
+            <td>
+                <p>Intercept</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>2</p>
+            </td>
+            <td>
+                <p>0.0305</p>
+            </td>
+            <td>
+                <p>2.5061</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>3</p>
+            </td>
+            <td>
+                <p>0.0397</p>
+            </td>
+            <td>
+                <p>1.4217</p>
+            </td>
+        </tr>
+    </table>
+    <p>You may wonder how close they are to the original values.</p>
+    <ul>
+        <li>Click the <strong>Show Graph</strong> button to find out.</li>
+    </ul>
+    <p>Skyline will present the following graphs:</p>
+    <p><img src="image-7.svg" /></p>
+    <p>The points correlate very well to the new linear equation, and appear to be on average 3-4 volts below the CE values chosen by the default
+        equations.</p>
+    <ul>
+        <li>To return to the document, click the <strong>Close</strong> button and two <strong>OK</strong> buttons.</li>
+    </ul>
+    <h1>Optimizing Each Transition</h1>
+    <p>The document settings have been changed to make Skyline use a new linear equation for calculating the CE values in any new method or transition
+        list export. But what if you are planning on moving to measuring large numbers of replicates, and just want to use the CE value which produced
+        the maximum peak area in the optimization data set you imported?</p>
+    <p>To cause Skyline to use optimal measured values in exported methods:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
+        <li>Check the <strong>Use optimization values when present</strong> checkbox.</li>
+        <li>From the <strong>Optimize by</strong> drop-list, choose <strong>Transition</strong>.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>And, to export a method with each transition optimized separately:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Export</strong>, and click <strong>Transition List</strong>.</li>
+        <li>Select <strong>Single method</strong>.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Name the file CE_Vantage_15mTorr_optimized.csv</li>
+        <li>Click the <strong>Save</strong> button.</li>
+    </ul>
+    <p>If you open the exported transition list in Excel, you will see the same 9 columns, because this is still a scheduled method. Even when you
+        have enough cycle time to cover all your transitions for the entire gradient of your experiment, the instrument output files will be smaller
+        and import faster, if you use a scheduled method. These are obviously desirable attributes of data for a large enough multi-replicate study to
+        warrant empirical CE optimization of each transition.</p>
+    <p>The exported transition list should look like:</p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>853.4302</p>
+                </td>
+                <td>
+                    <p>17.4</p>
+                </td>
+                <td>
+                    <p>16.35</p>
+                </td>
+                <td>
+                    <p>20.35</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y7</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>754.3618</p>
+                </td>
+                <td>
+                    <p>17.4</p>
+                </td>
+                <td>
+                    <p>16.35</p>
+                </td>
+                <td>
+                    <p>20.35</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>641.2777</p>
+                </td>
+                <td>
+                    <p>18.4</p>
+                </td>
+                <td>
+                    <p>16.35</p>
+                </td>
+                <td>
+                    <p>20.35</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>533.295</p>
+                </td>
+                <td>
+                    <p>526.2508</p>
+                </td>
+                <td>
+                    <p>23.4</p>
+                </td>
+                <td>
+                    <p>16.35</p>
+                </td>
+                <td>
+                    <p>20.35</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>VLVLDTDYK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y4</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>623.2959</p>
+                </td>
+                <td>
+                    <p>1047.484</p>
+                </td>
+                <td>
+                    <p>21.5</p>
+                </td>
+                <td>
+                    <p>10.98</p>
+                </td>
+                <td>
+                    <p>14.98</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>TPEVDDEALEK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y9</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>623.2959</p>
+                </td>
+                <td>
+                    <p>918.4415</p>
+                </td>
+                <td>
+                    <p>21.5</p>
+                </td>
+                <td>
+                    <p>10.98</p>
+                </td>
+                <td>
+                    <p>14.98</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>TPEVDDEALEK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y8</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>623.2959</p>
+                </td>
+                <td>
+                    <p>819.3731</p>
+                </td>
+                <td>
+                    <p>22.5</p>
+                </td>
+                <td>
+                    <p>10.98</p>
+                </td>
+                <td>
+                    <p>14.98</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>TPEVDDEALEK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y7</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>623.2959</p>
+                </td>
+                <td>
+                    <p>460.2766</p>
+                </td>
+                <td>
+                    <p>24.5</p>
+                </td>
+                <td>
+                    <p>10.98</p>
+                </td>
+                <td>
+                    <p>14.98</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>TPEVDDEALEK</p>
+                </td>
+                <td>
+                    <p>gi|2194089|Beta_Lactoglobulin</p>
+                </td>
+                <td>
+                    <p>y4</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>471.2562</p>
+                </td>
+                <td>
+                    <p>769.4567</p>
+                </td>
+                <td>
+                    <p>16.3</p>
+                </td>
+                <td>
+                    <p>15.03</p>
+                </td>
+                <td>
+                    <p>19.03</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>DGGIDPLVR</p>
+                </td>
+                <td>
+                    <p>gi|129823|Lactoperoxidase</p>
+                </td>
+                <td>
+                    <p>y7</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>471.2562</p>
+                </td>
+                <td>
+                    <p>712.4352</p>
+                </td>
+                <td>
+                    <p>15.3</p>
+                </td>
+                <td>
+                    <p>15.03</p>
+                </td>
+                <td>
+                    <p>19.03</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>DGGIDPLVR</p>
+                </td>
+                <td>
+                    <p>gi|129823|Lactoperoxidase</p>
+                </td>
+                <td>
+                    <p>y6</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>471.2562</p>
+                </td>
+                <td>
+                    <p>599.3511</p>
+                </td>
+                <td>
+                    <p>15.3</p>
+                </td>
+                <td>
+                    <p>15.03</p>
+                </td>
+                <td>
+                    <p>19.03</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>DGGIDPLVR</p>
+                </td>
+                <td>
+                    <p>gi|129823|Lactoperoxidase</p>
+                </td>
+                <td>
+                    <p>y5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>471.2562</p>
+                </td>
+                <td>
+                    <p>484.3242</p>
+                </td>
+                <td>
+                    <p>20.3</p>
+                </td>
+                <td>
+                    <p>15.03</p>
+                </td>
+                <td>
+                    <p>19.03</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+                <td>
+                    <p>DGGIDPLVR</p>
+                </td>
+                <td>
+                    <p>gi|129823|Lactoperoxidase</p>
+                </td>
+                <td>
+                    <p>y4</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p>You can see that the CE values in the third column differ among transitions of the same precursor. Skyline has chosen the CE value that
+        produced the maximum measured peak area for each transition.</p>
+    <h1>Conclusion</h1>
+    <p>There is certainly more to learn about CE optimization. For instance, you can look into storing your optimized transition CE values in an
+        optimization library, also on the <strong>Transition Settings – Prediction</strong> tab. Hopefully this tutorial will be enough to get you
+        started on using Skyline for your CE optimization needs. If your instrument is not now explicitly covered by name in the Transition Settings
+        list of linear equations for CE calculation, you may want to run your own tests to ensure you are using a linear equation that calculates the
+        best CE values as accurately as possible. If you are performing SRM experiments with many peptides in charge states not covered by an existing
+        equation, you probably will want to calculate new equations for those charge states. This tutorial should have provided you with the tools you
+        will need in these cases. We hope you will use them.</p>
+    <h1>Bibliography</h1>
+    <p class="bibliography">1. MacLean, B. <em>et al.</em> Effect of Collision Energy Optimization on the Measurement of Peptides by Selected Reaction
+        Monitoring (SRM) Mass Spectrometry. <em>Anal. Chem.</em> <strong>82</strong>, 10116–10124 (2010).</p>
+    <p class="bibliography">2. Schmidlin, T. <em>et al.</em> Diet-induced neuropeptide expression: feasibility of quantifying extended and highly
+        charged endogenous peptide sequences by selected reaction monitoring. <em>Anal. Chem.</em> <strong>87</strong>, 9966–9973 (2015).</p>
+    <p class="bibliography">3. Sherwood, C. A. <em>et al.</em> Rapid Optimization of MRM-MS Instrument Parameters by Subtle Alteration of Precursor
+        and Product m/z Targets. <em>J. Proteome Res.</em> <strong>8</strong>, 3746–3751 (2009).</p>
+</body>
+
+</html>
