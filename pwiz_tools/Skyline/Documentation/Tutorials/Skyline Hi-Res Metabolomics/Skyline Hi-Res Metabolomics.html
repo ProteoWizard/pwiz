@@ -1,0 +1,270 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline High Resolution Metabolomics</h1>
+    <p>The Skyline Targeted Mass Spectrometry Environment provides informative visual displays of the raw mass spectrometer data you import into your
+        Skyline documents. Originally developed for proteomics use, Skyline has been extended to work with generalized molecules. This tutorial
+        explores using Skyline for targeted quantification of small molecules using high resolution mass spectra.</p>
+    <p>In this tutorial, you will learn about Quantification of Polyunsaturated Fatty Acids in Plasma using NIST SRM-1950 as a single-point external
+        calibrant, used along with stable-isotope labeled internal standards. </p>
+    <p>You will explore:</p>
+    <ul>
+        <li>Use of a molecular formula and adduct to assign a precursor accurate mass.</li>
+        <li>Analysis of high resolution accurate mass precursor quantification data in Skyline.</li>
+        <li>Quantification using single-point external calibration with SIL internal standards and surrogate standards.</li>
+        <li>Use of a Concentration Multiplier to adjust the calibration range for each analyte.</li>
+    </ul>
+    <p>Skyline aims to provide a vendor-neutral platform for targeted quantitative mass spectrometry research. It can import raw data from the
+        instrument vendors Agilent, SCIEX, Bruker, Shimadzu, Thermo-Scientific, and Waters. The ability to import data across various instrument
+        platforms facilitates cross-instrument comparisons and multi-site studies. This remains equally true in using it to target small molecules, as
+        it has been for years in the field of proteomics.</p>
+    <p>If you have not already looked at the “<a href="https://skyline.ms/tutorial_small_molecule.url">Skyline Small Molecule Targets</a>” tutorial
+        you should do so now, in order to pick up a few basics about how Skyline works with small molecule descriptions including chemical formulas
+        and adducts.</p>
+    <h1>Getting Started</h1>
+    <p>To start this tutorial, download the following ZIP file:</p>
+    <p><a href="https://skyline.ms/tutorials/HiResMetabolomics.zip">https://skyline.ms/tutorials/HiResMetabolomics.zip</a></p>
+    <p>Extract the files in it to a folder on your computer, like:</p>
+    <p>C:\Users\bspratt\Documents</p>
+    <p>This will create a new folder:</p>
+    <p>C:\Users\bspratt\Documents\HiResMetabolomics</p>
+    <p>It will contain all the files necessary for this tutorial.</p>
+    <p>If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <strong>Start Page, </strong>click <strong>Blank Document </strong>which looks like this: </li>
+    </ul>
+    <p><img src="image-0.png" /></p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Default. </strong></li>
+        <li>Click <strong>No </strong>on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>The document settings in this instance of Skyline have now been reset to the default.</p>
+    <p>Since this tutorial covers a small molecule topic, you can choose the molecule interface by doing the following:</p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <strong>Molecule interface </strong>which
+            looks like this: </li>
+    </ul>
+    <p><img src="image-1.png" /></p>
+    <p>Skyline is operating in molecule mode which is displayed by the molecule icon <img src="image-2.png" /> in the upper right-hand corner of the
+        Skyline window. Its original proteomics menus and controls are now hidden, allowing you to focus on small molecule analysis.</p>
+    <h1>Importing a Molecule Transition List into a Skyline Document</h1>
+    <p>To add a set of target transitions for the small molecules in this experiment, do the following:</p>
+    <ul>
+        <li>If you are an Excel user, open the provided PUFA_TransitionList.xlsx file. Otherwise, you can open the CSV version PUFA_TransitionList.csv
+            in any text editor.</li>
+    </ul>
+    <p>In Excel, it will look something like this:</p>
+    <p><img src="image-3.png" /></p>
+    <p>But again, the .csv version will work just as well.</p>
+    <p class="keep-next"><strong>Adding Isotopic Peaks</strong></p>
+    <p>This transition list specifies chemical formulas for the molecules of interest which Skyline can use to create targets for isotopes of the
+        molecules.</p>
+    <p>When Skyline reads a small molecule transition list like this one, it offers you two choices:</p>
+    <ul>
+        <li>add only the precursors and fragments explicitly included in the transition list. Each item added to the document is created with
+            <strong>Auto-select</strong> turned off so that subsequent settings changes do not cause any changes to the molecules, precursors or
+            transitions added the document. </li>
+        <li>use the document settings to add or remove transitions based on the list contents, e.g. add the M+1 precursor isotopes. Each item added to
+            the document is created with <strong>Auto-select</strong> turned on so that subsequent settings changes may affect the newly added items.
+        </li>
+    </ul>
+    <p>We would like to include the M+1 isotopes, so now you will review the transition settings and make some changes including those needed to add
+        M+1 isotope peak precursors transitions to the Skyline document. To do this, perform the following steps:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
+        <li>Click the <strong>Filter </strong>tab. </li>
+    </ul>
+    <ul class="keep-next">
+        <li>In the <strong>Ion types</strong> field, enter “p”.</li>
+    </ul>
+    <p class="keep-next">The <strong>Transitions Settings</strong> form should look like this:</p>
+    <p><img src="image-4.png" /></p>
+    <table>
+        <tr>
+            <td>
+                <p>NOTE: The “p” setting in <strong>Ion Types</strong> on the <strong>Filter</strong> tab means you are interested in
+                    <strong>p</strong>recursor ion transitions. This Skyline document contains only precursor transitions, but if there were also
+                    <strong>f</strong>ragment transitions in the input transition list we would set this to “<strong>f, p</strong>”.</p>
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li>Click to the <strong>Full-Scan</strong> tab in the <strong>Transitions Settings</strong> form.</li>
+        <li>Set the <strong>Isotope peaks included</strong> field to “Count<strong>”.</strong></li>
+        <li>In the <strong>Peaks </strong>field, enter “2”. This tell Skyline to use the chemical formulas provided in the input transition list to
+            add a precursor transition representing the M+1 isotope peak in addition to the monoisotopic peak.</li>
+        <li>Set the <strong>Precursor mass analyzer</strong> field to “Orbitrap<strong>”.</strong></li>
+        <li>Set the <strong>Resolving power </strong>field to “70,000”, <strong>At </strong>“200” <em>m/z.</em></li>
+        <li>In the<strong> </strong>section<strong> Retention time filtering</strong> section<strong>, </strong>choose <strong>Include all matching
+                scans</strong>.<br /></li>
+    </ul>
+    <p class="keep-next">The <strong>Transitions Settings</strong> form should look like this: <br /><br /><img src="image-5.png" /></p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>Now we are ready to import the transition list. </p>
+    <ul>
+        <li>Copy the contents of the transition list to the clipboard, including the header row with the column names in it.</li>
+        <li>On the Skyline <strong>Edit</strong> menu, choose <strong>Insert </strong>and click <strong>Transition List</strong>.</li>
+    </ul>
+    <p class="keep-next">Skyline will show the <strong>Insert Transition List</strong> form, looking something like this: </p>
+    <p><img src="image-6.png" /></p>
+    <ul>
+        <li>Press <strong>Ctrl-V</strong> to paste the information you placed on the clipboard into Skyline.</li>
+    </ul>
+    <p class="keep-next">Skyline will show the <strong>Import Transition List: Identify Columns</strong> form:</p>
+    <p><a id="_Hlk93417364"></a><img src="image-7.png" /></p>
+    <p>Make sure that the <strong>Molecules</strong> radio button is selected.</p>
+    <ul>
+        <li>Press the <strong>Check For Errors</strong> button.</li>
+    </ul>
+    <p class="keep-next">Skyline reports that there are inconsistencies in the data: the precursor adducts are all [M-H] but the precursor charges are
+        declared as +1. </p>
+    <p><img src="image-8.png" /></p>
+    <p>This is easy to correct:</p>
+    <ul>
+        <li>Click the <strong>OK</strong> button in the error report form.</li>
+        <li>Click the dropdown control in the <strong>Precursor Charge</strong> and choose “Ignore Column”. </li>
+    </ul>
+    <p>The precursor adduct is all the information that is needed.</p>
+    <p><img src="image-9.png" /></p>
+    <p>Notice that the first two entries are a heavy/light labeled pair based on having the same name and formulas that differ only in isotopic
+        labeling (four of the hydrogens are replaced by Deuterium in the second formula). Skyline will recognize these as heavy/light labeled pairs.
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>Skyline notices that your document’s Transition settings allow for calculating transitions in addition to those explicitly included in the
+        input transition list, and offers you a choice:</p>
+    <p><img src="image-10.png" /></p>
+    <p>The additional seven precursor transitions are the M+1 isotopes of the targets in the input transition list that Skyline can generate based on
+        the document’s Transition settings.</p>
+    <ul>
+        <li>Click the <strong>Enable </strong>button</li>
+    </ul>
+    <p>(As noted in the message, if you happen to click <strong>Disable</strong> you can still get the M+1 targets by using the “<strong>Refine &gt;
+            Advanced</strong>” menu item.)</p>
+    <p>Skyline imports the transition list and shows the result in the <strong>Targets </strong>window.</p>
+    <ul>
+        <li>On the Skyline <strong>Edit</strong> menu, choose <strong>Expand All</strong> and click <strong>Precursors</strong>.</li>
+    </ul>
+    <p class="keep-next">Your Skyline window should now look like this, displaying a tree of polyunsaturated fatty acids, along with their
+        stable-isotope internal standards (as applicable):</p>
+    <p><img src="image-11.png" /> </p>
+    <p>Note that for the molecules with a heavy labeled precursor, the label is expressed as part of the adduct description for the heavy variant. The
+        “[M4H2-H]” adduct tells you that four hydrogen atoms in the molecule are replaced by deuterium or H2 (“M4H2”) and that it is ionized by a
+        proton loss (“-H”).</p>
+    <h1>Surrogate Standards</h1>
+    <p>You will notice that ALA (alpha-linoleic acid) does not have a heavy-labeled precursor. Instead, it will be assigned a different stable-isotope
+        labeled molecule as its surrogate standard. In this case d5-DHA will be used because it is the closest in retention time. To prepare for this
+        association, do the following:</p>
+    <ul class="keep-next">
+        <li>Right-click the “DHA” target, choose <strong>Set Standard Type</strong>, and click <strong>Surrogate Standard</strong>.</li>
+    </ul>
+    <p><img src="image-12.png" /></p>
+    <p>Now the experimental mass spectrometer results can be imported.</p>
+    <h1>Importing Mass Spectrometer Runs</h1>
+    <p>Perform the following steps:</p>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save</strong>. (Ctrl-S)</li>
+        <li>Save this document as “SM_HiRes_v1.sky” in the tutorial folder you created.</li>
+        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
+        <li>In the <strong>Import Results</strong> form, choose <strong>Import single-injection replicates in files</strong>.</li>
+        <li>In the<strong> Files to import simultaneously</strong> dropdown list at the bottom of the form, click <strong>Many</strong> which will
+            provide the best import performance.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Select all 16 raw data folders in the tutorial folder by clicking the first listed and then holding down the Shift key and clicking the
+            last.</li>
+    </ul>
+    <p class="keep-next">The <strong>Import Results Files</strong> form should look like this:</p>
+    <p><img src="image-13.png" /></p>
+    <ul>
+        <li>Click the <strong>Open</strong> button.</li>
+    </ul>
+    <p class="keep-next">The files should import within 30 seconds or so, leaving your Skyline window looking like this:</p>
+    <p><img src="image-14.png" /> </p>
+    <p>To take advantage of the Skyline summary graphs for viewing individual targets, do the following:</p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>On the <strong>View </strong>menu, choose <strong>Retention Times</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>Click and drag these views to dock them above the chromatogram graphs.</li>
+        <li>On the <strong>View </strong>menu, choose <strong>Document Grid.</strong></li>
+        <li>In the <strong>Document Grid</strong> view, click the <strong>Reports</strong> menu, and then click <strong>Molecule
+                Quantification</strong>.</li>
+        <li>Click and drag the <strong>Document Grid</strong> view and dock it next to the chromatogram graphs.</li>
+    </ul>
+    <p class="keep-next">The Skyline window should now look like this:</p>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-15.png" /></p>
+    <h1>Checking Peak Integration</h1>
+    <p>Looking at the <strong>Retention Times – Replicate Comparison</strong> window, you can see by the lack of outliers that Skyline did not have
+        any problems with peak integration.</p>
+    <h1>Preparing for ‘Single Point Quantification’</h1>
+    <p>Next, follow these steps to prepare Skyline to produce calibrated quantitative values for the targeted molecules based on an external
+        single-point calibration run:</p>
+    <ul>
+        <li>On the <strong>Settings</strong> Menu, click <strong>Molecule Settings.</strong></li>
+        <li>Click the <strong>Quantification</strong> tab.</li>
+        <li>In the <strong>Regression fit </strong>field, select “Linear though zero”.</li>
+        <li>In the <strong>Normalization method</strong>, select “Ratio to Heavy<strong>”.</strong></li>
+        <li>Leave the <strong>Regression weighting </strong>field set to “None”.</li>
+        <li>Leave the <strong>MS level</strong> field set to “All”<strong>.</strong></li>
+        <li>In the <strong>Units</strong> field enter “uM”.</li>
+    </ul>
+    <p class="keep-next">The <strong>Molecule Settings</strong> form should look like this: </p>
+    <p><img src="image-16.png" /></p>
+    <ul>
+        <li>Click the <strong>OK </strong>button<strong>.</strong></li>
+    </ul>
+    <p class="keep-next">Return to the <strong>Document Grid</strong> view and do the following:</p>
+    <ul>
+        <li>Click the <strong>Reports</strong> menu, and then click <strong>Replicates</strong>.</li>
+    </ul>
+    <p class="keep-next">To establish the role of each of the samples (replicates) in the study, as a standard, an unknown, or a quality control run,
+        edit the Sample Type and Analyte Concentration cells for each row as necessary so the grid looks like this:</p>
+    <p><img src="image-17.png" /></p>
+    <p>In this situation, the concentration given for the NIST sample (NIST-SRM-1950) is entered as “1”, since all analytes have a different
+        concentration. Think of this as establishing your standard as “One NIST Unit”. Therefore, in the next step, the concentration multipliers will
+        each be given as the actual concentration of the analyte in the NIST SRM-1950 in order to adjust the target concentration of those analytes to
+        their respective reference values.</p>
+    <ul>
+        <li>In the <strong>Document Grid</strong>, click on the <strong>Reports</strong> menu and then click <strong>Molecule Quantification</strong>.
+        </li>
+        <li>Set the Concentration Multiplier and Normalization Method cells for each target as shown below.</li>
+    </ul>
+    <p><img alt="A screenshot of a computer
+
+Description automatically generated" src="image-18.png" /></p>
+    <p>The default normalization method is “Ratio to Heavy” when using stable-isotope internal standards, but you need to set the “FA 18:3” analyte to
+        use the previously-defined surrogate standard as the denominator in the analyte to standard ratio.</p>
+    <h1>Inspecting the Calibration Curves</h1>
+    <p>Each entry in the Calibration Curve column is a clickable link that shows and activates the <strong>Calibration Curve</strong> view for the
+        molecule in that row.</p>
+    <ul>
+        <li>Click on the calibration curve link for “FA 18:2”</li>
+    </ul>
+    <p>The <strong>Calibration Curve</strong> view will appear looking like this:</p>
+    <p><img src="image-19.png" /></p>
+    <p>Note that the calibration curve by default has an intercept of 0, as defined by the method of quantification (<strong>Settings</strong> menu,
+        <strong>Molecule Settings</strong>, <strong>Quantification</strong> tab). Using a single concentration in the external calibration runs
+        defines a “single point” at that concentration and the average Light:Heavy ratio of the measured runs. This point and the zero intercept,
+        thus, define the linear equation used to calibrate all other runs. The <strong>Calibration Curve</strong> graph shows the Unknown and Quality
+        Control points plotted on that line, because you did not enter known concentrations for them. In some experiments, quality control runs are
+        used where the concentrations are known, but in this case the quality control runs are technical replicates of a sample pooled from the
+        unknown samples.</p>
+    <p>The <strong>Document Grid</strong> or <strong>Report Grid</strong> can be used to export quantitative data (in micromolar) for each sample
+        analyzed.</p>
+    <h1>Conclusion</h1>
+    <p>In this tutorial, you have learned how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas
+        and adducts. You imported a multi-replicate data set collected on a Thermo Q Exactive Orbitrap mass spectrometer for a set of plasma samples,
+        , and saw how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data. You
+        applied external single-point calibration to derive micromolar values for each analyte in each run where the concentration was unknown.</p>
+</body>
+
+</html>
