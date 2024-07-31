@@ -81,9 +81,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                _ardiaAccount_CurrentlyLoggedIn = null;
+                if (_ardiaAccount_CurrentlyLoggedIn != null)
+                {
+                    _ardiaAccount_CurrentlyLoggedIn = null;
 
-                process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+                    process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+                }
             }
             catch
             {
