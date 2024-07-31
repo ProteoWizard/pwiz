@@ -1,0 +1,359 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skylineの絶対定量化法</h1>
+    <h1>はじめに</h1>
+    <p>本チュートリアルでは選択イオンモニタリング（SRM: Selected Ion Monitoring）法を使ってターゲット（標的）タンパク質の絶対量を求める方法を紹介します。ここでは安定同位体標識ペプチドを内部標準に用いた外部標準法による校正曲線作成を例に説明します。</p>
+    <p>ペプチドの絶対存在量測定は、一点か複数点検量のいずれでもできます。単一点内部校正絶対存在量測定は、安定同位体標識したターゲットペプチドを試料に一定量加えて測定します。試料中のターゲットペプチドの絶対量は、標識されていないターゲットペプチドと安定同位体標識されたターゲットペプチドの比率から計算できます<sup>1</sup>。この手法では標識されていないペプチドと安定同位体標識のペプチドの比率が2の場合、単純に標的ペプチドが試料中に絶対量で安定同位体標識されたペプチドの2倍量存在するということになります。これはペプチド応答の勾配が1ということになります。さらに、単一点内部校正を使用するこのアプローチは、ライトペプチドもヘビーペプチドも質量分析検出器の線形範囲であるという仮定のもとに成り立っています。しかしながら、この仮定は常に正しいわけではなく非線形の可能性もあります<sup>2,3,4,5</sup>。
+    </p>
+    <p>一方、複数の濃度で校正曲線を作成する場合は、校正曲線の勾配が1ではない場合にも適用できます。この方法では、複数の異なる濃度の標準ペプチドを用いて校正曲線を作成します。試料内のペプチド信号強度から試料内のターゲットペプチドの濃度を計算します<sup>3</sup>。ただし、この方法は校正曲線を作成するために質量分析計を用いた測定が複数回必要となります。
+    </p>
+    <p>外部標準法による校正曲線による絶対定量化の精度改善には安定同位体標識されたペプチドを内部標準をして使用するのが一般的です<sup>6</sup>。ペプチドのイオン強度は、試料調製、オートサンプラーまたはクロマトグラフィー分離のブレなど様々な要素に影響されます。そこでキャリブラントと試料のそれぞれに同じ量の安定同位体標識ペプチドを添加して正規化するだけでなく、キャリブラント対標準、および試料対標準の比率測定をします。この手法を用いる利点は比率が試料調製、オートサンプラー、またはクロマトグラフィーでの分離のブレによる影響を無視できる点です。安定同位体標識されたペプチドを内部標準にしてに外部標準法による校正曲線の作成では、測定で使用する試料を必要最小量にしながらも正確で精度の高い測定が可能となります。
+    </p>
+    <h1>実験概要</h1>
+    <p>本チュートリアルでは、GSTタグ（<strong>チュートリアル図1A</strong>）内の「ターゲット（標的）タンパク質に特異的」なペプチドをもとにGSTタグのタンパク質の絶対存在量を測定した（Stergachis et
+        al.<sup>7</sup>）公開データを使用します。絶対定量化ではまず対象となるタンパク質の定量化に使用できる「ターゲット（標的）タンパク質に特異的」なペプチドを複数見つけることが重要です。例えばペプチドIEAIPQIDKはGSTタグ内の他のトリプシン酵素処理で得られるペプチドと比較して、信号強度も強く、「ターゲット（標的）タンパク質に特異的」であると認識されました（未公開データ）。またこのペプチドは、他のヒトグルタチオン結合タンパク質とは異なり、この住血吸虫GSTタグ特異的です。
+    </p>
+    <p>この実験で登場するインフレームGSTタグを含むFOXN1タンパク質を、まず<em>In
+            vitro</em>転写/翻訳で生成し、その後グルタチオン樹脂（<strong>チュートリアル図1B</strong>）を使用して完全長タンパク質を精製しました。次に安定同位体標識したIEAIPQIDKペプチドを溶出バッファー液に添加、酵素処理をした後、Thermo TSQ
+        Vantage（四重極質量分析計）を用いて選択イオンモニタリング（SRM）で分析しました。97%以上の純度でに精製され、アミノ酸分析で濃度確認済みのさまざまな量の未標識IEAIPQIDKペプチドを使用して外部標準法による校正曲線が作成できます。安定同位体標識のIEAIPQIDKペプチドも、FOXN1-GNT試料と同じ濃度でこれらのキャリブラントに添加しています（<strong>チュートリアル図1C</strong>）。各試料内の安定同位体標識ペプチドの濃度が同じであれば値（濃度）はいくらであってもかまいませんが、試料内の安定同位体標識ペプチド量はFOXN1-GSTから生じる未標識のペプチドと量的に近いのが望ましいです。またFOXN1-GSTの未標識ペプチドの濃度はキャリブラントを使用して検定した濃度範囲の中央値に近いのが理想です。
+    </p>
+    <p><img src="image-0.png" /></p>
+    <p><strong>チュートリアル図1. 実験概要</strong></p>
+    <p>(<strong>A</strong>) 住血吸虫GSTタグタンパク質シークエンス。定量化目的に使用するトリプシンペプチドは赤で示されています。</p>
+    <p>(<strong>B</strong>) タグ付きタンパク質の合成、濃縮、消化、分析の図。</p>
+    <p>(<strong>C</strong>) モニタした試料と、それぞれにおけるライトおよびヘビーIEAIPQIDKペプチドの存在量。 </p>
+    <h1>はじめに</h1>
+    <p>チュートリアルを始める前に、以下のzipファイルをダウンロードしてください。</p>
+    <p><a href="https://skyline.ms/tutorials/AbsoluteQuant.zip">https://skyline.ms/tutorials/AbsoluteQuant.zip</a></p>
+    <p>この中のファイルを、以下のコンピュータ上のフォルダへ解凍します。</p>
+    <p>C:\Users\absterga\Documents</p>
+    <p>これにより新しいフォルダが作成されます。</p>
+    <p>C:\Users\absterga\Documents\AbsoluteQuant</p>
+    <p><a id="_Hlk32583422"></a>本チュートリアルを始める前からすでにSkylineを使用している場合は、Skylineをデフォルト設定に戻すことをお勧めします。デフォルト設定に戻すには、以下の操作を行います。 </p>
+    <ul>
+        <li>Skylineを起動します。</li>
+        <li><strong>開始ページ</strong>で、以下の図に示される<strong>空のドキュメント</strong>をクリックします。 </li>
+    </ul>
+    <p><img src="image-1.png" /></p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで、[ <strong>デフォルト</strong> ] をクリックします。</li>
+        <li>現在の設定を保存するかどうかを尋ねるフォームで [ <strong>いいえ</strong> ] をクリックします。</li>
+    </ul>
+    <p>これでSkylineのドキュメント設定がデフォルトにリセットされます。</p>
+    <p>このチュートリアルはプロテオミクス用なので、以下のようにプロテオミクス用インターフェイスの選択をすることもできます。</p>
+    <ul class="keep-next">
+        <li>Skylineウィンドウの右上隅にあるユーザーインターフェイス管理をクリックし、[ <strong>プロテオミクス用インターフェイス</strong> ] を選択します。 </li>
+    </ul>
+    <p><img src="image-2.png" /></p>
+    <p><a id="_Hlk32583357"></a>Skylineはウィンドウの右上隅のプロテインアイコン <img src="image-3.png" />で表示されるプロテオミクスモードで作動しています。</p>
+    <p>新しい空のドキュメントでSkylineが表示されます。</p>
+    <h1>トランジションリストの生成</h1>
+    <p>Skylineにペプチドシークエンスを入力する前にペプチドおよびトランジションの設定が（実験の目的に対して）正しいか確認することが重要です。以下の設定は<sup>13</sup>C<sub>6</sub><sup>15</sup>N<sub>2</sub>
+        L-Lysine安定同位体標識（内部標準）ペプチドに対しての設定となります。従って上記とは別の安定同位体標識を使用する場合は、ペプチド設定で適切な同位体修飾をまず選択してください。 </p>
+    <h2>トランジション設定を行う</h2>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>トランジション設定</strong> ] をクリックします。</li>
+        <li>[ <strong>予測</strong> ] タブをクリックします。 </li>
+        <li>[ <strong>衝突エネルギー</strong> ] ドロップダウンリストから測定に使用する装置を選択します。この実験では、すべての測定を<strong>Thermo TSQ Vantageで行いました</strong>。 </li>
+    </ul>
+    <p class="keep-next">フォームは以下のようになります。</p>
+    <p><img src="image-4.png" /></p>
+    <ul>
+        <li>[ <strong>フィルタ</strong> ] タブをクリックします。 </li>
+        <li>ここではイオンの電荷数やタイプについてデフォルト設定をそのまま使用します。 </li>
+        <li>[ <strong>特別なイオン</strong> ] リストで、[ N-terminal to Proline] チェックボックスをオフにします。</li>
+        <li>[ <strong>プロダクトイオンの選択</strong> ] – [ <strong>開始点</strong> ] フィールドで「イオン3」を選択します。</li>
+        <li>[ <strong>プロダクトイオンの選択</strong> ] – [ <strong>終了点</strong> ] フィールドで「最後のイオン–1」を選択します。</li>
+    </ul>
+    <div style="margin-left : 40px;">
+        <table>
+            <tr>
+                <td>
+                    <p>注：SkylineではIEAIPQIDKのような9アミノ酸ペプチドの場合にy<sub>n-1</sub>（またはy8）に相当する最後のイオンを選択してください。本実験では「n-1」と混同する可能性を考慮して「最後のイオン–1」を使用しました。</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p class="keep-next">[ <strong>トランジションの設定</strong> ] フォームは以下のようになります。 </p>
+    <p> <img src="image-5.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <h2>ペプチド設定を行う</h2>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>ペプチド設定</strong> ] をクリックします。</li>
+        <li>[ <strong>修飾</strong> ] タブをクリックします。 </li>
+        <li>[ <strong>同位体修飾</strong> ] リストの右にある [ <strong>リストを編集</strong> ] ボタンをクリックします。</li>
+        <li>表示される [ <strong>同位体修飾を編集</strong> ] フォームで [ <strong>追加</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>名前</strong> ] ドロップダウンリストで「Label:13C(6)15N(2) (C-term K)」を選択します。</li>
+    </ul>
+    <p class="keep-next">[ <strong>同位体修飾を編集</strong> ] フォームは以下のようになります。</p>
+    <p><img src="image-6.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>同位体修飾</strong> ] リストで新しい [ Label:13C(6)15N(2) (C-term K) ] 修飾チェックボックスをオンにします。</li>
+    </ul>
+    <p class="keep-next">[ <strong>ペプチド設定</strong> ] フォームは以下のようになります。</p>
+    <p><img src="image-7.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。 </li>
+    </ul>
+    <p>実験で安定同位体標識の内部標準ペプチドを使用するため、[ <strong>内部標準タイプ</strong> ] ドロップダウンリストはデフォルトの「<strong>heavy</strong>」のままでかまいません。</p>
+    <h2>ペプチドシークエンスを挿入</h2>
+    <ul>
+        <li>[ <strong>編集</strong> ] メニューで [ <strong>挿入</strong> ] を選択し、[ <strong>ペプチド</strong> ] をクリックします。</li>
+        <li>「IEAIPQIDK」を [ <strong>ペプチドシークエンス</strong> ] セルに貼り付け、「GST-tag」を [ <strong>タンパク質名</strong> ] セルへ貼り付けます。</li>
+    </ul>
+    <p><img src="image-8.png" /></p>
+    <ul>
+        <li>[ <strong>挿入</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">上記手順を実施すると、Skylineの画面は以下のようになります。</p>
+    <p><img src="image-9.png" /></p>
+    <p>最初のトランジションリストをエクスポートする前に、まず次の手順でドキュメントをAbsoluteQuantフォルダに保存します。</p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで [ <strong>保存</strong> ] をクリックします（Ctrl-S）。</li>
+        <li>AbsoluteQuantフォルダに移動します。</li>
+        <li>[ <strong>ファイル名</strong> ] フィールドに「AbsoluteQuantTutorial」と入力します。</li>
+        <li>[ <strong>保存</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <h2>トランジションリストのエクスポート</h2>
+    <p>質量分析計で実験をする場合当然ながら装置メソッドが必要です。Skylineのテンプレートメソッドを装置メソッドへ直接エクスポートすることもできます。ここではトランジションリストをエクスポートします（この作業はあらかじめテンプレートの装置メソッドにインポートしておいてもよいです）。これには、以下の操作を行います。
+    </p>
+    <ul>
+        <li>[ <strong>ファイル </strong>] メニューで [ <strong>エクスポート</strong> ] を選択し、[ <strong>トランジションリスト</strong> ] をクリックします。</li>
+    </ul>
+    <p>以下のような [ <strong>トランジションリストをエクスポート</strong> ] フォームが表示されます。[ <strong>トランジション設定</strong> ] – [ <strong>予測</strong> ] タブの [
+        <strong>衝突エネルギー</strong> ] で「Thermo TSQ Vantage」を選択しているので、[ <strong>装置タイプ</strong> ] リストには自動的に「Thermo」が選択されています。</p>
+    <p><img src="image-10.png" /></p>
+    <p>また、他の設定もすべてこのターゲットリストに適切であることがわかります。</p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>ファイル名</strong> ] フィールドに「GST-tag」と入力します。</li>
+        <li>[ <strong>保存</strong> ] ボタンをクリックします。 </li>
+    </ul>
+    <p>これでトランジションリストがThermo TSQ Vantage四重極質量分析計テンプレートメソッドファイルにインポートされました。今度は生成されたGST-tag.csvファイルをExcelまたはテキストエディタで開き確認します。</p>
+    <h1>キャリブラントを用いたSRMデータ分析</h1>
+    <p>この次のセクションでは、<strong>チュートリアル図1C</strong>で示されている9個の試料を使って作業します。.RAWファイルをSkylineにインポートしてデータを表示します。データは、前のセクションで作成し保存したSkylineドキュメントにインポートされます。インポートするファイルは、このチュートリアルのために作成したAbsoluteQuantフォルダに入っており、以下のような名称になっています。
+    </p>
+    <ul>
+        <li>Standard_1.RAW</li>
+        <li>Standard_2.RAW</li>
+        <li>Standard_3.RAW</li>
+        <li>Standard_4.RAW</li>
+        <li>Standard_5.RAW</li>
+        <li>Standard_6.RAW</li>
+        <li>Standard_7.RAW</li>
+        <li>Standard_8.RAW</li>
+        <li>FOXN1-GST.RAW</li>
+    </ul>
+    <p>これらのRAWファイルは多くのデータ群に散剤しているものから無作為に収集されたものです。Skylineで処理した結果は原文（<a
+            href="http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip">http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip</a>）の<strong>Supplemental
+            Data 2</strong>にあります。</p>
+    <p>FOXN1-GST試料を見る前に、まず標準の理解を深めましょう。</p>
+    <h2>SkylineへのRAWファイルインポート</h2>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで[ <strong>インポート</strong> ] を選択して [ <strong>結果</strong> ] をクリックします。</li>
+        <li>デフォルトの [ <strong>ファイルにシングルインジェクション繰り返し測定を追加</strong> ] オプションを受け入れます。</li>
+    </ul>
+    <p class="keep-next">[ <strong>結果をインポート</strong> ] フォームは以下のようになります。</p>
+    <p><img src="image-11.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <ul class="keep-next">
+        <li>[ <strong>結果ファイルをインポート</strong> ] フォームで、以下の8個の「Standard」RAWファイルを選択します。</li>
+    </ul>
+    <p><img src="image-12.png" /></p>
+    <ul>
+        <li>[ <strong>開く</strong> ] をクリックしてファイルをインポートします。</li>
+        <li>繰り返し名の作成で「Standard_」プリフィックスを削除するオプションが表示されたら、[ <strong>削除しない</strong> ] オプションを選択します。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>すべてのRAWファイルインポートに時間がかかることもあります。</p>
+    <p>各標準のクロマトグラフピークを確認するために、タイル表示ですべてのクロマトグラムを並べて表示するのが最良です。このレイアウトを表示するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>グラフを配置</strong> ] を選択して [ <strong>タイル</strong> ] をクリックします（Ctrl+T）。 </li>
+        <li>[ <strong>ターゲット</strong> ] 表示でIEAIPQIDKペプチドを選択します。</li>
+    </ul>
+    <p class="keep-next">以下のように各標準の安定同位体標識（青）と未標識（赤）のクロマトグラムが同時にグラフに表示されるのがわかります。</p>
+    <p><img src="image-13.png" /></p>
+    <p>標準のクロマトグラフトレースを見るときに注目すべきは以下の項目です。</p>
+    <ul>
+        <li>各標準の安定同位体標識と未標識のトレース両方でピークが正しく選択されている。</li>
+        <li>ピーク形状がガウス分布状であり、形状がギザギザしていない（s/n比が悪すぎない）。仮にピークのs/n比が悪い場合は試料を再実行することを勧めます。</li>
+        <li>各標準で保持時間が大きくずれてない。もし測定ごとに保持時間が大きくずれている場合、クロマトグラフィー分離の質と再現性を再度確認してください。</li>
+    </ul>
+    <h1>FOXN1-GST試料のSRMデータ分析</h1>
+    <p>次に上述までの説明と同様FOXN1-GST.RAWファイルを現在のSkylineドキュメントにインポートします。</p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで、[ <strong>インポート</strong> ] を選択して [ <strong>結果</strong> ] をクリックします。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>FOXN1-GST.RAWファイルを選択します。</li>
+        <li>[ <strong>開く</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>この試料が正しいことを確認するため、安定同位体標識および未標識ペプチド試料のピーククロマトグラフトレース、フラグメンテーションパターン、保持時間を調べます。以下のようにサマリープロットを表示します。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>保持時間</strong> ] を選択して [ <strong>繰り返し測定比較</strong> ] をクリックします（F8）。</li>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>ピーク領域</strong> ] を選択して [ <strong>繰り返し測定比較</strong>]をクリックします（F7）。</li>
+        <li><strong>ピーク領域</strong>グラフで右クリックし、[<strong>正規化</strong>] を選択して [ <strong>合計</strong> ] をクリックし、総信号強度に対する各トランジションの相対強度を表示します。</li>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>すべてを積分</strong> ] をクリックします。これですべてのトランジションの信号が検出可能であることを前提にしたメソッドが最適化されていることになります。</li>
+    </ul>
+    <p>以下のようにウィンドウを並べてより見やすくします。</p>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>グラフを配置</strong> ] を選択して [ <strong>タブ付き</strong> ] をクリックします（Ctrl+Shift+T）。 </li>
+        <li><strong>繰り返し測定比較</strong>グラフのタイトルバーをクリックし、メインSkylineウィンドウの右端にドラッグします。</li>
+    </ul>
+    <p class="keep-next">これで未標識ペプチドのプリカーサーイオン</p>
+    <p><img src="image-14.png" /></p>
+    <p class="keep-next">または安定同位体標識ペプチドのプリカーサーイオンを選択できます。</p>
+    <p><img src="image-15.png" /></p>
+    <p>以下を確認します。</p>
+    <ul>
+        <li>ピーク形状はガウス分布状で、形状がギザギザしていない（s/n比が悪すぎない）。</li>
+        <li>保持時間が標準とFOXN1-GST試料で大きくずれていない。</li>
+        <li>各トランジションの総信号強度に対する相対強度比が各測定間で大きくずれていない。 </li>
+    </ul>
+    <p>上記の条件が当てはまらない場合、ピーク選択が間違っている（ピーク同定の問題）、あるいは夾雑物による干渉がある可能性があります。 </p>
+    <p>データを表示するもう1つの方法は以下のやり方です。 </p>
+    <ul>
+        <li>[ <strong>ターゲット</strong> ] 表示でもう一度IEAIPQIDKペプチドを選択します。 </li>
+        <li><strong>ピーク領域</strong>グラフを右クリックし、[ <strong>正規化</strong> ] を選択して [ <strong>安定同位体標識</strong> ] をクリックし、各標準とFOXN1-GSST試料の未標識と安定同位体標識の比率を表示します。
+        </li>
+    </ul>
+    <p><strong>ピーク領域</strong>グラフに表示される値は校正曲線に使用する値となります。このグラフから、FOXN1-GST試料の未標識と安定同位体標識比率は校正点のおよそ中央にあることが簡単にわかります。この濃度範囲は定量化に最適で理想的です。 </p>
+    <p><img src="image-16.png" /></p>
+    <h1>校正曲線の作成</h1>
+    <p>このチュートリアルでは、Skylineによる校正曲線作成を紹介します。 </p>
+    <h2>定量化設定</h2>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>ペプチド設定</strong> ] をクリックします。</li>
+        <li>[ <strong>定量化</strong> ] タブをクリックします。</li>
+        <li>[ <strong>回帰適合</strong> ] ドロップダウンリストで「線形」を選択します。</li>
+        <li>[ <strong>正規化メソッド</strong> ] ドロップダウンリストで、「同位体標識に対する未標識の比率」を選択します。</li>
+        <li>[ <strong>単位</strong> ] フィールドに「fmol/ul」と入力します。</li>
+    </ul>
+    <p class="keep-next">[ <strong>ペプチド設定</strong> ] フォームは以下のようになります。</p>
+    <p><img src="image-17.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <h2>外部標準のアナライト濃度指定</h2>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>ドキュメントグリッド</strong> ] をクリックします。</li>
+        <li>[ <strong>ドキュメントグリッド</strong> ] の左上にある [ <strong>レポート</strong> ] ドロップダウンリストをクリックし、[ <strong>繰り返し測定</strong> ] を選択します。</li>
+        <li>以下のデータをコピーし、[ <strong>ドキュメントグリッド</strong> ] に貼り付けて「Standard_#」繰り返し測定の [ <strong>試料タイプ</strong> ] をそれぞれ「標準」に、[ <strong>アナライト濃度</strong> ]
+            を以下の値に設定します。</li>
+    </ul>
+    <div style="margin-left : 20px;">
+        <table>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>40</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>12.5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>2.5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>1</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>0.5</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>0.25</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>標準</p>
+                </td>
+                <td>
+                    <p>0.1</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <ul>
+        <li>FOXN1-GSTの行で、[ <strong>試料タイプ</strong> ] を「不明」に設定します。</li>
+    </ul>
+    <p class="keep-next">[<strong>ドキュメントグリッド: 繰り返し測定</strong> ] フォームは以下のようになります。</p>
+    <p><img src="image-18.png" /></p>
+    <h2>校正曲線表示</h2>
+    <ul>
+        <li>[ <strong>表示</strong> ] メニューで、[ <strong>校正曲線</strong> ] をクリックします。</li>
+        <li>[ <strong>ドキュメントグリッド</strong> ] で [ <strong>繰り返し測定</strong> ] 列のFOXN1-GSTをクリックします。</li>
+    </ul>
+    <p>以下のようなグラフが表示されます。</p>
+    <p><img src="image-19.png" /></p>
+    <p>校正曲線線に勾配と切片が表示されています。これを標準の<strong>y = m * x + b</strong>式と共に使用してピーク領域比と濃度を変換できます。 </p>
+    <p><em>（濃度＝勾配＊ピーク領域比＋切片）</em></p>
+    <p><em>濃度＝（ピーク領域比―切片）/勾配</em></p>
+    <p>選択された（繰り返し測定で計算された）濃度も校正曲線上に表示されます。ここでは試料の濃度が1.8554 fmol/ulと計算されました。</p>
+    <h1>まとめ</h1>
+    <p>本チュートリアルでは、さまざまな絶対存在量の長所を説明し、安定同位体標識したペプチドを用いた外部標準法校正曲線を使用した絶対存在量の決定方法を実証しました。この手法では試料の内生量が非常に低い場合でも正規化を行い正しい積分範囲を見い出しました。正確で精度の高い絶対量も可能であるため、実際の測定で使用する試料の量も必要最小限に抑えることもできるという大きなメリットがあります。
+    </p>
+    <h1>参考文献</h1>
+    <ol>
+        <li>Gerber, S.A., Rush, J., Stemman, O., Kirschner, M.W. &amp; Gygi, S.P. Absolute quantification of proteins and phosphoproteins from cell
+            lysates by tandem MS. <em>Proceedings of the National Academy of Sciences of the United States of America</em><strong> 100</strong>,
+            6940-6945 (2003).</li>
+        <li>MacCoss, M.J., Wu, C.C., Matthews, D.E. &amp; Yates, J.R. Measurement of the isotope enrichment of stable isotope-labeled proteins using
+            high-resolution mass spectra of peptides. <em>Analytical Chemistry</em><strong> 77</strong>, 7646-53 (2005).</li>
+        <li>Lavagnini, I. &amp; Magno, F. A statistical overview on univariate calibration, inverse regression, and detection limits: Application to
+            gas chromatography/mass spectrometry technique. <em>Mass spectrometry reviews</em><strong> 26</strong>, 1-18 </li>
+        <li>Watson, J.T. Mass Spectrometry. <em>Methods in Enzymology</em><strong> 193</strong>, 86–106 (1990).</li>
+        <li>Patterson, B.W. &amp; Wolfe, R.R. Concentration dependence of methyl palmitate isotope ratios by electron impact ionization gas
+            chromatography/mass spectrometry. <em>Biological mass spectrometry</em><strong> 22</strong>, 481-6 (1993). </li>
+        <li>MacCoss, M.J., Toth, M.J. &amp; Matthews, D.E. Evaluation and optimization of ion-current ratio measurements by selected-ion-monitoring
+            mass spectrometry. <em>Analytical chemistry</em><strong> 73</strong>, 2976-84 (2001).</li>
+        <li>Stergachis, A., MacLean, B., Lee, K., Stamatoyannopoulos, J. A., &amp; MacCoss, M. J., Rapid empirical discovery of optimal peptides for
+            targeted proteomics <em>Nature Methods</em> In press</li>
+    </ol>
+</body>
+
+</html>
