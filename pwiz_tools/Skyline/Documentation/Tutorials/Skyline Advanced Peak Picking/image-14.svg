@@ -1,0 +1,176 @@
+<?xml version="1.0"  encoding="UTF-8" standalone="no"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="428.0000" height="432.0000">
+<g transform="translate(-0.0000, -0.0000)">
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 0.0000,0.0000 L 0.0000,6912.0000 L 6848.0000,6912.0000 L 6848.0000,0.0000 L 0.0000,0.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 0.0000,0.0000 L 0.0000,6912.0000 L 6848.0000,6912.0000 L 6848.0000,0.0000 L 0.0000,0.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="700" text-anchor="start" x="112.0000" y="25.0000" font-size="16.0000" ><![CDATA[Q values of target peptides]]></text>
+<path d="M 66.0000,60.0000 L 66.0000,372.0000 L 401.0000,372.0000 L 401.0000,60.0000 L 66.0000,60.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+<path d="M 86.0000,107.0000 L 86.0000,372.0000 L 87.0000,372.0000 L 87.0000,107.0000 L 86.0000,107.0000 Z" stroke-width="1px" stroke="#171795"  fill="#171795" />
+<path d="M 87.0000,107.0000 L 87.0000,372.0000 L 88.0000,372.0000 L 88.0000,107.0000 L 87.0000,107.0000 Z" stroke-width="1px" stroke="#F5F5FB"  fill="#F5F5FB" />
+<path d="M 88.0000,107.0000 L 88.0000,372.0000 L 89.0000,372.0000 L 89.0000,107.0000 L 88.0000,107.0000 Z" stroke-width="1px" stroke="#D5D5EC"  fill="#D5D5EC" />
+<path d="M 89.0000,107.0000 L 89.0000,372.0000 L 90.0000,372.0000 L 90.0000,107.0000 L 89.0000,107.0000 Z" stroke-width="1px" stroke="#B5B5DE"  fill="#B5B5DE" />
+<path d="M 90.0000,107.0000 L 90.0000,372.0000 L 91.0000,372.0000 L 91.0000,107.0000 L 90.0000,107.0000 Z" stroke-width="1px" stroke="#9595CF"  fill="#9595CF" />
+<path d="M 91.0000,107.0000 L 91.0000,372.0000 L 92.0000,372.0000 L 92.0000,107.0000 L 91.0000,107.0000 Z" stroke-width="1px" stroke="#7676C1"  fill="#7676C1" />
+<path d="M 92.0000,107.0000 L 92.0000,372.0000 L 93.0000,372.0000 L 93.0000,107.0000 L 92.0000,107.0000 Z" stroke-width="1px" stroke="#5656B2"  fill="#5656B2" />
+<path d="M 93.0000,107.0000 L 93.0000,372.0000 L 94.0000,372.0000 L 94.0000,107.0000 L 93.0000,107.0000 Z" stroke-width="1px" stroke="#3636A4"  fill="#3636A4" />
+<defs><clipPath id="clip-41"><path d="M 67.0000,61.0000 L 402.0000,61.0000 L 402.0000,372.0000 L 67.0000,372.0000 L 67.0000,61.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-41)" d="M 1388.0000,1721.0000 L 1515.0000,1721.0000 L 1515.0000,5952.0000 L 1388.0000,5952.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 102.0000,364.0000 L 102.0000,372.0000 L 103.0000,372.0000 L 103.0000,364.0000 L 102.0000,364.0000 Z" stroke-width="1px" stroke="#151594"  fill="#151594" />
+<path d="M 103.0000,364.0000 L 103.0000,372.0000 L 104.0000,372.0000 L 104.0000,364.0000 L 103.0000,364.0000 Z" stroke-width="1px" stroke="#F4F4FA"  fill="#F4F4FA" />
+<path d="M 104.0000,364.0000 L 104.0000,372.0000 L 105.0000,372.0000 L 105.0000,364.0000 L 104.0000,364.0000 Z" stroke-width="1px" stroke="#D4D4EB"  fill="#D4D4EB" />
+<path d="M 105.0000,364.0000 L 105.0000,372.0000 L 106.0000,372.0000 L 106.0000,364.0000 L 105.0000,364.0000 Z" stroke-width="1px" stroke="#B3B3DD"  fill="#B3B3DD" />
+<path d="M 106.0000,364.0000 L 106.0000,372.0000 L 107.0000,372.0000 L 107.0000,364.0000 L 106.0000,364.0000 Z" stroke-width="1px" stroke="#9393CE"  fill="#9393CE" />
+<path d="M 107.0000,364.0000 L 107.0000,372.0000 L 108.0000,372.0000 L 108.0000,364.0000 L 107.0000,364.0000 Z" stroke-width="1px" stroke="#7474C0"  fill="#7474C0" />
+<path d="M 108.0000,364.0000 L 108.0000,372.0000 L 109.0000,372.0000 L 109.0000,364.0000 L 108.0000,364.0000 Z" stroke-width="1px" stroke="#5454B1"  fill="#5454B1" />
+<path d="M 109.0000,364.0000 L 109.0000,372.0000 L 110.0000,372.0000 L 110.0000,364.0000 L 109.0000,364.0000 Z" stroke-width="1px" stroke="#3434A3"  fill="#3434A3" />
+<defs><clipPath id="clip-18467"><path d="M 67.0000,61.0000 L 402.0000,61.0000 L 402.0000,372.0000 L 67.0000,372.0000 L 67.0000,61.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-18467)" d="M 1643.0000,5828.0000 L 1770.0000,5828.0000 L 1770.0000,5952.0000 L 1643.0000,5952.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 118.0000,368.0000 L 118.0000,372.0000 L 119.0000,372.0000 L 119.0000,368.0000 L 118.0000,368.0000 Z" stroke-width="1px" stroke="#131394"  fill="#131394" />
+<path d="M 119.0000,368.0000 L 119.0000,372.0000 L 120.0000,372.0000 L 120.0000,368.0000 L 119.0000,368.0000 Z" stroke-width="1px" stroke="#F2F2F9"  fill="#F2F2F9" />
+<path d="M 120.0000,368.0000 L 120.0000,372.0000 L 121.0000,372.0000 L 121.0000,368.0000 L 120.0000,368.0000 Z" stroke-width="1px" stroke="#D2D2EA"  fill="#D2D2EA" />
+<path d="M 121.0000,368.0000 L 121.0000,372.0000 L 122.0000,372.0000 L 122.0000,368.0000 L 121.0000,368.0000 Z" stroke-width="1px" stroke="#B2B2DC"  fill="#B2B2DC" />
+<path d="M 122.0000,368.0000 L 122.0000,372.0000 L 123.0000,372.0000 L 123.0000,368.0000 L 122.0000,368.0000 Z" stroke-width="1px" stroke="#9292CD"  fill="#9292CD" />
+<path d="M 123.0000,368.0000 L 123.0000,372.0000 L 124.0000,372.0000 L 124.0000,368.0000 L 123.0000,368.0000 Z" stroke-width="1px" stroke="#7272BF"  fill="#7272BF" />
+<path d="M 124.0000,368.0000 L 124.0000,372.0000 L 125.0000,372.0000 L 125.0000,368.0000 L 124.0000,368.0000 Z" stroke-width="1px" stroke="#5252B0"  fill="#5252B0" />
+<path d="M 125.0000,368.0000 L 125.0000,372.0000 L 126.0000,372.0000 L 126.0000,368.0000 L 125.0000,368.0000 Z" stroke-width="1px" stroke="#3232A2"  fill="#3232A2" />
+<defs><clipPath id="clip-6334"><path d="M 67.0000,61.0000 L 402.0000,61.0000 L 402.0000,372.0000 L 67.0000,372.0000 L 67.0000,61.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-6334)" d="M 1898.0000,5890.0000 L 2026.0000,5890.0000 L 2026.0000,5952.0000 L 1898.0000,5952.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 134.0000,370.0000 L 134.0000,372.0000 L 135.0000,372.0000 L 135.0000,370.0000 L 134.0000,370.0000 Z" stroke-width="1px" stroke="#111193"  fill="#111193" />
+<path d="M 135.0000,370.0000 L 135.0000,372.0000 L 136.0000,372.0000 L 136.0000,370.0000 L 135.0000,370.0000 Z" stroke-width="1px" stroke="#F0F0F8"  fill="#F0F0F8" />
+<path d="M 136.0000,370.0000 L 136.0000,372.0000 L 137.0000,372.0000 L 137.0000,370.0000 L 136.0000,370.0000 Z" stroke-width="1px" stroke="#D0D0EA"  fill="#D0D0EA" />
+<path d="M 137.0000,370.0000 L 137.0000,372.0000 L 138.0000,372.0000 L 138.0000,370.0000 L 137.0000,370.0000 Z" stroke-width="1px" stroke="#B0B0DB"  fill="#B0B0DB" />
+<path d="M 138.0000,370.0000 L 138.0000,372.0000 L 139.0000,372.0000 L 139.0000,370.0000 L 138.0000,370.0000 Z" stroke-width="1px" stroke="#9090CC"  fill="#9090CC" />
+<path d="M 139.0000,370.0000 L 139.0000,372.0000 L 140.0000,372.0000 L 140.0000,370.0000 L 139.0000,370.0000 Z" stroke-width="1px" stroke="#7171BE"  fill="#7171BE" />
+<path d="M 140.0000,370.0000 L 140.0000,372.0000 L 141.0000,372.0000 L 141.0000,370.0000 L 140.0000,370.0000 Z" stroke-width="1px" stroke="#5151AF"  fill="#5151AF" />
+<path d="M 141.0000,370.0000 L 141.0000,372.0000 L 142.0000,372.0000 L 142.0000,370.0000 L 141.0000,370.0000 Z" stroke-width="1px" stroke="#3131A1"  fill="#3131A1" />
+<defs><clipPath id="clip-26500"><path d="M 67.0000,61.0000 L 402.0000,61.0000 L 402.0000,372.0000 L 67.0000,372.0000 L 67.0000,61.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-26500)" d="M 2153.0000,5921.0000 L 2281.0000,5921.0000 L 2281.0000,5952.0000 L 2153.0000,5952.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 182.0000,370.0000 L 182.0000,372.0000 L 183.0000,372.0000 L 183.0000,370.0000 L 182.0000,370.0000 Z" stroke-width="1px" stroke="#0C0C90"  fill="#0C0C90" />
+<path d="M 183.0000,370.0000 L 183.0000,372.0000 L 184.0000,372.0000 L 184.0000,370.0000 L 183.0000,370.0000 Z" stroke-width="1px" stroke="#EBEBF6"  fill="#EBEBF6" />
+<path d="M 184.0000,370.0000 L 184.0000,372.0000 L 185.0000,372.0000 L 185.0000,370.0000 L 184.0000,370.0000 Z" stroke-width="1px" stroke="#CBCBE7"  fill="#CBCBE7" />
+<path d="M 185.0000,370.0000 L 185.0000,372.0000 L 186.0000,372.0000 L 186.0000,370.0000 L 185.0000,370.0000 Z" stroke-width="1px" stroke="#ABABD9"  fill="#ABABD9" />
+<path d="M 186.0000,370.0000 L 186.0000,372.0000 L 187.0000,372.0000 L 187.0000,370.0000 L 186.0000,370.0000 Z" stroke-width="1px" stroke="#8B8BCA"  fill="#8B8BCA" />
+<path d="M 187.0000,370.0000 L 187.0000,372.0000 L 188.0000,372.0000 L 188.0000,370.0000 L 187.0000,370.0000 Z" stroke-width="1px" stroke="#6C6CBC"  fill="#6C6CBC" />
+<path d="M 188.0000,370.0000 L 188.0000,372.0000 L 189.0000,372.0000 L 189.0000,370.0000 L 188.0000,370.0000 Z" stroke-width="1px" stroke="#4B4BAD"  fill="#4B4BAD" />
+<path d="M 189.0000,370.0000 L 189.0000,372.0000 L 190.0000,372.0000 L 190.0000,370.0000 L 189.0000,370.0000 Z" stroke-width="1px" stroke="#2B2B9F"  fill="#2B2B9F" />
+<defs><clipPath id="clip-19169"><path d="M 67.0000,61.0000 L 402.0000,61.0000 L 402.0000,372.0000 L 67.0000,372.0000 L 67.0000,61.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-19169)" d="M 2918.0000,5921.0000 L 3046.0000,5921.0000 L 3046.0000,5952.0000 L 2918.0000,5952.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<path d="M 389.0000,370.0000 L 389.0000,372.0000 L 390.0000,372.0000 L 390.0000,370.0000 L 389.0000,370.0000 Z" stroke-width="1px" stroke="#161695"  fill="#161695" />
+<path d="M 390.0000,370.0000 L 390.0000,372.0000 L 391.0000,372.0000 L 391.0000,370.0000 L 390.0000,370.0000 Z" stroke-width="1px" stroke="#F5F5FA"  fill="#F5F5FA" />
+<path d="M 391.0000,370.0000 L 391.0000,372.0000 L 392.0000,372.0000 L 392.0000,370.0000 L 391.0000,370.0000 Z" stroke-width="1px" stroke="#D4D4EC"  fill="#D4D4EC" />
+<path d="M 392.0000,370.0000 L 392.0000,372.0000 L 393.0000,372.0000 L 393.0000,370.0000 L 392.0000,370.0000 Z" stroke-width="1px" stroke="#B4B4DD"  fill="#B4B4DD" />
+<path d="M 393.0000,370.0000 L 393.0000,372.0000 L 394.0000,372.0000 L 394.0000,370.0000 L 393.0000,370.0000 Z" stroke-width="1px" stroke="#9494CF"  fill="#9494CF" />
+<path d="M 394.0000,370.0000 L 394.0000,372.0000 L 395.0000,372.0000 L 395.0000,370.0000 L 394.0000,370.0000 Z" stroke-width="1px" stroke="#7575C0"  fill="#7575C0" />
+<path d="M 395.0000,370.0000 L 395.0000,372.0000 L 396.0000,372.0000 L 396.0000,370.0000 L 395.0000,370.0000 Z" stroke-width="1px" stroke="#5555B2"  fill="#5555B2" />
+<path d="M 396.0000,370.0000 L 396.0000,372.0000 L 397.0000,372.0000 L 397.0000,370.0000 L 396.0000,370.0000 Z" stroke-width="1px" stroke="#3535A3"  fill="#3535A3" />
+<defs><clipPath id="clip-15724"><path d="M 67.0000,61.0000 L 402.0000,61.0000 L 402.0000,372.0000 L 67.0000,372.0000 L 67.0000,61.0000 Z Z" /></clipPath></defs>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path  clip-path="url(#clip-15724)" d="M 6235.0000,5921.0000 L 6363.0000,5921.0000 L 6363.0000,5952.0000 L 6235.0000,5952.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1069.0000,5952.0000 L 6427.0000,5952.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="69.0000" y="390.0000" font-size="14.0000" ><![CDATA[0.00]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="143.0000" y="390.0000" font-size="14.0000" ><![CDATA[0.01]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="217.0000" y="390.0000" font-size="14.0000" ><![CDATA[0.02]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="291.0000" y="390.0000" font-size="14.0000" ><![CDATA[0.03]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="365.0000" y="390.0000" font-size="14.0000" ><![CDATA[0.04]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="700" text-anchor="start" x="208.0000" y="413.0000" font-size="14.0000" ><![CDATA[Q value]]></text>
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1069.0000,975.0000 L 1069.0000,5952.0000 " stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="43.0000" y="376.0000" font-size="14.0000" ><![CDATA[0]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="39.0000" y="337.0000" font-size="14.0000" ><![CDATA[20]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="39.0000" y="298.0000" font-size="14.0000" ><![CDATA[40]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="39.0000" y="259.0000" font-size="14.0000" ><![CDATA[60]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="39.0000" y="221.0000" font-size="14.0000" ><![CDATA[80]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="182.0000" font-size="14.0000" ><![CDATA[100]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="143.0000" font-size="14.0000" ><![CDATA[120]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="104.0000" font-size="14.0000" ><![CDATA[140]]></text>
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="35.0000" y="65.0000" font-size="14.0000" ><![CDATA[160]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 267.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="255.0000" font-size="14.0000" ><![CDATA[P]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 258.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="246.0000" font-size="14.0000" ><![CDATA[e]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 250.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="238.0000" font-size="14.0000" ><![CDATA[a]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 242.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="230.0000" font-size="14.0000" ><![CDATA[k]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 234.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="222.0000" font-size="14.0000" ><![CDATA[ ]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 230.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="218.0000" font-size="14.0000" ><![CDATA[c]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 222.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="210.0000" font-size="14.0000" ><![CDATA[o]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 213.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="201.0000" font-size="14.0000" ><![CDATA[u]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 204.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="192.0000" font-size="14.0000" ><![CDATA[n]]></text>
+<text font-family="Arial" fill="#000000" transform="rotate(-90, 23.0000, 195.6000) translate(0, 12.6000)" style ="white-space:pre;" font-weight="700" text-anchor="start" x="23.0000" y="183.0000" font-size="14.0000" ><![CDATA[t]]></text>
+<path d="M 66.0000,39.0000 L 66.0000,53.0000 L 154.0000,53.0000 L 154.0000,39.0000 L 66.0000,39.0000 Z" stroke-width="1px" stroke="#FFFFFF"  fill="#FFFFFF" />
+<text font-family="Arial" fill="#000000" style ="white-space:pre;" font-weight="400" text-anchor="start" x="107.0000" y="51.0000" font-size="12.0000" ><![CDATA[Targets]]></text>
+<path d="M 70.0000,43.0000 L 70.0000,50.0000 L 71.0000,50.0000 L 71.0000,43.0000 L 70.0000,43.0000 Z" stroke-width="1px" stroke="#02028C"  fill="#02028C" />
+<path d="M 71.0000,43.0000 L 71.0000,50.0000 L 72.0000,50.0000 L 72.0000,43.0000 L 71.0000,43.0000 Z" stroke-width="1px" stroke="#F8F8FC"  fill="#F8F8FC" />
+<path d="M 72.0000,43.0000 L 72.0000,50.0000 L 73.0000,50.0000 L 73.0000,43.0000 L 72.0000,43.0000 Z" stroke-width="1px" stroke="#EFEFF8"  fill="#EFEFF8" />
+<path d="M 73.0000,43.0000 L 73.0000,50.0000 L 74.0000,50.0000 L 74.0000,43.0000 L 73.0000,43.0000 Z" stroke-width="1px" stroke="#E6E6F4"  fill="#E6E6F4" />
+<path d="M 74.0000,43.0000 L 74.0000,50.0000 L 75.0000,50.0000 L 75.0000,43.0000 L 74.0000,43.0000 Z" stroke-width="1px" stroke="#DDDDF0"  fill="#DDDDF0" />
+<path d="M 75.0000,43.0000 L 75.0000,50.0000 L 76.0000,50.0000 L 76.0000,43.0000 L 75.0000,43.0000 Z" stroke-width="1px" stroke="#D4D4EB"  fill="#D4D4EB" />
+<path d="M 76.0000,43.0000 L 76.0000,50.0000 L 77.0000,50.0000 L 77.0000,43.0000 L 76.0000,43.0000 Z" stroke-width="1px" stroke="#CBCBE7"  fill="#CBCBE7" />
+<path d="M 77.0000,43.0000 L 77.0000,50.0000 L 78.0000,50.0000 L 78.0000,43.0000 L 77.0000,43.0000 Z" stroke-width="1px" stroke="#C1C1E3"  fill="#C1C1E3" />
+<path d="M 78.0000,43.0000 L 78.0000,50.0000 L 79.0000,50.0000 L 79.0000,43.0000 L 78.0000,43.0000 Z" stroke-width="1px" stroke="#B8B8DF"  fill="#B8B8DF" />
+<path d="M 79.0000,43.0000 L 79.0000,50.0000 L 80.0000,50.0000 L 80.0000,43.0000 L 79.0000,43.0000 Z" stroke-width="1px" stroke="#AFAFDB"  fill="#AFAFDB" />
+<path d="M 80.0000,43.0000 L 80.0000,50.0000 L 81.0000,50.0000 L 81.0000,43.0000 L 80.0000,43.0000 Z" stroke-width="1px" stroke="#A6A6D7"  fill="#A6A6D7" />
+<path d="M 81.0000,43.0000 L 81.0000,50.0000 L 82.0000,50.0000 L 82.0000,43.0000 L 81.0000,43.0000 Z" stroke-width="1px" stroke="#9D9DD3"  fill="#9D9DD3" />
+<path d="M 82.0000,43.0000 L 82.0000,50.0000 L 83.0000,50.0000 L 83.0000,43.0000 L 82.0000,43.0000 Z" stroke-width="1px" stroke="#9494CE"  fill="#9494CE" />
+<path d="M 83.0000,43.0000 L 83.0000,50.0000 L 84.0000,50.0000 L 84.0000,43.0000 L 83.0000,43.0000 Z" stroke-width="1px" stroke="#8B8BCA"  fill="#8B8BCA" />
+<path d="M 84.0000,43.0000 L 84.0000,50.0000 L 85.0000,50.0000 L 85.0000,43.0000 L 84.0000,43.0000 Z" stroke-width="1px" stroke="#8282C6"  fill="#8282C6" />
+<path d="M 85.0000,43.0000 L 85.0000,50.0000 L 86.0000,50.0000 L 86.0000,43.0000 L 85.0000,43.0000 Z" stroke-width="1px" stroke="#7979C2"  fill="#7979C2" />
+<path d="M 86.0000,43.0000 L 86.0000,50.0000 L 87.0000,50.0000 L 87.0000,43.0000 L 86.0000,43.0000 Z" stroke-width="1px" stroke="#7070BE"  fill="#7070BE" />
+<path d="M 87.0000,43.0000 L 87.0000,50.0000 L 88.0000,50.0000 L 88.0000,43.0000 L 87.0000,43.0000 Z" stroke-width="1px" stroke="#6767BA"  fill="#6767BA" />
+<path d="M 88.0000,43.0000 L 88.0000,50.0000 L 89.0000,50.0000 L 89.0000,43.0000 L 88.0000,43.0000 Z" stroke-width="1px" stroke="#5E5EB6"  fill="#5E5EB6" />
+<path d="M 89.0000,43.0000 L 89.0000,50.0000 L 90.0000,50.0000 L 90.0000,43.0000 L 89.0000,43.0000 Z" stroke-width="1px" stroke="#5555B1"  fill="#5555B1" />
+<path d="M 90.0000,43.0000 L 90.0000,50.0000 L 91.0000,50.0000 L 91.0000,43.0000 L 90.0000,43.0000 Z" stroke-width="1px" stroke="#4C4CAD"  fill="#4C4CAD" />
+<path d="M 91.0000,43.0000 L 91.0000,50.0000 L 92.0000,50.0000 L 92.0000,43.0000 L 91.0000,43.0000 Z" stroke-width="1px" stroke="#4242A9"  fill="#4242A9" />
+<path d="M 92.0000,43.0000 L 92.0000,50.0000 L 93.0000,50.0000 L 93.0000,43.0000 L 92.0000,43.0000 Z" stroke-width="1px" stroke="#3939A5"  fill="#3939A5" />
+<path d="M 93.0000,43.0000 L 93.0000,50.0000 L 94.0000,50.0000 L 94.0000,43.0000 L 93.0000,43.0000 Z" stroke-width="1px" stroke="#3030A1"  fill="#3030A1" />
+<path d="M 94.0000,43.0000 L 94.0000,50.0000 L 95.0000,50.0000 L 95.0000,43.0000 L 94.0000,43.0000 Z" stroke-width="1px" stroke="#27279D"  fill="#27279D" />
+<path d="M 95.0000,43.0000 L 95.0000,50.0000 L 96.0000,50.0000 L 96.0000,43.0000 L 95.0000,43.0000 Z" stroke-width="1px" stroke="#1E1E99"  fill="#1E1E99" />
+<path d="M 96.0000,43.0000 L 96.0000,50.0000 L 97.0000,50.0000 L 97.0000,43.0000 L 96.0000,43.0000 Z" stroke-width="1px" stroke="#151594"  fill="#151594" />
+<path d="M 97.0000,43.0000 L 97.0000,50.0000 L 98.0000,50.0000 L 98.0000,43.0000 L 97.0000,43.0000 Z" stroke-width="1px" stroke="#0C0C90"  fill="#0C0C90" />
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1125.0000,695.0000 L 1573.0000,695.0000 L 1573.0000,807.0000 L 1125.0000,807.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+<g transform="matrix(0.0625 0.0000 0.0000 0.0625 0.0000 0.0000)">
+<path d="M 1069.0000,639.0000 L 2475.0000,639.0000 L 2475.0000,863.0000 L 1069.0000,863.0000 Z" stroke="#000000" stroke-width="16.0000"  stroke-linecap="butt"  stroke-linejoin="miter"  stroke-miterlimit="10.0000" fill="none" />
+</g>
+<g transform="matrix(1.0000 0.0000 0.0000 1.0000 0.0000 0.0000)">
+</g>
+</g>
+</svg>
