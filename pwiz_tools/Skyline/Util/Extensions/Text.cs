@@ -25,6 +25,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
@@ -753,6 +754,50 @@ namespace pwiz.Skyline.Util.Extensions
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Insert spaces if necessary to ensure that the string has no regions with
+        /// more than <paramref name="maxWordLength"/> non-whitespace characters.
+        /// This ensures that text measuring code will not spend too long looking for
+        /// word breaks.
+        /// </summary>
+        public static string EnforceMaxWordLength(string str, int maxWordLength)
+        {
+            if (str.Length <= maxWordLength)
+            {
+                return str;
+            }
+
+            int currentWordLength = 0;
+            StringBuilder stringBuilder = null;
+            
+            for (int i = 0; i < str.Length; i++)
+            {
+                var ch = str[i];
+                if (char.IsWhiteSpace(ch) || ch == '-')
+                {
+                    currentWordLength = 0;
+                }
+                else
+                {
+                    if (currentWordLength == maxWordLength)
+                    {
+                        stringBuilder ??= new StringBuilder(str.Substring(0, i));
+                        stringBuilder.Append(' ');
+                        currentWordLength = 0;
+                    }
+                    currentWordLength++;
+                }
+
+                stringBuilder?.Append(ch);
+            }
+
+            if (stringBuilder == null)
+            {
+                return str;
+            }
+            return stringBuilder.ToString();
         }
     }
 
