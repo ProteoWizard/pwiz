@@ -457,7 +457,10 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (RemoteAccountType.UNIFI.Equals(AccountType))
             {
-                btnTest.Text = _btnTest_OriginalLabel_Test;
+                if (!btnTest.Text.Equals(_btnTest_OriginalLabel_Test))
+                {
+                    btnTest.Text = _btnTest_OriginalLabel_Test;
+                }
 
                 return;
             }
@@ -466,13 +469,21 @@ namespace pwiz.Skyline.ToolsUI
             {
                 btnLogoutArdia.Enabled = true;
 
-                btnTest.Text = _btnTest_OriginalLabel_Test;
+                if (!btnTest.Text.Equals(_btnTest_OriginalLabel_Test))
+                {
+                    btnTest.Text = _btnTest_OriginalLabel_Test;
+                }
             }
             else
             {
                 btnLogoutArdia.Enabled = false;
 
-                btnTest.Text = Resources.EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect;
+                var btnText_Connect = Resources.EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect;
+
+                if (!btnTest.Text.Equals(btnText_Connect))
+                {
+                    btnTest.Text = btnText_Connect;
+                }
             }
         }
     }
