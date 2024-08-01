@@ -80,6 +80,8 @@ namespace AutoQC
 
         public virtual DateTime GetOldestImportedFileDate(DateTime lastAcqDate)
         {
+            if (_resultsFileList.Count == 0) return lastAcqDate;
+
             // Results files are sorted by LastWriteTime;
             if (DateTime.MinValue.Equals(lastAcqDate))
             {

@@ -1200,7 +1200,7 @@ namespace AutoQC
         {
             string archiveArgs = null;
             var currentDate = DateTime.Today;
-            if (importContext.ImportingMultiple && importContext.ImportingLast())
+            if (importContext.InitialImport && importContext.ImportingLast())
             {
                 // If we are importing existing files in the folder, create an archive (if required) of the 
                 // Skyline document AFTER importing the last results file.
