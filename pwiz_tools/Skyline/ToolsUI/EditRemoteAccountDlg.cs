@@ -278,7 +278,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 try
                 {
-                    ardiaAccount.GetAuthenticatedHttpClient();
+                    var authenticatedHttpClient = ardiaAccount.GetAuthenticatedHttpClient();
+                    if (authenticatedHttpClient == null)
+                    {
+                        return false;
+                    }
                 }
                 catch (Exception e)
                 {

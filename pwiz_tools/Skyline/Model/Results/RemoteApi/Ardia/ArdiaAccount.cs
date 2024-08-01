@@ -122,6 +122,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                 Assume.IsNotNull(RemoteSession.RemoteAccountUserInteraction, @"RemoteSession.UserInteraction is not set");
                 _authenticatedHttpClientFactory = RemoteSession.RemoteAccountUserInteraction.UserLogin(this);
             }
+
+            if (_authenticatedHttpClientFactory == null)
+            {
+                throw new Exception("Get Ardia Connection Failed");
+                // return null;
+            }
+
             return _authenticatedHttpClientFactory();
         }
 

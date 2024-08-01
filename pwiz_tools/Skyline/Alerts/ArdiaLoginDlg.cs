@@ -265,7 +265,14 @@ namespace pwiz.Skyline.Alerts
                 {
                     // MessageDlg.Show(this, "Register this Skyline instance with Ardia");
 
-                    await RegisterDevice();
+                    var registerSuccessful = await RegisterDevice();
+
+                    if (!registerSuccessful)
+                    {
+                        DialogResult = DialogResult.OK;
+
+                        return;
+                    }
 
                     // MessageDlg.Show(this, "Registration of this Skyline instance with Ardia is complete.  Continuing to Sign in.");
 
@@ -431,22 +438,36 @@ namespace pwiz.Skyline.Alerts
         //   START:  Stuffing in launch Register Device here to see if can get working
 
         // Register the device with the Ardia platform using the WebView2 control to display the registration page
-        public async Task RegisterDevice()
+        public async Task<bool> RegisterDevice()
         {
             if (webView != null && webView.CoreWebView2 != null)
             {
                 var _baseUrl = Account.ServerUrl.Replace("https://", "");
 
+                var authority = $"https://identity.{_baseUrl}";
+
                 try
                 {
-                    var authority = $"https://identity.{_baseUrl}";
                     var discoveryCache = new DiscoveryCache(authority);
                     var discoveryDocument = await discoveryCache.GetAsync();
                     if (discoveryDocument.IsError)
                     {
                         //  For Register Device, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
 
-                        throw new Exception(discoveryDocument.Error);
+
+                        var errorMessage =
+                            string.Format(
+                                "Error Registering Skyline Instance in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
+                                authority, Account.ServerUrl, discoveryDocument.Error);
+                        MessageDlg.Show(this, errorMessage);
+
+                        DialogResult = DialogResult.OK;
+
+                        return false;
+
+                        //  TODO  How to close dialog here with failure instead.
+
+                        // throw new Exception(discoveryDocument.Error);
                     }
 
                     var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
@@ -479,19 +500,33 @@ namespace pwiz.Skyline.Alerts
                         MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
                     }
 
+                    return false;
 
                     //  added throw to code from Thermo
-                    throw;
+                    // throw;
                 }
                 catch (Exception e)
                 {
+                    var st = e.StackTrace;
+                    var type = e.GetType();
+                    var fullName = type.FullName;
+                    var source = e.Source;
                     var eToString = e.ToString();
                     var z = 0;
-                    MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
+                    var errorMessage =
+                        string.Format(
+                            "Error Registering Skyline Instance in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}",
+                            authority, Account.ServerUrl);
+                    MessageDlg.ShowWithException(this, errorMessage, e);
+
+                    return false;
+
                     //  added throw to code from Thermo
-                    throw;
+                    // throw;
                 }
             }
+
+            return true;
         }
 
         // Request a user token from the Ardia platform using the device code obtained from the device authorization response
