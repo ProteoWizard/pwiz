@@ -284,6 +284,11 @@ namespace pwiz.Skyline.ToolsUI
                         return false;
                     }
                 }
+                catch (System.OperationCanceledException e)
+                {
+                    MessageDlg.Show(this, "Login was canceled");
+                    return false;
+                }
                 catch (Exception e)
                 {
                     MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);

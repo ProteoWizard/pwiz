@@ -322,9 +322,14 @@ namespace pwiz.Skyline.Alerts
 
             var _baseUrl = Account.ServerUrl.Replace("https://", "");
 
+            //  TODO DJJ FAKE alter the _baseUrl for TESTING  
+            // _baseUrl = "FAKE" + _baseUrl;
+
 
             // Navigate to the login page
             var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=https://{_baseUrl}/";
+
+            _ardia_LoginUrl = loginUrl;
 
             //  TODO.  Test returnURL of localhost with port for possibly log in with system browser
             // var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=http://localhost:8888/";
@@ -346,6 +351,8 @@ namespace pwiz.Skyline.Alerts
 
         }
 
+        private string _ardia_LoginUrl;
+
         private void CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
         {
 
@@ -353,10 +360,10 @@ namespace pwiz.Skyline.Alerts
             {
                 var currentURLofWebview = webView.Source.AbsolutePath;
 
-                if (eventArgs.HttpStatusCode == 404)
+                if (eventArgs.HttpStatusCode == 404 || eventArgs.HttpStatusCode == 0)
                 {
-                    MessageDlg.Show(
-                        this, "Load Client Registration page failed with HTTP status code 404.  Page not found at URL: " + currentURLofWebview );
+                    var errorMessage = string.Format("Load Client Registration page failed with HTTP status code {0}.  Page not found at URL.  Page URL: {1}", eventArgs.HttpStatusCode, currentURLofWebview);
+                    MessageDlg.Show(this, errorMessage);
 
                     //  404 may result in something different being triggered
 
@@ -365,8 +372,8 @@ namespace pwiz.Skyline.Alerts
                 }
                 else
                 {
-                    MessageDlg.Show(
-                        this, "Load Client Registration page failed with HTTP status code " + eventArgs.HttpStatusCode + " at URL: " + currentURLofWebview + ".");
+                    var errorMessage = string.Format("Load Client Registration page failed with HTTP status code {0}. Page URL: {1}", eventArgs.HttpStatusCode, currentURLofWebview);
+                    MessageDlg.Show(this, errorMessage);
                 }
 
                 // TODO DJJ Not sure what to do here
@@ -381,6 +388,8 @@ namespace pwiz.Skyline.Alerts
         {
             if (!eventArgs.IsSuccess)
             {
+                var currentURLofWebview = webView.Source.AbsolutePath; // Use instead of _ardia_LoginUrl?  This is the current URL of the webview
+
                 if (eventArgs.HttpStatusCode == 401)
                 {
                     //  Page load for Login failed with HTTP status code 401.  Assumed due to invalid ApplicationCode (Registration Code)
@@ -405,33 +414,23 @@ namespace pwiz.Skyline.Alerts
                     {
                         //  NOT First Time executing Registration.  Show Error message
 
-                        MessageDlg.Show(
-                            webView,
-                            "Load Login page failed with HTTP status code 401.  Likely that the Client Registration Code is invalid.  A new Client Registration Code was just received from the server so this is likely a bug.");
+                        var errorMessage = string.Format("Load Login page failed with HTTP status code {0}.  Likely that the Client Registration Code is invalid.  A new Client Registration Code was just received from the server so this is likely a bug. Login Page URL: {1}",
+                            eventArgs.HttpStatusCode, currentURLofWebview);
+                        MessageDlg.Show(webView, errorMessage);
                     }
                 }
-                else if (eventArgs.HttpStatusCode == 404)
+                else if (eventArgs.HttpStatusCode == 404 || eventArgs.HttpStatusCode == 0)
                 {
-                    MessageDlg.Show(
-                        this, "Load Login page failed with HTTP status code 404.  Page not found at URL.");
-
-                    //  404 may result in something different being triggered
-
-
-                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
-
+                    var errorMessage = string.Format("Load Login page failed with HTTP status code {0}.  Page not found at URL. Login Page URL: {1}", eventArgs.HttpStatusCode, currentURLofWebview);
+                    MessageDlg.Show(this, errorMessage);
                 }
                 else
                 {
-                    MessageDlg.Show(
-                        this, "Load Login page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
+                    var errorMessage = string.Format("Load Login page failed with HTTP status code {0}. Login Page URL: {1}", eventArgs.HttpStatusCode, currentURLofWebview);
+                    MessageDlg.Show(this, errorMessage);
                 }
 
-                // TODO DJJ Not sure what to do here
-
-                //  Exception throws does NOT appear to do anything.
-
-                throw new Exception("Load Login page failed. if (!eventArgs.IsSuccess) ");
+                DialogResult = DialogResult.OK;
             }
         }
 
