@@ -688,8 +688,8 @@ namespace pwiz.Skyline.Alerts
             var clientActivationInput = new ClientActivationInput()
             {
                 ApplicationCode = clientCode,
-                AppName = @"SkylineSampleApp",
-                Version = @"1.0.0",
+                AppName = @"SkylineApp",
+                Version = @"Unknown",
                 PCName = Environment.MachineName,
                 RedirectUris = new List<string>() { @"http://localhost:5001/signin-oidc" },
                 PostLogoutRedirectUris = new List<string>() { @"http://localhost:5001/signout-oidc" },
