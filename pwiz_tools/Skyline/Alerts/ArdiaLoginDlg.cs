@@ -721,14 +721,7 @@ namespace pwiz.Skyline.Alerts
                             var clientCredentialsResponseData = await clientCredentialsResponse.Content.ReadAsStringAsync();
                             var clientCredentials = JsonConvert.DeserializeObject<ClientCredentialsResponse>(clientCredentialsResponseData);
 
-                            var ClientId = clientCredentials.ClientId;
-                            var clientSecret = clientCredentials.ClientSecret;
-                            var ApplicationCode = clientCredentials.ApplicationCode;
-                            var clientCredentials_Name = clientCredentials.Name;
-
-
                             SetSavedArdiaApplicationCode(clientCredentials.ApplicationCode);
-
 
                             await CheckForBffHostCookie();
 
