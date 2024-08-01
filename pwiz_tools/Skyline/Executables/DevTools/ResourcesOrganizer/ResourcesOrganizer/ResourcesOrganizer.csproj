@@ -24,6 +24,9 @@
     <Reference Include="CsvHelper">
       <HintPath>..\lib\CsvHelper.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="Iesi.Collections">
       <HintPath>..\lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>

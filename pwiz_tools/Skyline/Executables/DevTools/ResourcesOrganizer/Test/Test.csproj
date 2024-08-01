@@ -24,6 +24,9 @@
     <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
     <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
     <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <None Remove="HtmlFileTest\Skyline Custom Reports.html.testfile" />
+    <None Remove="HtmlFileTest\Skyline Custom Reports_ja.html.testfile" />
+    <None Remove="HtmlFileTest\Skyline Custom Reports_zh-CHS.html.testfile" />
     <None Remove="ImportLocalizationCsvTest\ColumnToolTips.ja.resx.testfile" />
     <None Remove="ImportLocalizationCsvTest\ColumnToolTips.ja.testfile" />
     <None Remove="ImportLocalizationCsvTest\ColumnToolTips.resx.testfile" />
@@ -67,6 +70,9 @@
     <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
     <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
     <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="HtmlFileTest\Skyline Custom Reports.html.testfile" />
+    <EmbeddedResource Include="HtmlFileTest\Japanese\Skyline Custom Reports.html.testfile" />
+    <EmbeddedResource Include="HtmlFileTest\Chinese\Skyline Custom Reports.html.testfile" />
     <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.ja.resx.testfile" />
     <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.resx.testfile" />
     <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.zh-CHS.resx.testfile" />
@@ -115,6 +121,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="NHibernate">
       <HintPath>..\lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>

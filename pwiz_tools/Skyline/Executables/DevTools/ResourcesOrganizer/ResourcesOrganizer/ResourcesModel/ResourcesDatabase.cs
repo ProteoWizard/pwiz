@@ -30,8 +30,8 @@ namespace ResourcesOrganizer.ResourcesModel
     public record ResourcesDatabase
     {
         public static readonly ResourcesDatabase Empty = new();
-        public ImmutableDictionary<string, ResourcesFile> ResourcesFiles { get; init; }
-            = ImmutableDictionary<string, ResourcesFile>.Empty;
+        public ImmutableDictionary<string, LocalizableFile> ResourcesFiles { get; init; }
+            = ImmutableDictionary<string, LocalizableFile>.Empty;
 
         public static ResourcesDatabase ReadFile(string path, HashSet<string> exclude)
         {
@@ -45,12 +45,12 @@ namespace ResourcesOrganizer.ResourcesModel
                 var resourcesFile = ResourcesFile.Read(path, path);
                 return new ResourcesDatabase
                 {
-                    ResourcesFiles = ImmutableDictionary<string, ResourcesFile>.Empty.Add(path, resourcesFile)
+                    ResourcesFiles = ImmutableDictionary<string, LocalizableFile>.Empty.Add(path, resourcesFile)
                 };
             }
             if (Directory.Exists(path))
             {
-                var files = new Dictionary<string, ResourcesFile>();
+                var files = new Dictionary<string, LocalizableFile>();
                 AddFolder(files, path, path, exclude);
                 return new ResourcesDatabase
                 {
@@ -75,7 +75,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 .ToDictionary(resource => resource.Id!.Value);
             var localizedResources = session.Query<LocalizedResource>()
                 .ToLookup(localizedResource => localizedResource.InvariantResourceId);
-            var resourcesFiles = new Dictionary<string, ResourcesFile>();
+            var resourcesFiles = new Dictionary<string, LocalizableFile>();
             foreach (var fileGroup in session.Query<ResourceLocation>().GroupBy(location => location.ResxFileId))
             {
                 var resxFile = session.Get<ResxFile>(fileGroup.Key);
@@ -159,7 +159,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 using (var entryStream = entry.Open())
                 {
                     using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+                    writer.Write(file.Value.ExportFile(null, overrideAll));
                 }
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())
@@ -169,7 +169,7 @@ namespace ResourcesOrganizer.ResourcesModel
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));
                     using var localizedStream = localizedEntry.Open();
                     using var writer = new StreamWriter(localizedStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(language, overrideAll)));
+                    writer.Write(file.Value.ExportFile(language, overrideAll));
                 }
             }
         }
@@ -235,7 +235,7 @@ namespace ResourcesOrganizer.ResourcesModel
             }
         }
 
-        private void SaveResourcesFile(IStatelessSession session, IDictionary<InvariantResourceKey, long> invariantResources, long resxFileId, string filePath, ResourcesFile resourcesFile)
+        private void SaveResourcesFile(IStatelessSession session, IDictionary<InvariantResourceKey, long> invariantResources, long resxFileId, string filePath, LocalizableFile resourcesFile)
         {
             int sortIndex = 0;
             foreach (var entry in resourcesFile.Entries)
@@ -328,7 +328,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 {
                     Value = string.Empty, File = entry.Invariant.IsLocalizableText ? null : entry.Invariant.File
                 });
-            var newFiles = new Dictionary<string, ResourcesFile>();
+            var newFiles = new Dictionary<string, LocalizableFile>();
             foreach (var resourcesEntry in ResourcesFiles.ToList())
             {
                 var newEntries = new List<ResourceEntry>();
@@ -428,7 +428,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return this with { ResourcesFiles = newFiles.ToImmutableDictionary() };
         }
 
-        private static void AddFolder(Dictionary<string, ResourcesFile> files, string fullPath, string relativePath, HashSet<string> exclude)
+        private static void AddFolder(Dictionary<string, LocalizableFile> files, string fullPath, string relativePath, HashSet<string> exclude)
         {
             if (exclude.Contains(relativePath))
             {
@@ -517,7 +517,7 @@ namespace ResourcesOrganizer.ResourcesModel
             var allRecords = csvReader.GetRecords<LocalizationCsvRecord>().ToList();
             totalEntryCount = allRecords.Count;
             var recordsByName = allRecords.ToLookup(record => record.Name);
-            var newFiles = new Dictionary<string, ResourcesFile>();
+            var newFiles = new Dictionary<string, LocalizableFile>();
             foreach (var resourceFileEntry in ResourcesFiles)
             {
                 var newFile = resourceFileEntry.Value.ImportLocalizationRecords(languageFilePath.Language, recordsByName,
