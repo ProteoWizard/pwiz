@@ -310,7 +310,6 @@ namespace AutoQC
         {
             CheckDrive();
 
-
             if (_dataFiles.IsEmpty)
             {
                 return null;
@@ -564,6 +563,11 @@ namespace AutoQC
         private long GetReimportDelay()
         {
             return (long) (_acquisitionTimeSetting * 0.1 * 60 * 1000);
+        }
+
+        public int GetQueueCount()
+        {
+            return _dataFiles.Count;
         }
 
         public int GetReimportQueueCount()

@@ -81,6 +81,7 @@ namespace AutoQC
         private DateTime _lastUploadAt = DateTime.MinValue;
 
         private bool _annotationsImportError;
+        private bool _annotationsFirstImport = true;
 
         public DateTime LastAcquiredFileDate;
         public DateTime LastArchivalDate;
@@ -343,8 +344,6 @@ namespace AutoQC
                         // Any files that still do not import successfully
                         // will be removed from the re-import queue.
                         TryReimportOldFiles(e, true);
-
-                        if (!ImportAnnotationsIfRequired()) break;
                     }
 
                     inWait = false;
@@ -352,105 +351,61 @@ namespace AutoQC
                 else
                 {
                     // Try to import any older files that resulted in an import error the first time.
-                    var reimported = TryReimportOldFiles(e, false);
+                    TryReimportOldFiles(e, false);
+                }
 
-                    if (reimported > 0 && !ImportAnnotationsIfRequired()) break;
+                if (_panoramaFatalError)
+                {
+                    LogError(
+                        "Document could not be imported on Panorama. Stopping configuration. Please review the errors before restarting the configuration.");
+                    break;
+                }
 
-                    if (_panoramaFatalError)
+                if (_panoramaUploadError)
+                {
+                    if (_lastUploadAt.AddMinutes(5) < DateTime.Now)
                     {
-                        LogError(
-                            "Document could not be imported on Panorama. Stopping configuration. Please review the errors before restarting the configuration.");
+                        // Try uploading to Panorama every 5 minutes until we succeed
+                        Log("Trying to upload the Skyline document to Panorama again. ");
+                        UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
+                    }
+
+                    // If we haven't been able to upload to Panorama for 12 hours, stop with an error
+                    if (!DateTime.MinValue.Equals(_panoramaErrorOccurred) && // _panoramaErrorOccurred.AddMinutes(5) < DateTime.Now)
+                        _panoramaErrorOccurred.AddHours(12) < DateTime.Now)
+                    {
+                        LogError("Uploads to Panorama have not been successful in over 12 hours. Stopping configuration.");
                         break;
                     }
-                    if (_panoramaUploadError)
-                    {
-                        if (_lastUploadAt.AddMinutes(5) < DateTime.Now)
-                        {
-                            // Try uploading to Panorama every 5 minutes until we succeed
-                            Log("Trying to upload the Skyline document to Panorama again. ");
-                            UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
-                        }
+                }
 
-                        // If we haven't been able to upload to Panorama for 12 hours, stop with an error
-                        if (!DateTime.MinValue.Equals(_panoramaErrorOccurred) && // _panoramaErrorOccurred.AddMinutes(5) < DateTime.Now)
-                            _panoramaErrorOccurred.AddHours(12) < DateTime.Now)
-                        {
-                            LogError("Uploads to Panorama have not been successful in over 12 hours. Stopping configuration.");
-                            break;
-                        }
-                    }
-
+                if (_fileWatcher.GetQueueCount() == 0)
+                {
                     if (!inWait)
                     {
                         Log("Waiting for files...");
                     }
-
                     inWait = true;
                     Thread.Sleep(WAIT_FOR_NEW_FILE);
                 }
             }
         }
 
-        private bool ImportAnnotationsIfRequired()
+        private void TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
         {
-            if (_annotationsImportError)
-            {
-                // If the annotations file could not be imported earlier, try again after importing a raw file, and
-                // re-trying previously failed raw files. 
-                ImportAnnotationsFileIfWatching(true, "Attempting to re-import the annotations file.");
-                if (_annotationsImportError)
-                {
-                    LogError("There were errors importing the annotations file. Stopping configuration.");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private int TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
-        {
+            var toReimport = new List<string>();
             var failed = new List<RawFile>();
 
-            var reimported = 0;
             while (_fileWatcher.GetReimportQueueCount() > 0)
             {
                 var file = _fileWatcher.GetNextFileToReimport();
                 if (forceImport || file.TryReimport())
                 {
-                    var importContext = new ImportContext(file.FilePath);
-                    _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__, file.FilePath));
-                    if (!ImportFile(e, importContext, false)) 
-                    {
-                        if (forceImport)
-                        {
-                            // forceImport is true when we attempt to import failed files after successfully importing a newer file.
-                            // If the file still fails to import we will not add it back to the re-import queue.
-                            _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles__0__failed_to_import_successfully__Skipping___, file.FilePath));     
-                        }
-                        else
-                        {
-                            if (_fileWatcher.RawDataExists(file.FilePath))
-                            {
-                                _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_, file.FilePath));
-                                file.LastImportTime = DateTime.Now;
-                                failed.Add(file);   
-                            }
-                            else
-                            {
-                                _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles__0__no_longer_exists__Skipping___, file.FilePath));
-                            }
-                            
-                        }        
-                    }
-                    else
-                    {
-                        reimported++;
-                    }
+                    toReimport.Add(file.FilePath);
                 }
-                else
+                else if (_fileWatcher.RawDataExists(file.FilePath))
                 {
-                    failed.Add(file); // We are going to try to re-import later
+                    failed.Add(file);
                 }
             }
 
@@ -462,7 +417,50 @@ namespace AutoQC
                 }
             }
 
-            return reimported;
+            if (toReimport.Count == 0) return;
+
+            var importContext = new ImportContext(toReimport);
+
+            while (importContext.GetNextFile() != null)
+            {
+                if (_worker.CancellationPending)
+                {
+                    e.Result = CANCELED;
+                    return;
+                }
+
+                var filePath = importContext.GetCurrentFile();
+                if (!_fileWatcher.RawDataExists(filePath))
+                {
+                    // User may have deleted this file.
+                    Log(Resources.ConfigRunner_TryReimportOldFiles__0__no_longer_exists__Skipping___, filePath);
+                    continue;
+                }
+
+                _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__, filePath));
+                if (!ImportFile(e, importContext, false))
+                {
+                    if (forceImport)
+                    {
+                        // forceImport is true when we attempt to import failed files after successfully importing a newer file.
+                        // If the file still fails to import we will not add it back to the re-import queue.
+                        _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles__0__failed_to_import_successfully__Skipping___, filePath));
+                    }
+                    else
+                    {
+                        if (_fileWatcher.RawDataExists(filePath))
+                        {
+                            _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_, filePath));
+                            _fileWatcher.AddToReimportQueue(filePath);
+                        }
+                        else
+                        {
+                            _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles__0__no_longer_exists__Skipping___, filePath));
+                        }
+
+                    }
+                }
+            }
         }
 
         private void ProcessFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -513,7 +511,7 @@ namespace AutoQC
             
             Log("Existing files found: {0}", files.Count);
 
-            var importContext = new ImportContext(files);
+            var importContext = new ImportContext(files, true);
             var skipped = 0;
             while (importContext.GetNextFile() != null)
             {
@@ -597,14 +595,11 @@ namespace AutoQC
             }
 
             var resultsImported = ProcessOneFile(importContext);
-            if (!resultsImported)
+            if (!resultsImported && addToReimportQueueOnFailure)
             {
-                if (addToReimportQueueOnFailure)
-                {
-                    AddToReimportQueue(filePath);
-                }
+                AddToReimportQueue(filePath);
             }
-           
+
             return resultsImported;
         }
 
@@ -620,9 +615,27 @@ namespace AutoQC
             CreateZipArchiveBefore(importContext);
 
             var importSucceeded = ImportResults(importContext);
-            
-            ImportAnnotationsFile(importContext);
-           
+
+            // Import the annotations file after importing all the existing raw data. 
+            if (importContext.ImportingMultiple && importContext.ImportingLast())
+            {
+                if (importContext.InitialImport)
+                {
+                    // Import annotations after importing any existing files when the config starts.
+                    ImportAnnotationsFileIfWatching(false);
+                }
+                else if (importContext.ImportCount > 0)
+                {
+                    // If this is not the initial import (when a config starts) but we are re-importing previously failed imports,
+                    // then import annotations only if new replicates were added and annotation import had failed previously.
+                    ImportAnnotationsIfRequired();
+                }
+            }
+            else if (!importContext.ImportingMultiple && importSucceeded)
+            {
+                ImportAnnotationsIfRequired();
+            }
+
             UploadToPanorama(importContext);
 
             CreateZipArchiveAfter(importContext);
@@ -653,7 +666,7 @@ namespace AutoQC
             var panoramaUploadArgs = PanoramaArgs(importContext);
             if (!string.IsNullOrEmpty(panoramaUploadArgs))
             {
-                if (importContext.ImportCount > 0 || (importContext.ImportExisting && DocumentHasReplicates()))
+                if (importContext.ImportCount > 0 || (importContext.InitialImport && DocumentHasReplicates()))
                 {
                     var argsToPrint = PanoramaArgs(importContext, true);
                     UploadToPanorama(panoramaUploadArgs, argsToPrint);
@@ -716,6 +729,22 @@ namespace AutoQC
             }
         }
 
+        private void ImportAnnotationsIfRequired()
+        {
+            if (_annotationsImportError || _annotationsFirstImport)
+            {
+                // Importing annotations if:
+                // 1. annotations have not yet been imported
+                // 2. previous attempt to import annotations was unsuccessful. 
+                var logMessage = _annotationsImportError ? "Attempting to re-import the annotations file." : null;
+                ImportAnnotationsFileIfWatching(false, logMessage);
+                if (_annotationsImportError)
+                {
+                    LogError("There were errors importing the annotations file.");
+                }
+            }
+        }
+
         private void ImportAnnotationsFileIfWatching(bool uploadToPanorama, string logMessage = null)
         {
             if (_annotationsFileWatcher != null)
@@ -732,15 +761,6 @@ namespace AutoQC
                 AnnotationsFileUpdated = false;
                 ImportAnnotationsFileIfWatching(true);
             }
-        } 
-        
-        private void ImportAnnotationsFile(ImportContext importContext)
-        {
-            // Import the annotations file after importing all the existing raw data. 
-            if (importContext.ImportExisting && importContext.ImportingLast())
-            {
-                ImportAnnotationsFileIfWatching(false); // Do not upload the document to Panorama.
-            }
         }
 
         private void ImportAnnotationsFile(bool uploadToPanorama = true)
@@ -751,6 +771,7 @@ namespace AutoQC
 
             var status = RunProcess(procInfo);
             _annotationsImportError = status == ProcStatus.Error;
+            _annotationsFirstImport = false;
             if (!_annotationsImportError && Config.PanoramaSettings.PublishToPanorama && uploadToPanorama)
             {
                 // Upload to Panorama
@@ -952,8 +973,6 @@ namespace AutoQC
                 archiveDate.Year,
                 archiveDate.Month);
 
-            LastArchivalDate = currentDate;
-
             // Archive file will be written in the same directory as the Skyline file.
             return string.Format("--share-zip={0}", archiveFileName);
         }
@@ -1097,7 +1116,7 @@ namespace AutoQC
             args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
 
             string importOnOrAfter = string.Empty;
-            if (importContext.ImportExisting || !Config.MainSettings.RemoveResults)
+            if (importContext.InitialImport || !Config.MainSettings.RemoveResults)
             {
                 // We are importing existing files in the folder.  The import-on-or-after is determined
                 // by the last acquisition date on the files already imported in the Skyline document.
@@ -1132,7 +1151,7 @@ namespace AutoQC
 
         private string PanoramaArgs(ImportContext importContext, bool toPrint = false)
         {
-            if (!Config.PanoramaSettings.PublishToPanorama || importContext.ImportExisting && !importContext.ImportingLast())
+            if (!Config.PanoramaSettings.PublishToPanorama || importContext.ImportingMultiple && !importContext.ImportingLast())
             {
                 // Do not upload to Panorama if we are importing existing documents and this is not the 
                 // last file being imported.
@@ -1161,16 +1180,18 @@ namespace AutoQC
         public ProcessInfo RunBefore(ImportContext importContext)
         {
             string archiveArgs = null;
-            if (!importContext.ImportExisting)
+            var currentDate = DateTime.Today;
+            if (!importContext.InitialImport)
             {
                 // If we are NOT importing existing results, create an archive (if required) of the 
                 // Skyline document BEFORE importing a results file.
-                archiveArgs = GetArchiveArgs(GetLastArchivalDate(), DateTime.Today);
+                archiveArgs = GetArchiveArgs(GetLastArchivalDate(), currentDate);
             }
             if (string.IsNullOrEmpty(archiveArgs))
             {
                 return null;
             }
+            LastArchivalDate = currentDate;
             var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
             return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
         }
@@ -1179,7 +1200,7 @@ namespace AutoQC
         {
             string archiveArgs = null;
             var currentDate = DateTime.Today;
-            if (importContext.ImportExisting && importContext.ImportingLast())
+            if (importContext.ImportingMultiple && importContext.ImportingLast())
             {
                 // If we are importing existing files in the folder, create an archive (if required) of the 
                 // Skyline document AFTER importing the last results file.
@@ -1194,6 +1215,7 @@ namespace AutoQC
             {
                 return null;
             }
+            LastArchivalDate = currentDate;
             var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
             return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
         }
