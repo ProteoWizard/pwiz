@@ -42,12 +42,39 @@ namespace pwiz.Skyline.Alerts
         public ArdiaAccount Account { get; private set; }
         public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
 
+        private string _ardiaServerURL_BaseURL;
+        private string _ardiaServerURL_Transport;
+
         public ArdiaLoginDlg(ArdiaAccount account/*, bool headless = false*/)
         {
             InitializeComponent();
 
             Account = account;
             _tempUserDataFolder = new TemporaryDirectory(null, @"~SK_WebView2");
+
+            {
+                var serverUrl = Account.ServerUrl;
+
+                var transport_HTTPS = "https://";
+                var transport_HTTP = "http://";
+
+                if (serverUrl.StartsWith(transport_HTTPS))
+                {
+                    _ardiaServerURL_BaseURL = serverUrl.Substring(transport_HTTPS.Length);
+                    _ardiaServerURL_Transport = transport_HTTPS;
+                }
+                else if (serverUrl.StartsWith(transport_HTTPS))
+                {
+                    _ardiaServerURL_BaseURL = serverUrl.Substring(transport_HTTP.Length);
+                    _ardiaServerURL_Transport = transport_HTTP;
+                }
+                else
+                {
+                    //  Should not get here
+                    _ardiaServerURL_BaseURL = serverUrl;
+                    _ardiaServerURL_Transport = "";
+                }
+            }
 
             // To support command line, need to do something completely different since Ardia objects to Skyline code having username/password and also programmatic sign in to Ardia not possible for MFA and other possible issues.
             //
@@ -96,12 +123,10 @@ namespace pwiz.Skyline.Alerts
 
             //  END Temp NOT store in Settings
 
-            var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
-            
             string applicationCode = null;
             
             {
-                if (!Settings.Default.ArdiaRegistrationCodes.TryGetValue(ardiaServerURL,
+                if (!Settings.Default.ArdiaRegistrationCodes.TryGetValue(_ardiaServerURL_BaseURL,
                         out applicationCode))
                 {
                     applicationCode = null;
@@ -113,16 +138,13 @@ namespace pwiz.Skyline.Alerts
 
         private void SetSavedArdiaApplicationCode(string applicationCode)
         {
-
             //  Temp to NOT store in Settings
 
             // _ardia_ApplicationCode__TEMP = applicationCode;
 
             //  END Temp NOT store in Settings
 
-            var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
-            
-            Settings.Default.ArdiaRegistrationCodes[ardiaServerURL] = applicationCode;
+            Settings.Default.ArdiaRegistrationCodes[_ardiaServerURL_BaseURL] = applicationCode;
         }
 
         private Func<HttpClient> GetFactory()
@@ -137,15 +159,14 @@ namespace pwiz.Skyline.Alerts
                     throw new Exception("GetFactory(); if (applicationCode == null) ");
                 }
 
-                // var applicationCode = Account.ApplicationCode;
+                var cookieURI_String = _ardiaServerURL_Transport + "api." + _ardiaServerURL_BaseURL;
 
                 var cookieContainer = new CookieContainer();
                 var handler = new HttpClientHandler();
                 handler.CookieContainer = cookieContainer;
                 var client = new HttpClient(handler);
                 client.BaseAddress = new Uri(Account.ServerUrl);
-                cookieContainer.Add(new Uri(Account.ServerUrl.Replace(@"https://", @"https://api.")),
-                    new Cookie(_bffCookie.Name, _bffCookie.Value));
+                cookieContainer.Add(new Uri(cookieURI_String), new Cookie(_bffCookie.Name, _bffCookie.Value));
                 client.DefaultRequestHeaders.Add(@"Accept", @"application/json");
 
                 client.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);
@@ -225,8 +246,6 @@ namespace pwiz.Skyline.Alerts
             //   START:  Stuffing in launch Register Device here to see if can get working
 
             // Account = Account.ChangeApplicationCode("6fFwDy55");
-
-            var ardiaServerURL = Account.ServerUrl.Replace("https://", "");
 
             var applicationCode_BeforeRegister = GetSavedArdiaApplicationCode();
             
@@ -320,19 +339,18 @@ namespace pwiz.Skyline.Alerts
 
             Reset_ProgrammaticLoginFlags();
 
-            var _baseUrl = Account.ServerUrl.Replace("https://", "");
+            var ardiaServer_BaseUrl = _ardiaServerURL_BaseURL;
 
             //  TODO DJJ FAKE alter the _baseUrl for TESTING  
-            // _baseUrl = "FAKE" + _baseUrl;
-
-
+            // ardiaServer_BaseUrl = "FAKE" + ardiaServer_BaseUrl;
+            
             // Navigate to the login page
-            var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=https://{_baseUrl}/";
+            var loginUrl = $"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl={_ardiaServerURL_Transport}{ardiaServer_BaseUrl}/";
 
             _ardia_LoginUrl = loginUrl;
 
             //  TODO.  Test returnURL of localhost with port for possibly log in with system browser
-            // var loginUrl = $"https://api.{_baseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=http://localhost:8888/";
+            // var loginUrl = $"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=http://localhost:8888/";
 
             // MessageDlg.Show(this, "loginUrl: " + loginUrl);
 
@@ -441,9 +459,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (webView != null && webView.CoreWebView2 != null)
             {
-                var _baseUrl = Account.ServerUrl.Replace("https://", "");
-
-                var authority = $"https://identity.{_baseUrl}";
+                var authority = $"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}";
 
                 try
                 {
@@ -533,12 +549,10 @@ namespace pwiz.Skyline.Alerts
         {
             using (var httpClient = new HttpClient())
             {
-                var _baseUrl = Account.ServerUrl.Replace("https://", "");
-
                 //  Hard coded for initial connection to get device registration
                 var _ardiaDeviceClientId = "ardia.device.client.registration";
 
-                var tokenEndpoint = $"https://identity.{_baseUrl}/connect/token";
+                var tokenEndpoint = $"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/token";
                 var response = await httpClient.RequestDeviceTokenAsync(new DeviceTokenRequest
                 {
                     Address = tokenEndpoint,
@@ -572,12 +586,10 @@ namespace pwiz.Skyline.Alerts
             {
                 using (var httpClient = new HttpClient())
                 {
-                    var _baseUrl = Account.ServerUrl.Replace("https://", "");
-
                     //  Hard coded for initial connection to get device registration
                     var _ardiaDeviceClientId = "ardia.device.client.registration";
 
-                    var deviceAuthorizationEndpoint = $"https://identity.{_baseUrl}/connect/deviceauthorization";
+                    var deviceAuthorizationEndpoint = $"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/deviceauthorization";
                     var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
                     {
                         Address = deviceAuthorizationEndpoint,
@@ -625,9 +637,7 @@ namespace pwiz.Skyline.Alerts
         private async Task<string> CreateNewClient(TokenResponse userTokenResponse)
         {
             try {
-                var _baseUrl = Account.ServerUrl.Replace("https://", "");
-
-                var newClientUri = $"https://api.{_baseUrl}/identity-registration/api/v2/Clients";
+                var newClientUri = $"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients";
                 var accessToken = userTokenResponse.AccessToken;
                 var clientName = $"SkylineSampleApp{Guid.NewGuid().ToString()}";
                 var newClient = new NewClient() { ClientName = clientName };
@@ -680,9 +690,7 @@ namespace pwiz.Skyline.Alerts
         // Activate the client in the Ardia platform using the client code obtained from the client creation response
         private async Task<IdentityClient> ActivateClient(string clientCode, TokenResponse userTokenResponse)
         {
-            var _baseUrl = Account.ServerUrl.Replace("https://", "");
-
-            var activateClientUri = $"https://api.{_baseUrl}/identity-registration/api/v2/Clients/activate";
+            var activateClientUri = $"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/activate";
             var accessToken = userTokenResponse.AccessToken;
             // Define the client activation input
             var clientActivationInput = new ClientActivationInput()
@@ -711,7 +719,7 @@ namespace pwiz.Skyline.Alerts
                     var clientActivationData = await clientActivationResponse.Content.ReadAsStringAsync();
                     var clientActivation = JsonConvert.DeserializeObject<ClientApplicationResponse>(clientActivationData);
                     var clientCredentialsUri =
-                        $"https://api.{_baseUrl}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
+                        $"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
                     using (var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, clientCredentialsUri))
                     {
                         clientCredentialsRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
