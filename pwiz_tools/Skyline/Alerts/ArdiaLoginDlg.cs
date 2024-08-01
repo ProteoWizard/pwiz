@@ -55,8 +55,8 @@ namespace pwiz.Skyline.Alerts
             {
                 var serverUrl = Account.ServerUrl;
 
-                var transport_HTTPS = "https://";
-                var transport_HTTP = "http://";
+                var transport_HTTPS = @"https://";
+                var transport_HTTP = @"http://";
 
                 if (serverUrl.StartsWith(transport_HTTPS))
                 {
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Alerts
 
         private bool _firstTime_ExecuteClientRegistration = true;
 
-        private bool _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = true;
+        // private bool _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = true;
 
         // private string _ardia_ApplicationCode__TEMP; //  TODO  Only used to hold ardia_ApplicationCode until store in Settings
 
@@ -156,10 +156,10 @@ namespace pwiz.Skyline.Alerts
 
                 if (applicationCode == null)
                 {
-                    throw new Exception("GetFactory(); if (applicationCode == null) ");
+                    throw new Exception(@"GetFactory(); if (applicationCode == null) ");
                 }
 
-                var cookieURI_String = _ardiaServerURL_Transport + "api." + _ardiaServerURL_BaseURL;
+                var cookieURI_String = _ardiaServerURL_Transport + @"api." + _ardiaServerURL_BaseURL;
 
                 var cookieContainer = new CookieContainer();
                 var handler = new HttpClientHandler();
@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Alerts
             
             if (applicationCode_AfterRegister == null)
             {
-                throw new Exception("applicationCode_AfterRegister == null");
+                throw new Exception(@"applicationCode_AfterRegister == null");
             }
 
 
@@ -345,9 +345,9 @@ namespace pwiz.Skyline.Alerts
             // ardiaServer_BaseUrl = "FAKE" + ardiaServer_BaseUrl;
             
             // Navigate to the login page
-            var loginUrl = $"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl={_ardiaServerURL_Transport}{ardiaServer_BaseUrl}/";
+            var loginUrl = @$"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl={_ardiaServerURL_Transport}{ardiaServer_BaseUrl}/";
 
-            _ardia_LoginUrl = loginUrl;
+            // _ardia_LoginUrl = loginUrl;
 
             //  TODO.  Test returnURL of localhost with port for possibly log in with system browser
             // var loginUrl = $"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=http://localhost:8888/";
@@ -369,7 +369,7 @@ namespace pwiz.Skyline.Alerts
 
         }
 
-        private string _ardia_LoginUrl;
+        // private string _ardia_LoginUrl;
 
         private void CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
         {
@@ -459,7 +459,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (webView != null && webView.CoreWebView2 != null)
             {
-                var authority = $"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}";
+                var authority = @$"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}";
 
                 try
                 {
@@ -486,27 +486,23 @@ namespace pwiz.Skyline.Alerts
                     }
 
                     var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
-                    var verificationUri = $"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
+                    var verificationUri = @$"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
                     webView.CoreWebView2.Navigate(verificationUri);
                     var userTokenResponse = await RequestUserTokenAsync(deviceAuthorizationResponse);
-                    var z = 0;
                     var clientCode = await CreateNewClient(userTokenResponse);
                     var identityClient = await ActivateClient(clientCode, userTokenResponse);
 
-                    var x = 0;
                     // StoreClientCredentials(identityClient);
                 }
                 catch (HttpRequestException e)
                 {
                     var eToString = e.ToString();
-                    var z = 0;
-
+                    
                     // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                     //
                     // var eMessage = e.Message;
 
-
-                    if (e.Message.Contains("403"))
+                    if (e.Message.Contains(@"403"))
                     {
                         MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
                     }
@@ -527,7 +523,6 @@ namespace pwiz.Skyline.Alerts
                     var fullName = type.FullName;
                     var source = e.Source;
                     var eToString = e.ToString();
-                    var z = 0;
                     var errorMessage =
                         string.Format(
                             "Error Registering Skyline Instance in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}",
@@ -550,9 +545,9 @@ namespace pwiz.Skyline.Alerts
             using (var httpClient = new HttpClient())
             {
                 //  Hard coded for initial connection to get device registration
-                var _ardiaDeviceClientId = "ardia.device.client.registration";
+                var _ardiaDeviceClientId = @"ardia.device.client.registration";
 
-                var tokenEndpoint = $"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/token";
+                var tokenEndpoint = @$"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/token";
                 var response = await httpClient.RequestDeviceTokenAsync(new DeviceTokenRequest
                 {
                     Address = tokenEndpoint,
@@ -587,14 +582,14 @@ namespace pwiz.Skyline.Alerts
                 using (var httpClient = new HttpClient())
                 {
                     //  Hard coded for initial connection to get device registration
-                    var _ardiaDeviceClientId = "ardia.device.client.registration";
+                    var _ardiaDeviceClientId = @"ardia.device.client.registration";
 
-                    var deviceAuthorizationEndpoint = $"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/deviceauthorization";
+                    var deviceAuthorizationEndpoint = @$"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/deviceauthorization";
                     var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
                     {
                         Address = deviceAuthorizationEndpoint,
                         ClientId = _ardiaDeviceClientId,
-                        Scope = "openid profile Ardia_Client_Registration"
+                        Scope = @"openid profile Ardia_Client_Registration"
                     });
                     return response;
                 }
@@ -603,14 +598,13 @@ namespace pwiz.Skyline.Alerts
             catch (HttpRequestException e)
             {
                 var eToString = e.ToString();
-                var z = 0;
 
                 // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                 //
                 // var eMessage = e.Message;
 
 
-                if (e.Message.Contains("403"))
+                if (e.Message.Contains(@"403"))
                 {
                     MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
                 }
@@ -626,7 +620,6 @@ namespace pwiz.Skyline.Alerts
             catch (Exception e)
             {
                 var eToString = e.ToString();
-                var z = 0;
                 MessageDlg.ShowWithException(this, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client", e);
                 //  added throw to code from Thermo
                 throw;
@@ -637,17 +630,17 @@ namespace pwiz.Skyline.Alerts
         private async Task<string> CreateNewClient(TokenResponse userTokenResponse)
         {
             try {
-                var newClientUri = $"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients";
+                var newClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients";
                 var accessToken = userTokenResponse.AccessToken;
-                var clientName = $"SkylineSampleApp{Guid.NewGuid().ToString()}";
+                var clientName = @$"SkylineSampleApp{Guid.NewGuid().ToString()}";
                 var newClient = new NewClient() { ClientName = clientName };
                 var newClientData = JsonConvert.SerializeObject(newClient);
 
                 using (var httpClient = new HttpClient())
                 using (var request = new HttpRequestMessage(HttpMethod.Post, newClientUri))
-                using (var content = new StringContent(newClientData, Encoding.UTF8, "application/json"))
+                using (var content = new StringContent(newClientData, Encoding.UTF8, @"application/json"))
                 {
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    request.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
                     request.Content = content;
                     using (var response = await httpClient.SendAsync(request))
                     {
@@ -661,14 +654,13 @@ namespace pwiz.Skyline.Alerts
             catch (HttpRequestException e)
             {
                 var eToString = e.ToString();
-                var z = 0;
-
+                
                 // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                 //
                 // var eMessage = e.Message;
 
 
-                if (e.Message.Contains("403"))
+                if (e.Message.Contains(@"403"))
                 {
                     MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
                 }
@@ -690,28 +682,28 @@ namespace pwiz.Skyline.Alerts
         // Activate the client in the Ardia platform using the client code obtained from the client creation response
         private async Task<IdentityClient> ActivateClient(string clientCode, TokenResponse userTokenResponse)
         {
-            var activateClientUri = $"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/activate";
+            var activateClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/activate";
             var accessToken = userTokenResponse.AccessToken;
             // Define the client activation input
             var clientActivationInput = new ClientActivationInput()
             {
                 ApplicationCode = clientCode,
-                AppName = "SkylineSampleApp",
-                Version = "1.0.0",
+                AppName = @"SkylineSampleApp",
+                Version = @"1.0.0",
                 PCName = Environment.MachineName,
-                RedirectUris = new List<string>() { "http://localhost:5001/signin-oidc" },
-                PostLogoutRedirectUris = new List<string>() { "http://localhost:5001/signout-oidc" },
-                ClientUri = "http://localhost:5001",
-                Scopes = new List<string>() { "openid", "profile", "offline_access", "DataServerApi", "IdentityServerApi" },
-                GrantTypes = new List<string>() { "authorization_code", "urn:ietf:params:oauth:grant-type:token-exchange" },
+                RedirectUris = new List<string>() { @"http://localhost:5001/signin-oidc" },
+                PostLogoutRedirectUris = new List<string>() { @"http://localhost:5001/signout-oidc" },
+                ClientUri = @"http://localhost:5001",
+                Scopes = new List<string>() { @"openid", @"profile", @"offline_access", @"DataServerApi", @"IdentityServerApi" },
+                GrantTypes = new List<string>() { @"authorization_code", @"urn:ietf:params:oauth:grant-type:token-exchange" },
             };
             var clientActivationInputData = JsonConvert.SerializeObject(clientActivationInput);
 
             using (var httpClient = new HttpClient())
             using (var clientActivationRequest = new HttpRequestMessage(HttpMethod.Post, activateClientUri))
-            using (var clientActivationContent = new StringContent(clientActivationInputData, Encoding.UTF8, "application/json"))
+            using (var clientActivationContent = new StringContent(clientActivationInputData, Encoding.UTF8, @"application/json"))
             {
-                clientActivationRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                clientActivationRequest.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
                 clientActivationRequest.Content = clientActivationContent;
                 using (var clientActivationResponse = await httpClient.SendAsync(clientActivationRequest))
                 {
@@ -719,10 +711,10 @@ namespace pwiz.Skyline.Alerts
                     var clientActivationData = await clientActivationResponse.Content.ReadAsStringAsync();
                     var clientActivation = JsonConvert.DeserializeObject<ClientApplicationResponse>(clientActivationData);
                     var clientCredentialsUri =
-                        $"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
+                        @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
                     using (var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, clientCredentialsUri))
                     {
-                        clientCredentialsRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                        clientCredentialsRequest.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
                         using (var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest))
                         {
                             clientCredentialsResponse.EnsureSuccessStatusCode();
@@ -732,7 +724,7 @@ namespace pwiz.Skyline.Alerts
                             var ClientId = clientCredentials.ClientId;
                             var clientSecret = clientCredentials.ClientSecret;
                             var ApplicationCode = clientCredentials.ApplicationCode;
-                            var Name = clientCredentials.Name;
+                            var clientCredentials_Name = clientCredentials.Name;
 
 
                             SetSavedArdiaApplicationCode(clientCredentials.ApplicationCode);
@@ -945,7 +937,7 @@ namespace pwiz.Skyline.Alerts
 
                         //  Failed login for invalid password results in username input being displayed again.
 
-                        throw new Exception("Already entered Username so appears to be stuck in login loop");
+                        throw new Exception(@"Already entered Username so appears to be stuck in login loop");
                     }
 
                     _programmaticLogin_HaveEnteredUsername = true;
@@ -970,7 +962,7 @@ namespace pwiz.Skyline.Alerts
 
                         //  Possibly Failed login for invalid password.
 
-                        throw new Exception("Already entered Password so appears to be stuck in login loop");
+                        throw new Exception(@"Already entered Password so appears to be stuck in login loop");
                     }
 
                     _programmaticLogin_HaveEnteredPassword= true;
@@ -996,7 +988,7 @@ namespace pwiz.Skyline.Alerts
 
                         //  Possibly Failed login for invalid password.
 
-                        throw new Exception("Already entered Role so appears to be stuck in login loop");
+                        throw new Exception(@"Already entered Role so appears to be stuck in login loop");
                     }
 
                     _programmaticLogin_HaveEnteredRole = true;
