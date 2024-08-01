@@ -125,6 +125,12 @@ PWIZ_API_DECL enum Polarity
     Undefined = 2
 };
 
+enum PWIZ_API_DECL FragmentationMode 
+{
+    FragmentationMode_CID,
+    FragmentationMode_EAD
+};
+
 
 struct PWIZ_API_DECL Spectrum
 {
@@ -136,7 +142,7 @@ struct PWIZ_API_DECL Spectrum
     virtual int getMSLevel() const = 0;
 
     virtual bool getHasIsolationInfo() const = 0;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const = 0;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const = 0;
 
     virtual bool getHasPrecursorInfo() const = 0;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const = 0;
