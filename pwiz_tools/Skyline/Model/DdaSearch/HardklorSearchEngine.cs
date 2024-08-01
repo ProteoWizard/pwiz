@@ -406,6 +406,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             _contents = new List<string[]>();
             _bfiles = _inputsAndOutputs.Keys.Select(GetSearchResultFilepath).ToArray();
+            Array.Sort(_bfiles); // For consistency in uncertain parallel completion order
             _summedIntensityPerFile = new double[_bfiles.Length];
 
             for (var fileIndex = 0; fileIndex < _bfiles.Length; fileIndex++)
