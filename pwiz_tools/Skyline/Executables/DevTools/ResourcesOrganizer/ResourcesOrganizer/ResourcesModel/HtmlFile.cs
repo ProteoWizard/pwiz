@@ -1,7 +1,10 @@
 ﻿using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.RegularExpressions;
+using F23.StringSimilarity;
 using HtmlAgilityPack;
+using NHibernate.Transform;
 
 namespace ResourcesOrganizer.ResourcesModel
 {
@@ -77,50 +80,77 @@ namespace ResourcesOrganizer.ResourcesModel
                 throw new ArgumentException(string.Format("{0} should be {1}", localized.RelativePath, RelativePath));
             }
             var entries = Entries.ToList();
-
-            var exactIndex = Enumerable.Range(0, entries.Count).ToDictionary(i => entries[i].Invariant);
-            var withoutXPathIndexes = Enumerable.Range(0, entries.Count)
-                .GroupBy(i => entries[i].Invariant with { Name = RemoveIndexesFromXPath(entries[i].Invariant.Name) })
-                .Where(group => group.Count() == 1)
-                .ToDictionary(group => group.Key, group => group.Single());
-            var withoutText = Enumerable.Range(0, entries.Count)
-                .GroupBy(i => entries[i].Invariant with { Value = string.Empty })
-                .Where(group => group.Count() == 1)
-                .ToDictionary(group => group.Key, group => group.Single());
-            foreach (var newEntry in localized.Entries)
+            var indexByXPath = Enumerable.Range(0, entries.Count).ToDictionary(i => entries[i].Name);
+            var withoutXPathIndexes = entries.ToLookup(entry => RemoveIndexesFromXPath(entry.Name));
+            foreach (var language in localized.Entries.SelectMany(entry => entry.LocalizedValues.Keys).Distinct())
             {
-                var key = newEntry.Invariant;
-                foreach (var localizedEntry in newEntry.LocalizedValues)
+                var unmatched = new List<ResourceEntry>();
+                foreach (var newEntry in localized.Entries)
                 {
-                    LocalizationIssue? localizationIssue = null;
-                    if (!exactIndex.TryGetValue(key, out int index))
+                    var translation = newEntry.GetTranslation(language);
+                    if (translation == null)
                     {
-                        if (!withoutXPathIndexes.TryGetValue(key with { Name = RemoveIndexesFromXPath(key.Name) }, out index))
-                        {
-                            if (!withoutText.TryGetValue(key with { Value = string.Empty }, out index))
-                            {
-                                continue;
-                            }
+                        continue;
+                    }
+                    if (!indexByXPath.TryGetValue(newEntry.Name, out int index) ||
+                        entries[index].Invariant.Value != newEntry.Invariant.Value)
+                    {
+                        unmatched.Add(newEntry);
+                        continue;
+                    }
 
-                            localizationIssue =
-                                new EnglishTextChanged(newEntry.Invariant.Value, localizedEntry.Value.Value);
+                    var entry = entries[index];
+                    entry = entry with { LocalizedValues = entry.LocalizedValues.SetItem(language, translation) };
+                    entries[index] = entry;
+                }
+
+                foreach (var unmatchedGroup in unmatched.GroupBy(newEntry=>RemoveIndexesFromXPath(newEntry.Name)))
+                {
+                    var candidates = withoutXPathIndexes[RemoveIndexesFromXPath(unmatchedGroup.Key)].ToList();
+                    var bestMatches = new List<Tuple<double, ResourceEntry, ResourceEntry>>();
+                    foreach (var newEntry in unmatchedGroup)
+                    {
+                        var candidatesWithDistance = candidates.Select(candidate =>
+                            Tuple.Create(Distance(newEntry.Invariant.Value, candidate.Invariant.Value), newEntry, candidate))
+                            .OrderBy(tuple => tuple.Item1);
+                        var bestMatch = candidatesWithDistance.FirstOrDefault();
+                        if (bestMatch != null)
+                        {
+                            bestMatches.Add(bestMatch);
                         }
                     }
 
-                    var matchingEntry = entries[index];
-                    foreach (var localizedValue in newEntry.LocalizedValues)
+                    foreach (var bestMatchTuple in bestMatches.OrderBy(tuple => tuple.Item1))
                     {
-                        matchingEntry = matchingEntry with
+                        int index = indexByXPath[bestMatchTuple.Item3.Name];
+                        var entry = entries[index];
+                        if (entry.LocalizedValues.ContainsKey(language))
                         {
-                            LocalizedValues =
-                            matchingEntry.LocalizedValues.SetItem(localizedValue.Key, localizedValue.Value with { Issue = localizationIssue })
+                            continue;
+                        }
+                        var newEntry = bestMatchTuple.Item2;
+                        var newTranslation = newEntry.LocalizedValues[language];
+                        LocalizationIssue issue = null;
+                        if (!Equals(newEntry.Invariant.Value, entry.Invariant.Value))
+                        {
+                            issue = new EnglishTextChanged(newEntry.Invariant.Value, newTranslation.Value);
+                        }
+                        entry = entry with
+                        {
+                            LocalizedValues = entry.LocalizedValues.SetItem(language,
+                                new LocalizedValue(newTranslation.Value, issue))
                         };
+
+                        entries[index] = entry;
                     }
-                    entries[index] = matchingEntry;
                 }
             }
-
             return this with { Entries = entries.ToImmutableList() };
+        }
+
+        private static double Distance(string target, string candidate)
+        {
+            return new Levenshtein().Distance(target, candidate);
         }
 
         public static HtmlFile? ReadFolder(string absolutePath, string relativePath)

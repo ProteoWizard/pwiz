@@ -24,6 +24,9 @@
     <Reference Include="CsvHelper">
       <HintPath>..\lib\CsvHelper.dll</HintPath>
     </Reference>
+    <Reference Include="F23.StringSimilarity">
+      <HintPath>..\lib\F23.StringSimilarity.dll</HintPath>
+    </Reference>
     <Reference Include="HtmlAgilityPack">
       <HintPath>..\lib\HtmlAgilityPack.dll</HintPath>
     </Reference>

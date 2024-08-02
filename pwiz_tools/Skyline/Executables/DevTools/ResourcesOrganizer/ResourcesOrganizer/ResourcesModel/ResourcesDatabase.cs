@@ -502,7 +502,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 }
             }
             using var stream = new FileStream(path, FileMode.Create);
-            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            using var writer = new StreamWriter(stream, new UTF8Encoding(true));
             using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
             csvWriter.WriteRecords(records);
             entryCount = records.Count;
