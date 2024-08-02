@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -57,7 +58,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private LineItem _minPValueLine;
 
         private readonly List<LineItem> _points;
+        // List of graph points that have labels
         private readonly List<LabeledPoint> _labeledPoints;
+        //
+        private static readonly Dictionary<string, List<LabeledPoint.PointLayout>> _labelsLayouts = new Dictionary<string, List<LabeledPoint.PointLayout>>();
 
         private FoldChangeBindingSource.FoldChangeRow _selectedRow;
 
@@ -142,7 +146,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
                     zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
-                    //SaveLabelsLayout();
+                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
                 }
             }
             else
@@ -307,6 +311,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _foldChangeCutoffLine1 = _foldChangeCutoffLine2 = _minPValueLine = null;
 
             var rows = GetFoldChangeRows(_bindingListSource).ToList();
+            if (!rows.Any()) // Nothing to graph
+                return;
 
             var selectedPoints = new PointPairList();
             var otherPoints = new PointPairList();
@@ -370,13 +376,26 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;       
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap && Settings.Default.GroupComparisonSuspendLabelLayout)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
+                _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
             }
             zedGraphControl.Invalidate();
         }
         // ReSharper restore PossibleMultipleEnumeration
+
+        protected override string GetPersistentString()
+        {
+            return PersistentString.Parse(base.GetPersistentString()).Append(JsonConvert.SerializeObject(_labelsLayouts[GroupComparisonName])).ToString();
+        }
+
+        public void SetLayout(string groupComparisonName, string jsonLayout)
+        {
+            var layout = JsonConvert.DeserializeObject<List<LabeledPoint.PointLayout>>(jsonLayout);
+            _labelsLayouts[GroupComparisonName] = layout;
+        }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
@@ -410,7 +429,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
-                    _labeledPoints.Add(new LabeledPoint(selected){Point = point, Label = label, Curve = lineItem}); 
+                    _labeledPoints.Add(new LabeledPoint(selected, row.Peptide.IdentityPath){Point = point, Label = label, Curve = lineItem}); 
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -630,6 +649,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             BuildContextMenu(sender, menuStrip, mousePt, objState);
         }
 
+        private bool zedGraphControl_LabelDragComplete(ZedGraphControl sender, MouseEventArgs mouseEvent)
+        {
+            _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout.PointsLayout;
+            return true;
+        }
+
         protected override void BuildContextMenu(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             base.BuildContextMenu(sender, menuStrip, mousePt, objState);
@@ -674,7 +699,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
                     zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
-                    //SaveLabelsLayout();
+                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
                     zedGraphControl.Invalidate();
                 }
             }

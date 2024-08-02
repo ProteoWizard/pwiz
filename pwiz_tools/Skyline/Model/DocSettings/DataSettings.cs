@@ -93,23 +93,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren]
         public RelativeAbundanceFormatting RelativeAbundanceFormatting { get; private set; }
 
-        [TrackChildren]
-        public GroupComparisonLabelLayout GroupComparisonLabelLayout { get; private set; }
-
-        public DataSettings ChangeGroupComparisonLabelLayout(GroupComparisonLabelLayout labelLayout)
-        {
-            return ChangeProp(ImClone(this),
-                im => im.GroupComparisonLabelLayout = (GroupComparisonLabelLayout)(labelLayout ?? LabelLayout.DEFAULT));
-        }
-
-        [TrackChildren]
-        public RelativeAbundanceLabelLayout RelativeAbundanceLabelLayout { get; private set; }
-        public DataSettings ChangeRelativeAbundanceLabelLayout(RelativeAbundanceLabelLayout labelLayout)
-        {
-            return ChangeProp(ImClone(this),
-                im => im.RelativeAbundanceLabelLayout = (RelativeAbundanceLabelLayout)(labelLayout ?? LabelLayout.DEFAULT));
-        }
-
         public DataSettings ChangeRelativeAbundanceFormatting(RelativeAbundanceFormatting relativeAbundanceFormatting)
         {
             return ChangeProp(ImClone(this),
@@ -274,8 +257,6 @@ namespace pwiz.Skyline.Model.DocSettings
             MetadataRuleSets = ImmutableList.ValueOf(allElements.OfType<MetadataRuleSet>());
             RelativeAbundanceFormatting = allElements.OfType<RelativeAbundanceFormatting>()
                 .FirstOrDefault() ?? RelativeAbundanceFormatting.DEFAULT;
-            GroupComparisonLabelLayout = allElements.OfType<GroupComparisonLabelLayout>().FirstOrDefault() ?? GroupComparisonLabelLayout.DEFAULT;
-            RelativeAbundanceLabelLayout = allElements.OfType<RelativeAbundanceLabelLayout>().FirstOrDefault() ?? RelativeAbundanceLabelLayout.DEFAULT;
         }
 
         private enum Attr
@@ -318,9 +299,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
                 new XmlElementHelperSuper<ListData, IXmlSerializable>(),
                 new XmlElementHelperSuper<MetadataRuleSet, IXmlSerializable>(),
-                new XmlElementHelperSuper<RelativeAbundanceFormatting, IXmlSerializable>(),
-                new XmlElementHelperSuper<GroupComparisonLabelLayout, IXmlSerializable>(),
-                new XmlElementHelperSuper<RelativeAbundanceLabelLayout, IXmlSerializable>(),
+                new XmlElementHelperSuper<RelativeAbundanceFormatting, IXmlSerializable>()
             };
         }
         #endregion
@@ -338,9 +317,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    && Equals(DocumentGuid, other.DocumentGuid)
                    && Equals(Lists, other.Lists)
                    && Equals(MetadataRuleSets, other.MetadataRuleSets)
-                   && Equals(RelativeAbundanceFormatting, other.RelativeAbundanceFormatting)
-                   && Equals(GroupComparisonLabelLayout, other.GroupComparisonLabelLayout)
-                   && Equals(RelativeAbundanceLabelLayout, other.RelativeAbundanceLabelLayout);
+                   && Equals(RelativeAbundanceFormatting, other.RelativeAbundanceFormatting);
         }
 
         public override bool Equals(object obj)
@@ -364,8 +341,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = result * 397 ^ Lists.GetHashCode();
                 result = result * 397 ^ MetadataRuleSets.GetHashCode();
                 result = result * 397 ^ RelativeAbundanceFormatting.GetHashCode();
-                result = result * 397 ^ GroupComparisonLabelLayout.GetHashCode();
-                result = result * 397 ^ RelativeAbundanceLabelLayout.GetHashCode();
                 return result;
             }
         }

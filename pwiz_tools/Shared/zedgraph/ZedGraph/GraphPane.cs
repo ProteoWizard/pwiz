@@ -1536,7 +1536,7 @@ namespace ZedGraph
 		/// <param name="savedLayoutString">Json string with the list of saved label layout information provided by the
 		/// <see cref="PersistentLabelLayout.GetJsonString"/> method. Json is used to avoid cyclical reference between
 		/// ZedGraph and Skyline projects.</param>
-		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, string savedLayoutString = null)
+		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, List<LabeledPoint.PointLayout> existingLayout = null)
         {
             if (!labPoints.Any())
                 return;
@@ -1560,18 +1560,38 @@ namespace ZedGraph
                     else
                         labeledPoint.Label.IsVisible = false;
                 }
-
+				
                 if (visiblePoints.Any())
                 {
-                    GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
+                    var savedLayout = existingLayout ?? new List<LabeledPoint.PointLayout>();
+					var newPoints = new List<LabeledPoint>();
                     foreach (var point in visiblePoints)
                     {
-                        if (_labelLayout.PlaceLabel(point, g))
+                        // if we already have a saved point layout for this peptide we do not need to re-adjust it
+						// CONSIDER: There is no stable persistent protein ID, so we cannot match the points using identityPath
+                        //var savedPoint = savedLayout.FirstOrDefault(p => p.Identity.Equals(point.UniqueID.ToString()));
+                        var savedPoint = savedLayout.FirstOrDefault(p => point.Point.Equals(p.PointLocation));
+                        if (savedPoint != null)
+                        {
+                            _labelLayout.AddLabel(point, savedPoint.LabelLocation);
+                            GraphObjList.Remove(point.Connector);
                             _labelLayout.DrawConnector(point, g);
+                        }
+						else // we should add all the existing points first to make sure the layout algorithm takes them into account when placing the new ones.
+                            newPoints.Add(point);
                     }
-                }
+                    foreach (var point in newPoints)
+                    {
+                        if (_labelLayout.PlaceLabel(point, g))
+                        {
+                            GraphObjList.Remove(point.Connector);
+                            _labelLayout.DrawConnector(point, g);
+                        }
+					}
+				}
             }
         }
+
 
         public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
         {

@@ -299,7 +299,12 @@ namespace ZedGraph
 		[Bindable( true ), Category( "Events" ),
 		 Description( "Subscribe to be notified when the left mouse button is released" )]
 		public event ZedMouseEventHandler MouseUpEvent;
-		/// <summary>
+
+        [Bindable(true), Category("Events"),
+         Description("Subscribe to be notified when a label drag is complete")]
+        public event ZedMouseEventHandler LabelDragEvent;
+
+/// <summary>
 		/// Subscribe to this event to provide notification of MouseMove events over graph
 		/// objects
 		/// </summary>
@@ -623,7 +628,7 @@ namespace ZedGraph
 				else if ( _isSelecting )
 					HandleSelectionFinish( sender, e );
 				else if( _isTextDragging )
-					HandleLabelDragFinish();
+					HandleLabelDragFinish(e);
 			}
 
 			// Reset the rectangle.
@@ -1209,9 +1214,11 @@ namespace ZedGraph
 			Invalidate();
 		}
 
-		private void HandleLabelDragFinish()
+		private void HandleLabelDragFinish(MouseEventArgs e)
 		{
 			_dragText.UpdatePositions();
+			if (LabelDragEvent != null)
+				LabelDragEvent(this, e);
 		}
 
 		private void HandleEditDrag( Point mousePt )

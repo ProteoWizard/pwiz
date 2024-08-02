@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size);
-                    _labeledPoints.Add(new LabeledPoint(selected) {Point = point, Label = label, Curve = lineItem });
+                    _labeledPoints.Add(new LabeledPoint(selected, pointData.IdentityPath) {Point = point, Label = label, Curve = lineItem });
                     GraphObjList.Add(label);
                 }
             }

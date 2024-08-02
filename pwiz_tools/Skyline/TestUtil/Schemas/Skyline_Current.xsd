@@ -764,8 +764,6 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
-	<xs:element name="group_comparison_label_layout" minOccurs="0" type="label_layout_type"/>
-	<xs:element name="relative_abundance_label_layout" minOccurs="0" type="label_layout_type"/>
     <xs:attribute name="document_guid" type="xs:string" use="optional"/>
     <xs:attribute name="audit_logging" type="xs:boolean" use="optional"/>
     <xs:attribute name="panorama_publish_uri" type="xs:string" use="optional"/>
@@ -1991,18 +1989,4 @@
     <xs:attribute name="symbol_type" type="xs:string"/>
     <xs:attribute name="point_size" type="xs:string"/>
   </xs:complexType>
-  <xs:complexType name="label_layout_point_type">
-	<xs:attribute name="identity" type="string"/>
-	<xs:attribute name="pointX" type="xs:double"/>
-	<xs:attribute name="pointY" type="xs:double"/>
-	<xs:attribute name="labelX" type="xs:double"/>
-	<xs:attribute name="labelX" type="xs:double"/>
-  </xs:complexType>
-  <xs:complexType name="label_layout_type">
-	<xs:sequence>
-	  <xs:element name="point" type="label_layout_point_type" minOccurs="0" maxOccurs="unbounded" />
-	</xs:sequence>
-  </xs:complexType>
-  
-  
 </xs:schema>
