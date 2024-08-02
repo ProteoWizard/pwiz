@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using AutoQC.Properties;
 using SharedBatch;
 
@@ -162,6 +163,10 @@ namespace AutoQC
             }  
         }
 
+        // Example: File write date 5/10/2024 11:20:12 AM is before --import-on-or-after date 7/2/2024 12:00:00 AM. Ignoring...
+        private static readonly Regex fileIgnoredRegex =
+            new Regex("File write date .* is before --import-on-or-after date .*\\. Ignoring", RegexOptions.Compiled);
+        
         private bool DetectError(string message)
         {
             if (string.IsNullOrEmpty(message))
@@ -170,7 +175,8 @@ namespace AutoQC
             }
 
             if (message.Contains("The file has already been imported. Ignoring...") ||
-                message.Contains("No files left to import"))
+                message.Contains("No files left to import") ||
+                fileIgnoredRegex.IsMatch(message))
             {
                 _fileImportIgnored = true; // SkylineRunner will return an exit code of 2 which will cause the file to be put 
                                            // on the reimport queue. We don't want that.
