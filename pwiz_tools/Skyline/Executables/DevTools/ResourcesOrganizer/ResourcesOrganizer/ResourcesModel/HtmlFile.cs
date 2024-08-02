@@ -1,4 +1,6 @@
 ﻿using System.Collections.Immutable;
+using System.Data.SQLite;
+using System.Runtime.InteropServices;
 using System.Text;
 using F23.StringSimilarity;
 using HtmlAgilityPack;
@@ -105,19 +107,48 @@ namespace ResourcesOrganizer.ResourcesModel
                     entries[index] = entry;
                 }
 
-                foreach (var unmatchedGroup in unmatched.GroupBy(newEntry=>RemoveIndexesFromXPath(newEntry.Name)))
+                foreach (var unmatchedGroup in unmatched.GroupBy(newEntry => RemoveIndexesFromXPath(newEntry.Name)))
                 {
                     var candidates = withoutXPathIndexes[RemoveIndexesFromXPath(unmatchedGroup.Key)].ToList();
-                    var bestMatches = new List<Tuple<double, ResourceEntry, ResourceEntry>>();
-                    foreach (var newEntry in unmatchedGroup)
+                    var needFuzzyMatch = new List<ResourceEntry>();
+                    var normalizedCandidates =
+                        candidates.ToLookup(candidate => NormalizeWhitespace(candidate.Invariant.Value));
+                    foreach (var identicalGroup in unmatchedGroup.GroupBy(newEntry =>
+                                 NormalizeWhitespace(newEntry.Invariant.Value)))
                     {
-                        var candidatesWithDistance = candidates.Select(candidate =>
-                            Tuple.Create(Distance(newEntry.Invariant.Value, candidate.Invariant.Value), newEntry, candidate))
-                            .OrderBy(tuple => tuple.Item1);
-                        var bestMatch = candidatesWithDistance.FirstOrDefault();
+                        var list = identicalGroup.ToList();
+                        var exactMatches = normalizedCandidates[identicalGroup.Key].ToList();
+                        if (exactMatches.Count == 0)
+                        {
+                            needFuzzyMatch.AddRange(list);
+                            continue;
+                        }
+                        if (list.Count != exactMatches.Count)
+                        {
+                            Console.Error.WriteLine("Wrong number of entries for {0}:{1}", unmatchedGroup.Key, identicalGroup.Key);
+                            continue;
+                        }
+
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            var index = indexByXPath[exactMatches[i].Name];
+                            var entry = entries[index];
+                            entry = entry with
+                            {
+                                LocalizedValues =
+                                entry.LocalizedValues.SetItem(language, list[i].GetTranslation(language)!)
+                            };
+                            entries[index] = entry;
+                        }
+                    }
+                    var bestMatches = new List<Tuple<int, ResourceEntry, ResourceEntry>>();
+                    foreach (var newEntry in needFuzzyMatch)
+                    {
+                        var normalizedTarget = NormalizeWhitespace(newEntry.Invariant.Value);
+                        var bestMatch = FindBestMatch(normalizedTarget, normalizedCandidates.Select(group=>group.Key));
                         if (bestMatch != null)
                         {
-                            bestMatches.Add(bestMatch);
+                            bestMatches.Add(Tuple.Create(bestMatch.Item1, newEntry, normalizedCandidates[bestMatch.Item2].First()));
                         }
                     }
 
@@ -149,9 +180,22 @@ namespace ResourcesOrganizer.ResourcesModel
             return this with { Entries = entries.ToImmutableList() };
         }
 
-        private static double Distance(string target, string candidate)
+        private static Levenshtein _levenshtein = new Levenshtein();
+        private Tuple<int, string>? FindBestMatch(string target, IEnumerable<string> candidates)
         {
-            return new Levenshtein().Distance(target, candidate);
+            int bestDistance = int.MaxValue;
+            string? bestMatch = null;
+            foreach (var candidate in candidates)
+            {
+                var distance = (int) _levenshtein.Distance(target, candidate, bestDistance);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestMatch = candidate;
+                }
+            }
+
+            return bestMatch == null ? null : Tuple.Create(bestDistance, bestMatch);
         }
 
         public static HtmlFile? ReadFolder(string absolutePath, string relativePath)
@@ -184,11 +228,23 @@ namespace ResourcesOrganizer.ResourcesModel
                 if (File.Exists(baseFile))
                 {
                     var baseHtmlFile = new HtmlFile(relativePath).ReadEnglish(baseFile);
+                    var incompatibilities = baseHtmlFile.DescribeIncompatibilities(localizedDoc);
+                    if (incompatibilities != null)
+                    {
+                        Console.Error.WriteLine("Incompatibilities between {0} and {1}: {2}", baseFile, localizedFile, incompatibilities);
+                        continue;
+                    }
                     baseHtmlFile = baseHtmlFile.ReadLocalized(language, localizedDoc);
                     htmlFile = htmlFile.MergeLocalized(baseHtmlFile);
                 }
                 else
                 {
+                    var incompatibilities = htmlFile.DescribeIncompatibilities(localizedDoc);
+                    if (incompatibilities != null)
+                    {
+                        Console.Error.WriteLine("Incompatibilities between {0} and {1}: {2}", absolutePath, localizedFile, incompatibilities);
+                        continue;
+                    }
                     htmlFile = htmlFile.ReadLocalized(language, localizedDoc);
                 }
             }
@@ -205,6 +261,17 @@ namespace ResourcesOrganizer.ResourcesModel
             }
 
             return node.ChildNodes.SelectMany(ListLocalizableElements);
+        }
+
+        private static IEnumerable<HtmlNode> ListAllElements(HtmlNode node)
+        {
+            string strippedXPath = RemoveIndexesFromXPath(node.XPath)!;
+            if (LocalizableXPaths.Contains(strippedXPath))
+            {
+                return new[] { node };
+            }
+
+            return node.ChildNodes.SelectMany(ListAllElements);
         }
 
         private static string RemoveIndexesFromXPath(string xPath)
@@ -308,9 +375,48 @@ namespace ResourcesOrganizer.ResourcesModel
             return stringBuilder.ToString();
         }
 
+        public static readonly string FILE_TYPE = "html";
         public override string FileType
         {
-            get { return "html"; }
+            get { return FILE_TYPE; }
+        }
+
+        private string? DescribeIncompatibilities(HtmlDocument localizedDocument)
+        {
+            var invariantKeys = Entries.Select(entry => entry.Name).ToHashSet();
+            var localizedNodes = ListLocalizableElements(localizedDocument.DocumentNode)
+                .ToDictionary(node => node.XPath);
+            var extraKeys = localizedNodes
+                .Where(entry => !invariantKeys.Contains(entry.Key) && ContainsLocalizableText(entry.Value))
+                .Select(entry => entry.Key).ToList();
+            var missingKeys = invariantKeys.Except(localizedNodes.Keys).ToList();
+            if (missingKeys.Count == 0)
+            {
+                if (extraKeys.Count == 0)
+                {
+                    return null;
+                }
+
+                if (extraKeys.Count == 1)
+                {
+                    return string.Format("Extra node: {0}", extraKeys.Single());
+                }
+
+                return string.Format("{0} extra nodes", extraKeys.Count);
+            }
+
+            if (extraKeys.Count == 0)
+            {
+                if (missingKeys.Count == 1)
+                {
+                    return string.Format("Missing node {0}", missingKeys.Single());
+                }
+
+                return string.Format("{0} missing nodes", missingKeys.Count);
+            }
+
+            return string.Format("{0} missing nodes and {1} extra nodes", missingKeys.Count,
+                extraKeys.Count);
         }
     }
 }

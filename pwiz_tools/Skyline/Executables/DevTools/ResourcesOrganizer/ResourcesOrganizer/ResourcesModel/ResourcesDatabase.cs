@@ -101,11 +101,21 @@ namespace ResourcesOrganizer.ResourcesModel
 
                     entries.Add(entry);
                 }
-                resourcesFiles.Add(resxFile.FilePath!, new ResourcesFile(resxFile.FilePath!)
+
+                var localizableFile = LocalizableFile.Create(resxFile.FileType);
+                if (localizableFile == null)
                 {
+                    Console.Out.WriteLine("Invalid file type: {0} path: {1}", resxFile.FileType, resxFile.FilePath);
+                    continue;
+                }
+
+                localizableFile = localizableFile with
+                {
+                    RelativePath = resxFile.FilePath!,
                     Entries = entries.ToImmutableList(),
                     XmlContent = xmlContent
-                });
+                };
+                resourcesFiles.Add(resxFile.FilePath!, localizableFile);
             }
 
             return new ResourcesDatabase
@@ -140,7 +150,8 @@ namespace ResourcesOrganizer.ResourcesModel
                 var resxFile = new ResxFile
                 {
                     FilePath = resourceFile.Key,
-                    XmlContent = resourceFile.Value.XmlContent
+                    XmlContent = resourceFile.Value.XmlContent,
+                    FileType = resourceFile.Value.FileType
                 };
                 session.Insert(resxFile);
 
@@ -261,7 +272,8 @@ namespace ResourcesOrganizer.ResourcesModel
         public IDictionary<InvariantResourceKey, List<ResourceEntry>> GetInvariantResources()
         {
             var dictionary = new Dictionary<InvariantResourceKey, List<ResourceEntry>>();
-            foreach (var group in ResourcesFiles.SelectMany(resourcesKvp => resourcesKvp.Value.Entries.Select(entry=>Tuple.Create(resourcesKvp.Key, entry)))
+            foreach (var group in ResourcesFiles.SelectMany(resourcesKvp =>
+                             resourcesKvp.Value.Entries.Select(entry => Tuple.Create(resourcesKvp.Key, entry)))
                          .GroupBy(tuple => tuple.Item2.Invariant))
             {
                 var totalCount = group.Count();
@@ -308,7 +320,7 @@ namespace ResourcesOrganizer.ResourcesModel
         }
 
         [Pure]
-        public ResourcesDatabase AddFile(ResourcesFile file)
+        public ResourcesDatabase AddFile(LocalizableFile file)
         {
             return this with { ResourcesFiles = ResourcesFiles.Add(file.RelativePath, file) };
         }
@@ -432,6 +444,13 @@ namespace ResourcesOrganizer.ResourcesModel
         {
             if (exclude.Contains(relativePath))
             {
+                return;
+            }
+
+            var htmlFile = HtmlFile.ReadFolder(fullPath, relativePath);
+            if (htmlFile != null)
+            {
+                files[relativePath] = htmlFile;
                 return;
             }
             var directoryInfo = new DirectoryInfo(fullPath);

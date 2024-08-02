@@ -53,5 +53,19 @@ namespace ResourcesOrganizer.ResourcesModel
             return Entries.FirstOrDefault(entry => entry.Name == name);
         }
 
+        public static LocalizableFile? Create(string fileType)
+        {
+            if (fileType == ResourcesFile.FILE_TYPE)
+            {
+                return new ResourcesFile(string.Empty);
+            }
+
+            if (fileType == HtmlFile.FILE_TYPE)
+            {
+                return new HtmlFile(string.Empty);
+            }
+
+            return null;
+        }
     }
 }

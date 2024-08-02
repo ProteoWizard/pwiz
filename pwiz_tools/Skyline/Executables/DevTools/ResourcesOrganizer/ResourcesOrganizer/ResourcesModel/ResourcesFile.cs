@@ -302,10 +302,11 @@ namespace ResourcesOrganizer.ResourcesModel
             return this with { Entries = entries.ToImmutableList() };
         }
 
+        public static readonly string FILE_TYPE = "resx";
+
         public override string FileType
         {
-            get { return "resx"; }
+            get { return FILE_TYPE; }
         }
-    }
     }
 }
