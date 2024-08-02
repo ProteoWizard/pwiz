@@ -27,6 +27,11 @@
     <None Remove="HtmlFileTest\Skyline Custom Reports.html.testfile" />
     <None Remove="HtmlFileTest\Skyline Custom Reports_ja.html.testfile" />
     <None Remove="HtmlFileTest\Skyline Custom Reports_zh-CHS.html.testfile" />
+    <None Remove="HtmlMergeTest\en\index.html.testfile" />
+    <None Remove="HtmlMergeTest\ja\index.html.testfile" />
+    <None Remove="HtmlMergeTest\ja\index.source.html.testfile" />
+    <None Remove="HtmlMergeTest\zh-CHS\index.html.testfile" />
+    <None Remove="HtmlMergeTest\zh-CHS\index.source.html.testfile" />
     <None Remove="ImportLocalizationCsvTest\ColumnToolTips.ja.resx.testfile" />
     <None Remove="ImportLocalizationCsvTest\ColumnToolTips.ja.testfile" />
     <None Remove="ImportLocalizationCsvTest\ColumnToolTips.resx.testfile" />
@@ -73,6 +78,11 @@
     <EmbeddedResource Include="HtmlFileTest\Skyline Custom Reports.html.testfile" />
     <EmbeddedResource Include="HtmlFileTest\Japanese\Skyline Custom Reports.html.testfile" />
     <EmbeddedResource Include="HtmlFileTest\Chinese\Skyline Custom Reports.html.testfile" />
+    <EmbeddedResource Include="HtmlMergeTest\en\index.html.testfile" />
+    <EmbeddedResource Include="HtmlMergeTest\ja\index.html.testfile" />
+    <EmbeddedResource Include="HtmlMergeTest\ja\index.source.html.testfile" />
+    <EmbeddedResource Include="HtmlMergeTest\zh-CHS\index.html.testfile" />
+    <EmbeddedResource Include="HtmlMergeTest\zh-CHS\index.source.html.testfile" />
     <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.ja.resx.testfile" />
     <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.resx.testfile" />
     <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.zh-CHS.resx.testfile" />

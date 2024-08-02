@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using NHibernate.Criterion;
 using ResourcesOrganizer;
 using ResourcesOrganizer.ResourcesModel;
 
@@ -47,6 +46,27 @@ namespace Test
             }
 
             return destination;
+        }
+
+        public string SaveManifestResourcesWithSubfolders(Type type, params string[] subfolders)
+        {
+            var rootFolder = SaveManifestResources(type);
+            foreach (var subfolder in subfolders)
+            {
+                var targetFolder = Path.Combine(rootFolder, subfolder);
+                Directory.CreateDirectory(targetFolder);
+                string prefix = subfolder.Replace('-', '_') + ".";
+                foreach (var file in Directory.EnumerateFiles(rootFolder))
+                {
+                    var fileName = Path.GetFileName(file);
+                    if (fileName.StartsWith(prefix))
+                    {
+                        File.Move(file, Path.Combine(targetFolder, fileName.Substring(prefix.Length)));
+                    }
+                }
+            }
+
+            return rootFolder;
         }
 
         protected void VerifyRoundTrip(ResourcesDatabase database, string path)
