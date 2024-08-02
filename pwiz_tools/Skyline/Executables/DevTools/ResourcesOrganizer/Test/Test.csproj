@@ -24,7 +24,7 @@
     <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
     <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
     <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
-    <None Remove="HtmlFileTest\Skyline Custom Reports.html.testfile" />
+    <None Remove="HtmlFileTest\index.html.testfile" />
     <None Remove="HtmlFileTest\Skyline Custom Reports_ja.html.testfile" />
     <None Remove="HtmlFileTest\Skyline Custom Reports_zh-CHS.html.testfile" />
     <None Remove="HtmlMergeTest\en\index.html.testfile" />
@@ -75,9 +75,9 @@
     <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
     <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
     <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
-    <EmbeddedResource Include="HtmlFileTest\Skyline Custom Reports.html.testfile" />
-    <EmbeddedResource Include="HtmlFileTest\Japanese\Skyline Custom Reports.html.testfile" />
-    <EmbeddedResource Include="HtmlFileTest\Chinese\Skyline Custom Reports.html.testfile" />
+    <EmbeddedResource Include="HtmlFileTest\en\index.html.testfile" />
+    <EmbeddedResource Include="HtmlFileTest\ja\index.html.testfile" />
+    <EmbeddedResource Include="HtmlFileTest\zh-CHS\index.html.testfile" />
     <EmbeddedResource Include="HtmlMergeTest\en\index.html.testfile" />
     <EmbeddedResource Include="HtmlMergeTest\ja\index.html.testfile" />
     <EmbeddedResource Include="HtmlMergeTest\ja\index.source.html.testfile" />

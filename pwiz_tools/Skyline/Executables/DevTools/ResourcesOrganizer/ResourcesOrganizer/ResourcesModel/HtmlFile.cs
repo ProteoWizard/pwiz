@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 
@@ -17,73 +18,6 @@ namespace ResourcesOrganizer.ResourcesModel
                 yield return "/html/body/ul/li";
                 yield return "/html/body/ol/li";
             }
-        }
-
-        public static HtmlFile Read(string absolutePath, string relativePath, IDictionary<string, string> localizedFolders)
-        {
-            var entries = new List<ResourceEntry>();
-            var doc = new HtmlDocument();
-            doc.Load(absolutePath);
-            foreach (var xPath in LocalizableXPaths)
-            {
-                var nodes = doc.DocumentNode.SelectNodes(xPath);
-                if (nodes == null)
-                {
-                    continue;
-                }
-                foreach (var el in nodes)
-                {
-                    var key = new InvariantResourceKey()
-                    {
-                        File = relativePath,
-                        Name = el.XPath,
-                        Value = el.InnerHtml
-                    };
-                    var resourceEntry = new ResourceEntry(el.XPath, key);
-                    entries.Add(resourceEntry);
-                }
-            }
-
-            string fileName = Path.GetFileName(absolutePath);
-            foreach (var localizedFolder in localizedFolders)
-            {
-                var localizedPath = Path.Combine(localizedFolder.Value, Path.GetFileName(fileName));
-                if (!File.Exists(localizedPath))
-                {
-                    continue;
-                }
-
-                var localizedDoc = new HtmlDocument();
-                localizedDoc.Load(localizedPath);
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    var entry = entries[i];
-                    var el = localizedDoc.DocumentNode.SelectSingleNode(entry.Name);
-                    if (el == null)
-                    {
-                        Console.Out.WriteLine("Unable to find {0} in {1}", entry.Name, localizedPath);
-                        continue;
-                    }
-
-                    entry = entry with
-                    {
-                        LocalizedValues =
-                        entry.LocalizedValues.SetItem(localizedFolder.Key, new LocalizedValue(el.InnerHtml))
-                    };
-                    entries[i] = entry;
-                }
-            }
-
-            foreach (var entry in entries)
-            {
-                doc.DocumentNode.SelectSingleNode(entry.Name).InnerHtml = string.Empty;
-            }
-
-            return new HtmlFile(relativePath)
-            {
-                Entries = entries.ToImmutableList(),
-                XmlContent = doc.DocumentNode.OuterHtml
-            };
         }
 
         public HtmlFile ReadEnglish(string path)
@@ -143,11 +77,16 @@ namespace ResourcesOrganizer.ResourcesModel
                 throw new ArgumentException(string.Format("{0} should be {1}", localized.RelativePath, RelativePath));
             }
             var entries = Entries.ToList();
+
             var exactIndex = Enumerable.Range(0, entries.Count).ToDictionary(i => entries[i].Invariant);
-            var withoutXPathIndexes = Enumerable.Range(0, entries.Count).ToDictionary(i =>
-                entries[i].Invariant with { Name = RemoveIndexesFromXPath(entries[i].Invariant.Name) });
+            var withoutXPathIndexes = Enumerable.Range(0, entries.Count)
+                .GroupBy(i => entries[i].Invariant with { Name = RemoveIndexesFromXPath(entries[i].Invariant.Name) })
+                .Where(group => group.Count() == 1)
+                .ToDictionary(group => group.Key, group => group.Single());
             var withoutText = Enumerable.Range(0, entries.Count)
-                .ToDictionary(i => entries[i].Invariant with { Value = string.Empty });
+                .GroupBy(i => entries[i].Invariant with { Value = string.Empty })
+                .Where(group => group.Count() == 1)
+                .ToDictionary(group => group.Key, group => group.Single());
             foreach (var newEntry in localized.Entries)
             {
                 var key = newEntry.Invariant;
@@ -316,14 +255,34 @@ namespace ResourcesOrganizer.ResourcesModel
         }
 
         private static readonly Regex RegexXpathIndex =
-            new Regex("\\[\\d\\]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            new Regex("\\[\\d+\\]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static string? RemoveIndexesFromXPath(string? xPath)
         {
-            if (xPath == null)
+            StringBuilder stringBuilder = new StringBuilder();
+            bool inBrackets = false;
+            foreach (var ch in xPath)
             {
-                return null;
+                if (inBrackets)
+                {
+                    if (ch == ']')
+                    {
+                        inBrackets = false;
+                    }
+                }
+                else
+                {
+                    if (ch == '[')
+                    {
+                        inBrackets = true;
+                    }
+                    else
+                    {
+                        stringBuilder.Append(ch);
+                    }
+                }
             }
-            return RegexXpathIndex.Replace(xPath, string.Empty);
+
+            return stringBuilder.ToString();
         }
 
         public HtmlDocument ExportHtmlDocument(string? language)
@@ -342,7 +301,11 @@ namespace ResourcesOrganizer.ResourcesModel
                 string? innerHtml = null;
                 if (language != null)
                 {
-                    innerHtml = entry.GetLocalizedText(language);
+                    var translation = entry.GetTranslation(language);
+                    if (translation?.Issue == null)
+                    {
+                        innerHtml = translation?.Value;
+                    }
                 }
 
                 innerHtml ??= entry.Invariant.Value;
