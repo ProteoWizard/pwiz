@@ -37,7 +37,7 @@ namespace Test
             var withImportedTranslations = newDatabase.ImportLastVersion(oldDatabase, Languages, out _, out _);
 
             var entryName = "button1.Location";
-            var importedFile = withImportedTranslations.ResourcesFiles.Values.Single();
+            var importedFile = (ResourcesFile)withImportedTranslations.ResourcesFiles.Values.Single();
             var importedEntry = importedFile.FindEntry(entryName);
             Assert.IsNotNull(importedEntry);
             var newEntry = newResourcesFile.FindEntry(entryName);

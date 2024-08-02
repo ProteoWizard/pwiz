@@ -39,7 +39,7 @@ namespace Test
             var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             var resourcesDatabase = new ResourcesDatabase
             {
-                ResourcesFiles = ImmutableDictionary<string, ResourcesFile>.Empty.Add("test", file)
+                ResourcesFiles = ImmutableDictionary<string, LocalizableFile>.Empty.Add("test", file)
             };
             Assert.AreNotEqual(0, resourcesDatabase.GetInvariantResources().Count());
             var dbPath = Path.Combine(runDirectory, "resources.db");
@@ -58,7 +58,7 @@ namespace Test
             var file = ResourcesFile.Read(Path.Combine(runDirectory, "Resources.resx"), "Resources.resx");
             var resourcesDatabase = ResourcesDatabase.Empty with
             {
-                ResourcesFiles = ImmutableDictionary<string, ResourcesFile>.Empty.Add("test", file)
+                ResourcesFiles = ImmutableDictionary<string, LocalizableFile>.Empty.Add("test", file)
             };
             var dbPath = Path.Combine(runDirectory, "resources.db");
             resourcesDatabase.Save(dbPath);

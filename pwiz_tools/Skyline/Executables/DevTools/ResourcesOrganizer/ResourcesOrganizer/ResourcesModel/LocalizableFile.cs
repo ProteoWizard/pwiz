@@ -36,9 +36,15 @@ namespace ResourcesOrganizer.ResourcesModel
 
         public abstract string ExportFile(string? language, bool overrideAll);
 
-        public virtual LocalizableFile Add(LocalizableFile other)
+        public virtual LocalizableFile Merge(LocalizableFile other)
         {
             return this;
         }
+
+        public ResourceEntry? FindEntry(string name)
+        {
+            return Entries.FirstOrDefault(entry => entry.Name == name);
+        }
+
     }
 }

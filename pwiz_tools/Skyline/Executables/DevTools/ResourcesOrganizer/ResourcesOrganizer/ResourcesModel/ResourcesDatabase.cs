@@ -296,7 +296,7 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 if (resourcesFiles.TryGetValue(resourcesFile.Key, out var existing))
                 {
-                    resourcesFiles[resourcesFile.Key] = existing.Add(resourcesFile.Value);
+                    resourcesFiles[resourcesFile.Key] = existing.Merge(resourcesFile.Value);
                 }
                 else
                 {

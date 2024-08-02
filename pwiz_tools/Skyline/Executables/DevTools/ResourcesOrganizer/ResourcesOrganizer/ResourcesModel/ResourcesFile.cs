@@ -25,11 +25,6 @@ namespace ResourcesOrganizer.ResourcesModel
     public record ResourcesFile(string RelativePath) : LocalizableFile(RelativePath)
     {
         public static readonly XName XmlSpace = XName.Get("space", "http://www.w3.org/XML/1998/namespace");
-        public ResourceEntry? FindEntry(string name)
-        {
-            return Entries.FirstOrDefault(entry => entry.Name == name);
-        }
-
         public static ResourcesFile Read(string absolutePath, string relativePath)
         {
             var entries = new List<ResourceEntry>();
@@ -141,7 +136,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return node is XElement;
         }
 
-        public override LocalizableFile Add(LocalizableFile other)
+        public override LocalizableFile Merge(LocalizableFile other)
         {
             return Add((ResourcesFile) other);
         }
