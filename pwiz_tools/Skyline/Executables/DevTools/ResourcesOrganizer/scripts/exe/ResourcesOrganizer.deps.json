@@ -11,6 +11,8 @@
           "Antlr3.Runtime": "3.5.0.2",
           "CommandLine": "2.9.1.0",
           "CsvHelper": "33.0.0.0",
+          "F23.StringSimilarity": "6.0.0.0",
+          "HtmlAgilityPack": "1.11.62.0",
           "Iesi.Collections": "4.0.0.4000",
           "Microsoft.Data.Sqlite": "8.0.6.0",
           "NHibernate": "5.5.0.0",
@@ -49,6 +51,22 @@
           "CsvHelper.dll": {
             "assemblyVersion": "33.0.0.0",
             "fileVersion": "33.0.1.24"
+          }
+        }
+      },
+      "F23.StringSimilarity/6.0.0.0": {
+        "runtime": {
+          "F23.StringSimilarity.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.0.0"
+          }
+        }
+      },
+      "HtmlAgilityPack/1.11.62.0": {
+        "runtime": {
+          "HtmlAgilityPack.dll": {
+            "assemblyVersion": "1.11.62.0",
+            "fileVersion": "1.11.62.0"
           }
         }
       },
@@ -167,6 +185,16 @@
       "sha512": ""
     },
     "CsvHelper/33.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "F23.StringSimilarity/6.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "HtmlAgilityPack/1.11.62.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

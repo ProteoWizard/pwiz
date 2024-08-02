@@ -1,10 +1,7 @@
 ﻿using System.Collections.Immutable;
-using System.ComponentModel.DataAnnotations;
 using System.Text;
-using System.Text.RegularExpressions;
 using F23.StringSimilarity;
 using HtmlAgilityPack;
-using NHibernate.Transform;
 
 namespace ResourcesOrganizer.ResourcesModel
 {
@@ -29,6 +26,10 @@ namespace ResourcesOrganizer.ResourcesModel
             var entries = new List<ResourceEntry>();
             foreach (var el in ListLocalizableElements(doc.DocumentNode))
             {
+                if (!ContainsLocalizableText(el))
+                {
+                    continue;
+                }
                 var key = new InvariantResourceKey()
                 {
                     File = RelativePath,
@@ -130,8 +131,8 @@ namespace ResourcesOrganizer.ResourcesModel
                         }
                         var newEntry = bestMatchTuple.Item2;
                         var newTranslation = newEntry.LocalizedValues[language];
-                        LocalizationIssue issue = null;
-                        if (!Equals(newEntry.Invariant.Value, entry.Invariant.Value))
+                        LocalizationIssue? issue = null;
+                        if (!Equals(NormalizeWhitespace(newEntry.Invariant.Value), NormalizeWhitespace(entry.Invariant.Value)))
                         {
                             issue = new EnglishTextChanged(newEntry.Invariant.Value, newTranslation.Value);
                         }
@@ -177,10 +178,9 @@ namespace ResourcesOrganizer.ResourcesModel
                     continue;
                 }
 
-                List<ResourceEntry> localizedEntries;
                 var localizedDoc = new HtmlDocument();
                 localizedDoc.Load(localizedFile);
-                var baseFile = Path.Combine(subFolder, "index.source.html");
+                var baseFile = Path.Combine(subFolder, "invariant.html");
                 if (File.Exists(baseFile))
                 {
                     var baseHtmlFile = new HtmlFile(relativePath).ReadEnglish(baseFile);
@@ -196,83 +196,6 @@ namespace ResourcesOrganizer.ResourcesModel
             return htmlFile;
         }
 
-        private static void AddLocalizedEntries(List<ResourceEntry> entries,
-            string language, HtmlDocument localizedDoc)
-        {
-            for (int i = 0; i < entries.Count; i++)
-            {
-                var entry = entries[i];
-                var node = localizedDoc.DocumentNode.SelectSingleNode(entry.Name);
-                if (node == null)
-                {
-                    Console.Out.WriteLine("Unable to find {0} in {1}", entry.Name, language);
-                    continue;
-                }
-                entries[i] = entry with
-                {
-                    LocalizedValues =
-                    entry.LocalizedValues.SetItem(language, new LocalizedValue(node.InnerHtml))
-                };
-            }
-        }
-
-        private static void MergeLocalized(List<ResourceEntry> invariants, IEnumerable<ResourceEntry> newEntries)
-        {
-            var list = invariants.ToList();
-            var exactIndex = Enumerable.Range(0, list.Count).ToDictionary(i => list[i].Invariant with { File = null });
-            var withoutXPathIndexes = Enumerable.Range(0, list.Count).ToDictionary(i =>
-                list[i].Invariant with { File = null, Name = RemoveIndexesFromXPath(list[i].Invariant.Name) });
-            var withoutText = Enumerable.Range(0, list.Count)
-                .ToDictionary(i => list[i].Invariant with { Value = string.Empty });
-            foreach (var newEntry in newEntries)
-            {
-                var key = newEntry.Invariant with { File = null };
-                foreach (var localizedEntry in newEntry.LocalizedValues)
-                {
-                    LocalizationIssue? localizationIssue = null;
-                    if (!exactIndex.TryGetValue(key, out int index))
-                    {
-                        if (!withoutXPathIndexes.TryGetValue(key with { Name = RemoveIndexesFromXPath(key.Name) }, out index))
-                        {
-                            if (!withoutText.TryGetValue(key with { Value = string.Empty }, out index))
-                            {
-                                continue;
-                            }
-
-                            localizationIssue =
-                                new EnglishTextChanged(newEntry.Invariant.Value, localizedEntry.Value.Value);
-                        }
-                    }
-
-                    var matchingEntry = list[index];
-                    foreach (var localizedValue in newEntry.LocalizedValues)
-                    {
-                        matchingEntry = matchingEntry with
-                        {
-                            LocalizedValues =
-                            matchingEntry.LocalizedValues.SetItem(localizedValue.Key, localizedValue.Value with { Issue = localizationIssue})
-                        };
-                    }
-                    list[index] = matchingEntry;
-                }
-            }
-        }
-
-        private IEnumerable<ResourceEntry> ReadInvariantEntries(HtmlDocument doc, string relativePath)
-        {
-            foreach (var el in ListLocalizableElements(doc.DocumentNode))
-            {
-                var key = new InvariantResourceKey()
-                {
-                    File = relativePath,
-                    Name = el.XPath,
-                    Value = el.InnerHtml
-                };
-                var resourceEntry = new ResourceEntry(el.XPath, key);
-                yield return resourceEntry;
-            }
-        }
-
         private static IEnumerable<HtmlNode> ListLocalizableElements(HtmlNode node)
         {
             string strippedXPath = RemoveIndexesFromXPath(node.XPath)!;
@@ -284,9 +207,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return node.ChildNodes.SelectMany(ListLocalizableElements);
         }
 
-        private static readonly Regex RegexXpathIndex =
-            new Regex("\\[\\d+\\]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-        private static string? RemoveIndexesFromXPath(string? xPath)
+        private static string RemoveIndexesFromXPath(string xPath)
         {
             StringBuilder stringBuilder = new StringBuilder();
             bool inBrackets = false;
@@ -345,11 +266,6 @@ namespace ResourcesOrganizer.ResourcesModel
             return htmlDocument;
         }
 
-        public override LocalizableFile ImportLocalizationRecords(string language, ILookup<string, LocalizationCsvRecord> records, out int matchCount, out int changeCount)
-        {
-            throw new NotImplementedException();
-        }
-
         public override string ExportFile(string? language, bool overrideAll)
         {
             using var stringWriter = new StringWriter();
@@ -362,6 +278,39 @@ namespace ResourcesOrganizer.ResourcesModel
             var htmlDocument = new HtmlDocument();
             htmlDocument.Load(path);
             return htmlDocument;
+        }
+
+        private bool ContainsLocalizableText(HtmlNode node)
+        {
+            return node.InnerText.Any(ch => !char.IsWhiteSpace(ch));
+        }
+
+        private string NormalizeWhitespace(string text)
+        {
+            var stringBuilder = new StringBuilder();
+            bool whitespace = true;
+            foreach (var ch in text)
+            {
+                if (char.IsWhiteSpace(ch))
+                {
+                    whitespace = true;
+                }
+                else
+                {
+                    if (whitespace && stringBuilder.Length > 0)
+                    {
+                        stringBuilder.Append(" ");
+                    }
+                    whitespace = false;
+                    stringBuilder.Append(ch);
+                }
+            }
+            return stringBuilder.ToString();
+        }
+
+        public override string FileType
+        {
+            get { return "html"; }
         }
     }
 }

@@ -301,5 +301,11 @@ namespace ResourcesOrganizer.ResourcesModel
 
             return this with { Entries = entries.ToImmutableList() };
         }
+
+        public override string FileType
+        {
+            get { return "resx"; }
+        }
+    }
     }
 }

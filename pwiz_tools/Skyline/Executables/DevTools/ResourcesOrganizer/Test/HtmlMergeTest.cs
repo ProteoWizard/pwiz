@@ -28,6 +28,7 @@ namespace Test
             Assert.AreNotEqual(0, jaEntryCount);
             database.ExportLocalizationCsv(Path.Combine(folder, "Localization_zh-CHS.csv"), "zh-CHS", out int zhEntryCount);
             Assert.AreNotEqual(0, zhEntryCount);
+            database.Save(Path.Combine(folder, "localization.db"));
         }
     }
 }

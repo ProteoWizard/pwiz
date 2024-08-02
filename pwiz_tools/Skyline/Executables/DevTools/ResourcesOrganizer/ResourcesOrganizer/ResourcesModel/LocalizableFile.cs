@@ -29,10 +29,17 @@ namespace ResourcesOrganizer.ResourcesModel
 
         public string XmlContent { get; init; } = string.Empty;
 
+        public abstract string FileType { get; }
 
-        public abstract LocalizableFile ImportLocalizationRecords(string language,
+
+        public virtual LocalizableFile ImportLocalizationRecords(string language,
             ILookup<string, LocalizationCsvRecord> records,
-            out int matchCount, out int changeCount);
+            out int matchCount, out int changeCount)
+        {
+            matchCount = 0;
+            changeCount = 0;
+            return this;
+        }
 
         public abstract string ExportFile(string? language, bool overrideAll);
 
