@@ -235,9 +235,6 @@ namespace pwiz.PanoramaClient
             // We could still have a LabKey error in the JSON response. For example, when we get a 404
             // response when trying to upload to a folder that does not exist. The response contains a 
             // LabKey error like "No such folder or workbook..."
-            // Do not close the WebResponse by accessing it in a using statement here. We access the Status
-            // property of the response in the PanoramaServerException constructor.  The response will
-            // be closed there.
             return GetIfErrorInResponse(e.Response);
         }
 
@@ -397,15 +394,48 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        public PanoramaServerException(string message, Exception e) : base(message, e)
+        private PanoramaServerException(string message, Exception e) : base(message, e)
+        {
+            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode;
+        }
+
+        public static PanoramaServerException Create(string message, Uri uri, string response, Exception e)
         {
             if (e is WebException webException)
             {
-                using (var response = webException.Response as HttpWebResponse)
-                {
-                    HttpStatus = response?.StatusCode;
-                }
+                return CreateWithResponseDisposal(message, uri, response, webException);
             }
+
+            var errorMessage = new ErrorMessageBuilder (Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
+                    .ExceptionMessage(e.Message).Uri(uri).Response(response).ToString();
+            return new PanoramaServerException(errorMessage, e);
+        }
+
+        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<WebException, LabKeyError> getLabKeyError, WebException e)
+        {
+            var errorMessageBuilder = new ErrorMessageBuilder(message)
+                .Uri(uri)
+                .ExceptionMessage(e.Message)
+                .LabKeyError(getLabKeyError(e)); // Will read the WebException's Response property.
+
+            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
+        }
+
+        private static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, string response, WebException e)
+        {
+            var errorMessageBuilder = new ErrorMessageBuilder(message)
+                .Uri(uri)
+                .ExceptionMessage(e.Message)
+                .Response(response);
+
+            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
+        }
+
+        private static PanoramaServerException CreateWithResponseDisposal(string errorMessage, WebException e)
+        {
+            var exception = new PanoramaServerException(errorMessage, e); // Will read WebException's Response.StatusCode
+            e.Response?.Dispose();
+            return exception;
         }
     }
 
