@@ -276,6 +276,10 @@ namespace pwiz.Skyline.Alerts
 
             // var applicationCode_BeforeRegister = Account.ApplicationCode;
 
+
+            // applicationCode_BeforeRegister = null;  //  TODO  FAKE
+
+
             if (applicationCode_BeforeRegister == null)
             {
                 _firstTime_ExecuteClientRegistration = false;
@@ -682,6 +686,8 @@ namespace pwiz.Skyline.Alerts
         // Activate the client in the Ardia platform using the client code obtained from the client creation response
         private async Task<IdentityClient> ActivateClient(string clientCode, TokenResponse userTokenResponse)
         {
+            var skylineVersion = pwiz.Skyline.Util.Install.Version;
+
             var activateClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/activate";
             var accessToken = userTokenResponse.AccessToken;
             // Define the client activation input
@@ -689,7 +695,7 @@ namespace pwiz.Skyline.Alerts
             {
                 ApplicationCode = clientCode,
                 AppName = @"SkylineApp",
-                Version = @"Unknown",
+                Version = skylineVersion,
                 PCName = Environment.MachineName,
                 RedirectUris = new List<string>() { @"http://localhost:5001/signin-oidc" },
                 PostLogoutRedirectUris = new List<string>() { @"http://localhost:5001/signout-oidc" },
