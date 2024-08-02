@@ -70,7 +70,6 @@ namespace pwiz.Skyline.Util
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
         private string Description { get; set; } // The text description (will be empty for protonation, we just use charge)
-        private ParsedMolecule IsotopeLabels { get; set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
         private TypedMass AverageMassAdduct { get; set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
         private TypedMass MonoMassAdduct { get; set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
         private int MassMultiplier { get; set; } // Returns, for example, the 2 in "[2M+Na]", which means the ion is two molecules + the adduct mass. 
@@ -566,6 +565,8 @@ namespace pwiz.Skyline.Util
             }
         }
         public Adduct Unlabeled { get; private set; } // Version of this adduct without any isotope labels
+
+        public ParsedMolecule IsotopeLabels { get; private set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
 
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.

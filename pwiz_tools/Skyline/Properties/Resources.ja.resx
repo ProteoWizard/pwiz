@@ -3176,9 +3176,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>ライブラリ「{0}」に無効なエントリが見つかりました。
 {2}個のペプチドまたは分子のうち、{3}を含む{1}個が無効でした。 </value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
-    <value>ライブラリ強度</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>既存ツールのディレクトリの削除エラー。このディレクトリを使用しているプログラムをすべて閉じ、後でもう一度上書きインポートしてください</value>
   </data>

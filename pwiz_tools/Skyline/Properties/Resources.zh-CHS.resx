@@ -3179,9 +3179,6 @@
     <value>在库 '{0}' 中找到无效的条目。
 {2} 个肽段或分子中的 {1} 个无效，包括:：{3}</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
-    <value>库强度</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>删除现有工具目录出错。请关闭使用该目录的所有内容并且稍候再次尝试覆盖导入</value>
   </data>
