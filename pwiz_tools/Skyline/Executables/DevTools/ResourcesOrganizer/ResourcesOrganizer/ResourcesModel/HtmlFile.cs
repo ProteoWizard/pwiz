@@ -383,40 +383,32 @@ namespace ResourcesOrganizer.ResourcesModel
 
         private string? DescribeIncompatibilities(HtmlDocument localizedDocument)
         {
-            var invariantKeys = Entries.Select(entry => entry.Name).ToHashSet();
-            var localizedNodes = ListLocalizableElements(localizedDocument.DocumentNode)
-                .ToDictionary(node => node.XPath);
-            var extraKeys = localizedNodes
-                .Where(entry => !invariantKeys.Contains(entry.Key) && ContainsLocalizableText(entry.Value))
-                .Select(entry => entry.Key).ToList();
-            var missingKeys = invariantKeys.Except(localizedNodes.Keys).ToList();
-            if (missingKeys.Count == 0)
+            var localizedNodes = ListLocalizableElements(localizedDocument.DocumentNode).Where(ContainsLocalizableText)
+                .ToList();
+            for (int i = 0; i < Math.Min(Entries.Count, localizedNodes.Count); i++)
             {
-                if (extraKeys.Count == 0)
+                var entry = Entries[i];
+                var localizedNode = localizedNodes[i];
+                if (entry.Name != localizedNode.XPath)
                 {
-                    return null;
+                    return string.Format("Mismatch: Invariant Path:{0} Text:{1}\r\nDoes not match Localized Path:{2} Text:{3}", entry.Name,
+                        entry.Invariant.Value, localizedNode.XPath, localizedNode.InnerHtml);
                 }
-
-                if (extraKeys.Count == 1)
-                {
-                    return string.Format("Extra node: {0}", extraKeys.Single());
-                }
-
-                return string.Format("{0} extra nodes", extraKeys.Count);
             }
 
-            if (extraKeys.Count == 0)
+            if (Entries.Count > localizedNodes.Count)
             {
-                if (missingKeys.Count == 1)
-                {
-                    return string.Format("Missing node {0}", missingKeys.Single());
-                }
-
-                return string.Format("{0} missing nodes", missingKeys.Count);
+                return string.Format("Extra Invariant Path:{0} Text:{1}",
+                    Entries[localizedNodes.Count].Name, Entries[localizedNodes.Count].Invariant.Value);
             }
 
-            return string.Format("{0} missing nodes and {1} extra nodes", missingKeys.Count,
-                extraKeys.Count);
+            if (localizedNodes.Count > Entries.Count)
+            {
+                return string.Format("Extra Localized Path:{0} Text:{1}",
+                    localizedNodes[Entries.Count].XPath, localizedNodes[Entries.Count].InnerHtml);
+            }
+
+            return null;
         }
     }
 }
