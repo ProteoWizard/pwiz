@@ -18,11 +18,17 @@
  */
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Windows.Forms;
+using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -46,12 +52,14 @@ namespace pwiz.SkylineTestFunctional
 
         private const string PYTHON = "Python";
         private const string VERSION_27 = "2.7";
+        private const string VERSION_312 = "3.12.4";
         private const string EXE_PACKAGE = "http://test.com/package.exe";
         private const string TARGZ_PACKAGE = "http://test.com/package.tar.gz";
         private const string ZIP_PACKAGE = "http://test.com/package.zip";
         private const string LOCAL_ZIP_PACKAGE = "C:\\localpackage.zip";
         private const string LOCAL_TARGZ_PACKAGE = "C:\\localpackage.tar.gz";
         private const string LOCAL_EXE_PACKAGE = "C:\\localpackage.exe";
+        private const string BACK_SLASH = @"\";
         
         protected override void DoTest()
         {
@@ -60,6 +68,26 @@ namespace pwiz.SkylineTestFunctional
             TestGetPython();
             TestGetPackages();
             TestStartToFinish();
+            TestDownloadPythonEmbeddablePackage_Cancel();
+            TestDownloadPythonEmbeddablePackage_Fail();
+            TestDownloadPythonEmbeddablePackage_Success();
+            TestUnzipPythonEmbeddablePackage_Fail();
+            TestUnzipPythonEmbeddablePackage_Success();
+            TestEnableSearchPathInPythonEmbeddablePackage_NoSearchPathFile_Fail();
+            TestEnableSearchPathInPythonEmbeddablePackage_MoreThanOneSearchPathFile_Fail();
+            TestEnableSearchPathInPythonEmbeddablePackage_Success();
+            TestDownloadGetPipScript_Cancel();
+            TestDownloadGetPipScript_Fail();
+            TestDownloadGetPipScript_Success();
+            TestRunGetPipScript_Fail();
+            TestRunGetPipScript_Success();
+            TestPipInstallVirtualenv_Fail();
+            TestPipInstallVirtualenv_Success();
+            TestCreateVirtualEnvironment_Fail();
+            TestCreateVirtualEnvironment_Success();
+            TestPipInstallPackages_Fail();
+            TestPipInstallPackages_Success();
+            TestStartToFinishWithVirtualEnvironment_Success();
         }
 
         // Tests that the form loads with the proper display based on whether Python is installed or not, as
@@ -518,6 +546,826 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(pythonInstaller);
         }
 
+        private static void TestDownloadPythonEmbeddablePackage_Cancel()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = true
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_download_Python_embeddable_package, dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, dlg2.Message));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestDownloadPythonEmbeddablePackage_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = false,
+                    DownloadSuccess = false
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_download_Python_embeddable_package, dlg1.Message));
+            
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.PythonInstaller_DownloadPython_Download_failed_,
+                Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), dlg2.Message));
+            
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestDownloadPythonEmbeddablePackage_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = false,
+                    DownloadSuccess = true
+                };
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.download_python_embeddable_package };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestUnzipPythonEmbeddablePackage_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.download_python_embeddable_package);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_unzip_Python_embeddable_package, dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.IsTrue(dlg2.Message.Contains($@"Could not find file")));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestUnzipPythonEmbeddablePackage_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+            try
+            {
+                var fileName = $@"test.txt";
+                var filePath = CreateFile(PythonUtil.PythonRootDir, fileName);
+                CreateZipFile(pythonInstaller.PythonEmbeddablePackageDownloadPath, (fileName, filePath));
+            }
+            catch (Exception ex)
+            {
+                CleanupDir(PythonUtil.PythonRootDir);
+                throw;
+            }
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.unzip_python_embeddable_package };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestEnableSearchPathInPythonEmbeddablePackage_NoSearchPathFile_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.unzip_python_embeddable_package);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            try
+            {
+                CreateDirectory(pythonInstaller.PythonEmbeddablePackageExtractDir);
+            }
+            catch (Exception e)
+            {
+                CleanupDir(PythonUtil.PythonRootDir);
+                throw;
+            }
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_enable_search_path_in_Python_embeddable_package, dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with___pth_extension__this_is_unexpected_, dlg2.Message));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestEnableSearchPathInPythonEmbeddablePackage_MoreThanOneSearchPathFile_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.unzip_python_embeddable_package);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            try
+            {
+                CreateDirectory(pythonInstaller.PythonEmbeddablePackageExtractDir);
+                CreateFile(pythonInstaller.PythonEmbeddablePackageExtractDir, @"file1._pth");
+                CreateFile(pythonInstaller.PythonEmbeddablePackageExtractDir, @"file2._pth");
+            }
+            catch (Exception e)
+            {
+                CleanupDir(PythonUtil.PythonRootDir);
+                throw;
+            }
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_enable_search_path_in_Python_embeddable_package, dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with___pth_extension__this_is_unexpected_, dlg2.Message));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestEnableSearchPathInPythonEmbeddablePackage_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            try
+            {
+                CreateDirectory(pythonInstaller.PythonEmbeddablePackageExtractDir);
+                CreateFile(pythonInstaller.PythonEmbeddablePackageExtractDir, @"python312._pth");
+            }
+            catch (Exception e)
+            {
+                CleanupDir(PythonUtil.PythonRootDir);
+                throw;
+            }
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.enable_search_path_in_python_embeddable_package };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.IsTrue(File.Exists(pythonInstaller.PythonEmbeddablePackageExtractDir + BACK_SLASH + @"python312.pth")));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestDownloadGetPipScript_Cancel()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.enable_search_path_in_python_embeddable_package);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = true
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_download_the_get_pip_py_script, dlg1.Message));
+            
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, dlg2.Message));
+            
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestDownloadGetPipScript_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.enable_search_path_in_python_embeddable_package);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = false,
+                    DownloadSuccess = false
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_download_the_get_pip_py_script, dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, dlg2.Message));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestDownloadGetPipScript_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = false,
+                    DownloadSuccess = true
+                };
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.download_getpip_script };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestRunGetPipScript_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.download_getpip_script);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 1
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_run_the_get_pip_py_script, dlg1.Message));
+            
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.IsTrue(dlg2.Message.Contains($@"Failed to execute command")));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestRunGetPipScript_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 0
+                };
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.run_getpip_script };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestPipInstallVirtualenv_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.run_getpip_script);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 1
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_run_pip_install__0_, @"virtualenv"), dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.IsTrue(dlg2.Message.Contains($@"Failed to execute command")));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestPipInstallVirtualenv_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 0
+                };
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.pip_install_virtualenv };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestCreateVirtualEnvironment_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.pip_install_virtualenv);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 1
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual( 
+                string.Format(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_create_virtual_environment__0_, @"test"), dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.IsTrue(dlg2.Message.Contains($@"Failed to execute command")));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestCreateVirtualEnvironment_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 0
+                };
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.create_virtual_environment };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestPipInstallPackages_Fail()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            taskValidator.SetSuccessUntil(TaskName.create_virtual_environment);
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 1
+                };
+            });
+
+            // Test
+            var dlg1 = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(
+                string.Format(ToolsUIResources.PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_install_Python_packages_in_virtual_environment__0_, @"test"), dlg1.Message));
+
+            OkDialog(dlg1, dlg1.OkDialog);
+            var dlg2 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.IsTrue(dlg2.Message.Contains($@"Failed to execute command")));
+
+            OkDialog(dlg2, dlg2.OkDialog);
+            var dlg3 = WaitForOpenForm<MessageDlg>();
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+
+            OkDialog(dlg3, dlg3.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestPipInstallPackages_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            RunUI(() =>
+            {
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 0
+                };
+                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<TaskName>
+                    { TaskName.pip_install_packages };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
+        private static void TestStartToFinishWithVirtualEnvironment_Success()
+        {
+            // Set up
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+            };
+            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller =
+                ShowDialog<PythonInstaller>(
+                    () => InstallProgramWithVirtualEnvironment(
+                        new ProgramPathContainer(PYTHON, VERSION_312), packages, taskValidator, @"test"));
+
+            try
+            {
+                var fileName = $@"python312._pth";
+                var filePath = CreateFile(PythonUtil.PythonRootDir, fileName);
+                CreateZipFile(pythonInstaller.PythonEmbeddablePackageDownloadPath, (fileName, filePath));
+            }
+            catch (Exception ex)
+            {
+                CleanupDir(PythonUtil.PythonRootDir);
+                throw;
+            }
+            RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = false,
+                    DownloadSuccess = true
+                };
+                pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = true,
+                    ExitCode = 0
+                };
+            });
+
+            // Test
+            var dlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialogVirtualEnvironment);
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(8, pythonInstaller.NumTotalTasks));
+            RunUI(() => Assert.AreEqual(8, pythonInstaller.NumCompletedTasks));
+
+            OkDialog(dlg, dlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
+
+            // Tear down
+            CleanupDir(PythonUtil.PythonRootDir);
+        }
+
         private static void InstallProgram(ProgramPathContainer ppc, IEnumerable<string> packageUris, bool installed)
         {
             using (var dlg = new PythonInstaller(ppc, packageUris, installed, null))
@@ -525,6 +1373,49 @@ namespace pwiz.SkylineTestFunctional
                 // Keep OK button from doing anything ever
                 dlg.TestRunProcess = new TestRunProcess { ExitCode = 0 }; 
                 dlg.ShowDialog(SkylineWindow);
+            }
+        }
+        private static void InstallProgramWithVirtualEnvironment(ProgramPathContainer programPathContainer, IEnumerable<PythonPackage> packages, IPythonInstallerTaskValidator taskValidator, string virtualEnvironmentName)
+        {
+            using var dlg = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), taskValidator, virtualEnvironmentName: virtualEnvironmentName);
+            dlg.TestRunProcess = new TestRunProcess { ExitCode = 0 };
+            dlg.ShowDialog(SkylineWindow);
+        }
+
+        private static string CreateFile(string dir, string fileName, string content = "")
+        {
+            var path = dir + BACK_SLASH + fileName;
+            var buffer = new UTF8Encoding(true).GetBytes(content);
+            using var fileStream = File.Create(path);
+            fileStream.Write(buffer, 0, buffer.Length);
+            return path;
+        }
+
+        private static void CreateZipFile(string outputFilePath, params (string entryName, string filePath)[] inputFileTuples )
+        {
+            using var zipFile = new ZipFile();
+            foreach (var inputFileTuple in inputFileTuples)
+            {
+                var entry = zipFile.AddFile(inputFileTuple.filePath);
+                entry.FileName = inputFileTuple.entryName;
+            }
+            zipFile.Save(outputFilePath);
+        }
+
+        private static void CreateDirectory(string dir)
+        {
+            if (Directory.Exists(dir))
+            {
+                return;
+            }
+            Directory.CreateDirectory(dir);
+        }
+
+        private static void CleanupDir(string dir)
+        {
+            if (Directory.Exists(dir))
+            {
+                Directory.Delete(dir, true);
             }
         }
 

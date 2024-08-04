@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnInstall.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -145,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnInstall.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -172,16 +175,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
-  <data name="labelMessage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="labelMessage.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
   </data>
   <data name="labelMessage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
+    <value>3, 3</value>
+  </data>
+  <data name="labelMessage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>290, 52</value>
+    <value>286, 52</value>
   </data>
   <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -196,19 +202,19 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMessage.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabStandard</value>
   </data>
   <data name="&gt;&gt;labelMessage.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="clboxPackages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="clboxPackages.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
   </data>
   <data name="clboxPackages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 62</value>
+    <value>3, 56</value>
   </data>
   <data name="clboxPackages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>290, 184</value>
+    <value>286, 184</value>
   </data>
   <data name="clboxPackages.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -220,9 +226,150 @@
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;clboxPackages.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabStandard</value>
   </data>
   <data name="&gt;&gt;clboxPackages.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="tabStandard.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabStandard.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabStandard.Size" type="System.Drawing.Size, System.Drawing">
+    <value>292, 243</value>
+  </data>
+  <data name="tabStandard.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabStandard.Text" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="&gt;&gt;tabStandard.Name" xml:space="preserve">
+    <value>tabStandard</value>
+  </data>
+  <data name="&gt;&gt;tabStandard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabStandard.Parent" xml:space="preserve">
+    <value>tabs</value>
+  </data>
+  <data name="&gt;&gt;tabStandard.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textBoxVirtualEnvironment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 61</value>
+  </data>
+  <data name="textBoxVirtualEnvironment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>280, 176</value>
+  </data>
+  <data name="textBoxVirtualEnvironment.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="textBoxVirtualEnvironment.Text" xml:space="preserve">
+    <value>- item1
+- item2
+- item3
+- item4</value>
+  </data>
+  <data name="&gt;&gt;textBoxVirtualEnvironment.Name" xml:space="preserve">
+    <value>textBoxVirtualEnvironment</value>
+  </data>
+  <data name="&gt;&gt;textBoxVirtualEnvironment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxVirtualEnvironment.Parent" xml:space="preserve">
+    <value>tabVirtualEnvironment</value>
+  </data>
+  <data name="&gt;&gt;textBoxVirtualEnvironment.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelVirtualEnvironment.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelVirtualEnvironment.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="labelVirtualEnvironment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="labelVirtualEnvironment.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="labelVirtualEnvironment.MaximumSize" type="System.Drawing.Size, System.Drawing">
+    <value>285, 0</value>
+  </data>
+  <data name="labelVirtualEnvironment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>283, 52</value>
+  </data>
+  <data name="labelVirtualEnvironment.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelVirtualEnvironment.Text" xml:space="preserve">
+    <value>This tool requires Python &lt;version&gt; and the following packages. A dedicated python virtual environment &lt;env&gt; will be created for the tool. Click the "Install" button to start installation.</value>
+  </data>
+  <data name="&gt;&gt;labelVirtualEnvironment.Name" xml:space="preserve">
+    <value>labelVirtualEnvironment</value>
+  </data>
+  <data name="&gt;&gt;labelVirtualEnvironment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelVirtualEnvironment.Parent" xml:space="preserve">
+    <value>tabVirtualEnvironment</value>
+  </data>
+  <data name="&gt;&gt;labelVirtualEnvironment.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabVirtualEnvironment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabVirtualEnvironment.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabVirtualEnvironment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>292, 243</value>
+  </data>
+  <data name="tabVirtualEnvironment.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabVirtualEnvironment.Text" xml:space="preserve">
+    <value>Virtual Environment</value>
+  </data>
+  <data name="&gt;&gt;tabVirtualEnvironment.Name" xml:space="preserve">
+    <value>tabVirtualEnvironment</value>
+  </data>
+  <data name="&gt;&gt;tabVirtualEnvironment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabVirtualEnvironment.Parent" xml:space="preserve">
+    <value>tabs</value>
+  </data>
+  <data name="&gt;&gt;tabVirtualEnvironment.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="tabs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>300, 269</value>
+  </data>
+  <data name="tabs.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;tabs.Name" xml:space="preserve">
+    <value>tabs</value>
+  </data>
+  <data name="&gt;&gt;tabs.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=23.1.1.550, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;tabs.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tabs.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -240,10 +387,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Python Installer</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.550, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonInstaller</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.550, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
