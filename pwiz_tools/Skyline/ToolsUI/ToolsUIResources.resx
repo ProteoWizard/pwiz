@@ -356,4 +356,61 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>Installing updates to {0}</value>
   </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Downloading_Python_embeddable_package" xml:space="preserve">
+	  <value>Downloading Python embeddable package</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_download_Python_embeddable_package" xml:space="preserve">
+	  <value>Failed to download Python embeddable package</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Unzipping_Python_embeddable_package" xml:space="preserve">
+	  <value>Unzipping Python embeddable package</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_unzip_Python_embeddable_package" xml:space="preserve">
+	  <value>Failed to unzip Python embeddable package</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Enabling_search_path_in_Python_embeddable_package" xml:space="preserve">
+	  <value>Enabling search path in Python embeddable package</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_enable_search_path_in_Python_embeddable_package" xml:space="preserve">
+	  <value>Failed to enable search path in Python embeddable package</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Downloading_the_get_pip_py_script" xml:space="preserve">
+	  <value>Downloading the get-pip.py script</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_download_the_get_pip_py_script" xml:space="preserve">
+	  <value>Failed to download the get-pip.py script</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Running_the_get_pip_py_script" xml:space="preserve">
+	  <value>Running the get-pip.py script</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_run_the_get_pip_py_script" xml:space="preserve">
+	  <value>Failed to run the get-pip.py script</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Running_pip_install__0_" xml:space="preserve">
+	  <value>Running pip install {0}</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_run_pip_install__0_" xml:space="preserve">
+	  <value>Failed to run pip install {0}</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Creating_virtual_environment__0_" xml:space="preserve">
+	  <value>Creating virtual environment {0}</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_create_virtual_environment__0_" xml:space="preserve">
+	  <value>Failed to create virtual environment {0}</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Installing_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+	  <value>Installing Python packages in virtual environment {0}</value>
+  </data>
+  <data name="PythonInstaller_ValidatePythonVirtualEnvironment_Failed_to_install_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+	  <value>Failed to install Python packages in virtual environment {0}</value>
+  </data>
+  <data name="PythonInstaller_OkDialogVirtualEnvironment_Successfully_set_up_Python_virtual_environment" xml:space="preserve">
+	  <value>Successfully set up Python virtual environment</value>
+  </data>
+  <data name="PythonInstaller_OkDialogVirtualEnvironment_Failed_to_set_up_Python_virtual_environment" xml:space="preserve">
+	  <value>Failed to set up Python virtual environment</value>
+  </data>
+  <data name="PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with___pth_extension__this_is_unexpected_" xml:space="preserve">
+	  <value>Found 0 or more than one files with ._pth extension, this is unexpected.</value>
+  </data>
 </root>
