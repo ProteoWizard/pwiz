@@ -68,6 +68,7 @@ set(pwiz_LIBS_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_utility_minimxml.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_utility_misc.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_utility_vendor_reader_test_harness.lib
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_vendor_api_abi.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_vendor_api_agilent.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_vendor_api_thermo.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_vendor_api_uimf.lib
@@ -79,7 +80,6 @@ set(pwiz_LIBS_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libsvm.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libzlib.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msconvert.lib
-    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msparserD.lib
     )
 
 set(pwiz_LIBS_RELEASE
@@ -145,6 +145,7 @@ set(pwiz_LIBS_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_utility_minimxml.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_utility_misc.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_utility_vendor_reader_test_harness.lib
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_vendor_api_abi.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_vendor_api_agilent.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_vendor_api_thermo.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_vendor_api_uimf.lib
@@ -156,7 +157,6 @@ set(pwiz_LIBS_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libsvm.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libzlib.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msconvert.lib
-    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msparser.lib
     )
 
 set(pwiz_REDISTR_DEBUG
@@ -205,12 +205,27 @@ set(pwiz_REDISTR_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/BaseDataAccess.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/BaseError.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/BaseTof.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Compression.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Data.AnalystDataProvider.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Data.Client.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Data.CommonInterfaces.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Data.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Data.Wiff2.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Data.WiffReader.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Devices.Types.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Domain.Acquisition.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Infrastructure.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.InternalRawXYProcessing.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Muni.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.RawXYProcessing.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.StructuredStorage.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.Utility.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Clearcore2.XmlHelpers.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/IdentityModel.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Interop.DataExplorer.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/MassSpecDataReader.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/mfc90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/MIDAC.dll
-    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msparserD.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcm90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp110.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp120.dll
@@ -220,7 +235,16 @@ set(pwiz_REDISTR_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcr120.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcr90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Newtonsoft.Json.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/OFX.Core.Contracts.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/ParallelExtensionsExtras.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/protobuf-net.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/SCIEX.Apis.Data.v1.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Sciex.Clearcore.FMan.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Sciex.Data.SimpleTypes.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Sciex.Data.XYData.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Sciex.FMan.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Sciex.Wiff.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/SQLite.Interop.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/System.Data.SQLite.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/System.Runtime.Caching.Generic.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/ThermoFisher.CommonCore.Data.dll
@@ -281,12 +305,27 @@ set(pwiz_REDISTR_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/BaseDataAccess.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/BaseError.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/BaseTof.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Compression.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Data.AnalystDataProvider.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Data.Client.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Data.CommonInterfaces.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Data.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Data.Wiff2.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Data.WiffReader.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Devices.Types.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Domain.Acquisition.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Infrastructure.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.InternalRawXYProcessing.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Muni.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.RawXYProcessing.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.StructuredStorage.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.Utility.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Clearcore2.XmlHelpers.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/IdentityModel.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Interop.DataExplorer.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MassSpecDataReader.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/mfc90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MIDAC.dll
-    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msparser.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcm90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp110.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp120.dll
@@ -296,7 +335,16 @@ set(pwiz_REDISTR_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcr120.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcr90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Newtonsoft.Json.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/OFX.Core.Contracts.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/ParallelExtensionsExtras.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/protobuf-net.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/SCIEX.Apis.Data.v1.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Sciex.Clearcore.FMan.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Sciex.Data.SimpleTypes.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Sciex.Data.XYData.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Sciex.FMan.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Sciex.Wiff.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/SQLite.Interop.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/System.Data.SQLite.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/System.Runtime.Caching.Generic.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/ThermoFisher.CommonCore.Data.dll

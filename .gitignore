@@ -474,3 +474,4 @@ temp.RAMPAdapterTest.tiny.mzML
 pwiz_aux/msrc/utility/vendor_api/thermo/x64/MSFileReader.XRawfile2.SxS.manifest
 pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.mzMLb
 pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/Thyrxox 5 TS Diff Scan B.mzMLb
+pwiz/data/vendor_readers/ABI/Reader_ABI_Test.data/PressureTrace1-6500SysSuit1269-globalChromatogramsAreMs1Only.mzMLb
