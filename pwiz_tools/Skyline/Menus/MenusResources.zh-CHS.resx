@@ -319,4 +319,17 @@
   <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
     <value>第 {1} 行发现意外字符“{0}”。</value>
   </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_" xml:space="preserve">
+    <value>确定要向本文档添加诱饵吗？ 
+该文档使用谱图库中的峰边界。使用这些边界时，Skyline 不会自行检测峰。
+要准备有效地训练峰得分模型，请按照以下步骤操作：
+
+1. 导航至“设置 &gt; 肽段设置 - 库”选项卡，然后单击“编辑列表”。
+2. 选择库中的某项，单击“编辑”，然后取消选中“使用明示峰界限”复选框。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
+    <value>添加诱饵</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

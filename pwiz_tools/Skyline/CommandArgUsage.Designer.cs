@@ -133,6 +133,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used..
+        /// </summary>
+        public static string _associate_proteins_fasta {
+            get {
+                return ResourceManager.GetString("_associate_proteins_fasta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association..
         /// </summary>
         public static string _associate_proteins_gene_level_parsimony {
@@ -880,6 +889,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name..
+        /// </summary>
+        public static string _import_pep_list {
+            get {
+                return ResourceManager.GetString("_import_pep_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of imported peptide list specified by --import-pep-list..
+        /// </summary>
+        public static string _import_pep_list_name {
+            get {
+                return ResourceManager.GetString("_import_pep_list_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on 24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
         /// </summary>
         public static string _import_process_count {
@@ -1293,6 +1320,15 @@ namespace pwiz.Skyline {
         public static string _pep_add_mod {
             get {
                 return ResourceManager.GetString("_pep_add_mod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adds a modification as variable if &apos;true&apos; or static if &apos;false&apos;. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss)..
+        /// </summary>
+        public static string _pep_add_mod_variable {
+            get {
+                return ResourceManager.GetString("_pep_add_mod_variable", resourceCulture);
             }
         }
         

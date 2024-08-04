@@ -1220,7 +1220,7 @@ namespace pwiz.Skyline.Menus
                     try
                     {
                         SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false);
                     }
                     catch (Exception exception)
                     {
@@ -1858,7 +1858,7 @@ namespace pwiz.Skyline.Menus
                 bool changed = false;
                 var idPathSet = peptidePathGroup.ToHashSet();
                 var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
-                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                    Tuple.Create(tg.LabelType, tg.PrecursorAdduct)).ToList();
                 var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {

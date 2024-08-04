@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         var ionMobilityValue = ionMobilityFunctionsProvider.IonMobilityFromCCS(
                             result.CollisionalCrossSectionSqA.Value,
-                            ion.PrecursorMz ?? mz, ion.Charge);
+                            ion.PrecursorMz ?? mz, ion.Charge, ion);
                         if (ionMobilityValue.HasValue && // Successful CCS->IM conversion
                             !Equals(ionMobilityValue, result.IonMobility))
                         {
@@ -725,6 +725,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ionMobilityValue.HasValue || (collisionalCrossSectionSqA??0) != 0
                 ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset)
+                : EMPTY;
+        }
+
+        public static IonMobilityAndCCS GetIonMobilityAndCCS(ExplicitTransitionGroupValues values)
+        {
+            return values.IonMobility.HasValue || values.CollisionalCrossSectionSqA.HasValue
+                ? new IonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(values.IonMobility, values.IonMobilityUnits), values.CollisionalCrossSectionSqA, null)
                 : EMPTY;
         }
 

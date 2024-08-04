@@ -124,4 +124,27 @@
   <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0_" xml:space="preserve">
     <value>サロゲート{0}に対する比率</value>
   </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing" xml:space="preserve">
+    <value>トランジション「{0}」がありません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Missing_values_for__0___1__transitions" xml:space="preserve">
+    <value>{0}/{1}個のトランジションの値が欠損しています</value>
+    <comment>{0} and {1} are numbers
+Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated" xml:space="preserve">
+    <value>トランジション「{0}」が切断されています</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated" xml:space="preserve">
+    <value>{0}個のピークすべてが切断されています</value>
+    <comment>{0} is a number
+Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions" xml:space="preserve">
+    <value>{0}/{1}個のトランジションの切断ピーク</value>
+    <comment>{0} and {1} are numbers
+Needs Review:New resource</comment>
+  </data>
 </root>

@@ -53,7 +53,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.fastaPage = new System.Windows.Forms.TabPage();
             this.fastaSettingsPanel = new System.Windows.Forms.Panel();
             this.lblFastaSettings = new System.Windows.Forms.Label();
-            this.prositPage = new System.Windows.Forms.TabPage();
+            this.koinaPage = new System.Windows.Forms.TabPage();
             this.panelFilesProps = new System.Windows.Forms.Panel();
             this.label2 = new System.Windows.Forms.Label();
             this.defaultChargeUpDown = new System.Windows.Forms.NumericUpDown();
@@ -69,8 +69,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
-            this.prositPanel = new System.Windows.Forms.Panel();
-            this.lblPrositPrediction = new System.Windows.Forms.Label();
+            this.koinaPanel = new System.Windows.Forms.Panel();
+            this.lblKoinaPrediction = new System.Windows.Forms.Label();
             this.narrowWindowPage = new System.Windows.Forms.TabPage();
             this.narrowWindowPanel = new System.Windows.Forms.Panel();
             this.lblNarrowWindowFiles = new System.Windows.Forms.Label();
@@ -97,12 +97,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPages.SuspendLayout();
             this.fastaPage.SuspendLayout();
             this.fastaSettingsPanel.SuspendLayout();
-            this.prositPage.SuspendLayout();
+            this.koinaPage.SuspendLayout();
             this.panelFilesProps.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.defaultChargeUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxChargeUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.minChargeUpDown)).BeginInit();
-            this.prositPanel.SuspendLayout();
+            this.koinaPanel.SuspendLayout();
             this.narrowWindowPage.SuspendLayout();
             this.narrowWindowPanel.SuspendLayout();
             this.wideWindowPage.SuspendLayout();
@@ -115,13 +115,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.wizardPages, "wizardPages");
             this.wizardPages.Controls.Add(this.fastaPage);
-            this.wizardPages.Controls.Add(this.prositPage);
+            this.wizardPages.Controls.Add(this.koinaPage);
             this.wizardPages.Controls.Add(this.narrowWindowPage);
             this.wizardPages.Controls.Add(this.wideWindowPage);
             this.wizardPages.Controls.Add(this.encyclopediaPage);
             this.wizardPages.Controls.Add(this.runSearchPage);
             this.wizardPages.Name = "wizardPages";
             this.wizardPages.SelectedIndex = 0;
+            this.wizardPages.TabStop = false;
             // 
             // fastaPage
             // 
@@ -144,13 +145,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblFastaSettings.ForeColor = System.Drawing.SystemColors.ControlText;
             this.lblFastaSettings.Name = "lblFastaSettings";
             // 
-            // prositPage
+            // koinaPage
             // 
-            this.prositPage.Controls.Add(this.panelFilesProps);
-            this.prositPage.Controls.Add(this.prositPanel);
-            resources.ApplyResources(this.prositPage, "prositPage");
-            this.prositPage.Name = "prositPage";
-            this.prositPage.UseVisualStyleBackColor = true;
+            this.koinaPage.Controls.Add(this.panelFilesProps);
+            this.koinaPage.Controls.Add(this.koinaPanel);
+            resources.ApplyResources(this.koinaPage, "koinaPage");
+            this.koinaPage.Name = "koinaPage";
+            this.koinaPage.UseVisualStyleBackColor = true;
             // 
             // panelFilesProps
             // 
@@ -290,19 +291,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbKeepRedundant.Name = "cbKeepRedundant";
             this.cbKeepRedundant.UseVisualStyleBackColor = true;
             // 
-            // prositPanel
+            // koinaPanel
             // 
-            this.prositPanel.BackColor = System.Drawing.Color.GhostWhite;
-            this.prositPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.prositPanel.Controls.Add(this.lblPrositPrediction);
-            resources.ApplyResources(this.prositPanel, "prositPanel");
-            this.prositPanel.Name = "prositPanel";
+            this.koinaPanel.BackColor = System.Drawing.Color.GhostWhite;
+            this.koinaPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.koinaPanel.Controls.Add(this.lblKoinaPrediction);
+            resources.ApplyResources(this.koinaPanel, "koinaPanel");
+            this.koinaPanel.Name = "koinaPanel";
             // 
-            // lblPrositPrediction
+            // lblKoinaPrediction
             // 
-            resources.ApplyResources(this.lblPrositPrediction, "lblPrositPrediction");
-            this.lblPrositPrediction.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.lblPrositPrediction.Name = "lblPrositPrediction";
+            resources.ApplyResources(this.lblKoinaPrediction, "lblKoinaPrediction");
+            this.lblKoinaPrediction.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.lblKoinaPrediction.Name = "lblKoinaPrediction";
             // 
             // narrowWindowPage
             // 
@@ -473,13 +474,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPages.ResumeLayout(false);
             this.fastaPage.ResumeLayout(false);
             this.fastaSettingsPanel.ResumeLayout(false);
-            this.prositPage.ResumeLayout(false);
+            this.koinaPage.ResumeLayout(false);
             this.panelFilesProps.ResumeLayout(false);
             this.panelFilesProps.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.defaultChargeUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxChargeUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.minChargeUpDown)).EndInit();
-            this.prositPanel.ResumeLayout(false);
+            this.koinaPanel.ResumeLayout(false);
             this.narrowWindowPage.ResumeLayout(false);
             this.narrowWindowPanel.ResumeLayout(false);
             this.wideWindowPage.ResumeLayout(false);
@@ -495,7 +496,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private WizardPages wizardPages;
         private System.Windows.Forms.TabPage fastaPage;
-        private System.Windows.Forms.TabPage prositPage;
+        private System.Windows.Forms.TabPage koinaPage;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Panel panelFilesProps;
         private System.Windows.Forms.NumericUpDown minChargeUpDown;
@@ -530,8 +531,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.ComboBox cbMS1TolUnit;
         private System.Windows.Forms.Panel fastaSettingsPanel;
         private System.Windows.Forms.Label lblFastaSettings;
-        private System.Windows.Forms.Panel prositPanel;
-        private System.Windows.Forms.Label lblPrositPrediction;
+        private System.Windows.Forms.Panel koinaPanel;
+        private System.Windows.Forms.Label lblKoinaPrediction;
         private System.Windows.Forms.Panel narrowWindowPanel;
         private System.Windows.Forms.Label lblNarrowWindowFiles;
         private System.Windows.Forms.Panel wideWindowPanel;

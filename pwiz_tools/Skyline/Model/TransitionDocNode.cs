@@ -102,7 +102,13 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
                 ? Transition.CustomIon.GetMass(MzMassType)
-                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
+                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);
+        }
+
+        public TypedMass GetMoleculeMass(CustomMolecule molecule)
+        {
+            Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
+            return molecule.GetMass(MzMassType);
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
@@ -118,6 +124,8 @@ namespace pwiz.Skyline.Model
 
         [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
+
+        public bool ParticipatesInScoring => Transition.ParticipatesInScoring; // Don't use things like reporter ions (e.g. TMT etc) in "best" peak selection
 
         public TransitionDocNode ChangeExplicitSLens(double? value)
         {

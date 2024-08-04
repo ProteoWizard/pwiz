@@ -639,6 +639,13 @@
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>436, 17</value>
+  </metadata>
+  <data name="textPeptide.ToolTip" xml:space="preserve">
+    <value>以 * 开头的过滤器将在描述中进行搜索，例如 *PEET 将匹配 PEETID 和 AAPEETB</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
   </data>
@@ -925,7 +932,7 @@
     <value>0</value>
   </data>
   <data name="labelFilename.Text" xml:space="preserve">
-    <value>文件(&amp;E):</value>
+    <value>文件(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
     <value>labelFilename</value>
@@ -1330,7 +1337,7 @@
     <value>263, 32</value>
   </data>
   <data name="graphPropsContextMenuItem.Text" xml:space="preserve">
-    <value>图形属性...</value>
+    <value>图形属性…</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>
@@ -1664,6 +1671,12 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator27.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ViewLibraryDlg</value>
