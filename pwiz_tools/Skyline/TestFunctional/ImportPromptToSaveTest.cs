@@ -207,6 +207,36 @@ namespace pwiz.SkylineTestFunctional
                 manageResultsDlg.RemoveAllReplicates();
                 manageResultsDlg.OkDialog();
             });
+
+            Assert.IsTrue(File.Exists(skydFilePath));
+            // Lock the .skyd file so that it cannot be deleted, then save the document
+            // No error gets shown in this case
+            using (File.OpenRead(skydFilePath))
+            {
+                RunUI(()=>SkylineWindow.SaveDocument());
+            }
+            Assert.IsTrue(File.Exists(skydFilePath));
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
+            {
+                transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.FullScan;
+                transitionSettingsUi.PrecursorRes = 10000;
+                transitionSettingsUi.OkDialog();
+            });
+
+            // Import "S_2.mzML" and click Yes when prompted to save
+            RunLongDlg<AlertDlg>(SkylineWindow.ImportResults, alertDlg =>
+            {
+                OkDialog(alertDlg, alertDlg.ClickYes);
+                var importResultsDlg = WaitForOpenForm<ImportResultsDlg>();
+                Assert.IsFalse(File.Exists(skydFilePath));
+                RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDialog =>
+                {
+                    openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_2.mzML"));
+                    openDataSourceDialog.Open();
+                });
+            }, dlg => { });
+            WaitForDocumentLoaded();
+            Assert.AreEqual(extractionWidth10K, GetExtractionWidth("S_2"));
         }
 
         private double GetExtractionWidth(string replicate)
