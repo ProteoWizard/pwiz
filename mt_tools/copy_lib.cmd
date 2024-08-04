@@ -49,6 +49,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_6
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_core.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_mz5.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_mzmlb.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_obo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_proteome.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
@@ -74,6 +78,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_6
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_utility_minimxml.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_utility_misc.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_utility_vendor_reader_test_harness.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_abi.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_agilent.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_thermo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_uimf.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
@@ -121,6 +129,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_core.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_mz5.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_mzmlb.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_obo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_proteome.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
@@ -146,6 +158,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_utility_minimxml.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_utility_misc.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_utility_vendor_reader_test_harness.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_abi.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_agilent.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_thermo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_uimf.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
@@ -182,6 +198,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\mz5\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_mz5.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\mzmlb\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_mzmlb.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\proteome\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_proteome.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\proteome\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_proteome_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\proteome\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_proteome_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
@@ -206,6 +226,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\mis
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\misc\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_utility_misc.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\misc\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_utility_vendor_reader_test_harness.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\misc\msvc-14.3\rls\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libSHA1.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\ABI\msvc-14.3\rls\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_abi.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\Agilent\msvc-14.3\rls\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_agilent.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\thermo\msvc-14.3\rls\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_thermo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\UIMF\msvc-14.3\rls\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_uimf.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64
@@ -265,6 +289,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_6
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_core.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_mz5.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_mzmlb.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_msdata_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_obo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_data_proteome.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
@@ -290,6 +318,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_6
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_utility_minimxml.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_utility_misc.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_utility_vendor_reader_test_harness.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_abi.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_agilent.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_thermo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64\libpwiz_vendor_api_uimf.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
@@ -337,6 +369,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_core.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_mz5.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_mzmlb.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_msdata_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_obo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_data_proteome.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
@@ -362,6 +398,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_utility_minimxml.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_utility_misc.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_utility_vendor_reader_test_harness.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_abi.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_agilent.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_thermo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-release-x86_64\libpwiz_vendor_api_uimf.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
@@ -398,6 +438,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\mz5\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_mz5.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\msdata\mzmlb\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_msdata_mzmlb.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\proteome\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_proteome.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\proteome\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_proteome_examples.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\data\proteome\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_data_proteome_version.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
@@ -422,6 +466,10 @@ copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\mis
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\misc\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_utility_misc.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\misc\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libpwiz_utility_vendor_reader_test_harness.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz\utility\misc\msvc-14.3\dbg\adrs-mdl-64\async-excpt-on\lnk-sttc\thrd-mlt\libSHA1.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+<<<<<<< HEAD
+=======
+copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\ABI\msvc-14.3\dbg\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_abi.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
+>>>>>>> a60ad72ca (Minor changes to build scripts)
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\Agilent\msvc-14.3\dbg\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_agilent.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\thermo\msvc-14.3\dbg\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_thermo.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
 copy /y E:\Development\Repositories\libraries\pwiz\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\UIMF\msvc-14.3\dbg\adrs-mdl-64\lnk-sttc\thrd-mlt\us-clr-tr\libpwiz_vendor_api_uimf.lib E:\Development\Repositories\libraries\pwiz\build-nt-x86\msvc-debug-x86_64
