@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
@@ -377,10 +378,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
 
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap && Settings.Default.GroupComparisonSuspendLabelLayout)
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
-                _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
+                if (Settings.Default.GroupComparisonSuspendLabelLayout)
+                {
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints,
+                        _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
+                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
+                }
             }
             zedGraphControl.Invalidate();
         }
@@ -388,13 +393,26 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override string GetPersistentString()
         {
-            return PersistentString.Parse(base.GetPersistentString()).Append(JsonConvert.SerializeObject(_labelsLayouts[GroupComparisonName])).ToString();
+            if (_labelsLayouts.ContainsKey(GroupComparisonName))
+            {
+                return PersistentString.Parse(base.GetPersistentString())
+                    .Append(JsonConvert.SerializeObject(_labelsLayouts[GroupComparisonName])).ToString();
+            }
+            else
+                return null;
         }
 
         public void SetLayout(string groupComparisonName, string jsonLayout)
         {
-            var layout = JsonConvert.DeserializeObject<List<LabeledPoint.PointLayout>>(jsonLayout);
-            _labelsLayouts[GroupComparisonName] = layout;
+            try
+            {
+                var layout = JsonConvert.DeserializeObject<List<LabeledPoint.PointLayout>>(jsonLayout);
+                _labelsLayouts[GroupComparisonName] = layout;
+            }
+            catch (Exception e)
+            {
+                Trace.Write(@"Cannot deserialize labels layout. Error message: " + e.Message);
+            }
         }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)

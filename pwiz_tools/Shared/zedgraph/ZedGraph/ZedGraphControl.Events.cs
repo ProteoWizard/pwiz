@@ -461,7 +461,8 @@ namespace ZedGraph
 
 			// Second, Check to see if it's within a Chart Rect
 			pane = this.MasterPane.FindChartRect( mousePt );
-            var label = pane.OverLabel(mousePt, out var isOverBoundary);
+            var isOverBoundary = false;
+            var label = pane?.OverLabel(mousePt, out isOverBoundary);
 			//Rectangle rect = new Rectangle( mousePt, new Size( 1, 1 ) );
 
 			if ( pane != null &&
