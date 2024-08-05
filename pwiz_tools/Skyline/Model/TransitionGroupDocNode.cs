@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    moleculeMass = nodeTran.GetMoleculeMass();
+                    moleculeMass = nodeTran.GetMoleculeMass(molecule);
                 }
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
                     moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
