@@ -74,8 +74,11 @@ namespace pwiz.PanoramaClient
 
         private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
         {
-            messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, requestMethod);
-            return PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, GetErrorFromException, e);
+            using (e.Response)
+            {
+                messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, requestMethod);
+                return PanoramaServerException.Create(messageOnError, uri, GetErrorFromException(e), e);
+            }
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -162,8 +165,11 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw PanoramaServerException.CreateWithResponseDisposal(
-                    Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_, address, GetErrorFromException, e);
+                using (e.Response)
+                {
+                    throw PanoramaServerException.Create(
+                        Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_, address, GetErrorFromException(e), e);
+                }
             }
         }
 
@@ -241,11 +247,14 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw PanoramaServerException.CreateWithResponseDisposal(
-                    Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_,
-                    uri,
-                    GetErrorFromException,
-                    e);
+                using (e.Response)
+                {
+                    throw PanoramaServerException.Create(
+                        Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_,
+                        uri,
+                        GetErrorFromException(e),
+                        e);
+                }
             }
 
             try

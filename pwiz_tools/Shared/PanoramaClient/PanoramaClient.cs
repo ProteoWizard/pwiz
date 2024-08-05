@@ -593,40 +593,44 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException ex)
             {
-                // Invalid URL
-                if (ex.Status == WebExceptionStatus.NameResolutionFailure)
+                using (ex.Response)
                 {
-                    var response = ex.Response as HttpWebResponse;
-                    var responseUri = response?.ResponseUri;
+                    // Invalid URL
+                    if (ex.Status == WebExceptionStatus.NameResolutionFailure)
+                    {
+                        var response = ex.Response as HttpWebResponse;
+                        var responseUri = response?.ResponseUri;
 
-                    throw PanoramaServerException.CreateWithResponseDisposal(
-                        ServerStateEnum.missing.Error(uri),
-                        responseUri != null && !uri.Equals(responseUri) ? responseUri : null,
-                        PanoramaUtil.GetErrorFromWebException,
+                        throw PanoramaServerException.Create(
+                            ServerStateEnum.missing.Error(uri),
+                            responseUri != null && !uri.Equals(responseUri) ? responseUri : null,
+                            PanoramaUtil.GetErrorFromWebException(ex),
+                            ex);
+                    }
+                    else if (tryNewProtocol)
+                    {
+                        // try again using https
+                        if (uri.Scheme.Equals(@"http"))
+                        {
+                            var httpsUri = new Uri(uri.AbsoluteUri.Replace(@"http", @"https"));
+                            return ValidateUri(httpsUri, false);
+                        }
+                        // We assume "https" (PanoramaUtil.ServerNameToUrl) if there is no scheme in the user provided URL.
+                        // Try http. LabKey Server may not be running under SSL. 
+                        else if (uri.Scheme.Equals(@"https"))
+                        {
+                            var httpUri = new Uri(uri.AbsoluteUri.Replace(@"https", @"http"));
+                            return ValidateUri(httpUri, false);
+                        }
+                    }
+
+                    throw PanoramaServerException.Create(
+                        ServerStateEnum.unknown.Error(ServerUri),
+                        uri,
+                        PanoramaUtil.GetErrorFromWebException(ex),
                         ex);
-                }
-                else if (tryNewProtocol)
-                {
-                    // try again using https
-                    if (uri.Scheme.Equals(@"http"))
-                    {
-                        var httpsUri = new Uri(uri.AbsoluteUri.Replace(@"http", @"https"));
-                        return ValidateUri(httpsUri, false);
-                    }
-                    // We assume "https" (PanoramaUtil.ServerNameToUrl) if there is no scheme in the user provided URL.
-                    // Try http. LabKey Server may not be running under SSL. 
-                    else if (uri.Scheme.Equals(@"https"))
-                    {
-                        var httpUri = new Uri(uri.AbsoluteUri.Replace(@"https", @"http"));
-                        return ValidateUri(httpUri, false);
-                    }
-                }
 
-                throw PanoramaServerException.CreateWithResponseDisposal(
-                    ServerStateEnum.unknown.Error(ServerUri), 
-                    uri,
-                    PanoramaUtil.GetErrorFromWebException,
-                    ex);
+                }
             }
         }
 
@@ -640,8 +644,7 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException ex)
             {
-                var response = ex.Response as HttpWebResponse;
-
+                using var response = ex.Response as HttpWebResponse;
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound) // 404
                 {
                     var newServer = pServer.HasContextPath()
@@ -660,10 +663,10 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw PanoramaServerException.CreateWithResponseDisposal(
+                throw PanoramaServerException.Create(
                     UserStateEnum.unknown.Error(ServerUri), 
                     PanoramaUtil.GetEnsureLoginUri(pServer), 
-                    PanoramaUtil.GetErrorFromWebException, 
+                    PanoramaUtil.GetErrorFromWebException(ex), 
                     ex);
             }
         }
@@ -725,8 +728,11 @@ namespace pwiz.PanoramaClient
             catch (WebException ex)
             {
                 var response = ex.Response as HttpWebResponse;
-
-                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized) // 401
+                if (response == null || response.StatusCode != HttpStatusCode.Unauthorized)
+                {
+                    throw;
+                }
+                using (response)
                 {
                     var responseUri = response.ResponseUri;
                     if (!requestUri.Equals(responseUri))
@@ -740,10 +746,10 @@ namespace pwiz.PanoramaClient
                             return EnsureLogin(redirectedServer);
                         }
 
-                        throw PanoramaServerException.CreateWithResponseDisposal(
+                        throw PanoramaServerException.Create(
                             UserStateEnum.nonvalid.Error(ServerUri), 
                             requestUri, 
-                            PanoramaUtil.GetErrorFromWebException, 
+                            PanoramaUtil.GetErrorFromWebException(ex), 
                             ex);
                     }
 
@@ -755,14 +761,12 @@ namespace pwiz.PanoramaClient
                         return pServer;
                     }
 
-                    throw PanoramaServerException.CreateWithResponseDisposal(
+                    throw PanoramaServerException.Create(
                         UserStateEnum.nonvalid.Error(ServerUri),
                         requestUri, 
-                        PanoramaUtil.GetErrorFromWebException, 
+                        PanoramaUtil.GetErrorFromWebException(ex), 
                         ex);
                 }
-
-                throw;
             }
         }
 

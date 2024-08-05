@@ -411,14 +411,14 @@ namespace pwiz.PanoramaClient
             return new PanoramaServerException(errorMessage, e);
         }
 
-        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<WebException, LabKeyError> getLabKeyError, WebException e)
+        public static PanoramaServerException Create(string message, Uri uri, LabKeyError labkeyError, WebException e)
         {
             var errorMessageBuilder = new ErrorMessageBuilder(message)
                 .Uri(uri)
                 .ExceptionMessage(e.Message)
-                .LabKeyError(getLabKeyError(e)); // Will read the WebException's Response property.
+                .LabKeyError(labkeyError); // Will read the WebException's Response property.
 
-            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
+            return new PanoramaServerException(errorMessageBuilder.ToString(), e);
         }
 
         private static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, string response, WebException e)
@@ -428,7 +428,7 @@ namespace pwiz.PanoramaClient
                 .ExceptionMessage(e.Message)
                 .Response(response);
 
-            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
+            return new PanoramaServerException(errorMessageBuilder.ToString(), e);
         }
 
         private static PanoramaServerException CreateWithResponseDisposal(string errorMessage, WebException e)
