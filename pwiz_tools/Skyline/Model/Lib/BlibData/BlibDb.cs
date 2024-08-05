@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
@@ -249,13 +250,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private class SpectrumInserter : IDisposable
         {
+            private const int _spectraBufferSize = 12;
             private class InsertCommands
             {
-                public SQLiteCommand _insertSpectraCmd;
-                public SQLiteCommand _insertAnnotationsCmd;
-                public SQLiteCommand _insertPeaksCmd;
-                public SQLiteCommand _insertRetentionTimesCmd;
-                public SQLiteCommand _insertModificationsCmd;
+                public SQLiteCommand[] _insertSpectraCmd;
+                public SQLiteCommand[] _insertAnnotationsCmd;
+                public SQLiteCommand[] _insertPeaksCmd;
+                public SQLiteCommand[] _insertRetentionTimesCmd;
+                public SQLiteCommand[] _insertModificationsCmd;
+                public List<DbRefSpectra> _buffer;
             }
             private ConcurrentDictionary<int, InsertCommands> _insertCommandsByThread;
             private long _lastSpectraId, _lastAnnotationId, _lastRetentionTimesId, _lastModificationId;
@@ -266,23 +269,43 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             private List<PropertyInfo> _dbModificationProperties;
             private List<PropertyInfo> _dbRetentionTimeProperties;
 
-            private static SQLiteCommand GenerateInsertCommand(SQLiteConnection connection, string table, IList<PropertyInfo> properties)
+            private static SQLiteCommand[] GenerateInsertCommand(SQLiteConnection connection, string table, IList<PropertyInfo> properties)
             {
                 string PropertySqlName(PropertyInfo p)
                 {
                     return p.PropertyType.BaseType == typeof(DbEntity) ? p.Name + @"Id" : p.Name;
                 }
 
+                var result = new SQLiteCommand[2]; // individual and batch
                 // ReSharper disable LocalizableElement
+                string valuesBlock = "(" + string.Join(",", Enumerable.Repeat("?", properties.Count)) + ")";
                 string sql = "INSERT INTO " + table + " (" +
-                             string.Join(",", properties.Select(PropertySqlName)) + ") VALUES (" +
-                             string.Join(",", Enumerable.Repeat("?", properties.Count)) + ")";
-                // ReSharper restore LocalizableElement
+                             string.Join(",", properties.Select(PropertySqlName)) + ") VALUES " + valuesBlock;
 
-                var cmd = new SQLiteCommand(sql, connection);
+                var cmd = result[0] = new SQLiteCommand(sql, connection);
                 for (int i = 0; i < properties.Count; ++i)
                     cmd.Parameters.Add(new SQLiteParameter());
-                return cmd;
+
+                string batchSql = sql + "," + string.Join(",", Enumerable.Repeat(valuesBlock, _spectraBufferSize - 1));
+                cmd = result[1] = new SQLiteCommand(batchSql, connection);
+                for(int j = 0; j < _spectraBufferSize; ++j)
+                {
+                    for (int i = 0; i < properties.Count; ++i)
+                        cmd.Parameters.Add(new SQLiteParameter());
+                }
+                // ReSharper restore LocalizableElement
+                return result;
+            }
+
+            private static SQLiteCommand[] CloneCommands(SQLiteCommand[] commands)
+            {
+                var result = new SQLiteCommand[commands.Length];
+                for (var i = 0; i < commands.Length; i++)
+                {
+                    var cmd = commands[i];
+                    result[i] = cmd.Clone() as SQLiteCommand;
+                }
+                return result;
             }
 
             private static IEnumerable<PropertyInfo> GetProperties(Type dbType)
@@ -350,76 +373,129 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 {
                     var masterCmds = _insertCommandsByThread[0];
                     insertCommands = _insertCommandsByThread[threadId] = new InsertCommands();
-                    insertCommands._insertSpectraCmd = masterCmds._insertSpectraCmd.Clone() as SQLiteCommand;
-                    insertCommands._insertPeaksCmd = masterCmds._insertPeaksCmd.Clone() as SQLiteCommand;
-                    insertCommands._insertAnnotationsCmd = masterCmds._insertAnnotationsCmd.Clone() as SQLiteCommand;
-                    insertCommands._insertModificationsCmd = masterCmds._insertModificationsCmd.Clone() as SQLiteCommand;
-                    insertCommands._insertRetentionTimesCmd = masterCmds._insertRetentionTimesCmd.Clone() as SQLiteCommand;
+                    insertCommands._insertSpectraCmd = CloneCommands(masterCmds._insertSpectraCmd);
+                    insertCommands._insertPeaksCmd = CloneCommands(masterCmds._insertPeaksCmd);
+                    insertCommands._insertAnnotationsCmd = CloneCommands(masterCmds._insertAnnotationsCmd);
+                    insertCommands._insertModificationsCmd = CloneCommands(masterCmds._insertModificationsCmd);
+                    insertCommands._insertRetentionTimesCmd = CloneCommands(masterCmds._insertRetentionTimesCmd);
+                    insertCommands._buffer = new List<DbRefSpectra>(_spectraBufferSize);
                 }
 
-                {
-                    int i = 0;
-                    dbRefSpectrum.Id = Interlocked.Increment(ref _lastSpectraId);
-                    foreach (var property in _dbRefSpectraProperties)
-                        insertCommands._insertSpectraCmd!.Parameters[i++].Value = GetPropertyValue(dbRefSpectrum, property);
-                    insertCommands._insertSpectraCmd!.ExecuteNonQuery();
+                var buffer = insertCommands._buffer;
+                buffer.Add(dbRefSpectrum);
+                dbRefSpectrum.Id = Interlocked.Increment(ref _lastSpectraId);
+                if (_spectraBufferSize > 1 && buffer.Count < _spectraBufferSize)
+                    return;
 
-                    i = 0;
-                    dbRefSpectrum.Peaks.RefSpectra ??= dbRefSpectrum;
-                    foreach (var property in _dbRefSpectraPeaksProperties)
-                        insertCommands._insertPeaksCmd!.Parameters[i++].Value = GetPropertyValue(dbRefSpectrum.Peaks, property);
-                    insertCommands._insertPeaksCmd!.ExecuteNonQuery();
-                }
+                FlushBuffer(insertCommands);
+                buffer.Clear();
+            }
 
-                if (dbRefSpectrum.PeakAnnotations != null)
+            private void FlushBuffer(InsertCommands insertCommands = null)
+            {
+                int threadId = Thread.CurrentThread.ManagedThreadId;
+
+                if (insertCommands == null)
+                    if (!_insertCommandsByThread.TryGetValue(threadId, out insertCommands))
+                        return;
+
+                var buffer = insertCommands._buffer;
+                if (!buffer.Any())
+                    return;
+
+                int whichCmd = _spectraBufferSize > 1 && buffer.Count == _spectraBufferSize ? 1 : 0;
+                var _insertSpectraCmd = insertCommands._insertSpectraCmd[whichCmd];
+                var _insertPeaksCmd = insertCommands._insertPeaksCmd[whichCmd];
+                var _insertAnnotationsCmd = insertCommands._insertAnnotationsCmd[0];
+                var _insertRetentionTimesCmd = insertCommands._insertRetentionTimesCmd[0];
+                var _insertModificationsCmd = insertCommands._insertModificationsCmd[0];
+
+                int spectraCmdParameter = 0, peaksCmdParameter = 0;
+                foreach (var dbRefSpectrum in buffer)
                 {
-                    foreach (var annotation in dbRefSpectrum.PeakAnnotations)
                     {
-                        int i = 0;
-                        annotation.Id = Interlocked.Increment(ref _lastAnnotationId);
-                        annotation.RefSpectra = dbRefSpectrum;
-                        foreach (var property in _dbRefSpectraPeakAnnotationsProperties)
-                            insertCommands._insertAnnotationsCmd!.Parameters[i++].Value = GetPropertyValue(annotation, property);
-                        insertCommands._insertAnnotationsCmd!.ExecuteNonQuery();
+                        foreach (var property in _dbRefSpectraProperties)
+                            _insertSpectraCmd.Parameters[spectraCmdParameter++].Value = GetPropertyValue(dbRefSpectrum, property);
+
+                        dbRefSpectrum.Peaks.RefSpectra ??= dbRefSpectrum;
+                        foreach (var property in _dbRefSpectraPeaksProperties)
+                            _insertPeaksCmd.Parameters[peaksCmdParameter++].Value = GetPropertyValue(dbRefSpectrum.Peaks, property);
+                    }
+
+                    if (whichCmd == 0)
+                    {
+                        spectraCmdParameter = 0;
+                        peaksCmdParameter = 0;
+                        _insertSpectraCmd.ExecuteNonQuery();
+                        _insertPeaksCmd.ExecuteNonQuery();
                     }
                 }
 
+                if (whichCmd == 1)
                 {
-                    foreach (var retentionTime in dbRefSpectrum.RetentionTimes)
+                    _insertSpectraCmd.ExecuteNonQuery();
+                    _insertPeaksCmd.ExecuteNonQuery();
+                }
+
+                foreach (var dbRefSpectrum in buffer)
+                {
+                    if (dbRefSpectrum.PeakAnnotations != null)
                     {
-                        int i = 0;
-                        retentionTime.Id = Interlocked.Increment(ref _lastRetentionTimesId);
-                        retentionTime.RefSpectra = dbRefSpectrum;
-                        foreach (var property in _dbRetentionTimeProperties)
-                            insertCommands._insertRetentionTimesCmd!.Parameters[i++].Value = GetPropertyValue(retentionTime, property);
-                        insertCommands._insertRetentionTimesCmd!.ExecuteNonQuery();
+                        foreach (var annotation in dbRefSpectrum.PeakAnnotations)
+                        {
+                            int i = 0;
+                            annotation.Id = Interlocked.Increment(ref _lastAnnotationId);
+                            annotation.RefSpectra = dbRefSpectrum;
+                            foreach (var property in _dbRefSpectraPeakAnnotationsProperties)
+                                _insertAnnotationsCmd.Parameters[i++].Value = GetPropertyValue(annotation, property);
+                            _insertAnnotationsCmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    {
+                        foreach (var retentionTime in dbRefSpectrum.RetentionTimes)
+                        {
+                            int i = 0;
+                            retentionTime.Id = Interlocked.Increment(ref _lastRetentionTimesId);
+                            retentionTime.RefSpectra = dbRefSpectrum;
+                            foreach (var property in _dbRetentionTimeProperties)
+                                _insertRetentionTimesCmd.Parameters[i++].Value = GetPropertyValue(retentionTime, property);
+                            _insertRetentionTimesCmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    if (dbRefSpectrum.Modifications != null)
+                    {
+                        foreach (var modification in dbRefSpectrum.Modifications)
+                        {
+                            int i = 0;
+                            modification.Id = Interlocked.Increment(ref _lastModificationId);
+                            modification.RefSpectra = dbRefSpectrum;
+                            foreach (var property in _dbModificationProperties)
+                                _insertModificationsCmd.Parameters[i++].Value = GetPropertyValue(modification, property);
+                            _insertModificationsCmd.ExecuteNonQuery();
+                        }
                     }
                 }
 
-                if (dbRefSpectrum.Modifications != null)
-                {
-                    foreach (var modification in dbRefSpectrum.Modifications)
-                    {
-                        int i = 0;
-                        modification.Id = Interlocked.Increment(ref _lastModificationId);
-                        modification.RefSpectra = dbRefSpectrum;
-                        foreach (var property in _dbModificationProperties)
-                            insertCommands._insertModificationsCmd!.Parameters[i++].Value = GetPropertyValue(modification, property);
-                        insertCommands._insertModificationsCmd!.ExecuteNonQuery();
-                    }
-                }
             }
 
             public void Dispose()
             {
                 foreach (var cmd in _insertCommandsByThread)
                 {
-                    cmd.Value._insertSpectraCmd.Dispose();
-                    cmd.Value._insertAnnotationsCmd.Dispose();
-                    cmd.Value._insertPeaksCmd.Dispose();
-                    cmd.Value._insertRetentionTimesCmd.Dispose();
-                    cmd.Value._insertModificationsCmd.Dispose();
+                    if (cmd.Key > 0)
+                    {
+                        FlushBuffer(cmd.Value);
+                        cmd.Value._buffer.Clear();
+                    }
+                    cmd.Value._insertSpectraCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertAnnotationsCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertPeaksCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertRetentionTimesCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertModificationsCmd.ForEach(c => c.Dispose());
                 }
+                _insertCommandsByThread.Clear();
             }
 
             private static object ExecuteScalar(string commandText, SQLiteConnection connection)
@@ -453,44 +529,46 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
                 var proteinTablesBuilder = new ProteinTablesBuilder(session);
-                using var spectrumInserter = new SpectrumInserter(session);
-                ParallelEx.ForEach(listSpectra, spectrum =>
+                using (var spectrumInserter = new SpectrumInserter(session))
                 {
-                    var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
-                    spectrumInserter.InsertSpectrum(dbRefSpectrum);
-                    var ionMobilitiesByFileId = new IndexedIonMobilities(
-                        dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
-                            Select(rt =>
-                            {
-                                var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
-                                var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
-                                return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
-                            }));
-                    lock(listLibrary)
+                    ParallelEx.ForEach(listSpectra, spectrum =>
                     {
-                        listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
-                            dbRefSpectrum.Copies,
-                            dbRefSpectrum.NumPeaks,
-                            (int)(dbRefSpectrum.Id ?? 0),
-                            spectrum.Protein,
-                            default(IndexedRetentionTimes),
-                            ionMobilitiesByFileId));
-                        proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
-                        if (progressMonitor != null)
+                        var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
+                        spectrumInserter.InsertSpectrum(dbRefSpectrum);
+                        var ionMobilitiesByFileId = new IndexedIonMobilities(
+                            dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
+                                Select(rt =>
+                                {
+                                    var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
+                                    var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
+                                    return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
+                                }));
+                        lock(listLibrary)
                         {
-                            if (progressMonitor.IsCanceled)
-                                return;
-                            int progressNew = (i*100/listSpectra.Count);
-                            if (progressPercent != progressNew)
+                            listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
+                                dbRefSpectrum.Copies,
+                                dbRefSpectrum.NumPeaks,
+                                (int)(dbRefSpectrum.Id ?? 0),
+                                spectrum.Protein,
+                                default(IndexedRetentionTimes),
+                                ionMobilitiesByFileId));
+                            proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
+                            if (progressMonitor != null)
                             {
-                                progressMonitor.UpdateProgress(localStatus = localStatus.ChangePercentComplete(progressNew));
-                                progressPercent = progressNew;
+                                if (progressMonitor.IsCanceled)
+                                    return;
+                                int progressNew = (i*100/listSpectra.Count);
+                                if (progressPercent != progressNew)
+                                {
+                                    progressMonitor.UpdateProgress(localStatus = localStatus.ChangePercentComplete(progressNew));
+                                    progressPercent = progressNew;
+                                }
                             }
-                        }
 
-                        ++i;
-                    }
-                });
+                            ++i;
+                        }
+                    }, maxThreads:4);
+                }
 
                 if (progressMonitor?.IsCanceled ?? false)
                     return null;

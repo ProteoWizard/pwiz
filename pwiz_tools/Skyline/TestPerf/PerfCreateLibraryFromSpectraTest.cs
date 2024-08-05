@@ -63,8 +63,6 @@ namespace TestPerf
 
             ParallelEx.ForEach(EnumeratePeptides(), peptide =>
             {
-                //if (spectra.Count % 10000 == 0)
-                //    Console.WriteLine(spectra.Count);
                 var target = new Target(peptide);
                 var key = target.GetLibKey(Adduct.M_PLUS_3);
                 var mi = new SpectrumPeaksInfo.MI[100 + spectra.Count % 5];
@@ -83,11 +81,13 @@ namespace TestPerf
                     });
             });
 
+            //Stopwatch sw = Stopwatch.StartNew();
             string blibPath = PathEx.GetTempFileNameWithExtension(".blib");
             using (var blib = BlibDb.CreateBlibDb(blibPath))
             {
                 blib.CreateLibraryFromSpectra(new BiblioSpecLiteSpec("test", blibPath), spectra, "test", null);
             }
+            //Console.WriteLine("Time to generate blib: {0:F1}s", sw.Elapsed.TotalSeconds);
 
             File.Delete(blibPath);
         }
