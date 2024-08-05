@@ -247,6 +247,17 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
         }
 
+        private static object ExecuteScalar(string commandText, SQLiteConnection connection)
+        {
+            using var cmd = new SQLiteCommand(commandText, connection);
+            return cmd.ExecuteScalar();
+        }
+
+        private static void ExecuteNonQuery(string commandText, SQLiteConnection connection)
+        {
+            using var cmd = new SQLiteCommand(commandText, connection);
+            cmd.ExecuteNonQuery();
+        }
 
         private class SpectrumInserter : IDisposable
         {
@@ -497,12 +508,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
                 _insertCommandsByThread.Clear();
             }
-
-            private static object ExecuteScalar(string commandText, SQLiteConnection connection)
-            {
-                using var cmd = new SQLiteCommand(commandText, connection);
-                return cmd.ExecuteScalar();
-            }
         }
 
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
@@ -523,8 +528,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             var localStatus = status;
             using (ISession session = OpenWriteSession())
-            using (ITransaction transaction = session.BeginTransaction())
             {
+                // speed up writing by turning off filesystem synchronization and journaling
+                var connection = session.Connection as SQLiteConnection;
+                ExecuteNonQuery(@"PRAGMA journal_mode=OFF;
+                PRAGMA synchronous=OFF;
+                PRAGMA defer_foreign_keys = ON;", connection);
+
+                using ITransaction transaction = session.BeginTransaction();
                 int progressPercent = -1;
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();

@@ -81,13 +81,13 @@ namespace TestPerf
                     });
             });
 
-            //Stopwatch sw = Stopwatch.StartNew();
+            //var sw = System.Diagnostics.Stopwatch.StartNew();
             string blibPath = PathEx.GetTempFileNameWithExtension(".blib");
             using (var blib = BlibDb.CreateBlibDb(blibPath))
             {
                 blib.CreateLibraryFromSpectra(new BiblioSpecLiteSpec("test", blibPath), spectra, "test", null);
             }
-            //Console.WriteLine("Time to generate blib: {0:F1}s", sw.Elapsed.TotalSeconds);
+            //System.Console.WriteLine("Time to generate blib: {0:F1}s", sw.Elapsed.TotalSeconds);
 
             File.Delete(blibPath);
         }
