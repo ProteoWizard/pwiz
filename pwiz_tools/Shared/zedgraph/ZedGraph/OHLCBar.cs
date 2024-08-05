@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #endregion
 
@@ -307,32 +308,58 @@ namespace ZedGraph
 			}
 		}
 
-
-		/// <summary>
-		/// Draw all the <see cref="OHLCBar"/>'s to the specified <see cref="Graphics"/>
-		/// device as a candlestick at each defined point.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="OHLCBarItem"/> object representing the
-		/// <see cref="OHLCBar"/>'s to be drawn.</param>
-		/// <param name="baseAxis">The <see cref="Axis"/> class instance that defines the base (independent)
-		/// axis for the <see cref="OHLCBar"/></param>
-		/// <param name="valueAxis">The <see cref="Axis"/> class instance that defines the value (dependent)
-		/// axis for the <see cref="OHLCBar"/></param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		public void Draw( Graphics g, GraphPane pane, OHLCBarItem curve,
+        public void Draw(SvgGraphics g, GraphPane pane, bool isXBase,
+            float pixBase, float pixHigh, float pixLow,
+            float pixOpen, float pixClose,
+            float halfSize, Pen pen)
+        {
+            if (pixBase != PointPair.Missing)
+            {
+                if (isXBase)
+                {
+                    if (Math.Abs(pixLow) < 1000000 && Math.Abs(pixHigh) < 1000000)
+                        g.DrawLine(pen, pixBase, pixHigh, pixBase, pixLow);
+                    if (_isOpenCloseVisible && Math.Abs(pixOpen) < 1000000)
+                        g.DrawLine(pen, pixBase - halfSize, pixOpen, pixBase, pixOpen);
+                    if (_isOpenCloseVisible && Math.Abs(pixClose) < 1000000)
+                        g.DrawLine(pen, pixBase, pixClose, pixBase + halfSize, pixClose);
+                }
+                else
+                {
+                    if (Math.Abs(pixLow) < 1000000 && Math.Abs(pixHigh) < 1000000)
+                        g.DrawLine(pen, pixHigh, pixBase, pixLow, pixBase);
+                    if (_isOpenCloseVisible && Math.Abs(pixOpen) < 1000000)
+                        g.DrawLine(pen, pixOpen, pixBase - halfSize, pixOpen, pixBase);
+                    if (_isOpenCloseVisible && Math.Abs(pixClose) < 1000000)
+                        g.DrawLine(pen, pixClose, pixBase, pixClose, pixBase + halfSize);
+                }
+            }
+        }
+        /// <summary>
+        /// Draw all the <see cref="OHLCBar"/>'s to the specified <see cref="Graphics"/>
+        /// device as a candlestick at each defined point.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="OHLCBarItem"/> object representing the
+        /// <see cref="OHLCBar"/>'s to be drawn.</param>
+        /// <param name="baseAxis">The <see cref="Axis"/> class instance that defines the base (independent)
+        /// axis for the <see cref="OHLCBar"/></param>
+        /// <param name="valueAxis">The <see cref="Axis"/> class instance that defines the value (dependent)
+        /// axis for the <see cref="OHLCBar"/></param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        public void Draw( Graphics g, GraphPane pane, OHLCBarItem curve,
 							Axis baseAxis, Axis valueAxis, float scaleFactor )
 		{
 			//ValueHandler valueHandler = new ValueHandler( pane, false );
@@ -403,21 +430,91 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Returns the width of the candleStick, in pixels, based on the settings for
-		/// <see cref="Size"/> and <see cref="IsAutoSize"/>.
-		/// </summary>
-		/// <param name="pane">The parent <see cref="GraphPane"/> object.</param>
-		/// <param name="baseAxis">The <see cref="Axis"/> object that
-		/// represents the bar base (independent axis).</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <returns>The width of each bar, in pixel units</returns>
-		public float GetBarWidth( GraphPane pane, Axis baseAxis, float scaleFactor )
+        public void Draw(SvgGraphics g, GraphPane pane, OHLCBarItem curve,
+                    Axis baseAxis, Axis valueAxis, float scaleFactor)
+        {
+            //ValueHandler valueHandler = new ValueHandler( pane, false );
+
+            float pixBase, pixHigh, pixLow, pixOpen, pixClose;
+
+            if (curve.Points != null)
+            {
+                //float halfSize = _size * scaleFactor;
+                float halfSize = GetBarWidth(pane, baseAxis, scaleFactor);
+
+                using (Pen pen = !curve.IsSelected ? new Pen(_color, _width) :
+                        new Pen(Selection.Border.Color, Selection.Border.Width))
+                //				using ( Pen pen = new Pen( _color, _penWidth ) )
+                {
+                    // Loop over each defined point							
+                    for (int i = 0; i < curve.Points.Count; i++)
+                    {
+                        PointPair pt = curve.Points[i];
+                        double date = pt.X;
+                        double high = pt.Y;
+                        double low = pt.Z;
+                        double open = PointPair.Missing;
+                        double close = PointPair.Missing;
+                        if (pt is StockPt)
+                        {
+                            open = (pt as StockPt).Open;
+                            close = (pt as StockPt).Close;
+                        }
+
+                        // Any value set to double max is invalid and should be skipped
+                        // This is used for calculated values that are out of range, divide
+                        //   by zero, etc.
+                        // Also, any value <= zero on a log scale is invalid
+
+                        if (!curve.Points[i].IsInvalid3D &&
+                                (date > 0 || !baseAxis._scale.IsLog) &&
+                                ((high > 0 && low > 0) || !valueAxis._scale.IsLog))
+                        {
+                            pixBase = (int)(baseAxis.Scale.Transform(curve.IsOverrideOrdinal, i, date) + 0.5);
+                            //pixBase = baseAxis.Scale.Transform( curve.IsOverrideOrdinal, i, date );
+                            pixHigh = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, high);
+                            pixLow = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, low);
+                            if (PointPair.IsValueInvalid(open))
+                                pixOpen = Single.MaxValue;
+                            else
+                                pixOpen = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, open);
+
+                            if (PointPair.IsValueInvalid(close))
+                                pixClose = Single.MaxValue;
+                            else
+                                pixClose = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, close);
+
+                            if (!curve.IsSelected && this._gradientFill.IsGradientValueType)
+                            {
+                                using (Pen tPen = GetPen(pane, scaleFactor, pt))
+                                    Draw(g, pane, baseAxis is XAxis || baseAxis is X2Axis,
+                                            pixBase, pixHigh, pixLow, pixOpen,
+                                            pixClose, halfSize, tPen);
+                            }
+                            else
+                                Draw(g, pane, baseAxis is XAxis || baseAxis is X2Axis,
+                                        pixBase, pixHigh, pixLow, pixOpen,
+                                        pixClose, halfSize, pen);
+                        }
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// Returns the width of the candleStick, in pixels, based on the settings for
+        /// <see cref="Size"/> and <see cref="IsAutoSize"/>.
+        /// </summary>
+        /// <param name="pane">The parent <see cref="GraphPane"/> object.</param>
+        /// <param name="baseAxis">The <see cref="Axis"/> object that
+        /// represents the bar base (independent axis).</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <returns>The width of each bar, in pixel units</returns>
+        public float GetBarWidth( GraphPane pane, Axis baseAxis, float scaleFactor )
 		{
 			float width;
 			if ( _isAutoSize )

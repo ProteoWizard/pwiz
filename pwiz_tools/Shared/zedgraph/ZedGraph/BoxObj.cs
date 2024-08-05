@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Collections;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -294,28 +295,52 @@ namespace ZedGraph
 				_border.Draw( g, pane, scaleFactor, pixRect );
 			}
 		}
-		
-		/// <summary>
-		/// Determine if the specified screen point lies inside the bounding box of this
-		/// <see cref="BoxObj"/>.
-		/// </summary>
-		/// <param name="pt">The screen point, in pixels</param>
-		/// <param name="pane">
-		/// A reference to the <see cref="PaneBase"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <returns>true if the point lies in the bounding box, false otherwise</returns>
-		override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
+
+        override public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor)
+        {
+            // Convert the arrow coordinates from the user coordinate system
+            // to the screen coordinate system
+            RectangleF pixRect = this.Location.TransformRect(pane);
+
+            // Clip the rect to just outside the PaneRect so we don't end up with wild coordinates.
+            RectangleF tmpRect = pane.Rect;
+            tmpRect.Inflate(20, 20);
+            pixRect.Intersect(tmpRect);
+
+            if (Math.Abs(pixRect.Left) < 100000 &&
+                Math.Abs(pixRect.Top) < 100000 &&
+                Math.Abs(pixRect.Right) < 100000 &&
+                Math.Abs(pixRect.Bottom) < 100000)
+            {
+                // If the box is to be filled, fill it
+                _fill.Draw(g, pixRect);
+
+                // Draw the border around the box if required
+                _border.Draw(g, pane, scaleFactor, pixRect);
+            }
+        }
+
+        /// <summary>
+        /// Determine if the specified screen point lies inside the bounding box of this
+        /// <see cref="BoxObj"/>.
+        /// </summary>
+        /// <param name="pt">The screen point, in pixels</param>
+        /// <param name="pane">
+        /// A reference to the <see cref="PaneBase"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <returns>true if the point lies in the bounding box, false otherwise</returns>
+        override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
 		{
 			if ( ! base.PointInBox(pt, pane, g, scaleFactor ) )
 				return false;

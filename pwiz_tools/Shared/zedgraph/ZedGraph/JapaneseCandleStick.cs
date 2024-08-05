@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #endregion
 
@@ -359,32 +360,70 @@ namespace ZedGraph
 			}
 		}
 
+        public void Draw(SvgGraphics g, GraphPane pane, bool isXBase,
+            float pixBase, float pixHigh, float pixLow,
+            float pixOpen, float pixClose, float halfSize,
+            float scaleFactor, Pen pen, Fill fill, Border border, PointPair pt)
+        {
+            //float halfSize = (int) ( _size * scaleFactor / 2.0f + 0.5f );
 
-		/// <summary>
-		/// Draw all the <see cref="JapaneseCandleStick"/>'s to the specified <see cref="Graphics"/>
-		/// device as a candlestick at each defined point.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="JapaneseCandleStickItem"/> object representing the
-		/// <see cref="JapaneseCandleStick"/>'s to be drawn.</param>
-		/// <param name="baseAxis">The <see cref="Axis"/> class instance that defines the base (independent)
-		/// axis for the <see cref="JapaneseCandleStick"/></param>
-		/// <param name="valueAxis">The <see cref="Axis"/> class instance that defines the value (dependent)
-		/// axis for the <see cref="JapaneseCandleStick"/></param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		public void Draw( Graphics g, GraphPane pane, JapaneseCandleStickItem curve,
+            if (pixBase != PointPair.Missing && Math.Abs(pixLow) < 1000000 &&
+                Math.Abs(pixHigh) < 1000000)
+            {
+                RectangleF rect;
+                if (isXBase)
+                {
+                    rect = new RectangleF(pixBase - halfSize, Math.Min(pixOpen, pixClose),
+                        halfSize * 2.0f, Math.Abs(pixOpen - pixClose));
+
+                    g.DrawLine(pen, pixBase, pixHigh, pixBase, pixLow);
+                }
+                else
+                {
+                    rect = new RectangleF(Math.Min(pixOpen, pixClose), pixBase - halfSize,
+                        Math.Abs(pixOpen - pixClose), halfSize * 2.0f);
+
+                    g.DrawLine(pen, pixHigh, pixBase, pixLow, pixBase);
+                }
+
+                if (_isOpenCloseVisible && Math.Abs(pixOpen) < 1000000 &&
+                    Math.Abs(pixClose) < 1000000)
+                {
+                    if (rect.Width == 0)
+                        rect.Width = 1;
+                    if (rect.Height == 0)
+                        rect.Height = 1;
+
+                    fill.Draw(g, rect, pt);
+                    border.Draw(g, pane, scaleFactor, rect);
+                }
+            }
+        }
+        /// <summary>
+        /// Draw all the <see cref="JapaneseCandleStick"/>'s to the specified <see cref="Graphics"/>
+        /// device as a candlestick at each defined point.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="JapaneseCandleStickItem"/> object representing the
+        /// <see cref="JapaneseCandleStick"/>'s to be drawn.</param>
+        /// <param name="baseAxis">The <see cref="Axis"/> class instance that defines the base (independent)
+        /// axis for the <see cref="JapaneseCandleStick"/></param>
+        /// <param name="valueAxis">The <see cref="Axis"/> class instance that defines the value (dependent)
+        /// axis for the <see cref="JapaneseCandleStick"/></param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        public void Draw( Graphics g, GraphPane pane, JapaneseCandleStickItem curve,
 							Axis baseAxis, Axis valueAxis, float scaleFactor )
 		{
 			//ValueHandler valueHandler = new ValueHandler( pane, false );
@@ -479,7 +518,101 @@ namespace ZedGraph
 			}
 		}
 
-		#endregion
+        public void Draw(SvgGraphics g, GraphPane pane, JapaneseCandleStickItem curve,
+                    Axis baseAxis, Axis valueAxis, float scaleFactor)
+        {
+            //ValueHandler valueHandler = new ValueHandler( pane, false );
 
-	}
+            float pixBase, pixHigh, pixLow, pixOpen, pixClose;
+
+            if (curve.Points != null)
+            {
+                //float halfSize = _size * scaleFactor;
+                float halfSize = GetBarWidth(pane, baseAxis, scaleFactor);
+
+                Color tColor = _color;
+                Color tFallingColor = _fallingColor;
+                float tPenWidth = _width;
+                Fill tRisingFill = _risingFill;
+                Fill tFallingFill = _fallingFill;
+                Border tRisingBorder = _risingBorder;
+                Border tFallingBorder = _fallingBorder;
+                if (curve.IsSelected)
+                {
+                    tColor = Selection.Border.Color;
+                    tFallingColor = Selection.Border.Color;
+                    tPenWidth = Selection.Border.Width;
+                    tRisingFill = Selection.Fill;
+                    tFallingFill = Selection.Fill;
+                    tRisingBorder = Selection.Border;
+                    tFallingBorder = Selection.Border;
+
+                }
+
+                using (Pen risingPen = new Pen(tColor, tPenWidth))
+                using (Pen fallingPen = new Pen(tFallingColor, tPenWidth))
+                {
+                    // Loop over each defined point							
+                    for (int i = 0; i < curve.Points.Count; i++)
+                    {
+                        PointPair pt = curve.Points[i];
+                        double date = pt.X;
+                        double high = pt.Y;
+                        double low = pt.Z;
+                        double open = PointPair.Missing;
+                        double close = PointPair.Missing;
+                        if (pt is StockPt)
+                        {
+                            open = (pt as StockPt).Open;
+                            close = (pt as StockPt).Close;
+                        }
+
+                        // Any value set to double max is invalid and should be skipped
+                        // This is used for calculated values that are out of range, divide
+                        //   by zero, etc.
+                        // Also, any value <= zero on a log scale is invalid
+
+                        if (!curve.Points[i].IsInvalid3D &&
+                                (date > 0 || !baseAxis._scale.IsLog) &&
+                                ((high > 0 && low > 0) || !valueAxis._scale.IsLog))
+                        {
+                            pixBase = (int)(baseAxis.Scale.Transform(curve.IsOverrideOrdinal, i, date) + 0.5);
+                            //pixBase = baseAxis.Scale.Transform( curve.IsOverrideOrdinal, i, date );
+                            pixHigh = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, high);
+                            pixLow = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, low);
+                            if (PointPair.IsValueInvalid(open))
+                                pixOpen = Single.MaxValue;
+                            else
+                                pixOpen = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, open);
+
+                            if (PointPair.IsValueInvalid(close))
+                                pixClose = Single.MaxValue;
+                            else
+                                pixClose = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, close);
+
+                            if (!curve.IsSelected && this._gradientFill.IsGradientValueType)
+                            {
+                                using (Pen tPen = GetPen(pane, scaleFactor, pt))
+                                    Draw(g, pane, baseAxis is XAxis || baseAxis is X2Axis,
+                                        pixBase, pixHigh, pixLow, pixOpen,
+                                        pixClose, halfSize, scaleFactor,
+                                        (tPen),
+                                        (close > open ? tRisingFill : tFallingFill),
+                                        (close > open ? tRisingBorder : tFallingBorder), pt);
+                            }
+                            else
+                                Draw(g, pane, baseAxis is XAxis || baseAxis is X2Axis,
+                                    pixBase, pixHigh, pixLow, pixOpen,
+                                    pixClose, halfSize, scaleFactor,
+                                    (close > open ? risingPen : fallingPen),
+                                    (close > open ? tRisingFill : tFallingFill),
+                                    (close > open ? tRisingBorder : tFallingBorder), pt);
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
+    }
 }

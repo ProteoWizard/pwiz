@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Collections;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -254,30 +255,69 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Determine if the specified screen point lies inside the bounding box of this
-		/// <see cref="LineObj"/>.
-		/// </summary>
-		/// <remarks>The bounding box is calculated assuming a distance
-		/// of <see cref="GraphPane.Default.NearestTol"/> pixels around the arrow segment.
-		/// </remarks>
-		/// <param name="pt">The screen point, in pixels</param>
-		/// <param name="pane">
-		/// A reference to the <see cref="PaneBase"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <returns>true if the point lies in the bounding box, false otherwise</returns>
-		override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
+        override public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor)
+        {
+            // Convert the arrow coordinates from the user coordinate system
+            // to the screen coordinate system
+            PointF pix1 = this.Location.TransformTopLeft(pane);
+            PointF pix2 = this.Location.TransformBottomRight(pane);
+
+            if (pix1.X > -10000 && pix1.X < 100000 && pix1.Y > -100000 && pix1.Y < 100000 &&
+                pix2.X > -10000 && pix2.X < 100000 && pix2.Y > -100000 && pix2.Y < 100000)
+            {
+                // calculate the length and the angle of the arrow "vector"
+                double dy = pix2.Y - pix1.Y;
+                double dx = pix2.X - pix1.X;
+                float angle = (float)Math.Atan2(dy, dx) * 180.0F / (float)Math.PI;
+                float length = (float)Math.Sqrt(dx * dx + dy * dy);
+
+                // Save the old transform matrix
+                Matrix transform = g.Transform;
+                // Move the coordinate system so it is located at the starting point
+                // of this arrow
+                g.TranslateTransform(pix1.X, pix1.Y);
+                // Rotate the coordinate system according to the angle of this arrow
+                // about the starting point
+                g.RotateTransform(angle);
+
+                // get a pen according to this arrow properties
+                using (Pen pen = _line.GetPen(pane, scaleFactor))
+                    //new Pen( _line._color, pane.ScaledPenWidth( _line._width, scaleFactor ) ) )
+                {
+                    //pen.DashStyle = _style;
+
+                    g.DrawLine(pen, 0, 0, length, 0);
+                }
+
+                // Restore the transform matrix back to its original state
+                g.Transform = transform;
+            }
+        }
+
+        /// <summary>
+        /// Determine if the specified screen point lies inside the bounding box of this
+        /// <see cref="LineObj"/>.
+        /// </summary>
+        /// <remarks>The bounding box is calculated assuming a distance
+        /// of <see cref="GraphPane.Default.NearestTol"/> pixels around the arrow segment.
+        /// </remarks>
+        /// <param name="pt">The screen point, in pixels</param>
+        /// <param name="pane">
+        /// A reference to the <see cref="PaneBase"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <returns>true if the point lies in the bounding box, false otherwise</returns>
+        override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
 		{
 			if ( ! base.PointInBox(pt, pane, g, scaleFactor ) )
 				return false;

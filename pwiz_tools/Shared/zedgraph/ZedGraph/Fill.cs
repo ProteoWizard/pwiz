@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -1115,20 +1116,35 @@ namespace ZedGraph
 			*/
 		}
 
-		/// <summary>
-		/// Fill the background of the <see cref="RectangleF"/> area, using the
-		/// fill type from this <see cref="Fill"/>.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="rect">The <see cref="RectangleF"/> struct specifying the area
-		/// to be filled</param>
-		/// <param name="pt">The data value to be used in case it's a
-		/// <see cref="FillType.GradientByX" />, <see cref="FillType.GradientByY" />, or
-		/// <see cref="FillType.GradientByZ" /> <see cref="FillType" />.</param>
-		public void Draw( Graphics g, RectangleF rect, PointPair pt )
+        public void Draw(SvgGraphics g, RectangleF rect)
+        {
+            Draw(g, rect, null);
+            /*
+            if ( this.IsVisible )
+            {
+                using( Brush brush = this.MakeBrush( rect ) )
+                {
+                    g.FillRectangle( brush, rect );
+                    //brush.Dispose();
+                }
+            }
+            */
+        }
+
+        /// <summary>
+        /// Fill the background of the <see cref="RectangleF"/> area, using the
+        /// fill type from this <see cref="Fill"/>.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="rect">The <see cref="RectangleF"/> struct specifying the area
+        /// to be filled</param>
+        /// <param name="pt">The data value to be used in case it's a
+        /// <see cref="FillType.GradientByX" />, <see cref="FillType.GradientByY" />, or
+        /// <see cref="FillType.GradientByZ" /> <see cref="FillType" />.</param>
+        public void Draw( Graphics g, RectangleF rect, PointPair pt )
 		{
 			if ( this.IsVisible )
 			{
@@ -1139,7 +1155,18 @@ namespace ZedGraph
 			}
 		}
 
+        public void Draw(SvgGraphics g, RectangleF rect, PointPair pt)
+        {
+            if (this.IsVisible)
+            {
+                using (Brush brush = this.MakeBrush(rect, pt))
+                {
+                    g.FillRectangle(brush, rect);
+                }
+            }
+        }
 
-	#endregion
-	}
+
+        #endregion
+    }
 }

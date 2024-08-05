@@ -24,6 +24,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -629,30 +630,89 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Calculate the <see cref="RectangleF"/> that will be used to define the bounding rectangle of
-		/// the Pie.
-		/// </summary>
-		/// <remarks>This rectangle always lies inside of the <see cref="Chart.Rect"/>, and it is
-		/// normally a square so that the pie itself is not oval-shaped.</remarks>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>				
-		/// <param name="chartRect">The <see cref="RectangleF"/> (normally the <see cref="Chart.Rect"/>)
-		/// that bounds this pie.</param>
-		/// <returns></returns>
-		public static RectangleF CalcPieRect( Graphics g, GraphPane pane, float scaleFactor, RectangleF chartRect )
+        override public void Draw(SvgGraphics g, GraphPane pane, int pos, float scaleFactor)
+        {
+            if (pane.Chart._rect.Width <= 0 && pane.Chart._rect.Height <= 0)
+            {
+                //pane.PieRect = RectangleF.Empty;
+                _slicePath = null;
+            }
+            else
+            {
+                //pane.PieRect = CalcPieRect( g, pane, scaleFactor, pane.ChartRect );
+                CalcPieRect(g, pane, scaleFactor, pane.Chart._rect);
+
+                _slicePath = new GraphicsPath();
+
+                if (!_isVisible)
+                    return;
+
+                RectangleF tRect = _boundingRectangle;
+
+                if (tRect.Width >= 1 && tRect.Height >= 1)
+                {
+                    SmoothingMode sMode = g.SmoothingMode;
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                    Fill tFill = _fill;
+                    Border tBorder = _border;
+                    if (this.IsSelected)
+                    {
+                        tFill = Selection.Fill;
+                        tBorder = Selection.Border;
+                    }
+
+                    using (Brush brush = tFill.MakeBrush(_boundingRectangle))
+                    {
+                        g.FillPie(brush, tRect.X, tRect.Y, tRect.Width, tRect.Height, this.StartAngle, this.SweepAngle);
+
+                        //add GraphicsPath for hit testing
+                        _slicePath.AddPie(tRect.X, tRect.Y, tRect.Width, tRect.Height,
+                            this.StartAngle, this.SweepAngle);
+
+                        if (this.Border.IsVisible)
+                        {
+                            using (Pen borderPen = tBorder.GetPen(pane, scaleFactor))
+                            {
+                                g.DrawPie(borderPen, tRect.X, tRect.Y, tRect.Width, tRect.Height,
+                                    this.StartAngle, this.SweepAngle);
+                            }
+                        }
+
+                        if (_labelType != PieLabelType.None)
+                            DrawLabel(g, pane, tRect, scaleFactor);
+
+                        //brush.Dispose();
+                    }
+
+                    g.SmoothingMode = sMode;
+                }
+            }
+        }
+        /// <summary>
+        /// Calculate the <see cref="RectangleF"/> that will be used to define the bounding rectangle of
+        /// the Pie.
+        /// </summary>
+        /// <remarks>This rectangle always lies inside of the <see cref="Chart.Rect"/>, and it is
+        /// normally a square so that the pie itself is not oval-shaped.</remarks>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>				
+        /// <param name="chartRect">The <see cref="RectangleF"/> (normally the <see cref="Chart.Rect"/>)
+        /// that bounds this pie.</param>
+        /// <returns></returns>
+        public static RectangleF CalcPieRect( Graphics g, GraphPane pane, float scaleFactor, RectangleF chartRect )
 		{
 			//want to draw the largest pie possible within ChartRect
 			//but want to leave  5% slack around the pie so labels will not overrun clip area
@@ -717,11 +777,76 @@ namespace ZedGraph
 			return nonExplRect;
 		}
 
-		/// <summary>
-		/// Recalculate the bounding rectangle when a piee slice is displaced.
-		/// </summary>
-		/// <param name="explRect">rectangle to be used for drawing exploded pie</param>
-		private void CalcExplodedRect( ref RectangleF explRect )
+        public static RectangleF CalcPieRect(SvgGraphics g, GraphPane pane, float scaleFactor, RectangleF chartRect)
+        {
+            //want to draw the largest pie possible within ChartRect
+            //but want to leave  5% slack around the pie so labels will not overrun clip area
+            //largest pie is limited by the smaller of ChartRect.height or ChartRect.width...
+            //this rect (nonExplRect)has to be re-positioned so that it's in the center of ChartRect.
+            //Where ChartRect is almost a square - low Aspect Ratio -, need to contract pieRect so that there's some
+            //room for labels, if they're visible.
+            double maxDisplacement = 0;
+            RectangleF tempRect;   //= new RectangleF(0,0,0,0);
+
+            RectangleF nonExplRect = chartRect;
+
+            if (pane.CurveList.IsPieOnly)
+            {
+                if (nonExplRect.Width < nonExplRect.Height)
+                {
+                    //create slack rect
+                    nonExplRect.Inflate(-(float)0.05F * nonExplRect.Height, -(float)0.05F * nonExplRect.Width);
+                    //get the difference between dimensions
+                    float delta = (nonExplRect.Height - nonExplRect.Width) / 2;
+                    //make a square	so we end up with circular pie
+                    nonExplRect.Height = nonExplRect.Width;
+                    //keep the center point  the same
+                    nonExplRect.Y += delta;
+                }
+                else
+                {
+                    nonExplRect.Inflate(-(float)0.05F * nonExplRect.Height, -(float)0.05F * nonExplRect.Width);
+                    float delta = (nonExplRect.Width - nonExplRect.Height) / 2;
+                    nonExplRect.Width = nonExplRect.Height;
+                    nonExplRect.X += delta;
+                }
+                //check aspect ratio
+                double aspectRatio = chartRect.Width / chartRect.Height;
+                //make an adjustment in rect size,as aspect ratio varies
+                if (aspectRatio < 1.5)
+                    nonExplRect.Inflate(-(float)(.1 * (1.5 / aspectRatio) * nonExplRect.Width),
+                                            -(float)(.1 * (1.5 / aspectRatio) * nonExplRect.Width));
+
+                //modify the rect to determine if any of the labels need to be wrapped....
+                //first see if there's any exploded slices and if so, what's the max displacement...
+                //also, might as well get all the display params we can
+                PieItem.CalculatePieChartParams(pane, ref maxDisplacement);
+
+                if (maxDisplacement != 0)            //need new rectangle if any slice exploded	
+                    CalcNewBaseRect(maxDisplacement, ref nonExplRect);
+
+                foreach (PieItem slice in pane.CurveList)
+                {
+                    slice._boundingRectangle = nonExplRect;
+                    //if exploded, need to re-calculate rectangle for slice
+                    if (slice.Displacement != 0)
+                    {
+                        tempRect = nonExplRect;
+                        slice.CalcExplodedRect(ref tempRect);
+                        slice._boundingRectangle = tempRect;
+                    }
+                    //now get all the other slice specific drawing details, including need for wrapping label
+                    slice.DesignLabel(g, pane, slice._boundingRectangle, scaleFactor);
+                }
+            }
+            return nonExplRect;
+        }
+
+        /// <summary>
+        /// Recalculate the bounding rectangle when a piee slice is displaced.
+        /// </summary>
+        /// <param name="explRect">rectangle to be used for drawing exploded pie</param>
+        private void CalcExplodedRect( ref RectangleF explRect )
 		{
 			//pie exploded out along the slice bisector - modify upper left of bounding rect to account for displacement
 			//keep height and width same
@@ -800,26 +925,44 @@ namespace ZedGraph
 			_labelDetail.Draw( g, pane, scaleFactor );
 		}
 
-		/// <summary>
-		/// This method collects all the data relative to rendering this <see cref="PieItem"/>'s label.
-		/// </summary>
-		/// <param name="g">
-		///  A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="rect">The rectangle used for rendering this <see cref="PieItem"/>
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		public void DesignLabel( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
+        public void DrawLabel(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor)
+        {
+            if (!_labelDetail.IsVisible)
+                return;
+
+            using (Pen labelPen = this.Border.GetPen(pane, scaleFactor))
+            {
+                //draw line from intersection point to pivot point -
+                g.DrawLine(labelPen, _intersectionPoint, _pivotPoint);
+
+                //draw horizontal line to move label away from pie...
+                g.DrawLine(labelPen, _pivotPoint, _endPoint);
+            }
+
+            //draw the label (TextObj)
+            _labelDetail.Draw(g, pane, scaleFactor);
+        }
+
+        /// <summary>
+        /// This method collects all the data relative to rendering this <see cref="PieItem"/>'s label.
+        /// </summary>
+        /// <param name="g">
+        ///  A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="rect">The rectangle used for rendering this <see cref="PieItem"/>
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        public void DesignLabel( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
 		{
 			if ( !_labelDetail.IsVisible )
 				return;
@@ -902,12 +1045,95 @@ namespace ZedGraph
 			_labelDetail.Text = _labelStr;
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="rect"></param>
-		/// <param name="midAngle"></param>
-		private void CalculateLinePoints( RectangleF rect, double midAngle )
+        public void DesignLabel(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor)
+        {
+            if (!_labelDetail.IsVisible)
+                return;
+
+            _labelDetail.LayoutArea = new SizeF();
+            //this.labelDetail.IsWrapped = false;
+
+            //label line will come off the explosion radius and then pivot to the horizontal right or left,
+            //dependent on position.. 
+            //text will be at the end of horizontal segment...
+            CalculateLinePoints(rect, _midAngle);
+
+            //now get size of bounding rect for label
+            SizeF size = _labelDetail.FontSpec.BoundingBox(g, _labelStr, scaleFactor);
+
+            //how much room left for the label - most likely midangles for wrapping
+            //Right - 315 -> 45 degrees
+            //Bottom - 45 -> 135
+            //Left - 135 -> 225
+            //Top - 225 -> 315
+            RectangleF chartRect = pane.Chart._rect;
+            float fill = 0;
+            if (_midAngle > 315 || _midAngle <= 45)
+            {
+                //correct by wrapping text
+                fill = chartRect.X + chartRect.Width - _endPoint.X - 5;
+                if (size.Width > fill)
+                {
+                    //need to wrap, so create label rectangle for overloaded DrawString - two rows, max
+                    _labelDetail.LayoutArea = new SizeF(fill, size.Height * 3.0F);
+                }
+            }
+
+            if (_midAngle > 45 && _midAngle <= 135)
+            {
+                //correct by moving radial line toward one or the other end of the range
+                fill = chartRect.Y + chartRect.Height - _endPoint.Y - 5;
+                //is there enuf room for the label
+                if (size.Height / 2 > fill)
+                {
+                    //no, so got to move explosion radius
+                    if (_midAngle > 90) //move _label clockwise one-third of way to the end of the arc
+                        CalculateLinePoints(rect, _midAngle + (_sweepAngle + _startAngle - _midAngle) / 3);
+                    else                        //move _label counter-clockwise one-third of way to the start of the arc
+                        CalculateLinePoints(rect, _midAngle - (_midAngle - (_midAngle - _startAngle) / 3));
+                }
+            }
+
+            if (_midAngle > 135 && _midAngle <= 225)
+            {
+                //wrap text 
+                fill = _endPoint.X - chartRect.X - 5;
+                //need to wrap, so create label rectangle for overloaded DrawString - two rows, max
+                if (size.Width > fill)
+                {
+                    _labelDetail.LayoutArea = new SizeF(fill, size.Height * 3.0F);
+                }
+            }
+
+            if (_midAngle > 225 && _midAngle <= 315)
+            {
+                //correct by moving radial line toward one or the other end of the range
+                fill = _endPoint.Y - 5 - chartRect.Y;
+                //is there enuf room for the label
+                if (size.Height / 2 > fill)
+                {
+                    //no, so got to move explosion radius
+                    if (_midAngle < 270)    //move _label counter-clockwise one-third of way to the start of the arc
+                        CalculateLinePoints(rect, _midAngle - (_sweepAngle + _startAngle - _midAngle) / 3);
+                    else                        //move _label clockwise one-third of way to the end of the arc
+                        CalculateLinePoints(rect, _midAngle + (_midAngle - _startAngle) / 3);
+                }
+            }
+
+            //complete the location Detail info
+            _labelDetail.Location.AlignV = AlignV.Center;
+            _labelDetail.Location.CoordinateFrame = CoordType.PaneFraction;
+            _labelDetail.Location.X = (_endPoint.X - pane.Rect.X) / pane.Rect.Width;
+            _labelDetail.Location.Y = (_endPoint.Y - pane.Rect.Y) / pane.Rect.Height;
+            _labelDetail.Text = _labelStr;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="midAngle"></param>
+        private void CalculateLinePoints( RectangleF rect, double midAngle )
 		{
 			//get the point where the explosion radius intersects the this arc
 			PointF rectCenter = new PointF( ( rect.X + rect.Width / 2 ), ( rect.Y + rect.Height / 2 ) );
@@ -1035,16 +1261,37 @@ namespace ZedGraph
 				_border.Draw( g, pane, scaleFactor, rect );
 		}
 
-		/// <summary>
-		/// Determine the coords for the rectangle associated with a specified point for 
-		/// this <see cref="CurveItem" />
-		/// </summary>
-		/// <param name="pane">The <see cref="GraphPane" /> to which this curve belongs</param>
-		/// <param name="i">The index of the point of interest</param>
-		/// <param name="coords">A list of coordinates that represents the "rect" for
-		/// this point (used in an html AREA tag)</param>
-		/// <returns>true if it's a valid point, false otherwise</returns>
-		override public bool GetCoords( GraphPane pane, int i, out string coords )
+        override public void DrawLegendKey(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor)
+        {
+            if (!_isVisible)
+                return;
+
+            // Fill the slice
+            if (_fill.IsVisible)
+            {
+                // just avoid height/width being less than 0.1 so GDI+ doesn't cry
+                using (Brush brush = _fill.MakeBrush(rect))
+                {
+                    g.FillRectangle(brush, rect);
+                    //brush.Dispose();
+                }
+            }
+
+            // Border the bar
+            if (!_border.Color.IsEmpty)
+                _border.Draw(g, pane, scaleFactor, rect);
+        }
+
+        /// <summary>
+        /// Determine the coords for the rectangle associated with a specified point for 
+        /// this <see cref="CurveItem" />
+        /// </summary>
+        /// <param name="pane">The <see cref="GraphPane" /> to which this curve belongs</param>
+        /// <param name="i">The index of the point of interest</param>
+        /// <param name="coords">A list of coordinates that represents the "rect" for
+        /// this point (used in an html AREA tag)</param>
+        /// <returns>true if it's a valid point, false otherwise</returns>
+        override public bool GetCoords( GraphPane pane, int i, out string coords )
 		{
 			coords = string.Empty;
 

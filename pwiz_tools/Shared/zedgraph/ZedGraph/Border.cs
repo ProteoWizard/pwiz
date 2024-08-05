@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -237,8 +238,24 @@ namespace ZedGraph
 			}
 		}
 
-	#endregion
-	}
+        public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor, RectangleF rect)
+        {
+            // Need to use the RectangleF props since rounding it can cause the axisFrame to
+            // not line up properly with the last tic mark
+            if (_isVisible)
+            {
+                RectangleF tRect = rect;
+
+                float scaledInflate = (float)(_inflateFactor * scaleFactor);
+                tRect.Inflate(scaledInflate, scaledInflate);
+
+                using (Pen pen = GetPen(pane, scaleFactor))
+                    g.DrawRectangle(pen, tRect.X, tRect.Y, tRect.Width, tRect.Height);
+            }
+        }
+
+        #endregion
+    }
 }
 
 

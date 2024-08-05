@@ -28,6 +28,7 @@ using System.Drawing.Text;
 using System.Collections;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #endregion
 
@@ -623,49 +624,117 @@ namespace ZedGraph
 
 		}
 
-		/// <summary>
-		/// Find the pane and the object within that pane that lies closest to the specified
-		/// mouse (screen) point.
-		/// </summary>
-		/// <remarks>
-		/// This method first finds the <see cref="GraphPane"/> within the list that contains
-		/// the specified mouse point.  It then calls the <see cref="GraphPane.FindNearestObject"/>
-		/// method to determine which object, if any, was clicked.  With the exception of the
-		/// <see paramref="pane"/>, all the parameters in this method are identical to those
-		/// in the <see cref="GraphPane.FindNearestObject"/> method.
-		/// If the mouse point lies within the <see cref="PaneBase.Rect"/> of any 
-		/// <see cref="GraphPane"/> item, then that pane will be returned (otherwise it will be
-		/// null).  Further, within the selected pane, if the mouse point is within the
-		/// bounding box of any of the items (or in the case
-		/// of <see cref="ArrowObj"/> and <see cref="CurveItem"/>, within
-		/// <see cref="GraphPane.Default.NearestTol"/> pixels), then the object will be returned.
-		/// You must check the type of the object to determine what object was
-		/// selected (for example, "if ( object is Legend ) ...").  The
-		/// <see paramref="index"/> parameter returns the index number of the item
-		/// within the selected object (such as the point number within a
-		/// <see cref="CurveItem"/> object.
-		/// </remarks>
-		/// <param name="mousePt">The screen point, in pixel coordinates.</param>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">A reference to the <see cref="GraphPane"/> object that was clicked.</param>
-		/// <param name="nearestObj">A reference to the nearest object to the
-		/// specified screen point.  This can be any of <see cref="Axis"/>,
-		/// <see cref="Legend"/>, <see cref="PaneBase.Title"/>,
-		/// <see cref="TextObj"/>, <see cref="ArrowObj"/>, or <see cref="CurveItem"/>.
-		/// Note: If the pane title is selected, then the <see cref="GraphPane"/> object
-		/// will be returned.
-		/// </param>
-		/// <param name="index">The index number of the item within the selected object
-		/// (where applicable).  For example, for a <see cref="CurveItem"/> object,
-		/// <see paramref="index"/> will be the index number of the nearest data point,
-		/// accessible via <see cref="CurveItem.Points">CurveItem.Points[index]</see>.
-		/// index will be -1 if no data points are available.</param>
-		/// <returns>true if a <see cref="GraphPane"/> was found, false otherwise.</returns>
-		/// <seealso cref="GraphPane.FindNearestObject"/>
-		public bool FindNearestPaneObject( PointF mousePt, Graphics g, out GraphPane pane,
+        /// <summary>
+        /// Render all the <see cref="GraphPane"/> objects in the <see cref="PaneList"/> to the
+        /// specified graphics device.
+        /// </summary>
+        /// <remarks>This method should be part of the Paint() update process.  Calling this routine
+        /// will redraw all
+        /// features of all the <see cref="GraphPane"/> items.  No preparation is required other than
+        /// instantiated <see cref="GraphPane"/> objects that have been added to the list with the
+        /// <see cref="Add"/> method.
+        /// </remarks>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        public override void Draw(SvgGraphics g)
+        {
+            // Save current AntiAlias mode
+            SmoothingMode sModeSave = g.SmoothingMode;
+            TextRenderingHint sHintSave = TextRenderingHint.SystemDefault;
+            CompositingQuality sCompQual = CompositingQuality.Default;
+            InterpolationMode sInterpMode = InterpolationMode.Default;
+
+            SetAntiAliasMode(g, _isAntiAlias);
+
+            // Draw the pane border & background fill, the title, and the GraphObj objects that lie at
+            // ZOrder.GBehindAll
+            base.Draw(g);
+
+            if (_rect.Width <= 1 || _rect.Height <= 1)
+                return;
+
+            float scaleFactor = CalcScaleFactor();
+
+            //var clip = PushClip(g, _rect);
+
+            // For the MasterPane, All GraphItems go behind the GraphPanes, except those that
+            // are explicity declared as ZOrder.AInFront
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.G_BehindChartFill);
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.E_BehindCurves);
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.D_BehindAxis);
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.C_BehindChartBorder);
+
+            foreach (GraphPane pane in _paneList)
+                pane.Draw(g);
+
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.B_BehindLegend);
+
+            // Recalculate the legend rect, just in case it has not yet been done
+            // innerRect is the area for the GraphPane's
+            RectangleF innerRect = CalcClientRect(g, scaleFactor);
+            _legend.CalcRect(g, this, scaleFactor, ref innerRect);
+            //this.legend.SetLocation( this, 
+
+            _legend.Draw(g, this, scaleFactor);
+
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.A_InFront);
+
+            // Reset the clipping
+            //PopClip(g, clip);
+
+            // Restore original anti-alias mode
+            g.SmoothingMode = SmoothingMode.Default;
+            g.TextRenderingHint = TextRenderingHint.SystemDefault;
+            g.CompositingQuality = CompositingQuality.Default;
+            g.InterpolationMode = InterpolationMode.Default;
+
+        }
+
+        /// <summary>
+        /// Find the pane and the object within that pane that lies closest to the specified
+        /// mouse (screen) point.
+        /// </summary>
+        /// <remarks>
+        /// This method first finds the <see cref="GraphPane"/> within the list that contains
+        /// the specified mouse point.  It then calls the <see cref="GraphPane.FindNearestObject"/>
+        /// method to determine which object, if any, was clicked.  With the exception of the
+        /// <see paramref="pane"/>, all the parameters in this method are identical to those
+        /// in the <see cref="GraphPane.FindNearestObject"/> method.
+        /// If the mouse point lies within the <see cref="PaneBase.Rect"/> of any 
+        /// <see cref="GraphPane"/> item, then that pane will be returned (otherwise it will be
+        /// null).  Further, within the selected pane, if the mouse point is within the
+        /// bounding box of any of the items (or in the case
+        /// of <see cref="ArrowObj"/> and <see cref="CurveItem"/>, within
+        /// <see cref="GraphPane.Default.NearestTol"/> pixels), then the object will be returned.
+        /// You must check the type of the object to determine what object was
+        /// selected (for example, "if ( object is Legend ) ...").  The
+        /// <see paramref="index"/> parameter returns the index number of the item
+        /// within the selected object (such as the point number within a
+        /// <see cref="CurveItem"/> object.
+        /// </remarks>
+        /// <param name="mousePt">The screen point, in pixel coordinates.</param>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">A reference to the <see cref="GraphPane"/> object that was clicked.</param>
+        /// <param name="nearestObj">A reference to the nearest object to the
+        /// specified screen point.  This can be any of <see cref="Axis"/>,
+        /// <see cref="Legend"/>, <see cref="PaneBase.Title"/>,
+        /// <see cref="TextObj"/>, <see cref="ArrowObj"/>, or <see cref="CurveItem"/>.
+        /// Note: If the pane title is selected, then the <see cref="GraphPane"/> object
+        /// will be returned.
+        /// </param>
+        /// <param name="index">The index number of the item within the selected object
+        /// (where applicable).  For example, for a <see cref="CurveItem"/> object,
+        /// <see paramref="index"/> will be the index number of the nearest data point,
+        /// accessible via <see cref="CurveItem.Points">CurveItem.Points[index]</see>.
+        /// index will be -1 if no data points are available.</param>
+        /// <returns>true if a <see cref="GraphPane"/> was found, false otherwise.</returns>
+        /// <seealso cref="GraphPane.FindNearestObject"/>
+        public bool FindNearestPaneObject( PointF mousePt, Graphics g, out GraphPane pane,
 			out object nearestObj, out int index )
 		{
 			pane = null;

@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Collections;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -386,29 +387,48 @@ namespace ZedGraph
 
 			}
 		}
-		
-		/// <summary>
-		/// Determine if the specified screen point lies inside the bounding box of this
-		/// <see cref="TextObj"/>.  This method takes into account rotation and alignment
-		/// parameters of the text, as specified in the <see cref="FontSpec"/>.
-		/// </summary>
-		/// <param name="pt">The screen point, in pixels</param>
-		/// <param name="pane">
-		/// A reference to the <see cref="PaneBase"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <returns>true if the point lies in the bounding box, false otherwise</returns>
-		override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
+
+        override public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor)
+        {
+            // transform the x,y location from the user-defined
+            // coordinate frame to the screen pixel location
+            PointF pix = _location.Transform(pane);
+
+            // Draw the text on the screen, including any frame and background
+            // fill elements
+            if (pix.X > -100000 && pix.X < 100000 && pix.Y > -100000 && pix.Y < 100000)
+            {
+                //if ( this.layoutSize.IsEmpty )
+                //	this.FontSpec.Draw( g, pane.IsPenWidthScaled, this.text, pix.X, pix.Y,
+                //		this.location.AlignH, this.location.AlignV, scaleFactor );
+                //else
+                this.FontSpec.Draw(g, pane, _text, pix.X, pix.Y,
+                    _location.AlignH, _location.AlignV, scaleFactor, _layoutArea);
+
+            }
+        }
+        /// <summary>
+        /// Determine if the specified screen point lies inside the bounding box of this
+        /// <see cref="TextObj"/>.  This method takes into account rotation and alignment
+        /// parameters of the text, as specified in the <see cref="FontSpec"/>.
+        /// </summary>
+        /// <param name="pt">The screen point, in pixels</param>
+        /// <param name="pane">
+        /// A reference to the <see cref="PaneBase"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <returns>true if the point lies in the bounding box, false otherwise</returns>
+        override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
 		{
 			if ( ! base.PointInBox(pt, pane, g, scaleFactor ) )
 				return false;

@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Collections;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #endregion
 
@@ -283,29 +284,51 @@ namespace ZedGraph
 			}
 
 		}
-		
-		/// <summary>
-		/// Determine if the specified screen point lies inside the bounding box of this
-		/// <see cref="ArrowObj"/>.  The bounding box is calculated assuming a distance
-		/// of <see cref="GraphPane.Default.NearestTol"/> pixels around the arrow segment.
-		/// </summary>
-		/// <param name="pt">The screen point, in pixels</param>
-		/// <param name="pane">
-		/// A reference to the <see cref="PaneBase"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <returns>true if the point lies in the bounding box, false otherwise</returns>
-		override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
+
+        override public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor)
+        {
+            if (_image != null)
+            {
+                // Convert the rectangle coordinates from the user coordinate system
+                // to the screen coordinate system
+                RectangleF tmpRect = _location.TransformRect(pane);
+
+                if (_isScaled)
+                    g.DrawImage(_image, tmpRect);
+                else
+                {
+                    Region clip = g.Clip.Clone();
+                    g.IntersectClip(tmpRect);
+                    g.DrawImageUnscaled(_image, Rectangle.Round(tmpRect));
+                    g.Clip = clip;
+                    //g.DrawImageUnscaledAndClipped( image, Rectangle.Round( tmpRect ) );
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Determine if the specified screen point lies inside the bounding box of this
+        /// <see cref="ArrowObj"/>.  The bounding box is calculated assuming a distance
+        /// of <see cref="GraphPane.Default.NearestTol"/> pixels around the arrow segment.
+        /// </summary>
+        /// <param name="pt">The screen point, in pixels</param>
+        /// <param name="pane">
+        /// A reference to the <see cref="PaneBase"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <returns>true if the point lies in the bounding box, false otherwise</returns>
+        override public bool PointInBox( PointF pt, PaneBase pane, Graphics g, float scaleFactor )
 		{
 			if ( _image != null )
 			{

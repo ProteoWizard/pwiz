@@ -24,8 +24,10 @@ using System.Threading;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
+using SvgNet;
 
 using System.Runtime.InteropServices;
+
 //using System.Diagnostics;
 
 namespace ZedGraph
@@ -360,9 +362,10 @@ namespace ZedGraph
 					"Gif Format (*.gif)|*.gif|" +
 					"Jpeg Format (*.jpg)|*.jpg|" +
 					"Tiff Format (*.tif)|*.tif|" +
-					"Bmp Format (*.bmp)|*.bmp";
+					"Bmp Format (*.bmp)|*.bmp|" +
+                    "Svg Format (*.svg)|*.svg";
 
-				if ( DefaultFileName != null && DefaultFileName.Length > 0 )
+            if ( DefaultFileName != null && DefaultFileName.Length > 0 )
 				{
 					String ext = System.IO.Path.GetExtension( DefaultFileName ).ToLower();
 					switch (ext)
@@ -375,7 +378,8 @@ namespace ZedGraph
 						case ".tiff":
 						case ".tif": _saveFileDialog.FilterIndex = 5; break;
 						case ".bmp": _saveFileDialog.FilterIndex = 6; break;
-					}
+                        case ".svg": _saveFileDialog.FilterIndex = 7; break;
+}
 					//If we were passed a file name, not just an extension, use it
 					if ( DefaultFileName.Length > ext.Length )
 					{
@@ -393,7 +397,12 @@ namespace ZedGraph
 							myStream.Close();
 							SaveEmfFile( _saveFileDialog.FileName );
 						}
-						else
+                        else if (_saveFileDialog.FilterIndex == 7)
+                        {
+                            myStream.Close();
+                            saveSvgFile(_saveFileDialog.FileName);
+                        }
+                        else
 						{
 							ImageFormat format = ImageFormat.Png;
                             switch (_saveFileDialog.FilterIndex)
@@ -507,7 +516,22 @@ namespace ZedGraph
 
 		}
 
-		internal class ClipboardMetafileHelper
+        /// <summary>
+        /// WIP
+        /// </summary>
+        internal void saveSvgFile(string fileName)
+        {
+			SvgGraphics graphics = new SvgGraphics();
+            using (Graphics g = this.CreateGraphics())
+            {
+				this._masterPane.Draw(graphics);
+                string output = graphics.WriteSVGString();
+                File.WriteAllText(fileName, output);
+            }
+
+        }
+
+        internal class ClipboardMetafileHelper
 		{
 			[DllImport("user32.dll")]
 			static extern bool OpenClipboard(IntPtr hWndNewOwner);

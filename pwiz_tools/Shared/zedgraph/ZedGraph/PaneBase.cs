@@ -28,6 +28,7 @@ using System.Drawing.Imaging;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.IO;
+using SvgNet;
 
 #endregion
 
@@ -619,37 +620,74 @@ namespace ZedGraph
             PopClip(g, clip);
 		}
 
-	    protected Region PushClip(Graphics g, RectangleF clip)
+        public virtual void Draw(SvgGraphics g)
+        {
+            if (_rect.Width <= 1 || _rect.Height <= 1)
+                return;
+
+            // calculate scaleFactor on "normal" pane size (BaseDimension)
+            float scaleFactor = this.CalcScaleFactor();
+
+            // Clip everything to the rect
+            //var clip = PushClip(g, _rect);
+
+            // Fill the pane background and draw a border around it			
+            DrawPaneFrame(g, scaleFactor);
+
+            // Draw the GraphItems that are behind everything
+            _graphObjList.Draw(g, this, scaleFactor, ZOrder.H_BehindAll);
+
+            // Draw the Pane Title
+            DrawTitle(g, scaleFactor);
+
+            // Draw the Legend
+            //this.Legend.Draw( g, this, scaleFactor );
+
+            // Reset the clipping
+            //PopClip(g, clip);
+        }
+protected Region PushClip(Graphics g, RectangleF clip)
 	    {
 	        var previousClip = g.Clip.Clone();
             g.IntersectClip(clip);
 	        return previousClip;
 	    }
 
-	    protected void PopClip(Graphics g, Region clipRegion)
+        protected Region PushClip(SvgGraphics g, RectangleF clip)
+        {
+            var previousClip = g.Clip.Clone();
+            g.IntersectClip(clip);
+            return previousClip;
+        }
+protected void PopClip(Graphics g, Region clipRegion)
 	    {
 	        g.Clip = clipRegion;
 	    }
 
-		/// <summary>
-		/// Calculate the client area rectangle based on the <see cref="PaneBase.Rect"/>.
-		/// </summary>
-		/// <remarks>The client rectangle is the actual area available for <see cref="GraphPane"/>
-		/// or <see cref="MasterPane"/> items after taking out space for the margins and the title.
-		/// This method does not take out the area required for the <see cref="PaneBase.Legend"/>.
-		/// To do so, you must separately call <see cref="ZedGraph.Legend.CalcRect"/>.
-		/// </remarks>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor for the features of the graph based on the <see cref="PaneBase.Default.BaseDimension"/>.  This
-		/// scaling factor is calculated by the <see cref="PaneBase.CalcScaleFactor"/> method.  The scale factor
-		/// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
-		/// </param>
-		/// <returns>The calculated chart rect, in pixel coordinates.</returns>
-		public RectangleF CalcClientRect( Graphics g, float scaleFactor )
+        protected void PopClip(SvgGraphics g, Region clipRegion)
+        {
+            g.Clip = clipRegion;
+        }
+
+        /// <summary>
+        /// Calculate the client area rectangle based on the <see cref="PaneBase.Rect"/>.
+        /// </summary>
+        /// <remarks>The client rectangle is the actual area available for <see cref="GraphPane"/>
+        /// or <see cref="MasterPane"/> items after taking out space for the margins and the title.
+        /// This method does not take out the area required for the <see cref="PaneBase.Legend"/>.
+        /// To do so, you must separately call <see cref="ZedGraph.Legend.CalcRect"/>.
+        /// </remarks>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor for the features of the graph based on the <see cref="PaneBase.Default.BaseDimension"/>.  This
+        /// scaling factor is calculated by the <see cref="PaneBase.CalcScaleFactor"/> method.  The scale factor
+        /// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
+        /// </param>
+        /// <returns>The calculated chart rect, in pixel coordinates.</returns>
+        public RectangleF CalcClientRect( Graphics g, float scaleFactor )
 		{
 			// get scaled values for the paneGap and character height
 			//float scaledOuterGap = (float) ( Default.OuterPaneGap * scaleFactor );
@@ -678,19 +716,48 @@ namespace ZedGraph
 			return innerRect;
 		}
 
-		/// <summary>
-		/// Draw the border _border around the <see cref="Rect"/> area.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor for the features of the graph based on the <see cref="BaseDimension"/>.  This
-		/// scaling factor is calculated by the <see cref="CalcScaleFactor"/> method.  The scale factor
-		/// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
-		/// </param>		
-		public void DrawPaneFrame( Graphics g, float scaleFactor )
+        public RectangleF CalcClientRect(SvgGraphics g, float scaleFactor)
+        {
+            // get scaled values for the paneGap and character height
+            //float scaledOuterGap = (float) ( Default.OuterPaneGap * scaleFactor );
+            float charHeight = _title._fontSpec.GetHeight(scaleFactor);
+
+            // chart rect starts out at the full pane rect.  It gets reduced to make room for the legend,
+            // scales, titles, etc.
+            RectangleF innerRect = new RectangleF(
+                _rect.Left + _margin.Left * scaleFactor,
+                _rect.Top + _margin.Top * scaleFactor,
+                _rect.Width - scaleFactor * (_margin.Left + _margin.Right),
+                _rect.Height - scaleFactor * (_margin.Top + _margin.Bottom));
+
+            // Leave room for the title
+            if (_title._isVisible && _title._text != string.Empty)
+            {
+                SizeF titleSize = _title._fontSpec.BoundingBox(g, _title._text, scaleFactor);
+                // Leave room for the title height, plus a line spacing of charHeight * _titleGap
+                innerRect.Y += titleSize.Height + charHeight * _titleGap;
+                innerRect.Height -= titleSize.Height + charHeight * _titleGap;
+            }
+
+            // Calculate the legend rect, and back it out of the current ChartRect
+            //this.legend.CalcRect( g, this, scaleFactor, ref innerRect );
+
+            return innerRect;
+        }
+
+/// <summary>
+        /// Draw the border _border around the <see cref="Rect"/> area.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor for the features of the graph based on the <see cref="BaseDimension"/>.  This
+        /// scaling factor is calculated by the <see cref="CalcScaleFactor"/> method.  The scale factor
+        /// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
+        /// </param>		
+        public void DrawPaneFrame( Graphics g, float scaleFactor )
 		{
 			// Erase the pane background, filling it with the specified brush
 			_fill.Draw( g, _rect );
@@ -704,19 +771,33 @@ namespace ZedGraph
 			_border.Draw( g, this, scaleFactor, rect );
 		}
 
-		/// <summary>
-		/// Draw the <see cref="Title"/> on the graph, centered at the top of the pane.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor for the features of the graph based on the <see cref="BaseDimension"/>.  This
-		/// scaling factor is calculated by the <see cref="CalcScaleFactor"/> method.  The scale factor
-		/// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
-		/// </param>		
-		public void DrawTitle( Graphics g, float scaleFactor )
+        public void DrawPaneFrame(SvgGraphics g, float scaleFactor)
+        {
+            // Erase the pane background, filling it with the specified brush
+            _fill.Draw(g, _rect);
+
+            // Reduce the rect width and height by 1 pixel so that for a rect of
+            // new RectangleF( 0, 0, 100, 100 ), which should be 100 pixels wide, we cover
+            // from 0 through 99.  The draw routines normally cover from 0 through 100, which is
+            // actually 101 pixels wide.
+            RectangleF rect = new RectangleF(_rect.X, _rect.Y, _rect.Width - 1, _rect.Height - 1);
+
+            _border.Draw(g, this, scaleFactor, rect);
+        }
+
+/// <summary>
+        /// Draw the <see cref="Title"/> on the graph, centered at the top of the pane.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor for the features of the graph based on the <see cref="BaseDimension"/>.  This
+        /// scaling factor is calculated by the <see cref="CalcScaleFactor"/> method.  The scale factor
+        /// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
+        /// </param>		
+        public void DrawTitle( Graphics g, float scaleFactor )
 		{	
 			// only draw the title if it's required
 			if ( _title._isVisible )
@@ -732,16 +813,32 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Change the size of the <see cref="Rect"/>.  Override this method to handle resizing the contents
-		/// as required.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="rect">The new size for the <see cref="Rect"/>.</param>
-		public virtual void ReSize( Graphics g, RectangleF rect )
+        public void DrawTitle(SvgGraphics g, float scaleFactor)
+        {
+            // only draw the title if it's required
+            if (_title._isVisible)
+            {
+                SizeF size = _title._fontSpec.BoundingBox(g, _title._text, scaleFactor);
+
+                // use the internal fontSpec class to draw the text using user-specified and/or
+                // default attributes.
+                _title._fontSpec.Draw(g, this, _title._text,
+                    (_rect.Left + _rect.Right) / 2,
+                    _rect.Top + _margin.Top * (float)scaleFactor + size.Height / 2.0F,
+                    AlignH.Center, AlignV.Center, scaleFactor);
+            }
+        }
+
+        /// <summary>
+        /// Change the size of the <see cref="Rect"/>.  Override this method to handle resizing the contents
+        /// as required.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="rect">The new size for the <see cref="Rect"/>.</param>
+        public virtual void ReSize( Graphics g, RectangleF rect )
 		{
 			_rect = rect;
 		}
@@ -909,7 +1006,19 @@ namespace ZedGraph
 			}
 		}
 
-		private void MakeImage( Graphics g, int width, int height, bool antiAlias )
+        internal void SetAntiAliasMode(SvgGraphics g, bool isAntiAlias)
+        {
+            if (isAntiAlias)
+            {
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                //g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = TextRenderingHint.AntiAlias;
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            }
+        }
+
+private void MakeImage( Graphics g, int width, int height, bool antiAlias )
 		{
 			//g.SmoothingMode = SmoothingMode.AntiAlias;
 			SetAntiAliasMode( g, antiAlias );

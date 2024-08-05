@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -252,35 +253,61 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Determine if a mouse point is within any <see cref="GraphObj"/>, and if so, 
-		/// return the index number of the the <see cref="GraphObj"/>.
-		/// </summary>
+        public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor,
+            ZOrder zOrder)
+        {
+            // Draw the items in reverse order, so the last items in the
+            // list appear behind the first items (consistent with
+            // CurveList)
+            for (int i = this.Count - 1; i >= 0; i--)
+            {
+                GraphObj item = this[i];
+                if (item.ZOrder == zOrder && item.IsVisible)
+                {
+                    Region region = null;
+                    if (item.IsClippedToChartRect && pane is GraphPane)
+                    {
+                        region = g.Clip.Clone();
+                        g.IntersectClip(((GraphPane)pane).Chart._rect);
+                    }
+
+                    item.Draw(g, pane, scaleFactor);
+
+                    if (item.IsClippedToChartRect && pane is GraphPane)
+                        g.Clip = region;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determine if a mouse point is within any <see cref="GraphObj"/>, and if so, 
+        /// return the index number of the the <see cref="GraphObj"/>.
+        /// </summary>
         /// <remarks>Change Aug 9, 2012 (nicksh): Iterate through items in forward order, 
         /// to correctly honor GraphObj ZOrder</remarks>
         /// <param name="mousePt">The screen point, in pixel coordinates.</param>
-		/// <param name="pane">
-		/// A reference to the <see cref="PaneBase"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="index">The index number of the <see cref="TextObj"/>
-		///  that is under the mouse point.  The <see cref="TextObj"/> object is
-		/// accessible via the <see cref="GraphObjList" /> indexer property.
-		/// </param>
-		/// <returns>true if the mouse point is within a <see cref="GraphObj"/> bounding
-		/// box, false otherwise.</returns>
-		/// <seealso cref="GraphPane.FindNearestObject"/>
-		public bool FindPoint( PointF mousePt, PaneBase pane, Graphics g, float scaleFactor, out int index )
+        /// <param name="pane">
+        /// A reference to the <see cref="PaneBase"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="index">The index number of the <see cref="TextObj"/>
+        ///  that is under the mouse point.  The <see cref="TextObj"/> object is
+        /// accessible via the <see cref="GraphObjList" /> indexer property.
+        /// </param>
+        /// <returns>true if the mouse point is within a <see cref="GraphObj"/> bounding
+        /// box, false otherwise.</returns>
+        /// <seealso cref="GraphPane.FindNearestObject"/>
+        public bool FindPoint( PointF mousePt, PaneBase pane, Graphics g, float scaleFactor, out int index )
 		{
 			index = -1;
 			

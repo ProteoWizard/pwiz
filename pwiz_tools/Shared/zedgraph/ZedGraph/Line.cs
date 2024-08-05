@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -390,33 +391,56 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Render a single <see cref="Line"/> segment to the specified
-		/// <see cref="Graphics"/> device.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="x1">The x position of the starting point that defines the
-		/// line segment in screen pixel units</param>
-		/// <param name="y1">The y position of the starting point that defines the
-		/// line segment in screen pixel units</param>
-		/// <param name="x2">The x position of the ending point that defines the
-		/// line segment in screen pixel units</param>
-		/// <param name="y2">The y position of the ending point that defines the
-		/// line segment in screen pixel units</param>
-		public void DrawSegment( Graphics g, GraphPane pane, float x1, float y1,
+        public void Draw(SvgGraphics g, GraphPane pane, CurveItem curve, float scaleFactor)
+        {
+            // If the line is being shown, draw it
+            if (this.IsVisible)
+            {
+                //How to handle fill vs nofill?
+                //if ( isSelected )
+                //	GraphPane.Default.SelectedLine.
+
+                SmoothingMode sModeSave = g.SmoothingMode;
+                if (_isAntiAlias)
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+
+                if (curve is StickItem)
+                    DrawSticks(g, pane, curve, scaleFactor);
+                else if (this.IsSmooth || this.Fill.IsVisible)
+                    DrawSmoothFilledCurve(g, pane, curve, scaleFactor);
+                else
+                    DrawCurve(g, pane, curve, scaleFactor);
+
+                g.SmoothingMode = sModeSave;
+            }
+        }
+        /// <summary>
+        /// Render a single <see cref="Line"/> segment to the specified
+        /// <see cref="Graphics"/> device.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="x1">The x position of the starting point that defines the
+        /// line segment in screen pixel units</param>
+        /// <param name="y1">The y position of the starting point that defines the
+        /// line segment in screen pixel units</param>
+        /// <param name="x2">The x position of the ending point that defines the
+        /// line segment in screen pixel units</param>
+        /// <param name="y2">The y position of the ending point that defines the
+        /// line segment in screen pixel units</param>
+        public void DrawSegment( Graphics g, GraphPane pane, float x1, float y1,
 								  float x2, float y2, float scaleFactor )
 		{
 			if ( _isVisible && !this.Color.IsEmpty )
@@ -428,27 +452,39 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Render the <see cref="Line"/>'s as vertical sticks (from a <see cref="StickItem" />) to
-		/// the specified <see cref="Graphics"/> device.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="CurveItem"/> representing this
-		/// curve.</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		public void DrawSticks( Graphics g, GraphPane pane, CurveItem curve, float scaleFactor )
+        public void DrawSegment(SvgGraphics g, GraphPane pane, float x1, float y1,
+            float x2, float y2, float scaleFactor)
+        {
+            if (_isVisible && !this.Color.IsEmpty)
+            {
+                using (Pen pen = GetPen(pane, scaleFactor))
+                {
+                    g.DrawLine(pen, x1, y1, x2, y2);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Render the <see cref="Line"/>'s as vertical sticks (from a <see cref="StickItem" />) to
+        /// the specified <see cref="Graphics"/> device.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="CurveItem"/> representing this
+        /// curve.</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        public void DrawSticks( Graphics g, GraphPane pane, CurveItem curve, float scaleFactor )
 		{
 			Line source = this;
 			if ( curve.IsSelected )
@@ -497,32 +533,80 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Draw the this <see cref="CurveItem"/> to the specified <see cref="Graphics"/>
-		/// device using the specified smoothing property (<see cref="ZedGraph.Line.SmoothTension"/>).
-		/// The routine draws the line segments and the area fill (if any, see <see cref="FillType"/>;
-		/// the symbols are drawn by the <see cref="Symbol.Draw"/> method.  This method
-		/// is normally only called by the Draw method of the
-		/// <see cref="CurveItem"/> object.  Note that the <see cref="StepType"/> property
-		/// is ignored for smooth lines (e.g., when <see cref="ZedGraph.Line.IsSmooth"/> is true).
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="LineItem"/> representing this
-		/// curve.</param>
-		public void DrawSmoothFilledCurve( Graphics g, GraphPane pane,
+        public void DrawSticks(SvgGraphics g, GraphPane pane, CurveItem curve, float scaleFactor)
+        {
+            Line source = this;
+            if (curve.IsSelected)
+                source = Selection.Line;
+
+            Axis yAxis = curve.GetYAxis(pane);
+            Axis xAxis = curve.GetXAxis(pane);
+
+            float basePix = yAxis.Scale.Transform(0.0);
+            using (Pen pen = source.GetPen(pane, scaleFactor))
+            {
+                for (int i = 0; i < curve.Points.Count; i++)
+                {
+                    PointPair pt = curve.Points[i];
+
+                    if (pt.X != PointPair.Missing &&
+                        pt.Y != PointPair.Missing &&
+                        !System.Double.IsNaN(pt.X) &&
+                        !System.Double.IsNaN(pt.Y) &&
+                        !System.Double.IsInfinity(pt.X) &&
+                        !System.Double.IsInfinity(pt.Y) &&
+                        (!xAxis._scale.IsLog || pt.X > 0.0) &&
+                        (!yAxis._scale.IsLog || pt.Y > 0.0))
+                    {
+                        float pixY = yAxis.Scale.Transform(curve.IsOverrideOrdinal, i, pt.Y);
+                        float pixX = xAxis.Scale.Transform(curve.IsOverrideOrdinal, i, pt.X);
+
+                        if (pixX >= pane.Chart._rect.Left && pixX <= pane.Chart._rect.Right)
+                        {
+                            if (pixY > pane.Chart._rect.Bottom)
+                                pixY = pane.Chart._rect.Bottom;
+                            if (pixY < pane.Chart._rect.Top)
+                                pixY = pane.Chart._rect.Top;
+
+                            if (!curve.IsSelected && this._gradientFill.IsGradientValueType)
+                            {
+                                using (Pen tPen = GetPen(pane, scaleFactor, pt))
+                                    g.DrawLine(tPen, pixX, pixY, pixX, basePix);
+                            }
+                            else
+                                g.DrawLine(pen, pixX, pixY, pixX, basePix);
+
+                        }
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// Draw the this <see cref="CurveItem"/> to the specified <see cref="Graphics"/>
+        /// device using the specified smoothing property (<see cref="ZedGraph.Line.SmoothTension"/>).
+        /// The routine draws the line segments and the area fill (if any, see <see cref="FillType"/>;
+        /// the symbols are drawn by the <see cref="Symbol.Draw"/> method.  This method
+        /// is normally only called by the Draw method of the
+        /// <see cref="CurveItem"/> object.  Note that the <see cref="StepType"/> property
+        /// is ignored for smooth lines (e.g., when <see cref="ZedGraph.Line.IsSmooth"/> is true).
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="LineItem"/> representing this
+        /// curve.</param>
+        public void DrawSmoothFilledCurve( Graphics g, GraphPane pane,
                                 CurveItem curve, float scaleFactor )
 		{
 			Line source = this;
@@ -595,7 +679,80 @@ namespace ZedGraph
 			}
 		}
 
-		private bool IsFirstLine( GraphPane pane, CurveItem curve )
+        public void DrawSmoothFilledCurve(SvgGraphics g, GraphPane pane,
+                        CurveItem curve, float scaleFactor)
+        {
+            Line source = this;
+            if (curve.IsSelected)
+                source = Selection.Line;
+
+            PointF[] arrPoints;
+            int count;
+            IPointList points = curve.Points;
+
+            if (this.IsVisible && !this.Color.IsEmpty && points != null &&
+                BuildPointsArray(pane, curve, out arrPoints, out count) &&
+                count > 2)
+            {
+                float tension = _isSmooth ? _smoothTension : 0f;
+
+                // Fill the curve if needed
+                if (this.Fill.IsVisible)
+                {
+                    Axis yAxis = curve.GetYAxis(pane);
+
+                    using (GraphicsPath path = new GraphicsPath(FillMode.Winding))
+                    {
+                        path.AddCurve(arrPoints, 0, count - 2, tension);
+
+                        double yMin = yAxis._scale._min < 0 ? 0.0 : yAxis._scale._min;
+                        CloseCurve(pane, curve, arrPoints, count, yMin, path);
+
+                        RectangleF rect = path.GetBounds();
+                        using (Brush brush = source._fill.MakeBrush(rect))
+                        {
+                            if (pane.LineType == LineType.Stack && yAxis.Scale._min < 0 &&
+                                    this.IsFirstLine(pane, curve))
+                            {
+                                float zeroPix = yAxis.Scale.Transform(0);
+                                RectangleF tRect = pane.Chart._rect;
+                                tRect.Height = zeroPix - tRect.Top;
+                                if (tRect.Height > 0)
+                                {
+                                    Region reg = g.Clip.Clone();
+                                    g.IntersectClip(tRect);
+                                    g.FillPath(brush, path);
+                                    g.Clip = reg;
+                                }
+                            }
+                            else
+                                g.FillPath(brush, path);
+                            //brush.Dispose();
+                        }
+
+                        // restore the zero line if needed (since the fill tends to cover it up)
+                        yAxis.FixZeroLine(g, pane, scaleFactor, rect.Left, rect.Right);
+                    }
+                }
+
+                // If it's a smooth curve, go ahead and render the path.  Otherwise, use the
+                // standard drawcurve method just in case there are missing values.
+                if (_isSmooth)
+                {
+                    using (Pen pen = GetPen(pane, scaleFactor))
+                    {
+                        // Stroke the curve
+                        g.DrawCurve(pen, arrPoints, 0, count - 2, tension);
+
+                        //pen.Dispose();
+                    }
+                }
+                else
+                    DrawCurve(g, pane, curve, scaleFactor);
+            }
+        }
+
+        private bool IsFirstLine( GraphPane pane, CurveItem curve )
 		{
 			CurveList curveList = pane.CurveList;
 
@@ -828,32 +985,222 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Draw the this <see cref="CurveItem"/> to the specified <see cref="Graphics"/>
-		/// device.  The format (stair-step or line) of the curve is
-		/// defined by the <see cref="StepType"/> property.  The routine
-		/// only draws the line segments; the symbols are drawn by the
-		/// <see cref="Symbol.Draw"/> method.  This method
-		/// is normally only called by the Draw method of the
-		/// <see cref="CurveItem"/> object
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="LineItem"/> representing this
-		/// curve.</param>
-		public void DrawCurveOriginal( Graphics g, GraphPane pane,
+        public void DrawCurve(SvgGraphics g, GraphPane pane,
+                        CurveItem curve, float scaleFactor)
+        {
+            Line source = this;
+            if (curve.IsSelected)
+                source = Selection.Line;
+
+            // switch to int to optimize drawing speed (per Dale-a-b)
+            int tmpX, tmpY,
+                    lastX = int.MaxValue,
+                    lastY = int.MaxValue;
+
+            double curX, curY;
+            PointPair curPt, lastPt = new PointPair();
+
+            bool lastBad = true;
+            IPointList points = curve.Points;
+            ValueHandler valueHandler = new ValueHandler(pane, false);
+            Axis yAxis = curve.GetYAxis(pane);
+            Axis xAxis = curve.GetXAxis(pane);
+
+            bool xIsLog = xAxis._scale.IsLog;
+            bool yIsLog = yAxis._scale.IsLog;
+
+            // switch to int to optimize drawing speed (per Dale-a-b)
+            int minX = (int)pane.Chart.Rect.Left;
+            int maxX = (int)pane.Chart.Rect.Right;
+            int minY = (int)pane.Chart.Rect.Top;
+            int maxY = (int)pane.Chart.Rect.Bottom;
+
+            using (Pen pen = source.GetPen(pane, scaleFactor))
+            {
+                if (points != null && !_color.IsEmpty && this.IsVisible)
+                {
+                    //bool lastOut = false;
+                    bool isOut;
+
+                    bool isOptDraw = _isOptimizedDraw && points.Count > 1000;
+
+                    // (Dale-a-b) we'll set an element to true when it has been drawn	
+                    bool[,] isPixelDrawn = null;
+
+                    if (isOptDraw)
+                        isPixelDrawn = new bool[maxX + 1, maxY + 1];
+
+                    // Loop over each point in the curve
+                    for (int i = 0; i < points.Count; i++)
+                    {
+                        curPt = points[i];
+                        if (pane.LineType == LineType.Stack)
+                        {
+                            if (!valueHandler.GetValues(curve, i, out curX, out _, out curY))
+                            {
+                                curX = PointPair.Missing;
+                                curY = PointPair.Missing;
+                            }
+                        }
+                        else
+                        {
+                            curX = curPt.X;
+                            curY = curPt.Y;
+                        }
+
+                        // Any value set to double max is invalid and should be skipped
+                        // This is used for calculated values that are out of range, divide
+                        //   by zero, etc.
+                        // Also, any value <= zero on a log scale is invalid
+                        if (curX == PointPair.Missing ||
+                                curY == PointPair.Missing ||
+                                System.Double.IsNaN(curX) ||
+                                System.Double.IsNaN(curY) ||
+                                System.Double.IsInfinity(curX) ||
+                                System.Double.IsInfinity(curY) ||
+                                (xIsLog && curX <= 0.0) ||
+                                (yIsLog && curY <= 0.0))
+                        {
+                            // If the point is invalid, then make a linebreak only if IsIgnoreMissing is false
+                            // LastX and LastY are always the last valid point, so this works out
+                            lastBad = lastBad || !pane.IsIgnoreMissing;
+                            isOut = true;
+                        }
+                        else
+                        {
+                            // Transform the current point from user scale units to
+                            // screen coordinates
+                            tmpX = (int)xAxis.Scale.Transform(curve.IsOverrideOrdinal, i, curX);
+                            tmpY = (int)yAxis.Scale.Transform(curve.IsOverrideOrdinal, i, curY);
+
+                            // Maintain an array of "used" pixel locations to avoid duplicate drawing operations
+                            // contributed by Dale-a-b
+                            if (isOptDraw && tmpX >= minX && tmpX <= maxX &&
+                                        tmpY >= minY && tmpY <= maxY) // guard against the zoom-in case
+                            {
+                                if (isPixelDrawn[tmpX, tmpY])
+                                    continue;
+                                isPixelDrawn[tmpX, tmpY] = true;
+                            }
+
+                            isOut = (tmpX < minX && lastX < minX) || (tmpX > maxX && lastX > maxX) ||
+                                (tmpY < minY && lastY < minY) || (tmpY > maxY && lastY > maxY);
+
+                            if (!lastBad)
+                            {
+                                try
+                                {
+                                    // GDI+ plots the data wrong and/or throws an exception for
+                                    // outrageous coordinates, so we do a sanity check here
+                                    if (lastX > 5000000 || lastX < -5000000 ||
+                                            lastY > 5000000 || lastY < -5000000 ||
+                                            tmpX > 5000000 || tmpX < -5000000 ||
+                                            tmpY > 5000000 || tmpY < -5000000)
+                                        InterpolatePoint(g, pane, curve, lastPt, scaleFactor, pen,
+                                                        lastX, lastY, tmpX, tmpY);
+                                    else if (!isOut)
+                                    {
+                                        if (!curve.IsSelected && this._gradientFill.IsGradientValueType)
+                                        {
+                                            using (Pen tPen = GetPen(pane, scaleFactor, lastPt))
+                                            {
+                                                if (this.StepType == StepType.NonStep)
+                                                {
+                                                    g.DrawLine(tPen, lastX, lastY, tmpX, tmpY);
+                                                }
+                                                else if (this.StepType == StepType.ForwardStep)
+                                                {
+                                                    g.DrawLine(tPen, lastX, lastY, tmpX, lastY);
+                                                    g.DrawLine(tPen, tmpX, lastY, tmpX, tmpY);
+                                                }
+                                                else if (this.StepType == StepType.RearwardStep)
+                                                {
+                                                    g.DrawLine(tPen, lastX, lastY, lastX, tmpY);
+                                                    g.DrawLine(tPen, lastX, tmpY, tmpX, tmpY);
+                                                }
+                                                else if (this.StepType == StepType.ForwardSegment)
+                                                {
+                                                    g.DrawLine(tPen, lastX, lastY, tmpX, lastY);
+                                                }
+                                                else
+                                                {
+                                                    g.DrawLine(tPen, lastX, tmpY, tmpX, tmpY);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (this.StepType == StepType.NonStep)
+                                            {
+                                                g.DrawLine(pen, lastX, lastY, tmpX, tmpY);
+                                            }
+                                            else if (this.StepType == StepType.ForwardStep)
+                                            {
+                                                g.DrawLine(pen, lastX, lastY, tmpX, lastY);
+                                                g.DrawLine(pen, tmpX, lastY, tmpX, tmpY);
+                                            }
+                                            else if (this.StepType == StepType.RearwardStep)
+                                            {
+                                                g.DrawLine(pen, lastX, lastY, lastX, tmpY);
+                                                g.DrawLine(pen, lastX, tmpY, tmpX, tmpY);
+                                            }
+                                            else if (this.StepType == StepType.ForwardSegment)
+                                            {
+                                                g.DrawLine(pen, lastX, lastY, tmpX, lastY);
+                                            }
+                                            else if (this.StepType == StepType.RearwardSegment)
+                                            {
+                                                g.DrawLine(pen, lastX, tmpY, tmpX, tmpY);
+                                            }
+                                        }
+                                    }
+
+                                }
+                                catch
+                                {
+                                    InterpolatePoint(g, pane, curve, lastPt, scaleFactor, pen,
+                                                lastX, lastY, tmpX, tmpY);
+                                }
+
+                            }
+
+                            lastPt = curPt;
+                            lastX = tmpX;
+                            lastY = tmpY;
+                            lastBad = false;
+                            //lastOut = isOut;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draw the this <see cref="CurveItem"/> to the specified <see cref="Graphics"/>
+        /// device.  The format (stair-step or line) of the curve is
+        /// defined by the <see cref="StepType"/> property.  The routine
+        /// only draws the line segments; the symbols are drawn by the
+        /// <see cref="Symbol.Draw"/> method.  This method
+        /// is normally only called by the Draw method of the
+        /// <see cref="CurveItem"/> object
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="LineItem"/> representing this
+        /// curve.</param>
+        public void DrawCurveOriginal( Graphics g, GraphPane pane,
 										  CurveItem curve, float scaleFactor )
 		{
 			Line source = this;
@@ -1154,21 +1501,144 @@ namespace ZedGraph
 			catch { }
 		}
 
-		/// <summary>
-		/// Build an array of <see cref="PointF"/> values (pixel coordinates) that represents
-		/// the current curve.  Note that this drawing routine ignores <see cref="PointPairBase.Missing"/>
-		/// values, but it does not "break" the line to indicate values are missing.
-		/// </summary>
-		/// <param name="pane">A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.</param>
-		/// <param name="curve">A <see cref="LineItem"/> representing this
-		/// curve.</param>
-		/// <param name="arrPoints">An array of <see cref="PointF"/> values in pixel
-		/// coordinates representing the current curve.</param>
-		/// <param name="count">The number of points contained in the "arrPoints"
-		/// parameter.</param>
-		/// <returns>true for a successful points array build, false for data problems</returns>
-		public bool BuildPointsArray( GraphPane pane, CurveItem curve,
+        private void InterpolatePoint(SvgGraphics g, GraphPane pane, CurveItem curve, PointPair lastPt,
+                        float scaleFactor, Pen pen, float lastX, float lastY, float tmpX, float tmpY)
+        {
+            try
+            {
+                RectangleF chartRect = pane.Chart._rect;
+                // try to interpolate values
+                bool lastIn = chartRect.Contains(lastX, lastY);
+                bool curIn = chartRect.Contains(tmpX, tmpY);
+
+                // If both points are outside the ChartRect, make a new point that is on the LastX/Y
+                // side of the ChartRect, and fall through to the code that handles lastIn == true
+                if (!lastIn)
+                {
+                    float newX, newY;
+
+                    if (Math.Abs(lastX) > Math.Abs(lastY))
+                    {
+                        newX = lastX < 0 ? chartRect.Left : chartRect.Right;
+                        newY = lastY + (tmpY - lastY) * (newX - lastX) / (tmpX - lastX);
+                    }
+                    else
+                    {
+                        newY = lastY < 0 ? chartRect.Top : chartRect.Bottom;
+                        newX = lastX + (tmpX - lastX) * (newY - lastY) / (tmpY - lastY);
+                    }
+
+                    lastX = newX;
+                    lastY = newY;
+                }
+
+                if (!curIn)
+                {
+                    float newX, newY;
+
+                    if (Math.Abs(tmpX) > Math.Abs(tmpY))
+                    {
+                        newX = tmpX < 0 ? chartRect.Left : chartRect.Right;
+                        newY = tmpY + (lastY - tmpY) * (newX - tmpX) / (lastX - tmpX);
+                    }
+                    else
+                    {
+                        newY = tmpY < 0 ? chartRect.Top : chartRect.Bottom;
+                        newX = tmpX + (lastX - tmpX) * (newY - tmpY) / (lastY - tmpY);
+                    }
+
+                    tmpX = newX;
+                    tmpY = newY;
+                }
+
+                /*
+				if ( this.StepType == StepType.ForwardStep )
+				{
+					g.DrawLine( pen, lastX, lastY, tmpX, lastY );
+					g.DrawLine( pen, tmpX, lastY, tmpX, tmpY );
+				}
+				else if ( this.StepType == StepType.RearwardStep )
+				{
+					g.DrawLine( pen, lastX, lastY, lastX, tmpY );
+					g.DrawLine( pen, lastX, tmpY, tmpX, tmpY );
+				}
+				else 		// non-step
+					g.DrawLine( pen, lastX, lastY, tmpX, tmpY );
+				*/
+                if (!curve.IsSelected && this._gradientFill.IsGradientValueType)
+                {
+                    using (Pen tPen = GetPen(pane, scaleFactor, lastPt))
+                    {
+                        if (this.StepType == StepType.NonStep)
+                        {
+                            g.DrawLine(tPen, lastX, lastY, tmpX, tmpY);
+                        }
+                        else if (this.StepType == StepType.ForwardStep)
+                        {
+                            g.DrawLine(tPen, lastX, lastY, tmpX, lastY);
+                            g.DrawLine(tPen, tmpX, lastY, tmpX, tmpY);
+                        }
+                        else if (this.StepType == StepType.RearwardStep)
+                        {
+                            g.DrawLine(tPen, lastX, lastY, lastX, tmpY);
+                            g.DrawLine(tPen, lastX, tmpY, tmpX, tmpY);
+                        }
+                        else if (this.StepType == StepType.ForwardSegment)
+                        {
+                            g.DrawLine(tPen, lastX, lastY, tmpX, lastY);
+                        }
+                        else
+                        {
+                            g.DrawLine(tPen, lastX, tmpY, tmpX, tmpY);
+                        }
+                    }
+                }
+                else
+                {
+                    if (this.StepType == StepType.NonStep)
+                    {
+                        g.DrawLine(pen, lastX, lastY, tmpX, tmpY);
+                    }
+                    else if (this.StepType == StepType.ForwardStep)
+                    {
+                        g.DrawLine(pen, lastX, lastY, tmpX, lastY);
+                        g.DrawLine(pen, tmpX, lastY, tmpX, tmpY);
+                    }
+                    else if (this.StepType == StepType.RearwardStep)
+                    {
+                        g.DrawLine(pen, lastX, lastY, lastX, tmpY);
+                        g.DrawLine(pen, lastX, tmpY, tmpX, tmpY);
+                    }
+                    else if (this.StepType == StepType.ForwardSegment)
+                    {
+                        g.DrawLine(pen, lastX, lastY, tmpX, lastY);
+                    }
+                    else if (this.StepType == StepType.RearwardSegment)
+                    {
+                        g.DrawLine(pen, lastX, tmpY, tmpX, tmpY);
+                    }
+                }
+
+            }
+
+            catch { }
+        }
+
+        /// <summary>
+        /// Build an array of <see cref="PointF"/> values (pixel coordinates) that represents
+        /// the current curve.  Note that this drawing routine ignores <see cref="PointPairBase.Missing"/>
+        /// values, but it does not "break" the line to indicate values are missing.
+        /// </summary>
+        /// <param name="pane">A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.</param>
+        /// <param name="curve">A <see cref="LineItem"/> representing this
+        /// curve.</param>
+        /// <param name="arrPoints">An array of <see cref="PointF"/> values in pixel
+        /// coordinates representing the current curve.</param>
+        /// <param name="count">The number of points contained in the "arrPoints"
+        /// parameter.</param>
+        /// <returns>true for a successful points array build, false for data problems</returns>
+        public bool BuildPointsArray( GraphPane pane, CurveItem curve,
 			out PointF[] arrPoints, out int count )
 		{
 			arrPoints = null;

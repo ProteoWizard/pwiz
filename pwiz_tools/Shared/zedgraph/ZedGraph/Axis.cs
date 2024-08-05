@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -1218,36 +1219,54 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Draw the minor tic marks as required for this <see cref="Axis"/>.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="baseVal">
-		/// The scale value for the first major tic position.  This is the reference point
-		/// for all other tic marks.
-		/// </param>
-		/// <param name="shift">The number of pixels to shift this axis, based on the
-		/// value of <see cref="Cross"/>.  A positive value is into the ChartRect relative to
-		/// the default axis position.</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="topPix">
-		/// The pixel location of the far side of the ChartRect from this axis.
-		/// This value is the ChartRect.Height for the XAxis, or the ChartRect.Width
-		/// for the YAxis and Y2Axis.
-		/// </param>
-		public void DrawMinorTics( Graphics g, GraphPane pane, double baseVal, float shift,
+        internal void FixZeroLine(SvgGraphics g, GraphPane pane, float scaleFactor,
+            float left, float right)
+        {
+            // restore the zero line if needed (since the fill tends to cover it up)
+            if (_isVisible && _majorGrid._isZeroLine &&
+                _scale._min < 0.0 && _scale._max > 0.0)
+            {
+                float zeroPix = _scale.Transform(0.0);
+
+                using (Pen zeroPen = new Pen(_color,
+                           pane.ScaledPenWidth(_majorGrid._penWidth, scaleFactor)))
+                {
+                    g.DrawLine(zeroPen, left, zeroPix, right, zeroPix);
+                    //zeroPen.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draw the minor tic marks as required for this <see cref="Axis"/>.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="baseVal">
+        /// The scale value for the first major tic position.  This is the reference point
+        /// for all other tic marks.
+        /// </param>
+        /// <param name="shift">The number of pixels to shift this axis, based on the
+        /// value of <see cref="Cross"/>.  A positive value is into the ChartRect relative to
+        /// the default axis position.</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="topPix">
+        /// The pixel location of the far side of the ChartRect from this axis.
+        /// This value is the ChartRect.Height for the XAxis, or the ChartRect.Width
+        /// for the YAxis and Y2Axis.
+        /// </param>
+        public void DrawMinorTics( Graphics g, GraphPane pane, double baseVal, float shift,
 								float scaleFactor, float topPix )
 		{
 			if ( ( this.MinorTic.IsOutside || this.MinorTic.IsOpposite || this.MinorTic.IsInside ||

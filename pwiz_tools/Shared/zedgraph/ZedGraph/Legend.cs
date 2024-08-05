@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -650,7 +651,101 @@ namespace ZedGraph
 			}
 		}
 
-		private float GetMaxHeight( PaneList paneList, Graphics g, float scaleFactor )
+        public void Draw(SvgGraphics g, PaneBase pane, float scaleFactor)
+        {
+            // if the legend is not visible, do nothing
+            if (!_isVisible)
+                return;
+
+            // Fill the background with the specified color if required
+            _fill.Draw(g, _rect);
+
+            PaneList paneList = GetPaneList(pane);
+
+            float halfGap = _tmpSize / 2.0F;
+
+            // Check for bad data values
+            if (_hStack <= 0)
+                _hStack = 1;
+            if (_legendItemWidth <= 0)
+                _legendItemWidth = 100;
+            if (_legendItemHeight <= 0)
+                _legendItemHeight = _tmpSize;
+
+            //float gap = pane.ScaledGap( scaleFactor );
+
+            int iEntry = 0;
+            float x, y;
+
+            // Get a brush for the legend label text
+            using (SolidBrush brushB = new SolidBrush(Color.Black))
+            {
+                foreach (GraphPane tmpPane in paneList)
+                {
+                    // Loop for each curve in the CurveList collection
+                    //foreach ( CurveItem curve in tmpPane.CurveList )
+                    int count = tmpPane.CurveList.Count;
+                    for (int i = 0; i < count; i++)
+                    {
+                        CurveItem curve = tmpPane.CurveList[_isReverse ? count - i - 1 : i];
+
+                        if (curve._label._text != "" && curve._label._isVisible)
+                        {
+                            // Calculate the x,y (TopLeft) location of the current
+                            // curve legend label
+                            // assuming:
+                            //  charHeight/2 for the left margin, plus legendWidth for each
+                            //    horizontal column
+                            //  legendHeight is the line spacing, with no extra margin above
+
+                            x = _rect.Left + halfGap / 2.0F +
+                                (iEntry % _hStack) * _legendItemWidth;
+                            y = _rect.Top + (int)(iEntry / _hStack) * _legendItemHeight;
+                            y += 3; // Give 3-pixel margin to top of legend
+
+                            // Draw the legend label for the current curve
+                            FontSpec tmpFont = (curve._label._fontSpec != null) ?
+                                        curve._label._fontSpec : this.FontSpec;
+
+                            // This is required because, for long labels, the centering can affect the
+                            // position in GDI+.
+                            tmpFont.StringAlignment = StringAlignment.Near;
+
+                            if (_isShowLegendSymbols)
+                            {
+                                tmpFont.Draw(g, pane, curve._label._text,
+                                        x + 2.5F * _tmpSize, y + _legendItemHeight / 2.0F,
+                                        AlignH.Left, AlignV.Center, scaleFactor);
+
+                                RectangleF rect = new RectangleF(x, y + _legendItemHeight / 4.0F,
+                                    2 * _tmpSize, _legendItemHeight / 2.0F);
+                                curve.DrawLegendKey(g, tmpPane, rect, scaleFactor);
+                            }
+                            else
+                            {
+                                if (curve._label._fontSpec == null)
+                                    tmpFont.FontColor = curve.Color;
+
+                                tmpFont.Draw(g, pane, curve._label._text,
+                                    x + 0.0F * _tmpSize, y + _legendItemHeight / 2.0F,
+                                    AlignH.Left, AlignV.Center, scaleFactor);
+                            }
+
+                            // maintain a curve count for positioning
+                            iEntry++;
+                        }
+                    }
+                    if (pane is MasterPane && ((MasterPane)pane).IsUniformLegendEntries)
+                        break;
+                }
+
+                // Draw a border around the legend if required
+                if (iEntry > 0)
+                    this.Border.Draw(g, pane, scaleFactor, _rect);
+            }
+        }
+
+        private float GetMaxHeight( PaneList paneList, Graphics g, float scaleFactor )
 		{
 			// Set up some scaled dimensions for calculating sizes and locations
 			float defaultCharHeight = this.FontSpec.GetHeight( scaleFactor );
@@ -679,29 +774,58 @@ namespace ZedGraph
 			return maxCharHeight;
 		}
 
-		/// <summary>
-		/// Determine if a mouse point is within the legend, and if so, which legend
-		/// entry (<see cref="CurveItem"/>) is nearest.
-		/// </summary>
-		/// <param name="mousePt">The screen point, in pixel coordinates.</param>
-		/// <param name="pane">
-		/// A reference to the <see cref="PaneBase"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="index">The index number of the <see cref="CurveItem"/> legend
-		/// entry that is under the mouse point.  The <see cref="CurveItem"/> object is
-		/// accessible via <see cref="GraphPane.CurveList">CurveList[index]</see>.
-		/// </param>
-		/// <returns>true if the mouse point is within the <see cref="Legend"/> bounding
-		/// box, false otherwise.</returns>
-		/// <seealso cref="GraphPane.FindNearestObject"/>
-		public bool FindPoint( PointF mousePt, PaneBase pane, float scaleFactor, out int index )
+        private float GetMaxHeight(PaneList paneList, SvgGraphics g, float scaleFactor)
+        {
+            // Set up some scaled dimensions for calculating sizes and locations
+            float defaultCharHeight = this.FontSpec.GetHeight(scaleFactor);
+            float maxCharHeight = defaultCharHeight;
+
+            // Find the largest charHeight, just in case the curves have individual fonts defined
+            foreach (GraphPane tmpPane in paneList)
+            {
+                foreach (CurveItem curve in tmpPane.CurveList)
+                {
+                    if (curve._label._text != string.Empty && curve._label._isVisible)
+                    {
+                        float tmpHeight = defaultCharHeight;
+                        if (curve._label._fontSpec != null)
+                            tmpHeight = curve._label._fontSpec.GetHeight(scaleFactor);
+
+                        // Account for multiline legend entries
+                        tmpHeight *= curve._label._text.Split('\n').Length;
+
+                        if (tmpHeight > maxCharHeight)
+                            maxCharHeight = tmpHeight;
+                    }
+                }
+            }
+
+            return maxCharHeight;
+        }
+
+/// <summary>
+        /// Determine if a mouse point is within the legend, and if so, which legend
+        /// entry (<see cref="CurveItem"/>) is nearest.
+        /// </summary>
+        /// <param name="mousePt">The screen point, in pixel coordinates.</param>
+        /// <param name="pane">
+        /// A reference to the <see cref="PaneBase"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="index">The index number of the <see cref="CurveItem"/> legend
+        /// entry that is under the mouse point.  The <see cref="CurveItem"/> object is
+        /// accessible via <see cref="GraphPane.CurveList">CurveList[index]</see>.
+        /// </param>
+        /// <returns>true if the mouse point is within the <see cref="Legend"/> bounding
+        /// box, false otherwise.</returns>
+        /// <seealso cref="GraphPane.FindNearestObject"/>
+        public bool FindPoint( PointF mousePt, PaneBase pane, float scaleFactor, out int index )
 		{
 			index = -1;
 
@@ -1031,18 +1155,266 @@ namespace ZedGraph
 			_rect = newRect;
 		}
 
-		//		/// <summary>
-		//		/// Private method to the render region that gives the iterator depending on the attribute
-		//		/// </summary>
-		//		/// <param name="c"></param>
-		//		/// <param name="forward"></param>
-		//		/// <returns></returns>
-		//		private IEnumerable<CurveItem> GetIterator(CurveList c, bool forward)
-		//		{
-		//			return forward ? c.Forward : c.Backward;
-		//		}
+        public void CalcRect(SvgGraphics g, PaneBase pane, float scaleFactor,
+            ref RectangleF tChartRect)
+        {
+            var originalChartRect = tChartRect;
+            // Start with an empty rectangle
+            _rect = Rectangle.Empty;
+            _hStack = 1;
+            _legendItemWidth = 1;
+            _legendItemHeight = 0;
 
-		#endregion
-	}
+            RectangleF clientRect = pane.CalcClientRect(g, scaleFactor);
+
+            // If the legend is invisible, don't do anything
+            if (!_isVisible)
+                return;
+
+            int nCurve = 0;
+
+            PaneList paneList = GetPaneList(pane);
+            _tmpSize = GetMaxHeight(paneList, g, scaleFactor);
+
+            float halfGap = _tmpSize / 2.0F,
+                    maxWidth = 0,
+                    tmpWidth,
+                    gapPix = _gap * _tmpSize;
+
+            foreach (GraphPane tmpPane in paneList)
+            {
+                // Loop through each curve in the curve list
+                // Find the maximum width of the legend labels
+                //foreach ( CurveItem curve in tmpPane.CurveList )
+                //foreach ( CurveItem curve in GetIterator( tmpPane.CurveList, _isReverse ) )
+                int count = tmpPane.CurveList.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    CurveItem curve = tmpPane.CurveList[_isReverse ? count - i - 1 : i];
+                    if (curve._label._text != string.Empty && curve._label._isVisible)
+                    {
+                        // Calculate the width of the label save the max width
+                        FontSpec tmpFont = (curve._label._fontSpec != null) ?
+                                        curve._label._fontSpec : this.FontSpec;
+
+                        tmpWidth = tmpFont.GetWidth(g, curve._label._text, scaleFactor);
+
+                        if (tmpWidth > maxWidth)
+                            maxWidth = tmpWidth;
+
+                        // Save the maximum symbol height for line-type curves
+                        if (curve is LineItem && ((LineItem)curve).Symbol.Size > _legendItemHeight)
+                            _legendItemHeight = ((LineItem)curve).Symbol.Size;
+
+                        nCurve++;
+                    }
+                }
+
+                if (pane is MasterPane && ((MasterPane)pane).IsUniformLegendEntries)
+                    break;
+            }
+
+            float widthAvail;
+
+            // Is this legend horizontally stacked?
+
+            if (_isHStack)
+            {
+                // Determine the available space for horizontal stacking
+                switch (_position)
+                {
+                    // Never stack if the legend is to the right or left
+                    case LegendPos.Right:
+                    case LegendPos.Left:
+                        widthAvail = 0;
+                        break;
+
+                    // for the top & bottom, the axis border width is available
+                    case LegendPos.Top:
+                    case LegendPos.TopCenter:
+                    case LegendPos.Bottom:
+                    case LegendPos.BottomCenter:
+                        widthAvail = tChartRect.Width;
+                        break;
+
+                    // for the top & bottom flush left, the panerect less margins is available
+                    case LegendPos.TopFlushLeft:
+                    case LegendPos.BottomFlushLeft:
+                        widthAvail = clientRect.Width;
+                        break;
+
+                    // for inside the axis area or Float, use 1/2 of the axis border width
+                    case LegendPos.InsideTopRight:
+                    case LegendPos.InsideTopLeft:
+                    case LegendPos.InsideBotRight:
+                    case LegendPos.InsideBotLeft:
+                    case LegendPos.Float:
+                        widthAvail = tChartRect.Width / 2;
+                        break;
+
+                    // shouldn't ever happen
+                    default:
+                        widthAvail = 0;
+                        break;
+                }
+
+                // width of one legend entry
+                if (_isShowLegendSymbols)
+                    _legendItemWidth = 3.0f * _tmpSize + maxWidth;
+                else
+                    _legendItemWidth = 0.5f * _tmpSize + maxWidth;
+
+                // Calculate the number of columns in the legend
+                // Normally, the legend is:
+                //     available width / ( max width of any entry + space for line&symbol )
+                if (maxWidth > 0)
+                    _hStack = (int)((widthAvail - halfGap) / _legendItemWidth);
+
+                // You can never have more columns than legend entries
+                if (_hStack > nCurve)
+                    _hStack = nCurve;
+
+                // a saftey check
+                if (_hStack == 0)
+                    _hStack = 1;
+            }
+            else
+            {
+                if (_isShowLegendSymbols)
+                    _legendItemWidth = 3.0F * _tmpSize + maxWidth;
+                else
+                    _legendItemWidth = 0.5F * _tmpSize + maxWidth;
+            }
+
+            // legend is:
+            //   item:     space  line  space  text   space
+            //   width:     wid  4*wid   wid  maxWid   wid 
+            // The symbol is centered on the line
+            //
+            // legend begins 3 * wid to the right of the plot rect
+            //
+            // The height of the legend is the actual height of the lines of text
+            //   (nCurve * hite) plus wid on top and wid on the bottom
+
+            // total legend width
+            float totLegWidth = _hStack * _legendItemWidth;
+
+            // The total legend height
+            _legendItemHeight = _legendItemHeight * (float)scaleFactor + halfGap;
+            if (_tmpSize > _legendItemHeight)
+                _legendItemHeight = _tmpSize;
+            float totLegHeight = (float)Math.Ceiling((double)nCurve / (double)_hStack)
+                * _legendItemHeight;
+            totLegHeight += 5;  // Give 2 or 3-pixel margin to top and bottom of legend
+
+            RectangleF newRect = new RectangleF();
+
+            // Now calculate the legend rect based on the above determined parameters
+            // Also, adjust the ChartRect to reflect the space for the legend
+            if (nCurve > 0)
+            {
+                newRect = new RectangleF(0, 0, totLegWidth, totLegHeight);
+
+                // The switch statement assigns the left and top edges, and adjusts the ChartRect
+                // as required.  The right and bottom edges are calculated at the bottom of the switch.
+                switch (_position)
+                {
+                    case LegendPos.Right:
+                        newRect.X = clientRect.Right - totLegWidth;
+                        newRect.Y = tChartRect.Top;
+
+                        tChartRect.Width -= totLegWidth + gapPix;
+                        break;
+                    case LegendPos.Top:
+                        newRect.X = tChartRect.Left;
+                        newRect.Y = clientRect.Top;
+
+                        tChartRect.Y += totLegHeight + gapPix;
+                        tChartRect.Height -= totLegHeight + gapPix;
+                        break;
+                    case LegendPos.TopFlushLeft:
+                        newRect.X = clientRect.Left;
+                        newRect.Y = clientRect.Top;
+
+                        tChartRect.Y += totLegHeight + gapPix * 1.5f;
+                        tChartRect.Height -= totLegHeight + gapPix * 1.5f;
+                        break;
+                    case LegendPos.TopCenter:
+                        newRect.X = tChartRect.Left + (tChartRect.Width - totLegWidth) / 2;
+                        newRect.Y = tChartRect.Top;
+
+                        tChartRect.Y += totLegHeight + gapPix;
+                        tChartRect.Height -= totLegHeight + gapPix;
+                        break;
+                    case LegendPos.Bottom:
+                        newRect.X = tChartRect.Left;
+                        newRect.Y = clientRect.Bottom - totLegHeight;
+
+                        tChartRect.Height -= totLegHeight + gapPix;
+                        break;
+                    case LegendPos.BottomFlushLeft:
+                        newRect.X = clientRect.Left;
+                        newRect.Y = clientRect.Bottom - totLegHeight;
+
+                        tChartRect.Height -= totLegHeight + gapPix;
+                        break;
+                    case LegendPos.BottomCenter:
+                        newRect.X = tChartRect.Left + (tChartRect.Width - totLegWidth) / 2;
+                        newRect.Y = clientRect.Bottom - totLegHeight;
+
+                        tChartRect.Height -= totLegHeight + gapPix;
+                        break;
+                    case LegendPos.Left:
+                        newRect.X = clientRect.Left;
+                        newRect.Y = tChartRect.Top;
+
+                        tChartRect.X += totLegWidth + halfGap;
+                        tChartRect.Width -= totLegWidth + gapPix;
+                        break;
+                    case LegendPos.InsideTopRight:
+                        newRect.X = tChartRect.Right - totLegWidth;
+                        newRect.Y = tChartRect.Top;
+                        break;
+                    case LegendPos.InsideTopLeft:
+                        newRect.X = tChartRect.Left;
+                        newRect.Y = tChartRect.Top;
+                        break;
+                    case LegendPos.InsideBotRight:
+                        newRect.X = tChartRect.Right - totLegWidth;
+                        newRect.Y = tChartRect.Bottom - totLegHeight;
+                        break;
+                    case LegendPos.InsideBotLeft:
+                        newRect.X = tChartRect.Left;
+                        newRect.Y = tChartRect.Bottom - totLegHeight;
+                        break;
+                    case LegendPos.Float:
+                        newRect.Location = this.Location.TransformTopLeft(pane, totLegWidth, totLegHeight);
+                        break;
+                }
+            }
+
+            if (tChartRect.IsEmpty && !originalChartRect.IsEmpty)
+            {
+                // If there is not enough room for both the chart and the Legend, then allow
+                // the chart to use the entire rectangle so the user will see them both overlapping
+                // instead of an empty plot
+                tChartRect = originalChartRect;
+            }
+            _rect = newRect;
+        }
+        
+        //		/// <summary>
+        //		/// Private method to the render region that gives the iterator depending on the attribute
+        //		/// </summary>
+        //		/// <param name="c"></param>
+        //		/// <param name="forward"></param>
+        //		/// <returns></returns>
+        //		private IEnumerable<CurveItem> GetIterator(CurveList c, bool forward)
+        //		{
+        //			return forward ? c.Forward : c.Backward;
+        //		}
+
+        #endregion
+    }
 }
 

@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -226,48 +227,62 @@ namespace ZedGraph
 				_bar.DrawBars( g, pane, this, BaseAxis( pane ), ValueAxis( pane ),
 								this.GetBarWidth( pane ), pos, scaleFactor );
 		}
-		
-		/// <summary>
-		/// Draw a legend key entry for this <see cref="BarItem"/> at the specified location
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
+
+        override public void Draw(SvgGraphics g, GraphPane pane, int pos,
+            float scaleFactor)
+        {
+            // Pass the drawing onto the bar class
+            if (_isVisible)
+                _bar.DrawBars(g, pane, this, BaseAxis(pane), ValueAxis(pane),
+                    this.GetBarWidth(pane), pos, scaleFactor);
+        }
+
+/// <summary>
+        /// Draw a legend key entry for this <see cref="BarItem"/> at the specified location
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
         /// <param name="pane">
         /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
         /// owner of this object.
         /// </param>
         /// <param name="rect">The <see cref="RectangleF"/> struct that specifies the
         /// location for the legend key</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		override public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        override public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
 		{
 			_bar.Draw( g, pane, rect, scaleFactor, true, false, null );
 		}
 
-		/// <summary>
-		/// Create a <see cref="TextObj" /> for each bar in the <see cref="GraphPane" />.
-		/// </summary>
-		/// <remarks>
-		/// This method will go through the bars, create a label that corresponds to the bar value,
-		/// and place it on the graph depending on user preferences.  This works for horizontal or
-		/// vertical bars in clusters or stacks, but only for <see cref="BarItem" /> types.  This method
-		/// does not apply to <see cref="ErrorBarItem" /> or <see cref="HiLowBarItem" /> objects.
-		/// Call this method only after calling <see cref="GraphPane.AxisChange()" />.
-		/// </remarks>
-		/// <param name="pane">The GraphPane in which to place the text labels.</param>
-		/// <param name="isBarCenter">true to center the labels inside the bars, false to
-		/// place the labels just above the top of the bar.</param>
-		/// <param name="valueFormat">The double.ToString string format to use for creating
-		/// the labels.
-		/// </param>
-		public static void CreateBarLabels( GraphPane pane, bool isBarCenter, string valueFormat )
+        override public void DrawLegendKey(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor)
+        {
+            _bar.Draw(g, pane, rect, scaleFactor, true, false, null);
+        }
+
+/// <summary>
+        /// Create a <see cref="TextObj" /> for each bar in the <see cref="GraphPane" />.
+        /// </summary>
+        /// <remarks>
+        /// This method will go through the bars, create a label that corresponds to the bar value,
+        /// and place it on the graph depending on user preferences.  This works for horizontal or
+        /// vertical bars in clusters or stacks, but only for <see cref="BarItem" /> types.  This method
+        /// does not apply to <see cref="ErrorBarItem" /> or <see cref="HiLowBarItem" /> objects.
+        /// Call this method only after calling <see cref="GraphPane.AxisChange()" />.
+        /// </remarks>
+        /// <param name="pane">The GraphPane in which to place the text labels.</param>
+        /// <param name="isBarCenter">true to center the labels inside the bars, false to
+        /// place the labels just above the top of the bar.</param>
+        /// <param name="valueFormat">The double.ToString string format to use for creating
+        /// the labels.
+        /// </param>
+        public static void CreateBarLabels( GraphPane pane, bool isBarCenter, string valueFormat )
 		{
 			CreateBarLabels( pane, isBarCenter, valueFormat, TextObj.Default.FontFamily,
 					TextObj.Default.FontSize, TextObj.Default.FontColor, TextObj.Default.FontBold,

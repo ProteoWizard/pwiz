@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #endregion
 
@@ -239,26 +240,34 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Draw a legend key entry for this <see cref="OHLCBarItem"/> at the specified location
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="rect">The <see cref="RectangleF"/> struct that specifies the
-		/// location for the legend key</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		override public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect,
+        override public void Draw(SvgGraphics g, GraphPane pane, int pos, float scaleFactor)
+        {
+            if (_isVisible)
+            {
+                _stick.Draw(g, pane, this, this.BaseAxis(pane),
+                    this.ValueAxis(pane), scaleFactor);
+            }
+        }
+        /// <summary>
+        /// Draw a legend key entry for this <see cref="OHLCBarItem"/> at the specified location
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="rect">The <see cref="RectangleF"/> struct that specifies the
+        /// location for the legend key</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        override public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect,
 									float scaleFactor )
 		{
 			float pixBase, pixHigh, pixLow, pixOpen, pixClose;
@@ -293,16 +302,50 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Determine the coords for the rectangle associated with a specified point for 
-		/// this <see cref="CurveItem" />
-		/// </summary>
-		/// <param name="pane">The <see cref="GraphPane" /> to which this curve belongs</param>
-		/// <param name="i">The index of the point of interest</param>
-		/// <param name="coords">A list of coordinates that represents the "rect" for
-		/// this point (used in an html AREA tag)</param>
-		/// <returns>true if it's a valid point, false otherwise</returns>
-		override public bool GetCoords( GraphPane pane, int i, out string coords )
+        override public void DrawLegendKey(SvgGraphics g, GraphPane pane, RectangleF rect,
+            float scaleFactor)
+        {
+            float pixBase, pixHigh, pixLow, pixOpen, pixClose;
+
+            if (pane._barSettings.Base == BarBase.X)
+            {
+                pixBase = rect.Left + rect.Width / 2.0F;
+                pixHigh = rect.Top;
+                pixLow = rect.Bottom;
+                pixOpen = pixHigh + rect.Height / 3;
+                pixClose = pixLow - rect.Height / 3;
+            }
+            else
+            {
+                pixBase = rect.Top + rect.Height / 2.0F;
+                pixHigh = rect.Right;
+                pixLow = rect.Left;
+                pixOpen = pixHigh - rect.Width / 3;
+                pixClose = pixLow + rect.Width / 3;
+            }
+
+            Axis baseAxis = BaseAxis(pane);
+            //float halfSize = _stick.GetBarWidth( pane, baseAxis, scaleFactor );
+            float halfSize = 2 * scaleFactor;
+
+            using (Pen pen = new Pen(_stick.Color, _stick._width))
+            {
+                _stick.Draw(g, pane, pane._barSettings.Base == BarBase.X, pixBase, pixHigh,
+                    pixLow, pixOpen, pixClose, halfSize, scaleFactor, pen,
+                    _stick.RisingFill,
+                    _stick.RisingBorder, null);
+            }
+        }
+        /// <summary>
+        /// Determine the coords for the rectangle associated with a specified point for 
+        /// this <see cref="CurveItem" />
+        /// </summary>
+        /// <param name="pane">The <see cref="GraphPane" /> to which this curve belongs</param>
+        /// <param name="i">The index of the point of interest</param>
+        /// <param name="coords">A list of coordinates that represents the "rect" for
+        /// this point (used in an html AREA tag)</param>
+        /// <returns>true if it's a valid point, false otherwise</returns>
+        override public bool GetCoords( GraphPane pane, int i, out string coords )
 		{
 			coords = string.Empty;
 

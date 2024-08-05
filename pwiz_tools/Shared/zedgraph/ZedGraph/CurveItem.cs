@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Collections;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #if ( !DOTNET1 )	// Is this a .Net 2 compilation?
 using System.Collections.Generic;
@@ -637,40 +638,44 @@ namespace ZedGraph
 		/// font sizes, etc. according to the actual size of the graph.
 		/// </param>
 		abstract public void Draw( Graphics g, GraphPane pane, int pos, float scaleFactor  );
-		
-		/// <summary>
-		/// Draw a legend key entry for this <see cref="CurveItem"/> at the specified location.
-		/// This abstract base method passes through to <see cref="BarItem.DrawLegendKey"/> or
-		/// <see cref="LineItem.DrawLegendKey"/> to do the rendering.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
+
+        abstract public void Draw(SvgGraphics g, GraphPane pane, int pos, float scaleFactor);
+
+        /// <summary>
+        /// Draw a legend key entry for this <see cref="CurveItem"/> at the specified location.
+        /// This abstract base method passes through to <see cref="BarItem.DrawLegendKey"/> or
+        /// <see cref="LineItem.DrawLegendKey"/> to do the rendering.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
         /// <param name="pane">
         /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
         /// owner of this object.
         /// </param>
         /// <param name="rect">The <see cref="RectangleF"/> struct that specifies the
         /// location for the legend key</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		abstract public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor );
-		
-	#endregion
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        abstract public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor );
 
-	#region Utility Methods
+        abstract public void DrawLegendKey(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor);
 
-		/// <summary>
-		/// Add a single x,y coordinate point to the end of the points collection for this curve.
-		/// </summary>
-		/// <param name="x">The X coordinate value</param>
-		/// <param name="y">The Y coordinate value</param>
-		public void AddPoint( double x, double y )
+        #endregion
+
+        #region Utility Methods
+
+        /// <summary>
+        /// Add a single x,y coordinate point to the end of the points collection for this curve.
+        /// </summary>
+        /// <param name="x">The X coordinate value</param>
+        /// <param name="y">The Y coordinate value</param>
+        public void AddPoint( double x, double y )
 		{
 			this.AddPoint( new PointPair( x, y ) );
 		}

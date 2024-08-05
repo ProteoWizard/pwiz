@@ -22,6 +22,7 @@ using System;
 using System.Text;
 using System.Drawing;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -444,25 +445,77 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Render the label for this <see cref="GasGaugeNeedle"/>.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into. This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A graphic device object to be drawn into. This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="rect">Bounding rectangle for this <see cref="GasGaugeNeedle"/>.</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects. This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param> 
-		public override void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
+        public override void Draw(SvgGraphics g, GraphPane pane, int pos, float scaleFactor)
+        {
+            if (pane.Chart._rect.Width <= 0 && pane.Chart._rect.Height <= 0)
+            {
+                _slicePath = null;
+            }
+            else
+            {
+                CalcRectangle(g, pane, scaleFactor, pane.Chart._rect);
+
+                _slicePath = new GraphicsPath();
+
+                if (!_isVisible)
+                    return;
+
+                RectangleF tRect = _boundingRectangle;
+
+                if (tRect.Width >= 1 && tRect.Height >= 1)
+                {
+                    SmoothingMode sMode = g.SmoothingMode;
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                    Matrix matrix = new Matrix();
+
+                    matrix.Translate(tRect.X + (tRect.Width / 2), tRect.Y + (tRect.Height / 2), MatrixOrder.Prepend);
+
+                    PointF[] pts = new PointF[2];
+                    pts[0] = new PointF(((tRect.Height * .10f) / 2.0f) * (float)Math.Cos(-SweepAngle * Math.PI / 180.0f),
+                        ((tRect.Height * .10f) / 2.0f) * (float)Math.Sin(-SweepAngle * Math.PI / 180.0f));
+                    pts[1] = new PointF((tRect.Width / 2.0f) * (float)Math.Cos(-SweepAngle * Math.PI / 180.0f),
+                        (tRect.Width / 2.0f) * (float)Math.Sin(-SweepAngle * Math.PI / 180.0f));
+
+                    matrix.TransformPoints(pts);
+
+                    Pen p = new Pen(NeedleColor, ((tRect.Height * .10f) / 2.0f));
+                    p.EndCap = LineCap.ArrowAnchor;
+                    g.DrawLine(p, pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+
+                    //Fill center 10% with Black dot;
+                    Fill f = new Fill(Color.Black);
+                    RectangleF r = new RectangleF((tRect.X + (tRect.Width / 2)) - 1.0f, (tRect.Y + (tRect.Height / 2)) - 1.0f, 1.0f, 1.0f);
+                    r.Inflate((tRect.Height * .10f), (tRect.Height * .10f));
+                    Brush b = f.MakeBrush(r);
+                    g.FillPie(b, r.X, r.Y, r.Width, r.Height, 0.0f, -180.0f);
+
+                    Pen borderPen = new Pen(Color.White, 2.0f);
+                    g.DrawPie(borderPen, r.X, r.Y, r.Width, r.Height, 0.0f, -180.0f);
+
+                    g.SmoothingMode = sMode;
+                }
+            }
+        }
+        /// <summary>
+        /// Render the label for this <see cref="GasGaugeNeedle"/>.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into. This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A graphic device object to be drawn into. This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="rect">Bounding rectangle for this <see cref="GasGaugeNeedle"/>.</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects. This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param> 
+        public override void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
 		{
 			if ( !_isVisible )
 				return;
@@ -476,16 +529,29 @@ namespace ZedGraph
 			g.DrawLine( pen, rect.Left, yMid, rect.Right, yMid );
 		}
 
-		/// <summary>
-		/// Determine the coords for the rectangle associated with a specified point for 
-		/// this <see cref="CurveItem" />
-		/// </summary>
-		/// <param name="pane">The <see cref="GraphPane" /> to which this curve belongs</param>
-		/// <param name="i">The index of the point of interest</param>
-		/// <param name="coords">A list of coordinates that represents the "rect" for
-		/// this point (used in an html AREA tag)</param>
-		/// <returns>true if it's a valid point, false otherwise</returns>
-		public override bool GetCoords( GraphPane pane, int i, out string coords )
+        public override void DrawLegendKey(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor)
+        {
+            if (!_isVisible)
+                return;
+
+            float yMid = rect.Top + rect.Height / 2.0F;
+
+            Pen pen = new Pen(NeedleColor, pane.ScaledPenWidth(NeedleWidth / 2, scaleFactor));
+            pen.StartCap = LineCap.Round;
+            pen.EndCap = LineCap.ArrowAnchor;
+            pen.DashStyle = DashStyle.Solid;
+            g.DrawLine(pen, rect.Left, yMid, rect.Right, yMid);
+        }
+        /// <summary>
+        /// Determine the coords for the rectangle associated with a specified point for 
+        /// this <see cref="CurveItem" />
+        /// </summary>
+        /// <param name="pane">The <see cref="GraphPane" /> to which this curve belongs</param>
+        /// <param name="i">The index of the point of interest</param>
+        /// <param name="coords">A list of coordinates that represents the "rect" for
+        /// this point (used in an html AREA tag)</param>
+        /// <returns>true if it's a valid point, false otherwise</returns>
+        public override bool GetCoords( GraphPane pane, int i, out string coords )
 		{
 			coords = String.Empty;
 			return false;
@@ -589,6 +655,45 @@ namespace ZedGraph
 
 		}
 
-	#endregion
-	}
+        public static RectangleF CalcRectangle(SvgGraphics g, GraphPane pane, float scaleFactor, RectangleF chartRect)
+        {
+            RectangleF nonExpRect = chartRect;
+
+            if ((2 * nonExpRect.Height) > nonExpRect.Width)
+            {
+                //Scale based on width
+                float percentS = ((nonExpRect.Height * 2) - nonExpRect.Width) / (nonExpRect.Height * 2);
+                nonExpRect.Height = ((nonExpRect.Height * 2) - ((nonExpRect.Height * 2) * percentS));
+            }
+            else
+            {
+                nonExpRect.Height = nonExpRect.Height * 2;
+            }
+
+            nonExpRect.Width = nonExpRect.Height;
+
+            float xDelta = (chartRect.Width / 2) - (nonExpRect.Width / 2);
+
+            //Align Horizontally
+            nonExpRect.X += xDelta;
+
+            nonExpRect.Inflate(-(float)0.05F * nonExpRect.Height, -(float)0.05 * nonExpRect.Width);
+
+            GasGaugeNeedle.CalculateGasGaugeParameters(pane);
+
+            foreach (CurveItem curve in pane.CurveList)
+            {
+                if (curve is GasGaugeNeedle)
+                {
+                    GasGaugeNeedle ggn = (GasGaugeNeedle)curve;
+                    ggn._boundingRectangle = nonExpRect;
+                }
+            }
+
+            return nonExpRect;
+
+        }
+
+        #endregion
+    }
 }

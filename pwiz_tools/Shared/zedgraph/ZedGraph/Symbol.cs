@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -393,6 +394,33 @@ namespace ZedGraph
 			}
 		}
 
+        private void DrawSymbol(SvgGraphics g, int x, int y, GraphicsPath path,
+            Pen pen, Brush brush, object tag = null)
+        {
+            // Only draw if the symbol is visible
+            if (_isVisible &&
+                this.Type != SymbolType.None &&
+                x < 100000 && x > -100000 &&
+                y < 100000 && y > -100000)
+            {
+                Matrix saveMatrix = g.Transform;
+                g.TranslateTransform(x, y);
+
+                if (tag != null)
+                    DrawTag(g, tag);
+
+                // Fill or draw the symbol as required
+                if (_fill.IsVisible)
+                    g.FillPath(brush, path);
+                //FillPoint( g, x, y, scaleFactor, pen, brush );
+
+                if (_border.IsVisible)
+                    g.DrawPath(pen, path);
+                //DrawPoint( g, x, y, scaleFactor, pen );
+
+                g.Transform = saveMatrix;
+            }
+        }
         protected virtual object TransformTag(GraphPane pane, object tag, double x, double y, Scale xScale, Scale yScale, bool isOverrideOrdinal, int pointIndex)
         {
             return tag;
@@ -402,34 +430,38 @@ namespace ZedGraph
 	    {
 	    }
 
-	    /// <summary>
-		/// Draw the <see cref="Symbol"/> to the specified <see cref="Graphics"/> device
-		/// at the specified location.  This routine draws a single symbol.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
+        protected virtual void DrawTag(SvgGraphics g, object tag)
+        {
+        }
+
+/// <summary>
+        /// Draw the <see cref="Symbol"/> to the specified <see cref="Graphics"/> device
+        /// at the specified location.  This routine draws a single symbol.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
         /// <param name="pane">
         /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
         /// owner of this object.
         /// </param>
         /// <param name="x">The x position of the center of the symbol in
         /// pixel units</param>
-		/// <param name="y">The y position of the center of the symbol in
-		/// pixel units</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor for the features of the graph based on the <see cref="PaneBase.BaseDimension"/>.  This
-		/// scaling factor is calculated by the <see cref="PaneBase.CalcScaleFactor"/> method.  The scale factor
-		/// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
-		/// </param>
-		/// <param name="dataValue">The data value to be used for a value-based
-		/// color gradient.  This is only applicable for <see cref="FillType.GradientByX"/>,
-		/// <see cref="FillType.GradientByY"/> or <see cref="FillType.GradientByZ"/>.</param>
-		/// <param name="isSelected">Indicates that the <see cref="Symbol" /> should be drawn
-		/// with attributes from the <see cref="Selection" /> class.
-		/// </param>
-		public void DrawSymbol( Graphics g, GraphPane pane, int x, int y,
+        /// <param name="y">The y position of the center of the symbol in
+        /// pixel units</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor for the features of the graph based on the <see cref="PaneBase.BaseDimension"/>.  This
+        /// scaling factor is calculated by the <see cref="PaneBase.CalcScaleFactor"/> method.  The scale factor
+        /// represents a linear multiple to be applied to font sizes, symbol sizes, etc.
+        /// </param>
+        /// <param name="dataValue">The data value to be used for a value-based
+        /// color gradient.  This is only applicable for <see cref="FillType.GradientByX"/>,
+        /// <see cref="FillType.GradientByY"/> or <see cref="FillType.GradientByZ"/>.</param>
+        /// <param name="isSelected">Indicates that the <see cref="Symbol" /> should be drawn
+        /// with attributes from the <see cref="Selection" /> class.
+        /// </param>
+        public void DrawSymbol( Graphics g, GraphPane pane, int x, int y,
 							float scaleFactor, bool isSelected, PointPair dataValue )
 		{
 			Symbol source = this;
@@ -457,20 +489,48 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
-		/// Create a <see cref="GraphicsPath"/> struct for the current symbol based on the
-		/// specified scaleFactor and assuming the symbol will be centered at position 0,0.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="scaleFactor">
-		/// The scaling factor for the features of the graph based on the <see cref="PaneBase.BaseDimension"/>.  This
-		/// scaling factor is calculated by the <see cref="PaneBase.CalcScaleFactor"/> method.  The scale factor
-		/// represents a linear multiple to be applied to font sizes, symbol sizes, etc.</param>
-		/// <returns>Returns the <see cref="GraphicsPath"/> for the current symbol</returns>
-		public GraphicsPath MakePath( Graphics g, float scaleFactor )
+        public void DrawSymbol(SvgGraphics g, GraphPane pane, int x, int y,
+            float scaleFactor, bool isSelected, PointPair dataValue)
+        {
+            Symbol source = this;
+            if (isSelected)
+                source = Selection.Symbol;
+
+            // Only draw if the symbol is visible
+            if (_isVisible &&
+                this.Type != SymbolType.None &&
+                x < 100000 && x > -100000 &&
+                y < 100000 && y > -100000)
+            {
+                SmoothingMode sModeSave = g.SmoothingMode;
+                if (_isAntiAlias)
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+
+                using (Pen pen = _border.GetPen(pane, scaleFactor, dataValue))
+                using (GraphicsPath path = this.MakePath(g, scaleFactor))
+                using (Brush brush = this.Fill.MakeBrush(path.GetBounds(), dataValue))
+                {
+                    DrawSymbol(g, x, y, path, pen, brush);
+                }
+
+                g.SmoothingMode = sModeSave;
+            }
+        }
+
+/// <summary>
+        /// Create a <see cref="GraphicsPath"/> struct for the current symbol based on the
+        /// specified scaleFactor and assuming the symbol will be centered at position 0,0.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="scaleFactor">
+        /// The scaling factor for the features of the graph based on the <see cref="PaneBase.BaseDimension"/>.  This
+        /// scaling factor is calculated by the <see cref="PaneBase.CalcScaleFactor"/> method.  The scale factor
+        /// represents a linear multiple to be applied to font sizes, symbol sizes, etc.</param>
+        /// <returns>Returns the <see cref="GraphicsPath"/> for the current symbol</returns>
+        public GraphicsPath MakePath( Graphics g, float scaleFactor )
 		{
 			float	scaledSize = (float) ( _size * scaleFactor );
 			float	hsize = scaledSize / 2,
@@ -540,34 +600,104 @@ namespace ZedGraph
 			return path;
 		}
 
-		/// <summary>
-		/// Draw this <see cref="CurveItem"/> to the specified <see cref="Graphics"/>
-		/// device as a symbol at each defined point.  The routine
-		/// only draws the symbols; the lines are draw by the
-		/// <see cref="Line.DrawCurve"/> method.  This method
-		/// is normally only called by the Draw method of the
-		/// <see cref="CurveItem"/> object
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="LineItem"/> representing this
-		/// curve.</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		/// <param name="isSelected">Indicates that the <see cref="Symbol" /> should be drawn
-		/// with attributes from the <see cref="Selection" /> class.
-		/// </param>
-		public void Draw( Graphics g, GraphPane pane, LineItem curve, float scaleFactor,
+        public GraphicsPath MakePath(SvgGraphics g, float scaleFactor)
+        {
+            float scaledSize = (float)(_size * scaleFactor);
+            float hsize = scaledSize / 2,
+                    hsize1 = hsize + 1;
+
+            GraphicsPath path = new GraphicsPath();
+
+            switch (_type == SymbolType.Default || (_type == SymbolType.UserDefined && _userSymbol == null) ? Default.Type : _type)
+            {
+                case SymbolType.Square:
+                    path.AddLine(-hsize, -hsize, hsize, -hsize);
+                    path.AddLine(hsize, -hsize, hsize, hsize);
+                    path.AddLine(hsize, hsize, -hsize, hsize);
+                    path.AddLine(-hsize, hsize, -hsize, -hsize);
+                    break;
+                case SymbolType.Diamond:
+                    path.AddLine(0, -hsize, hsize, 0);
+                    path.AddLine(hsize, 0, 0, hsize);
+                    path.AddLine(0, hsize, -hsize, 0);
+                    path.AddLine(-hsize, 0, 0, -hsize);
+                    break;
+                case SymbolType.Triangle:
+                    path.AddLine(0, -hsize, hsize, hsize);
+                    path.AddLine(hsize, hsize, -hsize, hsize);
+                    path.AddLine(-hsize, hsize, 0, -hsize);
+                    break;
+                case SymbolType.Circle:
+                    path.AddEllipse(-hsize, -hsize, scaledSize, scaledSize);
+                    break;
+                case SymbolType.XCross:
+                    path.AddLine(-hsize, -hsize, hsize1, hsize1);
+                    path.StartFigure();
+                    path.AddLine(hsize, -hsize, -hsize1, hsize1);
+                    break;
+                case SymbolType.Plus:
+                    path.AddLine(0, -hsize, 0, hsize1);
+                    path.StartFigure();
+                    path.AddLine(-hsize, 0, hsize1, 0);
+                    break;
+                case SymbolType.Star:
+                    path.AddLine(0, -hsize, 0, hsize1);
+                    path.StartFigure();
+                    path.AddLine(-hsize, 0, hsize1, 0);
+                    path.StartFigure();
+                    path.AddLine(-hsize, -hsize, hsize1, hsize1);
+                    path.StartFigure();
+                    path.AddLine(hsize, -hsize, -hsize1, hsize1);
+                    break;
+                case SymbolType.TriangleDown:
+                    path.AddLine(0, hsize, hsize, -hsize);
+                    path.AddLine(hsize, -hsize, -hsize, -hsize);
+                    path.AddLine(-hsize, -hsize, 0, hsize);
+                    break;
+                case SymbolType.HDash:
+                    path.AddLine(-hsize, 0, hsize1, 0);
+                    break;
+                case SymbolType.VDash:
+                    path.AddLine(0, -hsize, 0, hsize1);
+                    break;
+                case SymbolType.UserDefined:
+                    path = _userSymbol.Clone() as GraphicsPath;
+                    Matrix scaleTransform = new Matrix(scaledSize, 0.0f, 0.0f, scaledSize, 0.0f, 0.0f);
+                    path.Transform(scaleTransform);
+                    break;
+            }
+
+            return path;
+        }
+        
+        /// <summary>
+        /// Draw this <see cref="CurveItem"/> to the specified <see cref="Graphics"/>
+        /// device as a symbol at each defined point.  The routine
+        /// only draws the symbols; the lines are draw by the
+        /// <see cref="Line.DrawCurve"/> method.  This method
+        /// is normally only called by the Draw method of the
+        /// <see cref="CurveItem"/> object
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="LineItem"/> representing this
+        /// curve.</param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        /// <param name="isSelected">Indicates that the <see cref="Symbol" /> should be drawn
+        /// with attributes from the <see cref="Selection" /> class.
+        /// </param>
+        public void Draw( Graphics g, GraphPane pane, LineItem curve, float scaleFactor,
 			bool isSelected )
 		{
 			Symbol source = this;
@@ -688,8 +818,130 @@ namespace ZedGraph
 				g.SmoothingMode = sModeSave;
 			}
 		}
-		#endregion
-	
-	}
+
+        public void Draw(SvgGraphics g, GraphPane pane, LineItem curve, float scaleFactor,
+    bool isSelected)
+        {
+            Symbol source = this;
+            if (isSelected)
+                source = Selection.Symbol;
+
+            int tmpX, tmpY;
+
+            int minX = (int)pane.Chart.Rect.Left;
+            int maxX = (int)pane.Chart.Rect.Right;
+            int minY = (int)pane.Chart.Rect.Top;
+            int maxY = (int)pane.Chart.Rect.Bottom;
+
+            // (Dale-a-b) we'll set an element to true when it has been drawn	
+            bool[,] isPixelDrawn = new bool[maxX + 1, maxY + 1];
+
+            double curX, curY;
+            IPointList points = curve.Points;
+
+            if (points != null && (_border.IsVisible || _fill.IsVisible))
+            {
+                SmoothingMode sModeSave = g.SmoothingMode;
+                if (_isAntiAlias)
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+
+                // For the sake of speed, go ahead and create a solid brush and a pen
+                // If it's a gradient fill, it will be created on the fly for each symbol
+                //SolidBrush	brush = new SolidBrush( this.fill.Color );
+
+                using (Pen pen = source._border.GetPen(pane, scaleFactor))
+                using (GraphicsPath path = MakePath(g, scaleFactor))
+                {
+                    RectangleF rect = path.GetBounds();
+
+                    using (Brush brush = source.Fill.MakeBrush(rect))
+                    {
+                        ValueHandler valueHandler = new ValueHandler(pane, false);
+                        Scale xScale = curve.GetXAxis(pane).Scale;
+                        Scale yScale = curve.GetYAxis(pane).Scale;
+
+                        bool xIsLog = xScale.IsLog;
+                        bool yIsLog = yScale.IsLog;
+                        bool xIsOrdinal = xScale.IsAnyOrdinal;
+
+                        double xMin = xScale.Min;
+                        double xMax = xScale.Max;
+
+                        // Loop over each defined point							
+                        for (int i = 0; i < points.Count; i++)
+                        {
+                            // Get the user scale values for the current point
+                            // use the valueHandler only for stacked types
+                            object tag = null;
+                            if (pane.LineType == LineType.Stack)
+                            {
+                                valueHandler.GetValues(curve, i, out curX, out _, out curY);
+                            }
+                            // otherwise, just access the values directly.  Avoiding the valueHandler for
+                            // non-stacked types is an optimization to minimize overhead in case there are
+                            // a large number of points.
+                            else
+                            {
+                                curX = points[i].X;
+                                if (curve is StickItem)
+                                    curY = points[i].Z;
+                                else
+                                    curY = points[i].Y;
+                                tag = points[i].Tag;
+                            }
+
+                            // Any value set to double max is invalid and should be skipped
+                            // This is used for calculated values that are out of range, divide
+                            //   by zero, etc.
+                            // Also, any value <= zero on a log scale is invalid
+
+                            if (curX != PointPair.Missing &&
+                                    curY != PointPair.Missing &&
+                                    !System.Double.IsNaN(curX) &&
+                                    !System.Double.IsNaN(curY) &&
+                                    !System.Double.IsInfinity(curX) &&
+                                    !System.Double.IsInfinity(curY) &&
+                                    (curX > 0 || !xIsLog) &&
+                                    (!yIsLog || curY > 0.0) &&
+                                    (xIsOrdinal || (curX >= xMin && curX <= xMax)))
+                            {
+                                // Transform the user scale values to pixel locations
+                                tmpX = (int)xScale.Transform(curve.IsOverrideOrdinal, i, curX);
+                                tmpY = (int)yScale.Transform(curve.IsOverrideOrdinal, i, curY);
+                                tag = TransformTag(pane, tag, curX, curY, xScale, yScale, curve.IsOverrideOrdinal, i);
+
+                                // Maintain an array of "used" pixel locations to avoid duplicate drawing operations
+                                if (tmpX >= minX && tmpX <= maxX && tmpY >= minY && tmpY <= maxY) // guard against the zoom-in case
+                                {
+                                    if (isPixelDrawn[tmpX, tmpY])
+                                        continue;
+                                    isPixelDrawn[tmpX, tmpY] = true;
+                                }
+
+                                // If the fill type for this symbol is a Gradient by value type,
+                                // the make a brush corresponding to the appropriate current value
+                                if (_fill.IsGradientValueType || _border._gradientFill.IsGradientValueType)
+                                {
+                                    using (Brush tBrush = _fill.MakeBrush(rect, points[i]))
+                                    using (Pen tPen = _border.GetPen(pane, scaleFactor, points[i]))
+                                        this.DrawSymbol(g, tmpX, tmpY, path, tPen, tBrush);
+                                }
+                                else
+                                {
+                                    // Otherwise, the brush is already defined
+                                    // Draw the symbol at the specified pixel location
+                                    this.DrawSymbol(g, tmpX, tmpY, path, pen, brush, tag);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                g.SmoothingMode = sModeSave;
+            }
+        }
+        #endregion
+
+    }
 }
 

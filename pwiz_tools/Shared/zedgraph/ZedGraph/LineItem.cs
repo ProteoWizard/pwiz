@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 namespace ZedGraph
 {
@@ -292,28 +293,37 @@ namespace ZedGraph
 				
 				Symbol.Draw( g, pane, this, scaleFactor, IsSelected );
 			}
-		}		
+		}
 
-		/// <summary>
-		/// Draw a legend key entry for this <see cref="LineItem"/> at the specified location
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
+        override public void Draw(SvgGraphics g, GraphPane pane, int pos, float scaleFactor)
+        {
+            if (_isVisible)
+            {
+                Line.Draw(g, pane, this, scaleFactor);
+
+                Symbol.Draw(g, pane, this, scaleFactor, IsSelected);
+            }
+        }
+        /// <summary>
+        /// Draw a legend key entry for this <see cref="LineItem"/> at the specified location
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
         /// <param name="pane">
         /// A reference to the <see cref="ZedGraph.GraphPane"/> object that is the parent or
         /// owner of this object.
         /// </param>
         /// <param name="rect">The <see cref="RectangleF"/> struct that specifies the
         /// location for the legend key</param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		override public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="ZedGraph.GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        override public void DrawLegendKey( Graphics g, GraphPane pane, RectangleF rect, float scaleFactor )
 		{
 			// Draw a sample curve to the left of the label text
 			int xMid = (int)( rect.Left + rect.Width / 2.0F );
@@ -330,18 +340,36 @@ namespace ZedGraph
 			_symbol.DrawSymbol( g, pane, xMid, yMid, scaleFactor, false, null );
 
 		}
-	
-		/// <summary>
-		/// Loads some pseudo unique colors/symbols into this LineItem.  This
-		/// is mainly useful for differentiating a set of new LineItems without
-		/// having to pick your own colors/symbols.
-		/// <seealso cref="CurveItem.MakeUnique( ColorSymbolRotator )"/>
-		/// </summary>
-		/// <param name="rotator">
-		/// The <see cref="ColorSymbolRotator"/> that is used to pick the color
-		///  and symbol for this method call.
-		/// </param>
-		override public void MakeUnique( ColorSymbolRotator rotator )
+
+        override public void DrawLegendKey(SvgGraphics g, GraphPane pane, RectangleF rect, float scaleFactor)
+        {
+            // Draw a sample curve to the left of the label text
+            int xMid = (int)(rect.Left + rect.Width / 2.0F);
+            int yMid = (int)(rect.Top + rect.Height / 2.0F);
+            //RectangleF rect2 = rect;
+            //rect2.Y = yMid;
+            //rect2.Height = rect.Height / 2.0f;
+
+            _line.Fill.Draw(g, rect);
+
+            _line.DrawSegment(g, pane, rect.Left, yMid, rect.Right, yMid, scaleFactor);
+
+            // Draw a sample symbol to the left of the label text				
+            _symbol.DrawSymbol(g, pane, xMid, yMid, scaleFactor, false, null);
+
+        }
+
+        /// <summary>
+        /// Loads some pseudo unique colors/symbols into this LineItem.  This
+        /// is mainly useful for differentiating a set of new LineItems without
+        /// having to pick your own colors/symbols.
+        /// <seealso cref="CurveItem.MakeUnique( ColorSymbolRotator )"/>
+        /// </summary>
+        /// <param name="rotator">
+        /// The <see cref="ColorSymbolRotator"/> that is used to pick the color
+        ///  and symbol for this method call.
+        /// </param>
+        override public void MakeUnique( ColorSymbolRotator rotator )
 		{
 			this.Color			= rotator.NextColor;
 			this.Symbol.Type	= rotator.NextSymbol;

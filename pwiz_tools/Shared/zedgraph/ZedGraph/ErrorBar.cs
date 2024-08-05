@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using SvgNet;
 
 #endregion
 
@@ -314,32 +315,53 @@ namespace ZedGraph
 			}
 		}
 
-
-		/// <summary>
-		/// Draw all the <see cref="ErrorBar"/>'s to the specified <see cref="Graphics"/>
-		/// device as a an error bar at each defined point.
-		/// </summary>
-		/// <param name="g">
-		/// A graphic device object to be drawn into.  This is normally e.Graphics from the
-		/// PaintEventArgs argument to the Paint() method.
-		/// </param>
-		/// <param name="pane">
-		/// A reference to the <see cref="GraphPane"/> object that is the parent or
-		/// owner of this object.
-		/// </param>
-		/// <param name="curve">A <see cref="CurveItem"/> object representing the
-		/// <see cref="Bar"/>'s to be drawn.</param>
-		/// <param name="baseAxis">The <see cref="Axis"/> class instance that defines the base (independent)
-		/// axis for the <see cref="Bar"/></param>
-		/// <param name="valueAxis">The <see cref="Axis"/> class instance that defines the value (dependent)
-		/// axis for the <see cref="Bar"/></param>
-		/// <param name="scaleFactor">
-		/// The scaling factor to be used for rendering objects.  This is calculated and
-		/// passed down by the parent <see cref="GraphPane"/> object using the
-		/// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
-		/// font sizes, etc. according to the actual size of the graph.
-		/// </param>
-		public void Draw( Graphics g, GraphPane pane, ErrorBarItem curve,
+        public void Draw(SvgGraphics g, GraphPane pane, bool isXBase,
+            float pixBase, float pixValue,
+            float pixLowValue, float scaleFactor, Pen pen, bool isSelected,
+            PointPair dataValue)
+        {
+            if (isXBase)
+            {
+                g.DrawLine(pen, pixBase, pixValue, pixBase, pixLowValue);
+                _symbol.DrawSymbol(g, pane, (int)pixBase, (int)pixValue,
+                    scaleFactor, isSelected, dataValue);
+                _symbol.DrawSymbol(g, pane, (int)pixBase, (int)pixLowValue,
+                    scaleFactor, isSelected, dataValue);
+            }
+            else
+            {
+                g.DrawLine(pen, pixValue, pixBase, pixLowValue, pixBase);
+                _symbol.DrawSymbol(g, pane, (int)pixValue, (int)pixBase,
+                    scaleFactor, isSelected, dataValue);
+                _symbol.DrawSymbol(g, pane, (int)pixLowValue, (int)pixBase,
+                    scaleFactor, isSelected, dataValue);
+            }
+        }
+        /// <summary>
+        /// Draw all the <see cref="ErrorBar"/>'s to the specified <see cref="Graphics"/>
+        /// device as a an error bar at each defined point.
+        /// </summary>
+        /// <param name="g">
+        /// A graphic device object to be drawn into.  This is normally e.Graphics from the
+        /// PaintEventArgs argument to the Paint() method.
+        /// </param>
+        /// <param name="pane">
+        /// A reference to the <see cref="GraphPane"/> object that is the parent or
+        /// owner of this object.
+        /// </param>
+        /// <param name="curve">A <see cref="CurveItem"/> object representing the
+        /// <see cref="Bar"/>'s to be drawn.</param>
+        /// <param name="baseAxis">The <see cref="Axis"/> class instance that defines the base (independent)
+        /// axis for the <see cref="Bar"/></param>
+        /// <param name="valueAxis">The <see cref="Axis"/> class instance that defines the value (dependent)
+        /// axis for the <see cref="Bar"/></param>
+        /// <param name="scaleFactor">
+        /// The scaling factor to be used for rendering objects.  This is calculated and
+        /// passed down by the parent <see cref="GraphPane"/> object using the
+        /// <see cref="PaneBase.CalcScaleFactor"/> method, and is used to proportionally adjust
+        /// font sizes, etc. according to the actual size of the graph.
+        /// </param>
+        public void Draw( Graphics g, GraphPane pane, ErrorBarItem curve,
 							Axis baseAxis, Axis valueAxis, float scaleFactor )
 		{
 			ValueHandler valueHandler = new ValueHandler( pane, false );
@@ -382,7 +404,51 @@ namespace ZedGraph
 				}
 			}
 		}
-	#endregion
-	
-	}
+
+        public void Draw(SvgGraphics g, GraphPane pane, ErrorBarItem curve,
+            Axis baseAxis, Axis valueAxis, float scaleFactor)
+        {
+            ValueHandler valueHandler = new ValueHandler(pane, false);
+
+            float pixBase, pixValue, pixLowValue;
+            double scaleBase, scaleValue, scaleLowValue;
+
+            if (curve.Points != null && this.IsVisible)
+            {
+                using (Pen pen = !curve.IsSelected ? new Pen(_color, _penWidth) :
+                           new Pen(Selection.Border.Color, Selection.Border.Width))
+                {
+                    // Loop over each defined point							
+                    for (int i = 0; i < curve.Points.Count; i++)
+                    {
+                        valueHandler.GetValues(curve, i, out scaleBase,
+                            out scaleLowValue, out scaleValue);
+
+                        // Any value set to double max is invalid and should be skipped
+                        // This is used for calculated values that are out of range, divide
+                        //   by zero, etc.
+                        // Also, any value <= zero on a log scale is invalid
+
+                        if (!curve.Points[i].IsInvalid3D &&
+                            (scaleBase > 0 || !baseAxis._scale.IsLog) &&
+                            ((scaleValue > 0 && scaleLowValue > 0) || !valueAxis._scale.IsLog))
+                        {
+                            pixBase = baseAxis.Scale.Transform(curve.IsOverrideOrdinal, i, scaleBase);
+                            pixValue = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, scaleValue);
+                            pixLowValue = valueAxis.Scale.Transform(curve.IsOverrideOrdinal, i, scaleLowValue);
+
+                            //if ( this.fill.IsGradientValueType )
+                            //	brush = fill.MakeBrush( _rect, _points[i] );
+
+                            this.Draw(g, pane, baseAxis is XAxis || baseAxis is X2Axis, pixBase, pixValue,
+                                pixLowValue, scaleFactor, pen, curve.IsSelected,
+                                curve.Points[i]);
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
+    }
 }
