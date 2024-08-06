@@ -173,7 +173,7 @@
     <value>Starting msconvert conversion.</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-    <value>Retention time alignment: {0} vs {1}</value>
+    <value>RT alignment: {0} vs {1}</value>
   </data>
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
     <value>Looking for features occurring in multiple replicates</value>
@@ -187,11 +187,11 @@
   <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
     <value>Preparing for retention time alignment on "{0}"</value>
   </data>
-  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_" xml:space="preserve">
-    <value>Searching for peptide-like features with {0}</value>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features" xml:space="preserve">
+    <value>Searching for peptide-like features</value>
   </data>
-  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_" xml:space="preserve">
-    <value>Searching for persistent features in Hardklor results with {0}</value>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results" xml:space="preserve">
+    <value>Searching for persistent features in Hardklor results</value>
   </data>
   <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
     <value>Converting file "{0}" to {1}</value>
@@ -201,5 +201,23 @@
   </data>
   <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
     <value>Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution.</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion" xml:space="preserve">
+    <value>Waiting for Hardklor/Bullseye completion</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment" xml:space="preserve">
+    <value>Preparing {0} for RT alignment</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Reading__0_" xml:space="preserve">
+    <value>Reading {0}</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Align_replicates" xml:space="preserve">
+    <value>Align replicates</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates" xml:space="preserve">
+    <value>Searching for common features across replicates</value>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
+      <value>Waiting for next file</value>
   </data>
 </root>

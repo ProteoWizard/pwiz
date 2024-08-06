@@ -89,9 +89,12 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
 
                 SetCsvFileClipboardText(GetTestPath("Energy_TransitionList.csv"));
+                var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers", 5);
+                OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
+
                 RunUI(() =>
                 {
-                    SkylineWindow.Paste();
                     AdjustSequenceTreePanelWidth();
                 });
 

@@ -271,19 +271,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         private void Stamp(float[,] histogram, float[,] stamp, int x, int y)
         {
-            for (int i = x - stamp.GetLength(0)/2; i <= x + stamp.GetLength(0)/2; i++)
+            var stampLength0 = stamp.GetLength(0); // GetLength is more expensive than you'd think
+            var stampLength1 = stamp.GetLength(1);
+            var histogramLength0 = histogram.GetLength(0);
+            var histogramLength1 = histogram.GetLength(1);
+
+            for (int i = x - stampLength0/2; i <= x + stampLength0 / 2; i++)
             {
                 if(i < 0)
                     continue;
-                if (i >= histogram.GetLength(0))
+                if (i >= histogramLength0)
                     break;
-                for (int j = y - stamp.GetLength(1)/2; j <= y + stamp.GetLength(1)/2; j++)
+                for (int j = y - stampLength1/2; j <= y + stampLength1/2; j++)
                 {
                     if(j < 0)
                         continue;
-                    if (j >= histogram.GetLength(1))
+                    if (j >= histogramLength1)
                         break;
-                    histogram[i, j] += stamp[i - x + stamp.GetLength(0)/2, j - y + stamp.GetLength(1)/2];
+                    histogram[i, j] += stamp[i - x + stampLength0 / 2, j - y + stampLength1/2];
                 }
             }
         }
