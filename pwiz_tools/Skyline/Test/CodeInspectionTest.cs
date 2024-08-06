@@ -376,6 +376,25 @@ namespace pwiz.SkylineTest
             }
         }
 
+        private HashSet<string> UntestedTutorialLinks = new HashSet<string>();
+
+        /// <summary>
+        /// Make sure the links we show in the startup page are the ones we're testing
+        /// Get a list of current links, winnow it down as they are located in test files
+        /// </summary>
+        void FindCurrentTutorialLinks(string root)
+        {
+            var resourceFilePath = Path.Combine(root, "Controls\\Startup\\TutorialLinkResources.resx");
+            foreach (var line in File.ReadAllLines(resourceFilePath))
+            {
+                if (line.Contains("<value>https"))
+                {
+                    // Look for same string, but quoted, in other files. Assume untested until shown otherwise.
+                    UntestedTutorialLinks.Add($"\"{line.Split('>')[1].Split('<')[0]}\"");
+                }
+            }
+        }
+
         /// <summary>
         /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations 
         /// </summary>
@@ -588,6 +607,9 @@ namespace pwiz.SkylineTest
 
             InspectTutorialAuditLogs(root, results);
 
+            FindCurrentTutorialLinks(root); // Make sure the links we show in the startup page are the ones we're testing
+
+
             InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
 
             var errorCounts = new Dictionary<PatternDetails, int>();
@@ -629,6 +651,15 @@ namespace pwiz.SkylineTest
                                         || lines.Any(l => l.Contains(patternDetails.Cue))); // File contains required cue
                             }).ToDictionary(k => k.Key, k => k.Value.Reason)
                             : null;
+
+                    // See if any of the tutorial links are mentioned here, if so remove from list
+                    foreach (var tutorialLink in UntestedTutorialLinks.ToArray())
+                    {
+                        if (content.Contains(tutorialLink))
+                        {
+                            UntestedTutorialLinks.Remove(tutorialLink);
+                        }
+                    }
 
                     var errors = new List<string>();
                     var warnings = new List<string>();
@@ -757,6 +788,12 @@ namespace pwiz.SkylineTest
                         }
                     }
                 }
+            }
+
+            // List all tutorial links that aren't tested
+            foreach (var link in UntestedTutorialLinks)
+            {
+                results.Add($"{link} is mentioned in Controls\\Startup\\TutorialLinkResources.resx but is not found in any test. Is it a stale reference, or untested?");
             }
 
             if (TODOs.Any())
