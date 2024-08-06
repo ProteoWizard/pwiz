@@ -2525,7 +2525,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
         public double? RetentionTime { get; set; }
-        public IonMobilityAndCCS IonMobilityInfo { get; private set; }
+        public IonMobilityAndCCS IonMobilityInfo { get; set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
 
         public bool Equals(SpectrumInfoLibrary other)

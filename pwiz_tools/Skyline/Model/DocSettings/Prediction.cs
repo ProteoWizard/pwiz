@@ -323,9 +323,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 // have changed.  This is important to avoid an infinite loop when
                 // not enough information is present to actually calculate the Conversion
                 // parameter.
-                using (var enumPrevious = previous.PeptideTransitionGroups.GetEnumerator())
+                using (var enumPrevious = previous.MoleculeTransitionGroups.GetEnumerator())
                 {
-                    foreach (var nodeGroup in document.PeptideTransitionGroups)
+                    foreach (var nodeGroup in document.MoleculeTransitionGroups)
                     {
                         if (!enumPrevious.MoveNext())
                             return true;
@@ -1196,6 +1196,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
+        #endregion
+
+        #region test support
+        public virtual string PersistAsSmallMolecules(string pathDestDir, SrmDocument document)
+        {
+            return null;
+        }
         #endregion
     }
 

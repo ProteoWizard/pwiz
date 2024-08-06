@@ -215,10 +215,10 @@
     <value>意外停机</value>
   </data>
   <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
-    <value>请选择缺失文件所属的文件夹。</value>
+    <value>请选择缺失文件的所属文件夹。</value>
   </data>
   <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
-    <value>正在下载所需的文件...</value>
+    <value>正在下载所需的文件…</value>
   </data>
   <data name="SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_" xml:space="preserve">
     <value>需要以下文件。您是否要下载?</value>

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 13</value>
@@ -144,11 +147,14 @@
     <value>21</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnCreateDb.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="btnCreateDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 328</value>
+    <value>299, 327</value>
   </data>
   <data name="btnCreateDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -178,7 +184,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 45</value>
+    <value>298, 45</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -208,7 +214,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>273, 13</value>
+    <value>299, 13</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -231,11 +237,14 @@
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
+  <data name="btnBrowseDb.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="btnBrowseDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnBrowseDb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 420</value>
+    <value>299, 419</value>
   </data>
   <data name="btnBrowseDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -258,11 +267,14 @@
   <data name="&gt;&gt;btnBrowseDb.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
+  <data name="textOpenDatabase.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
   <data name="textOpenDatabase.Location" type="System.Drawing.Point, System.Drawing">
     <value>26, 422</value>
   </data>
   <data name="textOpenDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
+    <value>264, 20</value>
   </data>
   <data name="textOpenDatabase.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -414,11 +426,14 @@
   <data name="&gt;&gt;radioUseList.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
+  <data name="textNewDatabase.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
   <data name="textNewDatabase.Location" type="System.Drawing.Point, System.Drawing">
     <value>26, 330</value>
   </data>
   <data name="textNewDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
+    <value>264, 20</value>
   </data>
   <data name="textNewDatabase.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -495,11 +510,14 @@
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
+  <data name="textImportText.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
   <data name="textImportText.Location" type="System.Drawing.Point, System.Drawing">
     <value>26, 285</value>
   </data>
   <data name="textImportText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
+    <value>264, 20</value>
   </data>
   <data name="textImportText.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -516,11 +534,14 @@
   <data name="&gt;&gt;textImportText.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
+  <data name="btnBrowseText.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="btnBrowseText.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnBrowseText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 283</value>
+    <value>299, 282</value>
   </data>
   <data name="btnBrowseText.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -600,11 +621,14 @@
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="textNewDatabaseProteins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
   <data name="textNewDatabaseProteins.Location" type="System.Drawing.Point, System.Drawing">
     <value>26, 195</value>
   </data>
   <data name="textNewDatabaseProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
+    <value>264, 20</value>
   </data>
   <data name="textNewDatabaseProteins.TabIndex" type="System.Int32, mscorlib">
     <value>18</value>
@@ -621,11 +645,14 @@
   <data name="&gt;&gt;textNewDatabaseProteins.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="btnCreateDbProteins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="btnCreateDbProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnCreateDbProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 193</value>
+    <value>299, 192</value>
   </data>
   <data name="btnCreateDbProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -706,13 +733,19 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>358, 463</value>
+    <value>384, 463</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Create iRT calculator</value>
+    <value>Create iRT Calculator</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CreateIrtCalculatorDlg</value>

@@ -102,7 +102,13 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
                 ? Transition.CustomIon.GetMass(MzMassType)
-                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
+                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);
+        }
+
+        public TypedMass GetMoleculeMass(CustomMolecule molecule)
+        {
+            Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
+            return molecule.GetMass(MzMassType);
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }

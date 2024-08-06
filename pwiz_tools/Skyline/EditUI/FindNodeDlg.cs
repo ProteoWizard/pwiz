@@ -87,6 +87,15 @@ namespace pwiz.Skyline.EditUI
             set { cbCaseSensitive.Checked = value; }
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            if (!Program.SkylineOffscreen)
+            {
+                this.Focus(); // It's natural to want to start typing the search term immediately after hitting ctrl-F
+            }
+            base.OnShown(e);
+        }
+
         private void textSequence_TextChanged(object sender, EventArgs e)
         {
             EnableDisableButtons();
