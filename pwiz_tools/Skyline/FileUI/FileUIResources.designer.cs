@@ -117,6 +117,16 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unavailable: no matching iRT standards found.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matchin" +
+                        "g_iRT_standards_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Known iRTs.
         /// </summary>
         public static string ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs {

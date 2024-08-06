@@ -964,23 +964,40 @@ namespace pwiz.SkylineTestUtil
                     continue;
                 }
 
-                try  // Was column a filename?
+                // Did column contain a filename?
+                var partsE = pathE.Trim().Split('"'); // e.g. 'value="c:\foo\bar.baz",' => {'value=', '"c:\foo\bar.baz"', ','}
+                var partsA = pathA.Trim().Split('"'); 
+                if (partsE.Length != partsA.Length)
                 {
-                    var fileE = Path.GetFileName(pathE.Trim().Trim('"')); // Unquote if needed
-                    var fileA = Path.GetFileName(pathA.Trim().Trim('"')); // Unquote if needed
-                    if (string.Equals(fileE, fileA) ||
-                        (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
-                    {
-                        // Empty strings are harder to see as columns.
-                        // So, replace the matching paths with visible matching text.
-                        const string pathSubstitutionText = "path";
-                        lineExpected = lineExpected.Replace(pathE, pathSubstitutionText);
-                        lineActual = lineActual.Replace(pathA, pathSubstitutionText);
-                    }
+                    return; // No way we're cleaning this up to make a match
                 }
-                catch
+                for (var p = 0; p < partsE.Length; p++)
                 {
-                    // ignored
+                    var partE = partsE[p].Trim();
+                    var partA = partsA[p].Trim();
+                    if (string.Equals(partE, partA))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var fileE = Path.GetFileName(partE);
+                        var fileA = Path.GetFileName(partA);
+                        if (string.Equals(fileE, fileA) ||
+                            (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
+                        {
+                            // Empty strings are harder to see as columns.
+                            // So, replace the matching paths with visible matching text.
+                            const string pathSubstitutionText = "path";
+                            lineExpected = lineExpected.Replace(pathE, pathSubstitutionText);
+                            lineActual = lineActual.Replace(pathA, pathSubstitutionText);
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
         }

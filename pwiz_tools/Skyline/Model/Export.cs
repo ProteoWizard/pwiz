@@ -3214,7 +3214,7 @@ namespace pwiz.Skyline.Model
 
             return predictedRT.HasValue
                 ? (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(c.parent.CultureInfo) +
-                  c.parent.FieldSeparator + Math.Round(windowRT/2, 1).ToString(c.parent.CultureInfo)
+                  c.parent.FieldSeparator + Math.Round(windowRT, 1).ToString(c.parent.CultureInfo)
                 : c.parent.FieldSeparator.ToString();
         });
         public TransitionField FRAGMENTOR_FIELD = new TransitionField(c => c.parent.Fragmentor.ToString(c.parent.CultureInfo));
@@ -3544,7 +3544,7 @@ namespace pwiz.Skyline.Model
                 {
                     predictedRT = Math.Max(predictedRT.Value, windowRT.Window/2 + AGILENT_MIN_START_ACQUISITION_TIME);
                     retentionTime = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);  // Ret. Time (min)
-                    deltaRetentionTime = Math.Round(windowRT.Window/2, 1).ToString(CultureInfo); // Delta Ret. Time (min)
+                    deltaRetentionTime = Math.Round(windowRT, 1).ToString(CultureInfo); // Delta Ret. Time (min)
                 }
             }
             string isolationWidth = string.Format(CultureInfo, @"Narrow (~{0:0.0} m/z)", 1.3);
