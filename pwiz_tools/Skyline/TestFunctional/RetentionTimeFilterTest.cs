@@ -125,7 +125,8 @@ namespace pwiz.SkylineTestFunctional
                 // Choose a scheduling replicate (the one saved above)
                 RunUI(() => Assert.IsTrue(chooseSchedulingReplicatesDlg.TrySetReplicateChecked(
                     chromSetForScheduling, true)));
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(chooseSchedulingReplicatesDlg.OkDialog);
+                var promptToSaveDlg = ShowDialog<AlertDlg>(chooseSchedulingReplicatesDlg.OkDialog);
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(promptToSaveDlg.ClickNo);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("40fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
@@ -190,7 +191,8 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(calcName, SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator.Name);
                 docBeforeImport = WaitForDocumentChange(docBeforeSettingsChange);
                 Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                var promptToSaveDlg = ShowDialog<AlertDlg>(SkylineWindow.ImportResults);
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(promptToSaveDlg.ClickNo);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
