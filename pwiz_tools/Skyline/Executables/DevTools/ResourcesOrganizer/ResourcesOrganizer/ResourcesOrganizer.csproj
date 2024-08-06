@@ -24,6 +24,12 @@
     <Reference Include="CsvHelper">
       <HintPath>..\lib\CsvHelper.dll</HintPath>
     </Reference>
+    <Reference Include="F23.StringSimilarity">
+      <HintPath>..\lib\F23.StringSimilarity.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="Iesi.Collections">
       <HintPath>..\lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
@@ -64,7 +70,7 @@
 
   <ItemGroup>
     <Compile Update="Program.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
 

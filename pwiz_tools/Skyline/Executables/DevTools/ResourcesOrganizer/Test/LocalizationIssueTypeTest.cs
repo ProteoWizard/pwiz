@@ -59,7 +59,7 @@ namespace Test
 
             var exportedPath = Path.Combine(runDirectory, "exported.resx");
             
-            ExportFile(withImportedTranslations.ResourcesFiles.Values.Single(), exportedPath);
+            ExportFile((ResourcesFile)withImportedTranslations.ResourcesFiles.Values.Single(), exportedPath);
             var roundTrip = ResourcesFile.Read(exportedPath, resxFileName);
             Assert.IsNotNull(roundTrip);
             var roundTripCopyrightEntry = roundTrip.FindEntry(copyrightEntry.Name);

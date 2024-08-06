@@ -35,7 +35,7 @@ namespace Test
             var newResourcesFile = ResourcesFile.Read(Path.Combine(runDirectory, "v24." + fileName), fileName);
             var newDatabase = ResourcesDatabase.Empty.AddFile(newResourcesFile);
             var withImportedTranslations = newDatabase.ImportLastVersion(oldDatabase, Languages, out _, out _);
-            var fileWithImported = withImportedTranslations.ResourcesFiles.Values.Single();
+            var fileWithImported = (ResourcesFile) withImportedTranslations.ResourcesFiles.Values.Single();
             var entry = fileWithImported.FindEntry("btnAddFile.Location");
             Assert.IsNotNull(entry);
             var localizedValue = entry.GetTranslation("ja");

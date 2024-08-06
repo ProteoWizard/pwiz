@@ -22,38 +22,9 @@ using System.Xml.Linq;
 
 namespace ResourcesOrganizer.ResourcesModel
 {
-    public record ResourcesFile(string RelativePath)
+    public record ResourcesFile(string RelativePath) : LocalizableFile(RelativePath)
     {
         public static readonly XName XmlSpace = XName.Get("space", "http://www.w3.org/XML/1998/namespace");
-        private ImmutableList<ResourceEntry> _entries = [];
-
-        public ImmutableList<ResourceEntry> Entries
-        {
-            get
-            {
-                return _entries;
-            }
-            init
-            {
-                foreach (var entry in value)
-                {
-                    if (entry.Invariant.File != null && entry.Invariant.File != RelativePath)
-                    {
-                        string message = string.Format("File {0} in entry {1} should be {2}", entry.Invariant.File,
-                            entry.Invariant.Name, RelativePath);
-                        throw new ArgumentException(message);
-                    }
-                }
-                _entries = value;
-            }
-        }
-
-        public ResourceEntry? FindEntry(string name)
-        {
-            return Entries.FirstOrDefault(entry => entry.Name == name);
-        }
-        public string XmlContent { get; init; } = string.Empty;
-
         public static ResourcesFile Read(string absolutePath, string relativePath)
         {
             var entries = new List<ResourceEntry>();
@@ -165,6 +136,11 @@ namespace ResourcesOrganizer.ResourcesModel
             return node is XElement;
         }
 
+        public override LocalizableFile Merge(LocalizableFile other)
+        {
+            return Add((ResourcesFile) other);
+        }
+
         [Pure]
         public ResourcesFile Add(ResourcesFile resourcesFile)
         {
@@ -224,6 +200,12 @@ namespace ResourcesOrganizer.ResourcesModel
             return true;
         }
 
+        public override string ExportFile(string? language, bool overrideAll)
+        {
+            var doc = ExportResx(language, overrideAll);
+            return TextUtil.SerializeDocument(doc);
+        }
+
         public XDocument ExportResx(string? language, bool overrideAll)
         {
             var document = XDocument.Load(new StringReader(XmlContent));
@@ -276,7 +258,7 @@ namespace ResourcesOrganizer.ResourcesModel
             return document;
         }
 
-        public ResourcesFile ImportLocalizationRecords(string language, ILookup<string, LocalizationCsvRecord> records, out int matchCount, out int changeCount)
+        public override LocalizableFile ImportLocalizationRecords(string language, ILookup<string, LocalizationCsvRecord> records, out int matchCount, out int changeCount)
         {
             matchCount = 0;
             changeCount = 0;
@@ -318,6 +300,13 @@ namespace ResourcesOrganizer.ResourcesModel
             }
 
             return this with { Entries = entries.ToImmutableList() };
+        }
+
+        public static readonly string FILE_TYPE = "resx";
+
+        public override string FileType
+        {
+            get { return FILE_TYPE; }
         }
     }
 }

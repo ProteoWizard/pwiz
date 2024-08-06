@@ -1,0 +1,265 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="..\..\..\SkylineStyles.css">
+</head>
+
+<body>
+    <h1 class="document-title">Skyline MS1フィルタ用DDA検索</h1>
+    <p>Skylineを用いたターゲット質量分析は、Skylineドキュメントにインポートした質量分析計の生データの有益な情報を視覚的に表示します。測定対象となるペプチドとトランジションの最適化や積分境界の調整も可能です。SkylineはSRM（selected reaction
+        monitoring：選択反応モニタリング）またはMRM（multiple reaction monitoring:
+        複数反応モニタリング）質量分析データの定量解析ソフトとして開発されましたが、新たにMS1スペクトルの時間-強度クロマトグラムが抽出できるように機能が拡張され、データ依存MS/MSモードで計測されたデータを使用した質量分析測定によるペプチド定量データも使用できるようになりました。
+    </p>
+    <p>Skyline MS1フルスキャンフィルタでは、質量分析計をデータ依存測定 (DDA)
+        モードで操作した探索的なプロテオミクス実験のデータセットのインポートをサポートしています。生データのインポート後にSkylineの新しい機能や従来の機能を利用すると、多数の繰り返し測定データにおけるペプチドプリカーサーMS1シグナルの定量が容易になります。Skylineはデータの視覚化に非常に優れているため、このモードは他の「標識なし」の定量化ツールからの定量出力を視覚化し、よりよく理解するためにも使用できます。
+    </p>
+    <p>本チュートリアルは、Skylineを使ってDDAデータにおけるMS/MSスペクトルのペプチドスペクトル合致を実施したいときにSkyline MS1フィルタを有効に使用するために重要な以下の分野を網羅します。</p>
+    <ul>
+        <li>MS1フィルタ用のSkylineドキュメント作成</li>
+        <li>rawデータにDDA検索を実施して定量ターゲット候補を検索</li>
+    </ul>
+    <p>Skylineは、ターゲット質量分析研究のための、ベンダーに依存しないプラットフォームの提供を目指しています。Skylineは、Agilent、Bruker、SCIEX、島津製作所、Thermo-Scientific、Watersといった装置装置ベンダーからMS1フィルタの生データをインポートできるため、ここで得る専門知識はこれらのベンダーの装置を使用するあらゆる質量分析研究室に譲渡可能です。
+    </p>
+    <h1>はじめに</h1>
+    <p>チュートリアルを始める前に、以下のzipファイルをダウンロードしてください。</p>
+    <p><a href="https://skyline.ms/tutorials/DdaSearchMS1Filtering.zip">https://skyline.ms/tutorials/DdaSearchMS1Filtering.zip</a></p>
+    <p>この中のファイルを、以下のコンピュータ上のフォルダに解凍します。</p>
+    <p>C:\Users\brendanx\Documents</p>
+    <p>これにより以下の新しいフォルダが作成されます。</p>
+    <p>C:\Users\brendanx\Documents\DdaSearchMS1Filtering </p>
+    <p>本チュートリアルを開始する前に、Skylineをすで使用している場合は、Skylineをデフォルト設定に戻すことをお勧めします。デフォルト設定に戻すには、以下の操作を行います。 </p>
+    <ul>
+        <li>Skylineを起動します。</li>
+    </ul>
+    <ul class="keep-next">
+        <li><strong>開始ページ</strong>で、以下のような<strong>空のドキュメント</strong>をクリックします。 </li>
+    </ul>
+    <p><img src="image-0.png" /></p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで、[ <strong>デフォルト</strong> ] をクリックします。</li>
+        <li>現在の設定を保存するかどうかを尋ねるフォームで [ <strong>いいえ</strong> ] をクリックします。</li>
+    </ul>
+    <p>Skylineのこのインスタンスのドキュメント設定がデフォルトにリセットされました。</p>
+    <p>本チュートリアルはプロテオミクスに関するものであるため、以下の操作を行うとプロテオミクス用インターフェイスを選択できます。</p>
+    <ul>
+        <li>Skylineウィンドウの右上隅にあるユーザーインターフェイス管理をクリックし、[ <strong>プロテオミクス用インターフェイス</strong> ] をクリックします。 </li>
+    </ul>
+    <p><img src="image-1.png" /></p>
+    <p>Skylineは、ウィンドウの右上隅のタンパク質アイコン <img src="image-2.png" /> で表示される分子モードで動作しています。</p>
+    <p>この空のドキュメントは多数の方法で編集できますが、本チュートリアルでは質量分析計データ依存測定（DDA）データファイルの検索、ターゲットペプチドの設定、これらのファイルからのクロマトグラムのインポートという一連の流れをガイドする、ウィザードというフォームを使用します。</p>
+    <p>DDA検索を始める前に、Skylineがデフォルトで使用する内部標準を変更する必要があります。</p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>ペプチド設定</strong> ] をクリックします。</li>
+        <li>[ <strong>修飾</strong> ] タブをクリックします。</li>
+        <li>[ <strong>内部標準タイプ</strong> ] を「<strong>なし</strong>」に設定します。</li>
+    </ul>
+    <p class="keep-next">[ ペプチド設定 ] フォームは以下のようになります。</p>
+    <p><img src="image-3.png" /></p>
+    <ul>
+        <li>[ <strong>ペプチド設定</strong> ] フォームの [ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <h1>Skylineドキュメントにペプチドを読み込むDDAファイルの検索</h1>
+    <p>[ <strong>ペプチド検索をインポート</strong> ] ウィザードを使用することで、DDAデータファイル内のMS/MSスペクトルからペプチド検索を実行できます。</p>
+    <p>まず、以下の操作を行って新しいドキュメントを保存します。</p>
+    <ul>
+        <li>ツールバーの [ <strong>保存</strong> ] ボタン(Ctrl+S)をクリックします。</li>
+        <li>本チュートリアル用に作成したDdaSearchMS1Filteringフォルダに移動します。</li>
+        <li>[ <strong>ファイル名</strong> ] フィールドに「DdaSearchMS1FilteringTutorial.sky」と入力します。</li>
+        <li>[ <strong>保存</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>[ <strong>ペプチド検索をインポート</strong> ] ウィザードを以下のように開始します。</p>
+    <ul>
+        <li>[ <strong>ファイル</strong> ] メニューで [ <strong>インポート</strong> ] を選択し、[ <strong>ペプチド検索</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">以下のようなフォームが表示されます。</p>
+    <p><img alt="Graphical user interface, text, application
+
+Description automatically generated" src="image-4.png" /></p>
+    <p>[ <strong>構築</strong> ] オプションは、DDA検索エンジンからの出力（CometからのpepXMLファイル、Mascotからの.datなど）に、また [ <strong>DDA検索を実行</strong> ]
+        オプションは生データ（RAW、WIFF、*.d、mzML、mzXMLなど）に対して有効です。本チュートリアルのmz5ファイルは、質量分析計が生成した元のプロファイルThermo RAWファイルよりも高速でダウンロードできるようにセントロイド化されています。</p>
+    <p>次の操作を行って含まれているDDA mz5ファイルを検索に追加します。</p>
+    <ul>
+        <li>[ <strong>DDA検索を実行</strong> ] ラジオオプションをクリックします。</li>
+        <li>[ <strong>ファイルを追加</strong> ] ボタンをクリックします。</li>
+        <li>本チュートリアル用に作成したDdaSearchMS1Filteringフォルダにあるmz5ファイルをすべて選択します。</li>
+        <li>[ <strong>開く</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">ウィザードフォームは以下のようになります。</p>
+    <p><img alt="Graphical user interface, text
+
+Description automatically generated" src="image-5.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">3つのmz5ファイルに共通のプリフィックスをどう取り扱うかを尋ねるフォームが表示されます。 </p>
+    <p><img src="image-6.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードが [ <strong>修飾を追加</strong> ]
+        ページを開きます。ここでは、ドキュメント中のDDA検索に含めたいアミノ酸修飾すべてがリストされています。ここでは、固定修飾と変数修飾を区別することが重要です。固定（静的とも呼ばれる）修飾は、常に指定されたアミノ酸に適用されます。たとえば、Carbamidomethyl
+        Cではデータ中のすべてのシステインがアルキル化すると予測されるため、通常は固定修飾として扱われます。酸化はサンプルの取り扱いによって運次第であるため、Oxidation Mはほぼ常に変数修飾として扱われます。Skylineの検索は、同位体標識をほぼ常に変数として扱いますが、[
+        <strong>修飾を編集</strong> ] ボタンをクリックすれば他の修飾を固定として扱うか変数として扱うかを変更できます。</p>
+    <p class="keep-next">また、このページからドキュメントに修飾を追加することもできます。ドキュメントがデフォルトにリセットされているため、リストはCarbamidomethyl (C)のみで開始となります。</p>
+    <p><img src="image-7.png" /></p>
+    <p>これらのデータはSILAC標識であるため、ここでヘビー標識の修飾を追加する必要があります。これらを追加するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>修飾を編集</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>ヘビー修飾を編集</strong> ] メニューオプションをクリックします。</li>
+        <li>[ <strong>同位体修飾</strong> ] リストの横にある [ <strong>リストを編集</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>同位体修飾を編集</strong> ] フォームの [ <strong>追加</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>同位体修飾を編集</strong> ] フォームの [ <strong>名前</strong> ] フィールドに「Label:13C(6)15N(2) (C-term K)」と入力します。</li>
+        <li>[ <strong>名前</strong> ] フィールドの右にある下向き矢印をクリックし、同じ名前の項目をクリックします。これによってUnimodから特異性と組成フィールドが入力されます。</li>
+    </ul>
+    <p class="keep-next">[ <strong>同位体修飾を編集</strong> ] フォームは以下のように表示されます。</p>
+    <p><img src="image-8.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>以下の手順を行って2つ目の同位体修飾を追加します。</p>
+    <ul>
+        <li>[ <strong>同位体修飾を編集</strong> ] フォームの [ <strong>追加</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>同位体修飾を編集</strong> ] フォームの [ <strong>名前</strong> ] ドロップダウンリストから「Label:13C(6)15N(4) (C-term R)」を選択します。</li>
+    </ul>
+    <p>アルギニン分子内にあるすべての炭素原子に<strong>13</strong>C を、すべての窒素原子に<strong>15</strong>Nを使用するように設定するため、 [ 13C ] および [ 15N ]
+        のチェックボックスが自動的にオンになっており、総質量シフトは10ダルトンとなります（6x <sup>13</sup>C + 4x <sup>15</sup>N）。</p>
+    <p class="keep-next">[ <strong>同位体修飾を編集</strong> ] フォームは以下のように表示されます。</p>
+    <p><img src="image-9.png" /></p>
+    <p>Skylineは13Cおよび15Nを用いて、モノアイソトピック質量と平均質量のの計算を自動的に行います（リジン（K）については約8ダルトン、アルギニン（R）については約10ダルトンとなります）。ヘビー修飾の追加を終了するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>同位体修飾を編集</strong> ] フォームの [ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>同位体修飾を編集</strong> ] フォームの [ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>修飾を追加 </strong> ] リストで、先ほど作成した「Label:13C(6)15N(2) (C-term K)」修飾および<strong>「</strong>Label:13C(6)15N(4) (C-term
+            R)<strong>」</strong>修飾のチェックボックスをオンにします。</li>
+    </ul>
+    <p>今度はOxidation (M)を構造修飾として追加します。</p>
+    <ul>
+        <li>[ <strong>修飾を編集</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>構造修飾を編集</strong> ] メニューオプションをクリックします。</li>
+        <li>[ <strong>同位体修飾</strong> ] リストの横にある [ <strong>リストを編集</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>構造修飾を編集</strong> ] フォームの [ <strong>追加</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>構造修飾を編集</strong> ] フォームの [ <strong>名前</strong> ] フィールドに、「Oxidation (M)」と入力します。</li>
+        <li>[ <strong>名前</strong> ] フィールドの右にある下向き矢印をクリックし、同じ名前の項目をクリックします。これによってUnimodから特異性と組成フィールドが入力されます。</li>
+        <li>[ <strong>構造修飾を編集</strong> ] フォームの [ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>構造修飾を編集</strong> ] フォームの [ <strong>OK</strong> ] ボタンをクリックします。</li>
+        <li>[ <strong>修飾を追加</strong> ] リストで、先ほど作成した「Oxidation (M)」修飾のチェックボックスをオンにします。</li>
+        <li>また、「Carbamidomethyl (C)」のチェックボックスもオンになっていることを確認します。これは、デフォルト設定が選択されたためです。</li>
+    </ul>
+    <p class="keep-next">この時点で、[ <strong>修飾を追加</strong> ] ページは以下のようになります。</p>
+    <p><img src="image-10.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードが [ <strong>フルスキャン設定を行う</strong> ] ページに進みます。</p>
+    <ul>
+        <li>[ <strong>質量精度</strong> ] フィールドに「20」と入力します。</li>
+    </ul>
+    <p class="keep-next">このページの他のフィールドは、本チュートリアルで使用可能なデフォルト設定のままにしておいてください。ウィザードは以下のようになります。</p>
+    <p><img src="image-11.png" /></p>
+    <ul>
+        <li>この設定の詳細については、<a
+                href="https://skyline.ms/_webdav/home/software/Skyline/@files/tutorials/MS1Filtering-20_1.pdf#page=9">MS1フルスキャンフィルタのチュートリアル</a>（9ページ）を参照してください。
+        </li>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードの [ <strong>FASTAををインポート</strong> ] ページに移動します。本チュートリアルでは、先頭に追加されたシグマアルドリッチのUniversal Proteomics Standard
+        (UPS)のシークエンスでヒトタンパク質FASTAを使用します（SkylineがUPSと非UPSタンパク質の間で共有されるあらゆるペプチドにこのアクセッション番号を使用できるようにするため）。FASTAを選択するには、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>参照</strong> ] ボタンをクリックします。</li>
+        <li>本チュートリアル用に作成した「2014_01_HUMAN_UPS.fasta」ファイルを選択します。</li>
+        <li>[ <strong>FASTAを開く</strong> ] フォームの [ <strong>開く</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">ウィザードは以下のようになります。</p>
+    <p><img alt="Graphical user interface, text, application, email
+
+Description automatically generated" src="image-12.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p>ウィザードが [ <strong>検索設定の調整</strong> ] ページを開きます。ここでは、DDA検索に最も重要なパラメータを設定できます。本チュートリアルでは、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>MS1許容誤差</strong> ] フィールドに「5」と入力します。（テキストボックスから移動すると、フォームは単位がppmであると推定し、単位ボックスをそのように設定するので注意してください。）</li>
+        <li>[ <strong>MS2許容誤差</strong> ] フィールドに「10」と入力します。</li>
+    </ul>
+    <p class="keep-next">フォームは以下のようになります。</p>
+    <p><img src="image-13.png" /></p>
+    <ul>
+        <li>[ <strong>次へ</strong> ] ボタンをクリックして検索を開始します。</li>
+    </ul>
+    <p class="keep-next">[ <strong>DDA検索</strong> ] ページが検索の進捗状況を示します。このページの [ <strong>検索をキャンセル</strong> ] ボタンをクリックして検索をキャンセルすることもできます。</p>
+    <p><img alt="Text
+
+Description automatically generated" src="image-14.png" /></p>
+    <p>検索が完了したら、以下の操作を行います。</p>
+    <ul>
+        <li>[ <strong>完了</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <p class="keep-next">
+        Skylineが検索結果からスペクトルライブラリの構築を開始します。ライブラリの構築が完了するとメッセージボックスが表示され、信頼性が等しい複数の異なるペプチドと解釈することのできるスペクトルがあり、これらのペプチドは無視されるという警告が表示されます。</p>
+    <p><img alt="Text
+
+Description automatically generated" src="image-15.png" /></p>
+    <ul>
+        <li>[ <strong>OK</strong> ] ボタンをクリックしてメッセージを閉じます。</li>
+    </ul>
+    <p class="keep-next">Skylineはその後、ライブラリのドキュメントへのインポートを開始します。インポートが終了すると、ドキュメントにタンパク質を含む基準を設定するようにプロンプトされます。</p>
+    <p><img alt="Graphical user interface, text
+
+Description automatically generated" src="image-16.png" /></p>
+    <ul>
+        <li>[ <strong>反復ペプチドを削除</strong> ] チェックボックスをオンにします（一意ではないペプチドに対して最初に発生するペプチドを維持）。</li>
+        <li>[ <strong>OK</strong> ] ボタンをクリックします。</li>
+    </ul>
+    <h1>インポートされたデータを表示するSkylineの設定</h1>
+    <p>タンパク質がドキュメントにインポートされると、メインSkylineウィンドウで [ <strong>ターゲット</strong> ]
+        ビューの上部にUPSタンパク質が表示されます。そこには<strong>6,025</strong>個のタンパク質が表示されます（ステータスバーでカウントされる）。Skylineはまた、クロマトグラムの抽出を開始し、進捗状況を [ <strong>結果をインポート</strong> ]
+        フォームに表示します。クロマトグラムの抽出の完了には数分かかります。ただし以下の最終ステップ以外はインポート中にそのまま操作を続けることができます。</p>
+    <ul>
+        <li>3番目のタンパク質「P01112ups|RASH_HUMAN_UPS」の横にある [+] アイコンをクリックします。.</li>
+        <li>そのタンパク質の3つ目のペプチド「R.TGEGFL<strong>C</strong>VFAINNTK.S」の横にある [+] アイコンをクリックします。</li>
+        <li>そのペプチドの最初のプリカーサー<a id="OLE_LINK1"></a><a
+                id="OLE_LINK2"></a>835.9140++をクリックすると、プリカーサーのクロマトグラムとペプチドのMS/MSスペクトルが表示されます。（なおペプチドシークエンス内の太字の下線付きの残基「<strong>C</strong>」は、カルバミドメチルシステインを示します。）
+        </li>
+        <li>[ <strong>ビュー</strong> ] メニュー上にMS/MSスペクトルが見られない場合は、[ <strong>ライブラリ一致</strong> ] をクリックしてください。</li>
+        <li>[ <strong>ライブラリ一致</strong> ] ビューで下図の画像ほど多くの注釈付きピークが表示されない場合は、[ <strong>ビュー</strong> ] メニューで [ <strong>イオンタイプ</strong> ] を選択し、[
+            <strong>B</strong> ] および [ <strong>Y</strong> ] のチェックボックスをオンにします。</li>
+        <li>ペプチドの全クロマトグラムが見られない場合は、[ <strong>ビュー</strong> ] メニューで [ <strong>自動ズーム</strong> ] から [ <strong>なし</strong> ]（Shift+F11）をクリックします。</li>
+        <li>クロマトグラム上を右クリックし、[<strong> ペプチドが同定された回数 </strong>] を選択し、<br />[ <strong>調整済み</strong> ] がオンになっていない場合はオンにしてください。</li>
+    </ul>
+    <p class="keep-next">Skylineウィンドウは以下のようになります。</p>
+    <p><img alt="Graphical user interface
+
+Description automatically generated" src="image-17.png" /></p>
+    <p>このドキュメントは、DDAモードでの測定結果3件のインポートを含み、MS1フィルタ向けにフル設定されています。インポートウィザードで [ <strong>MS/MSのIDの時間（5分）のスキャンのみを使用します</strong> ]
+        の設定が選択されているため、このビューのクロマトグラムの表示時間範囲は約10分（133～143分）となっています。SkylineドキュメントをMS1フィルタ向けに設定しているため、三連四重極SRM測定結果にはプロダクトイオントランジション（y-イオンなど）の代わりに、ペプチドTGEGFL<strong>C</strong>VFAINNTKのプリカーサー
+        - 835.914++、プリカーサー[M+1] - 836.4154++、[M+2] - 836.9164++などの異なるプリカーサー同位体ピークが表示されることに留意してください。</p>
+    <p>特に特定のMS1フィルタデータの視覚化をさらに向上させるその他の複数の機能を設定するには、以下の手順を実施します。</p>
+    <ul>
+        <li>[ <strong>設定</strong> ] メニューで [ <strong>すべて積分</strong> ] のチェックをオンにします。</li>
+    </ul>
+    <p>これにより、ピークが最大ピークと共溶出しているように見えるかどうかに関わらず、Skylineではピークグループ内のすべてのクロマトグラム（ここではプリカーサーイオンM、M+1、およびM+2）が合わせて積分されます。以前のように積分ピーク面積に影響することはなくなりました。</p>
+    <ul>
+        <li>[ <strong>ビュー</strong> ] メニューで、[ <strong>ピーク領域</strong> ] を選択して [ <strong>繰り返し測定の比較</strong> ] をクリックします。</li>
+    </ul>
+    <p class="keep-next">グラフを含む次のようなウィンドウが表示されます。</p>
+    <p><img src="image-18.png" /></p>
+    <p>以下の操作を行うと、[ <strong>ピーク領域</strong> ] ウィンドウを好きな場所にドッキングできます。</p>
+    <ul>
+        <li>マウスの左ボタンを押したまま、マウスを [ <strong>ライブラリの一致</strong> ] へドラッグします。</li>
+        <li>十字形に並んだ5個のアイコンのセットが表示されたら、マウスを下部アイコンに移動させてマウスの左ボタンから指を離し、Skylineウィンドウの右端で [ <strong>ピーク領域</strong> ] と [ <strong>ライブラリの一致</strong> ]
+            を上下に分割表示します。</li>
+        <li>同様の手順で、[ <strong>ライブラリの一致</strong> ] ビューを [ <strong>ターゲット</strong> ] ビューの下に移動します。</li>
+        <li>[ <strong>ビュー</strong> ] メニューで、 [ <strong>自動ズーム</strong> ] を選択し、 [ <strong>最適ピーク</strong> ]（F11）をクリックします。</li>
+        <li>[ <strong>ビュー</strong> ] メニューで、[ <strong>グラフを配置</strong> ] を選択して [ <strong>列</strong> ] をクリックします。</li>
+        <li>クロマトグラムグラフを右クリックし、[ <strong>凡例</strong> ] をクリックしてクロマトグラムグラフ中の凡例の表示をオフにします。</li>
+    </ul>
+    <p class="keep-next">Skylineウィンドウは以下のようになります。</p>
+    <p><img alt="Graphical user interface, application, Word
+
+Description automatically generated" src="image-19.png" /></p>
+    <p>ここからは、<a
+            href="https://skyline.ms/_webdav/home/software/Skyline/@files/tutorials/MS1Filtering-20_1.pdf">MS1フルスキャンフィルタのチュートリアル</a>を見てDDAデータを使った作業についての詳細を学ぶことができます。
+    </p>
+</body>
+
+</html>

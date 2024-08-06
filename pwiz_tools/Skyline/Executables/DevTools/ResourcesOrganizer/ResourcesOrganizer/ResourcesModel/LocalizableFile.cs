@@ -1,0 +1,71 @@
+﻿using System.Collections.Immutable;
+
+namespace ResourcesOrganizer.ResourcesModel
+{
+    public abstract record LocalizableFile(string RelativePath)
+    {
+        private ImmutableList<ResourceEntry> _entries = [];
+
+        public ImmutableList<ResourceEntry> Entries
+        {
+            get
+            {
+                return _entries;
+            }
+            init
+            {
+                foreach (var entry in value)
+                {
+                    if (entry.Invariant.File != null && entry.Invariant.File != RelativePath)
+                    {
+                        string message = string.Format("File {0} in entry {1} should be {2}", entry.Invariant.File,
+                            entry.Invariant.Name, RelativePath);
+                        throw new ArgumentException(message);
+                    }
+                }
+                _entries = value;
+            }
+        }
+
+        public string XmlContent { get; init; } = string.Empty;
+
+        public abstract string FileType { get; }
+
+
+        public virtual LocalizableFile ImportLocalizationRecords(string language,
+            ILookup<string, LocalizationCsvRecord> records,
+            out int matchCount, out int changeCount)
+        {
+            matchCount = 0;
+            changeCount = 0;
+            return this;
+        }
+
+        public abstract string ExportFile(string? language, bool overrideAll);
+
+        public virtual LocalizableFile Merge(LocalizableFile other)
+        {
+            return this;
+        }
+
+        public ResourceEntry? FindEntry(string name)
+        {
+            return Entries.FirstOrDefault(entry => entry.Name == name);
+        }
+
+        public static LocalizableFile? Create(string fileType)
+        {
+            if (fileType == ResourcesFile.FILE_TYPE)
+            {
+                return new ResourcesFile(string.Empty);
+            }
+
+            if (fileType == HtmlFile.FILE_TYPE)
+            {
+                return new HtmlFile(string.Empty);
+            }
+
+            return null;
+        }
+    }
+}

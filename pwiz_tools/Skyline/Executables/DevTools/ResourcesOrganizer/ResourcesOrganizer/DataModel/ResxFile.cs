@@ -27,5 +27,7 @@ namespace ResourcesOrganizer.DataModel
         public string? FilePath { get; set; }
         [Property]
         public string? XmlContent { get; set; }
+        [Property]
+        public string FileType { get; set; }
     }
 }
