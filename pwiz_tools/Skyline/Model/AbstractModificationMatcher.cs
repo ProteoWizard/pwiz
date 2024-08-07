@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -473,24 +474,31 @@ namespace pwiz.Skyline.Model
                     SpectrumHeaderInfo libInfo;
                     if (nodePep != null && Settings.PeptideSettings.Libraries.TryGetLibInfo(key, out libInfo))
                     {
-                        var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
-                        var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
-                        nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
-                        SpectrumPeaksInfo spectrum;
-                        if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
+                        try
                         {
-                            // Add fragment and precursor transitions as needed
-                            var transitionDocNodes =
-                                Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
-                                    ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
-                                    : new List<DocNode>();
-
-                            if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
+                            var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
+                            var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
+                            nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                            SpectrumPeaksInfo spectrum;
+                            if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
                             {
-                                GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
+                                // Add fragment and precursor transitions as needed
+                                var transitionDocNodes =
+                                    Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
+                                        ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
+                                        : new List<DocNode>();
+
+                                if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
+                                {
+                                    GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
+                                }
+                                nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
+                                return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
                             }
-                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
-                            return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
+                        }
+                        catch (InvalidDataException e)
+                        {
+                            Trace.WriteLine(e.Message); // Adduct makes no sense for target formula etc
                         }
                     }
                 }
