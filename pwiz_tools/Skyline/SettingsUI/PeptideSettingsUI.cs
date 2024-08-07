@@ -1917,6 +1917,21 @@ namespace pwiz.Skyline.SettingsUI
         private void comboRegressionFit_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateLodOptions(comboLodMethod.SelectedItem as LodCalculation);
+
+            // If the user chooses "Bilinear" for the regression method, then
+            // change the LodCalculation and Max LOQ CV to the recommended values
+            if (comboRegressionFit.SelectedItem == RegressionFit.BILINEAR &&
+                _peptideSettings.Quantification.RegressionFit != RegressionFit.BILINEAR)
+            {
+                if (LodCalculation.NONE.Equals(comboLodMethod.SelectedItem))
+                {
+                    comboLodMethod.SelectedItem = LodCalculation.TURNING_POINT_STDERR;
+                }
+                if (!QuantMaxLoqCv.HasValue)
+                {
+                    QuantMaxLoqCv = 20;
+                }
+            }
         }
 
         private void UpdateLodOptions(LodCalculation current)
