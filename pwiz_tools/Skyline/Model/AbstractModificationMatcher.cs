@@ -498,7 +498,7 @@ namespace pwiz.Skyline.Model
                         }
                         catch (InvalidDataException e)
                         {
-                            Trace.WriteLine(e.Message); // Adduct makes no sense for target formula etc
+                            Trace.TraceWarning(e.Message); // Adduct makes no sense for target formula etc
                         }
                     }
                 }
