@@ -352,8 +352,8 @@
             // 
             // candidatePeaksToolStripMenuItem
             // 
-            this.candidatePeaksToolStripMenuItem.Name = "candidatePeaksToolStripMenuItem";
             resources.ApplyResources(this.candidatePeaksToolStripMenuItem, "candidatePeaksToolStripMenuItem");
+            this.candidatePeaksToolStripMenuItem.Name = "candidatePeaksToolStripMenuItem";
             this.candidatePeaksToolStripMenuItem.Click += new System.EventHandler(this.candidatePeaksToolStripMenuItem_Click);
             // 
             // listsMenuItem
@@ -417,21 +417,22 @@
             // fragmentsMenuItem
             // 
             this.fragmentsMenuItem.CheckOnClick = true;
-            this.fragmentsMenuItem.Name = "fragmentsMenuItem";
             resources.ApplyResources(this.fragmentsMenuItem, "fragmentsMenuItem");
+            this.fragmentsMenuItem.Name = "fragmentsMenuItem";
             this.fragmentsMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
             // 
             // specialIonsMenuItem
             // 
             this.specialIonsMenuItem.CheckOnClick = true;
-            this.specialIonsMenuItem.Name = "specialIonsMenuItem";
             resources.ApplyResources(this.specialIonsMenuItem, "specialIonsMenuItem");
+            this.specialIonsMenuItem.Name = "specialIonsMenuItem";
             this.specialIonsMenuItem.Click += new System.EventHandler(this.specialIonsMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
-            this.precursorIonMenuItem.Name = "precursorIonMenuItem";
+            this.precursorIonMenuItem.CheckOnClick = true;
             resources.ApplyResources(this.precursorIonMenuItem, "precursorIonMenuItem");
+            this.precursorIonMenuItem.Name = "precursorIonMenuItem";
             this.precursorIonMenuItem.Click += new System.EventHandler(this.precursorIonMenuItem_Click);
             // 
             // chargesMenuItem

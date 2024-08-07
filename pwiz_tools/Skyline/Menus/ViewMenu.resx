@@ -168,25 +168,25 @@
     <value>&amp;Proteins</value>
   </data>
   <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="showTargetsByNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Name</value>
   </data>
   <data name="showTargetsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="showTargetsByAccessionToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Accession</value>
   </data>
   <data name="showTargetsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="showTargetsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Preferred Name</value>
   </data>
   <data name="showTargetsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="showTargetsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Gene</value>
@@ -195,7 +195,7 @@
     <value>180, 22</value>
   </data>
   <data name="viewModificationsMenuItem.Text" xml:space="preserve">
-    <value>Modifications</value>
+    <value>&amp;Modifications</value>
   </data>
   <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
@@ -204,19 +204,19 @@
     <value>Te&amp;xt Zoom</value>
   </data>
   <data name="defaultTextToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="defaultTextToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Default</value>
   </data>
   <data name="largeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="largeToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Large</value>
   </data>
   <data name="extraLargeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="extraLargeToolStripMenuItem.Text" xml:space="preserve">
     <value>E&amp;xtra Large</value>
@@ -228,19 +228,19 @@
     <value>U&amp;ser Interface</value>
   </data>
   <data name="proteomicsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>134, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="proteomicsToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Proteomics</value>
   </data>
   <data name="moleculeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>134, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="moleculeToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Molecule</value>
   </data>
   <data name="mixedToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>134, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="mixedToolStripMenuItem.Text" xml:space="preserve">
     <value>Mi&amp;xed</value>
@@ -252,7 +252,7 @@
     <value>180, 22</value>
   </data>
   <data name="liveReportsMenuItem.Text" xml:space="preserve">
-    <value>Live Reports</value>
+    <value>Live &amp;Reports</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
@@ -262,7 +262,7 @@
     <value>191, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>Document &amp;Grid</value>
+    <value>&amp;Document Grid</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
@@ -303,6 +303,9 @@
   <data name="resultsGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Results Grid</value>
   </data>
+  <data name="candidatePeaksToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="candidatePeaksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
@@ -325,19 +328,19 @@
     <value>191, 22</value>
   </data>
   <data name="spectrumGridMenuItem.Text" xml:space="preserve">
-    <value>Spectrum Grid</value>
+    <value>&amp;Spectrum Grid</value>
   </data>
   <data name="librariesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
   <data name="librariesMenuItem.Text" xml:space="preserve">
-    <value>Libraries</value>
+    <value>&amp;Libraries</value>
   </data>
   <data name="libraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
-    <value>Library Explorer</value>
+    <value>Library &amp;Explorer</value>
   </data>
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -363,17 +366,26 @@
   <data name="ionTypesMenuItem.Text" xml:space="preserve">
     <value>&amp;Ion Types</value>
   </data>
+  <data name="fragmentsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="fragmentsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="fragmentsMenuItem.Text" xml:space="preserve">
     <value>&amp;Fragments</value>
   </data>
+  <data name="specialIonsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="specialIonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="specialIonsMenuItem.Text" xml:space="preserve">
     <value>&amp;Special Ions</value>
+  </data>
+  <data name="precursorIonMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="precursorIonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -895,7 +907,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.200, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;viewToolStripMenuItem.Name" xml:space="preserve">
     <value>viewToolStripMenuItem</value>
@@ -1531,6 +1543,6 @@
     <value>ViewMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=24.1.1.200, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
