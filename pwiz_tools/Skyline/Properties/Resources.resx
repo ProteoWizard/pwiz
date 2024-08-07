@@ -3182,9 +3182,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
 {1} of the {2} peptides or molecules were invalid, including:
 {3}</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
-    <value>Library Intensity</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>Error deleting the directory of the existing tool. Please close anything using that directory and try the overwriting import again later</value>
   </data>
@@ -3576,9 +3573,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential" xml:space="preserve">
     <value>Declustering Potential</value>
   </data>
-  <data name="HtmlFragment_ClipBoardText_From_Clipboard" xml:space="preserve">
-    <value>From Clipboard</value>
-  </data>
   <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
     <value>The selected file or model does not assign peak boundaries to any chromatograms in the document.  Please select a different model or file.</value>
   </data>
@@ -3896,6 +3890,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>Running command: {0} {1}</value>
+  </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
   </data>
   <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
     <value>File does not exist. It may have been deleted on the server.</value>
