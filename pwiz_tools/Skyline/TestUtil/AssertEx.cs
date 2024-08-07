@@ -835,7 +835,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static void NoDiff(string target, string actual, string helpMsg=null, 
-            Dictionary<int, double> columnTolerances = null, // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            ColumnTolerances columnTolerances = null,
             bool ignorePathDifferences = false)
         {
             if (helpMsg == null)
@@ -873,11 +873,52 @@ namespace pwiz.SkylineTestUtil
                         RemovePathDifferences(ref lineTarget, ref lineActual);
                     }
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
-                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
+                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances, out var failureMessage))
                     {
-                        int pos;
-                        for (pos = 0; pos < expectedLine?.Length && pos < actualLine?.Length && expectedLine[pos] == actualLine[pos];) {pos++;}
-                        Fail(helpMsg + $@" Diff found at line {count} position {pos}: expected{Environment.NewLine}{expectedLine}{Environment.NewLine}actual{Environment.NewLine}{actualLine}");
+                        var sbEnd = new StringBuilder();
+                        var sbStart = new StringBuilder();
+                        if (lineActual != null && lineTarget != null)
+                        {
+                            var sharedLen = Math.Min(lineActual.Length, lineTarget.Length);
+                            for (int i = 0; i < sharedLen; i++)
+                            {
+                                var endCh = lineActual[lineActual.Length - 1 - i];
+                                if (endCh != lineTarget[lineTarget.Length - 1 - i])
+                                    break;
+                                sbEnd.Insert(0, endCh);
+                            }
+                            for (int i = 0; i < sharedLen; i++)
+                            {
+                                var startCh = lineActual[i];
+                                if (startCh != lineTarget[i])
+                                    break;
+                                sbStart.Append(startCh);
+                            }
+                        }
+
+                        // Build an informative failure message
+                        string assertFailMessage = TextUtil.LineSeparate(
+                            helpMsg + $@" Diff found at line {count} position {sbStart.Length}:",
+                            "expected",
+                            expectedLine,
+                            "actual",
+                            actualLine);
+                        if (!Equals(expectedLine, lineTarget) || !Equals(actualLine, lineActual))
+                        {
+                            // Paths were removed, so report the text after removal
+                            assertFailMessage = TextUtil.LineSeparate(assertFailMessage,
+                                "expected with paths removed",
+                                lineTarget,
+                                "actual with paths removed",
+                                lineActual);
+                        }
+                        assertFailMessage = TextUtil.LineSeparate(assertFailMessage,
+                            $"matching prefix: '{sbStart}'",
+                            $"matching suffix: '{sbEnd}'");
+                        if (!string.IsNullOrEmpty(failureMessage))
+                            assertFailMessage = TextUtil.LineSeparate(assertFailMessage, "decimal matching: " + failureMessage);
+
+                        Fail(assertFailMessage);
                     }
                     lineEqualLast = expectedLine;
                     count++;
@@ -930,11 +971,10 @@ namespace pwiz.SkylineTestUtil
                 {
                     return; // No way we're cleaning this up to make a match
                 }
-
                 for (var p = 0; p < partsE.Length; p++)
                 {
-                    var partE = partsE[p];
-                    var partA = partsA[p];
+                    var partE = partsE[p].Trim();
+                    var partA = partsA[p].Trim();
                     if (string.Equals(partE, partA))
                     {
                         continue;
@@ -944,13 +984,14 @@ namespace pwiz.SkylineTestUtil
                     {
                         var fileE = Path.GetFileName(partE);
                         var fileA = Path.GetFileName(partA);
-                        var tmpExt = @".tmp";
-                        if (string.Equals(fileE, fileA) || // Same filename, different path
-                            (Path.GetExtension(fileE) == tmpExt) && Path.GetExtension(fileA) == tmpExt) // Tmp file names will always vary
+                        if (string.Equals(fileE, fileA) ||
+                            (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
                         {
-                            var ignoredPath = @"<ignored_path_difference>";
-                            lineExpected = lineExpected.Replace(partE, ignoredPath);
-                            lineActual = lineActual.Replace(partA, ignoredPath);
+                            // Empty strings are harder to see as columns.
+                            // So, replace the matching paths with visible matching text.
+                            const string pathSubstitutionText = "path";
+                            lineExpected = lineExpected.Replace(pathE, pathSubstitutionText);
+                            lineActual = lineActual.Replace(pathA, pathSubstitutionText);
                         }
                     }
                     catch
@@ -961,10 +1002,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
-            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            ColumnTolerances columnTolerances, out string failureMessage) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
         {
+            failureMessage = string.Empty;  // For all the return true cases
+
             if (string.Equals(lineExpected, lineActual))
             {
                 return true; // Identical
@@ -997,32 +1039,127 @@ namespace pwiz.SkylineTestUtil
             }
 
             if (columnTolerances != null)
+                return columnTolerances.LinesEquivalent(lineExpected, lineActual, out failureMessage);
+
+            return false; // Could not account for difference
+        }
+
+        public class ColumnTolerances
+        {
+            private ColumnToleranceValue _defaultTolerance { get; }
+            private Dictionary<int, ColumnToleranceValue> _explicitTolerances = new Dictionary<int, ColumnToleranceValue>();
+
+            public ColumnTolerances()
             {
+            }
+
+            public ColumnTolerances(double defaultTolerance, bool forceScientificNotation = false)
+            {
+                _defaultTolerance = new ColumnToleranceValue(defaultTolerance, forceScientificNotation);
+            }
+
+            public void AddTolerance(int column, double tolerance, bool forceScientificNotation = false)
+            {
+                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance, forceScientificNotation));
+            }
+
+            public bool LinesEquivalent(string lineExpected, string lineActual, out string failureMessage)
+            {
+                failureMessage = string.Empty;
+
                 // ReSharper disable PossibleNullReferenceException
                 var colsActual = lineActual.Split('\t');
                 var colsExpected = lineExpected.Split('\t');
                 // ReSharper restore PossibleNullReferenceException
-                if (colsExpected.Length == colsActual.Length)
+                if (colsExpected.Length != colsActual.Length)
+                    return false;
+                for (var c = 0; c < colsActual.Length; c++)
                 {
-                    for (var c = 0; c < colsActual.Length; c++)
-                    {
-                        if (colsActual[c] != colsExpected[c])
-                        {
-                            // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
-                            if ((!columnTolerances.TryGetValue(c, out var tolerance) && !columnTolerances.TryGetValue(-1, out tolerance)) || // No tolerance given for this column
-                                !(TextUtil.TryParseDoubleUncertainCulture(colsActual[c], out var valActual) &&
-                                  TextUtil.TryParseDoubleUncertainCulture(colsExpected[c], out var valExpected)) || // One or both don't parse as doubles
-                                (Math.Abs(valActual - valExpected) > tolerance + tolerance / 1000)) // Allow for rounding cruft
-                            {
-                                return false; // Can't account for difference
-                            }
-                        }
-                    }
-                    return true; // Differences accounted for
+                    if (!ColumnsEquivalent(c, colsExpected[c], colsActual[c], out failureMessage))
+                        return false;
                 }
+
+                return true; // Differences accounted for
             }
 
-            return false; // Could not account for difference
+            private bool ColumnsEquivalent(int i, string textExpected, string textActual, out string failureMessage)
+            {
+                failureMessage = string.Empty;
+                if (Equals(textExpected, textActual))
+                    return true;
+
+                // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
+                if (!_explicitTolerances.TryGetValue(i, out var toleranceValue))
+                {
+                    toleranceValue = _defaultTolerance;
+                    if (toleranceValue == null)
+                        return false; // No tolerance given for this column
+                }
+                if (!TextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
+                    !TextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
+                {
+                    return false;
+                }
+
+                char[] expChars = { 'E', 'e' };
+                var textSplitActual = textActual;
+                if (toleranceValue.ForceScientificNotation && textSplitActual.Split(expChars).Length != 2)
+                    textSplitActual = valActual.ToString("E");
+                var textSplitExpected = textExpected;
+                if (toleranceValue.ForceScientificNotation && textSplitExpected.Split(expChars).Length != 2)
+                    textSplitExpected = valExpected.ToString("E");
+
+                var actualParts = textSplitActual.Split(expChars);
+                var expectedParts = textSplitExpected.Split(expChars);
+
+                if (actualParts.Length == 2 && expectedParts.Length == 2)
+                {
+                    // Both strings have exponent, so check if they are equal
+                    if (!Equals(expectedParts[1], actualParts[1]) ||
+                        // Then check the mantissas match to the expected tolerance
+                        !TextUtil.TryParseDoubleUncertainCulture(actualParts[0], out valActual) ||
+                        !TextUtil.TryParseDoubleUncertainCulture(expectedParts[0], out valExpected))
+                    {
+                        failureMessage = string.Format(
+                            "Expected decimal value: {0} does not match actual {1}",
+                            textExpected, textActual);
+                        return false; // One or both mantissas don't parse as doubles
+                    }
+                }
+
+                double tolerance = toleranceValue.Tolerance;
+                tolerance += tolerance / 1000; // Allow for rounding cruft
+                if (Math.Abs(valActual - valExpected) > tolerance)
+                {
+                    if (expectedParts.Length == 2)
+                    {
+                        failureMessage = string.Format(
+                            "Expected decimal mantissa: {0} does not match actual {1} to within {2}",
+                            valExpected, valActual, tolerance);
+                    }
+                    else
+                    {
+                        failureMessage = string.Format(
+                            "Expected decimal value: {0} does not match actual {1} to within {2}",
+                            textSplitExpected, textSplitActual, tolerance);
+                    }
+                    return false; // Can't account for difference
+                }
+
+                return true;
+            }
+        }
+
+        private class ColumnToleranceValue
+        {
+            public ColumnToleranceValue(double tolerance, bool forceScientificNotation = false)
+            {
+                Tolerance = tolerance;
+                ForceScientificNotation = forceScientificNotation;
+            }
+
+            public double Tolerance { get; }
+            public bool ForceScientificNotation { get; }
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
@@ -1035,7 +1172,7 @@ namespace pwiz.SkylineTestUtil
                 name, count, lineEqualLast, lineNext, linesRemaining);
         }
 
-        public static void FileEquals(string pathExpectedFile, string pathActualFile, Dictionary<int, double> columnTolerances = null, bool ignorePathDifferences = false )
+        public static void FileEquals(string pathExpectedFile, string pathActualFile, ColumnTolerances columnTolerances = null, bool ignorePathDifferences = false )
         {
             string file1 = File.ReadAllText(pathExpectedFile);
             string file2 = File.ReadAllText(pathActualFile);
