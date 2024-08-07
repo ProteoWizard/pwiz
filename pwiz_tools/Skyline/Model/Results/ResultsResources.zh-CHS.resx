@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
+    <value>分离方案的设定旨在用于多路传输，但文件看起来不包含多路复用的采集数据。</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
+    <value>导入文件的扫描数据貌似缺少一个分离窗口中心。</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_" xml:space="preserve">
+    <value>导入文件中针对扫描的分离宽度无法确定。</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_" xml:space="preserve">
+    <value>尝试针对{0}获取窗口覆盖，因先前的分离窗口未观察到的测谱图。无需同时检测则请重设分离窗口。</value>
+  </data>
+  <data name="Block_VerifySort_Expected_sorted_data" xml:space="preserve">
+    <value>预期的分类数据</value>
+  </data>
+  <data name="BulkReadException_BulkReadException_Failed_reading_block_from_file" xml:space="preserve">
+    <value>从文件中读取信息组失败。</value>
+  </data>
+  <data name="ChromatogramCache_Load_Loading__0__cache" xml:space="preserve">
+    <value>加载{0}缓存</value>
+  </data>
+  <data name="ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs" xml:space="preserve">
+    <value>尝试阅读扫描 ID 失败</value>
+  </data>
+  <data name="ChromatogramCache_LoadStructs_FileCorrupted" xml:space="preserve">
+    <value>此文件似乎已损坏，无法读取。
+建议您删除此文件，以便 Skyline 从原始数据文件中再次提取色谱图来创建新文件。</value>
+  </data>
+  <data name="ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted" xml:space="preserve">
+    <value>缓存标题中的数据缺损。文件可能已损坏。</value>
+  </data>
+  <data name="ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points" xml:space="preserve">
+    <value>尝试读点失败</value>
+  </data>
+  <data name="ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__" xml:space="preserve">
+    <value>指数 {0} 必须在 0 和 {1} 之间。</value>
+  </data>
+  <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
+    <value>尝试针对无法找到的文件保存结果信息。</value>
+  </data>
+  <data name="ChromatogramSet_WriteXml_Attempt_to_serialize_list_containing_invalid_type" xml:space="preserve">
+    <value>尝试将包含无效类型的列表序列化。</value>
+  </data>
+  <data name="ChromCacheBuilder_BuildNextFileInner_Importing__0__" xml:space="preserve">
+    <value>导入{0}</value>
+  </data>
+  <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
+    <value>针对{0}重新计算得分</value>
+  </data>
+  <data name="ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data" xml:space="preserve">
+    <value>样品{0}不包含可用数据。</value>
+  </data>
+  <data name="ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_" xml:space="preserve">
+    <value>在先前导入的结果中未发现路径“{0}”。</value>
+  </data>
+  <data name="ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_" xml:space="preserve">
+    <value>由于保留时间预测器线性回归失败，所以不能完成导入色谱图。</value>
+  </data>
+  <data name="ChromCacheBuilder_WriteLoop_Failure_writing_cache_file" xml:space="preserve">
+    <value>写入缓存文件失败。</value>
+  </data>
+  <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
+    <value>来自同一母离子的离子对被发现具有不同峰计数 {0} 和 {1}。</value>
+  </data>
+  <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___" xml:space="preserve">
+    <value>导入结果文件“{0}”失败。</value>
+  </data>
+  <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__" xml:space="preserve">
+    <value>导入结果文件“{0}”、样品{1}失败。</value>
+  </data>
+  <data name="ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__" xml:space="preserve">
+    <value>创建缓存“{0}”失败。</value>
+  </data>
+  <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
+    <value>加入文件{0}</value>
+  </data>
+  <data name="ChromCacheWriter_Complete_Failure_attempting_to_write_the_file__0_" xml:space="preserve">
+    <value>尝试写入文件{0}失败</value>
+  </data>
+  <data name="ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count" xml:space="preserve">
+    <value>时间（{0}）和强度（{1}）在计数点上有差异。</value>
+  </data>
+  <data name="ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_" xml:space="preserve">
+    <value>强度（{0}）和质量误差（{1}）在计数点上有差异。</value>
+  </data>
+  <data name="ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid" xml:space="preserve">
+    <value>从{0}到{1}的时间间隔无效。</value>
+  </data>
+  <data name="ChromDataSet_MergePeaks_Unexpected_null_peak" xml:space="preserve">
+    <value>意外的无效峰</value>
+  </data>
+  <data name="ChromDataSet_ToString_empty" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values" xml:space="preserve">
+    <value>发现无效的色谱图 ID {0}。解析质荷比值失败。</value>
+  </data>
+  <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values" xml:space="preserve">
+    <value>发现无效的色谱图 ID {0}。ID 必须包括母离子和子离子质荷比值。</value>
+  </data>
+  <data name="ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID" xml:space="preserve">
+    <value>值“{0}”不是有效的色谱图 ID。</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_MS_MS" xml:space="preserve">
+    <value>MS/MS</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_SIM" xml:space="preserve">
+    <value>单离子检测</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Centroided" xml:space="preserve">
+    <value>棒状图形式</value>
+  </data>
+  <data name="GraphFullScan_PeakType_ChromDefault" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Profile" xml:space="preserve">
+    <value>轮廓形式</value>
+  </data>
+  <data name="LoadCanceledException_LoadCanceledException_Data_import_canceled" xml:space="preserve">
+    <value>数据导入已取消</value>
+  </data>
+  <data name="Loader_Fail_Failed_importing_results_into___0___" xml:space="preserve">
+    <value>将结果文件导入“{0}”失败。</value>
+  </data>
+  <data name="Loader_FinishLoad_Updating_peak_statistics" xml:space="preserve">
+    <value>正在更新峰统计</value>
+  </data>
+  <data name="Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_" xml:space="preserve">
+    <value>尝试加载数据缓存文件{0}失败</value>
+  </data>
+  <data name="Loader_Load_Failure_reading_the_data_file__0__" xml:space="preserve">
+    <value>读取数据文件{0}失败。</value>
+  </data>
+  <data name="MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_" xml:space="preserve">
+    <value>在没有首先完成原始数据导入的情况下尝试重新计算峰整合。</value>
+  </data>
+  <data name="MeasuredResults_CommitCacheFile_The_chromatogram_cache_must_be_loaded_before_it_can_be_changed" xml:space="preserve">
+    <value>色谱图缓存必须在其可以改变前被加载。</value>
+  </data>
+  <data name="MeasuredResults_OptimizeCache_The_chromatogram_cache_must_be_loaded_before_it_is_optimized" xml:space="preserve">
+    <value>色谱图缓存必须在其可以优化前被加载。</value>
+  </data>
+  <data name="MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found" xml:space="preserve">
+    <value>未发现 MS/MS 扫描指数 {0}</value>
+  </data>
+  <data name="NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_" xml:space="preserve">
+    <value>{0}中的任何扫描都不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__" xml:space="preserve">
+    <value>{0}中未发现 SRM/MRM 数据。</value>
+  </data>
+  <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
+    <value>在扫描{0}上缺少扫描时间值。基于重叠的多路复用需要扫描时间。</value>
+  </data>
+  <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
+    <value>重叠去卷积窗口方案在扫描{2}中缺少排名。当基质拥有尺寸 {1} 时，排名为 {0}。需要一个非退化的重叠窗口方案。</value>
+  </data>
+  <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
+    <value>重叠多路输出选择器：错误地初始化文件形成了重叠多路复用文件</value>
+  </data>
+  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
+    <value>由于一个色谱图的结束时间为“{1}”，另一个色谱图的结束时间为“{2}”，所以无法处理分子“{0}”的色谱图。</value>
+  </data>
+  <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
+    <value>意外的无效峰列表</value>
+  </data>
+  <data name="Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results" xml:space="preserve">
+    <value>针对文件发现的文档节点峰信息在文档结果中无匹配。</value>
+  </data>
+  <data name="Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__" xml:space="preserve">
+    <value>文档节点结果计数 {0} 不匹配文档结果计数 {1}。</value>
+  </data>
+  <data name="ResultsGrid_ChangeChromInfo_Element_not_found" xml:space="preserve">
+    <value>未发现元素</value>
+  </data>
+  <data name="ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___" xml:space="preserve">
+    <value>在文件“{1}”中找不到扫描 ID“{0}”。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_" xml:space="preserve">
+    <value>数据文件{0}无法找到，无论是在原始位置还是在文档或文档父文件夹中。</value>
+  </data>
+  <data name="SizedSet_Add_SizedSet_index_value_is_out_of_range" xml:space="preserve">
+    <value>指数超出范围</value>
+  </data>
+  <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz" xml:space="preserve">
+    <value>扫描{0}经发现没有母离子质荷比。</value>
+  </data>
+  <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time" xml:space="preserve">
+    <value>扫描{0}经发现没有扫描时间。</value>
+  </data>
+  <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
+    <value>无法确定定向扫描为{0}的分离宽度</value>
+  </data>
+  <data name="TransitionBinner_BinData_" xml:space="preserve">
+    <value>导入的谱图看起来缺少质荷比或强度值（{0} != {1}）</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml" xml:space="preserve">
+    <value>将{0}转化为 xml</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_" xml:space="preserve">
+    <value>尝试将文件{0}转化为 .group.xml 失败。</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_" xml:space="preserve">
+    <value>ProteinPilot 软件（试用或完整版）必须被安装，以将“.group”文件转化为可兼容的“.group.xml”文件。</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_" xml:space="preserve">
+    <value>无法在目录{2}中找到 {0}或{1}。 请重新安装 ProteinPilot 软件以便处理 .group 文件。</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_" xml:space="preserve">
+    <value>由于明确保留时间 {1} 不介于 {2} 和 {3} 之间，因此丢弃“{0}”的色谱图</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
+    <value>需要提供离子对设置离子迁移过滤窗口类型值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
+    <value>不支持混合离子迁移类型</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataFileInstrumentInfo_CCSFromIonMobility_no_conversion" xml:space="preserve">
+    <value>供应商提供的库无法确定迁移率为 {1:0.###}、质荷比为 {2:0.####}、电荷为 {3} 的 {0} 的 CCS。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
+    <value>供应商提供的库无法确定 CCS 为 {1:0.###}、质荷比为 {2:0.####}、电荷为 {3} 的 {0} 的离子迁移。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

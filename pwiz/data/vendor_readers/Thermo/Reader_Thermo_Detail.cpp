@@ -129,6 +129,9 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_Exploris_240:     return MS_Orbitrap_Exploris_240;
         case InstrumentModelType_Orbitrap_Exploris_480:     return MS_Orbitrap_Exploris_480;
         case InstrumentModelType_Orbitrap_Eclipse:          return MS_Orbitrap_Eclipse;
+        case InstrumentModelType_Orbitrap_GC:               return MS_Orbitrap_Exploris_480;
+        case InstrumentModelType_Orbitrap_Astral:           return MS_Orbitrap_Astral;
+        case InstrumentModelType_Stellar:                   return MS_Stellar;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -206,6 +209,10 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
                 analyzerType = MS_magnetic_sector;
                 detectorType = MS_electron_multiplier;
                 break;
+            case MassAnalyzerType_Astral:
+                analyzerType = MS_asymmetric_track_lossless_time_of_flight_analyzer;
+                detectorType = MS_electron_multiplier;
+            break;
         }
 
         if (analyzerType != CVID_Unknown)
@@ -234,6 +241,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_GC:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -247,6 +255,20 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_orbitrap, 2));
             configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
+            break;
+
+        case InstrumentModelType_Orbitrap_Astral:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_orbitrap, 3));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 4));
+
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_asymmetric_track_lossless_time_of_flight_analyzer, 3));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 4));
             break;
 
         case InstrumentModelType_LTQ_FT:
@@ -324,6 +346,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
@@ -460,6 +483,7 @@ PWIZ_API_DECL CVID translate(MassAnalyzerType type)
         case MassAnalyzerType_Triple_Quadrupole:    return MS_quadrupole;
         case MassAnalyzerType_Single_Quadrupole:    return MS_quadrupole;
         case MassAnalyzerType_Magnetic_Sector:      return MS_magnetic_sector;
+        case MassAnalyzerType_Astral:               return MS_asymmetric_track_lossless_time_of_flight_analyzer;
         case MassAnalyzerType_Unknown:
         default:
             return CVID_Unknown;

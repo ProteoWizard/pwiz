@@ -28,11 +28,14 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -42,23 +45,31 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DdaSearchTest : AbstractFunctionalTest
     {
-        public struct ExpectedResults
+        public class ExpectedResults
         {
+            public Exception expectedException;
             public int proteinCount;
             public int peptideCount;
             public int precursorCount;
             public int transitionCount;
+            public int unmappedOrRemovedCount;
 
-            public ExpectedResults(int proteinCount, int peptideCount, int precursorCount, int transitionCount)
+            public ExpectedResults(int proteinCount, int peptideCount, int precursorCount, int transitionCount, int unmappedOrRemovedCount = 0)
             {
                 this.proteinCount = proteinCount;
                 this.peptideCount = peptideCount;
                 this.precursorCount = precursorCount;
                 this.transitionCount = transitionCount;
+                this.unmappedOrRemovedCount = unmappedOrRemovedCount;
+            }
+
+            public ExpectedResults(Exception expected)
+            {
+                expectedException = expected;
             }
         }
 
-        public struct DdaTestSettings
+        public class DdaTestSettings
         {
             private SearchSettingsControl.SearchEngine _searchEngine;
             public SearchSettingsControl.SearchEngine SearchEngine
@@ -71,6 +82,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
+            public string FastaFilename { get; set; } = "rpal-subset.fasta";
             public string FragmentIons { get; set; }
             public string Ms2Analyzer { get; set; }
             public MzTolerance PrecursorTolerance { get; set; }
@@ -101,11 +113,11 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResults = new ExpectedResults(1131, 110, 110, 330),
-                ExpectedResultsFinal = new ExpectedResults(100, 111, 111, 333)
+                ExpectedResultsFinal = new ExpectedResults(133, 332, 394, 1182, 163)
             };
 
             RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
@@ -129,11 +141,11 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResults = new ExpectedResults(1131, 79, 79, 237),
-                ExpectedResultsFinal = new ExpectedResults(73, 80, 80, 240)
+                ExpectedResultsFinal = new ExpectedResults(104, 256, 317, 951, 124)
             };
 
             RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
@@ -161,11 +173,41 @@ namespace pwiz.SkylineTestFunctional
                     new KeyValuePair<string, string>("calibrate_mass", "0"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
-                ExpectedResults = new ExpectedResults(1131, 90, 90, 270),
-                ExpectedResultsFinal = new ExpectedResults(82, 91, 91, 273)
+                ExpectedResultsFinal = new ExpectedResults(143, 340, 428, 1284, 166)
             };
 
             RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
+
+        //[TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        public void TestDdaSearchMsFraggerBadFasta()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            if (RedownloadTools)
+                foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.MSFragger,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
+                AdditionalSettings = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("check_spectral_files", "0")
+                },
+                ExpectedResultsFinal = new ExpectedResults(new FileNotFoundException())
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
         }
 
         public bool IsRecordMode => false;
@@ -213,27 +255,20 @@ namespace pwiz.SkylineTestFunctional
             PrepareDocument("TestDdaSearch.sky");
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
-            // Add the test xml file to the search files list and try to 
-            // build the document library.
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-            // With only 1 source, no add/remove prefix/suffix dialog
 
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                // With only 1 source, no add/remove prefix/suffix dialog
+
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 // Test going back and switching workflow to DDA. This used to cause an exception.
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
@@ -242,58 +277,62 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
             });
 
-            // In PerformDDASearch mode, ClickAddStructuralModification launches edit list dialog
-            var editListUI =
-                ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
-            {
-                editModDlg.SetModification("Oxidation (M)", true); // Not L10N
-                editModDlg.OkDialog();
-            });
+            bool errorExpected = TestSettings.ExpectedResultsFinal.expectedException != null;
 
-            // Test a non-Unimod mod that won't affect the search
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            if (!errorExpected)
             {
-                editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
-                editModDlg.OkDialog();
-            });
+                // In PerformDDASearch mode, ClickAddStructuralModification launches edit list dialog
+                var editListUI =
+                    ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.SetModification("Oxidation (M)"); // Not L10N
+                    editModDlg.OkDialog();
+                });
 
-            // Test a N terminal mod with no AA
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
-            {
-                editModDlg.Modification = new StaticMod("NotUniModMod (N-term)", null, ModTerminus.N, "C42", LabelAtoms.None, null, null);
-                editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
-                editModDlg.OkDialog();
-            });
+                // Test a non-Unimod mod that won't affect the search
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
+                    editModDlg.OkDialog();
+                });
 
-            // Test a C terminal mod with no AA and one with AA - commented out because it changes results a bit to include it
-            /*RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
-            {
-                editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 0.01, 0.01);
-                editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
-                editModDlg.OkDialog();
-            }); 
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
-            {
-                editModDlg.Modification = new StaticMod("NotUniModMod4 (C-term)", "K,R", null, null, LabelAtoms.None, -1.01, -1.01);
-                editModDlg.OkDialog();
-            });*/
-            OkDialog(editListUI, editListUI.OkDialog);
+                // Test a N terminal mod with no AA
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.Modification = new StaticMod("NotUniModMod (N-term)", null, ModTerminus.N, "C42", LabelAtoms.None, null, null);
+                    editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                    editModDlg.OkDialog();
+                });
 
-            // Test back/next buttons
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                // Test a C terminal mod with no AA and one with AA - commented out because it changes results a bit to include it
+                /*RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 0.01, 0.01);
+                    editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                    editModDlg.OkDialog();
+                }); 
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.Modification = new StaticMod("NotUniModMod4 (C-term)", "K,R", null, null, LabelAtoms.None, -1.01, -1.01);
+                    editModDlg.OkDialog();
+                });*/
+                OkDialog(editListUI, editListUI.OkDialog);
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                // Test back/next buttons
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                });
+            }
 
             // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -304,7 +343,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
-                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("rpal-subset.fasta"));
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(TestSettings.FastaFilename));
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -342,6 +381,10 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
+            // delete the FASTA to cause the error
+            if (errorExpected)
+                File.Delete(GetTestPath(TestSettings.FastaFilename));
+
             RunUI(() =>
             {
                 foreach (var setting in TestSettings.AdditionalSettings)
@@ -350,6 +393,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
                 importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
 
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -363,6 +407,17 @@ namespace pwiz.SkylineTestFunctional
                 // Cancel search
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
+
+            if (errorExpected)
+            {
+                var fastaFileNotFoundDlg = WaitForOpenForm<MessageDlg>();
+                var expectedMsg = new FileNotFoundException(GetSystemResourceString("IO.FileNotFound_FileName", GetTestPath(TestSettings.FastaFilename))).Message;
+                Assert.AreEqual(expectedMsg, fastaFileNotFoundDlg.Message);
+                OkDialog(fastaFileNotFoundDlg, fastaFileNotFoundDlg.ClickOk);
+                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
+                return;
+            }
 
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
             Assert.IsFalse(searchSucceeded.Value);
@@ -412,7 +467,10 @@ namespace pwiz.SkylineTestFunctional
                 for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
                     importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.REVERSE_SEQUENCE;
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -420,18 +478,38 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-                RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+
+                RunUI(() =>
+                {
+                    Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
+
+                    // If this message is seen, the default config needs to be updated.
+                    if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                    {
+                        const string parameterNotSuppliedMessage = @"was not supplied. Using default value";
+                        Assert.IsFalse(
+                            importPeptideSearchDlg.SearchControl.LogText.Contains(parameterNotSuppliedMessage),
+                            "The default MSFragger config needs to be updated with new parameters:\r\n" +
+                            string.Join("", importPeptideSearchDlg.SearchControl.LogText.Split('\n')
+                                .Where(l => l.Contains(parameterNotSuppliedMessage))));
+                    }
+                });
             }
             finally
             {
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
-
-            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            
+            var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_), recalibrateMessage.Message));
+            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(recalibrateMessage.OkDialog);
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+
             RunUI(()=>
             {
-                int proteinCount, peptideCount, precursorCount, transitionCount;
+                int proteinCount, peptideCount, precursorCount, transitionCount, unmappedOrRemoved;
                 /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
@@ -449,12 +527,12 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(TestSettings.ExpectedResults.transitionCount, transitionCount);
                     }
                 }*/
-                emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount, out unmappedOrRemoved);
                 if (Environment.Is64BitProcess)
                 {
                     if (IsRecordMode)
                     {
-                        Console.WriteLine($@"{proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}");
+                        Console.WriteLine($@"ExpectedResultsFinal = new ExpectedResults({proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}, {unmappedOrRemoved})");
                     }
                     else
                     {
@@ -462,11 +540,11 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(TestSettings.ExpectedResultsFinal.peptideCount, peptideCount);
                         Assert.AreEqual(TestSettings.ExpectedResultsFinal.precursorCount, precursorCount);
                         Assert.AreEqual(TestSettings.ExpectedResultsFinal.transitionCount, transitionCount);
+                        Assert.AreEqual(TestSettings.ExpectedResultsFinal.unmappedOrRemovedCount, unmappedOrRemoved);
                     }
                 }
             });
             OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
-
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
         }

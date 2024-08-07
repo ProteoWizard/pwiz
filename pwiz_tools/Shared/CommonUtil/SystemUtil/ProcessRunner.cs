@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -46,6 +47,7 @@ namespace pwiz.Common.SystemUtil
         public Encoding OutputEncoding { get; set; }
 
         public string MessagePrefix { get; set; }
+        public bool ShowCommandAndArgs { get; set; }
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
 
@@ -84,23 +86,24 @@ namespace pwiz.Common.SystemUtil
             outputAndExitCodeAreGoodFunc ??= GoodIfExitCodeIsZero;
 
             _messageLog.Clear();
+            var cmd = $"{psi.FileName} {psi.Arguments}";
 
             // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
             _tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
-            var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
+            var msgFailureStartingCommand = $@"Failure starting command ""{cmd}"".";
             try
             {
                 proc = Process.Start(psi);
                 if (proc == null)
                 {
-                    throw new IOException(string.Format(msgFailureStartingCommand, psi.FileName, psi.Arguments));
+                    throw new IOException(msgFailureStartingCommand);
                 }
             }
             catch (Exception x)
             {
-                throw new IOException(string.Format(msgFailureStartingCommand, psi.FileName, psi.Arguments), x);
+                throw new IOException(msgFailureStartingCommand, x);
             }
 
             try
@@ -123,6 +126,25 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
+            if (ShowCommandAndArgs)
+            {
+                foreach (var msg in new[]{string.Empty, Resources.ProcessRunner_Run_Run_command_, cmd, string.Empty, string.Empty})
+                {
+                    if (!string.IsNullOrEmpty(msg))
+                    {
+                        _messageLog.Add(msg);
+                    }
+                    status = status.ChangeMessage(msg); // Each message will be displayed in a separate line
+                    progress.UpdateProgress(status);
+                }
+            }
+            StringBuilder sbOutput = null;
+            if (writer == null)
+            {
+                sbOutput = new StringBuilder();
+                writer = new StringWriter(sbOutput);
+            }
+
             try
             {
                 var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
@@ -143,9 +165,12 @@ namespace pwiz.Common.SystemUtil
                     {
                         if (progress.IsCanceled)
                         {
-                            proc.Kill();
+                            if (!proc.HasExited)
+                            {
+                                proc.Kill();
+                            }
                             progress.UpdateProgress(status = status.Cancel());
-                            CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+                            CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;
                         }
 
@@ -215,17 +240,34 @@ namespace pwiz.Common.SystemUtil
                 }
 
             }
+            catch (Exception ex)  // CONSIDER: Should we handle more types like WrapAndThrowException does?
+            {
+                if (sbOutput != null)
+                    ThrowExceptionWithOutput(ex, sbOutput.ToString());
+
+                throw;
+            }
             finally
             {
                 if (!proc.HasExited)
                     try { proc.Kill(); } catch (InvalidOperationException) { }
 
-                CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+                CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
             }
         }
 
+        private void ThrowExceptionWithOutput(Exception exception, string output)
+        {
+            var sbText = new StringBuilder();
+            sbText.AppendLine(exception.Message)
+                .AppendLine()
+                .AppendLine("Output:")
+                .AppendLine(output);
+            throw new IOException(exception.Message, new IOException(sbText.ToString(), exception));
+        }
+
         // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
-        private void CleanupTmpDir()
+        private void CleanupTmpDir(ProcessStartInfo psi)
         {
             if (!string.IsNullOrEmpty(_tmpDirForCleanup))
             {
@@ -234,7 +276,9 @@ namespace pwiz.Common.SystemUtil
                 {
                     try
                     {
-                        Directory.Delete(_tmpDirForCleanup, true);
+                        if (Directory.Exists(_tmpDirForCleanup))
+                            Directory.Delete(_tmpDirForCleanup, true);
+                        psi.Environment[@"TMP"] = Path.GetDirectoryName(_tmpDirForCleanup); // restore previous TMP value in case ProcessStartInfo is re-used
                         return;
                     }
                     catch (Exception e)
@@ -259,8 +303,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
-                    File.Delete(tmpDirForCleanup); // But we want a directory
+                    tmpDirForCleanup = psi.Environment.TryGetValue(@"TMP", out var value) ? value : Path.GetTempPath();
                     var exeName = string.Empty;
                     if (!string.IsNullOrEmpty(psi.FileName))
                     {
@@ -268,7 +311,7 @@ namespace pwiz.Common.SystemUtil
                         exeName = Path.GetFileNameWithoutExtension(psi.FileName);
                         if (!string.IsNullOrEmpty(exeName))
                         {
-                            tmpDirForCleanup = Path.ChangeExtension(tmpDirForCleanup, exeName);
+                            tmpDirForCleanup = Path.Combine(tmpDirForCleanup, exeName + "_" + Path.GetRandomFileName());
                         }
                     }
 

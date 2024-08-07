@@ -139,7 +139,7 @@ struct PWIZ_API_DECL CVParam
         return !operator==(that);
     }
 
-    bool empty() const {return cvid==CVID_Unknown && value.empty() && units==CVID_Unknown;}
+    bool empty() const { return cvid == CVID_Unknown && value.empty() && units == CVID_Unknown; }
 };
 
 

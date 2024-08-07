@@ -191,14 +191,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return SequenceMassCalc.PersistentMZ(DocNode.PrecursorMz); }
         }
 
+        /// <summary>
+        /// Predicted collision energy, not to be confused with <see cref="ExplicitCollisionEnergy"/>.
+        /// </summary>
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        public double CollisionEnergy
+        public double? CollisionEnergy
         {
             get
             {
-                // Note this is the predicited CE, explicit CE has its own display column
-                return SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy
-                                  .GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
+                var collisionEnergyRegression = SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy;
+                if (collisionEnergyRegression == null || Equals(collisionEnergyRegression, CollisionEnergyList.NONE))
+                {
+                    return null;
+                }
+
+                return collisionEnergyRegression.GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
             }
         }
 
@@ -503,9 +510,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (nodeCount == 1)
             {
-                return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___, this);
+                return string.Format(EntitiesResources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___, this);
             }
-            return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
+            return string.Format(EntitiesResources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
         }
 
         [Importable]

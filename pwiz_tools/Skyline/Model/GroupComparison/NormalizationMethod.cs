@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly NormalizationMethod GLOBAL_STANDARDS
             = new SingletonNormalizationMethod(@"global_standards",
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards,
-                () => Resources.AreaCVToolbar_UpdateUI_Global_standards,
+                () => GroupComparisonResources.AreaCVToolbar_UpdateUI_Global_standards,
                 value=>string.Format(GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards, value));
         public static readonly NormalizationMethod TIC
             = new SingletonNormalizationMethod(@"tic",
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     if (_isotopeLabelType == null)
                     {
-                        return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0_, _surrogateName);
+                        return string.Format(GroupComparisonResources.RatioToSurrogate_ToString_Ratio_to_surrogate__0_, _surrogateName);
                     }
                     return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__, _surrogateName, _isotopeLabelType.Title);
                 }
@@ -327,12 +327,12 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public static IEnumerable<RatioToSurrogate> ListSurrogateNormalizationMethods(SrmDocument srmDocument)
             {
-                var surrogatesByName = srmDocument.Settings.GetPeptideStandards(StandardType.SURROGATE_STANDARD).ToLookup(mol => mol.ModifiedTarget);
+                var surrogatesByName = srmDocument.Settings.GetPeptideStandards(StandardType.SURROGATE_STANDARD).ToLookup(mol => mol.PeptideDocNode.ModifiedTarget);
                 foreach (var grouping in surrogatesByName)
                 {
                     yield return new RatioToSurrogate(grouping.Key.InvariantName);
                     var labelTypes = grouping.SelectMany(
-                        mol => mol.TransitionGroups.Select(transitionGroup => transitionGroup.TransitionGroup.LabelType))
+                        mol => mol.PeptideDocNode.TransitionGroups.Select(transitionGroup => transitionGroup.TransitionGroup.LabelType))
                             .Distinct()
                             .ToArray();
                     if (labelTypes.Length > 1)
@@ -349,18 +349,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             public double GetStandardArea(SrmSettings settings, int resultsIndex, ChromFileInfoId fileId)
             {
                 double globalStandardArea = 0;
-                var peptideStandards = settings.GetPeptideStandards(StandardType.SURROGATE_STANDARD);
-                if (peptideStandards == null)
-                {
-                    return 0;
-                }
+                var peptideStandards = settings.GetSurrogateStandards(SurrogateName);
                 foreach (var peptideDocNode in peptideStandards)
                 {
-                    if (peptideDocNode.ModifiedTarget.InvariantName != SurrogateName)
-                    {
-                        continue;
-                    }
-                    foreach (var nodeGroup in peptideDocNode.TransitionGroups)
+                    foreach (var nodeGroup in peptideDocNode.PeptideDocNode.TransitionGroups)
                     {
                         if (null != _isotopeLabelType &&
                             _isotopeLabelType.Name != nodeGroup.TransitionGroup.LabelType.Name)

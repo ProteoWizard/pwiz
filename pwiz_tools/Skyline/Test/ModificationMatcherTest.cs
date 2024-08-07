@@ -69,8 +69,9 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(nodeCysOxi.HasExplicitMods);
             Assert.IsFalse(nodeCysOxi.ExplicitMods.HasHeavyModifications);
             // Modifications should match by name.
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_MOD_BY_NAME).ExplicitMods.StaticModifications.Contains(mod => 
-                Equals(mod.Modification.Name,  "Phospho (ST)")));
+            var pepModNode = MATCHER.GetModifiedNode(STR_MOD_BY_NAME);
+            Assert.IsTrue(pepModNode.ExplicitMods.StaticModifications.Contains(mod => 
+                mod.Modification.EquivalentAll(UniMod.GetModification("Phospho (ST)", true).ChangeExplicit(true))));
             // Test can find terminal modification
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_TERM_ONLY).ExplicitMods.HeavyModifications.Contains(mod => 
                 mod.Modification.EquivalentAll(UniMod.GetModification("Label:13C(6) (C-term R)", false))));
@@ -78,8 +79,9 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_MOD_BY_NAME).ExplicitMods.StaticModifications.Contains(mod =>
                 mod.Modification.Terminus == null));
             // Test matching negative masses
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_AMMONIA_LOSS).ExplicitMods.StaticModifications.Contains(mod =>
-                mod.Modification.EquivalentAll(UniMod.GetModification("Ammonia-loss (N-term C)", true))));
+            var pepAmmoniaModNode = MATCHER.GetModifiedNode(STR_AMMONIA_LOSS);
+            Assert.IsTrue(pepAmmoniaModNode.ExplicitMods.StaticModifications.Contains(mod =>
+                mod.Modification.EquivalentAll(UniMod.GetModification("Ammonia-loss (N-term C)", true).ChangeExplicit(true))));
 
             // General and specific
             // If all AAs modified, try for most general modification.
@@ -196,8 +198,10 @@ namespace pwiz.SkylineTest
             var nodeUniTerm = MATCHER.GetModifiedNode(STR_UNIMOD_TERMINUS);
             Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications.Count, 1);
             Assert.IsNull(nodeUniTerm.ExplicitMods.StaticModifications);
-            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.Terminus, ModTerminus.C);
-            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.UnimodId, 298);
+            var heavyMod = nodeUniTerm.ExplicitMods.HeavyModifications[0];
+            Assert.IsNull(heavyMod.Modification.Terminus);
+            Assert.AreEqual(heavyMod.Modification.AAs, "R");
+            Assert.AreEqual(heavyMod.Modification.UnimodId, 298);
 
             // Basic multi-label test
             var heavyLabelType2 = new IsotopeLabelType("Heavy2", 1);
@@ -412,7 +416,7 @@ namespace pwiz.SkylineTest
         private static readonly StaticMod LABEL15_N = new StaticMod("Label:15N", null, null, LabelAtoms.N15);
         private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);
         private static readonly StaticMod N_TERM_LABEL = new StaticMod("Label:13C(6)15N(2) (K)", "K", null, false, null, LabelAtoms.C13|LabelAtoms.N15, 
-                                                                        RelativeRT.Matching, null,null, null, 259, "+08", null);
+                                                                        RelativeRT.Matching, null,null, null, 259, "+08");
 
         private static List<string> _seqs;
         private static void InitSeqs()

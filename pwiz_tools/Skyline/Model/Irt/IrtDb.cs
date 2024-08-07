@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Irt
     {
         public const string EXT = ".irtdb";
 
-        public static string FILTER_IRTDB => TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
+        public static string FILTER_IRTDB => TextUtil.FileDialogFilter(IrtResources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
 
         public const int SCHEMA_VERSION_CURRENT = 2;
 
@@ -249,7 +249,13 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor = null)
         {
-            IProgressStatus status = new ProgressStatus(Resources.IrtDb_UpdatePeptides_Updating_peptides);
+            var docType = newPeptides.Any(p => !(p?.Target?.IsProteomic ?? true))
+                ? SrmDocument.DOCUMENT_TYPE.mixed
+                : SrmDocument.DOCUMENT_TYPE.proteomic;
+
+            var msg = Helpers.PeptideToMoleculeTextMapper.Translate(IrtResources.IrtDb_UpdatePeptides_Updating_peptides, docType); // Perform "peptide"->"molecule" translation as needed
+
+            IProgressStatus status = new ProgressStatus(msg);
             monitor?.UpdateProgress(status);
             return UpdatePeptides(newPeptides, monitor, ref status);
         }
@@ -530,16 +536,16 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, out IList<DbIrtPeptide> dbPeptides)
         {
-            var status = new ProgressStatus(string.Format(Resources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
+            var status = new ProgressStatus(string.Format(IrtResources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
             loadMonitor?.UpdateProgress(status);
 
             try
             {
                 if (path == null)
-                    throw new DatabaseOpeningException(Resources.IrtDb_GetIrtDb_Database_path_cannot_be_null);
+                    throw new DatabaseOpeningException(IrtResources.IrtDb_GetIrtDb_Database_path_cannot_be_null);
 
                 if (!File.Exists(path))
-                    throw new DatabaseOpeningException(string.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
+                    throw new DatabaseOpeningException(string.Format(IrtResources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
                 Exception xInner;
@@ -551,22 +557,22 @@ namespace pwiz.Skyline.Model.Irt
                 }
                 catch (UnauthorizedAccessException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_, path);
                     xInner = x;
                 }
                 catch (DirectoryNotFoundException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_The_path_containing__0__does_not_exist, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_The_path_containing__0__does_not_exist, path);
                     xInner = x;
                 }
                 catch (FileNotFoundException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges, path);
                     xInner = x;
                 }
                 catch (SQLiteException x)
                 {
-                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file, path);
+                    message = string.Format(IrtResources.IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file, path);
                     xInner = x;
                 }
                 catch (Exception x)

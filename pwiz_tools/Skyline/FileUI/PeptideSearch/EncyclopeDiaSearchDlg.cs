@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -33,7 +32,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public enum Pages
         {
             fasta_page,
-            prosit_page,
+            koina_page,
             narrow_window_page,
             wide_window_page,
             search_settings,
@@ -57,7 +56,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         public class FastaPage : IFormView { }
-        public class PrositPage : IFormView { }
+        public class KoinaPage : IFormView { }
         public class NarrowWindowPage : IFormView { }
         public class WideWindowPage : IFormView { }
         public class SearchSettingsPage : IFormView { }
@@ -65,7 +64,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new FastaPage(), new PrositPage(), new NarrowWindowPage(), new WideWindowPage(), new SearchSettingsPage(), new RunPage()
+            new FastaPage(), new KoinaPage(), new NarrowWindowPage(), new WideWindowPage(), new SearchSettingsPage(), new RunPage()
         };
 
         public EncyclopeDiaSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
@@ -79,7 +78,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             Icon = SkylineWindow.Icon;
 
-            ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree);
+            ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
             AddPageControl(ImportFastaControl, fastaPage, 2, 60);
 
@@ -93,8 +92,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             AddPageControl(SearchControl, runSearchPage, 2, 0);
             SearchControl.SearchFinished += SearchControlSearchFinished;
 
-            ceCombo.Items.AddRange(Enumerable.Range(EncyclopeDiaHelpers.FastaToPrositInputCsvConfig.MinNCE,
-                EncyclopeDiaHelpers.FastaToPrositInputCsvConfig.MaxNCE).Cast<object>().ToArray());
+            ceCombo.Items.AddRange(Enumerable.Range(EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig.MinNCE,
+                EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig.MaxNCE).Cast<object>().ToArray());
             ceCombo.SelectedIndex = ceCombo.Items.IndexOf(33);
 
             EncyclopeDiaAdditionalSettings = new EncyclopeDiaHelpers.EncyclopeDiaConfig();
@@ -117,8 +116,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportResultsDIAControl NarrowWindowResults { get; set; }
         public ImportResultsDIAControl WideWindowResults { get; set; }
 
-        public EncyclopeDiaHelpers.FastaToPrositInputCsvConfig PrositSettings =>
-            new EncyclopeDiaHelpers.FastaToPrositInputCsvConfig
+        public EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig KoinaSettings =>
+            new EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig
             {
                 DefaultCharge = DefaultCharge,
                 DefaultNCE = DefaultNCE,
@@ -220,7 +219,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get =>
                 new EncyclopeDiaSettings(ImportFastaControl.ImportSettings,
-                    PrositSettings,
+                    KoinaSettings,
                     NarrowWindowResults.FoundResultsFiles.Select(f => new MsDataFilePath(f.Path)),
                     WideWindowResults.FoundResultsFiles.Select(f => new MsDataFilePath(f.Path)),
                     EncyclopeDiaConfig,
@@ -309,7 +308,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (!File.Exists(ImportFastaControl.FastaFile))
             {
-                MessageDlg.Show(this, Resources.EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_);
+                MessageDlg.Show(this, PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_);
                 return;
             }
 
@@ -329,7 +328,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.fasta_page:
                     break;
 
-                case Pages.prosit_page:
+                case Pages.koina_page:
                     break;
 
                 case Pages.narrow_window_page:
@@ -339,7 +338,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.search_settings:
-                    btnNext.Text = Resources.EncyclopeDiaSearchDlg_NextPage_Run;
+                    btnNext.Text = PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_Run;
                     break;
 
                 case Pages.run_page:
@@ -408,7 +407,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             // add audit log entry for EncyclopeDIA search
-            SkylineWindow.ModifyDocument(Resources.EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search,
+            SkylineWindow.ModifyDocument(PeptideSearchResources.EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search,
                 doc => doc.ChangeSettings(doc.Settings.ChangePeptideSettings(
                     doc.Settings.PeptideSettings.ChangeLibraries(
                         doc.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(librarySpecs).ChangeLibraries(libraries)))),
@@ -419,6 +418,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;
+            else
+                foreach (var stream in libraries.SelectMany(library => library.ReadStreams))
+                    stream.CloseStream();
         }
 
         public void PreviousPage()
@@ -430,7 +432,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             switch (CurrentPage)
             {
-                case Pages.prosit_page:
+                case Pages.koina_page:
                     break;
 
                 case Pages.narrow_window_page:
@@ -443,7 +445,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.run_page:
-                    btnNext.Text = Resources.EncyclopeDiaSearchDlg_NextPage_Run;
+                    btnNext.Text = PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_Run;
                     break;
 
                 default:
@@ -482,7 +484,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [TrackChildren]
             public ImportFastaControl.ImportFastaSettings FastaSettings { get; }
             [TrackChildren]
-            public EncyclopeDiaHelpers.FastaToPrositInputCsvConfig PrositSettings { get; }
+            public EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig KoinaSettings { get; }
             [Track]
             public List<AuditLogPath> NarrowWindowResults { get; }
             [Track]
@@ -495,7 +497,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public AuditLogPath EncyclopeDiaQuantLibrary { get; }
 
             public EncyclopeDiaSettings(ImportFastaControl.ImportFastaSettings fastaSettings,
-                EncyclopeDiaHelpers.FastaToPrositInputCsvConfig prositSettings,
+                EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig koinaSettings,
                 IEnumerable<MsDataFileUri> narrowWindowResults,
                 IEnumerable<MsDataFileUri> wideWindowResults,
                 EncyclopeDiaHelpers.EncyclopeDiaConfig encyclopeDiaConfig,
@@ -503,7 +505,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 string encyclopeDiaQuantLibrary)
             {
                 FastaSettings = fastaSettings;
-                PrositSettings = prositSettings;
+                KoinaSettings = koinaSettings;
                 NarrowWindowResultUris = narrowWindowResults;
                 WideWindowResultUris = wideWindowResults;
                 NarrowWindowResults = NarrowWindowResultUris?.Select(r => AuditLogPath.Create(r.GetFilePath())).ToList();
@@ -529,7 +531,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 return new EncyclopeDiaSettings(
                     ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings),
-                    new EncyclopeDiaHelpers.FastaToPrositInputCsvConfig(),
+                    new EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig(),
                     null,
                     null,
                     new EncyclopeDiaHelpers.EncyclopeDiaConfig(),
@@ -540,7 +542,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)
         {
-            KeyValueGridDlg.Show(Resources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 EncyclopeDiaConfig.Parameters,
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
@@ -599,118 +601,138 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
     public class EncyclopeDiaSearchControl : SearchControl
     {
-        public EncyclopeDiaSearchControl(Control hostControl)
+        public EncyclopeDiaSearchDlg HostDialog { get; }
+
+        public EncyclopeDiaSearchControl(EncyclopeDiaSearchDlg hostControl)
         {
-            Parent = hostControl;
+            Parent = HostDialog = hostControl;
         }
 
         public EncyclopeDiaSearchDlg.EncyclopeDiaSettings Settings { get; set; }
         public string EncyclopeDiaChromLibraryPath { get; private set; }
         public string EncyclopeDiaQuantLibraryPath { get; private set; }
-
+        
         private bool Search(EncyclopeDiaSearchDlg.EncyclopeDiaSettings settings, CancellationTokenSource token, IProgressStatus status)
         {
+            ParallelRunnerProgressControl multiProgressControl = null;
             try
             {
                 if (!EnsureRequiredFilesDownloaded(EncyclopeDiaHelpers.FilesToDownload, this))
-                    throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia);
+                    throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia);
 
-                status = status.ChangeSegments(0, 8);
+                status = status.ChangeSegments(0, 7);
 
                 string fastaFilepath = Settings.FastaSettings.FastaFile.Path;
-                string fastaBasename = Path.Combine(Path.GetDirectoryName(fastaFilepath) ?? "", Path.GetFileNameWithoutExtension(fastaFilepath));
-                string prositBasename = fastaBasename + string.Format(@"-z{0}_nce{1}", settings.PrositSettings.DefaultCharge, settings.PrositSettings.DefaultNCE);
-                string dlibFilepath = prositBasename + @"-prosit.dlib";
+                string fastaBasename = Path.Combine(Path.GetDirectoryName(fastaFilepath) ?? "",
+                    Path.GetFileNameWithoutExtension(fastaFilepath));
+                string koinaBasename = fastaBasename + string.Format(@"-z{0}_nce{1}",
+                    settings.KoinaSettings.DefaultCharge, settings.KoinaSettings.DefaultNCE);
+                string dlibFilepath = koinaBasename + @"-koina.dlib";
 
-                string prositCsvFilepath = prositBasename + @"-prosit.csv";
-                EncyclopeDiaHelpers.ConvertFastaToPrositInputCsv(fastaFilepath, prositCsvFilepath, this, ref status, Settings.PrositSettings);
+                string koinaCsvFilepath = koinaBasename + @"-koina.csv";
+                EncyclopeDiaHelpers.ConvertFastaToKoinaInputCsv(fastaFilepath, koinaCsvFilepath, this, ref status, Settings.KoinaSettings);
                 status = status.NextSegment();
 
-                // hash Prosit CSV input to generate blib filename (so if blib file already exists there's no need to go to Prosit)
+                // hash Koina CSV input to generate blib filename (so if blib file already exists there's no need to go to Koina)
                 var hasher = new BlockHash(new MD5CryptoServiceProvider());
-                var hashBytes = hasher.HashFile(prositCsvFilepath);
+                var hashBytes = hasher.HashFile(koinaCsvFilepath);
                 var hashString = string.Join("", hashBytes.Select(b => b.ToString(@"X")));
-                string blibFilepath = prositBasename + @"-prosit-" + hashString + @".blib";
+                string modelSuffix = Properties.Settings.Default.KoinaIntensityModel + @"-" +
+                                     Properties.Settings.Default.KoinaRetentionTimeModel;
+                string blibFilepath = koinaBasename + @"-koina-" + modelSuffix + @"-" + hashString + @".blib";
 
                 if (!File.Exists(blibFilepath))
                 {
-                    var prositMs2Spectra = PrositHelpers.PredictBatchesFromPrositCsv(prositCsvFilepath, this, ref status, CancellationToken.None);
+                    var koinaMs2Spectra = KoinaHelpers.PredictBatchesFromKoinaCsv(koinaCsvFilepath, this, ref status, token.Token);
                     status = status.NextSegment();
-                    PrositHelpers.ExportPrositSpectraToBlib(prositMs2Spectra, blibFilepath, this, ref status);
+                    KoinaHelpers.ExportKoinaSpectraToBlib(koinaMs2Spectra, blibFilepath, this, ref status);
                 }
                 else
                 {
                     UpdateProgress(status.ChangeMessage(string.Format(
-                        Resources.EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_,
+                        PeptideSearchResources.EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_,
                         blibFilepath)));
-                    status = status.NextSegment(); // after generating prosit input rows
+                    status = status.NextSegment(); // after generating koina input rows
                     status = status.NextSegment(); // after intensity model
-                    status = status.NextSegment(); // after PredictBatchesFromPrositCsv
+                    status = status.NextSegment(); // after PredictBatchesFromKoinaCsv
                 }
+
                 status = status.NextSegment();
 
-                EncyclopeDiaHelpers.ConvertPrositOutputToDlib(blibFilepath, fastaFilepath, dlibFilepath, this, ref status);
+                EncyclopeDiaHelpers.ConvertKoinaOutputToDlib(blibFilepath, fastaFilepath, dlibFilepath, this, ref status);
                 status = status.NextSegment();
 
-                EncyclopeDiaChromLibraryPath = prositBasename + @".elib";
-                EncyclopeDiaHelpers.GenerateChromatogramLibrary(dlibFilepath, EncyclopeDiaChromLibraryPath, fastaFilepath,
-                    Settings.NarrowWindowResultUris, this, ref status, settings.EncyclopeDiaConfig);
-                status = status.NextSegment();
+                Invoke(new MethodInvoker(() =>
+                {
+                    multiProgressControl = new ParallelRunnerProgressControl(this);
+                    multiProgressControl.Dock = DockStyle.Fill;
+                    progressSplitContainer.Panel1.Controls.Add(multiProgressControl);
+                }));
 
-                EncyclopeDiaQuantLibraryPath = prositBasename + @"-quant.elib";
-                EncyclopeDiaHelpers.GenerateQuantLibrary(EncyclopeDiaChromLibraryPath, EncyclopeDiaQuantLibraryPath, fastaFilepath,
-                    Settings.WideWindowResultUris, this, ref status, settings.EncyclopeDiaConfig);
+                EncyclopeDiaChromLibraryPath = koinaBasename + @".elib";
+                EncyclopeDiaQuantLibraryPath = koinaBasename + @"-quant.elib";
+                EncyclopeDiaHelpers.Generate(dlibFilepath, EncyclopeDiaChromLibraryPath,
+                    EncyclopeDiaQuantLibraryPath, fastaFilepath, settings.EncyclopeDiaConfig,
+                    settings.NarrowWindowResultUris, settings.WideWindowResultUris,
+                    this, multiProgressControl, token.Token, status);
+            }
+            catch (OperationCanceledException e)
+            {
+                UpdateProgress(status.ChangeWarningMessage(e.InnerException?.Message ?? e.Message));
+                return false;
             }
             catch (Exception e)
             {
                 UpdateProgress(status.ChangeErrorException(e));
                 return false;
             }
+            finally
+            {
+                Invoke(new MethodInvoker(() =>
+                {
+                    progressSplitContainer.Panel1Collapsed = true;
+                    progressSplitContainer.Panel1.Controls.Clear();
+                    multiProgressControl?.Dispose();
+                }));
+            }
 
-            return true;
+            return !token.IsCancellationRequested;
         }
 
-        public override async void RunSearch()
+        public override void RunSearch()
         {
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
-            btnCancel.Enabled = true;
+            btnCancel.Enabled = progressBar.Visible = true;
+
             _cancelToken = new CancellationTokenSource();
+
+            ActionUtil.RunAsync(RunSearchAsync, @"EncyclopeDIA Search thread");
+        }
+
+        public void RunSearchAsync()
+        {
             IProgressStatus status = new ProgressStatus();
-            progressBar.Visible = true;
             bool success = true;
 
             if (!_cancelToken.IsCancellationRequested)
             {
-                UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Starting_search));
+                Invoke(new MethodInvoker(() => UpdateSearchEngineProgress(status.ChangeMessage(PeptideSearchResources.DDASearchControl_SearchProgress_Starting_search))));
 
-                var t = Task<bool>.Factory.StartNew(() => Search(Settings, _cancelToken, status),
-                    _cancelToken.Token);
-                await t;
-                success = t.Result;
+                success = Search(Settings, _cancelToken, status);
 
-                if (_cancelToken.IsCancellationRequested)
-                {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
-                    progressBar.Visible = false;
-                    success = false;
-                }
-                else if (!t.Result)
-                {
-                    UpdateSearchEngineProgress(status.ChangeWarningMessage(Resources.DDASearchControl_SearchProgress_Search_failed));
-                    Cancel();
-                }
-                else
-                {
-                    UpdateSearchEngineProgress(status
-                        .ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).ChangeSegments(0, 0)
-                        .Complete());
-                }
+                Invoke(new MethodInvoker(() => UpdateSearchEngineProgressMilestone(status, success, status.SegmentCount,
+                    Resources.DDASearchControl_SearchProgress_Search_canceled,
+                    PeptideSearchResources.DDASearchControl_SearchProgress_Search_failed,
+                    Resources.DDASearchControl_SearchProgress_Search_done)));
             }
 
-            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
-            btnCancel.Enabled = false;
-            OnSearchFinished(success);
+            Invoke(new MethodInvoker(() =>
+            {
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
+                btnCancel.Enabled = false;
+                OnSearchFinished(success);
+            }));
         }
 
         private bool EnsureRequiredFilesDownloaded(IEnumerable<FileDownloadInfo> requiredFiles, IProgressMonitor progressMonitor)
@@ -725,7 +747,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 try
                 {
                     SimpleFileDownloaderDlg.Show(null,
-                        string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
+                        string.Format(PeptideSearchResources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
                             @"EncyclopeDia"), filesNotAlreadyDownloaded);
                 }
                 catch (Exception x)

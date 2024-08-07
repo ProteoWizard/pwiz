@@ -125,6 +125,12 @@ PWIZ_API_DECL enum Polarity
     Undefined = 2
 };
 
+enum PWIZ_API_DECL FragmentationMode 
+{
+    FragmentationMode_CID,
+    FragmentationMode_EAD
+};
+
 
 struct PWIZ_API_DECL Spectrum
 {
@@ -136,7 +142,7 @@ struct PWIZ_API_DECL Spectrum
     virtual int getMSLevel() const = 0;
 
     virtual bool getHasIsolationInfo() const = 0;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const = 0;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const = 0;
 
     virtual bool getHasPrecursorInfo() const = 0;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const = 0;
@@ -190,9 +196,9 @@ struct PWIZ_API_DECL Experiment
 
     virtual size_t getSRMSize() const = 0;
     virtual void getSRM(size_t index, Target& target) const = 0;
-    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const = 0;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const = 0;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                        double& basePeakX, double& basePeakY) const = 0;
+                        double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const = 0;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
     virtual ScanType getScanType() const = 0;

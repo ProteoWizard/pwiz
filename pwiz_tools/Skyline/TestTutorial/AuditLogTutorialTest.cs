@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestTutorial
     {
         public const string SERVER_URL = "https://panoramaweb.org/";
         public const string PANORAMA_FOLDER = "SkylineTest";
-        public const string PANORAMA_USER_NAME = "ritach@uw.edu";
+        public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
         public const string PANORAMA_PASSWORD = "lclcmsms";
 
         public string testFolderName = "AuditLogUpload";
@@ -90,9 +90,6 @@ namespace pwiz.SkylineTestTutorial
                     : @"https://skyline.ms/tutorials/AuditLogMzml.zip",
                 @"TestTutorial\AuditLogViews.zip"
             };
-
-            if(IsPauseForScreenShots)
-                PanoramaSetup();
 
             RunFunctionalTest();
         }
@@ -472,6 +469,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
             else
             {
+                PanoramaSetup();
+
                 PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
                 var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
@@ -481,8 +480,8 @@ namespace pwiz.SkylineTestTutorial
                     publishDialog.SelectItem(testFolderName);
                 });
                 PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.", 21);
-                var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(publishDialog.OkDialog);
-
+                var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
+                var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
                 OkDialog(browserConfirmationDialog, browserConfirmationDialog.ClickYes);
 
                 PauseForScreenShot("Uploaded document in Panorama (in browser).");
@@ -625,16 +624,30 @@ namespace pwiz.SkylineTestTutorial
 
         private void PanoramaSetup()
         {
-            Uri serverUri = new Uri(SERVER_URL);
+            // NOTE: This method is called when IsPauseForScreenShots is set to true. 
+            // Before running the test change the permissions on the Panorama project folder at 
+            // https://panoramaweb.org/SkylineTest/project-begin.view 
+            // Make the test user (PANORAMA_USER_NAME) a folder administrator so that the
+            // user is able to create and delete folders in the "SkylineTest" project.
+            var panoramaClient =  new WebPanoramaClient(new Uri(SERVER_URL), PANORAMA_USER_NAME, PANORAMA_PASSWORD);
 
-            IPanoramaClient panoramaClient = PanoramaUtil.CreatePanoramaClient(serverUri);
-
-            var deleteResult = panoramaClient.DeleteFolder($@"{PANORAMA_FOLDER}/{testFolderName}", PANORAMA_USER_NAME,
-                PANORAMA_PASSWORD);
-            if(deleteResult != FolderOperationStatus.OK && deleteResult != FolderOperationStatus.notfound)
-                Assert.Fail($@"Cannot delete existing test folder. Returns {deleteResult}");
-            Assert.AreEqual(FolderOperationStatus.OK, panoramaClient.CreateFolder(PANORAMA_FOLDER, testFolderName,
-                PANORAMA_USER_NAME, PANORAMA_PASSWORD), "Error when creating panorama test folder.");
+            try
+            {
+                panoramaClient.DeleteFolderIfExists($@"{PANORAMA_FOLDER}/{testFolderName}");
+            }
+            catch (Exception e)
+            {
+                AssertEx.Fail("Cannot delete existing Panorama test folder. {0}", e.Message);
+            }
+            
+            try
+            {
+                panoramaClient.CreateTargetedMsFolder(PANORAMA_FOLDER, testFolderName);
+            }
+            catch (Exception e)
+            {
+                AssertEx.Fail("Error creating Panorama test folder. {0}", e.Message);
+            }
         }
     }
 }

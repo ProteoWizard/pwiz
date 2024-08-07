@@ -736,7 +736,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 // CONSIDER: Is this really the selected file?
-                return ChromGroupInfos.FirstOrDefault(info => info != null);
+                return ChromGroupInfos?.FirstOrDefault(info => info != null);
             }
         }
 
@@ -810,7 +810,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             string xAxisTitle = GraphValues.ToLocalizedString(RTPeptideValue.Retention);
-            RegressionLine timeRegressionFunction = null;
+            AlignmentFunction timeRegressionFunction = null;
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
@@ -1132,23 +1132,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     string message = null;
                     if (nodePeps == null)
-                        message = Resources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
+                        message = GraphsResources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
                     else switch (DisplayType)
                     {
                         case DisplayTypeChrom.precursors:
-                            message = Resources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.products:
-                            message = Resources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.base_peak:
-                            message = Resources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;
                             break;
                         case DisplayTypeChrom.tic:
-                            message = Resources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
                             break;
                         case DisplayTypeChrom.qc:
-                            message = Resources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
@@ -1160,10 +1160,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (DisplayType)
                 {
                     case DisplayTypeChrom.base_peak:
-                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram;
+                        message = GraphsResources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram;
                         break;
                     case DisplayTypeChrom.tic:
-                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
+                        message = GraphsResources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
                         break;
                 }
                 SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
@@ -1234,24 +1234,28 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayAllIonsSummary(RegressionLine timeRegressionFunction,
+        private void DisplayAllIonsSummary(AlignmentFunction timeRegressionFunction,
                                            TransitionDocNode nodeTranSelected,
                                            ChromatogramSet chromatograms,
                                            ChromExtractor extractor,
                                            out RetentionTimeValues bestRetentionTimes)
         {
             bestRetentionTimes = null;
-            if (ChromGroupInfos.Length == 0)
+            var chromGroupInfo = ChromGroupInfos?.FirstOrDefault();
+            if (chromGroupInfo == null)
             {
                 return;
             }
-            var chromGroupInfo = ChromGroupInfos[0];
             var fileId = chromatograms.FindFile(chromGroupInfo);
 
             var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
             var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw);
+            if (info == null)
+            {
+                return;
+            }
 
             TransitionChromInfo tranPeakInfo = null;
             RetentionTimeValues bestQuantitativePeakTimes = null;
@@ -1329,7 +1333,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphHelper.SetErrorGraphItem(graphItem);
         }
 
-        private void DisplayTransitions(RegressionLine timeRegressionFunction,
+        private void DisplayTransitions(AlignmentFunction timeRegressionFunction,
                                         TransitionDocNode nodeTranSelected,
                                         ChromatogramSet chromatograms,
                                         float mzMatchTolerance,
@@ -1633,7 +1637,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo chromatogramInfo,
-            RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
+            AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
             if (tranPeakInfo == null || chromatogramInfo == null)
@@ -1739,7 +1743,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
         }
 
-        private void DisplayOptimizationTotals(RegressionLine timeRegressionFunction,
+        private void DisplayOptimizationTotals(AlignmentFunction timeRegressionFunction,
                                                ChromatogramSet chromatograms,
                                                float mzMatchTolerance,
                                                out RetentionTimeValues bestPeakTimes)
@@ -1764,7 +1768,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private List<ChromGraphItem> GetOptimizationTotalGraphItems(
-            RegressionLine timeRegressionFunction,
+            AlignmentFunction timeRegressionFunction,
             ChromatogramSet chromatograms,
             float mzMatchTolerance,
             TransitionGroupDocNode nodeGroup,
@@ -1972,7 +1976,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayTotals(RegressionLine timeRegressionFunction,
+        private void DisplayTotals(AlignmentFunction timeRegressionFunction,
                                    ChromatogramSet chromatograms,
                                    float mzMatchTolerance,
                                    int countLabelTypes,
@@ -2099,7 +2103,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Display summed transitions for multiple selected peptides.
         /// </summary>
-        private void DisplayPeptides(RegressionLine timeRegressionFunction,
+        private void DisplayPeptides(AlignmentFunction timeRegressionFunction,
                                    ChromatogramSet chromatograms,
                                    float mzMatchTolerance,
                                    int countLabelTypes,
@@ -2119,9 +2123,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 lookupChromGroupInfoIndex[_nodeGroups[i].Id.GlobalIndex] = i;
 
             // Generate a unique short identifier for each peptide.
-            var peptideNames = new Tuple<string,bool>[peptideDocNodes.Count];
+            var peptideNames = new UniquePrefixGenerator.TargetLabel[peptideDocNodes.Count];
             for (int i = 0; i < peptideDocNodes.Count; i++)
-                peptideNames[i] = new Tuple<string,bool>(peptideDocNodes[i].ModifiedTarget.DisplayName, peptideDocNodes[i].IsProteomic);
+                peptideNames[i] = new UniquePrefixGenerator.TargetLabel(peptideDocNodes[i].ModifiedTarget.DisplayName, peptideDocNodes[i].IsProteomic);
             var uniqueNames = new UniquePrefixGenerator(peptideNames, 3);
 
             var displayPeptides = new List<DisplayPeptide>();
@@ -2459,7 +2463,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Check to see if the list of files has changed.
                 var listNames = new List<string>();
                 if (_hasMergedChromInfo)
-                    listNames.Add(Resources.GraphChromatogram_UpdateToolbar_All);
+                    listNames.Add(GraphsResources.GraphChromatogram_UpdateToolbar_All);
                 for (int i = _hasMergedChromInfo ? 1 : 0; i < arrayChromInfo.Count; i++)
                 {
                     var arrayInfo = arrayChromInfo[i];
@@ -2514,7 +2518,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroups)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
-                                      _arrayChromInfo?[0]?[0].TextId == Settings.Default.ShowQcTraceName;
+                                      _arrayChromInfo?[0]?[0]?.QcTraceName == Settings.Default.ShowQcTraceName;
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups) &&
                 _extractor == extractor &&
@@ -2561,7 +2565,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             continue;
                         foreach (var chromInfo in arrayChromInfo)
                         {
-                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.TextId;
+                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.QcTraceName;
                             if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath) && qcTraceNameMatches)
                                 arrayNew[j] = chromInfo;
                         }

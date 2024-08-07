@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
+    <value>Isolation scheme is set to multiplexing but file does not appear to contain multiplexed acquisition data.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
+    <value>Scan in imported file appears to be missing an isolation window center.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_" xml:space="preserve">
+    <value>The isolation width for a scan in the imported file could not be determined.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_" xml:space="preserve">
+    <value>Tried to get a window mask for {0}, a spectrum with previously unobserved isolation windows. Demultiplexing requires a repeating cycle of isolation windows.</value>
+  </data>
+  <data name="Block_VerifySort_Expected_sorted_data" xml:space="preserve">
+    <value>Expected sorted data</value>
+  </data>
+  <data name="BulkReadException_BulkReadException_Failed_reading_block_from_file" xml:space="preserve">
+    <value>Failed reading block from file.</value>
+  </data>
+  <data name="ChromatogramCache_Load_Loading__0__cache" xml:space="preserve">
+    <value>Loading {0} cache</value>
+  </data>
+  <data name="ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs" xml:space="preserve">
+    <value>Failure trying to read scan IDs</value>
+  </data>
+  <data name="ChromatogramCache_LoadStructs_FileCorrupted" xml:space="preserve">
+    <value>The file appears to be corrupted and cannot be read.
+It is recommended that you delete this file so that Skyline can create a new file by again extracting chromatograms from the raw data files.</value>
+  </data>
+  <data name="ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted" xml:space="preserve">
+    <value>Data truncation in cache header. File may be corrupted.</value>
+  </data>
+  <data name="ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points" xml:space="preserve">
+    <value>Failure trying to read points</value>
+  </data>
+  <data name="ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__" xml:space="preserve">
+    <value>The index {0} must be between 0 and {1}</value>
+  </data>
+  <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
+    <value>Attempting to save results info for a file that cannot be found.</value>
+  </data>
+  <data name="ChromatogramSet_WriteXml_Attempt_to_serialize_list_containing_invalid_type" xml:space="preserve">
+    <value>Attempt to serialize list containing invalid type.</value>
+  </data>
+  <data name="ChromCacheBuilder_BuildNextFileInner_Importing__0__" xml:space="preserve">
+    <value>Importing {0}</value>
+  </data>
+  <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
+    <value>Recalculating scores for {0}</value>
+  </data>
+  <data name="ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data" xml:space="preserve">
+    <value>The sample {0} contains no usable data.</value>
+  </data>
+  <data name="ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_" xml:space="preserve">
+    <value>The path '{0}' was not found among previously imported results.</value>
+  </data>
+  <data name="ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_" xml:space="preserve">
+    <value>Unable to finish importing chromatograms because the retention time predictor linear regression failed.</value>
+  </data>
+  <data name="ChromCacheBuilder_WriteLoop_Failure_writing_cache_file" xml:space="preserve">
+    <value>Failure writing cache file.</value>
+  </data>
+  <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
+    <value>Transitions of the same precursor found with different peak counts {0} and {1}</value>
+  </data>
+  <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___" xml:space="preserve">
+    <value>Failed importing results file '{0}'.</value>
+  </data>
+  <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__" xml:space="preserve">
+    <value>Failed importing results file '{0}', sample {1}.</value>
+  </data>
+  <data name="ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__" xml:space="preserve">
+    <value>Failed to create cache '{0}'.</value>
+  </data>
+  <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
+    <value>Joining file {0}</value>
+  </data>
+  <data name="ChromCacheWriter_Complete_Failure_attempting_to_write_the_file__0_" xml:space="preserve">
+    <value>Failure attempting to write the file {0}</value>
+  </data>
+  <data name="ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count" xml:space="preserve">
+    <value>Times ({0}) and intensities ({1}) disagree in point count.</value>
+  </data>
+  <data name="ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_" xml:space="preserve">
+    <value>Intensities ({0}) and mass errors ({1}) disagree in point count.</value>
+  </data>
+  <data name="ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid" xml:space="preserve">
+    <value>The time interval {0} to {1} is not valid.</value>
+  </data>
+  <data name="ChromDataSet_MergePeaks_Unexpected_null_peak" xml:space="preserve">
+    <value>Unexpected null peak</value>
+  </data>
+  <data name="ChromDataSet_ToString_empty" xml:space="preserve">
+    <value>empty</value>
+  </data>
+  <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values" xml:space="preserve">
+    <value>Invalid chromatogram ID {0} found. Failure parsing m/z values.</value>
+  </data>
+  <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values" xml:space="preserve">
+    <value>Invalid chromatogram ID {0} found. The ID must include both precursor and product m/z values.</value>
+  </data>
+  <data name="ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID" xml:space="preserve">
+    <value>The value '{0}' is not a valid chromatogram ID.</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_MS_MS" xml:space="preserve">
+    <value>MS/MS</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_SIM" xml:space="preserve">
+    <value>SIM</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Centroided" xml:space="preserve">
+    <value>Centroided</value>
+  </data>
+  <data name="GraphFullScan_PeakType_ChromDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="LoadCanceledException_LoadCanceledException_Data_import_canceled" xml:space="preserve">
+    <value>Data import canceled</value>
+  </data>
+  <data name="Loader_Fail_Failed_importing_results_into___0___" xml:space="preserve">
+    <value>Failed importing results into '{0}'.</value>
+  </data>
+  <data name="Loader_FinishLoad_Updating_peak_statistics" xml:space="preserve">
+    <value>Updating peak statistics</value>
+  </data>
+  <data name="Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_" xml:space="preserve">
+    <value>Failure attempting to load the data cache file {0}</value>
+  </data>
+  <data name="Loader_Load_Failure_reading_the_data_file__0__" xml:space="preserve">
+    <value>Failure reading the data file {0}.</value>
+  </data>
+  <data name="MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_" xml:space="preserve">
+    <value>Attempting to recalculate peak integration without first completing raw data import.</value>
+  </data>
+  <data name="MeasuredResults_CommitCacheFile_The_chromatogram_cache_must_be_loaded_before_it_can_be_changed" xml:space="preserve">
+    <value>The chromatogram cache must be loaded before it can be changed.</value>
+  </data>
+  <data name="MeasuredResults_OptimizeCache_The_chromatogram_cache_must_be_loaded_before_it_is_optimized" xml:space="preserve">
+    <value>The chromatogram cache must be loaded before it is optimized.</value>
+  </data>
+  <data name="MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found" xml:space="preserve">
+    <value>MS/MS scan index {0} not found</value>
+  </data>
+  <data name="NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_" xml:space="preserve">
+    <value>No scans in {0} match the current filter settings.</value>
+  </data>
+  <data name="NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__" xml:space="preserve">
+    <value>No SRM/MRM data found in {0}.</value>
+  </data>
+  <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
+    <value>Missing scan time value on scan {0}. Scan times are required for overlap-based demultiplexing.</value>
+  </data>
+  <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
+    <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}. A non-degenerate overlapping window scheme is required.</value>
+  </data>
+  <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
+    <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
+  </data>
+  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
+    <value>Unable to process chromatograms for the molecule '{0}' because one chromatogram ends at time '{1}' and the other ends at time '{2}'.</value>
+  </data>
+  <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
+    <value>Unexpected null peak list</value>
+  </data>
+  <data name="Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results" xml:space="preserve">
+    <value>DocNode peak info found for file with no match in document results.</value>
+  </data>
+  <data name="Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__" xml:space="preserve">
+    <value>DocNode results count {0} does not match document results count {1}.</value>
+  </data>
+  <data name="ResultsGrid_ChangeChromInfo_Element_not_found" xml:space="preserve">
+    <value>Element not found</value>
+  </data>
+  <data name="ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___" xml:space="preserve">
+    <value>The scan ID '{0}' could not be found in the file '{1}'.</value>
+  </data>
+  <data name="ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_" xml:space="preserve">
+    <value>The data file {0} could not be found, either at its original location or in the document or document parent folder.</value>
+  </data>
+  <data name="SizedSet_Add_SizedSet_index_value_is_out_of_range" xml:space="preserve">
+    <value>Index is out of range</value>
+  </data>
+  <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz" xml:space="preserve">
+    <value>Scan {0} found without precursor m/z.</value>
+  </data>
+  <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time" xml:space="preserve">
+    <value>Scan {0} found without scan time.</value>
+  </data>
+  <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
+    <value>Unable to determine isolation width for the scan targeted at {0}</value>
+  </data>
+  <data name="TransitionBinner_BinData_" xml:space="preserve">
+    <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml" xml:space="preserve">
+    <value>Converting {0} to xml</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_" xml:space="preserve">
+    <value>Failure attempting to convert file {0} to .group.xml.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_" xml:space="preserve">
+    <value>ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_" xml:space="preserve">
+    <value>Unable to find {0} or {1} in directory {2}.  Please reinstall ProteinPilot software to be able to handle .group files.</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_" xml:space="preserve">
+    <value>Discarding chromatograms for '{0}' because the explicit retention time {1} is not between {2} and {3}</value>
+  </data>
+  <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
+    <value>need a value for  Transition Settings  Ion mobility filtering  Window type</value>
+  </data>
+  <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
+    <value>mixed ion mobility types are not supported</value>
+  </data>
+  <data name="DataFileInstrumentInfo_CCSFromIonMobility_no_conversion" xml:space="preserve">
+    <value>Vendor-supplied library is unable to determine CCS for {0} with mobility={1:0.###}, mz={2:0.####}, and charge={3}.</value>
+  </data>
+  <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
+    <value>Vendor-supplied library is unable to determine ion mobility for {0} with CCS={1:0.###}, mz={2:0.####}, and charge={3}.</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
+    <value>Discarding empty chromatograms for {0}</value>
+  </data>
+</root>

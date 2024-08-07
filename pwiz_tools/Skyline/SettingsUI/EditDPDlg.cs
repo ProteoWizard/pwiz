@@ -25,7 +25,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -90,7 +89,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditDPDlg_OkDialog_The_declustering_potential_regression__0__already_exists, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditDPDlg_OkDialog_The_declustering_potential_regression__0__already_exists, name);
                 return;
             }
 
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.SettingsUI
             var regressionLine = regressionData.RegressionLine;
             if (regressionLine == null)
             {
-                MessageDlg.Show(this, Resources.EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression);
+                MessageDlg.Show(this, SettingsUIResources.EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression);
                 return;
             }
 
@@ -161,9 +160,9 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             var graphData = new RegressionGraphData
                                 {
-                                    Title = Resources.EditDPDlg_ShowGraph_Declustering_Potential_Regression,
-                                    LabelX = Resources.EditDPDlg_ShowGraph_Precursor_m_z,
-                                    LabelY = Resources.EditDPDlg_ShowGraph_Declustering_Potential,
+                                    Title = SettingsUIResources.EditDPDlg_ShowGraph_Declustering_Potential_Regression,
+                                    LabelX = SettingsUIResources.EditDPDlg_ShowGraph_Precursor_m_z,
+                                    LabelY = SettingsUIResources.EditDPDlg_ShowGraph_Declustering_Potential,
                                     XValues = regressionData.PrecursorMzValues,
                                     YValues = regressionData.BestValues,
                                     RegressionLine = regressionData.RegressionLine,
@@ -182,7 +181,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression);
+                MessageDlg.Show(this, SettingsUIResources.EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression);
                 return null;
             }
 

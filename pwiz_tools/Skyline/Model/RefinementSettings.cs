@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -52,9 +53,9 @@ namespace pwiz.Skyline.Model
 
     public static class DecoyGeneration
     {
-        public static string ADD_RANDOM { get { return Resources.DecoyGeneration_ADD_RANDOM_Random_Mass_Shift; } }
+        public static string ADD_RANDOM { get { return ModelResources.DecoyGeneration_ADD_RANDOM_Random_Mass_Shift; } }
         public static string SHUFFLE_SEQUENCE { get { return Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence; } }
-        public static string REVERSE_SEQUENCE { get { return Resources.DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence; } }
+        public static string REVERSE_SEQUENCE { get { return ModelResources.DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence; } }
 
         public static IEnumerable<string> Methods
         {
@@ -366,14 +367,15 @@ namespace pwiz.Skyline.Model
                     !document.Settings.HasGlobalStandardArea)
                 {
                     // error
-                    throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
+                    throw new Exception(ModelResources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
                 }
 
                 var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
                 var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
+                var normalizedValueCalculator = new NormalizedValueCalculator(refined);
+                var data = new AreaCVRefinementData(normalizedValueCalculator, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
                     Transitions, countTransitions, MSLevel), CancellationToken.None, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
@@ -405,7 +407,7 @@ namespace pwiz.Skyline.Model
                 if (idx == -1)
                 {
                     // error
-                    throw new Exception(Resources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
+                    throw new Exception(ModelResources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
                 }
                 return NormalizeOption.FromIsotopeLabelType(type);
             }
@@ -943,6 +945,15 @@ namespace pwiz.Skyline.Model
         public const string TestingConvertedFromProteomic = "zzzTestingConvertedFromProteomic";
         public static string TestingConvertedFromProteomicPeptideNameDecorator = @"pep_"; // Testing aid: use this to make sure name of a converted peptide isn't a valid peptide seq
         
+        public static CustomMolecule MoleculeFromPeptideSequence(string sequence)
+        {
+            var moleculeFormula = SrmSettings.MonoisotopicMassCalc.GetMolecularFormula(sequence);
+            var mol = ParsedMolecule.Create(moleculeFormula); // Convert to ParsedMolecule
+            var customMolecule = new CustomMolecule(mol,
+                RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + sequence);
+            return customMolecule;
+        }
+
         public SrmDocument ConvertToSmallMolecules(SrmDocument document, 
             string pathForLibraryFiles, // In case we translate libraries etc
             ConvertToSmallMoleculesMode mode = ConvertToSmallMoleculesMode.formulas, 
@@ -960,6 +971,24 @@ namespace pwiz.Skyline.Model
                 invertChargesMode == ConvertToSmallMoleculesChargesMode.none && // Too much trouble adjusting mz in libs
                 mode != ConvertToSmallMoleculesMode.masses_only && // Need a proper ID for libraries
                 document.Settings.PeptideSettings.Libraries.IsLoaded; // If original doc never loaded libraries, don't worry about converting
+
+            // Retention time prediction
+            var prediction = newdoc.Settings.PeptideSettings.Prediction;
+            var peptideTimes = prediction?.RetentionTime?.PeptideTimes;
+            if (canConvertLibraries && peptideTimes != null)
+            {
+                var calc = prediction.RetentionTime.Calculator;
+                var newDbFile =  calc.PersistAsSmallMolecules(Path.GetDirectoryName(calc.PersistencePath), newdoc);
+                if (newDbFile != null)
+                {
+                    var irtCalcName = Path.GetFileNameWithoutExtension(newDbFile);
+                    var calcIrt = new RCalcIrt(irtCalcName, newDbFile);
+                    var retentionTimeRegression = prediction.RetentionTime.ChangeCalculator(calcIrt);
+                    retentionTimeRegression = (RetentionTimeRegression)retentionTimeRegression.ChangeName(irtCalcName);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptidePrediction(p =>
+                        prediction.ChangeRetentionTime(retentionTimeRegression)));
+                }
+            }
 
             // Make small molecule filter settings look like peptide filter settings
             var ionTypes = new List<IonType>();
@@ -1171,7 +1200,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 var name = Path.GetFileNameWithoutExtension(newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath) +
-                           Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
+                           ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
                 var path = Path.Combine(pathForLibraryFiles, name + IonMobilityDb.EXT);
                 var db = IonMobilityDb.CreateIonMobilityDb(path, name, false).UpdateIonMobilities(mapped);
                 var spec = new IonMobilityLibrary(name, path, db);
@@ -1191,7 +1220,7 @@ namespace pwiz.Skyline.Model
                     oldTransitionLibInfos.AddRange(document.MoleculeTransitions.Select(t => t.LibInfo));
                     var newSettings = BlibDb.MinimizeLibrariesAndConvertToSmallMolecules(document,
                         pathForLibraryFiles, 
-                        Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
+                        ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
                         precursorMap, dictOldNamesToNew, null).Settings;
                     CloseLibraryStreams(document);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.
@@ -1232,13 +1261,11 @@ namespace pwiz.Skyline.Model
                     var newDbPath = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
                         .PersistMinimized(pathForLibraryFiles, document, precursorMap, out var newLoadedDb);
                     var spec = new IonMobilityLibrary(document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name + 
-                                                      @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath, newLoadedDb);
+                                                      @" " + ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath, newLoadedDb);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangeTransitionIonMobilityFiltering(im => im.ChangeLibrary(spec)));
                 }
-            }            
-            // No retention time prediction for small molecules (yet?)
-            newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
-                newdoc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(null))));
+            }
+
             newdoc = ForceReloadChromatograms(newdoc);
             CloseLibraryStreams(newdoc);
             return newdoc;
@@ -1317,6 +1344,33 @@ namespace pwiz.Skyline.Model
                                                         .Select(nodePeptideGroup => nodePeptideGroup.Id.GlobalIndex).ToArray()); 
         }
 
+        public static ModifiedDocument ModifyDocumentByRemovingDecoys(SrmDocument originalDocument)
+        {
+            var modifiedDocument = new ModifiedDocument(RemoveDecoys(originalDocument));
+            var deletedMoleculeGroups = originalDocument.MoleculeGroups.Where(moleculeGroup =>
+                modifiedDocument.Document.FindNodeIndex(moleculeGroup.PeptideGroup) < 0).ToList();
+            var docPair = SrmDocumentPair.Create(originalDocument, modifiedDocument.Document, SrmDocument.DOCUMENT_TYPE.none);
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(SkylineWindow.CreateDeleteNodesEntry(docPair,
+                deletedMoleculeGroups.Select(
+                    moleculeGroup => AuditLogEntry.GetNodeName(originalDocument, moleculeGroup).ToString()), null));
+            return modifiedDocument;
+        }
+
+        public ModifiedDocument ModifyDocumentByGeneratingDecoys(SrmDocument document)
+        {
+            var modifiedDocument = new ModifiedDocument(GenerateDecoys(document));
+            if (ReferenceEquals(document, modifiedDocument.Document))
+            {
+                return null;
+            }
+            var plural = NumberOfDecoys > 1;
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                new MessageInfo(
+                    plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
+                    modifiedDocument.Document.DocumentType,
+                    NumberOfDecoys, DecoysMethod)));
+            return modifiedDocument;
+        }
 
         public SrmDocument GenerateDecoys(SrmDocument document)
         {

@@ -162,7 +162,7 @@
     <value>24, 15</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>CE:</value>
+    <value>NCE:</value>
   </data>
   <data name="comboCE.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 25</value>
@@ -208,7 +208,7 @@
     <value>msGraphExtension</value>
   </data>
   <data name="&gt;&gt;msGraphExtension.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.537, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;msGraphExtension.Parent" xml:space="preserve">
     <value>GraphPanel</value>

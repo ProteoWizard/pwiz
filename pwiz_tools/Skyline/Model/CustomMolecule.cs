@@ -654,7 +654,7 @@ namespace pwiz.Skyline.Model
         public void Validate()
         {
             if (AverageMass == 0 || MonoisotopicMass == 0)
-                throw new InvalidDataException(Resources.CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);
+                throw new InvalidDataException(ModelResources.CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);
             if(AverageMass > MAX_MASS || MonoisotopicMass > MAX_MASS)
                 throw new InvalidDataException(string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__, 
                     AverageMass > MAX_MASS ? AverageMass : MonoisotopicMass, MAX_MASS));
@@ -807,7 +807,7 @@ namespace pwiz.Skyline.Model
             if ((averageMass == 0) != (monoisotopicMass == 0))
             {
                 // Expected both or neither to be zero
-                throw new InvalidDataException(Resources.CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);
+                throw new InvalidDataException(ModelResources.CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);
             }
 
             SetFormula(ParsedMolecule.IsNullOrEmpty(formula) ? 

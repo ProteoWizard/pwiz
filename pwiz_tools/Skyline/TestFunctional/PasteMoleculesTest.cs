@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private void TestError(string clipText, string errText,
-            string[] columnOrder)
+            string[] columnOrder, bool expectAutoManageDlg = false)
         {
             var allErrorText = string.Empty;
             clipText = ToLocalText(clipText);
@@ -77,7 +77,10 @@ namespace pwiz.SkylineTestFunctional
                 // We expect this to work, go ahead and load it
                 var docCurrent = SkylineWindow.Document;
                 OkDialog(windowDlg, windowDlg.OkDialog); 
-                DismissAutoManageDialog(docCurrent);  // Say no to the offer to set new nodes to automanage
+                if (expectAutoManageDlg)
+                {
+                    DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+                }
             }
             else
             {
@@ -123,6 +126,7 @@ namespace pwiz.SkylineTestFunctional
         const string caffeineSMILES = "Cn1cnc2n(C)c(=O)n(C)c(=O)c12";
         const string caffeineKEGG = "C07481";
         const string caffeineFormula = "C8H10N4O2";
+        const string caffeineFormulaUnicode = "C\u2088H\u2081\u2080N\u2084O\u2082"; // Unicode subscripts
         const string caffeineFragment = "C6H5N2O"; // Not really a known fragment of caffeine
 
         const double precursorMzAtZNeg2 = 96.0329118;
@@ -171,14 +175,20 @@ namespace pwiz.SkylineTestFunctional
             TestPrecursorTransitions();
             TestFullyDescribedPrecursors();
             TestTransitionListArrangementAndReporting();
+            TestProperData();
+        }
 
+        private void TestProperData()
+        {
             // Now a proper user data set
             var docOrig = NewDocument();
             var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.TransitionListText = GetCsvFileText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")));
 
-            RunUI(() => {
+            RunUI(() =>
+            {
+                windowDlg.radioMolecule.PerformClick();
                 // Example line from that file: "PC,PC aa C24:0,,C32H64N1O8P1,C5H14N1O4P1,622.445,184.074"
                 windowDlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
@@ -229,18 +239,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that MS1 filtering works properly
             var pasteText =
-            "Steryl esters [ST0102],12:0 Cholesteryl ester,C39H68O2NH4,1\r\n" +
-            "Steryl esters [ST0102],14:0 Cholesteryl ester,C41H72O2NH4,1\r\n" +
-            "Steryl esters [ST0102],14:1 Cholesteryl ester,C41H70O2NH4,1\r\n" +
-            "Steryl esters [ST0102],15:1 Cholesteryl ester,C42H72O2NH4,1";
+                "Steryl esters [ST0102],12:0 Cholesteryl ester,C39H68O2NH4,1\r\n" +
+                "Steryl esters [ST0102],14:0 Cholesteryl ester,C41H72O2NH4,1\r\n" +
+                "Steryl esters [ST0102],14:1 Cholesteryl ester,C41H70O2NH4,1\r\n" +
+                "Steryl esters [ST0102],15:1 Cholesteryl ester,C42H72O2NH4,1";
 
             var columnOrderB = new[]
-                {
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                };
+            {
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+            };
 
             // Doc is set for MS1 filtering, fragment transitions, charge=1, two peaks, should show M and M+1, M+2 after filter is invoked by changing to 3 peaks
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("small_molecule_missing_m1.sky")));
@@ -255,7 +265,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(transitionSettingsUIa, transitionSettingsUIa.OkDialog);
             WaitForDocumentChange(docA);
 
-            TestError(pasteText, String.Empty, columnOrderB);
+            TestError(pasteText, String.Empty, columnOrderB, true);
             var docB = SkylineWindow.Document;
             Assert.AreEqual(4, docB.MoleculeTransitionCount); // Initial import is faithful to what's pasted
 
@@ -272,23 +282,23 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify adduct usage - none, or in own column, or as part of formula
             var columnOrderC = new[]
-                {
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                };
+            {
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+            };
             pasteText =
                 "A,27-HC,C36H57N2O3,,1,135,1,light\r\n" + // No adduct, just charge
                 "A,27-HC,C36H57N2O3,[M+],1,130,1,light\r\n" + // Note this claims a charge with no protonation, thus not the same precursor as these others
                 "A,27-HC,C36H57N2O3,MH,,181,1,light\r\n" + // Note the implicit postive ion mode "MH"
                 "A,27-HC,C36H57N2O3[M+H],,,367,1,light\r\n" ;
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, true);
             var docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
@@ -298,21 +308,21 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify adduct usage - none, or in own column, or as part of formula, when no name hints are given
             columnOrderC = new[]
-                {
-                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                };
+            {
+                Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+            };
             pasteText =
                 "C36H57N2O3,,1,135,1,light\r\n" + // No adduct
                 "C36H57N2O3,[M+],1,130,1,light\r\n" +
                 "C36H56N2O3,M+H,,181,1,light\r\n" +
                 "C36H56N2O3[M+H],,,367,1,light\r\n";
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, true);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(2, docC.MoleculeCount);
@@ -325,7 +335,7 @@ namespace pwiz.SkylineTestFunctional
                 "C36H56N2O3,M+2H,,81,2,light\r\n" +
                 "C36H56N2O3[M+2H],,,167,2,light\r\n";
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, true);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
@@ -336,13 +346,13 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
             TestError(pasteText,
                 string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_, "[M+S]"),
-                columnOrderC);
+                columnOrderC, true);
             pasteText =
                 "C36H56N2O3,M+S,1,181,1,light\r\n"; // Adduct with unknown charge, but charge provided seperately
             NewDocument();
             TestError(pasteText,
                 string.Empty,
-                columnOrderC);
+                columnOrderC, true);
         }
 
         private void TestErrors()
@@ -483,7 +493,7 @@ namespace pwiz.SkylineTestFunctional
                 };
                 string[] badfields =
                 {
-                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "",
+                    "", "", "", "123z", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "",
                     "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV",
                     "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
                     "shamble-raft4-inchi", "bags34cas", "flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit",
@@ -645,11 +655,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 docEmpty = NewDocument();
                 line1 = BuildTestLine(imTypeIsDrift);
+                if (imTypeIsDrift)
+                {
+                    // Nothing to do with imType, just want to alternate styles here
+                    line1 = line1.Replace(caffeineFormula+"\t", caffeineFormulaUnicode + "\t"); // Test with unicode subscript numbers
+                }
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
                 double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
                 var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
                 TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty,
-                    fullColumnOrder);
+                    fullColumnOrder, true);
                 var docTest = WaitForDocumentChange(docEmpty);
                 var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
                 Assert.AreEqual(2, testTransitionGroups.Length);
@@ -869,7 +884,7 @@ namespace pwiz.SkylineTestFunctional
                     @"KEGG");
             });
             OkDialog(col0Dlg, col0Dlg.OkDialog);
-            DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+            DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
             var pastedDoc = WaitForDocumentChange(docOrig);
             // We expect four molecule groups
             var moleculeGroupNames = new [] {"Vitamin R", "Weinhards", "Oly", "Schmidt"};
@@ -1155,7 +1170,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestIrregularColumnCountCases(string textCSV, string lineEnd, bool withDsvReaderError)
         {
             var docOrig = SkylineWindow.Document;
-            TestError(textCSV, null, null); // That should just work
+            TestError(textCSV, null, null, true); // That should just work
             WaitForDocumentChange(docOrig);
             NewDocument();
 
@@ -1164,7 +1179,7 @@ namespace pwiz.SkylineTestFunctional
                 textCSV.Replace(@"," + SmallMoleculeTransitionListColumnHeaders.rtPrecursor, string.Empty);
             AssertEx.AreNotEqual(shortHeader, textCSV, "did something change in the test code?");
             docOrig = SkylineWindow.Document;
-            TestError(shortHeader, null, null);
+            TestError(shortHeader, null, null, true);
             WaitForDocumentChange(docOrig);
             NewDocument();
 
@@ -1172,7 +1187,7 @@ namespace pwiz.SkylineTestFunctional
             var shortData = textCSV.Replace(lineEnd, @",-1");
             AssertEx.AreNotEqual(shortData, textCSV, "did something change in the test code?");
             docOrig = SkylineWindow.Document;
-            TestError(shortData, null, null);
+            TestError(shortData, null, null, true);
             WaitForDocumentChange(docOrig);
             NewDocument();
 
@@ -1183,7 +1198,7 @@ namespace pwiz.SkylineTestFunctional
             docOrig = SkylineWindow.Document;
             // When the user can't see the field to use in making column decisions, an error is shown
             string expectedError = withDsvReaderError ? GetDsvReaderError(longData, suffixField) : null;
-            TestError(longData, expectedError, null);
+            TestError(longData, expectedError, null, true);
             if (expectedError == null)
                 WaitForDocumentChange(docOrig);
             NewDocument();
@@ -1296,11 +1311,7 @@ namespace pwiz.SkylineTestFunctional
                         textCSV6 = textCSV6.Replace("\t", ";"); // Excel FR
                         break;
                 }
-                NewDocument();
-                docOrig = WaitForDocumentChange(pastedDoc);
-                SetClipboardText(textCSV6);
-                PasteSmallMoleculeListNoAutoManage();
-                pastedDoc = WaitForDocumentChange(docOrig);
+                pastedDoc = PasteNewDocument(textCSV6);
                 Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
                 Assert.AreEqual(4, pastedDoc.MoleculeCount);
             }
@@ -1312,9 +1323,7 @@ namespace pwiz.SkylineTestFunctional
                 "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
                 "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
                 "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
-            var docCurrent = NewDocument();
-            SetClipboardText(textCSV7);
-            PasteSmallMoleculeListNoAutoManage();
+            PasteNewDocument(textCSV7);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
             // Check case insensitivity, m/z vs mz
@@ -1324,12 +1333,7 @@ namespace pwiz.SkylineTestFunctional
                 "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
                 "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
                 "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
-            docCurrent = NewDocument();
-            RunUI(() =>
-            {
-                SetClipboardText(textCSV8);
-            });
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
+            PasteNewDocument(textCSV8);  // Say no to the offer to set new nodes to automanage
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
             // Paste in a peptide transition list with some distinctive small molecule headers
@@ -1390,6 +1394,12 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
         }
 
+        private static SrmDocument PasteNewDocument(string text, bool expectAutoManage = true)
+        {
+            NewDocument();
+            return expectAutoManage ? PasteSmallMoleculeListNoAutoManage(text) : PasteSmallMoleculeList(text);
+        }
+
         private static string GetAminoAcidsTransitionListText(out string textCSV)
         {
             var header = string.Join(",", new string[]
@@ -1432,15 +1442,15 @@ namespace pwiz.SkylineTestFunctional
                 switch (pass)
                 {
                     case 0: // Use Edit | Insert | Transition List
-                        TestError(GetCsvFileText(filename), null, null);
+                        TestError(GetCsvFileText(filename), null, null, true);
                         break;
                     case 1: // Use File | Import | Transition List
-                        ImportTransitionListSkipColumnSelect(filename);
+                        ImportTransitionListSkipColumnSelect(filename, null, true, true);
                         break;
                     case 2: // Paste into Targets window
                         var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(GetCsvFileText(filename)));
                         OkDialog(dlg, dlg.OkDialog);
-                        DismissAutoManageDialog(doc);  // Say no to the offer to set new nodes to automanage
+                        DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
                         break;
                 }
                 doc = WaitForDocumentChangeLoaded(doc);
@@ -1577,7 +1587,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(col4Dlg, col4Dlg.OkDialog);
-            DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+            DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
             WaitForClosedForm(importDialog3);
 
             var pastedDoc = WaitForDocumentChange(docOrig);
@@ -1609,9 +1619,9 @@ namespace pwiz.SkylineTestFunctional
                 "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-mannose,C16H25N5O16P2,[M-H],-1,79,-1,100,MVMSCBBUIHUTGJ-GDJBGNAASA-N,173,,\n" +
                 "\"Glycan, Amino and Nucleotide sugar metabolism\",,C'16H25N5O16P2,[M16C13-H],-1,434.03355,-1,42,MVMSCBBUIHUTGJ-GDJBGNAASA-N,173,,\n" + // No name, same InChiKey, formula matches when unlabeled
                 "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-mannose,C'16H25N5O16P2,[M16C13-H],-1,79,-1,100,MVMSCBBUIHUTGJ-GDJBGNAASA-N,173,,";
-            SetClipboardText(text);
-            // Paste directly into targets area - no interaction expected
-            RunUI(() => SkylineWindow.Paste());
+
+            PasteToTargetsWindow(text); // Paste text, expect only header confirmation dialog
+
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 5, 11);
             // All those lines with bits and pieces of non-conflict accession info should unite into a single molecule with all that info
             var accessionNumbers = SkylineWindow.Document.CustomMolecules.First().CustomMolecule.AccessionNumbers;
@@ -1637,9 +1647,7 @@ namespace pwiz.SkylineTestFunctional
             };
             foreach (var text in texts)
             {
-                SetClipboardText(text);
-                // Paste directly into targets area - no interaction expected
-                RunUI(() => SkylineWindow.Paste());
+                PasteToTargetsWindow(text); // Paste text, expect only header confirmation dialog
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 2);
                 AssertEx.AreEqual(228, SkylineWindow.Document.Molecules.First().Target.Molecule.AverageMass, 1);
                 AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t => 
@@ -1654,6 +1662,16 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private static void PasteToTargetsWindow(string text)
+        {
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected beyond header confirmation dialog
+            var docCurrent = SkylineWindow.Document;
+            var confirmHdrsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            OkDialog(confirmHdrsDlg, confirmHdrsDlg.OkDialog);
+            WaitForDocumentChange(docCurrent);
+        }
+
         private void TestFormulaWithAtomCountZero()
         {
             // Make sure that H'0 doesn't cause trouble - throws "System.Collections.Generic.KeyNotFoundException: The given key was not present in the dictionary."
@@ -1666,11 +1684,8 @@ namespace pwiz.SkylineTestFunctional
                 "AMPP_FA,AMPP_14:0_1.04,C28H0N2O1XeH'0,[M]1+,,1,AMPP_14:0_precursor,C28H0N2O1XeH'0,[M]1+,,1\n" + // Made up values
                 "AMPP_FA,AMPP_19:0_1.04,C30N2O1XeH'45,[M]1+,,1,AMPP_19:0_precursor,C30N2O1XeH'45,[M]1+,,1\n"; // Made up values
 
-            SetClipboardText(text);
-            var docCurrent = SkylineWindow.Document;
             // Paste directly into targets area - expect to be asked about automanage
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
-            WaitForDocumentChange(docCurrent);
+            PasteNewDocument(text);  // Say no to the offer to set new nodes to automanage
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
             var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.ParsedMolecule).ToArray();
             AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0].ToString());
@@ -1689,9 +1704,8 @@ namespace pwiz.SkylineTestFunctional
                        "compound_of_interest, Taurin, C'2H7NO3S,[M+H]+,1,heavy\n" +
                        "compound_of_interest,Taurin,C2H7NO3S,[M-H]-,-1,light\n" +
                        "compound_of_interest, Taurin, C'2H7NO3S,[M-H]-,-1,heavy";
-            SetClipboardText(text);
-            // Paste directly into targets area - no interaction expected
-            RunUI(() => SkylineWindow.Paste());
+            PasteToTargetsWindow(text); // Paste text, expect only header confirmation dialog
+
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 4, 4);
             NewDocument();
         }
@@ -1763,18 +1777,16 @@ namespace pwiz.SkylineTestFunctional
             TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\tgreebles\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "greebles"), columns);
             TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\t77\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "77"), columns);
 
-            var docOrig = NewDocument();
             var precursorsTransitionList =
                 "MoleculeGroup\tPrecursorName\tPrecursorFormula\tPrecursorAdduct\tPrecursorMz\tPrecursorCharge\tProductName\tProductFormula\tProductNeutralLoss\tProductAdduct\tNote\tPrecursorCE\n" +
                 "12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tprecursor\tC20H32O3\t\t[M-H]1-\t\t21\n" +
                 "12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\tC20H30O\t\t[M-H]1-\t\t21\n" +
                 "12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag2\t\tH2O\t[M-H]1-\t\t21\n";
-            SetClipboardText(precursorsTransitionList.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
+            var text = precursorsTransitionList.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
 
             // Paste directly into targets area
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
+            var pastedDoc = PasteNewDocument(text);  // Say no to the offer to set new nodes to automanage
 
-            var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
             Assume.AreEqual(1, pastedDoc.MoleculeCount);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
@@ -1789,7 +1801,6 @@ namespace pwiz.SkylineTestFunctional
         {
             // Test our handling of fully described precursors
 
-            var docOrig = NewDocument();
             const string precursorsTransitionList =
             "MoleculeGroup,PrecursorName,PrecursorFormula,PrecursorAdduct,PrecursorMz,PrecursorCharge,ProductName,ProductFormula,ProductAdduct,ProductMz,ProductCharge,Note,PrecursorCE,Collisional Cross Section\n"+
             "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,precursor,C20H32O3,[M-H]1-,319.227868554909,-1,,21,123\n" +
@@ -1798,12 +1809,10 @@ namespace pwiz.SkylineTestFunctional
             "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,precursor,C20H32O3,[M8H2-H]1-,327.278082506909,-1,,21,126\n" +
             "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 309.2674,,[M-H]1-,309.2674,-1,,21,126\n" +
             "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 283.2879,,[M-H]1-,283.2879,-1,,21,126\n";
-            SetClipboardText(precursorsTransitionList);
 
             // Paste directly into targets area
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
+            var pastedDoc = PasteNewDocument(precursorsTransitionList);  // Say no to the offer to set new nodes to automanage
 
-            var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
             Assume.AreEqual(2, pastedDoc.MoleculeCount);
             var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
@@ -1844,15 +1853,11 @@ namespace pwiz.SkylineTestFunctional
                 "aPyr-GluB\taPyr-GluB\t\tM+\t158.1\t1\t\tM+\t147.1\t1\n";
 
             var docOrig = NewDocument();
-            SetClipboardText(precursorsTransitionListSorted);
-            // Paste directly into targets area
-            RunUI(() => SkylineWindow.Paste());
+            PasteToTargetsWindow(precursorsTransitionListSorted); // Paste text, expect only header confirmation dialog
             var pastedDocSorted = WaitForDocumentChange(docOrig);
 
             docOrig = NewDocument();
-            SetClipboardText(precursorsTransitionListUnsorted);
-            // Paste directly into targets area
-            RunUI(() => SkylineWindow.Paste());
+            PasteToTargetsWindow(precursorsTransitionListUnsorted); // Paste text, expect only header confirmation dialog
             var pastedDocUnsorted = WaitForDocumentChange(docOrig);
 
             Assume.AreEqual(2, pastedDocUnsorted.MoleculeGroupCount);
@@ -1875,18 +1880,24 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
         }
 
+        private static SrmDocument SetValuesAffectingAutomanage(bool wantAutoManage = false)
+        {
+            var docResult = SkylineWindow.Document;
+            // Set up FullScan filter as ion types precursor+custom, with automanage as desired
+            RunUI(() => SkylineWindow.ModifyDocument("Change isotope peaks count and ion types",
+                doc => doc.ChangeSettings(doc.Settings
+                    .ChangeTransitionInstrument(instrument => instrument.ChangeMaxMz(2500))
+                    .ChangeTransitionFullScan(fs =>
+                        fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault())
+                            .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, new IsolationScheme("Test", 2)))
+                    .ChangeTransitionFilter(f => f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor }).ChangeAutoSelect(wantAutoManage)))));
+            docResult = WaitForDocumentChange(docResult);
+            return docResult;
+        }
+
         private void TestAutoManage()
         {
-            void SetValuesAffectingAutomanage()
-            {
-                RunUI(() => SkylineWindow.ModifyDocument("Change isotope peaks count and ion types",
-                    doc => doc.ChangeSettings(doc.Settings
-                        .ChangeTransitionInstrument(instrument => instrument.ChangeMaxMz(2500))
-                        .ChangeTransitionFullScan(fs =>
-                            fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault())
-                                .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, new IsolationScheme("Test", 2)))
-                        .ChangeTransitionFilter(f => f.ChangeSmallMoleculeIonTypes(new[] {IonType.custom, IonType.precursor})))));
-            }
+
 
             const string text =
                 "Precursor Name,Precursor Formula,Precursor Adduct,Precursor charge,Explicit Retention Time,Collisional Cross Section (Sq A),Product m/z,product charge,explicit ion mobility High energy Offset,Explicit Collision Energy\n" +
@@ -1894,65 +1905,73 @@ namespace pwiz.SkylineTestFunctional
                 "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,156.0112,1,0.5,1\n" +
                 "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,92.0498,1,0.51,1\n";
 
-            var docOrig = NewDocument();
+            NewDocument();
+            var docOrig = SetValuesAffectingAutomanage(); // Turn off automanage, so the user gets asked
             SetClipboardText(text);
             // Paste directly into targets area, expect to be asked about automanage
-            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.Paste());
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // Since this we are in small molecule mode the column selection page should be set to small molecule when it opens
+            Assert.IsTrue(columnSelectDlg.radioMolecule.Checked);
+            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => columnSelectDlg.OkDialog());
             OkDialog(wantAutoManageDlg, wantAutoManageDlg.CancelDialog);
             AssertEx.IsTrue(SkylineWindow.Document.MoleculeCount == 0); // Canceled
 
             // Paste again, this time rejecting the auto manage
             docOrig = SkylineWindow.Document;
             SetClipboardText(text);
-            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.Paste());
+            var columnSelectDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => columnSelectDlg2.OkDialog());
             OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo);
             var pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 3);
 
             // Because we created nodes with auto manage off, changing these settings should not change the nodes (1 precursor, two fragments)
-            SetValuesAffectingAutomanage();
-            pastedDoc = WaitForDocumentChange(pastedDoc);
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 3);
+            pastedDoc = SetValuesAffectingAutomanage();
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 3);
 
             foreach (var managed in new[] {false, true})
             {
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, managed ? 5 : 3);
                 RunUI(() => SkylineWindow.ModifyDocument(" Turn off precursors",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                         f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom })))));  
                 pastedDoc = WaitForDocumentChange(pastedDoc);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 2 : 3);
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, managed ? 2 : 3);
                 RunUI(() => SkylineWindow.ModifyDocument("Turn on precursors",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                         f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor })))));  
                 pastedDoc = WaitForDocumentChange(pastedDoc);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 5 : 3);
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, managed ? 5 : 3);
 
                 // Automanage has no effect on fragments, since we can't generate those for small molecules the way we do for peptides
                 RunUI(() => SkylineWindow.ModifyDocument(" Turn off fragments",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                         f.ChangeSmallMoleculeIonTypes(new[] { IonType.precursor })))));
                 pastedDoc = WaitForDocumentChange(pastedDoc);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 5 : 3);
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, managed ? 5 : 3);
                 RunUI(() => SkylineWindow.ModifyDocument("Turn on fragments",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                         f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor })))));
                 pastedDoc = WaitForDocumentChange(pastedDoc);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 5 : 3);
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, managed ? 5 : 3);
 
                 if (!managed)
                 {
                     // Now turn on auto manage children, settings should have an effect on doc structure
+                    pastedDoc = SetValuesAffectingAutomanage(true);
                     pastedDoc = EnableAutomanageChildren(pastedDoc);
                 }
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 5);
             }
 
             // Now import again, this time with auto manage on
-            NewDocument(); 
-            SetValuesAffectingAutomanage();
-            docOrig = SkylineWindow.Document;
+            NewDocument();
+            docOrig = SetValuesAffectingAutomanage();
             SetClipboardText(text);
-            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.Paste());
+            var columnSelectDlg3 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // Since this we are in small molecule mode the column selection page should be set to small molecule when it opens
+            Assert.IsTrue(columnSelectDlg3.radioMolecule.Checked);
+            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => columnSelectDlg3.OkDialog());
             OkDialog(wantAutoManageDlg, wantAutoManageDlg.OkDialog);
             pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 5);
@@ -1977,10 +1996,12 @@ namespace pwiz.SkylineTestFunctional
                 "H7N2;H106C65N4O46;1;N1F1-2AB;H33C21N3O10;1\n" +
                 "H5N3F1;H109C67N5O45;1;N1F1-2AB;H33C21N3O10;1\n" +
                 "H7N2;H106C65N4O46;1;H1N1F1;H33C20N1O14;1";
-            SetValuesAffectingAutomanage();
-            docOrig = SkylineWindow.Document;
+            docOrig = SetValuesAffectingAutomanage();
             SetClipboardText(text2);
-            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.Paste());
+            var columnSelectDlg4 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // Since this we are in small molecule mode the column selection page should be set to small molecule when it opens
+            Assert.IsTrue(columnSelectDlg4.radioMolecule.Checked);
+            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => columnSelectDlg4.OkDialog());
             OkDialog(wantAutoManageDlg, wantAutoManageDlg.OkDialog);
             pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 21);
@@ -2002,7 +2023,6 @@ namespace pwiz.SkylineTestFunctional
         private void TestPerTransitionValues()
         {
             // Test our handling of fragments with unique explicit values
-            var docOrig = NewDocument();
             const string precursorsTransitionList =
                 "Molecule List Name,Molecule,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Explicit Collision Energy,Explicit Retention Time\n" +
                 "ThompsonIS,Apain,light,452,1,384,1,20,1\n" +
@@ -2012,12 +2032,10 @@ namespace pwiz.SkylineTestFunctional
                 "ThompsonIS,Apain,heavy,455,1,387,1,21,1\n" +
                 "ThompsonIS,Apain,heavy,455,1,191,1,26,1\n" +
                 "ThompsonIS,Bpain,light,567,1,,,35,1\n"; // Precursor-only explicit CE
-            SetClipboardText(precursorsTransitionList);
 
             // Paste directly into targets area
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
+            var pastedDoc = PasteNewDocument(precursorsTransitionList);  // Say no to the offer to set new nodes to automanage
 
-            var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
             AssertEx.AreEqual(2, pastedDoc.MoleculeCount);
             var molecules = pastedDoc.Molecules.ToArray();
@@ -2053,7 +2071,7 @@ namespace pwiz.SkylineTestFunctional
             TestTransitionListOutput(pastedDoc, "per_trans.csv", "per_trans_expected.csv", ExportFileType.List);
             
 
-            docOrig = NewDocument();
+            NewDocument();
             const string precursorsTransitionListHEOffset =
                 "Precursor Name,Precursor Formula,Precursor Adduct,Precursor charge,Explicit Retention Time,Collisional Cross Section (Sq A),Product m/z,product charge,explicit ion mobility High energy Offset,Explicit Collision Energy\n" +
                 "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,,,,1\n" +
@@ -2075,9 +2093,7 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardText(precursorsTransitionListHEOffset);
 
             // Paste directly into targets area
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
-
-            pastedDoc = WaitForDocumentChange(docOrig);
+            pastedDoc = PasteNewDocument(precursorsTransitionListHEOffset);  // Say no to the offer to set new nodes to automanage
 
             for (var roundtrips = 0; roundtrips < 2; roundtrips++)
             {
@@ -2247,13 +2263,9 @@ namespace pwiz.SkylineTestFunctional
                 ", \"(6R)-5,6,7,8-tetrahydrobiopterin 1\",344.1364,[M-H],-1,2.8,344.1364,-1,35\r\n" +
                 ", \"(6R)-5,6,7,8-tetrahydrobiopterin 1\",344.1364,[M-H],-1,2.8,147.9208,-1,35\r\n";
 
-            var docOrig = NewDocument();
-            SetClipboardText(input);
-
             // Paste directly into targets area
-            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
+            var pastedDoc = PasteNewDocument(input);  // Say no to the offer to set new nodes to automanage
 
-            var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
             Assume.AreEqual(1, pastedDoc.MoleculeCount);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
@@ -2278,13 +2290,10 @@ namespace pwiz.SkylineTestFunctional
                 "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H19NO5,[M-H],,-1,,,,,,,,,,HMDB0013125,QJGJXKFJFRSERW-QMMMGPOBSA-N\n" +
                 "quant,menthol,C10H20O,[M+H],,1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n" +
                 "quant,menthol,C10H20O,[M-H],,-1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n";
-            var docOrig = NewDocument();
-            SetClipboardText(input);
 
             // Paste directly into targets area
-            RunUI(() => SkylineWindow.Paste());
+            var pastedDoc = PasteNewDocument(input, false);
 
-            var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
             Assume.AreEqual(5, pastedDoc.MoleculeCount);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
@@ -2301,15 +2310,12 @@ namespace pwiz.SkylineTestFunctional
                 "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, Explicit Declustering potential\n" +
                 "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M-H]\",\"-1\",\"97\",\"-1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",\"60\"\n" +
                 "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M+H]\",\"1\",\"99\",\"1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-L\",\"60\"\n";
-            var docOrig = NewDocument();
-            SetClipboardText(input);
             // Paste directly into targets area, which should proceed with no error
-            RunUI(SkylineWindow.Paste);
-            var doc = WaitForDocumentChange(docOrig);
+            var doc = PasteNewDocument(input, false);
             AssertEx.IsDocumentState(doc, null, 1, 2, 2, 2);
 
             // Now check that we notice items with some accessions that agree but others that do not 
-            docOrig = NewDocument();
+            var docOrig = NewDocument();
             input =
                 "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, CAS, Explicit Declustering potential\n" +
                 "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M-H]\",\"-1\",\"97\",\"-1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",585-18-2,\"60\"\n" +
@@ -2344,20 +2350,22 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
-                SkylineWindow.ImportMassList(filename);
             });
+            var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
+            OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
+
             WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
 
             // Now verify error handling
-            filename = TestFilesDir.GetTestPath("known_bad.csv");
-            File.WriteAllText(filename, @"foo"+contents);
+            var filename2 = TestFilesDir.GetTestPath("known_bad.csv");
+            File.WriteAllText(filename2, @"foo"+contents);
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
             });
 
-            // One of the headers cannot be understood so we should see a ColumnSelectDlg come up
-            var badDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
+            // One of the headers cannot be understood
+            var badDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename2));
             RunUI(() => {
                 badDlg.radioMolecule.PerformClick();
                 badDlg.SetSelectedColumnTypes(
@@ -2415,12 +2423,12 @@ namespace pwiz.SkylineTestFunctional
                 if (asFile)
                 {
                     File.WriteAllText(tempFile, input);
-                    RunUI(() => SkylineWindow.ImportMassList(tempFile));
+                    var confirmHdrsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(tempFile));
+                    OkDialog(confirmHdrsDlg, confirmHdrsDlg.OkDialog);
                 }
                 else
                 {
-                    SetClipboardText(input);
-                    RunUI(() => SkylineWindow.Paste());
+                    PasteToTargetsWindow(input); // Paste text, expect only header confirmation dialog
                 }
                 var pastedDoc = WaitForDocumentChange(docOrig);
                 AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 2);
@@ -2472,40 +2480,24 @@ namespace pwiz.SkylineTestFunctional
 
                 var docOrig = NewDocument();
 
-                var tempFile = TestFilesDir.GetTestPath(string.Format("transitions_tmp{0}.csv", pass));
+                ImportTransitionListColumnSelectDlg testImportDlg;
                 if (asFile)
                 {
+                    var tempFile = TestFilesDir.GetTestPath(string.Format("transitions_tmp{0}.csv", pass));
                     File.WriteAllText(tempFile, input);
+                    // Import the file, which should send us to ColumnSelectDlg
+                    testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(tempFile));
                 }
                 else
                 {
                     SetClipboardText(input);
+                    // Paste directly into targets area, which should send us to ColumnSelectDlg
+                    testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
                 }
 
-                if (withHeaders)
+
+                if (!withHeaders)
                 {
-                    // With headers, should be no need for header selection
-                    var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() =>
-                    {
-                        if (asFile)
-                        {
-                            RunUI(() => SkylineWindow.ImportMassList(tempFile));
-                        }
-                        else
-                        {
-                            RunUI(() => SkylineWindow.Paste());
-                        }
-                    });
-                    OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Decline the offer to turn on automanage
-                }
-                else
-                {
-                    var testImportDlg = asFile ?
-                        // Import the file, which should send us to ColumnSelectDlg
-                        ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(tempFile)) :
-                        // Paste directly into targets area, which should send us to ColumnSelectDlg
-                        ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-                    WaitForDocumentLoaded();
                     // Correct the header assignments
                     RunUI(() => {
                         testImportDlg.radioMolecule.PerformClick();
@@ -2525,7 +2517,14 @@ namespace pwiz.SkylineTestFunctional
                 
                     // Import the list
                     OkDialog(testImportDlg, testImportDlg.OkDialog);
-                    DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+                    DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+                }
+            
+                // Import the list
+                OkDialog(testImportDlg, testImportDlg.OkDialog);
+                if (pass == 1)
+                {
+                    DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
                 }
 
                 var pastedDoc = WaitForDocumentChange(docOrig);

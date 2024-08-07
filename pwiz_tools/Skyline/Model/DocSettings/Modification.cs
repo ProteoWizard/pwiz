@@ -28,7 +28,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -62,10 +61,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return new[]
                 {
-                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Matching,
-                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Overlapping,
-                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Preceding,
-                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Unknown
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Matching,
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Overlapping,
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Preceding,
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Unknown
                 };
             }
         }
@@ -104,7 +103,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// case of C-terminal or N-terminal modifications.
     /// </summary>
     [XmlRoot("static_modification")]
-    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable, IHasItemDescription
+    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable, IHasItemDescription, IValidating
     {
         private ImmutableList<FragmentLoss> _losses;
         public static StaticMod EMPTY = new StaticMod();
@@ -121,14 +120,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, string aas, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null, null)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
         {
             
         }
 
         public StaticMod(string name, string aas, ModTerminus? term, bool isVariable, string formula,
                          LabelAtoms labelAtoms, RelativeRT relativeRT, double? monoMass, double? avgMass, IList<FragmentLoss> losses)
-            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null, null, null)
+            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null, null)
         {
             
         }
@@ -144,8 +143,7 @@ namespace pwiz.Skyline.Model.DocSettings
                          double? avgMass,
                          IList<FragmentLoss> losses,
                          int? uniModId,
-                         string shortName,
-                         int? precisionRequired)
+                         string shortName)
             : base(name)
         {
             AAs = aas;
@@ -161,9 +159,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             UnimodId = uniModId;
             ShortName = shortName;
-            _precisionRequired = precisionRequired;
 
-            Validate();
+            DoValidate();
         }
 
         [Track]
@@ -303,6 +300,8 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool IsUserSet { get { return IsExplicit && !IsVariable; } }
 
+        public bool IsVariablePossible { get { return Terminus.HasValue || AAs != null; } }
+
         public bool IsMod(string sequence)
         {
             if (sequence == null) // As when looking at a non-peptide molecule
@@ -378,9 +377,6 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public string ShortName { get; private set; }
-
-        private readonly int? _precisionRequired;
-        public int PrecisionRequired { get { return _precisionRequired ?? 1; }}
 
         public CrosslinkerSettings CrosslinkerSettings { get; private set; }
 
@@ -486,11 +482,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         string lossDescription;
                         if (Losses[0].Charge == 0)
                         {
-                            lossDescription = TextUtil.ColonSeparate(Resources.StaticMod_ItemDescription_Neutral_loss, Losses[0].ItemDescription.Summary);
+                            lossDescription = TextUtil.ColonSeparate(DocSettingsResources.StaticMod_ItemDescription_Neutral_loss, Losses[0].ItemDescription.Summary);
                         }
                         else
                         {
-                            lossDescription = TextUtil.ColonSeparate(Resources.StaticMod_ItemDescription_Loss, Losses[0].ItemDescription.Summary);
+                            lossDescription = TextUtil.ColonSeparate(DocSettingsResources.StaticMod_ItemDescription_Loss, Losses[0].ItemDescription.Summary);
                         }
 
                         lines.Add(lossDescription);
@@ -500,13 +496,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (Losses.All(loss => loss.Charge == 0))
                         {
-                            lines.Add(TextUtil.AppendColon(Resources.StaticMod_ItemDescription_Neutral_losses));
-                            summary ??= string.Format(Resources.StaticMod_ItemDescription__0__neutral_losses, Losses.Count);
+                            lines.Add(TextUtil.AppendColon(DocSettingsResources.StaticMod_ItemDescription_Neutral_losses));
+                            summary ??= string.Format(DocSettingsResources.StaticMod_ItemDescription__0__neutral_losses, Losses.Count);
                         }
                         else
                         {
-                            lines.Add(TextUtil.AppendColon(Resources.StaticMod_ItemDescription_Losses));
-                            summary ??= string.Format(Resources.StaticMod_ItemDescription__0__losses, Losses.Count);
+                            lines.Add(TextUtil.AppendColon(DocSettingsResources.StaticMod_ItemDescription_Losses));
+                            summary ??= string.Format(DocSettingsResources.StaticMod_ItemDescription__0__losses, Losses.Count);
                         }
 
                         const string indent = @"    ";
@@ -517,7 +513,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     }
                 }
 
-                summary ??= Resources.StaticMod_ItemDescription_Empty;
+                summary ??= DocSettingsResources.StaticMod_ItemDescription_Empty;
                 return new ItemDescription(summary).ChangeTitle(Name).ChangeDetailLines(lines);
             }
         }
@@ -540,7 +536,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         massString = @"+" + massString;
                     }
 
-                    parts.Add(string.Format(Resources.StaticMod_FormatFormulaOrMass___0__Da_, massString));
+                    parts.Add(string.Format(DocSettingsResources.StaticMod_FormatFormulaOrMass___0__Da_, massString));
                 }
 
                 return TextUtil.SpaceSeparate(parts);
@@ -560,7 +556,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (Equals(monoMass, averageMass))
                 {
-                    return TextUtil.ColonSeparate(Resources.StaticMod_FormatMass_Mass, monoMass.Value.ToString(Formats.RoundTrip));
+                    return TextUtil.ColonSeparate(DocSettingsResources.StaticMod_FormatMass_Mass, monoMass.Value.ToString(Formats.RoundTrip));
                 }
                 massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_MonoisotopicMass,
                     monoMass.Value.ToString(Formats.RoundTrip)));
@@ -577,7 +573,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             // Should not happen
-            return Resources.StaticMod_FormatMass_Unknown_mass;
+            return DocSettingsResources.StaticMod_FormatMass_Unknown_mass;
         }
 
         #region Property change methods
@@ -598,12 +594,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod ChangeFormula(ParsedMolecule prop)
         {
-            return ChangeProp(ImClone(this), im => im.ParsedMolecule = prop);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LabelAtoms = LabelAtoms.None;
+                im.ParsedMolecule = prop;
+            });
         }
 
         public StaticMod ChangeLabelAtoms(LabelAtoms prop)
         {
-            return ChangeProp(ImClone(this), im => im.LabelAtoms = prop);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ParsedMolecule = ParsedMolecule.EMPTY;
+                im.LabelAtoms = prop;
+            });
         }
 
         public StaticMod ChangeRelativeRT(RelativeRT prop)
@@ -687,25 +691,45 @@ namespace pwiz.Skyline.Model.DocSettings
             crosslinker
         }
 
-        private void Validate()
+        void IValidating.Validate()
         {
-            // It is now valid to specify modifications that apply to every amino acid.
-            // This is important for 15N labeling, and reasonable for an explicit
-            // static modification... but not for variable modifications.
-            if (IsVariable && !Terminus.HasValue && AAs == null)
-                throw new InvalidDataException(Resources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
+            // This function is called during property changes. So, clear and recalculate
+            // cached masses to avoid throwing an exception having them present when they
+            // can be calculated.
+            if (!ParsedMolecule.IsNullOrEmpty(ParsedMolecule) || LabelAtoms != LabelAtoms.None)
+            {
+                AverageMass = MonoisotopicMass = null;
+            }
+
+            DoValidate();
+        }
+
+        private void DoValidate()
+        {
+            if (IsVariable)
+            {
+                // It is now valid to specify modifications that apply to every amino acid.
+                // This is important for 15N labeling, and reasonable for an explicit
+                // static modification... but not for variable modifications.
+                if (!Terminus.HasValue && AAs == null)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
+                // Nor can isotope modifications be variable. Though, isotope labeled amino acids are the only type
+                // that can be detected here
+                if (LabelAtoms != LabelAtoms.None)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_);
+            }
             if (AAs != null)
             {
                 foreach (string aaPart in AAs.Split(','))
                 {
                     string aa = aaPart.Trim();
                     if (aa.Length != 1 || !AminoAcid.IsAA(aa[0]))
-                        throw new InvalidDataException(string.Format(Resources.StaticMod_Validate_Invalid_amino_acid___0___, aa));
+                        throw new InvalidDataException(string.Format(DocSettingsResources.StaticMod_Validate_Invalid_amino_acid___0___, aa));
                 }
             }
             else if (Terminus.HasValue && LabelAtoms != LabelAtoms.None)
             {
-                throw new InvalidDataException(Resources.StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed);
+                throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed);
             }
             if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule) && LabelAtoms == LabelAtoms.None)
             {
@@ -714,26 +738,35 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Allow a modification that just specifies potential neutral losses
                     // from unmodified amino acid residues.
                     if (Losses == null)
-                        throw new InvalidDataException(Resources.StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses);
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses);
                     if (IsVariable)
-                        throw new InvalidDataException(Resources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable);
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable);
                 }
             }
             else
             {
                 // No explicit masses with formula or label atoms
                 if (MonoisotopicMass != null || AverageMass != null)
-                    throw new InvalidDataException(Resources.StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses);
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses);
                 if (ParsedMolecule != null)
                 {
                     if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule))
-                        throw new InvalidDataException(Resources.StaticMod_Validate_Modification_formula_may_not_be_empty);
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Modification_formula_may_not_be_empty);
                     if (LabelAtoms != LabelAtoms.None)
-                        throw new InvalidDataException(Resources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
                     // Cache mass values to improve performance of variable modifications
                     // Throws an exception, if given an invalid formula.
                     MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, ParsedMolecule, SequenceMassCalc.MassPrecision);
                     AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, ParsedMolecule, SequenceMassCalc.MassPrecision);
+                }
+                else if (LabelAtoms != LabelAtoms.None)
+                {
+                    // If specifically labeling a single AA, cache mass values
+                    if (AAs is { Length: 1 })
+                    {
+                        MonoisotopicMass = new SequenceMassCalc(MassType.Monoisotopic).GetModMass(AAs[0], this);
+                        AverageMass = new SequenceMassCalc(MassType.Average).GetModMass(AAs[0], this);
+                    }
                 }
             }
 
@@ -752,7 +785,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             catch (ArgumentException)
             {
-                throw new ArgumentException(string.Format(Resources.StaticMod_ToModTerminus_Invalid_terminus__0__, value));
+                throw new ArgumentException(string.Format(DocSettingsResources.StaticMod_ToModTerminus_Invalid_terminus__0__, value));
             }            
         }
 
@@ -828,7 +861,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadEndElement();
             }
 
-            Validate();
+            DoValidate();
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -847,7 +880,7 @@ namespace pwiz.Skyline.Model.DocSettings
 //            writer.WriteAttribute(ATTR.label_37Cl, Label37Cl);
 //            writer.WriteAttribute(ATTR.label_81Br, Label81Br);
             writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
-            if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule))
+            if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule) && LabelAtoms == LabelAtoms.None)
             {
                 writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
                 writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
@@ -879,6 +912,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return Equivalent(obj) 
                 && base.Equals(obj) 
+                && obj.LabelAtoms == LabelAtoms
+                // Formulas don't have to be identical, but their presence or absence must match
+                && (obj.Formula == null) == (Formula == null)
                 && obj.IsVariable.Equals(IsVariable) 
                 && Equals(obj.UnimodId, UnimodId)
                 && Equals(obj.ShortName, ShortName)
@@ -893,10 +929,16 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!Equals(obj.AAs, AAs) ||
                 !obj.Terminus.Equals(Terminus) ||
-                !obj.AverageMass.Equals(AverageMass) ||
-                !obj.MonoisotopicMass.Equals(MonoisotopicMass) ||
                 !Equals(obj.RelativeRT, RelativeRT) ||
                 !Equals(obj.CrosslinkerSettings, CrosslinkerSettings))
+            {
+                return false;
+            }
+
+            // If both objects have a cached mass and the cached masses are not equal,
+            // then they are not equivalent.
+            if ((!obj.AverageMass.Equals(AverageMass) && obj.AverageMass.HasValue && AverageMass.HasValue) ||
+                (!obj.MonoisotopicMass.Equals(MonoisotopicMass) && obj.MonoisotopicMass.HasValue && MonoisotopicMass.HasValue))
             {
                 return false;
             }
@@ -1456,7 +1498,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             int index = GetModIndex(labelType);
             if (index == -1)
-                throw new IndexOutOfRangeException(string.Format(Resources.ExplicitMods_ChangeModifications_Modification_type__0__not_found, labelType));
+                throw new IndexOutOfRangeException(string.Format(DocSettingsResources.ExplicitMods_ChangeModifications_Modification_type__0__not_found, labelType));
             var modifications = _modifications.ToArrayStd();
             var typedMods = new TypedExplicitModifications(Peptide, labelType, prop);
             if (index != 0)
@@ -1789,9 +1831,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (typedStaticMods == null)
                 return this;
             if (_typedStaticMods != null)
-                throw new InvalidOperationException(Resources.TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type);
+                throw new InvalidOperationException(DocSettingsResources.TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type);
             if (LabelType.IsLight)
-                throw new InvalidOperationException(Resources.TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type);
+                throw new InvalidOperationException(DocSettingsResources.TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type);
 
             var im = ImClone(this);
             im._typedStaticMods = typedStaticMods;

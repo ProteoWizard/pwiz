@@ -1,5 +1,5 @@
 format-version: 1.4
-date: 20:10:2022 14:06
+date: 29:02:2024 10:49
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -2629,9 +2629,9 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:121
 name: GG
-def: "Ubiquitinylation residue." [PMID:12872131, URL:http\://www.nottingham.ac.uk/biochemcourses/students/ub/ubindex.html, PMID:15055197, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=121]
+def: "Ubiquitinylation residue." [PMID:34673284, URL:http\://www.nottingham.ac.uk/biochemcourses/students/ub/ubindex.html, PMID:15055197, PMID:24782567, PMID:28884683, PMID:12872131, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=121]
 comment: The two glycine residues left on ubiquitinylated lysine after tryptic digestion.
-synonym: "glycineglycine" RELATED []
+synonym: "SUMOylation leaving GG tag glycineglycine" RELATED []
 xref: record_id "121"
 xref: delta_mono_mass "114.042927"
 xref: delta_avge_mass "114.1026"
@@ -2639,7 +2639,7 @@ xref: delta_composition "H(6) C(4) N(2) O(2)"
 xref: username_of_poster "gielbert"
 xref: group_of_poster "users"
 xref: date_time_posted "2003-04-30 13:32:37"
-xref: date_time_modified "2017-03-06 08:47:05"
+xref: date_time_modified "2023-09-27 10:44:25"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -40499,7 +40499,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1830
 name: Biotin-tyramide
-def: "Biotin-Phenol." [URL:http\://www.iris-biotech.de/ls-3500, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1830]
+def: "Biotin-Phenol." [PMID:29039416, URL:http\://www.iris-biotech.de/ls-3500, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1830]
 xref: record_id "1830"
 xref: delta_mono_mass "361.146012"
 xref: delta_avge_mass "361.4585"
@@ -40507,13 +40507,25 @@ xref: delta_composition "H(23) C(18) N(3) O(3) S"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2016-08-04 08:05:43"
-xref: date_time_modified "2016-08-04 08:05:43"
+xref: date_time_modified "2023-02-24 12:26:35"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "Y"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "C"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_2_misc_notes "Only observed on a small fraction of residues (~2%). See doi: 10.1038/nmeth.4465"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "W"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_misc_notes "Only observed on a small fraction of residues (~2%). See doi: 10.1038/nmeth.4465"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -41239,7 +41251,7 @@ xref: delta_composition "H(5) C(5) N O(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-08-18 09:34:59"
-xref: date_time_modified "2017-09-01 14:44:50"
+xref: date_time_modified "2024-01-26 11:13:51"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -41251,6 +41263,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "S"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -41265,7 +41292,7 @@ xref: delta_composition "H(7) C(4) N O"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-08-18 09:36:27"
-xref: date_time_modified "2017-09-01 14:44:37"
+xref: date_time_modified "2024-01-26 11:12:21"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -41277,6 +41304,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "S"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -41291,7 +41333,7 @@ xref: delta_composition "H(15) C(9) N(3) O(3)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-08-18 09:38:52"
-xref: date_time_modified "2017-09-01 14:46:01"
+xref: date_time_modified "2024-01-26 11:16:24"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -41303,6 +41345,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "S"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -41317,7 +41374,7 @@ xref: delta_composition "H(14) C(9) N(2) O(4)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-08-18 09:43:05"
-xref: date_time_modified "2017-09-01 14:46:10"
+xref: date_time_modified "2024-01-26 11:17:27"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -41329,6 +41386,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "S"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -41343,7 +41415,7 @@ xref: delta_composition "H(23) C(13) N(3) O(6)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-08-18 09:44:40"
-xref: date_time_modified "2017-09-01 14:46:40"
+xref: date_time_modified "2024-01-26 11:18:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -41355,6 +41427,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "S"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -41448,7 +41535,7 @@ xref: delta_composition "H(12) C(9) N(2) O(3)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-08-31 14:57:02"
-xref: date_time_modified "2017-09-01 14:45:52"
+xref: date_time_modified "2024-01-26 11:15:23"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -41460,6 +41547,21 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "S"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -45369,48 +45471,19 @@ def: "Monomodification of Nγ-propargyl-L-Gln probe with clicked desthiobiotin-a
 comment: - desthiobiotin-azide to enrich L-Gln-propargyl modified peptides.
 synonym: "Enrichment of modified peptides using desthiobiotin-tag on streptavidin beads" RELATED []
 xref: record_id "2067"
-xref: delta_mono_mass "580.333296"
-xref: delta_avge_mass "580.677"
-xref: delta_composition "H(44) C(26) N(8) O(7)"
+xref: delta_mono_mass "596.328211"
+xref: delta_avge_mass "596.6764"
+xref: delta_composition "H(44) C(26) N(8) O(8)"
 xref: username_of_poster "KielkowskiLab"
 xref: group_of_poster ""
 xref: date_time_posted "2022-08-05 13:31:40"
-xref: date_time_modified "2022-10-20 14:02:54"
+xref: date_time_modified "2023-02-01 15:18:52"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
-xref: spec_1_site "D"
+xref: spec_1_site "C"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
-xref: spec_1_neutral_loss_197_mono_mass "196.121178"
-xref: spec_1_neutral_loss_197_avge_mass "196.2462"
-xref: spec_1_neutral_loss_197_flag "false"
-xref: spec_1_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
-xref: spec_1_neutral_loss_599_mono_mass "598.343861"
-xref: spec_1_neutral_loss_599_avge_mass "598.6922"
-xref: spec_1_neutral_loss_599_flag "false"
-xref: spec_1_neutral_loss_599_composition "H(46) C(26) N(8) O(8)"
-xref: spec_1_neutral_loss_470_mono_mass "469.301268"
-xref: spec_1_neutral_loss_470_avge_mass "469.5783"
-xref: spec_1_neutral_loss_470_flag "false"
-xref: spec_1_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
-xref: spec_2_group "2"
-xref: spec_2_hidden "1"
-xref: spec_2_site "E"
-xref: spec_2_position "Anywhere"
-xref: spec_2_classification "Chemical derivative"
-xref: spec_2_neutral_loss_470_mono_mass "469.301268"
-xref: spec_2_neutral_loss_470_avge_mass "469.5783"
-xref: spec_2_neutral_loss_470_flag "false"
-xref: spec_2_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
-xref: spec_2_neutral_loss_599_mono_mass "598.343861"
-xref: spec_2_neutral_loss_599_avge_mass "598.6922"
-xref: spec_2_neutral_loss_599_flag "false"
-xref: spec_2_neutral_loss_599_composition "H(46) C(26) N(8) O(8)"
-xref: spec_2_neutral_loss_197_mono_mass "196.121178"
-xref: spec_2_neutral_loss_197_avge_mass "196.2462"
-xref: spec_2_neutral_loss_197_flag "false"
-xref: spec_2_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -45565,6 +45638,281 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Protein N-term"
 xref: spec_2_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2073
+name: N6pAMP
+def: "Plain N6-Propargyl-AMP modified proteins without any clicked enrichment tag." [PMID:21942216, PMID:31980631, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2073]
+xref: record_id "2073"
+xref: delta_mono_mass "367.06817"
+xref: delta_avge_mass "367.2539"
+xref: delta_composition "H(14) C(13) N(5) O(6) P"
+xref: username_of_poster "KielkowskiLab"
+xref: group_of_poster ""
+xref: date_time_posted "2023-02-06 14:36:27"
+xref: date_time_modified "2023-10-05 14:38:51"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "T"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2074
+name: DABCYL-C2-maleimide
+def: "DABCYL-C2-maleimide Thiol-reactive dye for fluorescence labelling of proteins." [PMID:25197743, URL:https\://www.aatbio.com/products/dabcyl-c2-maleimide, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2074]
+xref: record_id "2074"
+xref: delta_mono_mass "391.16444"
+xref: delta_avge_mass "391.4231"
+xref: delta_composition "H(21) C(21) N(5) O(3)"
+xref: username_of_poster "amedalin"
+xref: group_of_poster ""
+xref: date_time_posted "2023-02-15 13:46:57"
+xref: date_time_modified "2023-10-05 14:38:24"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_neutral_loss_252_mono_mass "251.105862"
+xref: spec_1_neutral_loss_252_avge_mass "251.2832"
+xref: spec_1_neutral_loss_252_flag "false"
+xref: spec_1_neutral_loss_252_composition "H(13) C(15) N(3) O"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_252_mono_mass "251.105862"
+xref: spec_2_neutral_loss_252_avge_mass "251.2832"
+xref: spec_2_neutral_loss_252_flag "false"
+xref: spec_2_neutral_loss_252_composition "H(13) C(15) N(3) O"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2079
+name: NBF
+def: "Thiol blocking reagent." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2079]
+synonym: "4-Chloro-7-nitrobenzofurazan NBD Chloride" RELATED []
+xref: record_id "2079"
+xref: delta_mono_mass "163.001791"
+xref: delta_avge_mass "163.0904"
+xref: delta_composition "H C(6) N(3) O(3)"
+xref: username_of_poster "thibautvignane"
+xref: group_of_poster ""
+xref: date_time_posted "2023-03-30 16:05:51"
+xref: date_time_modified "2023-10-05 14:37:58"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "R"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2080
+name: DCP
+def: "Dimedone-Based Chemical Probes." [PMID:20513473, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2080]
+synonym: "Use for enrichment of cysteine oxidation Cleaved Cysteine Sulfenic Acid Probe (DCP-Bio1)" RELATED []
+xref: record_id "2080"
+xref: delta_mono_mass "168.078644"
+xref: delta_avge_mass "168.1898"
+xref: delta_composition "H(12) C(9) O(3)"
+xref: username_of_poster "thibautvignane"
+xref: group_of_poster ""
+xref: date_time_posted "2023-04-19 18:49:30"
+xref: date_time_modified "2023-10-05 14:37:23"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2081
+name: Ethynyl
+def: "Ethynlation of cysteine residues." [PMID:32233093, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2081]
+xref: record_id "2081"
+xref: delta_mono_mass "24"
+xref: delta_avge_mass "24.0214"
+xref: delta_composition "C(2)"
+xref: username_of_poster "bdwyer"
+xref: group_of_poster ""
+xref: date_time_posted "2023-07-29 02:40:17"
+xref: date_time_modified "2023-10-05 14:37:06"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2082
+name: QQTGG
+def: "SUMOylation leaving QQTGG." [PMID:28112733, PMID:28112733, PMID:25218447, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2082]
+xref: record_id "2082"
+xref: delta_mono_mass "471.207761"
+xref: delta_avge_mass "471.465"
+xref: delta_composition "H(29) C(18) N(7) O(8)"
+xref: username_of_poster "jonesar"
+xref: group_of_poster ""
+xref: date_time_posted "2023-09-27 09:55:30"
+xref: date_time_modified "2023-10-05 14:36:46"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2083
+name: Pyro-QQTGG
+def: "SUMOylation leaving Pyro-QQTGG." [PMID:25218447, PMID:28112733, PMID:28112733, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2083]
+xref: record_id "2083"
+xref: delta_mono_mass "454.181212"
+xref: delta_avge_mass "454.4344"
+xref: delta_composition "H(26) C(18) N(6) O(8)"
+xref: username_of_poster "jonesar"
+xref: group_of_poster ""
+xref: date_time_posted "2023-09-27 09:57:43"
+xref: date_time_modified "2023-10-05 14:36:23"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2084
+name: NQTGG
+def: "SUMOylation leaving NQTGG." [PMID:32047143, PMID:29048423, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2084]
+xref: record_id "2084"
+xref: delta_mono_mass "457.192111"
+xref: delta_avge_mass "457.4384"
+xref: delta_composition "H(27) C(17) N(7) O(8)"
+xref: username_of_poster "jonesar"
+xref: group_of_poster ""
+xref: date_time_posted "2023-09-27 10:05:13"
+xref: date_time_modified "2023-10-05 14:36:03"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2085
+name: DVFQQQTGG
+def: "SUMOylation by Endogenous SUMO2/3 following Lys C and Asp-N serial digestion." [PMID:29942033, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2085]
+xref: record_id "2085"
+xref: delta_mono_mass "960.43011"
+xref: delta_avge_mass "960.9865"
+xref: delta_composition "H(60) C(41) N(12) O(15)"
+xref: username_of_poster "jonesar"
+xref: group_of_poster ""
+xref: date_time_posted "2023-09-27 10:06:06"
+xref: date_time_modified "2023-10-05 14:35:40"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2086
+name: iST-NHS specific cysteine modification
+def: "Preomics iST-NHS Kit specific cysteine modification." [URL:https\://www.preomics.com/products/ist-nhs, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2086]
+comment: The lysis buffer in the iST-NHS kit, called LYSE-NHS, does not contain primary amines and therefore does not interfere with chemical labeling. The LYSE-NHS contains a distinct alkylation agent. Please consider the following as fixed modification in your database search: Specific cysteine modification (C6H11NO), specificity [C], mass shift +113.084 Da.
+xref: record_id "2086"
+xref: delta_mono_mass "113.084064"
+xref: delta_avge_mass "113.1576"
+xref: delta_composition "H(11) C(6) N O"
+xref: username_of_poster "dzolg"
+xref: group_of_poster ""
+xref: date_time_posted "2023-12-04 11:10:14"
+xref: date_time_modified "2024-02-29 10:48:20"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2088
+name: Label:13C(2)15N(1)
+def: "13C(2) 15N(1) Silac label." [URL:https\://isotope.com/de-de/microbiological-and-pyrogen-tested-mpt/glycine-13c5-15n-cnlm-1673-h-mpt, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2088]
+xref: record_id "2088"
+xref: delta_mono_mass "3.003745"
+xref: delta_avge_mass "2.9787"
+xref: delta_composition "C(-2) 13C(2) N(-1) 15N"
+xref: username_of_poster "jonasfoerster"
+xref: group_of_poster ""
+xref: date_time_posted "2024-01-08 10:29:39"
+xref: date_time_modified "2024-02-29 10:49:16"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "G"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 

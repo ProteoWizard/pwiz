@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Imported_Files" xml:space="preserve">
+    <value>导入的文件比较中</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Models" xml:space="preserve">
+    <value>模型比较中</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_" xml:space="preserve">
+    <value>文档中没有适合的用于分析的色谱图。 有效的色谱图不可以是诱饵或 iRT 标准品。</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_" xml:space="preserve">
+    <value>比较模型峰值边界出错：{0}</value>
+  </data>
+  <data name="AlignItem_ToString_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
+    <value>保留时间计算器…</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
+    <value>保留时间计算器 ({0})</value>
+  </data>
+  <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
+    <value>共享的肽段</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>查找能解释所有肽段的最小蛋白质组列表(&amp;M)</value>
+  </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_" xml:space="preserve">
+    <value>没有找到使用导入的 fasta 文件的匹配。</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
+    <value>每个蛋白质组的最小肽段数(&amp;N)</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
+    <value>现有蛋白质关联将被丢弃。</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
+    <value>将所有文档中的肽段组织到关联的蛋白质或蛋白质组中。</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
+    <value>删除蛋白质组子集(&amp;R)</value>
+  </data>
+  <data name="AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_" xml:space="preserve">
+    <value>没有从背景蛋白质组中找到匹配。</value>
+  </data>
+  <data name="ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes" xml:space="preserve">
+    <value>分钟</value>
+  </data>
+  <data name="ChromChartPropertyDlg_cbRelative_CheckedChanged_widths" xml:space="preserve">
+    <value>宽度</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Label__Model_or_File_" xml:space="preserve">
+    <value>模型或文件(&amp;M)：</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons" xml:space="preserve">
+    <value>编辑峰边界比较</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_" xml:space="preserve">
+    <value>观察到的 FPR：</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
+    <value>Q 值截止：</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_" xml:space="preserve">
+    <value>无法找到电荷态 {1} 的肽段 {0}</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
+    <value>峰值群组的部分</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks" xml:space="preserve">
+    <value>总正确的峰</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
+    <value>添加模型/文件来比较，以查看 q-Q 图</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
+    <value>添加模型/文件来比较，以查看受试者工作特征曲线图。</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_an_analysis_of_runs" xml:space="preserve">
+    <value>添加模型/文件来比较，以查看运行分析</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Expected_False_Positive_Rate" xml:space="preserve">
+    <value>预期的错误判断比率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate" xml:space="preserve">
+    <value>观察到的错误判断比率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Replicate_Name" xml:space="preserve">
+    <value>重复测定名称</value>
+  </data>
+  <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
+    <value>刷新 {0}</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
+    <value>{0} 观察到的假阳性率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
+    <value>{0} 重要阀值</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Equality" xml:space="preserve">
+    <value>等式</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Q_Q_Comparison" xml:space="preserve">
+    <value>Q-Q 比较</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__" xml:space="preserve">
+    <value>重复测定比较（观察到的 FPR &lt; {0}）</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__" xml:space="preserve">
+    <value>重复测定比较（q 值 &lt; {0}）</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_ROC_Plot_Comparison" xml:space="preserve">
+    <value>受试者工作特征曲线图比较</value>
+  </data>
+  <data name="CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard" xml:space="preserve">
+    <value>图元文件图像已复制到剪切板</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled" xml:space="preserve">
+    <value>平铺</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
+    <value>编辑修饰</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_" xml:space="preserve">
+    <value>该交联的两端不能相同。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
+    <value>无效交联剂</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_" xml:space="preserve">
+    <value>交联剂 '{0}' 不能附加到该氨基酸位置。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_" xml:space="preserve">
+    <value>此氨基酸位置不能为空。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_" xml:space="preserve">
+    <value>该肽段中的此氨基酸位置已被另一个交联使用。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_" xml:space="preserve">
+    <value>这不是该肽段中有效的氨基酸位置。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_" xml:space="preserve">
+    <value>此肽段无效。</value>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard" xml:space="preserve">
+    <value>丢弃</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks" xml:space="preserve">
+    <value>编辑交联</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks" xml:space="preserve">
+    <value>删除该氨基酸上的交联会导致一个交联肽段不再连接。您想现在编辑交联还是丢弃断开的肽段？</value>
+  </data>
+  <data name="EditPepModsDlg_GetIsotopeLabelText_Isotope__0__" xml:space="preserve">
+    <value>同位素{0}：</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__" xml:space="preserve">
+    <value>交联到 {0}：{1} [{2}]</value>
+    <comment>{0} is a peptide sequence, {1} is an amino acid letter and {2} is a number
+Example: Crosslink to PEPTIDE: T [4]</comment>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Invalid_crosslink___0_" xml:space="preserve">
+    <value>无效交联：{0}</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Looplink___0____1__" xml:space="preserve">
+    <value>环联：{0} [{1}]</value>
+    <comment>{0} is a single amino acid letter and {1} is a number
+Example: Looplink: T [4]
+</comment>
+  </data>
+  <data name="EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__" xml:space="preserve">
+    <value>一个或多个交联肽段不再附加到此肽段。</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>分支 {0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
+  </data>
+  <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
+    <value>&lt;&lt; 隐藏高级(&amp;V)</value>
+  </data>
+  <data name="FindNodeDlg_AdvancedVisible_Show_Advanced" xml:space="preserve">
+    <value>显示高级(&amp;V) &gt;&gt;</value>
+  </data>
+  <data name="GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_" xml:space="preserve">
+    <value>肽段数目 {0} 必须小于针对诱饵 {1} 的肽段母离子模型数目，或使用 ‘{2}’ 诱饵生成方法。</value>
+  </data>
+  <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns" xml:space="preserve">
+    <value>在第 {0} 行上，行拥有 2 个以上的列</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time" xml:space="preserve">
+    <value>采集时间</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Document" xml:space="preserve">
+    <value>文档</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Position" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
+    <value>“{0}”不是对应氨基酸的大写字母。</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_An_unexpected_error_occurred__" xml:space="preserve">
+    <value>发生意外错误：</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_There_is_no_name_for_this_protein" xml:space="preserve">
+    <value>此蛋白质没有名称</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_This_must_start_with____" xml:space="preserve">
+    <value>它必须以“&gt;”开始</value>
+  </data>
+  <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
+    <value>无此蛋白质序列</value>
+  </data>
+  <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
+    <value>FASTA 文件</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_This_peptide_sequence_was_not_found_in_the_protein_sequence" xml:space="preserve">
+    <value>此肽段序列未在蛋白质序列中发现</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
+    <value>无法解释肽段修饰</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>您是否想要针对下列修饰使用 Unimod 定义？</value>
+  </data>
+  <data name="PasteDlg_AddProteins_Invalid_protein_sequence__0__" xml:space="preserve">
+    <value>无效的蛋白质序列：{0}</value>
+  </data>
+  <data name="PasteDlg_AddProteins_Missing_protein_sequence" xml:space="preserve">
+    <value>缺失蛋白质序列</value>
+  </data>
+  <data name="PasteDlg_AddProteins_This_protein_was_not_found_in_the_background_proteome_database" xml:space="preserve">
+    <value>该蛋白质未在背景蛋白质组数据库中发现。</value>
+  </data>
+  <data name="PasteDlg_Description_Insert" xml:space="preserve">
+    <value>插入</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_FASTA" xml:space="preserve">
+    <value>插入 FASTA</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_peptide_list" xml:space="preserve">
+    <value>插入肽段列表</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_protein_list" xml:space="preserve">
+    <value>插入蛋白质列表</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
+    <value>肽段序列不能为空。</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline" xml:space="preserve">
+    <value>Skyline 不支持该交联肽段的结构</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters" xml:space="preserve">
+    <value>此肽段序列包含无效字符。</value>
+  </data>
+  <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
+    <value>必须选择一个用于比较的模型。</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications" xml:space="preserve">
+    <value>置换同位素修饰</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications" xml:space="preserve">
+    <value>正在置换同位素修饰</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Updating_settings" xml:space="preserve">
+    <value>正在更新设置</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Add_label_type" xml:space="preserve">
+    <value>添加标记类型(&amp;B)：</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>将添加选中同位素标记类型的母离子（如果缺失）</value>
+  </data>
+  <data name="RefineDlg_MSLevel_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="RefineDlg_MSLevel_2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio" xml:space="preserve">
+    <value>{0}必须小于最小峰值检出比。</value>
+  </data>
+  <data name="RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type" xml:space="preserve">
+    <value>标记类型“{0}”无法被添加。没有针对此类型的修饰。</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_best" xml:space="preserve">
+    <value>最佳</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_" xml:space="preserve">
+    <value>您必须训练并选择一个模型，以重新合并峰。</value>
+  </data>
+  <data name="RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File" xml:space="preserve">
+    <value>添加 FASTA 文件</value>
+  </data>
+  <data name="RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available" xml:space="preserve">
+    <value>无可用的蛋白质元数据</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
+    <value>读取文件{0}失败。{1}</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_" xml:space="preserve">
+    <value>当前文档和 FASTA 文件{0}之间未发现蛋白质序列匹配</value>
+  </data>
+  <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
+    <value>模板文件无效。</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_" xml:space="preserve">
+    <value>本操作放弃了没有与当前过滤器设置匹配肽段的 {0} 个蛋白质。</value>
+  </data>
+  <data name="SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>要与保留时间预测保持一致，必须先在 "肽段设置/预测" 中设置保留时间预测器。</value>
+  </data>
+  <data name="UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_" xml:space="preserve">
+    <value>向网格添加行。</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__" xml:space="preserve">
+    <value>查询背景蛋白质组{0}失败。</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences" xml:space="preserve">
+    <value>寻找具有匹配肽段序列的蛋白质</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database" xml:space="preserve">
+    <value>查询蛋白质组数据库</value>
+  </data>
+  <data name="UniquePeptidesDlg_OkDialog_Exclude_peptides" xml:space="preserve">
+    <value>排除肽段</value>
+  </data>
+  <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
+    <value>这些蛋白质包含：</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>查找可以解释所有肽段的最小基因组列表(&amp;M)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
+    <value>每个基因的最少肽段数(&amp;N)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
+    <value>删除子集基因(&amp;R)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>サーバーでドキュメントのインポートがキャンセルされました。Panoramaに進みますか？</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_" xml:space="preserve">
+    <value>アップロードに成功しました。このファイルをPanoramaで表示しますか？</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>付加物「{0}」によって、分子{2}で見つかったものよりも多くの{1}の原子を標識する必要があります。</value>
+  </data>
+  <data name="Adduct_ParseDescription_isotope_error" xml:space="preserve">
+    <value>付加イオンの表記「{1}」内の同位体標識の表記「{0}」を解読できませんでした。付加イオンの表記内の同位体標識は、同位体数の形式（例：「2Cl37」または「2Cl374N15」）か、  質量シフト（例：「1.234」または「（-1.234）」）の形式にしてください。認識された同位体には次が含まれます：{2}</value>
+  </data>
+  <data name="AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum" xml:space="preserve">
+    <value>チェックサムのバイトバッファが無効です。</value>
+  </data>
+  <data name="AdlerChecksum_MakeForFile_Failure_attempting_to_calculate_a_checksum_for_the_file__0__" xml:space="preserve">
+    <value>ファイル{0}のチェックサムの計算に失敗しました</value>
+  </data>
+  <data name="AdlerChecksum_MakeForString_Invalid_string___0___for_checksum" xml:space="preserve">
+    <value>チェックサムの無効な文字列「{0}」</value>
+  </data>
+  <data name="AdlerChecksum_ToString_Unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_" xml:space="preserve">
+    <value>付加物の説明「{0}」の解析に失敗しました：宣言済みの負荷{1}が算出済みの負荷{2}と一致しません</value>
+  </data>
+  <data name="BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__" xml:space="preserve">
+    <value> サポートされた化学記号には以下を含める： </value>
+  </data>
+  <data name="ClipboardEx_GetData_ClipboardEx_implementation_problem" xml:space="preserve">
+    <value>ClipboardEx実装の問題</value>
+  </data>
+  <data name="ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_" xml:space="preserve">
+    <value>クリップボードへのデータ設定に失敗しました。</value>
+  </data>
+  <data name="ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open" xml:space="preserve">
+    <value>プロセス「{0}」 (ID = {1}) には開いたクリップボードがあります。</value>
+  </data>
+  <data name="ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_" xml:space="preserve">
+    <value>クリップボードからのデータ取得に失敗しました。</value>
+  </data>
+  <data name="Could_not_open_web_Browser_to_show_link_" xml:space="preserve">
+    <value>リンクを表示するウェブブラウザを開けませんでした：</value>
+  </data>
+  <data name="DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows" xml:space="preserve">
+    <value>{0}/{1}行を消去しました</value>
+  </data>
+  <data name="DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells" xml:space="preserve">
+    <value>セルをクリア</value>
+  </data>
+  <data name="DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste" xml:space="preserve">
+    <value>貼り付け</value>
+  </data>
+  <data name="DataGridViewPasteHandler_Paste_Pasting_row__0_" xml:space="preserve">
+    <value>行{0}を貼り付けています</value>
+  </data>
+  <data name="DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_" xml:space="preserve">
+    <value>「{0}」を必要なタイプに変換中のエラー：{1}</value>
+  </data>
+  <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
+    <value>ファイル{0}から試料情報を読み込もうとした際にエラーが発生しました。</value>
+  </data>
+  <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
+    <value>ファイルが壊れているか、ファイルがないか、または正しいライブラリがインストールされていない可能性があります。</value>
+  </data>
+  <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
+    <value>ソースディレクトリが存在しない、または見つかりませんでした： </value>
+  </data>
+  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
+    <value>ディレクトリを見つけることができませんでした：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
+    <value>ファイルパスが無効です：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
+    <value>ファイルパスが長すぎます：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
+    <value>ファイルを削除するのに十分な権限がありません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
+    <value>パスに無効な文字が含まれています：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
+    <value>パスが空です</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
+    <value>ディレクトリは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
+    <value>使用中のファイルは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
+    <value>読み取り専用ファイルは削除できません：{0}</value>
+  </data>
+  <data name="FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists" xml:space="preserve">
+    <value>{0}に保存できません。パスをチェックしてディレクトリが存在することを確認します。</value>
+  </data>
+  <data name="FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only" xml:space="preserve">
+    <value>{0}に保存できません。ファイルは読み取り専用です。</value>
+  </data>
+  <data name="FileStreamManager_CreateStream_Unexpected_error_opening__0__" xml:space="preserve">
+    <value>{0}を開く際の予期しないエラー</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
+    <value>アクセスが拒否されました。フォルダ「{0}」にはファイルを作成できません。フォルダの書き込み権限を変更するか、ファイルを別のフォルダに移動するかコピーした後、操作を再試行してください</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_" xml:space="preserve">
+    <value>フォルダ{0}に一時ファイルを作成しようとしましたが、以下のエラーで失敗しました：</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Win32_Error__0__" xml:space="preserve">
+    <value>Win32エラー：{0}</value>
+  </data>
+  <data name="Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty" xml:space="preserve">
+    <value>XML IDの作成に失敗。入力列は空にできません。</value>
+  </data>
+  <data name="HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides" xml:space="preserve">
+    <value>{0}/{1}ペプチドのみを表示しています</value>
+  </data>
+  <data name="HtmlFragment_HtmlFragment_No_data_specified" xml:space="preserve">
+    <value>データが指定されていません</value>
+  </data>
+  <data name="HtmlFragment_HtmlFragment_StartFragment_is_already_declared" xml:space="preserve">
+    <value>StartFragmentは既に宣言されています</value>
+  </data>
+  <data name="HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment" xml:space="preserve">
+    <value>StartFragmentはEndFragmentの前に宣言する必要があります</value>
+  </data>
+  <data name="HtmlFragment_HtmlFragment_StartHtml_is_already_declared" xml:space="preserve">
+    <value>StartHtmlは既に宣言されています</value>
+  </data>
+  <data name="HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML" xml:space="preserve">
+    <value>StartHTMLはendHTMLの前に宣言する必要があります</value>
+  </data>
+  <data name="IonInfo_AdductTips_" xml:space="preserve">
+    <value>付加イオン：
+ 
+イオン式中に、事実上の表記基準となっている表記法（http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator）に則った付加イオンの表記が含まれている場合があります（例：「C47H51NO14[M+IsoProp+H]」）。
+
+イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）が使用されます。
+
+多量体（例：「[2M+K]」の「2」）と同位体標識（例：「[M2Cl37+H]」の「2Cl37」）の表記はサポートされています。
+
+認識された付加イオンの成分は、通常の化学記号と{0}で表記されます。
+
+荷電状態はこれらの付加イオン成分から推測されます：{1}</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_" xml:space="preserve">
+    <value>現在のドキュメントにはプロテオミクスのデータが含まれているため、分子用インターフェイスに切り替えることはできません。</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_" xml:space="preserve">
+    <value>現在のドキュメントには非プロテオミクスの分子データが含まれているため、プロテオミクス用インターフェイスに切り替えることはできません。</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_" xml:space="preserve">
+    <value>新しいドキュメントを作成しますか？</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface" xml:space="preserve">
+    <value>混合用インターフェイス</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis" xml:space="preserve">
+    <value>プロテオミクス解析に適切なメニューとコントロールのみを表示</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis" xml:space="preserve">
+    <value>非プロテオミクス分子解析に適切なメニューとコントロールのみを表示</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface" xml:space="preserve">
+    <value>プロテオミクス用インターフェイス</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls" xml:space="preserve">
+    <value>すべてのメニューとコントロールを表示</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface" xml:space="preserve">
+    <value>分子用インターフェイス</value>
+  </data>
+  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_" xml:space="preserve">
+    <value>{0}のダウンロード中</value>
+  </data>
+  <data name="PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" xml:space="preserve">
+    <value>ファイル{0}は最初に開かれた後に変更されています。</value>
+  </data>
+  <data name="PublishDocumentDlg_UploadSharedZipFile_Uploading_File" xml:space="preserve">
+    <value>ファイルのアップロード中</value>
+  </data>
+  <data name="Server_GetKey___anonymous_" xml:space="preserve">
+    <value> （匿名）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Server_ReadXml_A_Panorama_server_must_be_specified" xml:space="preserve">
+    <value>Panoramaサーバーを指定しなければなりません。</value>
+  </data>
+  <data name="Server_ReadXml_Server_URL_is_corrupt" xml:space="preserve">
+    <value>サーバーURLが破損しています。</value>
+  </data>
+  <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_" xml:space="preserve">
+    <value>一時投稿データのディスクへの保存に失敗しました。</value>
+  </data>
+  <data name="XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__" xml:space="preserve">
+    <value>クラス{0}には{1}がありません。</value>
+  </data>
+  <data name="XmlUtil_GetInvalidDataMessage_It_may_have_been_truncated_during_file_transfer" xml:space="preserve">
+    <value>ファイル転送中に切断された可能性があります。</value>
+  </data>
+  <data name="XmlUtil_GetInvalidDataMessage_The_file_does_not_appear_to_be_valid_XML" xml:space="preserve">
+    <value>ファイルは有効なXMLではないようです。</value>
+  </data>
+  <data name="XmlUtil_GetInvalidDataMessage_The_file_is_empty" xml:space="preserve">
+    <value>ファイルが空です。</value>
+  </data>
+  <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__" xml:space="preserve">
+    <value>無効なタイプ{0}を含むリストを直列化しようとしています。</value>
+  </data>
+  <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
+    <value>要素が欠損しているリストを直列化しようとしました。</value>
+  </data>
+  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___" xml:space="preserve">
+    <value>テキスト「{1}」内の質量オフセットとして「{0}」を解析できません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>Panoramaに移動しますか？</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Panoramaサーバー{0}でインポートエラーが発生しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

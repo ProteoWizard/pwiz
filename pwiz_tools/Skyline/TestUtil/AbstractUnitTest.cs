@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// When false, tests should not access resources on the internet other than
-        /// downloading the test ZIP files. e.g. UniProt, Prosit, Chorus, etc.
+        /// downloading the test ZIP files. e.g. UniProt, Koina, Chorus, etc.
         /// </summary>
         protected bool AllowInternetAccess
         {
@@ -120,6 +120,12 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
+
+        /// <summary>
+        /// Controls whether or not certain machines run the often flaky TestToolService
+        /// </summary>
+        protected bool SkipTestToolService => Environment.MachineName.Equals(@"BRENDANX-UW7");
+        public const string MSG_SKIPPING_TEST_TOOL_SERVICE = @"AbstractUnitTest.SkipTestToolService is set for this machine, no test was actually performed";
 
         /// <summary>
         /// Perf tests (long running, huge-data-downloading) should be declared
@@ -235,6 +241,20 @@ namespace pwiz.SkylineTestUtil
                         zipPath = zipFilePath;
                     }
                     _testFilesZips[i] = zipPath;
+                }
+            }
+        }
+
+        public void UnzipTestFiles()
+        {
+            // Unzip test files.
+            if (TestFilesZipPaths != null)
+            {
+                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                {
+                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                        TestFilesPersistent, IsExtractHere(i));
                 }
             }
         }

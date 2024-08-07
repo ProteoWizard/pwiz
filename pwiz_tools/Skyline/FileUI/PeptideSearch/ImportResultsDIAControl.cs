@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             DocumentContainer = documentContainer;
             BrowseResultsDialogText = browseResultsDialogText ??
-                                      Resources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files;
+                                      PeptideSearchResources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files;
 
             InitializeComponent();
 

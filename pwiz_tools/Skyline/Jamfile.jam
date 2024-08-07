@@ -25,15 +25,30 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
-    path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
-    path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+    path-constant CRT_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).crt" ;
+    constant CRT_KEY : "key_637015839" ;
+    path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
+    if ! [ path.exists $(NUGET_PATH) ]
+    {
+        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+        if ! [ path.exists $(NUGET_PATH) ]
+        {
+            path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+        }
+    }
+
+    if ! --incremental in [ modules.peek : ARGV ]
+    {
+       echo "Updating submodules for Hardklor etc..." ;
+       SHELL "git submodule update --init --recursive" ;
+    }
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
-    constant SKYLINE_YEAR : 23 ;
-    constant SKYLINE_ORDINAL : 0 ; # A count of official releases made so far this year
-    constant SKYLINE_BRANCH : 9 ; # 0 - release, 1 - daily, 9 - feature complete daily
+    constant SKYLINE_YEAR : 24 ;
+    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
     # (figuring out leap year here seems like overkill)
@@ -107,12 +122,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
         local .msvcSetupScriptX86 = [ regex.replace $(.msvcSetupScript) "amd64" "x86" ] ;
-        local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
-        if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+        if [ path.exists $(CRT_PATH) ]
         {
-            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishPW.bat" ;
-            local batch-file-text = "$(.msvcSetupScriptX86)\r\nCALL SignAfterPublish.bat $(.pfx-password) %*" ;
-            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishPW.bat ;
+            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishKey.bat" ;
+            local batch-file-text = "$(.msvcSetupScriptX86)\r\nCALL SignAfterPublish.bat $(CRT_KEY) %*" ;
+            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishKey.bat ;
             local batch-file = @($(batch-file-name):E=$(batch-file-text)) ;
         }
 
@@ -146,6 +160,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineCmd /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Executables/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);Platform="Any CPU";OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
 
@@ -155,15 +170,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         echo Cleaning Skyline so subsequent builds copy files properly...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Clean /nologo /verbosity:minimal
-    }
-
-    actions do_Inspect_Code
-    {
-        $(MSVC_CURRENT_SETUP_SCRIPT)
-        chcp 437
-        echo Running Code inspections
-        echo $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
-        $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
     }
 
     rule do_skyline_batch ( targets + : sources * : properties * )
@@ -343,20 +349,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         ) > "$(<)"
     }
 
-    if --official in [ modules.peek : ARGV ]
-    {
-        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
-        if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
-        {
-            errors.user-error "PrositConfig_production.xml must be present for an official build" ;
-        }
-    }
-    else
-    {
-        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_development.xml" ;
-    }
 
-    make PrositConfig.xml : $(SKYLINE_PROSIT_CONFIG) : @common.copy : <location>$(SKYLINE_PATH)/Model/Prosit/Config ;
+    constant SKYLINE_KOINA_CONFIG : "$(SKYLINE_PATH)/Model/Koina/Config/KoinaConfig_development.xml" ;
+    make KoinaConfig.xml : $(SKYLINE_KOINA_CONFIG) : @common.copy : <location>$(SKYLINE_PATH)/Model/Koina/Config ;
 
     rule build-location ( properties * )
     {
@@ -391,6 +386,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         return $(result) ;
     }
     
+    rule install-vendor-api-dependencies-to-debug-and-release ( properties * )
+    {
+        return [ install-vendor-api-dependencies-to-locations $(SKYLINE_PATH)/bin/x64/Debug $(SKYLINE_PATH)/bin/x64/Release : $(properties) ] ;
+    }
 
     notfile NugetRestore : @do_nuget_restore ;
 
@@ -408,18 +407,20 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/commandline//msconvert/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
-            <conditional>@install-vendor-api-dependencies
+            #<conditional>@install-vendor-api-dependencies
+            <conditional>@install-vendor-api-dependencies-to-debug-and-release
             <dependency>NugetRestore
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>TestDiagnostics//TestDiagnostics/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>Executables/Hardklor//Hardklor/<location>$(SKYLINE_PATH)/Executables/Hardklor/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>$(PWIZ_ROOT_PATH)//INSTALLER_VENDOR_FILES.txt
-            <dependency>PrositConfig.xml
+            <dependency>KoinaConfig.xml
     ;
     explicit Skyline.exe ;
 

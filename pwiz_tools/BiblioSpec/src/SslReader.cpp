@@ -35,14 +35,17 @@ namespace BiblioSpec {
 
 SslReader::SslReader(BlibBuilder& maker,
                        const char* sslname,
-                       const ProgressIndicator* parent_progress)
+                       const ProgressIndicator* parent_progress,
+                       const char *readerName)
     : BuildParser(maker, sslname, parent_progress), sslName_(sslname)
   {
-    Verbosity::debug("Creating SslReader.");
+    Verbosity::debug("Creating %s.", readerName);
     sslDir_ = getPath(sslName_);
 
     delete specReader_;  // delete base class reader
     specReader_ = this;
+
+    hasHeader_ = true;
   }
 
   SslReader::~SslReader()
@@ -56,11 +59,17 @@ SslReader::SslReader(BlibBuilder& maker,
    * unmodified one and a vector of mods.
    */
   void SslReader::addDataLine(sslPSM& newPSM){
+
+      if (newPSM.isPrecursorOnly())
+      {
+          newPSM.setPrecursorOnly(); // Set it again to ensure fully detailed lookup for precursor-only record
+      }
+
       Verbosity::comment(V_DETAIL, 
-                         "Adding new psm (scan %d) from delim file reader.",
-                         newPSM.specKey);
+                         "Adding new psm (scan %s) from delim file reader.",
+                         newPSM.idAsString().c_str());
       // create a new mod to store
-      PSM* curPSM = new PSM(static_cast<PSM &>(newPSM));
+      sslPSM* curPSM = new sslPSM(newPSM);
       curPSM->modifiedSeq.clear();
       curPSM->mods.clear();
 
@@ -91,10 +100,11 @@ SslReader::SslReader(BlibBuilder& maker,
           fileMap_[newPSM.filename] = tmpPsms;
           fileScoreTypes_[newPSM.filename] = newPSM.scoreType;
       } else {
-          (mapAccess->second).push_back(curPSM);
+          vector<PSM*>& psms = mapAccess->second;
+          psms.push_back(curPSM);
       }
 
-      if (newPSM.retentionTime >= 0)
+      if (newPSM.rtInfo.retentionTime != 0 || newPSM.rtInfo.startTime != 0)
       {
           int identifier = newPSM.specKey;
           if (newPSM.specIndex != -1) // not default value means scan id is index=<index>
@@ -102,36 +112,49 @@ SslReader::SslReader(BlibBuilder& maker,
           else if (newPSM.specKey == -1) // default value
               identifier = std::hash<string>()(newPSM.specName);
 
-          overrideRt_[identifier] = newPSM.retentionTime;
+          overrideRt_[identifier] = newPSM.rtInfo;
       }
+  }
+
+  void SslReader::setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader)
+  {
+      // add the required columns
+      fileReader.addRequiredColumn("file", sslPSM::setFile);
+      fileReader.addRequiredColumn("scan", sslPSM::setScanNumber);
+      fileReader.addRequiredColumn("charge", sslPSM::setCharge);
+      fileReader.addOptionalColumn("sequence", sslPSM::setModifiedSequence); // Formerly required, now optional (but if it's missing, this had better be small molecule data)
+
+      // add the optional columns
+      fileReader.addOptionalColumn("score-type", sslPSM::setScoreType);
+      fileReader.addOptionalColumn("score", sslPSM::setScore);
+      fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
+      fileReader.addOptionalColumn("start-time", sslPSM::setStartTime);
+      fileReader.addOptionalColumn("end-time", sslPSM::setEndTime);
+
+      fileReader.addOptionalColumn("ion-mobility", sslPSM::setIonMobility);
+      fileReader.addOptionalColumn("ion-mobility-units", sslPSM::setIonMobilityUnits);
+      fileReader.addOptionalColumn("ccs", sslPSM::setCCS);
+
+      // add the optional small molecule columns
+      fileReader.addOptionalColumn("inchikey", sslPSM::setInchiKey);
+      fileReader.addOptionalColumn("adduct", sslPSM::setPrecursorAdduct);
+      fileReader.addOptionalColumn("chemicalformula", sslPSM::setChemicalFormula);
+      fileReader.addOptionalColumn("moleculename", sslPSM::setMoleculeName);
+      fileReader.addOptionalColumn("otherkeys", sslPSM::setotherKeys);
+      fileReader.addOptionalColumn("precursorMZ", sslPSM::setPrecursorMzDeclared);
+
+      // use tab-delimited
+      fileReader.defineSeparators('\t');
+
   }
 
   void SslReader::parse() {
     Verbosity::debug("Parsing File.");
 
     // create a new DelimitedFileReader, with self as the consumer
-    DelimitedFileReader<sslPSM> fileReader(this);
+    DelimitedFileReader<sslPSM> fileReader(this, hasHeader_);
 
-    // add the required columns
-    fileReader.addRequiredColumn("file", sslPSM::setFile);
-    fileReader.addRequiredColumn("scan", sslPSM::setScanNumber);
-    fileReader.addRequiredColumn("charge", sslPSM::setCharge);
-    fileReader.addOptionalColumn("sequence", sslPSM::setModifiedSequence); // Formerly required, now optional (but if it's missing, this had better be small molecule data)
-
-    // add the optional columns
-    fileReader.addOptionalColumn("score-type", sslPSM::setScoreType);
-    fileReader.addOptionalColumn("score", sslPSM::setScore);
-    fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
-
-    // add the optional small molecule columns
-    fileReader.addOptionalColumn("inchikey", sslPSM::setInchiKey);
-    fileReader.addOptionalColumn("adduct", sslPSM::setPrecursorAdduct);
-    fileReader.addOptionalColumn("chemicalformula", sslPSM::setChemicalFormula);
-    fileReader.addOptionalColumn("moleculename", sslPSM::setMoleculeName);
-    fileReader.addOptionalColumn("otherkeys", sslPSM::setotherKeys);
-
-    // use tab-delimited
-    fileReader.defineSeparators('\t');
+    setColumnsAndSeparators(fileReader);
 
     // parse, getting each line with addDataLine
     fileReader.parseFile(sslName_.c_str());
@@ -160,14 +183,30 @@ SslReader::SslReader(BlibBuilder& maker,
       // move from map to psms_
       psms_ = fileIterator->second;
 
-      // look at first psm for scanKey vs scanName
-      if (psms_.front()->specIndex != -1) // not default value means scan id is index=<index>
-          lookUpBy_ = INDEX_ID;
-      else if (psms_.front()->specKey == -1) // default value
-          lookUpBy_ = NAME_ID;
-      else
-          lookUpBy_ = SCAN_NUM_ID;
-
+      // look at first non-precursor-only psm for scanKey vs scanName
+      lookUpBy_ = UNKNOWN;
+      for (unsigned int i = 0; i < psms_.size(); i++) {
+          sslPSM* psm = static_cast<sslPSM*>(psms_.at(i));
+          if (psm->specIndex >= 0) // not default value means scan id is index=<index>
+          {
+              lookUpBy_ = INDEX_ID;
+              break;
+          }
+          else if (psm->specKey <  0) // default value
+          {
+              lookUpBy_ = NAME_ID;
+              break;
+          }
+          else if (!psm->isPrecursorOnly())
+          {
+              lookUpBy_ = SCAN_NUM_ID;
+              break;
+          }
+      }
+      if (lookUpBy_ == UNKNOWN)
+      {
+        lookUpBy_ = SCAN_NUM_ID;
+      }
       buildTables(fileScoreTypes_[fileIterator->first]);
     }
 
@@ -190,23 +229,32 @@ SslReader::SslReader(BlibBuilder& maker,
                               bool getPeaks) {
     if (PwizReader::getSpectrum(identifier, returnData, type, getPeaks))
     {
-      map<int, double>::const_iterator i = overrideRt_.find(identifier);
+      map<int, RTINFO>::const_iterator i = overrideRt_.find(identifier);
       if (i != overrideRt_.end()) {
-        returnData.retentionTime = i->second;
+          setRtInfo(returnData, i->second);
       }
       return true;
     }
     return false;
   }
 
+  void SslReader::setRtInfo(SpecData& returnData, const RTINFO &rtInfo) {
+    if (rtInfo.retentionTime != 0)
+        returnData.retentionTime = rtInfo.retentionTime;
+    if (rtInfo.startTime != 0)
+        returnData.startTime = rtInfo.startTime;
+    if (rtInfo.endTime != 0)
+        returnData.endTime = rtInfo.endTime;
+}
+
   bool SslReader::getSpectrum(string identifier,
                               SpecData& returnData,
                               bool getPeaks) {
     if (PwizReader::getSpectrum(identifier, returnData, getPeaks))
     {
-        map<int, double>::const_iterator i = overrideRt_.find(std::hash<string>()(identifier));
+        map<int, RTINFO>::const_iterator i = overrideRt_.find(std::hash<string>()(identifier));
         if (i != overrideRt_.end()) {
-            returnData.retentionTime = i->second;
+            setRtInfo(returnData, i->second);
         }
         return true;
     }

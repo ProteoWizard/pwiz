@@ -134,9 +134,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        public object Clone()
+        public MatchRgbHexColor Clone()
         {
-            return MemberwiseClone();
+            return (MatchRgbHexColor) MemberwiseClone();
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         protected bool Equals(MatchRgbHexColor other)

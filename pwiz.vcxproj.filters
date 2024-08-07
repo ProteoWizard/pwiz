@@ -153,9 +153,7 @@
     <ClCompile Include="pwiz\data\identdata\MascotReader.cpp" />
     <ClCompile Include="pwiz\data\identdata\MascotReader_dummy.cpp" />
     <ClCompile Include="pwiz\data\identdata\Pep2MzIdent.cpp" />
-    <ClCompile Include="pwiz\data\identdata\Pep2MzIdentTest.cpp" />
     <ClCompile Include="pwiz\data\identdata\Reader.cpp" />
-    <ClCompile Include="pwiz\data\identdata\ReaderTest.cpp" />
     <ClCompile Include="pwiz\data\identdata\References.cpp" />
     <ClCompile Include="pwiz\data\identdata\ReferencesTest.cpp" />
     <ClCompile Include="pwiz\data\identdata\Serializer_protXML.cpp" />
@@ -526,7 +524,6 @@
     <ClCompile Include="pwiz\analysis\demux\DemuxSolver.cpp" />
     <ClCompile Include="pwiz\analysis\demux\DemuxSolverTest.cpp" />
     <ClCompile Include="pwiz\analysis\demux\DemuxTestData.cpp" />
-    <ClCompile Include="pwiz\analysis\demux\FSDemux.cpp" />
     <ClCompile Include="pwiz\analysis\demux\MatrixIO.cpp" />
     <ClCompile Include="pwiz\analysis\demux\MatrixIOTest.cpp" />
     <ClCompile Include="pwiz\analysis\demux\MSXDemultiplexer.cpp" />
@@ -593,6 +590,8 @@
     <ClCompile Include="pwiz_tools\commandline\idcat.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TsfData.cpp" />
     <ClCompile Include="libraries\SQLite\sqlite3pp.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mzmlb\Connection_mzMLb.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MzShiftFilter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -1066,6 +1065,8 @@
     <ClInclude Include="pwiz\data\msdata\mz5\Configuration_mz5.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TsfData.hpp" />
     <ClInclude Include="libraries\SQLite\sqlite3pp.h" />
+    <ClInclude Include="pwiz\data\msdata\mzmlb\Connection_mzMLb.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MzShiftFilter.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -43,13 +42,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 public TargetCurveList(SummaryBarGraphPaneBase parent)
                 {
                     _parent = parent;
-                }
-                public new void Add(CurveItem curve)
-                {
-                    //all targets must be on the same axis
-                    if (Count > 0)
-                        Assume.AreEqual(base[0].GetYAxis(_parent), curve.GetYAxis(_parent), @"All target curves for a tooltip must be on the same axis.");
-                    base.Add(curve);
                 }
 
                 public CurveItem ClearAndAdd(CurveItem curve)
@@ -78,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private TableDesc _table;
             internal RenderTools RenderTools = new RenderTools();
 
+            public double? YPosition { get; set; } //vertical coordinate of the tooltip
             public int ReplicateIndex { get; private set; }
             public TargetCurveList TargetCurves {  get; private set; }
 
@@ -103,7 +96,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (_table == null)
                     _table = new TableDesc();
-                _table.AddDetailRow(description, data, RenderTools);
+                _table.AddDetailRow(description, data, RenderTools, StringAlignment.Far);
             }
 
             public void ClearData()
@@ -111,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _table?.Clear();
             }
 
-            public void Draw(int dataIndex, Point cursorPos)
+            public void Draw(int dataIndex, Point cursorPos, CurveItem curve)
             {
                 if (_isVisible)
                 {
@@ -123,7 +116,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 ReplicateIndex = dataIndex;
                 var basePoint = new UserPoint(dataIndex + 1,
-                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent, TargetCurves.GetYAxis() ?? _parent.YAxis);
+                    (float)(YPosition ?? (curve.Points[ReplicateIndex].Y)) / _parent.YScale, _parent, curve.GetYAxis(_parent) ?? _parent.YAxis);
 
                 using (var g = _parent.GraphSummary.GraphControl.CreateGraphics())
                 {
@@ -210,18 +203,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public virtual void PopulateTooltip(int index){}
+        public virtual void PopulateTooltip(int index, CurveItem targetCurve) {}
 
-        /// <summary>
-        /// Override if you need to implement tooltips in your graph.
-        /// </summary>
-        /// <returns>A list of y-coordinates where tooltips should be displayed.
-        /// List index is the replicate index.</returns>
-        public virtual ImmutableList<float> GetToolTipDataSeries()
-        {
-            //This provides a clear error message if this method is invoked by mistake in a class that doesn't implement tooltips.
-            throw new NotImplementedException(@"Method GetToolTipDataSeries is not implemented.");
-        }
         /// <summary>
         /// Additional scaling factor for tooltip's vertical position.
         /// </summary>
@@ -309,8 +292,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (ToolTip != null && ToolTip.TargetCurves.IsTarget(nearestCurve))
             {
-                PopulateTooltip(iNearest);
-                ToolTip.Draw(iNearest, mouseEventArgs.Location);
+                PopulateTooltip(iNearest, nearestCurve);
+                ToolTip.Draw(iNearest, mouseEventArgs.Location, nearestCurve);
                 sender.Cursor = Cursors.Hand;
                 return true;
             }
@@ -331,7 +314,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ToolTip?.Hide();
         }
 
-        private XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        public XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
             using (Graphics g = sender.CreateGraphics())
             {

@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -42,7 +41,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static string FILTER_IONMOBILITYLIBRARY
         {
-            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
+            get { return TextUtil.FileDialogFilter(IonMobilityResources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
         }
 
         public IonMobilityLibrarySpec(string name, string path) : base(name)
@@ -314,14 +313,15 @@ namespace pwiz.Skyline.Model.IonMobility
                 throw new InvalidOperationException(@"Unexpected use of ion mobility library before successful initialization."); // - for developer use
         }
 
-        public static Dictionary<LibKey, IonMobilityAndCCS> CreateFromResults(SrmDocument document, string documentFilePath, bool useHighEnergyOffset,
+        public static Dictionary<LibKey, IonMobilityAndCCS> CreateFromResults(SrmDocument document, string documentFilePath,
+            IonMobilityWindowWidthCalculator imFilterWindowCalculator, bool useHighEnergyOffset,
             IProgressMonitor progressMonitor = null)
         {
             // Overwrite any existing measurements with newly derived ones
             // N.B. assumes we are not attempting to find multiple conformers
             // (so, returns Dictionary<LibKey, IonMobilityAndCCS> instead of Dictionary<LibKey, IList<IonMobilityAndCCS>>)
             Dictionary<LibKey, IonMobilityAndCCS> measured;
-            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor))
+            using (var finder = new IonMobilityFinder(document, documentFilePath, imFilterWindowCalculator, progressMonitor))
             {
                 finder.UseHighEnergyOffset = useHighEnergyOffset;
                 measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
@@ -329,11 +329,12 @@ namespace pwiz.Skyline.Model.IonMobility
             return measured;
         }
 
-        public static IonMobilityLibrary CreateFromResults(SrmDocument document, string documentFilePath, bool useHighEnergyOffset,
+        public static IonMobilityLibrary CreateFromResults(SrmDocument document, string documentFilePath,
+            IonMobilityWindowWidthCalculator imFilterWindowCalculator, bool useHighEnergyOffset,
             string libraryName, string dbPath, IProgressMonitor progressMonitor = null)
         {
             // Overwrite any existing measurements with newly derived ones
-            var measured = CreateFromResults(document, documentFilePath, useHighEnergyOffset, progressMonitor);
+            var measured = CreateFromResults(document, documentFilePath, imFilterWindowCalculator, useHighEnergyOffset, progressMonitor);
             var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false).
                 UpdateIonMobilities(measured.Select(m => new PrecursorIonMobilities(
                 m.Key, m.Value)).ToList());

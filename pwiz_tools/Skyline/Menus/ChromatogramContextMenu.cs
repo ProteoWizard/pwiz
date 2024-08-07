@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Menus
             {
                 var asSubMenu = true;
 
-                var ccsMenuItemText = Resources.ChromatogramContextMenu_Collision_Cross_Section;
+                var ccsMenuItemText = MenusResources.ChromatogramContextMenu_Collision_Cross_Section;
                 var ccsItem = new ToolStripMenuItem(ccsMenuItemText);
                 ccsItem.Click += (sender, eventArgs) => SkylineWindow.ShowCollisionCrossSection = !SkylineWindow.ShowCollisionCrossSection;
                 ccsItem.Checked = SkylineWindow.ShowCollisionCrossSection;
@@ -203,13 +203,13 @@ namespace pwiz.Skyline.Menus
                 switch (chromFileInfo.IonMobilityUnits)
                 {
                     case eIonMobilityUnits.drift_time_msec:
-                        imMenuItemText = Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time;
+                        imMenuItemText = MenusResources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time;
                         break;
                     case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                        imMenuItemText = Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility;
+                        imMenuItemText = MenusResources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility;
                         break;
                     case eIonMobilityUnits.compensation_V:
-                        imMenuItemText = Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage;
+                        imMenuItemText = MenusResources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage;
                         asSubMenu = false; // No CCS value, no need to submenu
                         break;
                     default:
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Menus
 
                 if (asSubMenu)
                 {
-                    var imSubMenu = new ToolStripMenuItem(Resources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility);
+                    var imSubMenu = new ToolStripMenuItem(MenusResources.ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility);
                     imSubMenu.DropDownItems.Add(ccsItem);
                     imSubMenu.DropDownItems.Add(ionMobilityItem);
                     items.Insert(iInsert++, imSubMenu);
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Menus
                             var groupBy = SkylineWindow.EditMenu.GetGroupApplyToDescription();
                             if (groupBy != null)
                             {
-                                applyPeakGroupGraphMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + groupBy;
+                                applyPeakGroupGraphMenuItem.Text = MenusResources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + groupBy;
                                 menuStrip.Items.Insert(iInsert++, applyPeakGroupGraphMenuItem);
                             }
 
@@ -318,6 +318,10 @@ namespace pwiz.Skyline.Menus
             }
         }
 
+        public void AddRelativeAbundanceFormattingMenu(ToolStrip menuStrip, int iInsert)
+        {
+            menuStrip.Items.Insert(iInsert, relativeAbundanceFormattingMenuItem);
+        }
 
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
@@ -390,7 +394,7 @@ namespace pwiz.Skyline.Menus
                 {
                     var handler = new RemovePeakHandler(SkylineWindow, pathGroup, nodeGroup, null);
                     var item = new ToolStripMenuItem(
-                        Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null,
+                        MenusResources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null,
                         handler.menuItem_Click);
                     menu.DropDownItems.Insert(0, item);
                 }
@@ -424,7 +428,7 @@ namespace pwiz.Skyline.Menus
                 if (transitionGroupDocNode == null)
                     return;
 
-                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All,
+                var item = new ToolStripMenuItem(MenusResources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All,
                     null, removePeakMenuItem_Click);
                 menu.DropDownItems.Insert(0, item);
 
@@ -619,6 +623,11 @@ namespace pwiz.Skyline.Menus
             if (qcTraceItem == null)
                 throw new InvalidOperationException(@"qcMenuItem_Click must be triggered by a ToolStripMenuItem");
             SkylineWindow.ShowQc(qcTraceItem.Text);
+        }
+
+        private void relativeAbundanceFormattingMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowRelativeAbundanceFormatting();
         }
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {

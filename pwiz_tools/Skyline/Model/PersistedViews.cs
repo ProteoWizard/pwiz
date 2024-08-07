@@ -54,9 +54,9 @@ namespace pwiz.Skyline.Model
     public class PersistedViews : SerializableViewGroups
     {
         public static readonly ViewGroup MainGroup = new ViewGroup(@"main",
-            () => Resources.PersistedViews_MainGroup_Main);
+            () => ModelResources.PersistedViews_MainGroup_Main);
         public static readonly ViewGroup ExternalToolsGroup = new ViewGroup(@"external_tools",
-            () => Resources.PersistedViews_ExternalToolsGroup_External_Tools);
+            () => ModelResources.PersistedViews_ExternalToolsGroup_External_Tools);
 
         /// <summary>
         /// Construct a new PersistedViews, migrating over the values from the old ViewSpecList 
@@ -130,7 +130,9 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 12; } } // v12 adds small mol peak boundaries report
+        // v12 adds small mol peak boundaries report
+        // v13 adds small mol transitions report and small mol RT Results report
+        public int RevisionIndexCurrent { get { return 13; } } 
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -194,6 +196,11 @@ namespace pwiz.Skyline.Model
                 reportStrings.Add(REPORTS_V12); // Including molecule peak boundaries export
             }
 
+            if (revisionIndex >= 13)
+            {
+                reportStrings.Add(REPORTS_V13); // Including molecule RT results and molecule transitions result report
+            }
+
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -212,6 +219,8 @@ namespace pwiz.Skyline.Model
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
                 {"Molecule Quantification", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Quantification)},
                 {"Molecule Ratio Results", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Ratio_Results)},
+                {"Molecule RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_RT_Results)},
+                {"Molecule Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
             };
             // ReSharper restore LocalizableElement
@@ -502,6 +511,37 @@ namespace pwiz.Skyline.Model
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";
+
+        private const string REPORTS_V13 = @"<views>
+  <view name='Molecule RT Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
+    <column name='' />
+    <column name='Protein.Name' />
+    <column name='Results!*.Value.ResultFile.Replicate.Name' />
+    <column name='PredictedRetentionTime' />
+    <column name='Results!*.Value.PeptideRetentionTime' />
+    <column name='Results!*.Value.PeptidePeakFoundRatio' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+  <view name='Molecule Transition Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='small_molecules'>
+    <column name='Precursor.Peptide' />
+    <column name='Precursor.Peptide.Protein.Name' />
+    <column name='Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.Name' />
+    <column name='Precursor.Mz' />
+    <column name='Precursor.Adduct' />
+    <column name='Precursor.Charge' />
+    <column name='FragmentIon' />
+    <column name='ProductMz' />
+    <column name='ProductAdduct' />
+    <column name='ProductCharge' />
+    <column name='Results!*.Value.RetentionTime' />
+    <column name='Results!*.Value.Area' />
+    <column name='Results!*.Value.Background' />
+    <column name='Results!*.Value.PeakRank' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+</views>";
+
+
 
         // ReSharper restore LocalizableElement
 

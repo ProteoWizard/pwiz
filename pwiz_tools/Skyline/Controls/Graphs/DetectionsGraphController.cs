@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -115,8 +114,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private TargetType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc) { }
 
-            public static readonly TargetType PRECURSOR = new TargetType(0, () => Resources.DetectionPlot_TargetType_Precursor);
-            public static readonly TargetType PEPTIDE = new TargetType(1, () => Resources.DetectionPlot_TargetType_Peptide);
+            public static readonly TargetType PRECURSOR = new TargetType(0, () => GraphsResources.DetectionPlot_TargetType_Precursor);
+            public static readonly TargetType PEPTIDE = new TargetType(1, () => GraphsResources.DetectionPlot_TargetType_Peptide);
 
             public static IEnumerable<TargetType> GetValues()
             {
@@ -133,8 +132,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private YScaleFactorType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc) { }
 
-            public static readonly YScaleFactorType ONE = new YScaleFactorType(1, () => Resources.DetectionPlot_YScale_One);
-            public static readonly YScaleFactorType PERCENT = new YScaleFactorType(0, () => Resources.DetectionPlot_YScale_Percent);
+            public static readonly YScaleFactorType ONE = new YScaleFactorType(1, () => GraphsResources.DetectionPlot_YScale_One);
+            public static readonly YScaleFactorType PERCENT = new YScaleFactorType(0, () => GraphsResources.DetectionPlot_YScale_Percent);
 
             public static IEnumerable<YScaleFactorType> GetValues()
             {
@@ -228,7 +227,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IFormView FormView =>new GraphSummary.DetectionsGraphView(); 
 
-        string GraphSummary.IController.Text => Resources.SkylineWindow_CreateGraphDetections_Counts;
+        string GraphSummary.IController.Text => GraphsResources.SkylineWindow_CreateGraphDetections_Counts;
 
         SummaryGraphPane GraphSummary.IControllerSplit.CreatePeptidePane(PaneKey key)
         {
@@ -242,8 +241,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         bool GraphSummary.IController.HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.Escape)
-                DetectionPlotData.GetDataCache().Cancel();
             return true;
         }
 

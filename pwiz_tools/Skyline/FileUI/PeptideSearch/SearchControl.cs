@@ -18,12 +18,16 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -55,6 +59,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return showTimestamp ? $"[{Timestamp.ToString("yyyy/MM/dd HH:mm:ss")}]  {Message}" : Message;
                 // ReSharper restore LocalizableElement
             }
+
+            public override string ToString()
+            {
+                return ToString(true); // For debugging convenience
+            }
+
         }
 
         protected List<ProgressEntry> _progressTextItems = new List<ProgressEntry>();
@@ -89,13 +99,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         protected int lastSegment = -1;
         protected string lastMessage;
+        protected string lastSegmentName;
         protected void UpdateSearchEngineProgress(IProgressStatus status)
         {
             string message = status.IsError ? status.ErrorException.ToString() : status.Message;
 
             if (status.IsError)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
+                MessageDlg.ShowWithException(Program.MainWindow, status.ErrorException.Message, status.ErrorException);
                 return;
             }
 
@@ -103,12 +114,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (status.SegmentCount > 0 && status.Segment != lastSegment)
             {
                 lastSegment = status.Segment;
-                progressBar.CustomText = status.Message;
+            }
+
+            if (status.SegmentName != lastSegmentName)
+            {
+                lastSegmentName = status.SegmentName;
+                progressBar.CustomText = status.SegmentName;
             }
 
             if (!status.WarningMessage.IsNullOrEmpty() && status.WarningMessage != lastMessage)
             {
-                lastMessage = status.WarningMessage;
+                lastMessage = message = status.WarningMessage;
                 progressBar.CustomText = status.WarningMessage;
             }
 
@@ -125,12 +141,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 progressBar.Style = ProgressBarStyle.Continuous;
             }
 
-            if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
+            // look at the last 10 lines for the same message and if found do not relog the same message
+            if (_progressTextItems.Skip(Math.Max(0, _progressTextItems.Count - 10)).Any(entry => entry.Message == message))
                 return;
+
+            if (message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length - 1), out _))
+            {
+                // Don't update text if the message is just a percent complete update (e.g. "13%") - that gets parsed in ProcessRunner.Run
+                return;
+            }
 
             var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
             txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+        }
+
+        public void SetProgressBarDisplayStyle(ProgressBarDisplayText style)
+        {
+            progressBar.DisplayStyle = style;
+        }
+
+        public void SetProgressBarText(string message)
+        {
+            progressBar.CustomText = message;
+            if (progressBar.DisplayStyle == ProgressBarDisplayText.CustomText)
+            {
+                Invalidate();
+            }
         }
 
         protected CancellationTokenSource _cancelToken;
@@ -202,7 +239,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool IsCanceled => _cancelToken.IsCancellationRequested;
 
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
-        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        public virtual UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             if (IsCanceled)
                 return UpdateProgressResponse.cancel;
@@ -213,6 +250,53 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 UpdateSearchEngineProgress(status.ChangeMessage(status.Message));
 
             return UpdateProgressResponse.normal;
+        }
+
+        public class ParallelRunnerProgressControl : MultiProgressControl, IProgressMonitor
+        {
+            private readonly SearchControl _hostControl;
+
+            public ParallelRunnerProgressControl(SearchControl hostControl)
+            {
+                _hostControl = hostControl;
+                ProgressSplit.Panel2Collapsed = true;
+            }
+
+            // ReSharper disable once InconsistentlySynchronizedField
+            public bool IsCanceled => _hostControl.IsCanceled;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                if (IsCanceled || status.IsCanceled)
+                    return UpdateProgressResponse.cancel;
+
+                var match = Regex.Match(status.Message, @"(.*)\:\:(.*)");
+                Assume.IsTrue(match.Success && match.Groups.Count == 3,
+                    @"ParallelRunnerProgressDlg requires a message like file::message to indicate which file's progress is being updated");
+
+                lock (this)
+                {
+                    // only make the MultiProgressControl visible if it's actually used
+                    if (RowCount == 0)
+                    {
+                        var hostDialog = _hostControl.Parent;
+                        hostDialog.BeginInvoke(new MethodInvoker(() =>
+                        {
+                            _hostControl.progressSplitContainer.Panel1Collapsed = false;
+                            hostDialog.Size = new Size(Math.Min(
+                                Screen.FromControl(hostDialog).Bounds.Width * 90 / 100,
+                                hostDialog.Width * 2), hostDialog.Height);
+                        }));
+                    }
+
+                    string name = match.Groups[1].Value;
+                    string message = match.Groups[2].Value;
+                    Update(name, status.PercentComplete, message, status.ErrorException != null);
+                    return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+                }
+            }
+
+            public bool HasUI => true;
         }
     }
 }

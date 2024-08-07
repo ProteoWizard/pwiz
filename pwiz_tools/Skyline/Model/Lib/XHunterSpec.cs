@@ -28,7 +28,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -42,14 +41,14 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_HLF
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.XHunterLibrary_SpecFilter_GPM_Spectral_Library, EXT); }
+            get { return TextUtil.FileDialogFilterAll(LibResources.XHunterLibrary_SpecFilter_GPM_Spectral_Library, EXT); }
         }
 
         public static readonly PeptideRankId PEP_RANK_EXPECT =
-            new PeptideRankId(@"Expect", () => Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
+            new PeptideRankId(@"Expect", () => LibResources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
 
         public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY =
-            new PeptideRankId(@"Processed intensity", () => Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity);
+            new PeptideRankId(@"Processed intensity", () => LibResources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity);
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
 
@@ -75,7 +74,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.XHunterLibrary_SpecFilter_GPM_Spectral_Library;
+            return LibResources.XHunterLibrary_SpecFilter_GPM_Spectral_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -269,15 +268,13 @@ namespace pwiz.Skyline.Model.Lib
                     details.Revision = Revision;
                 }
 
-                details.AddLink(LibraryLink.GPM);
-
                 return details; 
             }
         }
 
         public override LibraryFiles LibraryFiles
         {
-            get { return new LibraryFiles(); }
+            get { return LibraryFiles.EMPTY; }
         }
 
         /// <summary>
@@ -367,7 +364,7 @@ namespace pwiz.Skyline.Model.Lib
                 const int countLibHeader = 256 - 8;
                 byte[] libHeader = new byte[countLibHeader];
                 if (stream.Read(libHeader, 0, libHeader.Length) != libHeader.Length)
-                    throw new InvalidDataException(Resources.XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted);
+                    throw new InvalidDataException(LibResources.XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted);
 
                 for (i = 0; i < libHeader.Length; i++)
                 {
@@ -555,7 +552,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
 
-                    status = status.ChangeMessage(string.Format(Resources.XHunterLibrary_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
+                    status = status.ChangeMessage(string.Format(LibResources.XHunterLibrary_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
 
                     loader.UpdateProgress(status);
@@ -564,7 +561,7 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                 }
 
-                status = status.ChangeMessage(string.Format(Resources.XHunterLibrary_Load_Loading__0__library, Path.GetFileName(FilePath)));
+                status = status.ChangeMessage(string.Format(LibResources.XHunterLibrary_Load_Loading__0__library, Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
                 var valueCache = new ValueCache();
@@ -650,7 +647,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!cached)
                 {
-                    x = new Exception(string.Format(Resources.XHunterLibrary_Load_Failed_loading_library__0__, FilePath), x);
+                    x = new Exception(string.Format(LibResources.XHunterLibrary_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
@@ -689,7 +686,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Single read to get all the peaks
                     if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
-                        throw new IOException(Resources.XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
+                        throw new IOException(LibResources.XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 catch (Exception)
                 {

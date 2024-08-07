@@ -24,17 +24,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
     /// <summary>
-    /// Class for importing and exporting all of the annotations in a Skyline document.
+    /// Class for importing and exporting all the annotations in a Skyline document.
     /// </summary>
     public class DocumentAnnotations
     {
@@ -105,11 +105,21 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             return value.ToString();
         }
 
-        public SrmDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
+        public ModifiedDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
         {
             using (var streamReader = new StreamReader(filename))
             {
-                return ReadAnnotationsFromTextReader(cancellationToken, streamReader);
+                var originalDocument = Document;
+                var modifiedDocument =
+                    new ModifiedDocument(ReadAnnotationsFromTextReader(cancellationToken, streamReader));
+                if (ReferenceEquals(originalDocument, modifiedDocument.Document))
+                {
+                    return null;
+                }
+
+                return modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                    new MessageInfo(MessageType.imported_annotations, modifiedDocument.Document.DocumentType,
+                        filename)));
             }
         }
 
@@ -128,7 +138,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             int locatorColumnIndex = fieldNames.IndexOf(COLUMN_LOCATOR);
             if (locatorColumnIndex < 0)
             {
-                throw new InvalidDataException(string.Format(Resources.Columns_Columns_Missing_column___0__,
+                throw new InvalidDataException(string.Format(ExportAnnotationsResources.Columns_Columns_Missing_column___0__,
                     COLUMN_LOCATOR));
             }
             string[] row;
@@ -197,7 +207,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         private static Exception ElementNotFoundException(ElementRef elementRef)
         {
-            return new InvalidDataException(string.Format(Resources.DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___, elementRef));
+            return new InvalidDataException(string.Format(ExportAnnotationsResources.DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___, elementRef));
         }
 
         private static Exception ElementNotSupportedException(ElementRef elementRef)
@@ -208,7 +218,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         private static Exception AnnotationDoesNotApplyException(string name, ElementRef elementRef)
         {
-            return new InvalidDataException(string.Format(Resources.DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___,
+            return new InvalidDataException(string.Format(ExportAnnotationsResources.DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___,
                 name, elementRef));
         }
 

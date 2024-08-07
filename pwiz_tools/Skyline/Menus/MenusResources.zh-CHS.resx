@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ChromatogramContextMenu_Collision_Cross_Section" xml:space="preserve">
+    <value>碰撞横截面</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage" xml:space="preserve">
+    <value>补偿电压</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time" xml:space="preserve">
+    <value>漂移时间</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility" xml:space="preserve">
+    <value>反转离子迁移</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility" xml:space="preserve">
+    <value>离子迁移</value>
+  </data>
+  <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
+    <value>更改谱图过滤器</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>向 {0} 添加谱图过滤器</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>向 {0} 母离子添加谱图过滤器</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>编辑 {0} 的谱图过滤器</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>编辑 {0} 母离子的谱图过滤器</value>
+  </data>
+  <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
+    <value>将同步积分更改为 {0}</value>
+  </data>
+  <data name="SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides" xml:space="preserve">
+    <value>接受肽段</value>
+  </data>
+  <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
+    <value>所有重复测定</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Applying_Peak" xml:space="preserve">
+    <value>正在应用峰</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Failed_to_apply_peak_" xml:space="preserve">
+    <value>应用峰失败。</value>
+  </data>
+  <data name="SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_" xml:space="preserve">
+    <value>峰值应用于</value>
+  </data>
+  <data name="SkylineWindow_EditDelete_Delete__0__" xml:space="preserve">
+    <value>删除{0}</value>
+  </data>
+  <data name="SkylineWindow_EditDelete_items" xml:space="preserve">
+    <value>项</value>
+  </data>
+  <data name="SkylineWindow_EditNote_Edit_Note" xml:space="preserve">
+    <value>编辑注释</value>
+  </data>
+  <data name="SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group" xml:space="preserve">
+    <value>对群组应用峰值</value>
+  </data>
+  <data name="SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_" xml:space="preserve">
+    <value>目标数超出了此操作的限制。</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue" xml:space="preserve">
+    <value>您确定想要继续？</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
+    <value>文档必须包含肽段以生成诱饵。</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys" xml:space="preserve">
+    <value>本操作将替换现有的诱饵。</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
+    <value>修饰{0}</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
+    <value>修改分子</value>
+  </data>
+  <data name="SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor" xml:space="preserve">
+    <value>修改自定义离子母离子</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_product_ion__0_" xml:space="preserve">
+    <value>修饰子离子{0}</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_Transition" xml:space="preserve">
+    <value>修饰离子对</value>
+  </data>
+  <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
+    <value>第 {0} 行发现空序列。</value>
+  </data>
+  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_" xml:space="preserve">
+    <value>从剪切板读取 Skyline 文档失败。</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste__0__" xml:space="preserve">
+    <value>粘贴{0}</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_FASTA" xml:space="preserve">
+    <value>粘贴 FASTA</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_peptide_list" xml:space="preserve">
+    <value>粘贴肽段列表</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
+    <value>粘贴蛋白质</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_transition_list" xml:space="preserve">
+    <value>粘贴离子对列表</value>
+  </data>
+  <data name="SkylineWindow_Paste_peptides" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="SkylineWindow_Paste_Protein_sequence_not_found" xml:space="preserve">
+    <value>未发现蛋白质序列。</value>
+  </data>
+  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
+    <value>蛋白质序列必须是每行的最后一个值。</value>
+  </data>
+  <data name="SkylineWindow_Paste_Unexpected_character_period_found" xml:space="preserve">
+    <value>发现意外字符“.”。</value>
+  </data>
+  <data name="SkylineWindow_PickPeakInChromatograms_Apply_picked_peak" xml:space="preserve">
+    <value>应用拣选的峰</value>
+  </data>
+  <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
+    <value>删除重复的肽段</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides" xml:space="preserve">
+    <value>删除空肽段</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins" xml:space="preserve">
+    <value>删除空蛋白质</value>
+  </data>
+  <data name="SkylineWindow_RemoveMissingResults_Remove_missing_results" xml:space="preserve">
+    <value>删除缺失结果</value>
+  </data>
+  <data name="SkylineWindow_RemovePeak_Remove_all_peaks_from__0__" xml:space="preserve">
+    <value>从{0}移除所有峰</value>
+  </data>
+  <data name="SkylineWindow_RemovePeak_Remove_peak_from__0__" xml:space="preserve">
+    <value>从{0}删除峰</value>
+  </data>
+  <data name="SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_" xml:space="preserve">
+    <value>从{0}移除所有峰</value>
+  </data>
+  <data name="SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides" xml:space="preserve">
+    <value>删除重复的肽段</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>文档必须完全加载，以比较模型峰值拣选。</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>文档必须具有目标，以比较模型峰值拣选。</value>
+  </data>
+  <data name="SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys" xml:space="preserve">
+    <value>生成诱饵</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refine" xml:space="preserve">
+    <value>调整</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
+    <value>细化文档</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
+    <value>重新合并峰</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_" xml:space="preserve">
+    <value>文档必须在重新合并前被完全加载。</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
+    <value>操作过程中的意外文档修改。</value>
+  </data>
+  <data name="SkylineWindow_ShowRenameProteinsDlg_Rename_proteins" xml:space="preserve">
+    <value>重新命名蛋白质</value>
+  </data>
+  <data name="SkylineWindow_ShowUniquePeptidesDlg_Choose_a_background_proteome_in_the_Digestions_tab_of_the_Peptide_Settings" xml:space="preserve">
+    <value>在“肽段设置”的“消化”标签中选择一个背景蛋白质组。</value>
+  </data>
+  <data name="SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome" xml:space="preserve">
+    <value>检查肽段独特性需要背景蛋白质组。</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession" xml:space="preserve">
+    <value>按编号排序蛋白质</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene" xml:space="preserve">
+    <value>按基因排序蛋白质</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name" xml:space="preserve">
+    <value>按首选名称排序蛋白质</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
+    <value>按名称归类蛋白质</value>
+  </data>
+  <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
+    <value>第 {1} 行发现意外字符“{0}”。</value>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_" xml:space="preserve">
+    <value>确定要向本文档添加诱饵吗？ 
+该文档使用谱图库中的峰边界。使用这些边界时，Skyline 不会自行检测峰。
+要准备有效地训练峰得分模型，请按照以下步骤操作：
+
+1. 导航至“设置 &gt; 肽段设置 - 库”选项卡，然后单击“编辑列表”。
+2. 选择库中的某项，单击“编辑”，然后取消选中“使用明示峰界限”复选框。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
+    <value>添加诱饵</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

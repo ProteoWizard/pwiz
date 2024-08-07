@@ -47,5 +47,6 @@ IF EXIST Test\ProtocolBuffers\GeneratedCode\*.cs del /q Test\ProtocolBuffers\Gen
 IF EXIST TestSettings_x64.testsettings del /q TestSettings_x64.testsettings
 IF EXIST TestSettings_x86.testsettings del /q TestSettings_x86.testsettings
 IF EXIST Executables\Installer\FileList64.txt del /q Executables\Installer\FileList64.txt
-
+IF EXIST Executables\Hardklor\obj rmdir /s /q Executables\Hardklor\obj
+IF EXIST Executables\Hardklor\x64 rmdir /s /q Executables\Hardklor\x64
 popd

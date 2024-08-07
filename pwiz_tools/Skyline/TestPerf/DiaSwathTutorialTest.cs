@@ -405,8 +405,8 @@ namespace TestPerf
 
             RootName = "DIA-" + InstrumentTypeName;
 
-            const string pdfFormat = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/{0}-20_1.pdf";
-            // const string pdfFormat = "file:///C:/proj/branches/work/pwiz_tools/Skyline/Documentation/Tutorials/{0}-20_1.pdf";
+            const string pdfFormat = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/{0}-22_2.pdf";
+            // const string pdfFormat = "file:///C:/proj/branches/work/pwiz_tools/Skyline/Documentation/Tutorials/{0}-22_2.pdf";
             LinkPdf = string.Format(pdfFormat, RootName);
 
             TestFilesZipPaths = new[]
@@ -583,7 +583,6 @@ namespace TestPerf
             {
                 // Check default settings shown in the tutorial
                 Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
-                Assert.IsNull(importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);

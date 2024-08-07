@@ -141,6 +141,9 @@
   <data name="AnalyteConcentration">
     <value>分析物浓度</value>
   </data>
+  <data name="Analyzer">
+    <value>分析器</value>
+  </data>
   <data name="Area">
     <value>面积</value>
   </data>
@@ -216,6 +219,18 @@
   <data name="CalculatedConcentration">
     <value>计算的浓度</value>
   </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>计算的浓度消息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>计算的浓度原始值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>计算的浓度精确值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="CalibrationCurve">
     <value>校准曲线</value>
   </data>
@@ -230,6 +245,9 @@
   </data>
   <data name="Chromatogram">
     <value>色谱图</value>
+  </data>
+  <data name="ChromatogramEndTime">
+    <value>色谱图结束时间</value>
   </data>
   <data name="ChromatogramExtractionWidth">
     <value>色谱图提取宽度</value>
@@ -252,6 +270,9 @@
   <data name="ChromatogramSource">
     <value>色谱图源</value>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>色谱图开始时间</value>
+  </data>
   <data name="CleavageAa">
     <value>剪切 Aa</value>
   </data>
@@ -266,6 +287,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>碰撞能量</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>补偿电压</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>浓度系数</value>
@@ -549,6 +573,9 @@
   <data name="Key">
     <value>关键</value>
   </data>
+  <data name="Kurtosis">
+    <value>峰度</value>
+  </data>
   <data name="LastPosition">
     <value>最后一个位置</value>
   </data>
@@ -621,6 +648,9 @@
   <data name="MassErrors">
     <value>质量误差</value>
   </data>
+  <data name="MatchingPrecursors">
+    <value>匹配母离子</value>
+  </data>
   <data name="Max">
     <value>最大</value>
   </data>
@@ -690,6 +720,9 @@
   <data name="MedianPeakArea">
     <value>中位数峰面积</value>
   </data>
+  <data name="Message">
+    <value>消息</value>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -750,6 +783,22 @@
   <data name="MoleculeListAbundance">
     <value>分子列表丰度</value>
   </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>分子列表丰度消息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>分子列表丰度精确值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>分子列表丰度离子对平均值 </value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>分子列表丰度离子对总和</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="MoleculeListLocator">
     <value>分子列表定位器</value>
   </data>
@@ -798,6 +847,12 @@
   <data name="MonoisotopicMasses">
     <value>单一同位素质量</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>MS1 母离子</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MS2 母离子</value>
+  </data>
   <data name="MsLevel">
     <value>MS 级别</value>
   </data>
@@ -812,6 +867,18 @@
   </data>
   <data name="NormalizedArea">
     <value>校准后面积</value>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>归一化面积消息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>归一化面积原始值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>归一化面积精确值</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
     <value>点数</value>
@@ -848,6 +915,9 @@
   </data>
   <data name="PeakScores">
     <value>峰得分</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>峰标准偏差</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -906,6 +976,10 @@
   <data name="PeptideSequenceLength">
     <value>肽段序列长度</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>肽段谱图匹配计数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PointCount">
     <value>计数点</value>
   </data>
@@ -923,6 +997,18 @@
   </data>
   <data name="PrecursorCalculatedConcentration">
     <value>母离子计算的浓度</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>母离子计算的浓度消息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>母离子计算的浓度原始值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>母离子计算的浓度精确值</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCharge">
     <value>母离子电荷</value>
@@ -953,6 +1039,18 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>母离子校准后面积</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>母离子归一化面积消息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>母离子归一化面积原始值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>母离子归一化面积精确值</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
     <value>母离子注释</value>
@@ -987,6 +1085,9 @@
   <data name="PredictedRetentionTime">
     <value>预测保留时间</value>
   </data>
+  <data name="PresetScanConfiguration">
+    <value>预设扫描配置</value>
+  </data>
   <data name="PreviousAa">
     <value>上一个 Aa</value>
   </data>
@@ -1016,6 +1117,22 @@
   </data>
   <data name="ProteinAbundance">
     <value>蛋白质丰度</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>蛋白质丰度消息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>蛋白质丰度精确值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>蛋白质丰度离子对平均值 </value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>蛋白质丰度离子对总和</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
@@ -1088,6 +1205,10 @@
   </data>
   <data name="RatioToStandard">
     <value>相对于标准品比率</value>
+  </data>
+  <data name="Raw">
+    <value>原始</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
     <value>原始数据</value>
@@ -1194,8 +1315,20 @@
   <data name="SampleType">
     <value>样品类型</value>
   </data>
+  <data name="ScanDescription">
+    <value>扫描说明</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>扫描窗口宽度</value>
+  </data>
   <data name="Score">
     <value>得分</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>形状关联</value>
+  </data>
+  <data name="Skewness">
+    <value>偏度</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline 版本</value>
@@ -1205,6 +1338,9 @@
   </data>
   <data name="SMILES">
     <value>SMILES（简化分子线性输入规范）</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>谱图过滤器</value>
   </data>
   <data name="SpectrumIds">
     <value>谱图 ID</value>
@@ -1254,8 +1390,16 @@
   <data name="StdevTotalAreaRatio">
     <value>总面积比标准偏差</value>
   </data>
+  <data name="Strict">
+    <value>精确</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="SummaryMessage">
     <value>总结消息</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>替代外部标准</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>目标定性离子比</value>

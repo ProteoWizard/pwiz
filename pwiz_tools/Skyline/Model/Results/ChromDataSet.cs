@@ -26,7 +26,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -85,9 +84,11 @@ namespace pwiz.Skyline.Model.Results
                 chromData.DocNode = null;
         }
 
-        public ChromData BestChromatogram { get { return _listChromData[0]; } }
-//        private ChromData BestNonFragmentChromatogram { get { return _listChromData.FirstOrDefault(t => t.Key.Source != ChromSource.fragment); } }
-//        private ChromData BestFragmentChromatogram { get { return _listChromData.FirstOrDefault(t => t.Key.Source == ChromSource.fragment); } }
+        public ChromData BestChromatogram
+        {
+            get { return _listChromData.FirstOrDefault(c => c.ParticipatesInScoring) ?? _listChromData[0]; }
+        }
+
         public IList<ChromData> Chromatograms { get { return _listChromData; } }
 
         /// <summary>
@@ -101,8 +102,8 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return _listChromData.Where(d => d.DocNode != null).Select(d => d.DocNode.Id)
-                    .Distinct(new IdentityEqualityComparer<Identity>()).Count();
+                return _listChromData.Where(d => d.DocNode != null).Select(d => ReferenceValue.Of(d.DocNode.Id))
+                    .Distinct().Count();
             }
         }
 
@@ -472,7 +473,7 @@ namespace pwiz.Skyline.Model.Results
             }
             // Make sure the final time interval contains at least one time.
             if (start > end)
-                throw new InvalidOperationException(string.Format(Resources.ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid, start, end));
+                throw new InvalidOperationException(string.Format(ResultsResources.ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid, start, end));
         }
 
         private const double NOISE_CORRELATION_THRESHOLD = 0.95;
@@ -503,9 +504,6 @@ namespace pwiz.Skyline.Model.Results
         {
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
-
-//            if (Math.Round(_listChromData[0].Key.Precursor) == 585)
-//                Console.WriteLine("Issue");
 
             // First use Crawdad to find the peaks
             // If any chromatograms have an associated transition, then only find peaks
@@ -543,9 +541,9 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Merge sort all peaks into a single list
-            IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks());
+            IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks()); // Returns list sorted by intensity, with reporter ions after others even when more intense
 
-            // Inspect 20 most intense peak regions
+            // Inspect 20 most intense scorable (e.g. not reporter ions) peak regions (give reporter ions lowest priority even if higher intensity)
             var listRank = new List<double>();
             Assume.IsTrue(_listPeakSets.Count == 0);
             for (int i = 0; i < MAX_PEAKS_CHECKED || retentionTimes.Length > 0; i++)
@@ -572,13 +570,17 @@ namespace pwiz.Skyline.Model.Results
             if (_listPeakSets.Count == 0)
                 return;
 
-            // Sort by total area descending
-            _listPeakSets.Sort((p1, p2) => Comparer<double>.Default.Compare(p2.TotalArea, p1.TotalArea));
+            // Sort by total scorable area descending, or just by total area descending if nothing is scorable
+            _listPeakSets.Sort((p1, p2) =>
+            {
+                var result = Comparer<double>.Default.Compare(p2.TotalScorableArea, p1.TotalScorableArea);
+                return result == 0 ? Comparer<double>.Default.Compare(p2.TotalArea, p1.TotalArea) : result;
+            });
 
             // The peak will be a signigificant spike above the norm for this
             // data.  Find a cut-off by removing peaks until the remaining
             // peaks correlate well in a linear regression.
-            var listAreas = _listPeakSets.ConvertAll(set => set.TotalArea);
+            var listAreas = _listPeakSets.ConvertAll(set => set.TotalScorableArea);
             // Keep at least 3 peaks
             listRank.RemoveRange(0, Math.Min(MINIMUM_PEAKS, listRank.Count));
             listAreas.RemoveRange(0, Math.Min(MINIMUM_PEAKS, listAreas.Count));
@@ -659,23 +661,29 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Takes sorted list of peaks and puts MS1 peaks after MS2 peaks, preserving the order within
-        /// the groups.
+        /// the groups, other than placing scorable before unscorable.
         /// </summary>
         private IList<ChromDataPeak> SplitMS(IList<ChromDataPeak> allPeaks)
         {
             int len = allPeaks.Count;
             var allPeaksNew = new List<ChromDataPeak>(len);
-            // First add back all MS/MS peaks
-            foreach (var peak in allPeaks)
+            // Place scorable peaks before unscorable
+            var scorable = true;
+            for ( int i = 0; i < 2; i++)
             {
-                if (IsMs2(peak))
-                    allPeaksNew.Add(peak);
-            }
-            // Then add all MS1 peaks
-            foreach (var peak in allPeaks)
-            {
-                if (!IsMs2(peak))
-                    allPeaksNew.Add(peak);
+                // First add back all MS/MS peaks
+                foreach (var peak in allPeaks)
+                {
+                    if (IsMs2(peak) && peak.ParticipatesInScoring == scorable)
+                        allPeaksNew.Add(peak);
+                }
+                // Then add all MS1 peaks
+                foreach (var peak in allPeaks)
+                {
+                    if (!IsMs2(peak) && peak.ParticipatesInScoring == scorable)
+                        allPeaksNew.Add(peak);
+                }
+                scorable = false;
             }
             return allPeaksNew;
         }
@@ -829,7 +837,12 @@ namespace pwiz.Skyline.Model.Results
         private IList<ChromDataPeak> MergePeaks()
         {
             List<ChromDataPeak> allPeaks = new List<ChromDataPeak>();
-            var listEnumerators = _listChromData.ConvertAll(item => item.RawPeaks.GetEnumerator());
+            using var allEnumerators = new DisposableCollection<IEnumerator<IFoundPeak>>();
+            foreach (var chromData in _listChromData)
+            {
+                allEnumerators.Add(chromData.RawPeaks.GetEnumerator());
+            }
+            var listEnumerators = allEnumerators.ToList();
             // Merge with list of chrom data that will match the enumerators
             // list, as completed enumerators are removed.
             var listUnmerged = new List<ChromData>(_listChromData);
@@ -854,10 +867,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var peak = listEnumerators[i].Current;
                     if (peak == null)
-                        throw new InvalidOperationException(Resources.ChromDataSet_MergePeaks_Unexpected_null_peak);
+                        throw new InvalidOperationException(ResultsResources
+                            .ChromDataSet_MergePeaks_Unexpected_null_peak);
                     float intensity = peak.Area;
                     int isId = peak.Identified ? 1 : 0;
-                    if (isId > maxId  || (isId == maxId && intensity > maxIntensity))
+                    if (isId > maxId || (isId == maxId && intensity > maxIntensity))
                     {
                         maxId = isId;
                         maxIntensity = intensity;
@@ -877,7 +891,8 @@ namespace pwiz.Skyline.Model.Results
                 // These are not useful in SRM.
                 // TODO: Fix Crawdad peak detection to make this unnecessary
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex && maxPeak.EndIndex != maxPeak.TimeIndex)
+                if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex &&
+                    maxPeak.EndIndex != maxPeak.TimeIndex)
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     allPeaks.Add(new ChromDataPeak(maxData, maxPeak));
                 if (!maxEnumerator.MoveNext())
@@ -886,6 +901,7 @@ namespace pwiz.Skyline.Model.Results
                     listUnmerged.RemoveAt(iMaxEnumerator);
                 }
             }
+
             return allPeaks;
         }
 
@@ -1060,6 +1076,8 @@ namespace pwiz.Skyline.Model.Results
 
                     // Exclude peaks where the apex is not inside the max peak,
                     // or apex is at one end of the peak
+                    // N.B. the "max" peak may actually be less intense than its associated reporter ions,
+                    // which are treated as confirmatory but not for actually determining retention
                     int timeIndex = peak.Peak.TimeIndex;
                     int startPeak = peak.Peak.StartIndex;
                     int endPeak = peak.Peak.EndIndex;
@@ -1123,7 +1141,7 @@ namespace pwiz.Skyline.Model.Results
         {
             ChromDataPeakList peakSetAdd = null;
             int startIndex, endIndex;
-            // TODO: Need to do something more reasonable for Deuterium elution time shifts
+            // TODO(bspratt): Need to do something more reasonable for Deuterium elution time shifts
             bool matchBounds = GetLocalPeakBounds(bestPeptidePeak, out startIndex, out endIndex);
 
             if (peakSet != null)
@@ -1304,7 +1322,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Count > 0 ? _listChromData[0].ToString() : Resources.ChromDataSet_ToString_empty;
+            return Count > 0 ? _listChromData[0].ToString() : ResultsResources.ChromDataSet_ToString_empty;
         }
 
         public void Truncate(double startTime, double endTime)

@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Single read to get all the points
                 if (stream.Read(scanIdBytes, 0, scanIdBytes.Length) < scanIdBytes.Length)
-                    throw new IOException(Resources
+                    throw new IOException(ResultsResources
                         .ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs);
                 return scanIdBytes;
             });
@@ -338,7 +338,12 @@ namespace pwiz.Skyline.Model.Results
             float tolerance, ChromatogramSet chromatograms)
         {
             var fileIndexesFound = new HashSet<int>();
-            if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
+            // For peptides, see if "_chromEntryIndex" has any matches.
+            // We only do this for peptides because:
+            // 1. Small molecules do not require the complicated matching logic in "MassModification.Matches".
+            // 2. The LibKey for a peptide is always based on "nodePep.ModifiedTarget". Small molecule LibKey's have
+            // evolved over time and is implemented in "TextIdEqual".
+            if (true == nodePep?.IsProteomic && _chromEntryIndex != null)
             {
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
@@ -449,6 +454,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
+                if (chromatogramGroupId.Target?.Sequence == null)
+                {
+                    return false;
+                }
                 var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
                 var key2 = new PeptideLibraryKey(chromatogramGroupId.Target.Sequence, 0);
                 return LibKeyIndex.KeysMatch(key1, key2);
@@ -665,7 +674,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
         {
-            status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
+            status = status.ChangeMessage(string.Format(ResultsResources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
 
             IPooledStream readStream = null;
@@ -810,7 +819,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (cacheHeader.IsCorrupted(stream.Length))
             {
-                throw new InvalidDataException(Resources.ChromatogramCache_LoadStructs_FileCorrupted);
+                throw new InvalidDataException(ResultsResources.ChromatogramCache_LoadStructs_FileCorrupted);
             }
 
             var formatVersion = cacheHeader.formatVersion;
@@ -1025,7 +1034,7 @@ namespace pwiz.Skyline.Model.Results
         private static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException(Resources.ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted);
+                throw new InvalidDataException(ResultsResources.ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted);
         }
 
         public static CacheHeaderStruct WriteStructs(CacheFormat cacheFormat,
@@ -1466,7 +1475,7 @@ namespace pwiz.Skyline.Model.Results
 
             var productMzs = Enumerable.Range(startIdx, endIdx - startIdx).Select(i =>
                 new SignedMz(transitions[i].Product, transitionDocNode.Mz.IsNegative));
-            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenter(
+            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenterMz(
                 transitionDocNode.Mz, productMzs, optimizableRegression.StepCount);
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)
@@ -1801,7 +1810,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Single read to get all the points
                 if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                    throw new IOException(Resources
+                    throw new IOException(ResultsResources
                         .ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
                 return pointsCompressed;
 
@@ -1921,37 +1930,45 @@ namespace pwiz.Skyline.Model.Results
             {
                 Assume.AreEqual(chromGroupHeaderInfos.Count, scores.Length);
             }
-            using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                if (peaks != null)
-                {
-                    // Read the peaks for all of the ChromGroupHeaderInfos
-                    // We process these in order of StartPeakIndex, because, in theory, it might make seeking in the file stream faster,
-                    // but it does not seem to make a difference in practice
-                    foreach (var index in Enumerable.Range(0, chromGroupHeaderInfos.Count)
-                        .OrderBy(i => chromGroupHeaderInfos[i].StartPeakIndex))
-                    {
-                        peaks[index] = ReadPeaks(stream, chromGroupHeaderInfos[index]);
-                    }
-                }
 
-                if (scores != null)
+            using (ReadStream.ReaderWriterLock.GetReadLock())
+            {
+                var cancellationToken = ReadStream.ReaderWriterLock.CancellationToken;
+                using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    // Read the scores. Some of the ChromGroupHeaderInfos may have the same StartScoreIndex and number of peaks,
-                    // so process those at the same time
-                    foreach (var indexGroup in Enumerable.Range(0, chromGroupHeaderInfos.Count)
-                        .GroupBy(i => Tuple.Create(chromGroupHeaderInfos[i].StartScoreIndex,
-                            chromGroupHeaderInfos[i].NumPeaks))
-                        .OrderBy(group => group.Key.Item1))
+                    if (peaks != null)
                     {
-                        var groupScores = ReadScoresStartingAt(stream, indexGroup.Key.Item1,
-                            indexGroup.Key.Item2 * ScoreTypesCount);
-                        foreach (var index in indexGroup)
+                        // Read the peaks for all of the ChromGroupHeaderInfos
+                        // We process these in order of StartPeakIndex, because, in theory, it might make seeking in the file stream faster,
+                        // but it does not seem to make a difference in practice
+                        foreach (var index in Enumerable.Range(0, chromGroupHeaderInfos.Count)
+                                     .OrderBy(i => chromGroupHeaderInfos[i].StartPeakIndex))
                         {
-                            scores[index] = groupScores;
+                            cancellationToken.ThrowIfCancellationRequested();
+                            peaks[index] = ReadPeaks(stream, chromGroupHeaderInfos[index]);
+                        }
+                    }
+
+                    if (scores != null)
+                    {
+                        // Read the scores. Some of the ChromGroupHeaderInfos may have the same StartScoreIndex and number of peaks,
+                        // so process those at the same time
+                        foreach (var indexGroup in Enumerable.Range(0, chromGroupHeaderInfos.Count)
+                                     .GroupBy(i => Tuple.Create(chromGroupHeaderInfos[i].StartScoreIndex,
+                                         chromGroupHeaderInfos[i].NumPeaks))
+                                     .OrderBy(group => group.Key.Item1))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            var groupScores = ReadScoresStartingAt(stream, indexGroup.Key.Item1,
+                                indexGroup.Key.Item2 * ScoreTypesCount);
+                            foreach (var index in indexGroup)
+                            {
+                                scores[index] = groupScores;
+                            }
                         }
                     }
                 }
+
             }
         }
     }

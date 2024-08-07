@@ -31,6 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -1394,8 +1395,8 @@ namespace pwiz.Skyline.Util
         /// <returns>True if the two IEnumerables enumerate over equal objects</returns>
         public static bool Equals<TItem>(IEnumerable<TItem> e1, IEnumerable<TItem> e2)
         {
-            IEnumerator<TItem> enum1 = e1.GetEnumerator();
-            IEnumerator<TItem> enum2 = e2.GetEnumerator();
+            using IEnumerator<TItem> enum1 = e1.GetEnumerator();
+            using IEnumerator<TItem> enum2 = e2.GetEnumerator();
             bool b1, b2;
             while (MoveNext(enum1, out b1, enum2, out b2))
             {
@@ -1527,7 +1528,7 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(name))
                 throw new InvalidOperationException(
-                    Resources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
+                    UtilResources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
             if (REGEX_XML_ID.IsMatch(name))
                 return name;
 
@@ -1861,7 +1862,7 @@ namespace pwiz.Skyline.Util
                     $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
                     $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 5 sec extra time when running code coverage or other analysis
-                milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
+                milliseconds += (5000 * (loopCount)) / maxLoopCount; // Each loop a little more desperate
             }
             DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);
@@ -1920,6 +1921,8 @@ namespace pwiz.Skyline.Util
                 throw new IOException(x.Message, x);
             if (x is OperationCanceledException)
                 throw new OperationCanceledException(x.Message, x);
+            if (x is UnauthorizedAccessException)
+                throw new UnauthorizedAccessException(x.Message, x);
             throw new TargetInvocationException(x.Message, x);            
         }
 
@@ -2126,6 +2129,31 @@ namespace pwiz.Skyline.Util
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Calls either <see cref="MessageDlg.ShowWithException"/> or <see cref="Program.ReportException"/> depending
+        /// on what <see cref="IsProgrammingDefect"/> returns.
+        /// <param name="parent">Parent window for message dialog</param>
+        /// <param name="exception">The exception that was caught</param>
+        /// <param name="message">Optional message which summarizes what Skyline was trying to do when the exception happened,
+        /// to be inserted on a separate line before the exception's message.</param>
+        /// </summary>
+        public static void DisplayOrReportException(IWin32Window parent, Exception exception, string message = null)
+        {
+            if (IsProgrammingDefect(exception))
+            {
+                Program.ReportException(exception);
+            }
+            else
+            {
+                string fullMessage = exception.Message;
+                if (string.IsNullOrEmpty(message))
+                {
+                    fullMessage = TextUtil.LineSeparate(message, fullMessage);
+                }
+                MessageDlg.ShowWithException(parent, fullMessage, exception);
+            }
         }
     }
 

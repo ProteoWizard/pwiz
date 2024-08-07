@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -225,18 +226,25 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(StringComparer.OrdinalIgnoreCase.Compare(x.DisplayText, y.DisplayText) <= 0);
             }
 
+            // Find all that contain chlorine
+            FilterListAndVerifyCount(filterTextBox, pepList, "*Cl", 3);
+
             // Entering the formula for Midazolam should filter out all other spectra
             var midazolamFormula = "C18H13ClFN3";
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula, 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.Replace("C18", "*"), 1); // Wildcard
 
             // Check case insensitivity
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant().Replace("c18", "*"), 1);
 
             // Clearing search box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*", 6); // Should have same effect as no filter
 
             // Entering 'SD' should filter out all entries as nothing starts with SD
             FilterListAndVerifyCount(filterTextBox, pepList, "SD", 0);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*SD", 0); // Nor does anything contain SD
 
             // Clearing the filter text box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
@@ -253,8 +261,10 @@ namespace pwiz.SkylineTestFunctional
             var midazolamMzStr = midazolamMz.ToString("G", CultureInfo.CurrentCulture);
             var inexactMidazolamMzStr = (midazolamMz + 0.05).ToString("G", CultureInfo.CurrentCulture);
 
-            // Entering '32' should filter the list down to three entries
+            // Entering '32' should filter the list down to two entries
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr.Substring(0, 2), 2);
+            // Entering '*26.0' should yield just one entry
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr.Replace("326", "*26").Substring(0, 4), 1);
 
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr, 1);
@@ -270,6 +280,7 @@ namespace pwiz.SkylineTestFunctional
                     filterCategoryComboBox.FindStringExact("cas");
             });
             FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*928", 1); // Wildcard
 
             // Now switch to a list with multiple molecular IDs
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
@@ -295,6 +306,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             FilterListAndVerifyCount(filterTextBox, pepList, "123", 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*23", 1); // Wildcard
 
 
             // Now test search behavior on a peptide list
@@ -305,6 +317,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Searching for a peptide sequence should work as well
             FilterListAndVerifyCount(filterTextBox, pepList, "CY", 2);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*CY", 31); // Wildcard
+            FilterListAndVerifyCount(filterTextBox, pepList, "*Y", 80); // Wildcard
 
             // Now test filtering by precursor m/z
             RunUI(() =>
@@ -315,6 +329,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Precursor searching should work here as well
             FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*" + (6.4).ToString("G", CultureInfo.CurrentCulture), 3);
 
             // Switch to library with both molecules and peptides
             ShowDialog<AddModificationsDlg>(
@@ -323,8 +338,33 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that we found all of the filter categories
             expectedCategories = new List<string>(categories);
-            expectedCategories.AddRange(new List<string>{ Resources.PeptideTipProvider_RenderTip_Ion_Mobility , Resources.PeptideTipProvider_RenderTip_CCS , "InChI", smiles});
+            var inchi = "InChI";
+            expectedCategories.AddRange(new List<string> { Resources.PeptideTipProvider_RenderTip_Ion_Mobility, Resources.PeptideTipProvider_RenderTip_CCS, inchi, smiles });
             VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
+
+            // * Match IM units
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Ion_Mobility);
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList,
+                "*" + IonMobilityValue.GetUnitsString(eIonMobilityUnits.drift_time_msec), 2);
+
+            // Match SMILES
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex = filterCategoryComboBox.FindStringExact(smiles);
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList, "*=", 1);
+
+            // Match InChI
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex = filterCategoryComboBox.FindStringExact(inchi);
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList, "*C32", 1);
+
 
             // Close the spectral library explorer
             OkDialog(_viewLibUI , _viewLibUI.CancelDialog);

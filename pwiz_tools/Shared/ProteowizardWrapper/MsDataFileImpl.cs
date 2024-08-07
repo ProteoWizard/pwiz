@@ -577,6 +577,11 @@ namespace pwiz.ProteowizardWrapper
             return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
         }
 
+        public double CCSFromIonMobility(double ionMobility, double mz, int charge)
+        {
+            return IonMobilitySpectrumList.ionMobilityToCCS(ionMobility, mz, charge);
+        }
+
         public eIonMobilityUnits IonMobilityUnits
         {
             get
@@ -647,24 +652,30 @@ namespace pwiz.ProteowizardWrapper
                         _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
                         _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
                     }
-                    if (IsWatersFile  && _spectrumList != null && !_spectrumList.calibrationSpectraAreOmitted())
+                    if (IsWatersFile  && _spectrumList != null && !_spectrumList.calibrationSpectraAreOmitted() && !hasSrmSpectra)
                     {
-                        if (_spectrumList.size() > 0 && !hasSrmSpectra)
+                        for (var index = 0; index < _spectrumList.size(); index++)
                         {
                             // If lockmass scans aren't already being omitted at the top level, try to filter them out here.
-                            // If the first seen spectrum has MS1 data and function > 1 assume it's the lockspray function, 
-                            // and thus to be omitted from chromatogram extraction.
+                            // If the first seen MS spectrum has MS1 data and function > 1 assume it's the lockspray function, 
+                            // and thus to be omitted from chromatogram extraction. We've seen files where first spectrum is
+                            // "electromagnetic radiation spectrum", for example, which has no MS level value.
                             // N.B. for msE data we will always assume function 3 and greater are to be omitted
+                            // N.B. in all cases this assumes that any functions greater than the lockmass function are to be ignored
+                            // (e.g. "electromagnetic radiation spectrum") 
                             // CONSIDER(bspratt) I really wish there was some way to communicate decisions like this to the user
-                            using (var spectrum = _spectrumList.spectrum(0, DetailLevel.FullMetadata))
+                            using var spectrum = _spectrumList.spectrum(index, DetailLevel.FullMetadata);
+                            var msLevel = GetMsLevel(spectrum);
+                            if (msLevel == 1)
                             {
-                                if (GetMsLevel(spectrum) == 1)
-                                {
-                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), 
-                                        HasCombinedIonMobilitySpectra && spectrum.id.Contains(MERGED_TAG));
-                                    if (function > 1)
-                                        _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
-                                }
+                                var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), 
+                                    HasCombinedIonMobilitySpectra && spectrum.id.Contains(MERGED_TAG));
+                                if (function > 1)
+                                    _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
+                            }
+                            if (msLevel.HasValue)
+                            {
+                                break; // This was first-seen MS spectrum
                             }
                         }
                     }
@@ -717,6 +728,12 @@ namespace pwiz.ProteowizardWrapper
         }
 
         private static readonly string[] msLevelOrFunctionArrayNames = { "ms level", "function" };
+
+        public double? GetChromatogramCollisionEnergy(int chromIndex)
+        {
+            using var chrom = ChromatogramList.chromatogram(chromIndex, DetailLevel.FullMetadata);
+            return chrom.precursor?.activation?.cvParam(CVID.MS_collision_energy)?.value;
+        }
 
         public void GetChromatogram(int chromIndex, out string id,
             out float[] timeArray, out float[] intensityArray, bool onlyMs1OrFunction1 = false)
@@ -1149,6 +1166,10 @@ namespace pwiz.ProteowizardWrapper
             return msDataSpectrum;
         }
 
+        // UserParam name that indicates that scan window bounds were obtained
+        // from centroided data and therefore do not represent the entire
+        // range that was monitored
+        private const string CENTROIDED_MIN_MAX = @"centroided min/max";
         private SpectrumMetadata GetSpectrumMetadata(Spectrum spectrum)
         {
             if (spectrum == null)
@@ -1195,6 +1216,44 @@ namespace pwiz.ProteowizardWrapper
                     metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
                 }
             }
+            double? scanWindowLowerLimit = null;
+            double? scanWindowUpperLimit = null;
+            foreach (var scan in spectrum.scanList.scans)
+            {
+                foreach (var window in scan.scanWindows)
+                {
+                    if (!window.userParam(CENTROIDED_MIN_MAX).empty())
+                    {
+                        // min/max values obtained from centroided data are unreliable
+                        continue;
+                    }
+                    var cvParamLowerLimit = window.cvParam(CVID.MS_scan_window_lower_limit);
+                    if (cvParamLowerLimit != null)
+                    {
+                        double windowStart = cvParamLowerLimit.value;
+                        if (scanWindowLowerLimit == null || windowStart < scanWindowLowerLimit)
+                        {
+                            scanWindowLowerLimit = windowStart;
+                        }
+                    }
+
+                    var cvParamUpperLimit = window.cvParam(CVID.MS_scan_window_upper_limit);
+                    if (cvParamUpperLimit != null)
+                    {
+                        double windowEnd = cvParamUpperLimit.value;
+                        if (scanWindowUpperLimit == null || windowEnd > scanWindowUpperLimit)
+                        {
+                            scanWindowUpperLimit = windowEnd;
+                        }
+                    }
+                }
+            }
+
+            if (scanWindowLowerLimit.HasValue && scanWindowUpperLimit.HasValue)
+            {
+                metadata = metadata.ChangeScanWindow(scanWindowLowerLimit.Value, scanWindowUpperLimit.Value);
+            }
+
             return metadata;
         }
 
@@ -1615,18 +1674,31 @@ namespace pwiz.ProteowizardWrapper
         private static IEnumerable<MsPrecursor> GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            return spectrum.scanList.scans[0].scanWindows.Select(s =>
+            foreach (var scanWindow in spectrum.scanList.scans[0].scanWindows)
             {
-                double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
-                double windowEnd = s.cvParam(CVID.MS_scan_window_upper_limit).value;
-                double isolationWidth = (windowEnd - windowStart) / 2;
-                return new MsPrecursor
+                if (!scanWindow.userParam(CENTROIDED_MIN_MAX).empty())
                 {
-                    IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
-                    IsolationWindowLower = isolationWidth,
-                    IsolationWindowUpper = isolationWidth
-                };
-            });
+                    // The upper and lower window limits cannot be trusted.
+                    // Just return a MsPrecursor whose IsolationWindowTargetMz can be used
+                    // to determine the polarity of the spectrum.
+                    yield return new MsPrecursor
+                    {
+                        IsolationWindowTargetMz = new SignedMz(1, negativePolarity)
+                    };
+                }
+                else
+                {
+                    double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
+                    double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
+                    double isolationWidth = (windowEnd - windowStart) / 2;
+                    yield return new MsPrecursor
+                    {
+                        IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
+                        IsolationWindowLower = isolationWidth,
+                        IsolationWindowUpper = isolationWidth
+                    };
+                }
+            }
         }
 
         private static SignedMz? GetPrecursorMz(Precursor precursor, bool negativePolarity)
@@ -1697,7 +1769,7 @@ namespace pwiz.ProteowizardWrapper
 
             try
             {
-                var msd = new MSData();
+                using var msd = new MSData();
                 FULL_READER_LIST.read(filepath, msd);
                 return true;
             }

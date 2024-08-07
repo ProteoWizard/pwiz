@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Thermo.TNG.MethodXMLFactory;
 using Thermo.TNG.MethodXMLInterface;
@@ -12,6 +13,7 @@ using XmlCalcium;
 using XmlExploris;
 using XmlFusion;
 using XmlTsq;
+using XmlStellar;
 
 namespace BuildThermoMethod
 {
@@ -82,6 +84,7 @@ namespace BuildThermoMethod
                     "   -p               Exploris method\n" +
                     "   -l               Fusion Lumos method\n" +
                     "   -c               Eclipse method\n" +
+                    "   -t               Stellar method\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -x               Export method XML to <basename>.xml file\n" +
                     "   -s               Transition list is read from stdin.\n" +
@@ -124,6 +127,7 @@ namespace BuildThermoMethod
         public double? CollisionEnergy { get; set; }
         public SureQuantInfo SureQuantInfo { get; set; }
         public double? IntensityThreshold { get; set; }
+        public double? FaimsCV { get; set; }
 
         public ListItem()
         {
@@ -137,6 +141,7 @@ namespace BuildThermoMethod
             CollisionEnergy = 0.0;
             SureQuantInfo = null;
             IntensityThreshold = null;
+            FaimsCV = null;
         }
 
         public static ListItem FromLine(int lineNum, string[] fields, Dictionary<int, string> columnMap)
@@ -152,6 +157,9 @@ namespace BuildThermoMethod
 
             // Fusion
             // m/z,z,t start (min),t end (min),CID Collision Energy (%)
+
+            // Stellar
+            // m/z,z,t start (min),t stop (min),HCD Collision Energy/Energies (%), FAIMS CV (V)
 
             var item = new ListItem();
 
@@ -221,7 +229,8 @@ namespace BuildThermoMethod
                         item.ProductMz = mzParse;
                 }
                 else if (curHeader.Equals("collision energy (v)", StringComparison.InvariantCultureIgnoreCase) ||
-                         curHeader.Equals("cid collision energy (%)", StringComparison.InvariantCultureIgnoreCase))
+                         curHeader.Equals("cid collision energy (%)", StringComparison.InvariantCultureIgnoreCase) ||
+                         curHeader.Equals("hcd collision energy/energies (%)", StringComparison.InvariantCultureIgnoreCase))
                 {
                     parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var ceParse);
                     if (!parseFail)
@@ -238,6 +247,12 @@ namespace BuildThermoMethod
                     parseFail = !double.TryParse(curValue, out var thresholdParse);
                     if (!parseFail)
                         item.IntensityThreshold = thresholdParse;
+                }
+                else if (curHeader.Equals("FAIMS CV (V)", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    parseFail = !double.TryParse(curValue, out var faimsParse);
+                    if (!parseFail)
+                        item.FaimsCV = faimsParse;
                 }
 
                 if (parseFail)
@@ -334,6 +349,7 @@ namespace BuildThermoMethod
         private const string InstrumentEndura = "TSQEndura";
         private const string InstrumentQuantiva = "TSQQuantiva";
         private const string InstrumentAltis = "TSQAltis";
+        private const string InstrumentStellar = "Stellar";
 
         private string InstrumentType { get; set; }
         private string InstrumentVersion { get; set; }
@@ -381,6 +397,9 @@ namespace BuildThermoMethod
                         break;
                     case 'c':
                         InstrumentType = InstrumentEclipse;
+                        break;
+                    case 't':
+                        InstrumentType = InstrumentStellar;
                         break;
                     case 'o':
                         if (i >= args.Length)
@@ -560,6 +579,9 @@ namespace BuildThermoMethod
                             // case InstrumentFusion:
                             case InstrumentFusionLumos:
                                 mx.ApplyMethodModificationsFromXML(GetCalciumXml(InstrumentType, listItems, outMeth));
+                                break;
+                            case InstrumentStellar:
+                                mx.ApplyMethodModificationsFromXML(GetStellarXml(listItems, outMeth));
                                 break;
                             default:
                                 mx.ImportMassListFromXML(GetHyperionXml(listItems, outMeth));
@@ -844,6 +866,51 @@ namespace BuildThermoMethod
             };
 
             return Serialize(methodModifications, outMethod);
+        }
+
+        private string GetStellarXml(IList<ListItem> items, string outMethod)
+        {
+            var records = new List<XmlStellar.MassListRecord>();
+            foreach (var item in items)
+            {
+                records.Add(new XmlStellar.MassListRecord()
+                {
+                    MOverZ = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                    Z = item.Charge.GetValueOrDefault(),
+                    StartTime = item.RetentionStart.GetValueOrDefault(),
+                    EndTime = item.RetentionEnd.GetValueOrDefault(),
+                    CompoundName = item.Compound,
+                    CIDCollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                    FAIMSCV = item.FaimsCV.GetValueOrDefault(),
+                    ZSpecified = true,
+                    StartTimeSpecified = true,
+                    EndTimeSpecified = true,
+                    CIDCollisionEnergySpecified = true,
+                    FAIMSCVSpecified = true,
+                });
+            }
+
+            var xml = new XmlStellar.MethodModifications()
+            {
+                Modification = new[] {new XmlStellar.Modification()
+                {
+                    Order = 1,
+                    Experiment = new []{new XmlStellar.Experiment()
+                        {
+                            ExperimentIndex = 1,
+                            ExperimentIndexSpecified = true,
+                            TMSnScan = new XmlStellar.TMSnScan()
+                            {
+                                MassList = new XmlStellar.MassList()
+                                {
+                                    MassListRecord = records.ToArray(),
+                                }
+                            }
+                        }
+                }}
+            }};
+
+            return Serialize(xml, outMethod);
         }
 
         // Get XML for Calcium methods (Fusion, Fusion Lumos, Eclipse)

@@ -80,9 +80,7 @@ namespace MSConvertGUI
 
                 // this list is for Windows; it's a superset of the POSIX list
                 const string illegalFilename = "\\/*:?<>|\"";
-                foreach (var t in illegalFilename)
-                    if (runId.Contains(t))
-                        runId = runId.Replace(t, '_');
+                runId = new string(runId.Select(t => (t < 0x20 || t == 0x7f || illegalFilename.Contains(t)) ? '_' : t).ToArray());
 
                 var newFilename = runId + Extension;
                 var fullPath = Path.Combine(OutputPath, newFilename);
@@ -132,6 +130,7 @@ namespace MSConvertGUI
 
             var formatText = false;
             var formatMzMl = false;
+            var formatMzMlB = false;
             var formatMzXml = false;
             var formatMz5 = false;
             var formatMgf = false;
@@ -168,6 +167,9 @@ namespace MSConvertGUI
                         break;
                     case "--mzML":
                         formatMzMl = true;
+                        break;
+                    case "--mzMLb":
+                        formatMzMlB = true;
                         break;
                     case "--mzXML":
                         formatMzXml = true;
@@ -358,6 +360,7 @@ namespace MSConvertGUI
                 + (formatMzMl ? 1 : 0)
                 + (formatMzXml ? 1 : 0)
                 + (formatMz5 ? 1 : 0)
+                + (formatMzMlB ? 1 : 0)
                 + (formatMgf ? 1 : 0)
                 + (formatMs1 ? 1 : 0)
                 + (formatCms1 ? 1 : 0)
@@ -368,6 +371,7 @@ namespace MSConvertGUI
             if (formatMzMl) config.WriteConfig.format = MSDataFile.Format.Format_mzML;
             if (formatMzXml) config.WriteConfig.format = MSDataFile.Format.Format_mzXML;
             if (formatMz5) config.WriteConfig.format = MSDataFile.Format.Format_MZ5;
+            if (formatMzMlB) config.WriteConfig.format = MSDataFile.Format.Format_mzMLb;
             if (formatMgf) config.WriteConfig.format = MSDataFile.Format.Format_MGF;
             if (formatMs1) config.WriteConfig.format = MSDataFile.Format.Format_MS1;
             if (formatCms1) config.WriteConfig.format = MSDataFile.Format.Format_CMS1;
@@ -392,6 +396,9 @@ namespace MSConvertGUI
                     case MSDataFile.Format.Format_MZ5:
                         config.Extension = ".mz5";
                         break;
+                    case MSDataFile.Format.Format_mzMLb:
+                        config.Extension = ".mzMLb";
+                        break;    
                     case MSDataFile.Format.Format_MGF:
                         config.Extension = ".mgf";
                         break;
@@ -440,7 +447,15 @@ namespace MSConvertGUI
                 config.WriteConfig.indexed = false;
 
             if (zlib)
+            {
                 config.WriteConfig.compression = MSDataFile.Compression.Compression_Zlib;
+                config.WriteConfig.mzMLb_compression_level = 4;
+            }
+            else
+            {
+                config.WriteConfig.compression = MSDataFile.Compression.Compression_None;
+                config.WriteConfig.mzMLb_compression_level = 0;
+            }
 
             return config;
         }
@@ -529,6 +544,7 @@ namespace MSConvertGUI
                                 switch (config.WriteConfig.format)
                                 {
                                     case MSDataFile.Format.Format_MZ5:
+                                    case MSDataFile.Format.Format_mzMLb:
                                     case MSDataFile.Format.Format_mzML:
                                         break;
                                     default:

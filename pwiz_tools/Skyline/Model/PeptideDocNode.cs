@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -137,6 +136,12 @@ namespace pwiz.Skyline.Model
             return node;
         }
 
+        public PeptideDocNode RemoveFastaSequence()
+        {
+            var newPeptide = new Peptide(Peptide.Target);
+            return ChangePeptide(newPeptide, TransitionGroups.Select(tg => tg.ChangePeptide(newPeptide)));
+        }
+
         [TrackChildren(ignoreName:true, defaultValues: typeof(DefaultValuesNull))]
         public CustomMolecule CustomMolecule { get { return Peptide.CustomMolecule; } }
 
@@ -219,8 +224,24 @@ namespace pwiz.Skyline.Model
         [Track(defaultValues:typeof(DefaultValuesNull))]
         public StandardType GlobalStandardType { get; private set; }
 
-        public Target ModifiedTarget { get; private set; }
+        private Target _modifiedTarget;
+        public Target ModifiedTarget 
+        {
+            get => IsProteomic ? _modifiedTarget : Peptide.Target;
+            private set => _modifiedTarget = value;
+        }
         public string ModifiedSequence { get { return ModifiedTarget.Sequence; } }
+
+        public Target OriginalMoleculeTarget { get; private set; }
+
+        public PeptideDocNode ChangeOriginalMoleculeTarget(Target originalMolecule)
+        {
+            if (Equals(originalMolecule, OriginalMoleculeTarget))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.OriginalMoleculeTarget = originalMolecule);
+        }
 
         public string ModifiedSequenceDisplay { get; private set; }
 
@@ -228,7 +249,7 @@ namespace pwiz.Skyline.Model
         public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
 
         // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
-        public Target ChromatogramTarget => Peptide.OriginalMoleculeTarget ?? ModifiedTarget;
+        public Target ChromatogramTarget => OriginalMoleculeTarget ?? ModifiedTarget;
 
         public Target Target { get { return Peptide.Target; }}
         public string TextId { get { return CustomInvariantNameOrText(Peptide.Sequence); } }
@@ -506,7 +527,8 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Returns the index of the "best" result for a peptide.  This is currently
-        /// base solely on total peak area, could be enhanced in the future to be
+        /// based solely on total peak area, exclusive of things marked as not participating in scoring
+        /// like reporter ions.  Could be enhanced in the future to be
         /// more like picking the best peak in the import code, including factors
         /// such as peak-found-ratio and dot-product.
         /// </summary>
@@ -566,7 +588,7 @@ namespace pwiz.Skyline.Model
                         for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
                             var chromInfo = result[iChromInfo];
-                            if (chromInfo.Area > 0)
+                            if (nodeTran.ParticipatesInScoring && chromInfo.Area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += chromInfo.Area;
                                 tranMeasured++;
@@ -594,6 +616,8 @@ namespace pwiz.Skyline.Model
         public double? ConcentrationMultiplier { get; private set; }
 
         public NormalizationMethod NormalizationMethod { get; private set; }
+
+        public string SurrogateCalibrationCurve { get; private set; }
 
         public string AttributeGroupId { get; private set; }
 
@@ -685,10 +709,7 @@ namespace pwiz.Skyline.Model
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
         public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, CustomMolecule customMolecule, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
-            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
-            var sameMass = Equals(customMolecule.AverageMass, Peptide.CustomMolecule.AverageMass) && 
-                           Equals(customMolecule.Formula, Peptide.CustomMolecule.Formula);
-            var newPeptide = new Peptide(customMolecule, sameMass ? Peptide.Target : null);
+            var newPeptide = new Peptide(customMolecule);
             Helpers.AssignIfEquals(ref newPeptide, Peptide);
             if (Equals(Peptide, newPeptide))
             {
@@ -719,6 +740,11 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
         {
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
+        }
+
+        public PeptideDocNode ChangeSurrogateCalibrationCurve(string surrogateCalibrationCurve)
+        {
+            return ChangeProp(ImClone(this), im => im.SurrogateCalibrationCurve = surrogateCalibrationCurve);
         }
 
         public PeptideDocNode ChangeAttributeGroupId(string attributeGroupId)
@@ -902,6 +928,10 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(sourceKey, SourceKey))
                 nodeResult = nodeResult.ChangeSourceKey(sourceKey);
             nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
+            if (!settingsNew.HasResults)
+            {
+                nodeResult = nodeResult.ChangeOriginalMoleculeTarget(null);
+            }
 
             if (diff.DiffPeptideProps)
             {
@@ -931,7 +961,7 @@ namespace pwiz.Skyline.Model
                 IEqualityComparer<TransitionGroup> transitionGroupEqualityComparer = null;
                 if (!IsProteomic)
                 {
-                    transitionGroupEqualityComparer = new IdentityEqualityComparer<TransitionGroup>();
+                    transitionGroupEqualityComparer = ReferenceValue.EQUALITY_COMPARER;
                 }
 
                 ILookup<TransitionGroup, TransitionGroupDocNode> mapIdToChild =
@@ -1968,6 +1998,39 @@ namespace pwiz.Skyline.Model
             #endregion
         }
 
+        /// <summary>
+        /// For custom molecules, if the molecule's identifying string has changed
+        /// but its mass is still the same, remember its original string so as not
+        /// to lose the connection to the chromatograms in the .skyd file
+        /// </summary>
+        public PeptideDocNode RememberOriginalTarget(PeptideDocNode old)
+        {
+            var myCustomMolecule = CustomMolecule;
+            var oldCustomMolecule = old.CustomMolecule;
+            if (myCustomMolecule == null || oldCustomMolecule == null)
+            {
+                // Don't change anything if this is not a custom molecule
+                return this;
+            }
+            var sameMass = Equals(myCustomMolecule.AverageMass, oldCustomMolecule.AverageMass) &&
+                           Equals(myCustomMolecule.Formula, oldCustomMolecule.Formula);
+            if (!sameMass)
+            {
+                // If the mass has changed then forget any previously remembered molecule name
+                return ChangeOriginalMoleculeTarget(null);
+            }
+            if (OriginalMoleculeTarget != null)
+            {
+                // Don't change anything if the molecule is still remembering an even older name
+                return this;
+            }
+            if (Equals(ChromatogramTarget, old.ChromatogramTarget))
+            {
+                return this;
+            }
+            return ChangeOriginalMoleculeTarget(old.ChromatogramTarget);
+        }
+
         #region object overrides
 
         public bool Equals(PeptideDocNode other)
@@ -1985,7 +2048,9 @@ namespace pwiz.Skyline.Model
                 Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
                 Equals(other.NormalizationMethod, NormalizationMethod) &&
                 Equals(other.AttributeGroupId, AttributeGroupId) &&
-                Equals(other.GlobalStandardType, GlobalStandardType);
+                Equals(other.GlobalStandardType, GlobalStandardType) &&
+                Equals(other.SurrogateCalibrationCurve, SurrogateCalibrationCurve) &&
+                Equals(other.OriginalMoleculeTarget, OriginalMoleculeTarget);
             return equal; // For debugging convenience
         }
 
@@ -2012,6 +2077,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
                 result = (result*397) ^ (AttributeGroupId == null ? 0 : AttributeGroupId.GetHashCode());
                 result = (result*397) ^ (GlobalStandardType == null ? 0 : GlobalStandardType.GetHashCode());
+                result = (result*397) ^ (SurrogateCalibrationCurve == null ? 0 : SurrogateCalibrationCurve.GetHashCode());
                 return result;
             }
         }
@@ -2019,7 +2085,7 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             return Rank.HasValue
-                       ? String.Format(Resources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
+                       ? String.Format(ModelResources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
                        : Peptide.ToString();
         }
 

@@ -83,7 +83,8 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
   state(STATE_INIT),
-  isScoreLookup_(false)
+  isScoreLookup_(false),
+  isMGF_(false)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
     numFiles = 0;
@@ -146,14 +147,6 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
    } else if(isElement("msms_run_summary",name)) {
       fileroot_ = getRequiredAttrValue("base_name",attr);
       Verbosity::comment(V_DEBUG, "PepXML base_name is %s", fileroot_.c_str());
-      // Because Mascot2XML uses the full path for the base_name,
-      // only the part beyond the last "\" or "/" is taken.
-      size_t slash = fileroot_.rfind('/');
-      size_t bslash = fileroot_.rfind('\\');
-      if (slash == string::npos || (bslash != string::npos && bslash > slash))
-          slash = bslash;
-      if (slash != string::npos)
-          fileroot_.erase(0, slash + 1);
 
       // Check if this pepXML file is from Proteome Discoverer
       string rawType = getAttrValue("raw_data_type", attr);
@@ -277,14 +270,18 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            // Only the MGF file from MSFragger will match up with the scan numbers from an MSFragger pepXML file from a timsTOF dataset, but
            // other extensions must be supported for MSFragger searches of non-timsTOF datasets (e.g. mzML, Thermo RAW)
            extensions.insert(extensions.begin(), "_calibrated.mgf");
-           extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated, so place first in list
+           extensions.insert(extensions.begin(), "_calibrated.mzML");
+           extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated MGF over calibrated, so place second in list
+           extensions.insert(extensions.begin(), "_uncalibrated.mzML"); // Prefer uncalibrated mzML over all, so place first in list
            if (analysisType_ != MSFRAGGER_ANALYSIS)
                parentAnalysisType_ = MSFRAGGER_ANALYSIS;
        }
 
        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
-       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
+       isMGF_ = bal::iends_with(getSpecFileName(), ".mgf");
+
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && isMGF_) {
            lookUpBy_ = NAME_ID;
            specReader_->setIdType(NAME_ID);
        }
@@ -313,16 +310,25 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        }
        // if morpheus or msfragger type
        else if (analysisType_ == MORPHEUS_ANALYSIS || analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
-           spectrumName = getRequiredAttrValue("spectrum", attr);
+           spectrumName = getAttrValue("spectrumNativeID", attr);
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
 
-           // HACK: remove zero padding of scan numbers in the spectrum attribute title because MSFragger MGF files don't have padding
-           if (lookUpBy_ == NAME_ID && (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS))
-           {
-               namespace bxp = boost::xpressive;
-               auto scanNumberPaddingRegex = bxp::sregex::compile("(.*?\\.)0*(\\d+\\.)0*(\\d+\\.\\d+)");
-               spectrumName = bxp::regex_replace(spectrumName, scanNumberPaddingRegex, "$1$2$3");
+           if (!isMGF_ && !spectrumName.empty()) {
+               if (bal::contains(spectrumName, "="))
+                   lookUpBy_ = NAME_ID;
+               else
+                   lookUpBy_ = SCAN_NUM_ID;
+           }
+           else {
+               spectrumName = getRequiredAttrValue("spectrum", attr);
+               // HACK: remove zero padding of scan numbers in the spectrum attribute title because MSFragger MGF files don't have padding
+               if (lookUpBy_ == NAME_ID && (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS))
+               {
+                   namespace bxp = boost::xpressive;
+                   auto scanNumberPaddingRegex = bxp::sregex::compile("(.*?\\.)0*(\\d+\\.)0*(\\d+\\.\\d+)");
+                   spectrumName = bxp::regex_replace(spectrumName, scanNumberPaddingRegex, "$1$2$3");
+               }
            }
        }
        // this should never happen, error should have been thrown earlier
@@ -407,7 +413,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        string score_name = getAttrValue("name", attr);
        bal::to_lower(score_name);
 
-       if (score_name == "expect" ||
+       if ((analysisType_ != CRUX_ANALYSIS && score_name == "expect") ||
            (analysisType_ == SPECTRUM_MILL_ANALYSIS && score_name == "smscore") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||

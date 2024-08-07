@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -223,7 +223,7 @@
     <value>23</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Default Charge:</value>
+    <value>Default &amp;Charge:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -316,7 +316,7 @@
     <value>28</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>Max m/z:</value>
+    <value>Ma&amp;x m/z:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -346,7 +346,7 @@
     <value>27</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>Min m/z:</value>
+    <value>Min m/&amp;z:</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -397,7 +397,7 @@
     <value>25</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>Max Charge:</value>
+    <value>Max C&amp;harge:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -448,7 +448,7 @@
     <value>21</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Min Charge:</value>
+    <value>&amp;Min Charge:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -478,7 +478,7 @@
     <value>20</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>Default N&amp;CE:</value>
+    <value>Default &amp;NCE:</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -529,7 +529,7 @@
     <value>17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>Include ambiguous &amp;matches</value>
+    <value>Include &amp;ambiguous matches</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -595,90 +595,90 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
-    <value>prositPage</value>
+    <value>koinaPage</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblPrositPrediction.Font" type="System.Drawing.Font, System.Drawing">
+  <data name="lblKoinaPrediction.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 12pt</value>
   </data>
-  <data name="lblPrositPrediction.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="lblKoinaPrediction.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="lblPrositPrediction.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblKoinaPrediction.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
-  <data name="lblPrositPrediction.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblKoinaPrediction.Size" type="System.Drawing.Size, System.Drawing">
     <value>350, 18</value>
   </data>
-  <data name="lblPrositPrediction.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblKoinaPrediction.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="lblPrositPrediction.Text" xml:space="preserve">
-    <value>Prosit Settings</value>
+  <data name="lblKoinaPrediction.Text" xml:space="preserve">
+    <value>Koina Settings</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.Name" xml:space="preserve">
-    <value>lblPrositPrediction</value>
+  <data name="&gt;&gt;lblKoinaPrediction.Name" xml:space="preserve">
+    <value>lblKoinaPrediction</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblKoinaPrediction.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.Parent" xml:space="preserve">
-    <value>prositPanel</value>
+  <data name="&gt;&gt;lblKoinaPrediction.Parent" xml:space="preserve">
+    <value>koinaPanel</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblKoinaPrediction.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="prositPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="koinaPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="prositPanel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="prositPanel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>597, 43</value>
   </data>
-  <data name="prositPanel.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaPanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
-  <data name="&gt;&gt;prositPanel.Name" xml:space="preserve">
-    <value>prositPanel</value>
+  <data name="&gt;&gt;koinaPanel.Name" xml:space="preserve">
+    <value>koinaPanel</value>
   </data>
-  <data name="&gt;&gt;prositPanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositPanel.Parent" xml:space="preserve">
-    <value>prositPage</value>
+  <data name="&gt;&gt;koinaPanel.Parent" xml:space="preserve">
+    <value>koinaPage</value>
   </data>
-  <data name="&gt;&gt;prositPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="prositPage.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="prositPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="koinaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="prositPage.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaPage.Size" type="System.Drawing.Size, System.Drawing">
     <value>603, 413</value>
   </data>
-  <data name="prositPage.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaPage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="prositPage.Text" xml:space="preserve">
-    <value>Prosit Prediction</value>
+  <data name="koinaPage.Text" xml:space="preserve">
+    <value>Koina Prediction</value>
   </data>
-  <data name="&gt;&gt;prositPage.Name" xml:space="preserve">
-    <value>prositPage</value>
+  <data name="&gt;&gt;koinaPage.Name" xml:space="preserve">
+    <value>koinaPage</value>
   </data>
-  <data name="&gt;&gt;prositPage.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositPage.Parent" xml:space="preserve">
+  <data name="&gt;&gt;koinaPage.Parent" xml:space="preserve">
     <value>wizardPages</value>
   </data>
-  <data name="&gt;&gt;prositPage.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaPage.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="lblNarrowWindowFiles.Font" type="System.Drawing.Font, System.Drawing">
@@ -913,7 +913,7 @@
     <value>36</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>Unit:</value>
+    <value>U&amp;nit:</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -943,7 +943,7 @@
     <value>35</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>Unit:</value>
+    <value>&amp;Unit:</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -1198,7 +1198,7 @@
     <value>wizardPages</value>
   </data>
   <data name="&gt;&gt;wizardPages.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1324,7 +1324,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;backgroundWorker1.Name" xml:space="preserve">
     <value>backgroundWorker1</value>
@@ -1336,6 +1336,6 @@
     <value>EncyclopeDiaSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -25,13 +25,13 @@ namespace pwiz.Skyline.Model
             return new Statistics(_internalData.Select(d => d.CV)).Median();
         }
 
-        public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings,
+        public AreaCVRefinementData(NormalizedValueCalculator normalizedValueCalculator, AreaCVRefinementSettings settings,
             CancellationToken token, SrmSettingsChangeMonitor progressMonitor = null)
         {
             _settings = settings;
+            var document = normalizedValueCalculator.Document;
             if (document == null || !document.Settings.HasResults)
                 return;
-
             var replicates = document.MeasuredResults.Chromatograms.Count;
             var areas = new List<AreaInfo>(replicates);
             var annotations = AnnotationHelper.GetPossibleAnnotations(document, settings.Group).ToArray();
@@ -61,7 +61,6 @@ namespace pwiz.Skyline.Model
             }
             if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
                 medianInfo = CalculateMedianAreas(document);
-            var normalizedValueCalculator = new NormalizedValueCalculator(document);
 
             foreach (var peptideGroup in document.MoleculeGroups)
             {
@@ -86,10 +85,8 @@ namespace pwiz.Skyline.Model
                             continue;
                         }
 
-                        var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(
-                            () => normalizedValueCalculator.GetNormalizationData(), document.Settings, peptideGroup,
-                            peptide);
-                        calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+                        calibrationCurveFitter =
+                            CalibrationCurveFitter.GetCalibrationCurveFitter(document, peptideGroup, peptide);
                         transitionGroups = new[] {peptide.TransitionGroups.First()};
                         if (_settings.NormalizeOption == NormalizeOption.CALIBRATED)
                         {

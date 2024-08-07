@@ -143,6 +143,7 @@
     <Compile Include="AbstractFunctionalTestEx.cs" />
     <Compile Include="AbstractUnitTestEx.cs" />
     <Compile Include="AssertEx.cs" />
+    <Compile Include="AsSmallMoleculeTestUtil.cs" />
     <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
     <Compile Include="ScreenshotManager.cs" />
+    <Compile Include="SpectralLibraryTestUtil.cs" />
     <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />

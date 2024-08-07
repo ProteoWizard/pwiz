@@ -18,7 +18,6 @@
 
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -40,7 +39,7 @@ namespace pwiz.Skyline.Model.Find
         }
         public override string DisplayName
         {
-            get { return Resources.DuplicatedPeptideFinder_DisplayName_Duplicated_peptides; }
+            get { return FindResources.DuplicatedPeptideFinder_DisplayName_Duplicated_peptides; }
         }
 
         private void InitializeIndex(SrmDocument document)

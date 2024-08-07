@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -31,9 +32,9 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramInfo
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
+        private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData;
         private SrmDocument _document;
 
@@ -48,24 +49,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _areaCVGraphData = null;
             _lineItems = new LineItem[2];
-            _cache = new AreaCVGraphData.AreaCVGraphDataCache();
+            _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
         }
 
-        public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
         public int Items { get; private set; }
 
         public override bool HasToolbar { get { return true; } }
-
-        public override void OnClose(EventArgs e)
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            _cache.Dispose();
-        }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
@@ -122,9 +112,9 @@ namespace pwiz.Skyline.Controls.Graphs
             base.Draw(g);
         }
 
-        private void DataCallback(AreaCVGraphData data)
+        private void OnProductAvailable()
         {
-            GraphSummary.GraphControl.BeginInvoke((Action)(() => { GraphSummary.UpdateUI(); }));
+            GraphSummary.UpdateUI();
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -136,23 +126,27 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _document = GraphSummary.DocumentUIContainer.DocumentUI;
+
             var settings = new AreaCVGraphData.AreaCVGraphSettings(_document.Settings, GraphSummary.Type);
             _percentage = !Settings.Default.AreaCVShowDecimals;
             _decimals = _percentage ? 1 : 3;
 
             CurveList.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
+            var gotData =
+                _receiver.TryGetProduct(
+                    new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                    out _areaCVGraphData);
 
             if (!gotData)
             {
-                Title.Text = Resources.AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____;
+                Title.Text = GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____;
                 return;
             }
 
             if (!_areaCVGraphData.IsValid)
             {
-                Title.Text = Resources.AreaCVHistogram2DGraphPane_Draw_Not_enough_data;
+                Title.Text = GraphsResources.AreaCVHistogram2DGraphPane_Draw_Not_enough_data;
                 return;
             }
 
@@ -160,8 +154,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Title.Text = string.Empty;
 
-            YAxis.Title.Text = Resources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
-            XAxis.Title.Text = Resources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area;
+            YAxis.Title.Text = GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
+            XAxis.Title.Text = GraphsResources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area;
 
             XAxis.Scale.MinAuto = XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MaxAuto = false;
             XAxis.Scale.Min = Math.Max(0, double.IsNaN(Settings.Default.AreaCVMinLog10Area) ? _areaCVGraphData.MinMeanArea : Settings.Default.AreaCVMinLog10Area);
@@ -182,14 +176,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (Settings.Default.AreaCVShowMedianCV)
             {
-                string text = string.Format(Resources.AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_, HistogramHelper.FormatDouble(_areaCVGraphData.MedianCV * factor, _decimals) + unit);
+                string text = string.Format(GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_, HistogramHelper.FormatDouble(_areaCVGraphData.MedianCV * factor, _decimals) + unit);
                 _lineItems[0] = AddLineItem(text, XAxis.Scale.Min, XAxis.Scale.Max, _areaCVGraphData.MedianCV * factor, _areaCVGraphData.MedianCV * factor, Color.Blue);
                 CurveList.Insert(0, _lineItems[0]);
             }
 
             if (Settings.Default.AreaCVShowCVCutoff)
             {
-                string text = string.Format(Resources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_, Settings.Default.AreaCVCVCutoff + unit,
+                string text = string.Format(GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_, Settings.Default.AreaCVCVCutoff + unit,
                               HistogramHelper.FormatDouble(_areaCVGraphData.BelowCVCutoff * factor, _decimals) +
                               unit);
                 _lineItems[1] = AddLineItem(text,XAxis.Scale.Min, XAxis.Scale.Max,Settings.Default.AreaCVCVCutoff, Settings.Default.AreaCVCVCutoff, Color.Red);

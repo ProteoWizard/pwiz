@@ -83,7 +83,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (Settings.Default.RetentionTimeList.Any(regression => regression.Name == txtName.Text))
             {
-                MessageDlg.Show(this, Resources.AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_);
+                MessageDlg.Show(this, SettingsUIResources.AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_);
                 txtName.Focus();
                 return;
             }

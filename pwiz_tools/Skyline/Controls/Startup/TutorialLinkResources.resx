@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -154,7 +154,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MS1Filtering_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-22_2.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-24_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DDASearch_zip" xml:space="preserve">
@@ -162,7 +162,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DDSearch_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-22_2.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-24_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_zip" xml:space="preserve">
@@ -250,7 +250,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-22_2.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-24_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolecule_zip" xml:space="preserve">
@@ -266,7 +266,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-20_1.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-23_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeQuantification_zip" xml:space="preserve">
@@ -274,7 +274,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeQuantification_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-23_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="HiResMetabolomics_zip" xml:space="preserve">
@@ -282,7 +282,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="HiResMetabolomics_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-23_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolLibraries_zip" xml:space="preserve">
@@ -306,7 +306,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_TTOF_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-TTOF-22_2.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-TTOF-24_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_PASEF_zip" xml:space="preserve">
@@ -314,7 +314,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_PASEF_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-PASEF-22_2.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-PASEF-24_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="IMSFiltering_zip" xml:space="preserve">
