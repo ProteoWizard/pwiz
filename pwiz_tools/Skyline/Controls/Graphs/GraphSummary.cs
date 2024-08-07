@@ -144,6 +144,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public string LabelLayoutString { get; set; }
+
         public GraphTypeSummary Type { get; set; }
 
         public GraphSummary(GraphTypeSummary type, IDocumentUIContainer documentUIContainer, IController controller, int targetResultsIndex, int originalIndex = -1)
@@ -285,7 +287,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + '|' + _controller.GetType().Name + '|' + Type;
+            var res = base.GetPersistentString() + '|' + _controller.GetType().Name + '|' + Type;
+            var panelLayouts = GraphPanes.OfType<ILayoutPersistable>().FirstOrDefault()?.GetPersistentString();
+            if (panelLayouts != null)
+            {
+                res = res + '|' + Uri.EscapeDataString(panelLayouts);
+            }
+            return res;
         }
 
         public IEnumerable<string> Categories
