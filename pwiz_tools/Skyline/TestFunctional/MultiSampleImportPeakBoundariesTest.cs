@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SimpleWiffTest.sky")));
+            var docBefore = WaitForDocumentLoaded();
 
             // Import results from 2 wiff files ("firstfile.wiff" and "secondfile.wiff")
             // the wiff files are identical, and have 4 samples in them:
@@ -61,13 +62,12 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.ReplicateName = "ReplicateOne";
             });
-            RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
+            ShowAndDismissDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
             {
                 openDataSourceDlg.SelectFile(TestFilesDir.GetTestPath("firstfile.wiff"));
                 openDataSourceDlg.Open();
             });
             var importResultsSamplesDlg = WaitForOpenForm<ImportResultsSamplesDlg>();
-            var docBefore = SkylineWindow.Document;
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentChangeLoaded(docBefore);
             Assert.AreEqual(1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.ReplicateName = "ReplicateTwo";
             });
-            RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
+            ShowAndDismissDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
             {
                 openDataSourceDlg.SelectFile(TestFilesDir.GetTestPath("secondfile.wiff"));
                 openDataSourceDlg.Open();
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.ReplicateName = "ReplicateThree";
             });
-            RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
+            ShowAndDismissDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
             {
                 openDataSourceDlg.SelectFile(TestFilesDir.GetTestPath("secondfile.wiff"));
                 openDataSourceDlg.Open();

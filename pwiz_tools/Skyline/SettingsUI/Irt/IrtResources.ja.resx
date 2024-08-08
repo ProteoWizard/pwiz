@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__" xml:space="preserve">
+    <value>{0}には1個の新しいペプチドが追加されます。</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_not_converted_due_to_insufficient_correlation" xml:space="preserve">
+    <value>相関が不十分なため、1回の実行が変換されませんでした。</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_successfully_converted" xml:space="preserve">
+    <value>1回の実行が正常に変換されました。</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database" xml:space="preserve">
+    <value>iRTデータベース</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__" xml:space="preserve">
+    <value>{0}に追加される新しいペプチドはありません。</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression" xml:space="preserve">
+    <value>回帰</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
+    <value>回帰の試行</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
+    <value>回帰の改良</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library" xml:space="preserve">
+    <value>スペクトルライブラリ</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries" xml:space="preserve">
+    <value>スペクトルライブラリ</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain_enough_retention_time_information_to_support_this_operation" xml:space="preserve">
+    <value>この操作に必要な保持時間情報を含むのはBiblioSpecおよびクロマトグラムライブラリのみです。</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_Please_choose_a_non_redundant_library" xml:space="preserve">
+    <value>非冗長ライブラリを選択してください。</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add" xml:space="preserve">
+    <value>追加するライブラリを選択してください。</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_Please_specify_a_path_to_an_existing_spectral_library" xml:space="preserve">
+    <value>既存のスペクトルライブラリにパスを指定してください。</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
+    <value>ファイル{0}は非冗長ライブラリのようです。</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__does_not_exist" xml:space="preserve">
+    <value>ファイル{0}は存在しません。</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
+    <value>ファイル{0}はBiblioSpecまたはクロマトグラムライブラリではありません。</value>
+  </data>
+  <data name="AddIrtsResultsDlg_dataGridView_CellContentClick_Measured" xml:space="preserve">
+    <value>測定済み</value>
+  </data>
+  <data name="AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded" xml:space="preserve">
+    <value>現在のドキュメントには、この標準以外の{0}個のペプチドが測定保持時間とともに含まれています。 iRT標準向けに1回の注入で簡単に測定できる少数のペプチドを使用することをお勧めします。 以下のペプチドをいくつか選択して、Skylineが現在のドキュメントから自動的に選択できるようにしてください。</value>
+  </data>
+  <data name="CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation" xml:space="preserve">
+    <value>回帰方程式の計算</value>
+  </data>
+  <data name="CalibrateIrtDlg_btnGraphIrts_Click_Calibrated_iRT_values" xml:space="preserve">
+    <value>校正済みiRT値</value>
+  </data>
+  <data name="CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_" xml:space="preserve">
+    <value>{0}個以上の標準ペプチドを入力してください。</value>
+  </data>
+  <data name="CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_" xml:space="preserve">
+    <value>iRT標準{0}は既に存在します。</value>
+  </data>
+  <data name="CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_" xml:space="preserve">
+    <value>ドキュメントに、この標準以外の{0}個のペプチドの結果が含まれていますが、標準を校正するために必要な最小値{1}未満です。</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_Measured" xml:space="preserve">
+    <value>測定済み</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_New_iRT" xml:space="preserve">
+    <value>新iRT</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_Old_iRT" xml:space="preserve">
+    <value>旧iRT</value>
+  </data>
+  <data name="CalibrateIrtDlg_StandardsChanged__0__peptides" xml:space="preserve">
+    <value>{0}個のペプチド</value>
+  </data>
+  <data name="CalibrateIrtDlg_StandardsChanged__1_peptide" xml:space="preserve">
+    <value>1個のペプチド</value>
+  </data>
+  <data name="CalibrateIrtDlg_TryGetLine_Invalid_fixed_point_peptides_" xml:space="preserve">
+    <value>無効な固定点ペプチドです。</value>
+  </data>
+  <data name="CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_" xml:space="preserve">
+    <value>最大固定点ペプチドは最小固定点ペプチドよりも大きな測定保持時間を持つ必要があります。</value>
+  </data>
+  <data name="CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_" xml:space="preserve">
+    <value>標準校正ペプチドが必要です。</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>ドキュメントには{0}個のペプチドの結果が含まれていますが、{1}個未満の標準ペプチドを使用することは勧められません。続行してよろしいですか？</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_" xml:space="preserve">
+    <value>ドキュメントには{0}個のペプチドの結果が含まれていますが、標準を校正するために必要な最小値{1}未満です。</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>ドキュメントにはこの標準以外の{0}個のペプチドの結果が含まれていますが、{1}個未満の標準ペプチドを使用することは勧められません。続行してよろしいですか？</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard" xml:space="preserve">
+    <value>ドキュメントは標準の校正に対する結果を含まなければなりません。</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression" xml:space="preserve">
+    <value>回帰から計算</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores" xml:space="preserve">
+    <value>スコアを計算中</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values" xml:space="preserve">
+    <value>事前定義済みの値</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_" xml:space="preserve">
+    <value>このドキュメントには{0}個のCiRTペプチドが含まれています。このうち{1}個をiRT標準として使用しますか？</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
+    <value>事前定義済みのiRT値を使用しますか、または回帰に基づいて新しいiRT値を計算しますか？</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database" xml:space="preserve">
+    <value>データベースには標準ペプチドが存在する必要があります。</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_" xml:space="preserve">
+    <value>以下のペプチドが削除されました：</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database" xml:space="preserve">
+    <value>以下のシークエンスは現在データベースにありません：</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database" xml:space="preserve">
+    <value>シークエンス「{0}」は現在データベースにありません。</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_" xml:space="preserve">
+    <value>これらをドキュメントから削除しますか？</value>
+  </data>
+  <data name="EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost" xml:space="preserve">
+    <value>本当に新しいデータベースファイルを開きますか？ 現在のカルキュレータへの変更はすべて失われます。</value>
+  </data>
+  <data name="EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost" xml:space="preserve">
+    <value>本当に新しいデータベースファイルを作成しますか？ 現在のカルキュレータへの変更はすべて失われます。</value>
+  </data>
+  <data name="EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein" xml:space="preserve">
+    <value>iRT標準タンパク質で削除されたペプチド</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it" xml:space="preserve">
+    <value>{0}という名前のカルキュレータが既にあります。上書きしますか？</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
+    <value>クロマトグラムライブラリは修飾できません。このiRTカルキュレータを新しいファイルとして保存しなければなりません。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file" xml:space="preserve">
+    <value>作成ボタンをクリックして新しいデータベースを作成するか、開くボタンをクリックして既存のデータベースファイルを開きます。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_" xml:space="preserve">
+    <value>iRTデータベース内のペプチドのアップデートに失敗しました。データベースが同期していない可能性があります。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_library_table_name" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Please_choose_a_database_file_for_the_iRT_calculator" xml:space="preserve">
+    <value>iRTカルキュレータのデータベースファイルを選択してください。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator" xml:space="preserve">
+    <value>iRTカルキュレータの名前を入力してください。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides" xml:space="preserve">
+    <value>{0}個以上の標準ペプチドを入力してください。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
+    <value>iRTカルキュレータのデータベースファイルにはフルパスを使用してください。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Saving_to_database" xml:space="preserve">
+    <value>データベースに保存中</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
+    <value>スペクトラルライブラリは変更できません。このiRTカルキュレーターを新規ファイルとして保存する必要があります。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_standard_table_name" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__" xml:space="preserve">
+    <value>{0}個未満の標準ペプチドの使用は推奨されません。本当に{1}個のみで続行しますか？</value>
+  </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
+    <value>データベースを開く</value>
+  </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。作成ボタンをクリックして新しいデータベースを作成するか、開くボタンをクリックして欠損しているファイルを検索します。</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptide" xml:space="preserve">
+    <value>{0}ペプチド</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
+    <value>{0}個のペプチド</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumPeptides_Calibrate" xml:space="preserve">
+    <value>校正(&amp;B)...</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumPeptides_Recalibrate" xml:space="preserve">
+    <value>再校正(&amp;B)...</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_" xml:space="preserve">
+    <value>{0}個の標準ペプチド（{1}個必要）</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_" xml:space="preserve">
+    <value>{0}個の標準ペプチド（{1}個必要）</value>
+  </data>
+  <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
+    <value>{1}表でペプチド{0}が1回以上表示されています。</value>
+  </data>
+  <data name="EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence" xml:space="preserve">
+    <value>値{0}は有効な修飾ペプチドシークエンスではありません。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddIrtDatabase_Adding_iRT_Database" xml:space="preserve">
+    <value>iRTデータベースの追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddIrtDatabase_An_error_occurred_attempting_to_load_the_iRT_database_file__0__" xml:space="preserve">
+    <value>iRTデータベースファイル{0}を読み込もうとした際にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddResults_Adding_Results" xml:space="preserve">
+    <value>結果の追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddResults_Adding_retention_times_from_imported_results" xml:space="preserve">
+    <value>インポートされた結果から保持時間を追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddResults_An_error_occurred_attempting_to_add_results_from_current_document" xml:space="preserve">
+    <value>現在のドキュメントから結果を追加しようとした際にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_iRT_values" xml:space="preserve">
+    <value>iRT値を追加するには、アクティブドキュメントが結果を含んでいる必要があります。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__" xml:space="preserve">
+    <value>{0}から保持時間の追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリの追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__" xml:space="preserve">
+    <value>ライブラリファイル{0}を読み込もうとした際にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_retention_time_information" xml:space="preserve">
+    <value>ライブラリ{0}には保持時間情報が含まれていません。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_" xml:space="preserve">
+    <value>再校正中にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides" xml:space="preserve">
+    <value>iRT標準ペプチドの再校正</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values" xml:space="preserve">
+    <value>iRT標準ペプチドを再校正してiRT値を再処理しています</value>
+  </data>
+  <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
+    <value>ペプチド{0}は既に{1}表にあり、{2}表には貼り付けられません。</value>
+  </data>
+</root>

@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var errorDlg = ShowDialog<MessageDlg>(() => editMeasuredIon1.Charge = -1); // Negative charge states are valid for small molecule only, not for reporter ions
             AssertEx.AreComparableStrings(String.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, String.Empty, 1), errorDlg.Message);
-            RunUI(() => errorDlg.OkDialog()); // Dismiss the warning
+            OkDialog(errorDlg, errorDlg.OkDialog); // Dismiss the warning
             RunUI(() =>
             {
                 editMeasuredIon1.Charge = 1;

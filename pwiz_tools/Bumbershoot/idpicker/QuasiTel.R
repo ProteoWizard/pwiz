@@ -25,7 +25,7 @@
 howToCiteQuasitel <- paste(
 "Li M., Gray W., Zhang H., Chung C. H., Billheimer D., Yarbrough W. G., Liebler D. C., Shyr Y., Slebos R. J.",
 "(2010) Comparative shotgun proteomics using spectral count data and quasi-likelihood modeling.",
-"J. Proteome Res. 9, 4295-–4305"
+"J. Proteome Res. 9, 4295-4305"
 )
 
 if (!require(tcltk)) {install.packages('tcltk', repos="http://cran.us.r-project.org"); require(tcltk) || stop("tcltk support is missing")}

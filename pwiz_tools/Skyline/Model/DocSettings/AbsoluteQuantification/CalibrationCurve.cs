@@ -16,164 +16,351 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using pwiz.Common.DataBinding.Attributes;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Util.Extensions;
+using System.Linq;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class CalibrationCurve : Immutable, IComparable
+    public abstract class CalibrationCurve
     {
         // The CalibrationCurve that you get if you have no external standards.
         public static readonly CalibrationCurve NO_EXTERNAL_STANDARDS
-            = new CalibrationCurve(RegressionFit.NONE).ChangePointCount(0).ChangeSlope(1.0);
+            = new Simple(1);
 
-        public CalibrationCurve(RegressionFit regressionFit)
+        public abstract double? GetY(double? x);
+
+        /// <summary>
+        /// Returns the inverse of GetY
+        /// </summary>
+        public abstract double? GetX(double? y);
+
+        /// <summary>
+        /// Returns the same thing as GetX, except when this is a BilinearCalibrationCurve.
+        /// This method is only used when calculating Limit of Detection by doing &lt;blank plus something>
+        /// </summary>
+        public virtual double? GetXValueForLimitOfDetection(double? y)
         {
-            RegressionFit = regressionFit;
+            return GetX(y);
         }
 
-        public CalibrationCurve() : this(RegressionFit.NONE)
+        public CalibrationCurveMetrics GetMetrics(IList<WeightedPoint> points)
         {
-        }
-
-        [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
-        public double? Slope { get; private set; }
-
-        public CalibrationCurve ChangeSlope(double? slope)
-        {
-            return ChangeProp(ImClone(this), im => im.Slope = slope);
-        }
-        [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
-        public double? Intercept { get; private set; }
-
-        public CalibrationCurve ChangeIntercept(double? intercept)
-        {
-            return ChangeProp(ImClone(this), im => im.Intercept = intercept);
-        }
-
-        [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
-        public double? TurningPoint { get; private set; }
-
-        public CalibrationCurve ChangeTurningPoint(double? turningPoint)
-        {
-            return ChangeProp(ImClone(this), im => im.TurningPoint = turningPoint);
-        }
-
-        [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int? PointCount { get; private set; }
-
-        public CalibrationCurve ChangePointCount(int? pointCount)
-        {
-            return ChangeProp(ImClone(this), im => im.PointCount = pointCount);
-        }
-        
-        [Format(Formats.CalibrationCurve, NullValue=TextUtil.EXCEL_NA)]
-        public double? QuadraticCoefficient { get; private set; }
-
-        public CalibrationCurve ChangeQuadraticCoefficient(double? quadraticCoefficient)
-        {
-            return ChangeProp(ImClone(this), im => im.QuadraticCoefficient = quadraticCoefficient);
-        }
-
-        [Browsable(false)]
-        public RegressionFit RegressionFit { get; private set; }
-
-        public CalibrationCurve ChangeRegressionFit(RegressionFit regressionFit)
-        {
-            return ChangeProp(ImClone(this), im => im.RegressionFit = regressionFit);
-        }
-
-        [Format("0.####", NullValue = TextUtil.EXCEL_NA)]
-        public double? RSquared { get; private set; }
-
-        public static string RSquaredDisplayText(double rSquared)
-        {
-            return QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
-                   rSquared.ToString(@"0.####");
-        }
-
-        public CalibrationCurve ChangeRSquared(double? rSquared)
-        {
-            return ChangeProp(ImClone(this), im => im.RSquared = rSquared);
-        }
-
-        public string ErrorMessage { get; private set; }
-
-        public CalibrationCurve ChangeErrorMessage(string message)
-        {
-            return ChangeProp(ImClone(this), im => im.ErrorMessage = message);
-        }
-
-        public double? GetY(double? x)
-        {
-            return RegressionFit.GetY(this, x);
-        }
-
-        public double? GetFittedX(double? y)
-        {
-            return RegressionFit.GetFittedX(this, y);
-        }
-
-        public double? GetX(double? y)
-        {
-            return RegressionFit.GetX(this, y);
-        }
-
-        public override string ToString()
-        {
-            if (!string.IsNullOrEmpty(ErrorMessage))
+            var calibrationCurveRow = CreateCalibrationCurveMetrics();
+            if (points.Count != 0)
             {
-                return TextUtil.SpaceSeparate(QuantificationStrings.CalibrationCurve_ToString_Error__, ErrorMessage);
-            }
-            return Format(Slope, Intercept, QuadraticCoefficient, TurningPoint);
-        }
-
-        public static string Format(double? slope, double? intercept, double? quadraticCoefficient = null, double? turningPoint = null)
-        {
-            List<string> parts = new List<string>();
-            if (quadraticCoefficient.HasValue)
-            {
-                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_y_x_2_x_c,
-                    quadraticCoefficient.Value.ToString(Formats.CalibrationCurve),
-                    slope.Value.ToString(Formats.CalibrationCurve),
-                    intercept.Value.ToString(Formats.CalibrationCurve)));
-            }
-            else if (slope.HasValue)
-            {
-                parts.Add(String.Format(QuantificationStrings.CalibrationCurve_ToString_Slope___0_,
-                    slope.Value.ToString(Formats.CalibrationCurve)));
-                if (intercept.HasValue)
+                calibrationCurveRow = calibrationCurveRow.ChangePointCount(points.Count);
+                double? rSquared = CalculateRSquared(points);
+                if (rSquared.HasValue)
                 {
-                    parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Intercept___0_,
-                        intercept.Value.ToString(Formats.CalibrationCurve)));
+                    calibrationCurveRow = calibrationCurveRow.ChangeRSquared(rSquared);
                 }
             }
-            if (turningPoint.HasValue)
-            {
-                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Turning_Point___0_,
-                    turningPoint.Value.ToString(Formats.CalibrationCurve)));
-            }
-            return TextUtil.SpaceSeparate(parts);
+            return calibrationCurveRow;
         }
 
-        public int CompareTo(object obj)
+        protected abstract CalibrationCurveMetrics CreateCalibrationCurveMetrics();
+        public abstract override string ToString();
+
+        public virtual double? CalculateRSquared(IEnumerable<WeightedPoint> points)
         {
-            if (null == obj)
+            List<double> yValues = new List<double>();
+            List<double> residuals = new List<double>();
+            foreach (var point in points)
             {
-                return 1;
+                double? yFitted = GetY(point.X);
+                if (!yFitted.HasValue)
+                {
+                    continue;
+                }
+                yValues.Add(point.Y);
+                residuals.Add(point.Y - yFitted.Value);
             }
-            return Comparer.Default.Compare(GetCompareKey(), ((CalibrationCurve) obj).GetCompareKey());
+            if (!residuals.Any())
+            {
+                return null;
+            }
+            double yMean = yValues.Average();
+            double totalSumOfSquares = yValues.Sum(y => (y - yMean) * (y - yMean));
+            double sumOfSquaresOfResiduals = residuals.Sum(r => r * r);
+            double rSquared = 1 - sumOfSquaresOfResiduals / totalSumOfSquares;
+            return rSquared;
+        }
+        public class Linear : CalibrationCurve
+        {
+            public Linear(double slope, double? intercept)
+            {
+                Slope = slope;
+                Intercept = intercept;
+            }
+
+            public double Slope { get; }
+            public double? Intercept { get; }
+
+            public override double? GetY(double? x)
+            {
+                return x * Slope + Intercept.GetValueOrDefault();
+            }
+
+            public override double? GetX(double? y)
+            {
+                return (y - Intercept.GetValueOrDefault()) / Slope;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
+            }
+
+            public override string ToString()
+            {
+                if (Intercept.HasValue)
+                {
+                    return string.Format(@"y = {0}x + {1}", Slope, Intercept);
+                }
+
+                return string.Format(@"y = {0}x", Slope);
+            }
+        }
+        public class Quadratic : CalibrationCurve
+        {
+            public Quadratic(double intercept, double slope, double quadraticCoefficient)
+            {
+                Intercept = intercept;
+                Slope = slope;
+                QuadraticCoefficient = quadraticCoefficient;
+            }
+
+            public double Intercept { get; }
+            public double Slope { get; }
+            public double QuadraticCoefficient { get; }
+
+            public override double? GetX(double? y)
+            {
+                // Quadratic formula: x = (-b +/- sqrt(b^2-4ac))/2a
+                double? a = QuadraticCoefficient;
+                double? b = Slope;
+                double? c = Intercept - y;
+
+                double? discriminant = b * b - 4 * a * c;
+                if (!discriminant.HasValue)
+                {
+                    return null;
+                }
+                if (discriminant < 0)
+                {
+                    return double.NaN;
+                }
+                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
+                return (-b + sqrtDiscriminant) / 2 / a;
+            }
+
+            public override double? GetY(double? x)
+            {
+                return x * x * QuadraticCoefficient + x * Slope + Intercept;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeIntercept(Intercept).ChangeSlope(Slope)
+                    .ChangeQuadraticCoefficient(QuadraticCoefficient);
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"y = {0}x^2 + {1}x + {2}", QuadraticCoefficient, Slope, Intercept);
+            }
         }
 
-        private Tuple<double?, double?> GetCompareKey()
+        public class LinearInLogSpace : CalibrationCurve
         {
-            return new Tuple<double?, double?>(Slope, Intercept);
+            private readonly Linear _linearCalibrationCurve;
+            public LinearInLogSpace(Linear linearCalibrationCurve)
+            {
+                _linearCalibrationCurve = linearCalibrationCurve;
+            }
+
+            public double Slope
+            {
+                get { return _linearCalibrationCurve.Slope; }
+            }
+
+            public double Intercept
+            {
+                get { return _linearCalibrationCurve.Intercept.GetValueOrDefault(); }
+            }
+
+            public override double? GetY(double? x)
+            {
+                if (x.HasValue)
+                {
+                    var y = _linearCalibrationCurve.GetY(Math.Log(x.Value));
+                    if (y.HasValue)
+                    {
+                        return Math.Exp(y.Value);
+                    }
+                }
+                return null;
+            }
+
+            public override double? GetX(double? y)
+            {
+                if (y.HasValue)
+                {
+                    var x = _linearCalibrationCurve.GetX(Math.Log(y.Value));
+                    if (x.HasValue)
+                    {
+                        return Math.Exp(x.Value);
+                    }
+                }
+                return null;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
+            }
+
+            /// <summary>
+            /// Linear in log space calibration curves, the R-squared is calculated using the logarithm
+            /// of the points and 
+            /// </summary>
+            public override double? CalculateRSquared(IEnumerable<WeightedPoint> points)
+            {
+                return _linearCalibrationCurve.CalculateRSquared(points.Select(LogOfPoint).ToList());
+            }
+
+            public static WeightedPoint LogOfPoint(WeightedPoint weightedPoint)
+            {
+                return new WeightedPoint(Math.Log(weightedPoint.X), Math.Log(weightedPoint.Y), weightedPoint.Weight);
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"log(y) = {0} log(x) + {1}", _linearCalibrationCurve.Slope,
+                    _linearCalibrationCurve.Intercept ?? 0);
+            }
+        }
+        public class Bilinear : CalibrationCurve
+        {
+            private readonly Linear _linearCalibrationCurve;
+            public Bilinear(Linear linearCalibrationCurve, double turningPoint)
+            {
+                _linearCalibrationCurve = linearCalibrationCurve;
+                TurningPoint = turningPoint;
+            }
+
+            public double Slope
+            {
+                get { return _linearCalibrationCurve.Slope; }
+            }
+
+            public double Intercept
+            {
+                get
+                {
+                    return _linearCalibrationCurve.Intercept.GetValueOrDefault();
+                }
+            }
+
+            public double TurningPoint { get; }
+
+            public override double? GetY(double? x)
+            {
+                if (x < TurningPoint)
+                {
+                    return _linearCalibrationCurve.GetY(TurningPoint);
+                }
+
+                return _linearCalibrationCurve.GetY(x);
+            }
+
+            public override double? GetX(double? y)
+            {
+                double? x = _linearCalibrationCurve.GetX(y);
+                if (x < TurningPoint)
+                {
+                    return null;
+                }
+
+                return x;
+            }
+
+            public override double? GetXValueForLimitOfDetection(double? y)
+            {
+                return _linearCalibrationCurve.GetX(y);
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept)
+                    .ChangeTurningPoint(TurningPoint);
+            }
+
+            public override string ToString()
+            {
+                return _linearCalibrationCurve + string.Format(@"; x > {0}", TurningPoint);
+            }
+        }
+
+        public class Simple : CalibrationCurve
+        {
+            public Simple(double slope)
+            {
+                Slope = slope;
+            }
+
+            public double Slope { get; }
+            public override double? GetY(double? x)
+            {
+                return x * Slope;
+            }
+
+            public override double? GetX(double? y)
+            {
+                return y / Slope;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangePointCount(0);
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"y = {0}x", Slope);
+            }
+        }
+
+        public class Error : CalibrationCurve
+        {
+            public Error(string message)
+            {
+                ErrorMessage = message;
+            }
+
+            public string ErrorMessage { get; }
+            public override double? GetY(double? x)
+            {
+                return null;
+            }
+
+            public override double? GetX(double? y)
+            {
+                return null;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeErrorMessage(ErrorMessage);
+            }
+
+            public override string ToString()
+            {
+                return @"Error: " + ErrorMessage;
+            }
         }
     }
 }

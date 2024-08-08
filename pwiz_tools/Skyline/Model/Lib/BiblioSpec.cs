@@ -29,7 +29,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -40,7 +39,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".lib";
 
-        public static string FILTER_LIB { get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library, EXT); } }
+        public static string FILTER_LIB { get { return TextUtil.FileDialogFilterAll(LibResources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library, EXT); } }
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
@@ -64,6 +63,11 @@ namespace pwiz.Skyline.Model.Lib
             get { return RANK_IDS; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return LibResources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library;
+        }
+
         #region Implementation of IXmlSerializable
         
         /// <summary>
@@ -85,17 +89,15 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class BiblioSpecSpectrumHeaderInfo : SpectrumHeaderInfo
     {
         public BiblioSpecSpectrumHeaderInfo(string libraryName, int spectrumCount, double? score, string scoreType, string protein)
-            : base(libraryName)
+            : base(libraryName, score, scoreType)
         {
             SpectrumCount = spectrumCount;
-            Score = score;
-            ScoreType = scoreType;
             Protein = protein;
         }
 
+        public override string LibraryTypeName => @"BiblioSpec";
+
         public int SpectrumCount { get; private set; }
-        public double? Score { get; private set; }
-        public string ScoreType { get; private set; }
 
         public override float GetRankValue(PeptideRankId rankId)
         {
@@ -125,8 +127,6 @@ namespace pwiz.Skyline.Model.Lib
         private enum ATTR
         {
             count_measured,
-            score,
-            score_type
         }
 
         public static BiblioSpecSpectrumHeaderInfo Deserialize(XmlReader reader)
@@ -139,8 +139,6 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             SpectrumCount = reader.GetIntAttribute(ATTR.count_measured);
-            Score = reader.GetNullableDoubleAttribute(ATTR.score);
-            ScoreType = reader.GetAttribute(ATTR.score_type);
             // Consume tag
             reader.Read();
         }
@@ -150,11 +148,6 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.count_measured, SpectrumCount);
-            if (Score.HasValue)
-            {
-                writer.WriteAttribute(ATTR.score, Score.Value);
-                writer.WriteAttribute(ATTR.score_type, ScoreType);
-            }
         }
 
         #endregion
@@ -247,7 +240,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override LibraryFiles LibraryFiles
         {
-            get { return new LibraryFiles();  }
+            get { return LibraryFiles.EMPTY;  }
         }
 
         /// <summary>
@@ -336,7 +329,7 @@ namespace pwiz.Skyline.Model.Lib
         private bool Load(ILoadMonitor loader)
         {
             IProgressStatus status =
-                new ProgressStatus(string.Format(Resources.BiblioSpecLibrary_Load_Loading__0__library,
+                new ProgressStatus(string.Format(LibResources.BiblioSpecLibrary_Load_Loading__0__library,
                                                  Path.GetFileName(FilePath)));
             loader.UpdateProgress(status);
 
@@ -351,7 +344,7 @@ namespace pwiz.Skyline.Model.Lib
                 int countHeader = (int) LibHeaders.count*4;
                 byte[] libHeader = new byte[countHeader];
                 if (stream.Read(libHeader, 0, countHeader) != countHeader)
-                    throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_library_header_File_may_be_corrupted);
+                    throw new InvalidDataException(LibResources.BiblioSpecLibrary_Load_Data_truncation_in_library_header_File_may_be_corrupted);
                 lenRead += countHeader;
                 // Check the first byte of the primary version number to determine
                 // whether the format is little- or big-endian.  Little-endian will
@@ -391,7 +384,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Read spectrum header
                     int bytesRead = stream.Read(specHeader, 0, countHeader);
                     if (bytesRead != countHeader)
-                        throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted);
+                        throw new InvalidDataException(LibResources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted);
 
                     // If this is the first header, and the sequence length is zero,
                     // then this is a Linux format library.  Switch to linux format,
@@ -405,7 +398,7 @@ namespace pwiz.Skyline.Model.Lib
                         countHeader = (int)SpectrumHeadersLinux.count * 4;
                         bytesRead = stream.Read(specHeader, 0, countHeader);
                         if (bytesRead != countHeader)
-                            throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted);
+                            throw new InvalidDataException(LibResources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted);
                     }
 
                     lenRead += bytesRead;
@@ -414,7 +407,7 @@ namespace pwiz.Skyline.Model.Lib
                     
                     int charge = GetInt32(specHeader, (int)SpectrumHeaders.charge);
                     if (charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                        throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
+                        throw new InvalidDataException(LibResources.BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
 
                     int numPeaks = GetInt32(specHeader, (int)SpectrumHeaders.num_peaks);
                     int seqLength = GetInt32(specHeader, (_linuxFormat ?
@@ -425,7 +418,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Read sequence information
                     int countSeq = (seqLength + 1)*2;
                     if (stream.Read(specSequence, 0, countSeq) != countSeq)
-                        throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted);
+                        throw new InvalidDataException(LibResources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted);
 
                     lenRead += countSeq;
 
@@ -468,7 +461,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (Exception x)
             {
-                x = new Exception(string.Format(Resources.BiblioSpecLibrary_Load_Failed_loading_library__0__, FilePath), x);
+                x = new Exception(string.Format(LibResources.BiblioSpecLibrary_Load_Failed_loading_library__0__, FilePath), x);
                 loader.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
@@ -647,7 +640,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Single read to get all the peaks
                     if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
-                        throw new IOException(Resources.BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
+                        throw new IOException(LibResources.BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 catch (Exception)
                 {

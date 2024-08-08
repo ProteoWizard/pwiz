@@ -24,7 +24,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -95,13 +94,12 @@ namespace pwiz.SkylineTest
         public void ReporterIonTest()
         {
             // Test the code that updates old-style formulas
-            Assert.AreEqual("C5C'H13N2", BioMassCalc.AddH("C5C'H12N2"));
-            Assert.AreEqual("CO2H", BioMassCalc.AddH("CO2"));
+            Assert.AreEqual("C5C'H13N2", ParsedMolecule.Create("C5C'H12N2").AdjustElementCount("H",1).ToString());
+            Assert.AreEqual("CO2H", ParsedMolecule.Create("CO2").AdjustElementCount("H", 1).ToString());
 
             var docOriginal = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(instrument => instrument.ChangeMinMz(10)));  // H2O2 is not very heavy!
-            IdentityPath path;
             SrmDocument docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
-                true, IdentityPath.ROOT, out path);
+                true, IdentityPath.ROOT, out _);
             // One of the prolines should have caused an extra transition
             Assert.AreEqual(4, docPeptide.PeptideTransitionCount);
             Assert.IsTrue(docPeptide.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8));
@@ -190,9 +188,8 @@ namespace pwiz.SkylineTest
                       .ChangeFragmentRangeFirstName("ion 1")
                       .ChangeFragmentRangeLastName("last ion"));
             var docOriginal = new SrmDocument(settings);
-            IdentityPath path;
             var docPeptides = docOriginal.ImportFasta(new StringReader(">peptides\nESTIGNSAFELLLEVAK\nTVYHAGTK"),
-                true, IdentityPath.ROOT, out path);
+                true, IdentityPath.ROOT, out _);
             AssertEx.IsDocumentState(docPeptides, revisionIndex++, 1, 2, 2, 40);
             // Both precursors should contain 1 and 2 ions
             foreach (var nodeGroup in docPeptides.PeptideTransitionGroups)
@@ -239,16 +236,13 @@ namespace pwiz.SkylineTest
         public void TransitionLibrary07Test()
         {
             // Create a document with the necessary library spectrum
-            LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
-            int startRev;
             SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
                 ">peptide1\nLECTDTLPDILENR",
                 true,
                 TEXT_LIB_YEAST_NIST_PRECURSOR,
-                out libraryManager,
-                out docContainer,
-                out startRev);
+                out _,
+                out _,
+                out _);
 
             // Open up the transition filter settings before testing the precursor m/z window
             var settings = document.Settings
@@ -330,16 +324,13 @@ namespace pwiz.SkylineTest
         public void TransitionLibraryDIAPrecursorExclusionTest()
         {
             // Create a document with the necessary library spectrum
-            LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
-            int startRev;
             SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
                 ">peptide1\nLECTDTLPDILENR",
                 true,
                 TEXT_LIB_YEAST_NIST_PRECURSOR,
-                out libraryManager,
-                out docContainer,
-                out startRev);
+                out _,
+                out _,
+                out _);
 
             // Open up the transition filter settings and add a new isolation window scheme 
             List<IsolationWindow> isolationWindows = new List<IsolationWindow>();

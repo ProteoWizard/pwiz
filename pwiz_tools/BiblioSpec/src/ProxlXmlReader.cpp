@@ -37,6 +37,13 @@ ProxlXmlReader::ProxlXmlReader(BlibBuilder& maker, const char* filename, const P
     extensions_.push_back(".mz5"); // look for spec in mz5 files
     extensions_.push_back(".mzML"); // look for spec in mzML files
     extensions_.push_back(".mzXML"); // look for spec in mzXML files
+#ifdef VENDOR_READERS
+    extensions_.push_back(".raw"); // Waters/Thermo
+    extensions_.push_back(".wiff"); // Sciex
+    extensions_.push_back(".wiff2"); // Sciex
+    extensions_.push_back(".d"); // Bruker/Agilent
+    extensions_.push_back(".lcd"); // Shimadzu
+#endif
     extensions_.push_back(".ms2");
     extensions_.push_back(".cms2");
     extensions_.push_back(".bms2");
@@ -70,6 +77,9 @@ PSM_SCORE_TYPE ProxlXmlReader::analysisToScoreType(ANALYSIS analysisType) {
             return BYONIC_PEP;
         case PERCOLATOR_ANALYSIS:
             return PERCOLATOR_QVALUE;
+        case PLINK_ANALYIS:
+        case PEPTIDE_PROPHET_ANALYSIS:	
+            return GENERIC_QVALUE;
         default:
             return UNKNOWN_SCORE_TYPE;
     }
@@ -96,6 +106,12 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
                 analysisType_ = PERCOLATOR_ANALYSIS;
             else if (program == "byonic")
                 analysisType_ = BYONIC_ANALYSIS;
+            else if (program == "plink")
+                analysisType_ = PLINK_ANALYIS;
+            else if (program == "merox")
+                analysisType_ = MEROX_ANALYSIS;
+            else if (program == "peptideprophet")
+                analysisType_ = PEPTIDE_PROPHET_ANALYSIS;
         }
         break;
     case REPORTED_PEPTIDES_STATE:
@@ -116,7 +132,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         break;
     case REPORTED_PEPTIDE_STATE:
         if (analysisType_ == UNKNOWN_ANALYSIS)
-            throw runtime_error("only Byonic or Percolator ProxlXML files are supported; "
+            throw runtime_error("only Byonic, MeroX, Peptide Prophet, Percolator, and pLink ProxlXML files are supported; "
                                 "cannot handle search program: " + bal::join(searchPrograms_, ", "));
         if (isScoreLookup_)
             throw SAXHandler::EndEarlyException();
@@ -182,7 +198,10 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             string program = bal::to_lower_copy(string(getRequiredAttrValue("search_program", attr)));
             string score = bal::to_lower_copy(string(getRequiredAttrValue("annotation_name", attr)));
             if (analysisType_ == PERCOLATOR_ANALYSIS && score == "q-value" ||
-                analysisType_ == BYONIC_ANALYSIS && score == "peptide abslogprob2d") {
+                analysisType_ == BYONIC_ANALYSIS && score == "peptide abslogprob2d" ||
+                analysisType_ == PLINK_ANALYIS && score == "score" ||
+                analysisType_ == MEROX_ANALYSIS && score == "qvalue" ||
+                analysisType_ == PEPTIDE_PROPHET_ANALYSIS && score == "pprophet fdr") {
                 curProxlPsm_->score = getDoubleRequiredAttrValue("value", attr);
             }
 
@@ -290,9 +309,27 @@ double ProxlXmlReader::calcMass(const string& sequence, const vector<SeqMod>& mo
     return sum;
 }
 
+double ProxlXmlReader::getScoreThreshold()
+{
+    switch (analysisType_)
+    {
+        case BYONIC_ANALYSIS: 
+            return blibMaker_.getScoreThreshold(BYONIC);
+        case PERCOLATOR_ANALYSIS: 
+        case PLINK_ANALYIS:
+        case MEROX_ANALYSIS:
+        case PEPTIDE_PROPHET_ANALYSIS:	
+            return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
+
+        default:
+            throw runtime_error("no case for analysisType_: " + lexical_cast<string>((int) analysisType_));
+    }
+}
+
 void ProxlXmlReader::calcPsms() {
     boost::format modSeqCrosslinkFormat("%s-%s-[%+.4f@%d,%d]");
     boost::format modSeqLooplinkFormat("%s-[%+.4f@%d-%d]");
+    double scoreThreshold = getScoreThreshold();
 
     for (auto& match : proxlMatches_) {
         for (auto& peptide : match.peptides_)
@@ -305,7 +342,7 @@ void ProxlXmlReader::calcPsms() {
                 lookup = fileToPsms_.find(psmPair.first);
             }
             for (auto& proxlPsm : psmPair.second) {
-                if (proxlPsm->score <= getScoreThreshold(SQT)) {
+                if (proxlPsm->score <= scoreThreshold) {
                     switch (match.linkType_)
                     {
                         case LinkType::Unlinked:
@@ -370,6 +407,8 @@ void ProxlXmlReader::calcPsms() {
                             break;
                     }
                 }
+                else
+                    ++filteredOutPsmCount_;
                 delete proxlPsm;
             }
         }

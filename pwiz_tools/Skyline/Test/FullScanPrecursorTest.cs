@@ -36,14 +36,14 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void FullScanPrecursorTransitionsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\FullScanPrecursor.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"Test\FullScanPrecursor.zip");
 
-            string docPath = testFilesDir.GetTestPath("FullScanPrecursor.sky");
+            string docPath = TestFilesDir.GetTestPath("FullScanPrecursor.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, 0, 1, 4, 5, 52);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
-                var mitoLibSpec = new BiblioSpecLiteSpec("mito2", testFilesDir.GetTestPath("mito2.blib"));
+                var mitoLibSpec = new BiblioSpecLiteSpec("mito2", TestFilesDir.GetTestPath("mito2.blib"));
                 doc = docContainer.ChangeLibSpecs(new[] { mitoLibSpec });
                 Assert.IsTrue(doc.IsLoaded);
 
@@ -87,7 +87,6 @@ namespace pwiz.SkylineTest
                 // Release the library stream, and dispose of the directory
                 docContainer.ChangeLibSpecs(new LibrarySpec[0]);
             }
-            testFilesDir.Dispose();
         }
     }
 }

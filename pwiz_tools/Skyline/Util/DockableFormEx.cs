@@ -20,7 +20,7 @@
 using System;
 using System.ComponentModel;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
@@ -90,12 +90,6 @@ namespace pwiz.Skyline.Util
         protected override bool ShowWithoutActivation
         {
             get { return Program.FunctionalTest || Program.SkylineOffscreen; }
-        }
-
-        public void CheckDisposed()
-        {
-            if (IsDisposed)
-                throw new ObjectDisposedException(@"Form disposed");
         }
     }
 }

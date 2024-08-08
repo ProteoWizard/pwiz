@@ -72,14 +72,12 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            using (var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog())
             {
-                Title = Resources.MProphetFeaturesDlg_OkDialog_Export_mProphet_Features,
-                OverwritePrompt = true,
-                DefaultExt = EXT,
-                Filter = TextUtil.FileDialogFilterAll(Resources.MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files, EXT),
-            })
-            {
+                dlg.Title = FileUIResources.MProphetFeaturesDlg_OkDialog_Export_mProphet_Features;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = EXT;
+                dlg.Filter = TextUtil.FileDialogFilterAll(FileUIResources.MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files, EXT);
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                 {
                     dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
@@ -95,16 +93,14 @@ namespace pwiz.Skyline.FileUI
                 var mProphetScoringModel = currentPeakScoringModel as MProphetPeakScoringModel;
 //                if (mProphetScoringModel == null)
 //                {
-//                    MessageDlg.Show(this, Resources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
+//                    MessageDlg.Show(this, FileUIResources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
 //                    return;
 //                }
                 var resultsHandler = new MProphetResultsHandler(Document, mProphetScoringModel);
 
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files,
-                })
-                {
+                    longWaitDlg.Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files;
                     try
                     {
                         longWaitDlg.PerformWork(this, 1000, b =>
@@ -120,7 +116,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(string.Format(Resources.MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__, dlg.FileName),
+                        var message = TextUtil.LineSeparate(string.Format(FileUIResources.MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__, dlg.FileName),
                                                                           x.Message);
                         MessageDlg.ShowWithException(this, message, x);
                     }

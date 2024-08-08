@@ -40,7 +40,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -65,13 +64,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // Mzml is faster for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies1-2_6.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies-21_2.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies1.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/GroupedStudies1Mzml.zip",
+                    ? @"https://skyline.ms/tutorials/GroupedStudies1.zip"
+                    : @"https://skyline.ms/tutorials/GroupedStudies1Mzml.zip",
                 @"TestTutorial\GroupedStudies1Views.zip"
             };
             RunFunctionalTest();
@@ -1287,9 +1286,8 @@ namespace pwiz.SkylineTestTutorial
         private static int GetChromIndex(string name)
         {
             int index;
-            ChromatogramSet chromatogramSet;
             Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(name,
-                out chromatogramSet, out index));
+                out _, out index));
             return index;
         }
 
@@ -1347,7 +1345,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
                 editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
                 Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
-                editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem = NormalizationMethod.GLOBAL_STANDARDS;
+                editGroupComparisonDlg.NormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
             });

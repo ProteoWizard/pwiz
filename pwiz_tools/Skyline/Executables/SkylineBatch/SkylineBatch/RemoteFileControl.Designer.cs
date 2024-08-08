@@ -33,6 +33,7 @@
             this.textRelativePath = new System.Windows.Forms.TextBox();
             this.comboRemoteFileSource = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.btnOpenFromPanorama = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label2
@@ -58,12 +59,22 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // btnOpenFromPanorama
+            // 
+            resources.ApplyResources(this.btnOpenFromPanorama, "btnOpenFromPanorama");
+            this.btnOpenFromPanorama.BackColor = System.Drawing.Color.Transparent;
+            this.btnOpenFromPanorama.Image = global::SkylineBatch.Properties.Resources.Panorama;
+            this.btnOpenFromPanorama.Name = "btnOpenFromPanorama";
+            this.btnOpenFromPanorama.UseVisualStyleBackColor = false;
+            this.btnOpenFromPanorama.Click += new System.EventHandler(this.btnOpenFromPanorama_Click);
+            // 
             // RemoteFileControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.btnOpenFromPanorama);
             this.Controls.Add(this.textRelativePath);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.comboRemoteFileSource);
             this.Controls.Add(this.label1);
             this.Name = "RemoteFileControl";
@@ -77,5 +88,6 @@
         public System.Windows.Forms.TextBox textRelativePath;
         public System.Windows.Forms.ComboBox comboRemoteFileSource;
         private System.Windows.Forms.Label label1;
+        public System.Windows.Forms.Button btnOpenFromPanorama;
     }
 }

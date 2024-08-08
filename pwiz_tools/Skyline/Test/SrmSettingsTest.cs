@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -1108,7 +1109,7 @@ namespace pwiz.SkylineTest
 
         TransitionIonMobilityFiltering CheckIonMobilitySettingsBackwardCompatibility(string xml, string expectError = null)
         {
-            var testFilesDir = TestContext.GetTestPath(string.Empty);
+            var testFilesDir = TestContext.GetTestResultsPath(string.Empty);
 
             if (expectError != null)
             {
@@ -1149,18 +1150,20 @@ namespace pwiz.SkylineTest
                                                         "    <peptide_settings>\n" +
                                                         "      <protein_association min_peptides_per_protein=\"0\" " +
                                                         "group_proteins=\"true\" " +
+                                                        "gene_level_parsimony=\"true\" " +
                                                         "find_minimal_protein_list=\"true\" " +
                                                         "remove_subset_proteins=\"true\" " +
                                                         "shared_peptides=\"AssignedToBestProtein\" />\n" +
                                                         "    </peptide_settings>\n" +
                                                         "  </settings_summary>\n" +
                                                         "</srm_settings>";
-            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.PROTEIN_GROUPS);
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.CURRENT);
 
             var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
             var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
             Assert.AreEqual(0, parsimonySettings.MinPeptidesPerProtein);
             Assert.AreEqual(true, parsimonySettings.GroupProteins);
+            Assert.AreEqual(true, parsimonySettings.GeneLevelParsimony);
             Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
             Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
@@ -1185,9 +1188,12 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Test serialization of ion mobility data
         /// </summary>
-        [TestMethod, NoParallelTesting]
+        [TestMethod]
         public void SerializeIonMobilityTest()
         {
+            // Make sure any generated .imsdb files are not in exe's directory - that interferes with parallel tests
+            TestContext.EnsureTestResultsDir();
+            using var d = new CurrentDirectorySetter(TestContext.GetTestResultsPath());
 
             // Check using drift time predictor without measured drift times (this never was exposed in production, so just testing ability to ignore it in test docs)
             const string predictorV19 = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
@@ -1196,7 +1202,7 @@ namespace pwiz.SkylineTest
 
             var pred = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test\" resolving_power=\"100\"></predict_drift_time>");
             var libFileName = "test"+IonMobilityDb.EXT;
-            Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.FilePath);
+            Assert.AreEqual(TestContext.GetTestResultsPath(libFileName), pred.IonMobilityLibrary.FilePath);
             Assert.AreEqual("test", pred.IonMobilityLibrary.Name);
             Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
             Assert.AreEqual(0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
@@ -1258,6 +1264,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("20", "-1"),Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            // ReSharper disable once PossibleLossOfFraction
             Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
 
             // Test ability to roundtrip to older doc formats
@@ -1265,10 +1272,12 @@ namespace pwiz.SkylineTest
             var settings = AssertEx.Deserialize<SrmSettings>(xml);
             var save = AuditLogList.IgnoreTestChecks;
             AuditLogList.IgnoreTestChecks = true;
-            var tmpFile19 = "V19_1.sky";
-            var tmpFileCurrent = "V20_13.sky";
+            var tmpFile19 = TestContext.GetTestResultsPath("V19_1.sky");
+            var tmpFileCurrent = TestContext.GetTestResultsPath("V20_13.sky");
             var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
-            var testPath = TestContext.TestDir;
+            var testPath = TestContext.GetTestResultsPath();
+            if (!File.Exists(testPath))
+                Directory.CreateDirectory(testPath);
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.V19_1); // Round trip with IMS info in peptide settings
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.CURRENT); // Round trip with IMS info in transition settings
             oldDoc.SerializeToFile(tmpFile19, tmpFile19, SkylineVersion.V19_1, null);
@@ -1285,7 +1294,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(newDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
             Assert.AreEqual(currentDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
             AuditLogList.IgnoreTestChecks = save;
-
         }
 
         private const string VALID_ISOTOPE_ENRICHMENT_XML =

@@ -215,7 +215,7 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet::SpectrumList_FilterPre
 PWIZ_API_DECL tribool SpectrumList_FilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
     int scanNumber = 0;
-    if (bal::starts_with(spectrumIdentity.id, "scan="))
+    if (bal::contains(spectrumIdentity.id, "scan="))
         scanNumber = id::valueAs<int>(spectrumIdentity.id, "scan");
     else if (bal::starts_with(spectrumIdentity.id, "index=")) 
         scanNumber = id::valueAs<int>(spectrumIdentity.id, "index");
@@ -462,7 +462,7 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_DefaultArrayLen
 //
 
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_ActivationType(const set<CVID> cvFilterItems_, bool hasNoneOf_)
+PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_ActivationType(const set<CVID>& cvFilterItems_, bool hasNoneOf_)
 : hasNoneOf(hasNoneOf_)
 {
     BOOST_FOREACH(const CVID cvid, cvFilterItems_)
@@ -515,7 +515,7 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ActivationType:
 //
 
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(const set<CVID> cvFilterItems_, const util::IntegerSet& msLevelSet)
+PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(const set<CVID>& cvFilterItems_, const util::IntegerSet& msLevelSet)
     : msLevelSet(msLevelSet)
 {
     BOOST_FOREACH(const CVID cvid, cvFilterItems_)
@@ -594,7 +594,7 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_Polarity::accep
 // SpectrumList_FilterPredicate_MzPresent
 //
 
-SpectrumList_FilterPredicate_MzPresent::SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, std::set<double> mzSet, ThresholdFilter tf, FilterMode mode) : mzt_(mzt), mzSet_(mzSet), tf_(tf), mode_(mode) {}
+SpectrumList_FilterPredicate_MzPresent::SpectrumList_FilterPredicate_MzPresent(const chemistry::MZTolerance& mzt, const std::set<double>& mzSet, ThresholdFilter tf, FilterMode mode) : mzt_(mzt), mzSet_(mzSet), tf_(tf), mode_(mode) {}
 
 boost::logic::tribool SpectrumList_FilterPredicate_MzPresent::accept(const msdata::Spectrum& spectrum) const
 {

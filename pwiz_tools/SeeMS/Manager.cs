@@ -66,8 +66,6 @@ namespace seems
 			this.source = source;
 
             chromatogramListForm = new ChromatogramListForm();
-            chromatogramListForm.Text = source.Name + " chromatograms";
-            chromatogramListForm.TabText = source.Name + " chromatograms";
             chromatogramListForm.ShowIcon = false;
 
             CVID nativeIdFormat = CVID.MS_scan_number_only_nativeID_format;
@@ -79,9 +77,9 @@ namespace seems
                     break;
             }
             spectrumListForm = new SpectrumListForm( nativeIdFormat );
-            spectrumListForm.Text = source.Name + " spectra";
-            spectrumListForm.TabText = source.Name + " spectra";
             spectrumListForm.ShowIcon = false;
+
+            RenameSource(source.Name);
 
             spectrumDataProcessing = new DataProcessing();
             //chromatogramDataProcessing = new DataProcessing();
@@ -102,6 +100,15 @@ namespace seems
 
 		//private GraphInfoMap graphInfoMap;
 		//public GraphInfoMap GraphInfoMap { get { return graphInfoMap; } }
+
+        public void RenameSource(string name)
+        {
+            source.Name = name;
+            chromatogramListForm.Text = source.Name + " chromatograms";
+            chromatogramListForm.TabText = source.Name + " chromatograms";
+            spectrumListForm.Text = source.Name + " spectra";
+            spectrumListForm.TabText = source.Name + " spectra";
+        }
 
         public Chromatogram GetChromatogram( int index )
         { return GetChromatogram( index, source.MSDataFile.run.chromatogramList ); }
@@ -323,6 +330,10 @@ namespace seems
                     var newSource = new ManagedDataSource(new SpectrumSource(msDataRunPath));
                     dataSourceMap.Add(filepath, newSource);
 
+                    UniqifySourceNames();
+                    foreach (var form in CurrentGraphFormList)
+                        form.SetPaneNames();
+
                     if (spectrumListFilters.Length > 0)
                         SpectrumListFactory.wrap(newSource.Source.MSDataFile, spectrumListFilterList);
 
@@ -424,9 +435,53 @@ namespace seems
                 OnLoadDataSourceProgress("Failed to load data: " + ex.Message, 100);
 			    return false;
 			}
-		}
+        }
 
-		public GraphForm CreateGraph()
+        private void UniqifySourceNames()
+        {
+            if (dataSourceMap.Count == 1)
+                return;
+
+            // for each name that isn't unique, first try making unique by filename without ext, then by filename, then by filepath
+            var sourcesGroupedByName = dataSourceMap.GroupBy(kvp => kvp.Value.Source.MSDataFile.run.id, kvp => kvp.Value).ToList();
+            foreach (var nameGroup in sourcesGroupedByName)
+            {
+                if (nameGroup.Count() == 1)
+                    continue;
+
+                var sourcesGroupedByFilenameWithoutExt = nameGroup.GroupBy(g => Path.GetFileNameWithoutExtension(g.Source.CurrentFilepath));
+                foreach (var filenameWithoutExtGroup in sourcesGroupedByFilenameWithoutExt)
+                {
+                    if (filenameWithoutExtGroup.Count() == 1)
+                    {
+                        filenameWithoutExtGroup.First().RenameSource(filenameWithoutExtGroup.Key);
+                    }
+                    else
+                    {
+                        var sourcesGroupedByFilename = filenameWithoutExtGroup.GroupBy(g => Path.GetFileName(g.Source.CurrentFilepath));
+                        foreach (var filenameGroup in sourcesGroupedByFilename)
+                        {
+                            if (filenameGroup.Count() == 1)
+                            {
+                                filenameGroup.First().RenameSource(filenameGroup.Key);
+                            }
+                            else
+                            {
+                                var sourcesGroupedByFilepath = filenameGroup.GroupBy(g => g.Source.CurrentFilepath);
+                                foreach (var filepathGroup in sourcesGroupedByFilepath)
+                                {
+                                    if (filepathGroup.Count() > 1)
+                                        throw new InvalidOperationException("should not be possible");
+                                    filepathGroup.First().RenameSource(filepathGroup.Key);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public GraphForm CreateGraph()
 		{
 			GraphForm graphForm = new GraphForm(this);
             graphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( graphForm_PreviewKeyDown );

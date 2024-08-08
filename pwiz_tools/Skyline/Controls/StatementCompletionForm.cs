@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -154,7 +153,7 @@ namespace pwiz.Skyline.Controls
         private void DrawWithHighlighting(String description, String textToHighlight, Graphics graphics,
             Rectangle descriptionBounds, Color textColor, Color backColor)
         {
-            var findMatch = new FindMatch(description);
+            var findMatch = new FindMatch(Bookmark.ROOT, description);
             int ichHighlightBegin = description.ToLower().IndexOf(textToHighlight.ToLower(), StringComparison.Ordinal);
             // A very short search only matches at the front of a word
             if ((textToHighlight.Length < ProteinMatchQuery.MIN_FREE_SEARCH_LENGTH) && (ichHighlightBegin > 0))
@@ -291,7 +290,7 @@ namespace pwiz.Skyline.Controls
             if (listViewItem.SubItems.Count != 1)
             {
                 throw new InvalidOperationException(
-                    Resources.StatementCompletionForm_AddDescription_List_view_item_already_has_a_description);
+                    ControlsResources.StatementCompletionForm_AddDescription_List_view_item_already_has_a_description);
             }
             listViewItem.SubItems.Add(new ListViewItem.ListViewSubItem(listViewItem, description)
                                           {

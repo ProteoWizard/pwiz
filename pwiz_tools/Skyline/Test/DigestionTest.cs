@@ -34,8 +34,8 @@ namespace pwiz.SkylineTest
         public void TestTooManyProteinMatches()
         {
             int proteinCount = 30000;
-            Directory.CreateDirectory(TestContext.TestDir);
-            var proteomeDbPath = Path.Combine(TestContext.TestDir, "manySimilarProteins.protdb");
+            Directory.CreateDirectory(TestContext.GetTestResultsPath());
+            var proteomeDbPath = TestContext.GetTestResultsPath("manySimilarProteins.protdb");
             var proteomeDb = ProteomeDb.CreateProteomeDb(proteomeDbPath);
             StringWriter repetitiveFastaFile = new StringWriter();
             WriteRepetitiveFastaFile(repetitiveFastaFile, "ELVISLIVES", proteinCount);

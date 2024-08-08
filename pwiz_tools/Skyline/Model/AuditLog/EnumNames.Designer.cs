@@ -871,6 +871,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string MsLevelOption_ {
+            get {
+                return ResourceManager.GetString("MsLevelOption_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        public static string MsLevelOption_1 {
+            get {
+                return ResourceManager.GetString("MsLevelOption_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2.
+        /// </summary>
+        public static string MsLevelOption_2 {
+            get {
+                return ResourceManager.GetString("MsLevelOption_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string MsLevelOption_default {
+            get {
+                return ResourceManager.GetString("MsLevelOption_default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (m/z &gt; precursor) - 1.
         /// </summary>
         public static string MzFragmentFinder__m_z__gt__precursor___minus__1 {
@@ -1285,6 +1321,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Matching.
+        /// </summary>
+        public static string RelativeRT_Matching {
+            get {
+                return ResourceManager.GetString("RelativeRT_Matching", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overlapping.
+        /// </summary>
+        public static string RelativeRT_Overlapping {
+            get {
+                return ResourceManager.GetString("RelativeRT_Overlapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preceding.
+        /// </summary>
+        public static string RelativeRT_Preceding {
+            get {
+                return ResourceManager.GetString("RelativeRT_Preceding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string RelativeRT_Unknown {
+            get {
+                return ResourceManager.GetString("RelativeRT_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use only scans within time frame of MS/MS IDs.
         /// </summary>
         public static string RetentionTimeFilterType_ms2_ids {
@@ -1362,6 +1434,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SampleType_unknown {
             get {
                 return ResourceManager.GetString("SampleType_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklör.
+        /// </summary>
+        public static string SearchEngine_Hardklor {
+            get {
+                return ResourceManager.GetString("SearchEngine_Hardklor", resourceCulture);
             }
         }
         
@@ -1465,6 +1546,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assigned to the gene with the most peptides.
+        /// </summary>
+        public static string SharedPeptidesGene_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the first gene.
+        /// </summary>
+        public static string SharedPeptidesGene_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between genes.
+        /// </summary>
+        public static string SharedPeptidesGene_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single gene).
+        /// </summary>
+        public static string SharedPeptidesGene_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_Removed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assigned to the protein group with the most peptides.
         /// </summary>
         public static string SharedPeptidesGroup_AssignedToBestProtein {
@@ -1497,6 +1614,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SharedPeptidesGroup_Removed {
             get {
                 return ResourceManager.GetString("SharedPeptidesGroup_Removed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Equalize Medians.
+        /// </summary>
+        public static string Simple_equalize_medians {
+            get {
+                return ResourceManager.GetString("Simple_equalize_medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Global Standards.
+        /// </summary>
+        public static string Simple_global_standards {
+            get {
+                return ResourceManager.GetString("Simple_global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Simple_none {
+            get {
+                return ResourceManager.GetString("Simple_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantile.
+        /// </summary>
+        public static string Simple_quantile {
+            get {
+                return ResourceManager.GetString("Simple_quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Heavy.
+        /// </summary>
+        public static string Simple_ratio_to_heavy {
+            get {
+                return ResourceManager.GetString("Simple_ratio_to_heavy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Light.
+        /// </summary>
+        public static string Simple_ratio_to_light {
+            get {
+                return ResourceManager.GetString("Simple_ratio_to_light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current.
+        /// </summary>
+        public static string Simple_tic {
+            get {
+                return ResourceManager.GetString("Simple_tic", resourceCulture);
             }
         }
         
@@ -1569,6 +1749,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SingletonNormalizationMethod_tic {
             get {
                 return ResourceManager.GetString("SingletonNormalizationMethod_tic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration Curve.
+        /// </summary>
+        public static string Special_calibrated {
+            get {
+                return ResourceManager.GetString("Special_calibrated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default Normalization Method.
+        /// </summary>
+        public static string Special_default {
+            get {
+                return ResourceManager.GetString("Special_default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum.
+        /// </summary>
+        public static string Special_maximum {
+            get {
+                return ResourceManager.GetString("Special_maximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        public static string Special_total {
+            get {
+                return ResourceManager.GetString("Special_total", resourceCulture);
             }
         }
         
@@ -1668,6 +1884,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string Workflow_dia {
             get {
                 return ResourceManager.GetString("Workflow_dia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature Detection.
+        /// </summary>
+        public static string Workflow_feature_detection {
+            get {
+                return ResourceManager.GetString("Workflow_feature_detection", resourceCulture);
             }
         }
         

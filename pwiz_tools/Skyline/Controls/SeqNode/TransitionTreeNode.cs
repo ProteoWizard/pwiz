@@ -32,11 +32,11 @@ namespace pwiz.Skyline.Controls.SeqNode
     {
         public static string TITLE
         {
-            get { return Resources.TransitionTreeNode_Title; }
+            get { return SeqNodeResources.TransitionTreeNode_Title; }
         }
         public static string TITLES
         {
-            get { return Resources.TransitionTreeNode_Titles; }
+            get { return SeqNodeResources.TransitionTreeNode_Titles; }
         }
 
         public static TransitionTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return Resources.TransitionTreeNode_Title; }
+            get { return SeqNodeResources.TransitionTreeNode_Title; }
         }
 
         protected override void OnModelChanged()
@@ -181,14 +181,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (!string.IsNullOrEmpty(tran.CustomIon.Name))
                     labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
-                else if (!string.IsNullOrEmpty(tran.CustomIon.Formula))
-                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer;
+                else if (tran.CustomIon.HasChemicalFormula)
+                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer; // Show formula (e.g. C12H5 or maybe C12H5[-1.2/1.21]
                 else
-                    labelPrefix = string.Empty;
+                    labelPrefix = string.Empty; // Just show the mass
             }
             else
             {
-                labelPrefix = string.Format(Resources.TransitionTreeNode_GetLabel__0__1__, tran.AA, nodeTran.FragmentIonName) + labelPrefixSpacer;
+                labelPrefix = string.Format(SeqNodeResources.TransitionTreeNode_GetLabel__0__1__, tran.AA, nodeTran.FragmentIonName) + labelPrefixSpacer;
             }
 
             if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             
             string rank = nodeTran.HasDistInfo
-                              ? string.Format(Resources.TransitionTreeNode_GetLabel_irank__0__, nodeTran.IsotopeDistInfo.Rank)
+                              ? string.Format(SeqNodeResources.TransitionTreeNode_GetLabel_irank__0__, nodeTran.IsotopeDistInfo.Rank)
                               : string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, nodeTran.LibInfo.Rank);
 
             return string.Format(@"{0}{1}{2} ({3}){4}",
@@ -241,37 +241,37 @@ namespace pwiz.Skyline.Controls.SeqNode
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
+                table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, FormatAdductTip(nodeTran.Transition.Adduct), rt);
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Product_m_z, string.Format(@"{0:F04}", nodeTran.Mz), rt);
+                table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Product_m_z, string.Format(@"{0:F04}", nodeTran.Mz), rt);
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
 
                 if (nodeTran.HasLoss)
                 {
                     // If there is only one loss, show its full description
                     var losses = nodeTran.Losses;
                     if (losses.Losses.Count == 1)
-                        table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Loss, losses.ToStrings()[0], rt);
+                        table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Loss, losses.ToStrings()[0], rt);
                     // Otherwise, just show the total mass for multiple losses
                     // followed by individual losses
                     else
                     {
-                        table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Loss, string.Format(@"{0:F04}", losses.Mass), rt);
-                        table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Losses, TextUtil.LineSeparate(losses.ToStrings()), rt);
+                        table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Loss, string.Format(@"{0:F04}", losses.Mass), rt);
+                        table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Losses, TextUtil.LineSeparate(losses.ToStrings()), rt);
                     }
                 }
                 if (nodeTran.HasLibInfo)
                 {
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_rank, nodeTran.LibInfo.Rank.ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Library_rank, nodeTran.LibInfo.Rank.ToString(LocalizationHelper.CurrentCulture), rt);
                     float intensity = nodeTran.LibInfo.Intensity;
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
+                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
-                if (nodeTran.Transition.IsCustom() && !string.IsNullOrEmpty(nodeTran.Transition.CustomIon.Formula))
+                if (nodeTran.Transition.IsCustom() && nodeTran.Transition.CustomIon.ParsedMolecule.HasChemicalFormula)
                 {
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                 }
 
                 SizeF size = table.CalcDimensions(g);

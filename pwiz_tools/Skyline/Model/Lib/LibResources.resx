@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="BiblioSpecLibrary_Load_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
+    <value>Data truncation in library header. File may be corrupted.</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted" xml:space="preserve">
+    <value>Data truncation in spectrum header. File may be corrupted.</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted" xml:space="preserve">
+    <value>Data truncation in spectrum sequence. File may be corrupted.</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
+    <value>Failed loading library '{0}'.</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
+    <value>Invalid precursor charge found. File may be corrupted.</value>
+  </data>
+  <data name="BiblioSpecLibrary_Load_Loading__0__library" xml:space="preserve">
+    <value>Loading {0} library</value>
+  </data>
+  <data name="BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
+    <value>Failure trying to read peaks</value>
+  </data>
+  <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library" xml:space="preserve">
+    <value>Legacy BiblioSpec Library</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Building__0__library" xml:space="preserve">
+    <value>Building {0} library</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__" xml:space="preserve">
+    <value>Failed trying to build the library {0}.</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__" xml:space="preserve">
+    <value>Failed trying to build the redundant library {0}.</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library" xml:space="preserve">
+    <value>Preparing to build library</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
+    <value>Aligning library retention times</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__" xml:space="preserve">
+    <value>Failed reading library header for {0}.</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__" xml:space="preserve">
+    <value>Unable to get a valid count of spectra in the library {0}</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_" xml:space="preserve">
+    <value>Failed attempting to filter redundant library {0} to {1}</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_" xml:space="preserve">
+    <value>Removing library runs from document library.</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library" xml:space="preserve">
+    <value>Building binary cache for {0} library</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist" xml:space="preserve">
+    <value>The redundant library {0} does not exist.</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__" xml:space="preserve">
+    <value>Unable to get a valid count of all spectra in the library {0}</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library" xml:space="preserve">
+    <value>BiblioSpec Library</value>
+  </data>
+  <data name="BiblioSpecLiteLibraryLoadLoading__0__library" xml:space="preserve">
+    <value>Loading {0} library,</value>
+  </data>
+  <data name="BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library" xml:space="preserve">
+    <value>BiblioSpec Library</value>
+  </data>
+  <data name="CachedLibrary_LoadSpectrum_Library_entry_not_found__0__" xml:space="preserve">
+    <value>Library entry not found {0}.</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" xml:space="preserve">
+    <value>Converting FASTA to Koina input</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library" xml:space="preserve">
+    <value>Converting Koina output to EncyclopeDIA library</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
+    <value>Waiting for chromatogram library</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
+    <value>Generating chromatogram library ({0} of {1}): {2}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2" xml:space="preserve">
+    <value>Generating quantification library ({0} of {1}): {2}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML" xml:space="preserve">
+    <value>Converting DIA data to mzML</value>
+  </data>
+  <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
+    <value>EncyclopeDIA Libraries</value>
+  </data>
+  <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
+    <value>EncyclopeDIA Library</value>
+  </data>
+  <data name="FastaToKoina_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
+    <value>unsupported enzyme '{0}'; allowed values are: {1}</value>
+  </data>
+  <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
+    <value>Data truncation in library header. File may be corrupted.</value>
+  </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+    <value>Ignore explicit peak boundaries</value>
+  </data>
+  <data name="LibrarySpec_PEP_RANK_COPIES_Spectrum_count" xml:space="preserve">
+    <value>Spectrum count</value>
+  </data>
+  <data name="LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity" xml:space="preserve">
+    <value>Picked intensity</value>
+  </data>
+  <data name="LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity" xml:space="preserve">
+    <value>Total intensity</value>
+  </data>
+  <data name="LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_" xml:space="preserve">
+    <value>Document library specs cannot be persisted to XML.</value>
+  </data>
+  <data name="LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML" xml:space="preserve">
+    <value>Document local library specs cannot be persisted to XML.</value>
+  </data>
+  <data name="NistLibrary_SpecFilter_NIST_Spectral_Library" xml:space="preserve">
+    <value>NIST Spectral Library</value>
+  </data>
+    <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
+    <value>Could not read the precursor m/z value "{0}"</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__" xml:space="preserve">
+    <value>Could not read the precursor CCS value "{0}"</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__" xml:space="preserve">
+    <value>Invalid format at peak {0} for {1}.</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_molecule_adduct" xml:space="preserve">
+    <value>molecule+adduct</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__" xml:space="preserve">
+    <value>No peaks found for peptide {0}.</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__" xml:space="preserve">
+    <value>Peak count for MS/MS spectrum exceeds maximum {0}.</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_peptide_charge" xml:space="preserve">
+    <value>peptide+charge</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Unexpected_end_of_file" xml:space="preserve">
+    <value>Unexpected end of file.</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__" xml:space="preserve">
+    <value>Unexpected end of file in peaks for {0}.</value>
+  </data>
+  <data name="NistLibraryBase_Load_Building_binary_cache_for__0__library" xml:space="preserve">
+    <value>Building binary cache for {0} library</value>
+  </data>
+  <data name="NistLibraryBase_Load_Failed_loading_library__0__" xml:space="preserve">
+    <value>Failed loading library '{0}'.</value>
+  </data>
+  <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
+    <value>Invalid precursor charge found. File may be corrupted.</value>
+  </data>
+  <data name="NistLibraryBase_Load_Loading__0__library" xml:space="preserve">
+    <value>Loading {0} library</value>
+  </data>
+  <data name="NistLibraryBase_Load_The_file___0___is_not_a_valid_library_" xml:space="preserve">
+    <value>The file '{0}' is not a valid library.</value>
+  </data>
+  <data name="NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
+    <value>Failure trying to read peaks</value>
+  </data>
+  <data name="NistLibraryBase_ThrowIOException__0__line__1__2__" xml:space="preserve">
+    <value>{0} (line {1}): {2}</value>
+    <comment>FilePath (line #): message</comment>
+  </data>
+  <data name="NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio" xml:space="preserve">
+    <value>TFRatio</value>
+  </data>
+  <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
+    <value>An EncyclopeDIA task failed.</value>
+  </data>
+  <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
+    <value>Demultiplexing spectra: {0}/{1}</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
+    <value>Average mass</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass" xml:space="preserve">
+    <value>Monoisotopic mass</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
+    <value>A molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc)</value>
+  </data>
+  <data name="SpectrastLibrary_SpecFilter_SpectraST_Library" xml:space="preserve">
+    <value>SpectraST Library</value>
+  </data>
+  <data name="SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__" xml:space="preserve">
+    <value>Two incompatible transition groups for sequence {0}, precursor m/z {1}.</value>
+  </data>
+  <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
+    <value>Library spectrum for sequence {0} is missing.</value>
+  </data>
+  <data name="XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
+    <value>Data truncation in library header. File may be corrupted.</value>
+  </data>
+  <data name="XHunterLibrary_Load_Building_binary_cache_for__0__library" xml:space="preserve">
+    <value>Building binary cache for {0} library</value>
+  </data>
+  <data name="XHunterLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
+    <value>Failed loading library '{0}'.</value>
+  </data>
+  <data name="XHunterLibrary_Load_Loading__0__library" xml:space="preserve">
+    <value>Loading {0} library</value>
+  </data>
+  <data name="XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
+    <value>Failure trying to read peaks</value>
+  </data>
+  <data name="XHunterLibrary_SpecFilter_GPM_Spectral_Library" xml:space="preserve">
+    <value>GPM Spectral Library</value>
+  </data>
+  <data name="XHunterLibSpec_PEP_RANK_EXPECT_Expect" xml:space="preserve">
+    <value>Expect</value>
+  </data>
+  <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
+    <value>Processed intensity</value>
+  </data>
+</root>

@@ -167,12 +167,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
             else if (_existing.Contains(r => !ReferenceEquals(_standard, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_, name);
+                helper.ShowTextBoxError(textName, IrtResources.CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_, name);
                 return;
             }
             else if (StandardPeptideCount < MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format(Resources.CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_, MIN_STANDARD_PEPTIDES));
+                MessageDlg.Show(this, string.Format(IrtResources.CalibrateIrtDlg_OkDialog_Please_enter_at_least__0__standard_peptides_, MIN_STANDARD_PEPTIDES));
                 return;
             }
 
@@ -220,7 +220,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (showErrors)
                 {
-                    MessageDlg.Show(this, Resources.CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_);
+                    MessageDlg.Show(this, IrtResources.CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_);
                 }
                 return false;
             }
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (showErrors)
                 {
-                    MessageDlg.Show(this, Resources.CalibrateIrtDlg_TryGetLine_Invalid_fixed_point_peptides_);
+                    MessageDlg.Show(this, IrtResources.CalibrateIrtDlg_TryGetLine_Invalid_fixed_point_peptides_);
                 }
                 return false;
             }
@@ -253,7 +253,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (showErrors)
                 {
                     MessageDlg.Show(this,
-                        Resources.CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_);
+                        IrtResources.CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_);
                 }
                 return false;
             }
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var document = Program.ActiveDocumentUI;
             if (!document.Settings.HasResults)
             {
-                MessageDlg.Show(this, Resources.CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard);
+                MessageDlg.Show(this, IrtResources.CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard);
                 return false;
             }
             var targetResolver = TargetResolver.MakeTargetResolver(document);
@@ -296,8 +296,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 MessageDlg.Show(this,
                     ModeUIAwareStringFormat(!exclude
-                            ? Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_
-                            : Resources.CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_,
+                            ? IrtResources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_
+                            : IrtResources.CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_,
                         count, MIN_STANDARD_PEPTIDES));
                 return false;
             }
@@ -305,8 +305,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (MultiButtonMsgDlg.Show(this,
                         ModeUIAwareStringFormat(!exclude
-                                ? Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_
-                                : Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_,
+                                ? IrtResources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_
+                                : IrtResources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_,
                             count, MIN_SUGGESTED_STANDARD_PEPTIDES),
                         MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
                 {
@@ -408,8 +408,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void UpdatePeptideCount()
         {
             labelStandardCount.Text = StandardPeptideList.Count != 1
-                ? ModeUIAwareStringFormat(Resources.CalibrateIrtDlg_StandardsChanged__0__peptides, StandardPeptideCount)
-                : ModeUIAwareStringFormat(Resources.CalibrateIrtDlg_StandardsChanged__1_peptide);
+                ? ModeUIAwareStringFormat(IrtResources.CalibrateIrtDlg_StandardsChanged__0__peptides, StandardPeptideCount)
+                : ModeUIAwareStringFormat(IrtResources.CalibrateIrtDlg_StandardsChanged__1_peptide);
         }
 
         private void StandardsChanged(object sender, EventArgs eventArgs)
@@ -517,7 +517,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 regression = SelectedRegressionOption.Regression;
             }
 
-            ShowGraph(Resources.CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation, xValues, yValues, tooltips,
+            ShowGraph(IrtResources.CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation, xValues, yValues, tooltips,
                 regression, SelectedRegressionOption.FixedPoint && IsRecalibration);
         }
 
@@ -561,7 +561,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     i++;
                 }
             }
-            ShowGraph(Resources.CalibrateIrtDlg_btnGraphIrts_Click_Calibrated_iRT_values, xValues, yValues, tooltips,
+            ShowGraph(IrtResources.CalibrateIrtDlg_btnGraphIrts_Click_Calibrated_iRT_values, xValues, yValues, tooltips,
                 regressionLine, IsRecalibration);
         }
 
@@ -570,16 +570,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var data = new RegressionGraphData
             {
                 Title = title,
-                LabelX = !xIrt ? Resources.CalibrateIrtDlg_ShowGraph_Measured : Resources.CalibrateIrtDlg_ShowGraph_Old_iRT,
-                LabelY = !xIrt ? Resources.CalibrateIrtDlg_ShowGraph_iRT : Resources.CalibrateIrtDlg_ShowGraph_New_iRT,
+                LabelX = !xIrt ? IrtResources.CalibrateIrtDlg_ShowGraph_Measured : IrtResources.CalibrateIrtDlg_ShowGraph_Old_iRT,
+                LabelY = !xIrt ? IrtResources.CalibrateIrtDlg_ShowGraph_iRT : IrtResources.CalibrateIrtDlg_ShowGraph_New_iRT,
                 XValues = xValues,
                 YValues = yValues,
                 Tooltips = tooltips,
                 RegressionLine = regression,
             };
 
-            using (var graph = new GraphRegression(new[] { data }) { Width = 800, Height = 600 })
+            using (var graph = new GraphRegression(new[] { data }))
             {
+                graph.Width = 800;
+                graph.Height = 600;
                 graph.ShowDialog(this);
             }
         }
@@ -726,8 +728,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 if (!_picker.HasScoredPeptides)
                 {
-                    using (var longWaitDlg = new LongWaitDlg {Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores})
+                    using (var longWaitDlg = new LongWaitDlg())
                     {
+                        longWaitDlg.Text = IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores;
                         longWaitDlg.PerformWork(_parent, 1000, pm => _picker.ScorePeptides(doc, pm));
                         if (longWaitDlg.IsCanceled)
                             return null;
@@ -745,7 +748,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                     var currentIsCirt = currentRegression != null && currentRegression.IsCirtDiscovered;
                     switch (MultiButtonMsgDlg.Show(_parent, string.Format(
-                                Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
+                        IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
                                 _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                     {
                         case DialogResult.Yes:
@@ -753,9 +756,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             if ((currentRegression != null && currentRegression.FixedPoint) || currentIsCirt)
                             {
                                 switch (MultiButtonMsgDlg.Show(_parent,
-                                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
-                                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
-                                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
+                                    IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
+                                    IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
+                                    IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
                                             true))
                                 {
                                     case DialogResult.Yes:

@@ -20,16 +20,23 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
+    /// Desired level of clean-up in test directories
+    /// </summary>
+    public enum DesiredCleanupLevel { none, persistent_files, downloads, all }
+
+    /// <summary>
     /// Creates and cleans up a directory containing the contents of a
     /// test ZIP file.
     /// </summary>
-    public sealed class TestFilesDir : IDisposable
+    public sealed class TestFilesDir
     {
         private TestContext TestContext { get; set; }
 
@@ -81,7 +88,8 @@ namespace pwiz.SkylineTestUtil
             }
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
-            PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
+            if (PersistentFiles != null)
+                PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
         }
@@ -102,6 +110,19 @@ namespace pwiz.SkylineTestUtil
         public string PersistentFilesDir { get; private set; }
 
         public string[] PersistentFiles { get; private set; }
+
+        public string RootPath
+        {
+            get
+            {
+                // Handle the case where a DirectoryName has been added to differentiate
+                // folders running with the same test files.
+                var rootPath = FullPath;
+                if (!Equals(TestContext.GetTestPath(string.Empty), Path.GetDirectoryName(rootPath)))
+                    rootPath = Path.GetDirectoryName(rootPath);
+                return rootPath;
+            }
+        }
 
         /// <summary>
         /// Returns a full path to a file in the unzipped directory.
@@ -160,7 +181,8 @@ namespace pwiz.SkylineTestUtil
             UIMF,
             UNIFI,
             Waters,
-            DiaUmpire
+            DiaUmpire,
+            BiblioSpec
         }
 
         /// <summary>
@@ -181,6 +203,10 @@ namespace pwiz.SkylineTestUtil
                 {
                     return Path.Combine(projectDir, @"..\..\pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpireTest.data");
                 }
+                else if (vendorDir == VendorDir.BiblioSpec)
+                {
+                    return Path.Combine(projectDir, @"..\..\pwiz_tools\BiblioSpec\tests\inputs");
+                }
                 else
                 {
                     vendorReaderPath = Path.Combine(projectDir, @"..\..\pwiz\data\vendor_readers");
@@ -191,7 +217,9 @@ namespace pwiz.SkylineTestUtil
             {
                 vendorReaderPath = Path.Combine(projectDir, @".."); // one up from TestZipFiles, and no vendorStr intermediate directory
                 if (vendorDir == VendorDir.DiaUmpire)
-                    return Path.Combine(vendorReaderPath, "DiaUmpireTest.data");
+                    return Path.Combine(vendorReaderPath, "SpectrumList_DiaUmpireTest.data");
+                else if (vendorDir == VendorDir.BiblioSpec)
+                    return Path.Combine(vendorReaderPath, "BiblioSpecTestData");
                 else
                     return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
             }
@@ -208,40 +236,136 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Attempts to move the directory to make sure no file handles are open.
+        /// <para>Attempts to move the directory to make sure no file handles are open.
         /// Used to delete the directory, but it can be useful to look at test
-        /// artifacts, after the tests complete.
+        /// artifacts, after the tests complete.</para>
+        /// <para>In some contexts, however, it may be more important to be space
+        /// efficient, and the chance to look at remaining artifacts is low (e.g. on
+        /// TeamCity VMs), so deletion is used again when called for.</para>
         /// </summary>
-        public void Dispose()
+        public void Cleanup()
         {
+            var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none);
+
+            CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
+            // Also check for file locks on the persistent files directory
+            // since it is essentially an extension of the test directory.
+            if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
+            {
+                if (!PathEx.IsDownloadsPathShared())
+                {
+                    CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+                }
+            }
+        }
+
+        public static void CheckForFileLocks(string path, bool useDeletion = false)
+        {
+            // Do a garbage collection in case any finalizer is supposed to release a file handle
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            string GetProcessNamesLockingFile(string lockedDirectory, Exception exceptionShowingLockedFileName)
+            {
+                var output = string.Empty;
+                try
+                {
+                    var fname = exceptionShowingLockedFileName.Message.Split('\'')[1];
+                    var fullPathToFile = Path.Combine(lockedDirectory, fname);
+                    var names = string.Join(@", ",
+                        FileLockingProcessFinder.GetProcessesUsingFile(fullPathToFile).Select(p => p.ProcessName));
+                    if (!names.IsNullOrEmpty())
+                    {
+                        output = $@" ({fullPathToFile} is locked by {names})";
+                    }
+                }
+                catch
+                {
+                    // ignored - not a disaster if this doesn't always work
+                }
+                return output;
+            }
+
+            if (!Directory.Exists(path)) // Did test already clean up after itself?
+                return;
+
+            // If deletion is acceptable, then simply try to delete the directory
+            // and the operation will throw a useful exception if it fails
+            if (useDeletion)
+            {
+                RemoveReadonlyFlags(path);
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                }
+                catch (Exception e)
+                {
+                    throw new IOException($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                }
+                return;
+            }
+
             // Move to a new name within the same directory
             string guidName = Guid.NewGuid().ToString();
-            string parentPath = Path.GetDirectoryName(FullPath);
+            string parentPath = Path.GetDirectoryName(path);
             if (parentPath != null)
                 guidName = Path.Combine(parentPath, guidName);
 
-            if (Directory.Exists(FullPath))  // Did test already clean up after itself?
+            try
+            {
+                Helpers.TryTwice(() => Directory.Move(path, guidName));
+            }
+            catch (IOException)
+            {
+                // Useful for debugging. Exception names file that is locked.
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                }
+                catch (Exception e)
+                {
+                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                }
+            }
+
+            // Move the file back to where it was, and fail if this throws
+            try
+            {
+                Helpers.TryTwice(() => Directory.Move(guidName, path));
+            }
+            catch (IOException)
             {
                 try
-                {
-                    Helpers.TryTwice(() => Directory.Move(FullPath, guidName));
-                }
-                catch (IOException)
-                {
-                    // Useful for debugging. Exception names file that is locked.
-                    Helpers.TryTwice(() => Directory.Delete(FullPath, true));
-                }
-
-                // Move the file back to where it was, and fail if this throws
-                try
-                {
-                    Helpers.TryTwice(() => Directory.Move(guidName, FullPath));
-                }
-                catch (IOException)
                 {
                     // Useful for debugging. Exception names file that is locked.
                     Helpers.TryTwice(() => Directory.Delete(guidName, true));
                 }
+                catch (Exception e)
+                {
+                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Recursively removes read-only flags from files in a directory
+        /// making it possible to delete with Directory.Delete().
+        /// Note that it does not check for shortcuts/symbolic links to
+        /// other folders.
+        /// </summary>
+        public static void RemoveReadonlyFlags(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+            string[] dirs = Directory.GetDirectories(path);
+
+            foreach (string file in files)
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            foreach (string dir in dirs)
+            {
+                RemoveReadonlyFlags(dir);
             }
         }
     }

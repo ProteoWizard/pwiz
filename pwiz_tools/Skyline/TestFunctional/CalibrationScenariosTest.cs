@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
@@ -26,6 +25,11 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// This test generates files which are intended to be committed to the TargetedMS project
+    /// in the "CalibrationScenariosTest" folder:
+    /// https://github.com/LabKey/targetedms/tree/develop/test/sampledata/TargetedMS/Quantification/CalibrationScenariosTest
+    /// </summary>
     [TestClass]
     public class CalibrationScenariosTest : AbstractFunctionalTest
     {
@@ -38,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestContext.EnsureTestResultsDir();
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
             RunUI(() => manageViewsForm.ImportViews(TestFilesDir.GetTestPath("CalibrationReports.skyr")));
@@ -48,7 +53,9 @@ namespace pwiz.SkylineTestFunctional
                 "CalibrationTest",
                 "CalibrationExcludedTest",
                 "p180test_calibration_DukeApril2016",
-                "MergedDocuments"
+                "MergedDocuments",
+                "BilinearCalibrationTest",
+                "LinearInLogSpace"
             };
             foreach (var scenarioName in scenarioNames)
             {
@@ -59,21 +66,16 @@ namespace pwiz.SkylineTestFunctional
         private void RunScenario(string scenarioName)
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath(scenarioName + ".sky")));
-            if (null != TestContext.TestRunResultsDirectory)
+            string baseName = TestContext.GetTestResultsPath(scenarioName);
+            RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
+            var reports = new[]
             {
-                var directory = Path.Combine(TestContext.TestRunResultsDirectory, "CalibrationScenarioTest");
-                Directory.CreateDirectory(directory);
-                string baseName = Path.Combine(directory, scenarioName);
-                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
-                var reports = new[]
-                {
-                    "CalibrationCurves",
-                    "PeptideResultQuantification"
-                };
-                foreach (String report in reports)
-                {
-                    ExportReport(baseName, report);
-                }
+                "CalibrationCurves",
+                "PeptideResultQuantification"
+            };
+            foreach (String report in reports)
+            {
+                ExportReport(baseName, report);
             }
         }
 

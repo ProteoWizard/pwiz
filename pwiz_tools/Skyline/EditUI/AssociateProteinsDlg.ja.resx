@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>420, 507</value>
+    <value>420, 523</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>339, 507</value>
+    <value>339, 523</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -315,6 +315,77 @@
   <data name="&gt;&gt;lnkHelpProteinGroups.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="cbGeneLevel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbGeneLevel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbGeneLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 23</value>
+  </data>
+  <data name="cbGeneLevel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 0, 3</value>
+  </data>
+  <data name="cbGeneLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 14</value>
+  </data>
+  <data name="cbGeneLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="cbGeneLevel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Name" xml:space="preserve">
+    <value>cbGeneLevel</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 23</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 3, 0, 3</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 13</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="lblGroupAtGeneLevel.Text" xml:space="preserve">
+    <value>遺伝子レベルでグループ化(&amp;E)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="lblGroupAtGeneLevel.ToolTip" xml:space="preserve">
+    <value>ペプチドがタンパク質ではなく遺伝子ごとに関連付けられ、グループ化されます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Name" xml:space="preserve">
+    <value>lblGroupAtGeneLevel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="lblSharedPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -322,7 +393,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 26</value>
+    <value>0, 46</value>
   </data>
   <data name="lblSharedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 0, 3</value>
@@ -340,7 +411,7 @@
     <value>TopRight</value>
   </data>
   <data name="lblSharedPeptides.ToolTip" xml:space="preserve">
-    <value>FASTAかバックグラウンドプロテオームの1つ以上のタンパク質には多くのペプチドが含まれます。Skylineにこれらのペプチドをどのように割り当てさせるか選択してください。</value>
+    <value>FASTA又はバックグラウンドプロテオームには多くのペプチドが含まれるタンパク質が1つ以上存在します。Skylineにこれらのペプチドをどのように割り当てさせるか選択してください。</value>
   </data>
   <data name="&gt;&gt;lblSharedPeptides.Name" xml:space="preserve">
     <value>lblSharedPeptides</value>
@@ -352,7 +423,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lblSharedPeptides.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="lnkHelpSharedPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -364,7 +435,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>105, 20</value>
+    <value>105, 40</value>
   </data>
   <data name="lnkHelpSharedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -388,7 +459,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lnkHelpSharedPeptides.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="cbMinimalProteinList.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -397,7 +468,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 75</value>
+    <value>3, 95</value>
   </data>
   <data name="cbMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 6, 0, 3</value>
@@ -421,13 +492,13 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;cbMinimalProteinList.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="lblMinimalProteinList.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 75</value>
+    <value>18, 95</value>
   </data>
   <data name="lblMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 0, 3</value>
@@ -454,7 +525,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lblMinimalProteinList.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -466,7 +537,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 69</value>
+    <value>250, 89</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -490,7 +561,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lnkHelpFindMinimalProteinList.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="cbRemoveSubsetProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -499,7 +570,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 95</value>
+    <value>3, 115</value>
   </data>
   <data name="cbRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 0, 3</value>
@@ -523,7 +594,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;cbRemoveSubsetProteins.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="lblRemoveSubsetProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -532,7 +603,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 95</value>
+    <value>18, 115</value>
   </data>
   <data name="lblRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 3, 0, 3</value>
@@ -547,7 +618,7 @@
     <value>サブセットのタンパク質を削除(&amp;R)</value>
   </data>
   <data name="lblRemoveSubsetProteins.ToolTip" xml:space="preserve">
-    <value>サブセットのタンパク質を削除し、パーシモニーまたはサブセット以外のタンパク質は保持します。</value>
+    <value>サブセットのタンパク質を削除し、パーシモニーでないサブセット以外のタンパク質は保持します。</value>
   </data>
   <data name="&gt;&gt;lblRemoveSubsetProteins.Name" xml:space="preserve">
     <value>lblRemoveSubsetProteins</value>
@@ -559,7 +630,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lblRemoveSubsetProteins.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -571,7 +642,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>139, 92</value>
+    <value>139, 112</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -595,7 +666,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="lblMinPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -604,7 +675,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 118</value>
+    <value>0, 138</value>
   </data>
   <data name="lblMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 3, 3</value>
@@ -634,10 +705,10 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lblMinPeptides.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="numMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 135</value>
+    <value>3, 155</value>
   </data>
   <data name="numMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 0, 3, 3</value>
@@ -658,7 +729,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;numMinPeptides.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="flowLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -667,7 +738,7 @@
     <value>3, 16</value>
   </data>
   <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>477, 164</value>
+    <value>477, 182</value>
   </data>
   <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -685,7 +756,7 @@
     <value>0</value>
   </data>
   <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 45</value>
+    <value>3, 65</value>
   </data>
   <data name="comboSharedPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>341, 21</value>
@@ -703,7 +774,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;comboSharedPeptides.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -712,7 +783,7 @@
     <value>12, 177</value>
   </data>
   <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 183</value>
+    <value>483, 201</value>
   </data>
   <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -883,7 +954,7 @@
     <value>True</value>
   </metadata>
   <data name="headerColumn.HeaderText" xml:space="preserve">
-    <value />
+    <value></value>
   </data>
   <metadata name="mappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -904,7 +975,7 @@
     <value>ターゲット</value>
   </data>
   <data name="dgvAssociateResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 387</value>
+    <value>12, 403</value>
   </data>
   <data name="dgvAssociateResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 89</value>
@@ -934,7 +1005,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 369</value>
+    <value>12, 385</value>
   </data>
   <data name="lblResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 13</value>
@@ -994,7 +1065,7 @@
     <value>0</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value />
+    <value></value>
   </data>
   <data name="dataGridViewTextBoxColumn1.Width" type="System.Int32, mscorlib">
     <value>85</value>
@@ -1024,7 +1095,7 @@
     <value>RightToLeft</value>
   </data>
   <data name="panelStatusBarResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 481</value>
+    <value>12, 497</value>
   </data>
   <data name="panelStatusBarResult.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 20</value>
@@ -1075,7 +1146,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>507, 542</value>
+    <value>507, 558</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>468, 554</value>

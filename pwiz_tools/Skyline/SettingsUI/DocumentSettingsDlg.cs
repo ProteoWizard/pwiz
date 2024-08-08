@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
@@ -174,18 +175,18 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var list = removedListsWithData[0];
                     message = string.Format(
-                        Resources.DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_,
+                        SettingsUIResources.DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_,
                         list.ListName, list.RowCount);
                 }
                 else
                 {
                     message = TextUtil.LineSeparate(new[]
                         {
-                            Resources.DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_
+                            SettingsUIResources.DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_
                         }
                         .Concat(removedListsWithData.Select(list =>
-                            string.Format(Resources.DocumentSettingsDlg_OkDialog_List___0___with__1__items, list.ListName, list.RowCount)))
-                        .Concat(new[]{Resources.DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_}));
+                            string.Format(SettingsUIResources.DocumentSettingsDlg_OkDialog_List___0___with__1__items, list.ListName, list.RowCount)))
+                        .Concat(new[]{SettingsUIResources.DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_}));
                 }
                 if (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
                 {
@@ -223,7 +224,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 string message =
                     string.Format(
-                        Resources.DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_,
+                        SettingsUIResources.DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_,
                         error.ExceptionDetail.RuleName);
                 var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel) { Exception = error };
                 if (alertDlg.ShowAndDispose(this) == DialogResult.Cancel)
@@ -300,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void NewReport()
         {
-            var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var dataSchema = SkylineWindowDataSchema.FromDocumentContainer(DocumentContainer);
             var viewContext = new DocumentGridViewContext(dataSchema) { EnablePreview = true };
             var newView = viewContext.NewView(this, PersistedViews.MainGroup);
             if (newView != null)

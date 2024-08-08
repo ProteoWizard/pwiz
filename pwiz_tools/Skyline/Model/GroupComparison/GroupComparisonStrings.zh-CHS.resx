@@ -288,7 +288,7 @@
     <value>肽段序列</value>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
-    <value>格式化...</value>
+    <value>格式化…</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression" xml:space="preserve">
     <value>表达式</value>
@@ -359,7 +359,13 @@
     <comment>Example: TIC Normalized Peak Area</comment>
   </data>
   <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
-	  <value>中位数归一化 {0}</value>
-      <comment>Example: Median Normalized Peak Area</comment>
+    <value>中位数归一化 {0}</value>
+    <comment>Example: Median Normalized Peak Area</comment>
+  </data>
+  <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
+    <value>批次校准曲线</value>
+  </data>
+  <data name="EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_" xml:space="preserve">
+    <value>Skyline 尚不支持使用校准值在蛋白质级别进行群组比较。</value>
   </data>
 </root>

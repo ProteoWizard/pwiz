@@ -37,7 +37,7 @@ using System.Threading;
 
 namespace MSConvertGUI
 {
-    public partial class UnifiBrowserForm : Form
+    public partial class UnifiBrowserForm : BaseForm
     {
         public class Credentials
         {
@@ -168,7 +168,7 @@ namespace MSConvertGUI
 
             openButton.Enabled = false;
 
-            serverLocationTextBox.Text = defaultUrl ?? "demo.unifiapi.com:48444";
+            serverLocationTextBox.Text = defaultUrl ?? "democonnect.waters.com:48505";
             SelectedCredentials = defaultCredentials;
         }
 

@@ -485,7 +485,7 @@
       <Project>{2399f68b-d886-4d94-ab4b-700fe3e46849}</Project>
       <Name>seems</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
@@ -717,12 +717,13 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>call "%25VSAPPIDDIR%25..\Tools\VsDevCmd.bat" &gt;nul
+    <PostBuildEvent>call $(ProjectDir)..\..\..\libraries\msvc_setup_script.bat $(PlatformName) 143
 IF $(PlatformName) NEQ "x64" editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"
 IF EXIST $(OutDir)setup.exe del $(OutDir)setup.exe
 IF EXIST $(OutDir)Test.passed del $(OutDir)Test.passed</PostBuildEvent>
-    <PreBuildEvent>call "%25VSAPPIDDIR%25..\Tools\VsDevCmd.bat" &gt;nul
-rc.exe $(ProjectDir)Resources\Resources.rc &gt;nul</PreBuildEvent>
+    <PreBuildEvent>call $(ProjectDir)..\..\..\libraries\msvc_setup_script.bat $(PlatformName) 143
+rc.exe $(ProjectDir)Resources\Resources.rc &gt;nul
+</PreBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

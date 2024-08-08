@@ -270,7 +270,7 @@ namespace pwiz.Skyline.SettingsUI
                 catch (Exception)
                 {
                     helper.ShowTextBoxError(tbxRegularExpression,
-                        string.Format(Resources.MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank, tbxRegularExpression.Text));
+                        string.Format(SettingsUIResources.MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank, tbxRegularExpression.Text));
                     return;
                 }
             }

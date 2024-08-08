@@ -20,7 +20,6 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Environment = System.Environment;
 
@@ -49,11 +48,9 @@ namespace pwiz.Skyline.Alerts
         public String SkylineFileLocation { get; set; }
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var choseDirectoryDialog = new FolderBrowserDialog
+            using (var choseDirectoryDialog = new FolderBrowserDialog())
             {
-                SelectedPath = ExtractionPath
-            })
-            {
+                choseDirectoryDialog.SelectedPath = ExtractionPath;
                 if (choseDirectoryDialog.ShowDialog() == DialogResult.OK)
                 {
                     ExtractionPath = choseDirectoryDialog.SelectedPath;
@@ -70,7 +67,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (Directory.Exists(ExtractionPath))
             {
-                MessageDlg.Show(this, Resources.PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_);
+                MessageDlg.Show(this, AlertsResources.PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_);
                 ResetTextBoxToReccommendedPath();
                 return;
             }

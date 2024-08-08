@@ -46,7 +46,7 @@ namespace SkylineBatch
                     completed = true;
                 });
                 var progressChanged = new DownloadProgressChangedEventHandler((sender, e) => {
-                    var percent = new FileInfo(downloadPath).Length * 100 / expectedSize;
+                    var percent = expectedSize > 0 ? new FileInfo(downloadPath).Length * 100 / expectedSize : 0;
                     ProgressHandler((int)percent, null);
                 });
                 wc.DownloadProgressChanged += progressChanged;
@@ -153,13 +153,14 @@ namespace SkylineBatch
         {
             if (remoteFileSource == null)
                 throw new ArgumentException(Resources.Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote_file_source_);
+            string url = remoteFileSource.URI.AbsoluteUri + relativeUrl;
             try
             {
-                _ = new Uri(remoteFileSource.URI.AbsoluteUri + relativeUrl);
+                _ = new Uri(url);
             }
             catch (Exception)
             {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+                throw new ArgumentException(TextUtil.LineSeparate(Resources.RemoteFileSource_ValidateInputs_Error_parsing_the_URL_, url, Resources.RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_));
             }
         }
 
@@ -230,18 +231,18 @@ namespace SkylineBatch
     {
         public const string XML_EL = "remote_file_source";
 
-        public static RemoteFileSource RemoteSourceFromUi(string name, string url, string username, string password, bool encrypt)
+        public static RemoteFileSource RemoteSourceFromUi(string name, string url, string username, string password, bool encrypt, bool panoramaSource =false, string selectedPath = null)
         {
             ValidateInputs(url, username, password, out Uri uri);
-            return new RemoteFileSource(name, uri, username, password, encrypt);
+            return new RemoteFileSource(name, uri, username, password, encrypt, panoramaSource, selectedPath);
         }
 
-        public RemoteFileSource(string name, string uriText, string username, string password, bool encrypt)
-            : this(name, new Uri(uriText), username, password, encrypt)
+        public RemoteFileSource(string name, string uriText, string username, string password, bool encrypt, bool panoramaSource=false, string selectedPath = null)
+            : this(name, new Uri(uriText), username, password, encrypt,panoramaSource, selectedPath)
         {
         }
 
-        public RemoteFileSource(string name, Uri uri, string username, string password, bool encrypt)
+        public RemoteFileSource(string name, Uri uri, string username, string password, bool encrypt, bool panoramaSource = false, string selectedPath = null)
         {
             Name = name;
             Username = username;
@@ -249,6 +250,8 @@ namespace SkylineBatch
             URI = uri;
             Encrypt = encrypt;
             FtpSource = uri.AbsoluteUri.StartsWith("ftp://");
+            PanoramaSource = panoramaSource;
+            SelectedPath = selectedPath;
         }
 
         internal string Name { get; set; }
@@ -256,7 +259,8 @@ namespace SkylineBatch
         internal string Password { get; set; }
         internal Uri URI { get; set; }
         internal bool FtpSource { get; set; }
-
+        internal bool PanoramaSource { get; set; }
+        internal string SelectedPath { get; set; }
         internal bool Encrypt { get; set; }
 
         public string GetKey()
@@ -304,7 +308,7 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+                throw new ArgumentException(TextUtil.LineSeparate(Resources.RemoteFileSource_ValidateInputs_Error_parsing_the_URL_, url ,Resources.RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_));
             }
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 return;

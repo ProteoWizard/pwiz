@@ -41,12 +41,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfNegativeIonDIA.zip");
             TestFilesPersistent = new[] { "neg.mzML", "pos.mzML" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
+            TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
 
-            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("Test positive-negative.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Test positive-negative.sky")));
             WaitForDocumentLoaded();
 
-            ImportResultsFiles(TestFilesPersistent.Select(file => MsDataFileUri.Parse(testFilesDir.GetTestPath(file))));
+            ImportResultsFiles(TestFilesPersistent.Select(file => MsDataFileUri.Parse(TestFilesDir.GetTestPath(file))));
             
             // Verify that pos ion has a chromatogram for pos replicate, and neg ion has one for neg replicate
             var doc = WaitForDocumentLoaded(400000);

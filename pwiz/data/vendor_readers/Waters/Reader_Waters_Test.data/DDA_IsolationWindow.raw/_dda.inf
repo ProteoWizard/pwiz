@@ -1,0 +1,5 @@
+[VERSION#1]
+<-- version must be first line
+[IsolationWindow]
+lowerOffset=1.05
+upperOffset=2.30

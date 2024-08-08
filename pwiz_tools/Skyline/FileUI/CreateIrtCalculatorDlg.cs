@@ -57,9 +57,9 @@ namespace pwiz.Skyline.FileUI
         {
             var standardProteinsList = new List<PeptideGroupDocNode>();
             var nonStandardProteinsList = new List<PeptideGroupDocNode>();
-            foreach (var protein in proteins.Where(protein => protein.PeptideCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
+            foreach (var protein in proteins.Where(protein => protein.MoleculeCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
             {
-                if (protein.Peptides.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+                if (protein.Molecules.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
                     standardProteinsList.Add(protein);
                 else
                     nonStandardProteinsList.Add(protein);
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.FileUI
                     var db = IrtDb.GetIrtDb(textOpenDatabase.Text, null);
                     if (db == null)
                     {
-                        throw new DatabaseOpeningException(string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_, textOpenDatabase.Text));
+                        throw new DatabaseOpeningException(string.Format(FileUIResources.CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_, textOpenDatabase.Text));
                     }
                 }
                 catch (Exception x)
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 if (comboBoxProteins.SelectedIndex == -1)
                 {
-                    MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
+                    MessageDlg.Show(this, FileUIResources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
                     comboBoxProteins.Focus();
                     return;
                 }
@@ -175,6 +175,7 @@ namespace pwiz.Skyline.FileUI
             // Import transition list of standards, if applicable
             if (irtType == IrtType.separate_list)
             {
+                var userCanceled = false;
                 try
                 {
                     if (!File.Exists(textImportText.Text))
@@ -189,22 +190,42 @@ namespace pwiz.Skyline.FileUI
                     docNew = docNew.ImportMassList(inputs, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
                     if (errorList.Any())
                     {
-                        throw new InvalidDataException(errorList[0].ErrorMessage);
+                        // Allow the user to assign column types
+                        var importer = docNew.PreImportMassList(inputs, null, true, SrmDocument.DOCUMENT_TYPE.none, true, ModeUI);
+                        using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docNew, inputs, selectPath, false))
+                        {
+                            if (columnDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                var insParams = columnDlg.InsertionParams;
+                                docNew = insParams.Document;
+                                selectPath = insParams.SelectPath;
+                                irtPeptides = insParams.IrtPeptides;
+                                _librarySpectra = insParams.LibrarySpectra;
+                            }
+                            else
+                            {
+                                userCanceled = true;
+                                throw new InvalidDataException(errorList[0].ErrorMessage);
+                            }
+                        }
                     }
                     _dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)).ToList();
                     IrtFile = textImportText.Text;
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
-                    return;
+                    if (!userCanceled)
+                    {
+                        MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
+                    }
+                    return; // Go back and try something else
                 }
             }
             else if (irtType == IrtType.protein)
             {
                 PeptideGroupDocNode selectedGroup = comboBoxProteins.SelectedItem as PeptideGroupDocNode;
 // ReSharper disable PossibleNullReferenceException
-                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Peptides.Select(pep => pep.ModifiedTarget));
+                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Molecules.Select(pep => pep.ModifiedTarget));
 // ReSharper restore PossibleNullReferenceException
             }
             Document = docNew;
@@ -240,14 +261,12 @@ namespace pwiz.Skyline.FileUI
 
         public void BrowseDb()
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
-                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
-                DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
-            })
-            {
+                dlg.Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database;
+                dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                dlg.DefaultExt = IrtDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -269,15 +288,13 @@ namespace pwiz.Skyline.FileUI
 
         public void CreateDb(TextBox textBox)
         {
-            using (var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog())
             {
-                Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database,
-                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
-                OverwritePrompt = true,
-                DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
-            })
-            {
+                dlg.Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database;
+                dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = IrtDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -296,15 +313,13 @@ namespace pwiz.Skyline.FileUI
 
         public void ImportTextFile()
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_,
-                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV))
-            })
-            {
+                dlg.Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_;
+                dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                dlg.DefaultExt = TextUtil.EXT_CSV;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV));
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);

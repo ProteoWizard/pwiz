@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.Skyline.Model
 {
     public class StandardType : IAuditLogObject
     {
         public static readonly StandardType IRT = new StandardType(@"iRT",
-            () => Resources.PeptideDocNode_GetStandardTypeDisplayName_iRT);
+            () => ModelResources.PeptideDocNode_GetStandardTypeDisplayName_iRT);
         public static readonly StandardType QC = new StandardType(@"QC",
-            () => Resources.PeptideDocNode_GetStandardTypeDisplayName_QC);
+            () => ModelResources.PeptideDocNode_GetStandardTypeDisplayName_QC);
         public static readonly StandardType GLOBAL_STANDARD = new StandardType(@"Normalization",
-            ()=>Resources.PeptideDocNode_GetStandardTypeDisplayName_Normalization);
+            ()=>ModelResources.PeptideDocNode_GetStandardTypeDisplayName_Normalization);
         public static readonly StandardType SURROGATE_STANDARD = new StandardType(@"Surrogate Standard",
-            ()=>Resources.StandardType_SURROGATE_STANDARD_Surrogate_Standard);
+            ()=>ModelResources.StandardType_SURROGATE_STANDARD_Surrogate_Standard);
         private readonly Func<String> _getTitleFunc;
         private StandardType(String name, Func<String> getTitleFunc)
         {
@@ -59,5 +59,18 @@ namespace pwiz.Skyline.Model
 
         public string AuditLogText { get { return Title; } }
         public bool IsName { get { return true; } }
+
+        public class PropertyFormatter : IPropertyFormatter
+        {
+            public object ParseValue(CultureInfo cultureInfo, string text)
+            {
+                return FromName(text);
+            }
+
+            public string FormatValue(CultureInfo cultureInfo, object value)
+            {
+                return ((StandardType)value).Name;
+            }
+        }
     }
 }

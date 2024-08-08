@@ -320,8 +320,7 @@ namespace pwiz.Common.PeakFinding
             var gs1d = new GaussSmother();
             gs1d.SetGaussWeights(GetSd(), 1);
             gs1d.TrimWeightsByFracMax(0.005f);
-            gs1d.SmoothVect(_intensitiesWithWings);
-            return _intensitiesWithWings;
+            return gs1d.SmoothVect(_intensitiesWithWings);
         }
     }
 }

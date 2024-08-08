@@ -21,7 +21,6 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
@@ -34,14 +33,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public DetectionsHistogramPane(GraphSummary graphSummary) : base(graphSummary )
         {
             XAxis.Type = AxisType.Ordinal;
-            XAxis.Title.Text = Resources.DetectionHistogramPane_XAxis_Name;
+            XAxis.Title.Text = GraphsResources.DetectionHistogramPane_XAxis_Name;
         }
-
-        public override ImmutableList<float> GetToolTipDataSeries()
-        {
-            return ImmutableList.ValueOf(TargetData.Histogram.Select(n => (float)n));
-        }
-
 
         public override void UpdateGraph(bool selectionChanged)
         {
@@ -49,11 +42,15 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             Legend.IsVisible = false;
 
-            if (!DetectionPlotData.GetDataCache().TryGet(
-                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
-                out _detectionData))
-                return;
+            if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
+            {
+                _detectionData = DetectionPlotData.INVALID;
+            }
             AddLabels();
+            if (!_detectionData.IsValid)
+            {
+                return;
+            }
 
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;
@@ -70,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.Max = TargetData.Histogram.Max() / YScale * 1.15;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             DetectionPlotData.DataSet targetData = _detectionData.GetTargetData(Settings.TargetType);
@@ -86,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_detectionData.IsValid)
             {
-                YAxis.Title.Text = Resources.DetectionHistogramPane_YAxis_Name;
+                YAxis.Title.Text = GraphsResources.DetectionHistogramPane_YAxis_Name;
             }
             base.AddLabels();
         }

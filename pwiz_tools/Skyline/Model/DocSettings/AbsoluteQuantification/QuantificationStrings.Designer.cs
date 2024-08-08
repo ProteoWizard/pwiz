@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class QuantificationStrings {
@@ -280,6 +280,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}).
+        /// </summary>
+        public static string CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType {
+            get {
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select a peptide to see its calibration curve.
         /// </summary>
         public static string CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve {
@@ -454,6 +463,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         public static string LodCalculation_TURNING_POINT_Bilinear_turning_point {
             get {
                 return ResourceManager.GetString("LodCalculation_TURNING_POINT_Bilinear_turning_point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string MsLevelOption_ALL_All {
+            get {
+                return ResourceManager.GetString("MsLevelOption_ALL_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string MsLevelOption_DEFAULT_Default {
+            get {
+                return ResourceManager.GetString("MsLevelOption_DEFAULT_Default", resourceCulture);
             }
         }
         

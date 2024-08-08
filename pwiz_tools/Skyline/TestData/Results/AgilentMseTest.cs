@@ -80,14 +80,14 @@ namespace pwiz.SkylineTestData.Results
                 return;
             }
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument document = InitAgilentMseDocument(testFilesDir, out docPath);
+            SrmDocument document = InitAgilentMseDocument(TestFilesDir, out docPath);
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
                 var refine = new RefinementSettings();
-                document = refine.ConvertToSmallMolecules(document, testFilesDir.FullPath, asSmallMolecules, smallMolMode == small_mol_mode.simple ? RefinementSettings.ConvertToSmallMoleculesChargesMode.none : RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
+                document = refine.ConvertToSmallMolecules(document, TestFilesDir.FullPath, asSmallMolecules, smallMolMode == small_mol_mode.simple ? RefinementSettings.ConvertToSmallMoleculesChargesMode.none : RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
             }
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
@@ -134,7 +134,6 @@ namespace pwiz.SkylineTestData.Results
                     Assert.AreEqual(smallMolMode == small_mol_mode.invert_charges ? 0 : 1, nPeptides); // If we switched document polarity, we'd expect no chromatograms extracted
                 }
             }
-            testFilesDir.Dispose();
         }
 
         /// <summary>

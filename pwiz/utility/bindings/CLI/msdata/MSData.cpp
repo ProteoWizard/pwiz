@@ -751,6 +751,11 @@ bool SpectrumList::benefitsFromWorkerThreads()
         return false;
 }
 
+// Currently only supported for Waters lockmass functions, as in msconvert with --ignoreCalibrationSpectra
+bool SpectrumList::calibrationSpectraAreOmitted()
+{
+    try {return (*base_)->calibrationSpectraAreOmitted();} CATCH_AND_FORWARD
+}
 
 SpectrumListSimple::SpectrumListSimple()
 : SpectrumList(new boost::shared_ptr<b::SpectrumList>(new b::SpectrumListSimple()))

@@ -40,9 +40,9 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestLibraryRankedSpectrumInfoSpeed()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"Test\LibraryRankedSpectrumInfoSpeedTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"Test\LibraryRankedSpectrumInfoSpeedTest.zip");
             SrmDocument srmDocument;
-            using (var stream = File.OpenRead(testFilesDir.GetTestPath("LibraryRankedSpectrumInfoSpeedTest.sky")))
+            using (var stream = File.OpenRead(TestFilesDir.GetTestPath("LibraryRankedSpectrumInfoSpeedTest.sky")))
             {
                 srmDocument = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(stream);
             }
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(unloadedLibrary);
             var streamManager = new MemoryStreamManager();
             var loader = new LibraryLoadTest.TestLibraryLoader { StreamManager = streamManager };
-            var librarySpec = unloadedLibrary.CreateSpec(testFilesDir.GetTestPath("LibraryRankedSpectrumInfoSpeedTest.blib"));
+            var librarySpec = unloadedLibrary.CreateSpec(TestFilesDir.GetTestPath("LibraryRankedSpectrumInfoSpeedTest.blib"));
             var library = librarySpec.LoadLibrary(loader);
             Assert.IsTrue(library.IsLoaded);
             var peptideLibraries = srmDocument.Settings.PeptideSettings.Libraries.ChangeLibraries(new[] {library});
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTest
                 
                 var startTime = DateTime.UtcNow;
                 LibraryRankedSpectrumInfo libraryRankedSpectrum = null;
-                int repeatCount = 50;
+                int repeatCount = 1;
                 for (int i = 0; i < repeatCount; i++)
                 {
                     libraryRankedSpectrum = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum.SpectrumPeaksInfo,
@@ -116,6 +116,7 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(tuple.Item3, libraryRankedSpectrum.PeaksMatched.Count());
                 }
             }
+            library.ReadStream.CloseStream();
         }
     }
 }

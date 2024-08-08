@@ -102,7 +102,13 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
                 ? Transition.CustomIon.GetMass(MzMassType)
-                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
+                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);
+        }
+
+        public TypedMass GetMoleculeMass(CustomMolecule molecule)
+        {
+            Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
+            return molecule.GetMass(MzMassType);
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
@@ -118,6 +124,8 @@ namespace pwiz.Skyline.Model
 
         [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
+
+        public bool ParticipatesInScoring => Transition.ParticipatesInScoring; // Don't use things like reporter ions (e.g. TMT etc) in "best" peak selection
 
         public TransitionDocNode ChangeExplicitSLens(double? value)
         {
@@ -183,7 +191,7 @@ namespace pwiz.Skyline.Model
             get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
-        public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
+        public string GetFragmentIonName(CultureInfo cultureInfo, MzTolerance tolerance = null)
         {
             if (ComplexFragmentIon.IsCrosslinked)
             {
@@ -635,7 +643,9 @@ namespace pwiz.Skyline.Model
         {
             if (Transition.IsNonReporterCustomIon())
             {
-                transitionProto.Formula = Transition.CustomIon.Formula;
+                transitionProto.Formula = Transition.CustomIon.ParsedMolecule.IsMassOnly ?
+                    null : 
+                    Transition.CustomIon.ParsedMolecule.ToString();
                 if (Transition.CustomIon.AverageMass.IsMassH())
                     transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else
@@ -683,16 +693,18 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var formula = transitionProto.Formula;
+                    var formula = ParsedMolecule.Create(transitionProto.Formula);
                     var moleculeID = MoleculeAccessionNumbers.FromString(transitionProto.MoleculeId); // Tab separated list of InChiKey, CAS etc
                     var monoMassH = transitionProto.MonoMassH;
                     var averageMassH = transitionProto.AverageMassH;
                     var monoMass = transitionProto.MonoMass ?? monoMassH;
                     var averageMass = transitionProto.AverageMass ?? averageMassH;
-                    customIon = new CustomMolecule(formula,
-                        new TypedMass(monoMass.Value, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
-                        new TypedMass(averageMass.Value, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
-                        transitionProto.CustomIonName, moleculeID);
+                    var monoMassType = monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic;
+                    customIon = ParsedMolecule.IsNullOrEmpty(formula) ?
+                        new CustomMolecule(new TypedMass(monoMass??0, monoMassType),
+                            new TypedMass(averageMass??0, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
+                            transitionProto.CustomIonName, moleculeID) :
+                        new CustomMolecule(formula.ChangeIsMassH(monoMassType.IsMassH()), transitionProto.CustomIonName, moleculeID);
                 }
             }
             Transition transition;
@@ -810,6 +822,7 @@ namespace pwiz.Skyline.Model
                     transitionPeak.EndRetentionTime = transitionChromInfo.EndRetentionTime;
                     transitionPeak.IonMobility = transitionChromInfo.IonMobility.IonMobility.Mobility;
                     transitionPeak.IonMobilityWindow = transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth;
+                    transitionPeak.IonMobilityCollisionCrossSection = transitionChromInfo.IonMobility.CollisionalCrossSectionSqA;
                     transitionPeak.Area = transitionChromInfo.Area;
                     transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
                     transitionPeak.Height = transitionChromInfo.Height;
@@ -833,6 +846,18 @@ namespace pwiz.Skyline.Model
                     transitionPeak.Rank = transitionChromInfo.Rank;
                     transitionPeak.RankByLevel = transitionChromInfo.RankByLevel;
                     transitionPeak.PointsAcrossPeak = DataValues.ToOptional(transitionChromInfo.PointsAcrossPeak);
+                    var peakShapeValues = transitionChromInfo.PeakShapeValues;
+                    if (peakShapeValues.HasValue)
+                    {
+                        transitionPeak.PeakShapeValues =
+                            new SkylineDocumentProto.Types.TransitionPeak.Types.PeakShapeValues
+                            {
+                                StdDev = peakShapeValues.Value.StdDev,
+                                Skewness = peakShapeValues.Value.Skewness,
+                                Kurtosis = peakShapeValues.Value.Kurtosis,
+                                ShapeCorrelation = peakShapeValues.Value.ShapeCorrelation
+                            };
+                    }
                     yield return transitionPeak;
                 }
             }
@@ -886,7 +911,7 @@ namespace pwiz.Skyline.Model
                         // Something is wrong, if the value has already been added (duplicate peak? out of order?)
                         if (peakAdded)
                         {
-                            throw new InvalidDataException(string.Format(Resources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
+                            throw new InvalidDataException(string.Format(ModelResources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
                                                               FragmentIonName));
                         }
                         

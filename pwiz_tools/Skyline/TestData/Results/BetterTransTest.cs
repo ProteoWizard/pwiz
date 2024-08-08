@@ -64,20 +64,20 @@ namespace pwiz.SkylineTestData.Results
 
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("TROUBLED_File.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("TROUBLED_File.sky");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var refine = new RefinementSettings();
-            doc = refine.ConvertToSmallMolecules(doc, testFilesDir.FullPath, asSmallMolecules);
+            doc = refine.ConvertToSmallMolecules(doc, TestFilesDir.FullPath, asSmallMolecules);
             const int expectedMoleculeCount = 1;   // At first small molecules did not support multiple label types
             AssertEx.IsDocumentState(doc, null, 1, expectedMoleculeCount, 2, 6);
 
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("Rush_p3_96_21May16_Smeagol.mzML");
+                string rawPath = TestFilesDir.GetTestPath("Rush_p3_96_21May16_Smeagol.mzML");
                 var measuredResults = new MeasuredResults(new[] {new ChromatogramSet("Single", new[] {rawPath})});
 
                 {
@@ -93,8 +93,6 @@ namespace pwiz.SkylineTestData.Results
                         Assert.AreEqual(0.008, ratio, 0.001);
                 }
             }
-
-            testFilesDir.Dispose();
         }
     }
 }

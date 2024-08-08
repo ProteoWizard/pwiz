@@ -20,19 +20,16 @@
 using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Lists
 {
     public class ListGridForm : DataboundGridForm
     {
-        public ListGridForm(IDocumentContainer documentContainer, string listName)
+        public ListGridForm(SkylineWindow skylineWindow, string listName)
         {
-            var skylineDataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var skylineDataSchema = new SkylineWindowDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             ListViewContext = ListViewContext.CreateListViewContext(skylineDataSchema, listName);
             BindingListSource.QueryLock = ListViewContext.SkylineDataSchema.QueryLock;
             BindingListSource.ListChanged += BindingListSourceOnListChanged;
@@ -47,7 +44,7 @@ namespace pwiz.Skyline.Controls.Lists
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
-            string title = Resources.ListGridForm_BindingListSourceOnListChanged_List__ + ListName;
+            string title = ListsResources.ListGridForm_BindingListSourceOnListChanged_List__ + ListName;
             ViewInfo view = BindingListSource.ViewInfo;
             if (null != view && view.Name != AbstractViewContext.DefaultViewName)
             {

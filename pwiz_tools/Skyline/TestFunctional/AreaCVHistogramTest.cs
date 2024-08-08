@@ -252,7 +252,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(toolbar.DetectionsVisible);
             });
             AssertDataCorrect(pane, statsStartIndex++);
-            WaitForCondition(700, () => GetCache(pane).DataCount == 45);
+            WaitForGraphs();
             
             // Make sure that grouping by an annotation works correctly
             RunUI(() => SkylineWindow.SetAreaCVAnnotation("D102"));
@@ -529,11 +529,6 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForConditionUI(() => histogramInfo.Items == expectedBars,
                 string.Format("Expecting {0} bars", expectedBars));
-        }
-
-        private static AreaCVGraphData.AreaCVGraphDataCache GetCache(SummaryGraphPane pane)
-        {
-            return GetPaneValue(pane, support => support.Cache);
         }
 
         private static AreaCVGraphData GetCurrentData(SummaryGraphPane pane)

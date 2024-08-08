@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -50,7 +51,7 @@ namespace SkylineTester
         public const string SkylineTesterFiles = "SkylineTester Files";
 
         public const string DocumentationLink =
-            "https://skyline.gs.washington.edu/labkey/wiki/home/development/page.view?name=SkylineTesterDoc";
+            "https://skyline.ms/wiki/home/development/page.view?name=SkylineTesterDoc";
 
         public string Git { get; private set; }
         public string Devenv { get; private set; }
@@ -476,9 +477,7 @@ namespace SkylineTester
                 var myId = Process.GetCurrentProcess().Id;
                 var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
                 var search = new ManagementObjectSearcher("root\\CIMV2", query);
-                var results = search.Get().GetEnumerator();
-                results.MoveNext();
-                var queryObj = results.Current;
+                var queryObj = search.Get().Cast<ManagementBaseObject>().First();
                 var parentId = (uint) queryObj["ParentProcessId"];
                 var parent = Process.GetProcessById((int) parentId);
                 // Only go interactive if our parent process is not named "SkylineNightly"
@@ -490,6 +489,8 @@ namespace SkylineTester
             }
             return isNightly;
         }
+
+        private Thread _waitForClose;
 
         protected override void OnClosing(CancelEventArgs e)
         {
@@ -507,6 +508,30 @@ namespace SkylineTester
             // If there are tests running, check with user before actually shutting down.
             if (_runningTab != null && !ShiftKeyPressed)
             {
+                // Wait a little longer for the active tab to finish if it was killed,
+                // since it is relatively easy to click the Stop button and then close
+                // the window and end up here.
+                if (_waitForClose == null && commandShell.IsKilled)
+                {
+                    _waitForClose = new Thread(() =>
+                    {
+                        // Wait 1 second more at most
+                        for (int i = 0; i < 10; i++)
+                        {
+                            if (_runningTab == null)
+                                break;
+                            Thread.Sleep(100);
+                        }
+
+                        RunUI(Close);
+                    });
+                    _waitForClose.Start();
+                    e.Cancel = true;
+                    return;
+                }
+
+                _waitForClose = null;
+
                 // Skip that check if we closed programatically.
                 var isNightly = IsNightlyRun();
 
@@ -559,7 +584,11 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+#if DEBUG
+        private bool _buildDebug = true;
+#else
         private bool _buildDebug;
+#endif
 
         public enum BuildDirs
         {
@@ -579,8 +608,8 @@ namespace SkylineTester
             {
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
-                Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
+                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
+                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x64\Release"),
                 Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
                 Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
                 GetZipPath(32),
@@ -599,7 +628,7 @@ namespace SkylineTester
             CheckBuildDirExistence(buildDirs);
             if (buildDirs.All(dir => dir == null))
             {
-                _buildDebug = true;
+                _buildDebug = !_buildDebug;
                 buildDirs = GetPossibleBuildDirs();
                 CheckBuildDirExistence(buildDirs);
                 _buildDebug = buildDirs.Any(dir => dir != null);
@@ -871,13 +900,15 @@ namespace SkylineTester
 
             var testNumber = line.Substring(8, 7).Trim();
             var testName = line.Substring(16, 46).TrimEnd();
+            // Expecting:
+            // <time> <pass> <test-name> <language> [test-output]<failure-count> failures, <memory-counts> MB, <handle-counts> handles, <seconds> secs.
             var parts = Regex.Split(line, "\\s+");
-            var partsIndex = memoryGraphType ? 6 : 8;
+            var partsIndex = parts.Length - (memoryGraphType ? 6 : 4);
             var unitsIndex = partsIndex + 1;
             var units = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
             double minorMemory = 0, majorMemory = 0;
             double? middleMemory = null;
-            if (unitsIndex < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
+            if (6 < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
@@ -1055,6 +1086,7 @@ namespace SkylineTester
                 runParallel,
                 runSerial,
                 parallelWorkerCount,
+                coverageCheckbox,
 
                 // Build
                 buildTrunk,
@@ -1484,6 +1516,7 @@ namespace SkylineTester
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
         public RadioButton      RunParallel                 { get { return runParallel; } }
+        public CheckBox         RunCoverage                 { get { return coverageCheckbox; } }
         public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
@@ -1899,6 +1932,46 @@ namespace SkylineTester
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
             StartBackgroundLoadTestSet();
+        }
+
+        private void buttonRunStatsExportCSV_Click(object sender, EventArgs e)
+        {
+            _tabRunStats.ExportCSV();
+        }
+
+        public void UpdateTestTabControls()
+        {
+            runSerial_CheckedChanged(null, null);
+        }
+
+        private void runSerial_CheckedChanged(object sender, EventArgs e)
+        {
+            labelParallelOffscreenHint.Location = Offscreen.Location;
+            Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
+            labelParallelOffscreenHint.Visible = !Offscreen.Visible;
+
+            if (runSerial.Checked)
+            {
+                coverageCheckbox.Checked = false;
+                coverageCheckbox.Enabled = false;
+            }
+            else
+            {
+                coverageCheckbox.Enabled = true;
+            }
+        }
+
+        private void coverageCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (coverageCheckbox.Checked)
+            {
+                runSerial.Enabled = false;
+                runParallel.Checked = true;
+            }
+            else
+            {
+                runSerial.Enabled = true;
+            }
         }
 
         #endregion Control events

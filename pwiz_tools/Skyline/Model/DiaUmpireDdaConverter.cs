@@ -18,6 +18,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(Resources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
+                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(ModelResources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.Model
                             if (equivalentConfig)
                             {
                                 progressMonitor?.UpdateProgress(status.ChangeMessage(
-                                    string.Format(Resources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
+                                    string.Format(ModelResources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
                                         spectrumSource.GetSampleOrFileName())));
                                 continue;
                             }
@@ -140,8 +141,8 @@ namespace pwiz.Skyline.Model
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + MsConvertOutputExtension);
-                    string tmpParams = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + @".params");
+                    string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
+                    string tmpParams = Path.Combine(Path.GetDirectoryName(outputFilepath) ?? string.Empty, @$"diaumpire-{DateTime.Now.ToString(@"yyyyMMddhhmm")}.params");
                     //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
@@ -153,15 +154,17 @@ namespace pwiz.Skyline.Model
                         Arguments =
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
-                            $"--outfile {Path.GetFileName(tmpFilepath)} " +
+                            $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                             " --filter \"peakPicking true 1-\"" + 
-                            " --filter " + $@"diaUmpire params={tmpParams}".Quote() + " " +
+                            " --filter " + $@"diaUmpire params={tmpParams.EscapedPathForNestedCommandLineQuotes()}".Quote() + " " +
                             spectrumSource.ToString().Quote()
                     };
 
                     try
                     {
+                        status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                            psi.FileName, psi.Arguments));
                         pr.Run(psi, null, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
                     }
                     catch (IOException e)
@@ -245,7 +248,8 @@ namespace pwiz.Skyline.Model
             rhs = rhs.ToLowerInvariant().Replace(@"true", @"1").Replace(@"false", @"0");
             if (int.TryParse(lhs, out int lhsInt) && int.TryParse(rhs, out int rhsInt))
                 return lhsInt == rhsInt;
-            if (double.TryParse(lhs, out double lhsDbl) && double.TryParse(rhs, out double rhsDbl))
+            if (double.TryParse(lhs.Replace(@".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), out double lhsDbl) &&
+                double.TryParse(rhs.Replace(@".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), out double rhsDbl))
                 return lhsDbl.AlmostEqual(rhsDbl, 5);
             return lhs == rhs;
         }

@@ -32,21 +32,33 @@ namespace pwiz.Skyline.Model.Results
     public class OptStepChromatograms
     {
         public static readonly OptStepChromatograms EMPTY =
-            new OptStepChromatograms(SignedMz.ZERO, ImmutableList.Empty<ChromatogramInfo>(), 0);
+            new OptStepChromatograms(ImmutableList.Empty<ChromatogramInfo>(), 0);
         private readonly int _centerIndex;
         private ImmutableList<ChromatogramInfo> _chromatogramInfos;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="productMz">The m/z of the transition that these chromatograms are for</param>
         /// <param name="chromatograms">List chromatograms </param>
         /// <param name="stepCount"></param>
-        public OptStepChromatograms(SignedMz productMz, IEnumerable<ChromatogramInfo> chromatograms, int stepCount)
+        public OptStepChromatograms(IEnumerable<ChromatogramInfo> chromatograms, int stepCount)
         {
             _chromatogramInfos = ImmutableList.ValueOf(chromatograms);
             StepCount = stepCount;
-            _centerIndex = IndexOfCenter(productMz, _chromatogramInfos.Select(c => c.ProductMz), stepCount);
+            _centerIndex = -1;
+            for (int i = 0; i < _chromatogramInfos.Count; i++)
+            {
+                if (_chromatogramInfos[i].OptimizationStep == 0)
+                {
+                    _centerIndex = i;
+                    break;
+                }
+            }
+
+            if (_centerIndex < 0)
+            {
+                _centerIndex = (_chromatogramInfos.Count + 1) / 2;
+            }
         }
 
         public static OptStepChromatograms FromChromatogram(ChromatogramInfo chromatogramInfo)
@@ -55,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return EMPTY;
             }
-            return new OptStepChromatograms(chromatogramInfo.ProductMz, ImmutableList.Singleton(chromatogramInfo), 0);
+            return new OptStepChromatograms(ImmutableList.Singleton(chromatogramInfo), 0);
         }
 
         /// <summary>
@@ -88,9 +100,18 @@ namespace pwiz.Skyline.Model.Results
         /// assume that the middle number is step 0. Otherwise, return the index of the productMz which is closest
         /// to the target m/z.
         /// </summary>
-        public static int IndexOfCenter(SignedMz targetMz, IEnumerable<SignedMz> productMzs, int stepCount)
+        public static int IndexOfCenterMz(SignedMz targetMz, IEnumerable<SignedMz> productMzs, int stepCount)
         {
-            var list = productMzs.ToList();
+            return IndexOfCenterValue(targetMz, productMzs.Select(v => (double) v).ToList(), stepCount);
+        }
+
+        public static int IndexOfCenterCe(float targetCe, IEnumerable<float> ceValues, int stepCount)
+        {
+            return IndexOfCenterValue(targetCe, ceValues.Select(v => (double)v).ToList(), stepCount);
+        }
+
+        private static int IndexOfCenterValue(double target, IList<double> list, int stepCount)
+        {
             if (list.Count == stepCount * 2 + 1)
             {
                 return stepCount;
@@ -100,11 +121,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 0;
             }
-            double minDelta = Math.Abs(list[0] - targetMz);
+            double minDelta = Math.Abs(list[0] - target);
             int closestIndex = 0;
             for (int i = 1; i < list.Count; i++)
             {
-                double delta = Math.Abs(list[i] - targetMz);
+                double delta = Math.Abs(list[i] - target);
                 if (delta < minDelta)
                 {
                     closestIndex = i;

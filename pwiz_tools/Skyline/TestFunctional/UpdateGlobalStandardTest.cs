@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNotNull(chromFileInfo);
                     var peptideChromInfo = FindChromInfo(peptideDocNode.Results, chromFileInfo.FileId);
                     var ratioToGlobalStandard = (double?) row.Cells[colRatioLightToGlobalStandard.Index].Value;
-                    double? normalizedArea = (double?)row.Cells[colNormalizedArea.Index].Value;
+                    var normalizedArea = (AnnotatedDouble)row.Cells[colNormalizedArea.Index].Value;
                     var normalizationMethod = peptideDocNode.NormalizationMethod;
                     double expectedNormalizedArea = double.NaN;
                     double totalArea = peptideDocNode.TransitionGroups.Sum(tg =>
@@ -319,7 +319,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.Fail("Unexpected normalization method {0}", normalizationMethod);
                     }
-                    AssertValuesEqual(expectedNormalizedArea, normalizedArea ?? 0);
+                    AssertValuesEqual(expectedNormalizedArea, normalizedArea?.Raw ?? 0);
                     if (peptideChromInfo == null)
                     {
                         Assert.IsNull(ratioToGlobalStandard);
@@ -387,7 +387,7 @@ namespace pwiz.SkylineTestFunctional
             var all = document.Molecules.SelectMany(peptideDocNode=>GetChromFileInfoIds(peptideDocNode.Results)
                 .Concat(peptideDocNode.TransitionGroups.SelectMany(tg => GetChromFileInfoIds(tg.Results)
                     .Concat(tg.Transitions.SelectMany(t => GetChromFileInfoIds(t.Results))))));
-            return all.Distinct(new IdentityEqualityComparer<ChromFileInfoId>());
+            return all.Distinct((IEqualityComparer<ChromFileInfoId>)ReferenceValue.EQUALITY_COMPARER);
         }
 
         private static IEnumerable<ChromFileInfoId> GetChromFileInfoIds<TItem>(Results<TItem> results) where TItem : ChromInfo

@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -43,7 +44,7 @@ namespace pwiz.SkylineTest.Reporting
                 new SkylineDataSchema(CreateMemoryDocumentContainer(LoadTestDocument()), DataSchemaLocalizer.INVARIANT);
             SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
 
-            string testFile = Path.Combine(TestContext.TestDir, "TestInvariantExport.csv");
+            string testFile = TestContext.GetTestResultsPath("TestInvariantExport.csv");
             viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, TextUtil.SEPARATOR_CSV);
             string strExported = File.ReadAllText(testFile);
             Assert.AreEqual(ExpectedInvariantReport, strExported);
@@ -60,7 +61,7 @@ namespace pwiz.SkylineTest.Reporting
                 new SkylineDataSchema(CreateMemoryDocumentContainer(LoadTestDocument()), SkylineDataSchema.GetLocalizedSchemaLocalizer());
             SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
 
-            string testFile = Path.Combine(TestContext.TestDir, "TestExportWithCurrentLanguage.csv");
+            string testFile = TestContext.GetTestResultsPath("TestExportWithCurrentLanguage.csv");
             viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, TextUtil.CsvSeparator);
             string strExported = File.ReadAllText(testFile);
             var actualLines = strExported.Split(new[] { Environment.NewLine }, StringSplitOptions.None);

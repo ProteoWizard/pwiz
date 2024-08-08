@@ -24,6 +24,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -46,10 +47,6 @@ namespace pwiz.SkylineTestUtil
         }
 
         public void Dispose()
-        {
-        }
-
-        public void CheckAll()
         {
         }
 
@@ -82,14 +79,6 @@ namespace pwiz.SkylineTestUtil
             throw new ArgumentException(string.Format("No row source for {0}", viewInfo.ParentColumn.PropertyType));
         }
         
-        public static void CheckAll(SrmDocument document)
-        {
-            using (var checkReportCompatibility = new CheckReportCompatibility(document))
-            {
-                checkReportCompatibility.CheckAll();
-            }
-        }
-
         public static void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName, CultureInfo cultureInfo)
         {
             var documentContainer = new MemoryDocumentContainer();

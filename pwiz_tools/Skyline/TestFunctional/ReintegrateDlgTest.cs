@@ -183,9 +183,8 @@ namespace pwiz.SkylineTestFunctional
                 reintegrateDlgCutoff.ReintegrateAll = false;
                 reintegrateDlgCutoff.Cutoff = 1.0;
                 reintegrateDlgCutoff.OverwriteManual = true;
-                reintegrateDlgCutoff.OkDialog();
             });
-            WaitForClosedForm(reintegrateDlgCutoff);
+            OkDialog(reintegrateDlgCutoff, reintegrateDlgCutoff.OkDialog);
             RunUI(() =>
             {
                 ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);

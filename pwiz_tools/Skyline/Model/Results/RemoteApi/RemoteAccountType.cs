@@ -18,7 +18,6 @@
  */
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
 {
@@ -45,7 +44,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override string Label
             {
-                get { return Resources.Unifi_Label_Unifi; }
+                get { return RemoteApiResources.Unifi_Label_Unifi; }
             }
 
             public override string Name
@@ -55,7 +54,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new UnifiAccount(@"https://demo.unifiapi.com:50034", null, null);
+                return new UnifiAccount(@"https://democonnect.waters.com:48505", null, null);
             }
         }
     }

@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
@@ -114,6 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public CalibrationCurve CalibrationCurve { get; private set; }
+        public CalibrationCurveMetrics CalibrationCurveMetrics { get; private set; }
         public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         private void DisplayCalibrationCurve()
@@ -134,43 +136,41 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available;
                 return;
             }
-            PeptideDocNode peptide;
-            PeptideGroupDocNode peptideGroup;
 
-            if (!TryGetSelectedPeptide(out peptideGroup,out peptide))
+            IdPeptideDocNode idPeptideDocNode = GetSelectedPeptide();
+            if (idPeptideDocNode == null)
             {
                 zedGraphControl.GraphPane.Title.Text =
                     ModeUIAwareStringFormat(QuantificationStrings
                         .CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve);
                 return;
             }
-            if (-1 == document.Children.IndexOf(peptideGroup))
+            if (document.FindNodeIndex(idPeptideDocNode.PeptideGroup) < 0)
             {
                 zedGraphControl.GraphPane.Title.Text = ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_);
                 return;
             }
-            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
-                peptide);
-            CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(document, idPeptideDocNode);
+            var mainPeptideQuantifier = curveFitter.PeptideQuantifier;
             if (curveFitter.IsEnableSingleBatch && Settings.Default.CalibrationCurveOptions.SingleBatch)
             {
                 curveFitter.SingleBatchReplicateIndex = _skylineWindow.SelectedResultsIndex;
             }
 
             Text = TabText = GetFormTitle(curveFitter);
-            if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
+            if (mainPeptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
-                if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
+                if (!(mainPeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
                     zedGraphControl.GraphPane.Title.Text =
                         ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_);
                 }
                 else
                 {
-                    if (!peptide.InternalStandardConcentration.HasValue)
+                    if (!idPeptideDocNode.PeptideDocNode.InternalStandardConcentration.HasValue)
                     {
                         zedGraphControl.GraphPane.Title.Text =
-                            ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, peptide);
+                            ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, idPeptideDocNode.PeptideDocNode.ModifiedSequenceDisplay);
                     }
                     else
                     {
@@ -192,7 +192,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
             zedGraphControl.GraphPane.XAxis.Title.Text = curveFitter.GetXAxisTitle();
             zedGraphControl.GraphPane.YAxis.Title.Text = curveFitter.GetYAxisTitle();
-            CalibrationCurve = curveFitter.GetCalibrationCurve();
+            curveFitter.GetCalibrationCurveAndMetrics(out CalibrationCurve calibrationCurve, out CalibrationCurveMetrics calibrationCurveRow);
+            CalibrationCurve = calibrationCurve;
+            CalibrationCurveMetrics = calibrationCurveRow;
+            
             FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue;
@@ -202,6 +205,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 .Where(Options.DisplaySampleType);
             foreach (var sampleType in sampleTypes)
             {
+                var samplePeptideQuantifier = curveFitter.GetPeptideQuantifier(sampleType);
                 PointPairList pointPairList = new PointPairList();
                 PointPairList pointPairListExcluded = new PointPairList();
                 foreach (var standardIdentifier in curveFitter.EnumerateCalibrationPoints())
@@ -211,22 +215,33 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         continue;
                     }
 
-                    double? y = curveFitter.GetYValue(standardIdentifier);
+                    AnnotatedDouble normalizedArea = curveFitter.GetAnnotatedNormalizedPeakArea(standardIdentifier);
                     double? xCalculated = curveFitter.GetCalculatedXValue(CalibrationCurve, standardIdentifier);
                     double? x = curveFitter.GetSpecifiedXValue(standardIdentifier)
                                 ?? xCalculated;
-                    if (y.HasValue && x.HasValue)
+                    if (normalizedArea != null && x.HasValue)
                     {
-                        PointPair point = new PointPair(x.Value, y.Value) {Tag = standardIdentifier };
-                        if (sampleType.AllowExclude && null == standardIdentifier.LabelType && peptide.IsExcludeFromCalibration(standardIdentifier.ReplicateIndex))
+                        PointPair point = new PointPair(x.Value, normalizedArea.Raw) {Tag = standardIdentifier };
+                        bool included = normalizedArea.Strict != null;
+                        if (included && sampleType.AllowExclude)
                         {
-                            pointPairListExcluded.Add(point);
+                            if (null == standardIdentifier.LabelType &&
+                                samplePeptideQuantifier.PeptideDocNode.IsExcludeFromCalibration(standardIdentifier
+                                    .ReplicateIndex))
+                            {
+                                included = false;
+                            }
                         }
-                        else
+
+                        if (included)
                         {
                             pointPairList.Add(point);
                         }
-                        if (!IsNumber(x) || !IsNumber(y))
+                        else
+                        {
+                            pointPairListExcluded.Add(point);
+                        }
+                        if (!IsNumber(x) || !IsNumber(normalizedArea.Raw))
                         {
                             continue;
                         }
@@ -234,9 +249,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             minX = Math.Min(minX, x.Value);
                         }
-                        if (!logPlot || y.Value > 0)
+                        if (!logPlot || normalizedArea.Raw > 0)
                         {
-                            minY = Math.Min(minY, y.Value);
+                            minY = Math.Min(minY, normalizedArea.Raw);
                         }
                         maxX = Math.Max(maxX, x.Value);
                         if (IsNumber(xCalculated))
@@ -249,9 +264,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         }
                     }
                 }
+
+                string curveLabel = sampleType.ToString();
+                if (!ReferenceEquals(samplePeptideQuantifier, mainPeptideQuantifier))
+                {
+                    curveLabel = QualifyCurveNameWithSurrogate(curveLabel, samplePeptideQuantifier.PeptideDocNode);
+                }
+
                 if (pointPairList.Any())
                 {
-                    var lineItem = zedGraphControl.GraphPane.AddCurve(sampleType.ToString(), pointPairList,
+                    var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairList,
                         sampleType.Color, sampleType.SymbolType);
                     lineItem.Line.IsVisible = false;
                     lineItem.Symbol.Fill = new Fill(sampleType.Color);
@@ -259,9 +281,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 if (pointPairListExcluded.Any())
                 {
-                    string curveLabel = pointPairList.Any() ? null : sampleType.ToString();
-                    var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairListExcluded,
-                        sampleType.Color, sampleType.SymbolType);
+                    var symbolType = sampleType.SymbolType;
+                    if (symbolType == SymbolType.XCross)
+                    {
+                        // Excluded or invalid points get drawn without being filled.
+                        // The XCross looks the same regardless of whether it is filled, so we switch to a circle
+                        // when it has a problem
+                        symbolType = SymbolType.Circle;
+                    }
+                    var lineItem = zedGraphControl.GraphPane.AddCurve(pointPairList.Any() ? null : curveLabel, pointPairListExcluded,
+                        sampleType.Color, symbolType);
                     lineItem.Line.IsVisible = false;
                     _scatterPlots.Add(lineItem);
                 }
@@ -285,9 +314,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         }
                     }
                     double[] xValues;
-                    if (CalibrationCurve.TurningPoint.HasValue)
+                    if (CalibrationCurve is CalibrationCurve.Bilinear bilinearCalibrationCurve)
                     {
-                        xValues = new[] {minX, CalibrationCurve.TurningPoint.Value, maxX};
+                        xValues = new[] {minX, bilinearCalibrationCurve.TurningPoint, maxX};
                     }
                     else
                     {
@@ -301,11 +330,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         zedGraphControl.GraphPane.CurveList.Add(interpolatedLine);
                     }
                 }
-                labelLines.Add(CalibrationCurve.ToString());
+                labelLines.Add(CalibrationCurveMetrics.ToString());
 
-                if (CalibrationCurve.RSquared.HasValue)
+                if (CalibrationCurveMetrics.RSquared.HasValue)
                 {
-                    labelLines.Add(CalibrationCurve.RSquaredDisplayText(CalibrationCurve.RSquared.Value));
+                    labelLines.Add(CalibrationCurveMetrics.RSquaredDisplayText(CalibrationCurveMetrics.RSquared.Value));
                 }
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {
@@ -343,19 +372,19 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
             }
             if (selectionIdentifier.HasValue) {
-                double? ySelected = curveFitter.GetYValue(selectionIdentifier.Value);
-                if (IsNumber(ySelected))
+                AnnotatedDouble ySelected = curveFitter.GetAnnotatedNormalizedPeakArea(selectionIdentifier.Value);
+                if (IsNumber(ySelected?.Raw))
                 {
-                    double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, selectionIdentifier.Value);
+                    double? xSelected = CalibrationCurve.GetX(ySelected.Raw);
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
                     const float selectedLineWidth = 2;
                     double? xSpecified = curveFitter.GetSpecifiedXValue(selectionIdentifier.Value);
                     if (IsNumber(xSelected))
                     {
-                        ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
-                            ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                        ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Raw, xSelected.Value,
+                            ySelected.Raw) {Line = {Color = GraphSummary.ColorSelected}};
                         zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
-                        var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value,
+                        var verticalLine = new LineObj(xSelected.Value, ySelected.Raw, xSelected.Value,
                             options.LogYAxis ? minY / 10 : 0)
                         {
                             Line = {Color = selectedLineColor, Width = selectedLineWidth},
@@ -366,8 +395,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         zedGraphControl.GraphPane.GraphObjList.Add(verticalLine);
                         if (IsNumber(xSpecified))
                         {
-                            var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
-                                ySelected.Value)
+                            var horizontalLine = new LineObj(xSpecified.Value, ySelected.Raw, xSelected.Value,
+                                ySelected.Raw)
                             {
                                 Line = {Color = selectedLineColor, Width = selectedLineWidth},
                                 Location = {CoordinateFrame = CoordType.AxisXYScale},
@@ -384,14 +413,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         if (IsNumber(xSpecified))
                         {
                             // If the point has a specified concentration, then use that.
-                            ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Value, xSpecified.Value,
-                                ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                            ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Raw, xSpecified.Value,
+                                ySelected.Raw) {Line = {Color = GraphSummary.ColorSelected}};
                             zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                         }
                         else
                         {
                             // Otherwise, draw a horizontal line at the appropriate y-value.
-                            var horizontalLine = new LineObj(minX, ySelected.Value, maxX, ySelected.Value)
+                            var horizontalLine = new LineObj(minX, ySelected.Raw, maxX, ySelected.Raw)
                             {
                                 Line = {Color = selectedLineColor, Width = selectedLineWidth},
                                 Location = {CoordinateFrame = CoordType.AxisXYScale},
@@ -402,28 +431,27 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     }
                 }
 
-                QuantificationResult quantificationResult = null;
-                double? calculatedConcentration;
+                AnnotatedDouble calculatedConcentration;
                 if (curveFitter.IsotopologResponseCurve)
                 {
                     calculatedConcentration =
-                        curveFitter.GetCalculatedConcentration(CalibrationCurve, selectionIdentifier.Value);
+                        AnnotatedDouble.Of(curveFitter.GetCalculatedConcentration(CalibrationCurve, selectionIdentifier.Value));
                 }
                 else
                 {
-                    quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
+                    var quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
                     calculatedConcentration = quantificationResult?.CalculatedConcentration;
                 }
-                if (calculatedConcentration.HasValue)
+                if (calculatedConcentration != null)
                 {
                     labelLines.Add(string.Format(@"{0} = {1}",
                         QuantificationStrings.Calculated_Concentration,
-                        QuantificationResult.FormatCalculatedConcentration(calculatedConcentration.Value,
+                        QuantificationResult.FormatCalculatedConcentration(calculatedConcentration,
                             curveFitter.QuantificationSettings.Units)));
                 }
-                else if (quantificationResult != null && !quantificationResult.NormalizedArea.HasValue)
+                else if (ySelected?.Message != null)
                 {
-                    labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
+                    labelLines.Add(ySelected.Message);
                 }
             }
             if (Options.ShowFiguresOfMerit)
@@ -487,25 +515,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return title;
         }
 
-        private bool TryGetSelectedPeptide(out PeptideGroupDocNode peptideGroup, out PeptideDocNode peptide)
+        private IdPeptideDocNode GetSelectedPeptide()
         {
-            peptide = null;
-            peptideGroup = null;
             SequenceTree sequenceTree = _skylineWindow.SequenceTree;
-            if (null != sequenceTree)
+            PeptideTreeNode peptideTreeNode = sequenceTree?.GetNodeOfType<PeptideTreeNode>();
+            PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree?.GetNodeOfType<PeptideGroupTreeNode>();
+            if (peptideGroupTreeNode != null && peptideTreeNode != null)
             {
-                PeptideTreeNode peptideTreeNode = sequenceTree.GetNodeOfType<PeptideTreeNode>();
-                if (null != peptideTreeNode)
-                {
-                    peptide = peptideTreeNode.DocNode;
-                }
-                PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                if (null != peptideGroupTreeNode)
-                {
-                    peptideGroup = peptideGroupTreeNode.DocNode;
-                }
+                return new IdPeptideDocNode(peptideGroupTreeNode.DocNode.PeptideGroup, peptideTreeNode.DocNode);
             }
-            return peptide != null;
+            return null;
         }
 
         protected override void OnClosed(EventArgs e)
@@ -584,8 +603,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         private bool IsEnableIsotopologResponseCurve()
         {
-            return TryGetSelectedPeptide(out _, out var peptide) &&
-                   peptide.TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue);
+            return true == GetSelectedPeptide()?.PeptideDocNode.TransitionGroups
+                .Any(tg => tg.PrecursorConcentration.HasValue);
         }
 
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
@@ -659,20 +678,28 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 return null;
             }
-            PeptideDocNode peptideDocNode;
-            PeptideGroupDocNode peptideGroupDocNode;
-            if (!TryGetSelectedPeptide(out peptideGroupDocNode, out peptideDocNode))
+
+            IdPeptideDocNode idPeptideDocNode = GetSelectedPeptide();
+            if (idPeptideDocNode == null)
             {
                 return null;
             }
+
+            if (idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve != null)
+            {
+                idPeptideDocNode =
+                    document.Settings.GetSurrogateStandards(idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve)
+                        .FirstOrDefault() ?? idPeptideDocNode;
+            }
+
+            var peptideDocNode = idPeptideDocNode.PeptideDocNode;
             bool isExcluded = peptideDocNode.IsExcludeFromCalibration(replicateIndex);
             var menuItemText = isExcluded ? QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard 
                 : QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard;
-            var peptideIdPath = new IdentityPath(peptideGroupDocNode.Id, peptideDocNode.Id);
             var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
             {
                 _skylineWindow.ModifyDocument(menuItemText,
-                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded), docPair =>
+                    doc => SetExcludeStandard(doc, idPeptideDocNode.IdentityPath, replicateIndex, !isExcluded), docPair =>
                     {
                         var msgType = isExcluded
                             ? MessageType.set_included_standard
@@ -830,6 +857,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             Settings.Default.CalibrationCurveOptions.SingleBatch =
                 !Settings.Default.CalibrationCurveOptions.SingleBatch;
             UpdateUI(false);
+        }
+
+        public static string QualifyCurveNameWithSurrogate(string curveName, PeptideDocNode surrogateMolecule)
+        {
+            return string.Format(@"{0} ({1})", curveName, surrogateMolecule.ModifiedSequenceDisplay);
         }
     }
 }

@@ -678,25 +678,28 @@ namespace SkylineTester
 
         public void BrowseBuild()
         {
-            using (var dlg = new FolderBrowserDialog
+            using (var dlg = new FolderBrowserDialog())
             {
-                Description = "Select or create a root folder for build source files.",
-                ShowNewFolderButton = true
-            })
-            {
+                dlg.Description = "Select or create a root folder for build source files.";
+                dlg.ShowNewFolderButton = true;
                 if (dlg.ShowDialog(MainWindow) == DialogResult.OK)
                 {
                     var nightlyRoot = dlg.SelectedPath;
                     var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    if (nightlyRoot.StartsWith(userFolder))
+                    if (nightlyRoot.Equals(userFolder))
+                        nightlyRoot = string.Empty;
+                    else if (nightlyRoot.StartsWith(userFolder))
                         nightlyRoot = nightlyRoot.Remove(0, userFolder.Length+1);
                     MainWindow.NightlyRoot.Text = nightlyRoot;
 
                     MainWindow.Summary = null;
                     MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
-                    MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
-                        ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
-                        : null;
+                    if (MainWindow.Summary != null) // For ReSharper - should never be null
+                    {
+                        MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
+                            ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
+                            : null;
+                    }
 
                     MainWindow.InitNightly();
                     Enter();
@@ -728,10 +731,8 @@ namespace SkylineTester
 
         private bool GraphMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            CurveItem nearestCurve;
-            int index;
             if (_mouseDownLocation == Point.Empty &&
-                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out _, out _))
             {
                 sender.Cursor = Cursors.Hand;
                 return true;

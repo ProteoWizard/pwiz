@@ -477,6 +477,8 @@ namespace SkylineTester
             get { return _process != null && !_process.HasExited; }
         }
 
+        public bool IsKilled => _processKilled || _process == null;
+
         public bool IsWaiting { get; set; }
 
         public bool IsDebuggerAttached 
@@ -498,12 +500,14 @@ namespace SkylineTester
         /// </summary>
         void ProcessExit(object sender, EventArgs e)
         {
-            ProcessExit(false);
+            if (ReferenceEquals(sender, _process))
+                ProcessExit(false);
         }
 
         void ProcessExitIgnoreError(object sender, EventArgs e)
         {
-            ProcessExit(true);
+            if (ReferenceEquals(sender, _process))
+                ProcessExit(true);
         }
 
         void ProcessExit(bool ignoreError)

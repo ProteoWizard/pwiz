@@ -34,6 +34,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <cstdint>
 
 
 namespace pwiz {
@@ -708,6 +709,9 @@ class PWIZ_API_DECL SpectrumList
     /// find all spectrum indexes with spotID (returns empty vector on failure)
     virtual IndexList findSpotID(const std::string& spotID) const;
 
+    /// if find() fails to find a spectrum id, can use this to check whether the id fields of the input id and the spectrum list are matching
+    virtual bool checkNativeIdMatch(const std::string& firstIdInList, const std::string& searchedId) const;
+
     /// retrieve a spectrum by index
     /// - binary data arrays will be provided if (getBinaryData == true);
     /// - client may assume the underlying Spectrum* is valid 
@@ -729,13 +733,17 @@ class PWIZ_API_DECL SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
     /// issues a warning once per SpectrumList instance (based on string hash)
-    virtual void warn_once(const char* msg) const; 
+    virtual void warn_once(const char* msg) const = 0; 
 
     /// returns the minimum DetailLevel for which the given predicate returns true
     /// - if the predicate returns indeterminate, another spectrum will be tried
     /// - if the predicate returns false, a higher detail level will be tried
     /// - e.g. spectrumList.min_level_accepted([](const Spectrum& s) { return s.hasCVParam(MS_ms_level); })
     virtual DetailLevel min_level_accepted(std::function<boost::tribool(const Spectrum&)> predicate) const;
+
+    // returns true if the source data contains calibration spectra (e.g. Waters lockmass function) that is being skipped over
+    // (as with msconvert's --ignoreCalibrationScans flag)
+    virtual bool calibrationSpectraAreOmitted() const;
 
     virtual ~SpectrumList(){} 
 };
@@ -758,6 +766,7 @@ struct PWIZ_API_DECL SpectrumListSimple : public SpectrumList
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
+    virtual void warn_once(const char* msg) const {}
 };
 
 
@@ -817,6 +826,9 @@ class PWIZ_API_DECL ChromatogramList
     /// - may return a null shared pointer
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
+    /// issues a warning once per ChromatogramList instance (based on string hash)
+    virtual void warn_once(const char* msg) const = 0;
+
     virtual ~ChromatogramList(){} 
 };
 
@@ -838,6 +850,7 @@ struct PWIZ_API_DECL ChromatogramListSimple : public ChromatogramList
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
+    virtual void warn_once(const char* msg) const {}
 };
 
 

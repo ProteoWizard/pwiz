@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ChromatogramContextMenu_Collision_Cross_Section" xml:space="preserve">
+    <value>衝突断面積</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Compensation_Voltage" xml:space="preserve">
+    <value>補償電圧</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Drift_Time" xml:space="preserve">
+    <value>ドリフト時間</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Inverse_Ion_Mobility" xml:space="preserve">
+    <value>逆イオン移動度</value>
+  </data>
+  <data name="ChromatogramContextMenu_InsertIonMobilityMenuItems_Ion_Mobility" xml:space="preserve">
+    <value>イオン移動度</value>
+  </data>
+  <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
+    <value>スペクトルフィルタの変更</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>{0}へのスペクトルフィルタの追加</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>{0}個のプリカーサーへのスペクトルフィルタの追加</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>{0}でのスペクトルフィルタの編集</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>{0}個のプリカーサーでのスペクトルフィルタの編集</value>
+  </data>
+  <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
+    <value>同期した統合を{0}に変更</value>
+  </data>
+  <data name="SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides" xml:space="preserve">
+    <value>ペプチドの受け入れ</value>
+  </data>
+  <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
+    <value>すべての繰り返し測定</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Applying_Peak" xml:space="preserve">
+    <value>ピークを適用中</value>
+  </data>
+  <data name="SkylineWindow_ApplyPeak_Failed_to_apply_peak_" xml:space="preserve">
+    <value>ピークを適用に失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_" xml:space="preserve">
+    <value>ピークの適用先：</value>
+  </data>
+  <data name="SkylineWindow_EditDelete_Delete__0__" xml:space="preserve">
+    <value>{0}を削除</value>
+  </data>
+  <data name="SkylineWindow_EditDelete_items" xml:space="preserve">
+    <value>アイテム</value>
+  </data>
+  <data name="SkylineWindow_EditNote_Edit_Note" xml:space="preserve">
+    <value>メモを編集</value>
+  </data>
+  <data name="SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group" xml:space="preserve">
+    <value>グループにピークを適用</value>
+  </data>
+  <data name="SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_" xml:space="preserve">
+    <value>ターゲット数が、この操作の制限を超えています。</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue" xml:space="preserve">
+    <value>続行してもよろしいですか？</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
+    <value>ドキュメントにはデコイを生成するためのペプチドが含まれていなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys" xml:space="preserve">
+    <value>この操作により既存のデコイを置き換えます。</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
+    <value>{0}を修飾</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
+    <value>分子を修飾</value>
+  </data>
+  <data name="SkylineWindow_ModifySmallMoleculeTransitionGroup_Modify_Custom_Ion_Precursor" xml:space="preserve">
+    <value>カスタムイオンプリカーサーを修飾</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_product_ion__0_" xml:space="preserve">
+    <value>プロダクトイオン{0}を修飾</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_Transition" xml:space="preserve">
+    <value>トランジションを修飾</value>
+  </data>
+  <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
+    <value>{0}行目に空のシークエンスが見つかりました。</value>
+  </data>
+  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_" xml:space="preserve">
+    <value>クリップボードからのSkylineドキュメントの読み取りに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste__0__" xml:space="preserve">
+    <value>{0}を貼り付け</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_FASTA" xml:space="preserve">
+    <value>FASTAを貼り付け</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_peptide_list" xml:space="preserve">
+    <value>ペプチドリストの貼り付け</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
+    <value>タンパク質の貼り付け</value>
+  </data>
+  <data name="SkylineWindow_Paste_Paste_transition_list" xml:space="preserve">
+    <value>トランジションリストの貼り付け</value>
+  </data>
+  <data name="SkylineWindow_Paste_peptides" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="SkylineWindow_Paste_Protein_sequence_not_found" xml:space="preserve">
+    <value>タンパク質シークエンスが見つかりません。</value>
+  </data>
+  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
+    <value>タンパク質シークエンスは各行の最後の値でなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_Paste_Unexpected_character_period_found" xml:space="preserve">
+    <value>予期しない文字「.」が見つかりました。</value>
+  </data>
+  <data name="SkylineWindow_PickPeakInChromatograms_Apply_picked_peak" xml:space="preserve">
+    <value>選択したピークを適用</value>
+  </data>
+  <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
+    <value>重複ペプチドを削除</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides" xml:space="preserve">
+    <value>空のペプチドを削除</value>
+  </data>
+  <data name="SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins" xml:space="preserve">
+    <value>空欄のタンパク質を削除</value>
+  </data>
+  <data name="SkylineWindow_RemoveMissingResults_Remove_missing_results" xml:space="preserve">
+    <value>欠損結果を削除</value>
+  </data>
+  <data name="SkylineWindow_RemovePeak_Remove_all_peaks_from__0__" xml:space="preserve">
+    <value>{0}からすべてのピークを削除</value>
+  </data>
+  <data name="SkylineWindow_RemovePeak_Remove_peak_from__0__" xml:space="preserve">
+    <value>{0}からピークを削除</value>
+  </data>
+  <data name="SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_" xml:space="preserve">
+    <value>{0}からすべてのピークを削除</value>
+  </data>
+  <data name="SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides" xml:space="preserve">
+    <value>反復ペプチドを削除</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>モデルピーク選択を比較するには、ドキュメントが完全に読み込まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>ドキュメントには、モデルピーク選択を比較するターゲットが含まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys" xml:space="preserve">
+    <value>デコイを生成</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refine" xml:space="preserve">
+    <value>最適化</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
+    <value>ドキュメントを最適化しています</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
+    <value>ピークを再積分</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_" xml:space="preserve">
+    <value>再積分前にドキュメントを完全に読み込まなければなりません。</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
+    <value>操作中の予期しないドキュメントの変更。</value>
+  </data>
+  <data name="SkylineWindow_ShowRenameProteinsDlg_Rename_proteins" xml:space="preserve">
+    <value>タンパク質の名前の変更</value>
+  </data>
+  <data name="SkylineWindow_ShowUniquePeptidesDlg_Choose_a_background_proteome_in_the_Digestions_tab_of_the_Peptide_Settings" xml:space="preserve">
+    <value>ペプチド設定の [消化] タブでバックグラウンドプロテオームを選択します。</value>
+  </data>
+  <data name="SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome" xml:space="preserve">
+    <value>ペプチドの一意性の検査にはバックグラウンドプロテオームが必要です。</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession" xml:space="preserve">
+    <value>タンパク質をアクセッション別で並べ替え</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene" xml:space="preserve">
+    <value>タンパク質を遺伝子別で並べ替え</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name" xml:space="preserve">
+    <value>タンパク質を推奨名別で並べ替え</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
+    <value>タンパク質を名前別で並べ替え</value>
+  </data>
+  <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
+    <value>予期しない文字「{0}」が{1}行目で見つかりました。</value>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_" xml:space="preserve">
+    <value>このドキュメントにデコイを追加してもよろしいですか？ 
+このドキュメントはスペクトルライブラリから得たピーク境界を使用します。このような境界を使用している場合、Skylineで独自のピーク検出は実行されません。
+ピークスコアモデルを効果的にトレーニングできるようにするには、以下の手順に従います。
+
+1. [設定] &gt; [ペプチド設定 - ライブラリ] タブに移動して [リストの編集] をクリックします。
+2. ライブラリのアイテムを選択して [編集] をクリックし、[指定されたピーク境界を使用する] チェックボックスをオフにします。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
+    <value>デコイを追加</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

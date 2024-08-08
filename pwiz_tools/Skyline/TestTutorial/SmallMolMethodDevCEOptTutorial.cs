@@ -58,11 +58,10 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
-//            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeMethodDevCEOpt";
 
             ForceMzml = true; // Prefer mzML as being the more efficient download
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-23_1.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -90,9 +89,12 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
 
                 SetCsvFileClipboardText(GetTestPath("Energy_TransitionList.csv"));
+                var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers", 5);
+                OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
+
                 RunUI(() =>
                 {
-                    SkylineWindow.Paste();
                     AdjustSequenceTreePanelWidth();
                 });
 
@@ -399,9 +401,9 @@ namespace pwiz.SkylineTestTutorial
                     });
                     PauseForScreenShot<EditCEDlg>("Edit Collision Energy Equation form", 26);
 
+                    OkDialog(editCurrentCE, editCurrentCE.OkDialog);
                     RunUI(() =>
                     {
-                        editCurrentCE.OkDialog();
                         transitionSettingsUI.UseOptimized = true;
                         transitionSettingsUI.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
                     });

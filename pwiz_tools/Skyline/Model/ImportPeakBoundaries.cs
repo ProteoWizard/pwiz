@@ -22,9 +22,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -240,14 +240,43 @@ namespace pwiz.Skyline.Model
             return doc;
         }
 
+        public ModifiedDocument ModifyDocument(SrmDocument.DOCUMENT_TYPE documentType, string inputFile, IProgressMonitor progressMonitor, long lineCount,
+            bool removeMissing = false, bool changePeaks = true)
+        {
+            var originalDocument = Document;
+            var modifiedDocument =
+                new ModifiedDocument(Import(inputFile, progressMonitor, lineCount, removeMissing, changePeaks));
+            if (ReferenceEquals(modifiedDocument.Document, originalDocument))
+            {
+                return null;
+            }
+
+            var docPair = SrmDocumentPair.Create(originalDocument, modifiedDocument.Document, documentType);
+            var allInfo = new List<MessageInfo>();
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, UnrecognizedPeptides);
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
+                UnrecognizedFiles.Select(AuditLogPath.Create));
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, UnrecognizedChargeStates);
+
+            var auditLogEntry = AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries,
+                    docPair.OldDocumentType,
+                    Path.GetFileName(inputFile))
+                .AppendAllInfo(allInfo);
+            return modifiedDocument.ChangeAuditLogEntry(auditLogEntry);
+        }
+
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
+        {
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
+        }
+
         public bool IsMinutesPeakBoundaries(TextReader reader)
         {
             long linesRead = 0;
             var peakTimes = new List<double>();
             string line = reader.ReadLine();
             int[] fieldIndices;
-            int fieldsTotal;
-            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out fieldsTotal);
+            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out _);
             // Find the first 50 peak times that are not #N/A, if any is larger than the maxRT, then times are in seconds
             while (peakTimes.Count < 50)
             {
@@ -278,10 +307,10 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
-            IProgressStatus status = new ProgressStatus(Resources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
+            IProgressStatus status = new ProgressStatus(ModelResources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
             double timeConversionFactor = isMinutes ? 1.0 : 60.0;
             int linesRead = 0;
-            int progressPercent = 0;
+            int progressPercent = -1;
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
             var sequenceToNode = MakeSequenceDictionary(Document);
@@ -354,14 +383,29 @@ namespace pwiz.Skyline.Model
                     {
                         if (modifiedPeptideString.Any(c => c < 'A' || c > 'Z'))
                         {
-                            modMatcher.CreateMatches(Document.Settings,
-                                new List<string> { modifiedPeptideString },
-                                Settings.Default.StaticModList,
-                                Settings.Default.HeavyModList);
-                            var nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                            Exception modificationException = null;
+                            PeptideDocNode nodeForModPep = null; 
+                            try
+                            {
+                                modMatcher.CreateMatches(Document.Settings,
+                                    new List<string> { modifiedPeptideString },
+                                    Settings.Default.StaticModList,
+                                    Settings.Default.HeavyModList);
+                                nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                            }
+                            catch (Exception e)
+                            {
+                                modificationException = e;
+                            }
+                                
                             if (nodeForModPep == null)
                             {
-                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
+                                string message =
+                                    string.Format(
+                                        ModelResources
+                                            .PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_,
+                                        modifiedPeptideString, linesRead);
+                                throw new IOException(message, modificationException);
                             }
                             nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
                             // Convert the modified peptide string into a standardized form that 
@@ -530,7 +574,7 @@ namespace pwiz.Skyline.Model
                             idPathList = new List<IdentityPath> { peptidePath };
                             sequenceToNode.Add(peptidePair, idPathList);
                         }
-                   }
+                    }
                 }
             }
             return sequenceToNode;
@@ -704,108 +748,6 @@ namespace pwiz.Skyline.Model
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// UI for warning about unrecognized peptides in imported file
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <returns></returns>
-        public bool UnrecognizedPeptidesCancel(IWin32Window parent)
-        {
-            const int itemsToShow = 10;
-            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedPeptides, p => p.ToString(), PeptideMessages))
-                return false;
-            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedFiles, f => f.ToString(), FileMessages))
-                return false;
-            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedChargeStates, c => c.PrintLine(' '), ChargeMessages))
-                return false;
-            return true;
-        }
-
-        private class MissingMessageLines
-            {
-            public MissingMessageLines(string first, string last)
-                {
-                First = first;
-                Last = last;
-                }
-
-            public string First { get; private set; }
-            public string Last { get; private set; }
-        }
-
-        private MissingMessageLines PeptideMessages(int count)
-                {
-            if (count == 1)
-            {
-                return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_);
-                }
-            else
-                {
-                return new MissingMessageLines(
-                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__, count),
-                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
-                }
-            }
-
-        private MissingMessageLines FileMessages(int count)
-            {
-            if (count == 1)
-                {
-                return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_file_name_in_the_peak_boundaries_file_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_);
-                }
-            else
-                {
-                return new MissingMessageLines(
-                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_, count),
-                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
-                }
-        }
-
-        private MissingMessageLines ChargeMessages(int count)
-                {
-            if (count == 1)
-            {
-                return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_);
-                }
-            else
-            {
-                return new MissingMessageLines(
-                    string.Format(Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, count),
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
-            }
-        }
-
-        private bool ShowMissingMessage<TItem>(IWin32Window parent, int maxItems, HashSet<TItem> items, Func<TItem, string> printLine, Func<int, MissingMessageLines> getMessageLines)
-            {
-            if (items.Any())
-            {
-                var sb = new StringBuilder();
-                var messageLines = getMessageLines(items.Count);
-                sb.AppendLine(messageLines.First);
-                sb.AppendLine();
-                int itemsToShow = Math.Min(items.Count, maxItems);
-                var itemsList = items.ToList();
-                for (int i = 0; i < itemsToShow; ++i)
-                    sb.AppendLine(printLine(itemsList[i]));
-                if (itemsToShow < items.Count)
-                    sb.AppendLine(@"...");
-                sb.AppendLine();
-                sb.Append(messageLines.Last);
-                var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
-                if (dlgFiles == DialogResult.Cancel)
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private class ResultsKey

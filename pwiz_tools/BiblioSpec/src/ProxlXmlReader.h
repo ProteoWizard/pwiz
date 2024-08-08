@@ -80,13 +80,17 @@ protected:
     enum ANALYSIS {
         UNKNOWN_ANALYSIS,
         PERCOLATOR_ANALYSIS,
-        BYONIC_ANALYSIS
+        BYONIC_ANALYSIS,
+        PLINK_ANALYIS,
+        MEROX_ANALYSIS,
+        PEPTIDE_PROPHET_ANALYSIS,
     };
 
     static double aaMasses_[128];
     static double calcMass(const std::string& sequence, const std::vector<SeqMod>& mods);
     static PSM_SCORE_TYPE analysisToScoreType(ANALYSIS analysisType);
 
+    double getScoreThreshold();
     void calcPsms();
     void applyStaticMods(const std::string& sequence, std::vector<SeqMod>& mods, int crosslinkPosition);
 

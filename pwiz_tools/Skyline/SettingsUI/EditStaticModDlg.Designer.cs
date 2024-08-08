@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditStaticModDlg));
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -58,6 +59,7 @@
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
             this.cbCrosslinker = new System.Windows.Forms.CheckBox();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
             this.toolBarLosses.SuspendLayout();
@@ -204,6 +206,7 @@
             this.listLosses.FormattingEnabled = true;
             this.listLosses.Name = "listLosses";
             this.listLosses.SelectedIndexChanged += new System.EventHandler(this.listNeutralLosses_SelectedIndexChanged);
+            this.listLosses.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listLosses_MouseMove);
             // 
             // labelLoss
             // 
@@ -337,5 +340,6 @@
         private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
         private System.Windows.Forms.ComboBox comboMod;
         private System.Windows.Forms.CheckBox cbCrosslinker;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }

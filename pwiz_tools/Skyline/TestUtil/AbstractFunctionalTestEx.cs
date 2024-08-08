@@ -69,10 +69,18 @@ namespace pwiz.SkylineTestUtil
         /// Open a document and wait for loading completion.
         /// </summary>
         /// <param name="documentPath">File path of document</param>
-        public void OpenDocument(string documentPath)
+        public SrmDocument OpenDocument(string documentPath)
         {
-            var documentFile = TestFilesDir.GetTestPath(documentPath);
-            WaitForCondition(() => File.Exists(documentFile));
+            string documentFile = null;
+            foreach (var testFileDir in TestFilesDirs)
+            {
+                documentFile = testFileDir.GetTestPath(documentPath);
+                if (File.Exists(documentFile))
+                {
+                    break;
+                }
+            }
+
             if (documentPath.EndsWith(@".zip", true, CultureInfo.InvariantCulture))
             {
                 RunUI(() => SkylineWindow.OpenSharedFile(documentFile));
@@ -81,7 +89,7 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => SkylineWindow.OpenFile(documentFile));
             }
-            WaitForDocumentLoaded();
+            return WaitForDocumentLoaded();
         }
 
         public void OpenDocumentNoWait(string documentPath)
@@ -166,8 +174,7 @@ namespace pwiz.SkylineTestUtil
         {
             var doc = SkylineWindow.Document;
             ImportResultsDlg importResultsDlg;
-            if (!Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
-                doc.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            if (!Skyline.SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
             {
                 importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             }
@@ -186,7 +193,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
                 Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelDialog();
+                dlg.CancelButton.PerformClick();
             }
             else if (lockMassParameters == null)
             {
@@ -282,13 +289,13 @@ namespace pwiz.SkylineTestUtil
             return documentGrid.FindColumn(PropertyPath.Parse(colName));
         }
 
-        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRowsInitial, 
+        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int? expectedRowsInitial, 
             string[] additionalColNames = null,
             string newViewName = null,
             int? expectedRowsFinal = null)
         {
             RunUI(() => documentGrid.ChooseView(viewName));
-            WaitForCondition(() => (documentGrid.RowCount >= expectedRowsInitial)); // Let it initialize
+            WaitForCondition(() => (documentGrid.RowCount >= (expectedRowsInitial??0))); // Let it initialize
             if (additionalColNames != null)
             {
                 RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView,
@@ -302,7 +309,7 @@ namespace pwiz.SkylineTestUtil
                         viewEditor.ViewName = newViewName ?? viewName;
                         viewEditor.OkDialog();
                     });
-                WaitForCondition(() => (documentGrid.RowCount == (expectedRowsFinal??expectedRowsInitial))); // Let it initialize
+                WaitForCondition(() => (documentGrid.RowCount == (expectedRowsFinal??expectedRowsInitial??0))); // Let it initialize
             }
         }
 
@@ -698,14 +705,22 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
+        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null, bool recordValues = false)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
+            string actual = null;
             RunUI(() =>
             {
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                AssertEx.AreEqual(expected, val, name + (msg ?? string.Empty));
+                actual = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
             });
+            if (recordValues)
+            {
+                Console.Write($@",{actual}");
+            }
+            else
+            {
+                AssertEx.AreEqual(expected, actual, name + (msg ?? string.Empty));
+            }
         }
 
         protected const string MIXED_TRANSITION_LIST_REPORT_NAME = "Mixed Transition List";
@@ -786,7 +801,18 @@ namespace pwiz.SkylineTestUtil
                 expectedRowCount ?? SkylineWindow.Document.MoleculeTransitionCount * (SkylineWindow.Document.MeasuredResults?.Chromatograms.Count ?? 1));
             return documentGrid;
         }
-        
+
+        public static void SetIonMobilityResolvingPowerUI(TransitionSettingsUI transitionSettingsUi, double rp)
+        {
+            RunUI(() =>
+            {
+                transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.IonMobility;
+                transitionSettingsUi.IonMobilityControl.WindowWidthType =
+                    IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+                transitionSettingsUi.IonMobilityControl.IonMobilityFilterResolvingPower = rp;
+            });
+        }
+
         protected static void RenameReplicate(ManageResultsDlg manageResultsDlg, int replicateIndex, string newName)
         {
             RunUI(() => manageResultsDlg.SelectedChromatograms = new[]
@@ -802,10 +828,18 @@ namespace pwiz.SkylineTestUtil
 
         public static SrmDocument NewDocumentFromSpectralLibrary(string libName, string libFullPath)
         {
-            // Now import the .blib and populate document from that
+            // Remove current document
             RunUI(() => SkylineWindow.NewDocument(true));
+            // Now import the named library and populate document from that
+            return AddToDocumentFromSpectralLibrary(libName, libFullPath);
+        }
 
+        // Import a spectral library and add its contents to current document
+        public static SrmDocument AddToDocumentFromSpectralLibrary(string libName, string libFullPath)
+        {
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            RunUI(() => peptideSettingsUI.TabControlSel = PeptideSettingsUI.TABS.Library);
 
             Assert.IsNotNull(peptideSettingsUI);
             var editListUI =
@@ -817,19 +851,21 @@ namespace pwiz.SkylineTestUtil
                 addLibUI.LibraryPath = libFullPath;
                 addLibUI.OkDialog();
             });
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
+            OkDialog(editListUI, editListUI.OkDialog);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Length > 0);
+            // Library gets added to the document below by the ViewLibraryDlg form
             RunUI(() => Assert.IsFalse(peptideSettingsUI.IsSettingsChanged));
+
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Add all the molecules in the library
             RunUI(() => SkylineWindow.ViewSpectralLibraries());
             var viewLibraryDlg = FindOpenForm<ViewLibraryDlg>();
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
-            RunDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
+            ShowAndDismissDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
             {
                 var addLibraryMessage =
                     string.Format(
@@ -839,16 +875,14 @@ namespace pwiz.SkylineTestUtil
                 messageDlg.DialogResult = DialogResult.Yes;
             });
             var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
-            RunDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
-
+            ShowAndDismissDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
             OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
 
-            var docAfter = WaitForDocumentChange(docBefore);
+            var docAfterAdd = WaitForDocumentChange(docBefore);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
-            RunUI(() => peptideSettingsUI.OkDialog());
-            WaitForClosedForm(peptideSettingsUI);
-            return docAfter;
+
+            return docAfterAdd;
         }
     }
 }

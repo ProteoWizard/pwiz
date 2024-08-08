@@ -175,7 +175,7 @@
     <value>6</value>
   </data>
   <data name="browseFastaBtn.Text" xml:space="preserve">
-    <value>参照(&amp;O)...</value>
+    <value>参照(&amp;B)...</value>
   </data>
   <data name="&gt;&gt;browseFastaBtn.Name" xml:space="preserve">
     <value>browseFastaBtn</value>
@@ -343,7 +343,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大未切断数：</value>
+    <value>最大未切断数(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -421,7 +421,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>酵素：</value>
+    <value>酵素(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -472,7 +472,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>ターゲット毎のデコイ：</value>
+    <value>ターゲット毎のデコイ(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -502,7 +502,7 @@
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>デコイ生成法：</value>
+    <value>デコイ生成法(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -556,7 +556,7 @@
     <value>4</value>
   </data>
   <data name="cbAutoTrain.Text" xml:space="preserve">
-    <value>mProphetのモデルを自動的にトレーニングする</value>
+    <value>mProphetのモデルを自動的にトレーニングする(&amp;A)</value>
   </data>
   <data name="&gt;&gt;cbAutoTrain.Name" xml:space="preserve">
     <value>cbAutoTrain</value>
@@ -577,7 +577,7 @@
     <value>282, 59</value>
   </data>
   <data name="panelDecoys.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;panelDecoys.Name" xml:space="preserve">
     <value>panelDecoys</value>
@@ -604,7 +604,7 @@
     <value>238, 17</value>
   </data>
   <data name="cbImportFromSeparateFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>0</value>
   </data>
   <data name="cbImportFromSeparateFasta.Text" xml:space="preserve">
     <value>別のFASTAからターゲットタンパク質をインポート(&amp;M)</value>
@@ -634,7 +634,7 @@
     <value>282, 20</value>
   </data>
   <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
+    <value>1</value>
   </data>
   <data name="tbxFastaTargets.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -667,7 +667,7 @@
     <value>75, 23</value>
   </data>
   <data name="browseFastaTargetsBtn.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>2</value>
   </data>
   <data name="browseFastaTargetsBtn.Text" xml:space="preserve">
     <value>参照(&amp;W)...</value>
@@ -700,7 +700,7 @@
     <value>381, 45</value>
   </data>
   <data name="targetFastaPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;targetFastaPanel.Name" xml:space="preserve">
     <value>targetFastaPanel</value>

@@ -239,21 +239,12 @@ string getStringFromTimeT(time_t time)
 }
 
 
-bool processPath(const bfs::path& path, const Config& config, const ReaderList& readers, int longestPath)
+bool processPath(const bfs::path& path, const Config& config, const ReaderList& readers, int longestPath, int longestInstrument)
 {
     string head;
     if (bfs::is_regular_file(path))
     {
-        //pwiz::util::random_access_compressed_ifstream is(path.string().c_str());
-        //if (!is)
-        //    throw runtime_error(("[processPath()] Unable to open file \"" + path.string() + "\"").c_str());
-
-        head.resize(512, '\0');
-        FILE* file = fopen(path.string().c_str(), "r");
-        fread(&head[0], 512, 1, file);
-        fclose(file);
-
-        //is.read(&head[0], (std::streamsize)head.size());
+        head = read_file_header(path.string());
     }
 
     //for (ReaderList::const_iterator itr = readers.begin(); itr != readers.end(); ++itr)
@@ -267,19 +258,20 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
         return false;
 
     boost::uintmax_t pathSize = calculatePathSize(path);
-    string pathLastModified = getStringFromTimeT(bfs::last_write_time(path));
+    string pathCreationTime = getStringFromTimeT(bfs::creation_time(path));
 
     Reader::Config readerConfig;
     readerConfig.acceptZeroLengthSpectra = true;
     readerConfig.ignoreZeroIntensityPoints = true;
 
+    format detailedFormat("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %4% %|42t| %|5$+6| %|72t| %6% %|" + lexical_cast<string>(75+longestInstrument) + "t| %7% %|" + lexical_cast<string>(78+longestPath+longestInstrument) + "t| %8%");
     switch (config.verbosityLevel)
     {
         case VerbosityLevel_Brief:
             cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %4%")
                     % pathType
                     % abbreviate_byte_size(pathSize)
-                    % pathLastModified
+                    % pathCreationTime
                     % path.leaf()
                     ).str() << flush;
             break;
@@ -293,26 +285,46 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
                 {
                     const auto& source = *msd;
                     size_t spectraCount = source.run.spectrumListPtr->size();
-                    cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath+3) + "t| %6%")
+                    CVParam instrumentModel;
+                    if (!msd->instrumentConfigurationPtrs.empty())
+                        instrumentModel = msd->instrumentConfigurationPtrs[0]->cvParamChild(MS_instrument_model);
+                    cout << (detailedFormat
                         % pathType
                         % abbreviate_byte_size(pathSize)
-                        % pathLastModified
+                        % pathCreationTime
+                        % source.run.startTimeStamp
                         % spectraCount
-                        % path.leaf()
+                        % instrumentModel.name()
                         % source.run.id
+                        % path.leaf()
                         ).str() << flush;
                 }
             }
             catch(exception& e)
             {
-                cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath + 3) + "t| %6%")
+                cout << (detailedFormat
                         % pathType
                         % abbreviate_byte_size(pathSize)
-                        % pathLastModified
+                        % pathCreationTime
+                        % "error"
+                        % "error"
+                        % "error"
                         % "error"
                         % path.leaf()
-                        % "error"
                         ).str() << endl << e.what() << endl; 
+            }
+            catch(...)
+            {
+                cout << (detailedFormat
+                    % pathType
+                    % abbreviate_byte_size(pathSize)
+                    % pathCreationTime
+                    % "error"
+                    % "error"
+                    % "error"
+                    % "error"
+                    % path.leaf()
+                    ).str() << endl << "Unknown error" << endl;
             }
             break;
 
@@ -340,32 +352,40 @@ void go(const Config& config)
 {
     FullReaderList readers;
 
+    int longestPath = 0;
+    BOOST_FOREACH(const bfs::path & path, config.paths)
+        longestPath = max((int) path.leaf().size(), longestPath);
+
+    int longestInstrument = 0;
+    for(const auto& cvid : cvids())
+    {
+        CVTermInfo info = cvTermInfo(cvid);
+        if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), MS_instrument_model) == info.parentsIsA.end())
+            longestInstrument = max((int) info.shortName().length(), longestInstrument);
+    }
+    longestInstrument = min(35, longestInstrument);
+
     switch (config.verbosityLevel)
     {
         case VerbosityLevel_Brief:
             cout << (format("%|1$=14| %|15t| %|2$=8| %|24t| %|3$=16| %|42t| %4%")
-                    % "Type" % "Size" % "Last Modified" % "Name").str();
+                    % "Type" % "Size" % "Creation Time" % "Name").str();
             break;
         case VerbosityLevel_Detailed:
-            cout << (format("%|1$=14| %|15t| %|2$=8| %|24t| %|3$=16| %|42t| %|4$=6| %|50t| %5%")
-                    % "Type" % "Size" % "Last Modified" % "Spectra" % "Name").str();
+            cout << (format("%|1$=14| %|15t| %|2$=8| %|24t| %|3$=16| %|46t| %4% %|64t| %|5$=6| %|72t| %|6$=6| %|" + lexical_cast<string>(75+longestInstrument) + "t| %7% %|" + lexical_cast<string>(78+longestPath+longestInstrument) + "t| %8%")
+                    % "Type" % "Size" % "Creation Time" % "Run Start Time" % "Spectra"  % "Instrument" % "Name"  % "Filename").str();
             break;
         case VerbosityLevel_Full:
             // no global header
             break;
     }
 
-    int longestPath = 0;
-    BOOST_FOREACH(const bfs::path& path, config.paths)
-        if (path.size() > longestPath)
-            longestPath = path.size();
-
     size_t sourcesFound = 0;
     BOOST_FOREACH(const bfs::path& path, config.paths)
     {
         try
         {
-            if (processPath(path, config, readers, longestPath))
+            if (processPath(path, config, readers, longestPath, longestInstrument))
                 ++sourcesFound;
         }
         catch(bfs::filesystem_error& e)

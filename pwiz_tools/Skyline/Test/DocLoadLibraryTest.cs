@@ -43,9 +43,9 @@ namespace pwiz.SkylineTest
         public void DocLoadLibrary()
         {
             // Load the document
-            var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            string loadPath = testFilesDir.GetTestPath("DocWithLibrary.sky");
-            string libraryPath = testFilesDir.GetTestPath("Yeast_MRMer_min.blib");
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
+            string loadPath = TestFilesDir.GetTestPath("DocWithLibrary.sky");
+            string libraryPath = TestFilesDir.GetTestPath("Yeast_MRMer_min.blib");
             var doc = ResultsUtil.DeserializeDocument(loadPath);
             doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(
                 lib => lib.ChangeLibrarySpecs(new[] {new BiblioSpecLiteSpec(lib.Libraries[0].Name, libraryPath),})));

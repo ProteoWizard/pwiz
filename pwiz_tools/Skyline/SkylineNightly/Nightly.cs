@@ -110,7 +110,7 @@ namespace SkylineNightly
         public const int DEFAULT_DURATION_HOURS = 9;
         public const int PERF_DURATION_HOURS = 12;
 
-        public Nightly(RunMode runMode, string decorateSrcDirName = null)
+        public Nightly(RunMode runMode, string decorateSrcDirName = null, string logDir = null)
         {
             _runMode = runMode;
             _nightly = new Xml("nightly");
@@ -119,7 +119,7 @@ namespace SkylineNightly
             
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
-            _logDir = Path.Combine(nightlyDir, "Logs");
+            _logDir = logDir ?? Path.Combine(nightlyDir, "Logs");
             // Clean up after any old screengrab directories
             var logDirScreengrabs = Path.Combine(_logDir, "NightlyScreengrabs");
             if (Directory.Exists(logDirScreengrabs))
@@ -700,8 +700,9 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isIntegration = new Regex(@"git\.exe.*clone.*-b").IsMatch(log);
-            var isTrunk = !isIntegration && !log.Contains("Testing branch at");
+            var matchBranch = new Regex(@"git\.exe.*clone.*-b.*SkylineTesterForNightly_([a-z]+)").Match(log);
+            bool isTrunk = !matchBranch.Success;
+            bool isIntegration = matchBranch.Success && Equals("integration", matchBranch.Groups[1].Value);
 
             var machineName = Environment.MachineName;
             // Get machine name from logfile name, in case it's not from this machine
@@ -781,21 +782,44 @@ namespace SkylineNightly
                 _endMatchType = FindEndMatch(log);
             }
 
+            private static EndType LAST_BEST_END_TYPE = EndType.none;
+
             private EndType FindEndMatch(string log)
             {
-                // Enumerate through possible formats, starting with the most recent first
                 var regexes = new[] { END_TEST_HEAPS, END_TEST_HANDLES, END_TEST_OLD };
-                for (int i = 0; i < regexes.Length; i++)
+                int beyondSart = _startMatch.Index + _startMatch.Length;
+                // First see if the last matching type matches within this line
+                if (LAST_BEST_END_TYPE != EndType.none)
                 {
-                    var match = regexes[i].Match(log, _startMatch.Index);
-                    if (match.Success)
+                    var match = regexes[(int)LAST_BEST_END_TYPE].Match(log, beyondSart);
+                    int nextNewline = log.IndexOf('\n', beyondSart);
+                    if (match.Success && match.Index < nextNewline)
                     {
                         _endMatch = match;
-                        return (EndType) i;
+                        return LAST_BEST_END_TYPE;
+                    }
+                }
+                // Enumerate through possible formats, starting with the most recent first
+                Match bestMatch = null;
+                var bestEndType = EndType.none;
+                for (int i = 0; i < regexes.Length; i++)
+                {
+                    var match = regexes[i].Match(log, beyondSart);
+                    // The closest matching type is the best. Otherwise there may be a match many lines away.
+                    if (match.Success && (bestMatch == null || bestMatch.Index > match.Index))
+                    {
+                        bestMatch = match;
+                        bestEndType = (EndType) i;
                     }
                 }
 
-                return EndType.none;
+                if (bestMatch != null)
+                {
+                    _endMatch = bestMatch;
+                    LAST_BEST_END_TYPE = bestEndType;
+                }
+
+                return bestEndType;
             }
 
             public string Timestamp { get { return _startMatch.Groups[1].Value; } }
@@ -825,6 +849,9 @@ namespace SkylineNightly
 
         private int ParseTests(string log, bool storeXml = true)
         {
+            // Expecting:
+            // <time> <pass> <test-name> <language> [test-output]<failure-count> failures, <memory-counts> MB, <handle-counts> handles, <seconds> secs.
+            // Match first 4 elements and the trailing space
             var startTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
 
             string lastPass = null;
@@ -967,8 +994,15 @@ namespace SkylineNightly
                 XDocument doc = XDocument.Parse(xml);
                 if (doc.Root != null)
                 {
-                    doc.Root.Add(new XElement("Log", log));
-                    xml = doc.ToString();
+                    try
+                    {
+                        doc.Root.Add(new XElement("Log", log));
+                        xml = doc.ToString();
+                    }
+                    catch (Exception e)
+                    {
+                        Xml.ShowXmlExceptionDetailsAndDie(e, log);
+                    }
                 }
             }
 

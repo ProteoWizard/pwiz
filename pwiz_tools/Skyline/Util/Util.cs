@@ -30,8 +30,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -407,69 +407,6 @@ namespace pwiz.Skyline.Util
                 map.Add(keySelector(value), value);
             return map;
         }
-    }
-
-    /// <summary>
-    /// A read-only list class for the case when a list most commonly contains a
-    /// single entry, but must also support multiple entries.  This list may not
-    /// be empty, thought it may contain a single null element.
-    /// </summary>
-    /// <typeparam name="TItem">Type of the elements in the list</typeparam>
-    public class OneOrManyList<TItem> : AbstractReadOnlyList<TItem>
-    {
-        private ImmutableList<TItem> _list;
-
-        public OneOrManyList(params TItem[] elements)
-        {
-            _list = ImmutableList.ValueOf(elements);
-        }
-
-        public OneOrManyList(IList<TItem> elements)
-        {
-            _list = ImmutableList.ValueOf(elements);
-        }
-
-        public override int Count
-        {
-            get { return _list.Count; }
-        }
-
-        public override TItem this[int index]
-        {
-            get
-            {
-                return _list[index];
-            }
-        }
-
-        public OneOrManyList<TItem> ChangeAt(int index, TItem item)
-        {
-            return new OneOrManyList<TItem>(_list.ReplaceAt(index, item));
-        }
-
-        #region object overrides
-
-        public bool Equals(OneOrManyList<TItem> obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return _list.Equals(obj._list);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((OneOrManyList<TItem>) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return _list.GetHashCode();
-        }
-
-        #endregion
     }
 
     /// <summary>
@@ -1039,6 +976,25 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static BlockedArray<TItem> FromEnumerable(IEnumerable<TItem> enumerable, int itemCount, int itemSize,
+            int bytesPerBlock, IProgressMonitor progressMonitor, IProgressStatus status)
+        {
+            using (var enumerator = enumerable.GetEnumerator())
+            {
+                return new BlockedArray<TItem>(count =>
+                {
+                    var array = new TItem[count];
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assume.IsTrue(enumerator.MoveNext());
+                        array[i] = enumerator.Current;
+                    }
+
+                    return array;
+                }, itemCount, itemSize, bytesPerBlock, progressMonitor, status);
+            }
+        }
+
         /// <summary>
         /// Copy a list into blocks.
         /// </summary>
@@ -1439,8 +1395,8 @@ namespace pwiz.Skyline.Util
         /// <returns>True if the two IEnumerables enumerate over equal objects</returns>
         public static bool Equals<TItem>(IEnumerable<TItem> e1, IEnumerable<TItem> e2)
         {
-            IEnumerator<TItem> enum1 = e1.GetEnumerator();
-            IEnumerator<TItem> enum2 = e2.GetEnumerator();
+            using IEnumerator<TItem> enum1 = e1.GetEnumerator();
+            using IEnumerator<TItem> enum2 = e2.GetEnumerator();
             bool b1, b2;
             while (MoveNext(enum1, out b1, enum2, out b2))
             {
@@ -1507,7 +1463,7 @@ namespace pwiz.Skyline.Util
 
         public static TEnum EnumFromLocalizedString<TEnum>(string value, string[] localizedStrings, TEnum defaultValue)
         {
-            int i = localizedStrings.IndexOf(v => Equals(v, value));
+            int i = localizedStrings.IndexOf(v => Equals(v, value??string.Empty));
             return (i == -1 ? defaultValue : (TEnum) (object) i);
         }
 
@@ -1572,7 +1528,7 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(name))
                 throw new InvalidOperationException(
-                    Resources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
+                    UtilResources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
             if (REGEX_XML_ID.IsMatch(name))
                 return name;
 
@@ -1647,8 +1603,7 @@ namespace pwiz.Skyline.Util
         {
             for (int i = name.Length; i > 0; i--)
             {
-                int num;
-                if (!int.TryParse(name.Substring(i - 1), out num))
+                if (!int.TryParse(name.Substring(i - 1), out _))
                     return i;
             }
             return 0;
@@ -1901,11 +1856,13 @@ namespace pwiz.Skyline.Util
             DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
             DetailedTrace.WriteLine(x.Message);
-            if (RunningResharperAnalysis)
+            if (RunningResharperAnalysis || IsParallelClient)
             {
-                DetailedTrace.WriteLine($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                DetailedTrace.WriteLine(IsParallelClient ?
+                    $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
+                    $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 5 sec extra time when running code coverage or other analysis
-                milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
+                milliseconds += (5000 * (loopCount)) / maxLoopCount; // Each loop a little more desperate
             }
             DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);
@@ -1917,6 +1874,8 @@ namespace pwiz.Skyline.Util
         // "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace, and JETBRAINS_DPA_AGENT_ENABLE=1
         // in case of dotCover and dotMemory."
         public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
+
+        public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
@@ -1962,6 +1921,8 @@ namespace pwiz.Skyline.Util
                 throw new IOException(x.Message, x);
             if (x is OperationCanceledException)
                 throw new OperationCanceledException(x.Message, x);
+            if (x is UnauthorizedAccessException)
+                throw new UnauthorizedAccessException(x.Message, x);
             throw new TargetInvocationException(x.Message, x);            
         }
 
@@ -2168,6 +2129,31 @@ namespace pwiz.Skyline.Util
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Calls either <see cref="MessageDlg.ShowWithException"/> or <see cref="Program.ReportException"/> depending
+        /// on what <see cref="IsProgrammingDefect"/> returns.
+        /// <param name="parent">Parent window for message dialog</param>
+        /// <param name="exception">The exception that was caught</param>
+        /// <param name="message">Optional message which summarizes what Skyline was trying to do when the exception happened,
+        /// to be inserted on a separate line before the exception's message.</param>
+        /// </summary>
+        public static void DisplayOrReportException(IWin32Window parent, Exception exception, string message = null)
+        {
+            if (IsProgrammingDefect(exception))
+            {
+                Program.ReportException(exception);
+            }
+            else
+            {
+                string fullMessage = exception.Message;
+                if (string.IsNullOrEmpty(message))
+                {
+                    fullMessage = TextUtil.LineSeparate(message, fullMessage);
+                }
+                MessageDlg.ShowWithException(parent, fullMessage, exception);
+            }
         }
     }
 

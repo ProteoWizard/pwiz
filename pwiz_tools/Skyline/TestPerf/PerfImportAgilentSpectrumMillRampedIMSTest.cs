@@ -50,13 +50,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         private int _testCase;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads
         public void AgilentSpectrumMillSpectralLibTest()
         {
             AgilentSpectrumMillTest(2);
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads
         public void AgilentSpectrumMillRampedIMSImportTest()
         {
             AgilentSpectrumMillTest(1);
@@ -158,9 +158,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     transitionSettingsDlg.IonMobilityControl.SetUseSpectralLibraryIonMobilities(false);
                     transitionSettingsDlg.IonMobilityControl.SelectedIonMobilityLibrary = Resources.SettingsList_ELEMENT_NONE_None;
-                    transitionSettingsDlg.OkDialog();
                 });
-                WaitForClosedForm(transitionSettingsDlg);
+                OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
             }
 
             
@@ -260,14 +259,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     editIonMobilityLibraryDlg.LibraryName = "test";
                     editIonMobilityLibraryDlg.CreateDatabaseFile(TestFilesDir.GetTestPath(editIonMobilityLibraryDlg.LibraryName + IonMobilityDb.EXT)); // Simulate user clicking Create button
                     editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
-                    editIonMobilityLibraryDlg.OkDialog();
                 });
-                WaitForClosedForm(editIonMobilityLibraryDlg);
-                RunUI(() =>
-                {
-                    transitionSettingsDlg.OkDialog();
-                });
-                WaitForClosedForm(transitionSettingsDlg);
+                OkDialog(editIonMobilityLibraryDlg, editIonMobilityLibraryDlg.OkDialog);
+                OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
 
                 var document = SkylineWindow.Document;
                 var measuredDTs = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
@@ -290,9 +284,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     string errMsg = string.Empty;
                     var key = new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorAdduct);
                     double tolerCCS = 5;
-                    if (expectedDiffs.ContainsKey(key))
+                    if (expectedDiffs.TryGetValue(key, out var diff))
                     {
-                        tolerCCS = expectedDiffs[key] + .1;
+                        tolerCCS = diff + .1;
                     }
                     if (!explicitDTs.ContainsKey(key))
                     {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,19 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    /// <summary>
-    /// For naming of the resource file
-    /// </summary>
-    public class EditListDlg
-    {        
-    }
-
     public partial class EditListDlg<TList, TItem> : FormEx
         where TList : ICollection<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>
@@ -269,7 +263,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            DialogResult result = MultiButtonMsgDlg.Show(this, Resources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
+            DialogResult result = MultiButtonMsgDlg.Show(this, SettingsUIResources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
                 MessageBoxButtons.YesNo);
 
             if (result == DialogResult.Yes)
@@ -294,6 +288,21 @@ namespace pwiz.Skyline.SettingsUI
         {
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private void listBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            string newToolTip = null;
+            var itemIndex = listBox.IndexFromPoint(e.Location);
+            if (itemIndex >= 0 && itemIndex < _list.Count)
+            {
+                newToolTip = (_list[itemIndex] as IHasItemDescription)?.ItemDescription.ToString();
+            }
+
+            if (newToolTip != helpTip.GetToolTip(listBox))
+            {
+                helpTip.SetToolTip(listBox, newToolTip);
+            }
         }
     }
 }

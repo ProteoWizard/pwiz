@@ -27,6 +27,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -100,13 +101,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     : string.Format(@"{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType);
             }
             return labelType.IsLight
-                ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
-                : string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
+                ? string.Format(GraphsResources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
+                : string.Format(GraphsResources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
         }
 
         public override string Title
         {
-            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
+            get
+            {
+                var title = GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType);
+                if (PeaksCount == 0)
+                {
+                    title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
+                }
+                return title;
+            }
         }
     }
     
@@ -123,7 +132,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public ICollection<IonType> ShowTypes { get; set; }
         public ICollection<int> ShowCharges { get; set; } // List of absolute charge values to display CONSIDER(bspratt): may want finer per-adduct control for small mol use
         public bool ShowRanks { get; set; }
-        public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
         public bool ShowMassError { get; set; }
@@ -253,19 +261,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 annotations.Add(stick);
             }
             //ReSharper restore UseObjectOrCollectionInitializer
-
-            if (ShowScores && SpectrumInfo.Score.HasValue)
-            {
-                var text = new TextObj(
-                    string.Format(LocalizationHelper.CurrentCulture, Resources.AbstractSpectrumGraphItem_AddAnnotations_, SpectrumInfo.Score),
-                    0.01, 0, CoordType.ChartFraction, AlignH.Left, AlignV.Top)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
-                };
-                annotations.Add(text);
-            }
         }
 
         public override PointAnnotation AnnotatePoint(PointPair point)
@@ -379,7 +374,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Try to show enough decimal places to distinguish by tolerance
             int places = 1;
-            while (places < 4 && ((int) (SpectrumInfo.Tolerance*Math.Pow(10, places))) == 0)
+            while (places < 4 && ((int) (SpectrumInfo.Tolerance.GetMzTolerance(mz)*Math.Pow(10, places))) == 0)
                 places++;
             return Math.Round(mz, places);
         }
@@ -403,7 +398,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class UnavailableMSGraphItem : NoDataMSGraphItem
     {
-        public UnavailableMSGraphItem() : base(Resources.UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable)
+        public UnavailableMSGraphItem() : base(GraphsResources.UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable)
         {
         }
     }
@@ -487,12 +482,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity);
+            CustomizeAxis(axis, GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity);
         }
 
         public void CustomizeXAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractMSGraphItem_CustomizeXAxis_MZ);
+            CustomizeAxis(axis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
         }
 
         private static void CustomizeAxis(Axis axis, string title)

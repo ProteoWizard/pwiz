@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -225,7 +225,7 @@
   <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
     <value>Product ion selection end</value>
   </data>
-  <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
+  <data name="TransitionLibraries_IonMatchMzTolerance" xml:space="preserve">
     <value>Ion match tolerance</value>
   </data>
   <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
@@ -308,6 +308,9 @@
   </data>
   <data name="StaticMod_IsCrosslinker" xml:space="preserve">
     <value>Crosslinker</value>
+  </data>
+  <data name="StaticMod_RelativeRT" xml:space="preserve">
+    <value>Relative retention time</value>
   </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
@@ -1100,6 +1103,24 @@
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
+  <data name="HardklorSettings_Charges" xml:space="preserve">
+    <value>Charges</value>
+  </data>
+  <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
+    <value>Min intensity PPM</value>
+  </data>
+  <data name="HardklorSettings_MinIdotP" xml:space="preserve">
+    <value>Min idotp</value>
+  </data>
+  <data name="HardklorSettings_Instrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="HardklorSettings_Resolution" xml:space="preserve">
+    <value>Resolution</value>
+  </data>
+  <data name="HardklorSettings_SignalToNoise" xml:space="preserve">
+    <value>Signal to noise</value>
+  </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
     <value>Automatically train mProphet model</value>
   </data>
@@ -1126,6 +1147,9 @@
   </data>
   <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
     <value>Configure Full-Scan Settings</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
+    <value>Hardklor Search Settings</value>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
     <value>Import FASTA</value>
@@ -1205,7 +1229,7 @@
   <data name="TransitionFilterAndLibrariesSettings_IonCount" xml:space="preserve">
     <value>Pick product ions</value>
   </data>
-  <data name="TransitionFilterAndLibrariesSettings_IonMatchTolerance" xml:space="preserve">
+  <data name="TransitionFilterAndLibrariesSettings_IonMatchMzTolerance" xml:space="preserve">
     <value>Ion match tolerance</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_MinIonCount" xml:space="preserve">
@@ -1708,5 +1732,74 @@
   </data>
   <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
     <value>Protein association settings</value>
+  </data>
+  <data name="GroupComparisonDef_MsLevel" xml:space="preserve">
+    <value>MS level</value>
+  </data>
+  <data name="EncyclopeDiaSettings" xml:space="preserve">
+    <value>EncyclopeDIA Search</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaChromLibrary" xml:space="preserve">
+    <value>Chromatogram library</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaConfig" xml:space="preserve">
+    <value>EncyclopeDIA settings</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaQuantLibrary" xml:space="preserve">
+    <value>Quantification library</value>
+  </data>
+  <data name="EncyclopeDiaSettings_FastaSettings" xml:space="preserve">
+    <value>FASTA settings</value>
+  </data>
+  <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
+    <value>Narrow window results</value>
+  </data>
+  <data name="EncyclopeDiaSettings_KoinaSettings" xml:space="preserve">
+    <value>Koina settings</value>
+  </data>
+  <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
+    <value>Wide window results</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_DefaultCharge" xml:space="preserve">
+    <value>Default charge</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_DefaultNCE" xml:space="preserve">
+    <value>Default NCE</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MaxCharge" xml:space="preserve">
+    <value>Max charge</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+    <value>Max missed cleavages</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MinCharge" xml:space="preserve">
+    <value>Min charge</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_Enzyme" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MaxMz" xml:space="preserve">
+    <value>Max m/z</value>
+  </data>
+  <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
+    <value>Min m/z</value>
+  </data>
+  <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
+    <value>Group at gene level</value>
+  </data>
+  <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
+    <value>Relative Abundance Formatting</value>
+  </data>
+  <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
+    <value>Formatting rows</value>
+  </data>
+  <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
+    <value>Max q-value</value>
+  </data>
+  <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">
+    <value>Score threshold</value>
+  </data>
+  <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
+    <value>Score type</value>
   </data>
 </root>

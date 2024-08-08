@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromData(ChromKey key, int providerId)
         {
-            Key = PrimaryKey = key;
+            Key = key;
             ProviderId = providerId;
             Peaks = new List<ChromPeak>();
             MaxPeakIndex = -1;
@@ -77,12 +77,12 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, ChromatogramGroupId chromatogramGroupId, Color peptideColor)
         {
             ChromExtra extra;
             TimeIntensities timeIntensities;
             bool result = provider.GetChromatogram(
-                ProviderId, modifiedSequence, peptideColor,
+                ProviderId, chromatogramGroupId, peptideColor,
                 out extra, out timeIntensities);
             Extra = extra;
             TimeIntensities = RawTimeIntensities = timeIntensities;
@@ -243,11 +243,9 @@ namespace pwiz.Skyline.Model.Results
 
         private IPeakFinder Finder { get; set; }
 
-        public PeakIntegrator MakePeakIntegrator(FullScanAcquisitionMethod acquisitionMethod,
-            TimeIntervals timeIntervals)
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
         {
-            return new PeakIntegrator(acquisitionMethod, timeIntervals, Key.Source, RawTimeIntensities, TimeIntensities,
-                Finder);
+            return new PeakIntegrator(peakGroupIntegrator, Key.Source, RawTimeIntensities, TimeIntensities, Finder);
         }
 
         public ChromKey Key { get; private set; }
@@ -261,6 +259,8 @@ namespace pwiz.Skyline.Model.Results
         public IList<float> RawMassErrors { get { return RawTimeIntensities == null ? null : RawTimeIntensities.MassErrors; } }
         public IList<int> RawScanIds { get { return RawTimeIntensities == null ? null : RawTimeIntensities.ScanIds; } }
         public IEnumerable<IFoundPeak> RawPeaks { get; private set; }
+
+        public bool ParticipatesInScoring => DocNode == null || DocNode.ParticipatesInScoring;
 
         public float RawCenterTime
         {
@@ -301,8 +301,18 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
-        public int OptimizationStep { get; set; }
-        public ChromKey PrimaryKey { get; set; }
+        public int OptimizationStep => Key.OptimizationStep;
+        public ChromKey PrimaryKey
+        {
+            get
+            {
+                if (Key.OptimizationStep == 0 && Key.CollisionEnergy == 0)
+                {
+                    return Key;
+                }
+                return Key.ChangeOptimizationStep(0, null).ChangeCollisionEnergy(0);
+            }
+        }
 
         public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIndexesNew)
         {
@@ -314,7 +324,7 @@ namespace pwiz.Skyline.Model.Results
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals, out IFoundPeak peak)
+        public ChromPeak CalcChromPeak(PeakGroupIntegrator peakGroupIntegrator, IFoundPeak peakMax, ChromPeak.FlagValues flags, out IFoundPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
@@ -324,7 +334,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
 
-            var peakIntegrator = MakePeakIntegrator(acquisitionMethod, timeIntervals);
+            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             var tuple = peakIntegrator.IntegrateFoundPeak(peakMax, flags);
             peak = tuple.Item2;
             return tuple.Item1;
@@ -395,55 +405,58 @@ namespace pwiz.Skyline.Model.Results
                 Key.ExtractionWidth,
                 (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
                 (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
-                Key.Source);
+                Key.Source,
+                (short) OptimizationStep);
         }
     }
 
     internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData
     {
         private ChromPeak _chromPeak;
-        private IFoundPeak _crawPeak;
-
+        
         public ChromDataPeak(ChromData data, IFoundPeak peak)
         {
             Data = data;
-            _crawPeak = peak;
+            Peak = peak;
         }
 
         public ChromData Data { get; private set; }
         public ChromPeak DataPeak {get { return _chromPeak; }
             set { _chromPeak = value; }
         }
-        public IFoundPeak Peak { get { return _crawPeak; } }
+        public IFoundPeak Peak { get; private set; } // As calculated by crawdad etc
 
         public TransitionDocNode NodeTran { get { return Data.DocNode; } }
         public IDetailedPeakData PeakData { get { return this; } }
 
+        public bool ParticipatesInScoring => NodeTran?.ParticipatesInScoring ?? true; // Some ion types don't participate in retention time determination e.g. reporter ions
+
         public override string ToString()
         {
             return Peak == null ? Data.Key.ToString() :
-                String.Format(@"{0} - area = {1:F0}{2}{3}, start = {4}, end = {5}, rt = {6}-{7}>{8}",  // : For debugging
+                String.Format(@"{0} - area = {1:F0}{2}{3}, start = {4}, end = {5}, rt = {6}-{7}>{8}{9}",  // : For debugging
                     Data.Key, Peak.Area,
                     Peak.Identified ? @"+" : string.Empty,
                     DataPeak.IsForcedIntegration ? @"*" : string.Empty,
                     Peak.StartIndex, Peak.EndIndex,
-                    Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
+                    Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex], ParticipatesInScoring?string.Empty:@", ns");
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals)
+        public ChromPeak CalcChromPeak(PeakGroupIntegrator peakGroupIntegrator, IFoundPeak peakMax, ChromPeak.FlagValues flags)
         {
-            _chromPeak = Data.CalcChromPeak(peakMax, flags, acquisitionMethod, timeIntervals, out _crawPeak);
+            DataPeak = Data.CalcChromPeak(peakGroupIntegrator, peakMax, flags, out var crawPeak);
+            Peak = crawPeak;
             return _chromPeak;
         }
 
         public void SetChromPeak(ChromPeak chromPeak)
         {
-            _chromPeak = chromPeak;
+            DataPeak = chromPeak;
         }
 
         public void ChangeChromPeak(ChromPeak chromPeak)
         {
-            _chromPeak = chromPeak;
+            DataPeak = chromPeak;
         }
 
         public bool IsIdentifiedTime(double[] retentionTimes)
@@ -569,6 +582,8 @@ namespace pwiz.Skyline.Model.Results
     {
         public static readonly ChromDataPeakList EMPTY = new ChromDataPeakList();
 
+        private int _scorablePeakCount;
+
         private ChromDataPeakList()
         {
             AcquisitionMethod = FullScanAcquisitionMethod.None;
@@ -633,6 +648,11 @@ namespace pwiz.Skyline.Model.Results
         public int PeakCount { get; set; }
 
         /// <summary>
+        /// A count of scorable peaks included in this peak group (e.g. not reporter ions, unless the group is all reporter ions)
+        /// </summary>
+        public int ScorablePeakCount => _scorablePeakCount == 0 ? PeakCount : _scorablePeakCount;
+
+        /// <summary>
         /// Scores computed using available <see cref="DetailedPeakFeatureCalculator"/>
         /// implementations
         /// </summary>
@@ -642,11 +662,11 @@ namespace pwiz.Skyline.Model.Results
         /// Use proportion of total peaks found to avoid picking super small peaks
         /// in unrefined data
         /// </summary>
-        public double PeakCountScore { get { return LegacyCountScoreCalc.GetPeakCountScore(PeakCount, Count); } }
+        public double ScorablePeakCountScore { get { return LegacyCountScoreCalc.GetPeakCountScore(ScorablePeakCount, Count); } }
         public double MS1Area { get; private set; }
         public double MS2Area { get; private set; }
+        public double ScorableMS2Area { get; private set; } // MS2Area exclusive of chromatograms marked as not participating in scoring (e.g. reporter ions)
         public double CombinedScore { get; private set; }
-        public double MaxHeight { get; private set; }
 
         private const int MIN_TOLERANCE_LEN = 4;
         private const int MIN_TOLERANCE_SMOOTH_FWHM = 3;
@@ -659,6 +679,19 @@ namespace pwiz.Skyline.Model.Results
         private bool IsMs1(ChromSource source)
         {
             return source != ChromSource.fragment; // TODO: source == ChromSource.ms1 || source == ChromSource.sim;
+        }
+
+        public double TotalScorableArea
+        {
+            get
+            {
+                if (FullScanAcquisitionMethod.DDA.Equals(AcquisitionMethod) || IsAllMS1)
+                {
+                    return MS1Area;
+                }
+                // Some ion types don't participate in retention time determination e.g. reporter ions like TMT
+                return ScorableMS2Area;
+            }
         }
 
         public double TotalArea
@@ -722,8 +755,8 @@ namespace pwiz.Skyline.Model.Results
 
         private int ExtendBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
         {
-            float maxIntensity, deltaIntensity;
-            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+            float maxIntensity;
+            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
 
             int lenIntensities = peakPrimary.Data.Intensities.Count;
             // Look for a descent proportional to the height of the peak.  Because, SRM data is
@@ -739,8 +772,8 @@ namespace pwiz.Skyline.Model.Results
                  i >= 0 && i < lenIntensities && Math.Abs(indexBoundary - i) < toleranceLen;
                  i += increment)
             {
-                float maxIntensityCurrent, deltaIntensityCurrent;
-                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent, out deltaIntensityCurrent);
+                float maxIntensityCurrent;
+                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent);
 
                 // If intensity goes above the maximum, stop looking
                 if (maxIntensityCurrent > maxHeight)
@@ -753,7 +786,7 @@ namespace pwiz.Skyline.Model.Results
                     if (indexBoundary == i)
                         maxIntensity = maxIntensityCurrent;
                     else
-                        GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+                        GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
                 }
             }
 
@@ -762,8 +795,8 @@ namespace pwiz.Skyline.Model.Results
 
         private int RetractBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment)
         {
-            float maxIntensity, deltaIntensity;
-            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+            float maxIntensity;
+            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
 
             int lenIntensities = peakPrimary.Data.Intensities.Count;
             // Look for a descent proportional to the height of the peak.  Because, SRM data is
@@ -777,8 +810,8 @@ namespace pwiz.Skyline.Model.Results
             // Extend the index in the direction of the increment
             for (int i = indexBoundary + increment; i > 0 && i < lenIntensities - 1; i += increment)
             {
-                float maxIntensityCurrent, deltaIntensityCurrent;
-                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent, out deltaIntensityCurrent);
+                float maxIntensityCurrent;
+                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent);
 
                 // If intensity goes above the maximum, stop looking
                 if (maxIntensityCurrent > maxHeight || maxIntensityCurrent - maxIntensity > maxAscent)
@@ -791,7 +824,7 @@ namespace pwiz.Skyline.Model.Results
             return indexBoundary;
         }
 
-        private void GetIntensityMetrics(int i, bool useRaw, out float maxIntensity, out float deltaIntensity)
+        private void GetIntensityMetrics(int i, bool useRaw, out float maxIntensity)
         {
             var peakData = this[0];
             var intensities = (useRaw ? peakData.Data.Intensities
@@ -811,7 +844,6 @@ namespace pwiz.Skyline.Model.Results
                 else if (currentIntensity < minIntensity)
                     minIntensity = currentIntensity;
             }
-            deltaIntensity = maxIntensity - minIntensity;
         }
 
         private void AddPeak(ChromDataPeak dataPeak)
@@ -819,13 +851,23 @@ namespace pwiz.Skyline.Model.Results
             // Avoid using optimization data from other optimization steps in scoring
             if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep))
             {
-                MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 double area = dataPeak.Peak.Area;
+                var participatesInScoring = dataPeak.ParticipatesInScoring;
                 if (IsMs1(dataPeak.Data.Key.Source))
                     MS1Area += area;
                 else
+                {
                     MS2Area += area;
+                    if (participatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions like TMT
+                    {
+                        ScorableMS2Area += area;
+                    }
+                }
                 PeakCount++;
+                if (participatesInScoring)
+                {
+                    _scorablePeakCount++;
+                }
             }
             UpdateCombinedScore();
         }
@@ -837,17 +879,29 @@ namespace pwiz.Skyline.Model.Results
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
+                var participatesInScoring = dataPeak.ParticipatesInScoring;
+                if (participatesInScoring)
+                {
+                    _scorablePeakCount--;
+                }
                 if (IsMs1(dataPeak.Data.Key.Source))
                     MS1Area = (PeakCount == 0) ? 0 : MS1Area - area;
                 else
+                {
                     MS2Area = (PeakCount == 0) ? 0 : MS2Area - area;
+                    if (participatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions
+                    {
+                        ScorableMS2Area = (PeakCount == 0) ? 0 : ScorableMS2Area - area;
+                    }
+                }
             }
             UpdateCombinedScore();
         }
 
         private void UpdateCombinedScore()
         {
-            CombinedScore = ScorePeak(TotalArea, PeakCountScore, IsIdentified);
+            // Score is based on peaks that are marked as being useful for scoring, e.g. not including reporter ions like TMT
+            CombinedScore = ScorePeak(TotalScorableArea, ScorablePeakCountScore, IsIdentified);
         }
 
         public static double ScorePeak(double totalArea, double peakCount, bool isIdentified)
@@ -859,10 +913,11 @@ namespace pwiz.Skyline.Model.Results
         protected override void ClearItems()
         {
             PeakCount = 0;
+            _scorablePeakCount = 0;
             MS1Area = 0;
             MS2Area = 0;
+            ScorableMS2Area = 0; 
             CombinedScore = 0;
-            MaxHeight = 0;
 
             base.ClearItems();
         }

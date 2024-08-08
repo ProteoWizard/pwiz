@@ -45,8 +45,8 @@ namespace ProteinTurnoverArgCollector
 
             if (DEFINED_Q_VALUES == DefinedValues.None)
             {
-                labelQValue.Text = "";
-                labelQValue.Enabled = false;
+                textQValue.Text = "";
+                textQValue.Enabled = false;
             }
             if (DEFINED_Q_VALUES == DefinedValues.Some)
             {
@@ -64,7 +64,7 @@ namespace ProteinTurnoverArgCollector
         /// </summary>
         private void ProteinTurnoverUI_Load(object sender, EventArgs e)
         {
-            if (Arguments != null)
+            if (Arguments?.Length == Constants.ARGUMENT_COUNT)
             {
                 textDietEnrichment.Text = Arguments[(int)ArgumentIndices.diet_enrichment];
                 textAverageTurnover.Text = Arguments[(int)ArgumentIndices.average_turnover];

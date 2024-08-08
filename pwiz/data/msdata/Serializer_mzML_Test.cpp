@@ -61,6 +61,50 @@ void testWriteRead(const MSData& msd, const Serializer_mzML::Config& config, con
     unit_assert(!diff);
 }
 
+class SpectrumListError : public SpectrumList
+{
+    public:
+    SpectrumListError(SpectrumListPtr inner) : inner_(std::move(inner)) {}
+
+    SpectrumPtr spectrum(size_t index, bool getBinaryData) const override
+    {
+        if (index == 1)
+            throw runtime_error("the index you are asking for is not available, please try again later");
+        return inner_->spectrum(index, getBinaryData);
+    }
+
+    size_t size() const override { return inner_->size(); }
+    const SpectrumIdentity& spectrumIdentity(size_t index) const override { return inner_->spectrumIdentity(index); }
+    void warn_once(const char* msg) const override {}
+
+    private:
+    SpectrumListPtr inner_;
+};
+
+void testWriteSkipError()
+{
+    if (os_) *os_ << "testWriteSkipError() " << endl;
+
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    Serializer_mzML mzmlSerializer;
+
+    auto sl = msd.run.spectrumListPtr;
+    msd.run.spectrumListPtr.reset(new SpectrumListError(sl));
+
+    ostringstream oss;
+
+    // test continue on error with and without threads
+    mzmlSerializer.write(oss, msd, nullptr, true, true);
+    mzmlSerializer.write(oss, msd, nullptr, false, true);
+
+    // test exception on error with and without threads
+    string expectedErrorMsg = "the index you are asking for is not available, please try again later";
+    unit_assert_throws_what(mzmlSerializer.write(oss, msd), runtime_error, expectedErrorMsg);
+    unit_assert_throws_what(mzmlSerializer.write(oss, msd, nullptr, false, false), runtime_error, expectedErrorMsg);
+}
+
 
 void testWriteRead()
 {
@@ -102,7 +146,6 @@ void testWriteRead()
             testWriteRead(msd, config, diffcfg);
         }
     }
-
 }
 
 
@@ -114,6 +157,9 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         testWriteRead();
+
+        // test writing a file when skipping a spectrum that throws an error
+        testWriteSkipError();
     }
     catch (exception& e)
     {

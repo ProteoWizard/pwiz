@@ -125,10 +125,6 @@ namespace pwiz.SkylineTestFunctional
                         break;
                 }
 
-                // TODO: Remove this once multiple precursor selections can show spectra again.
-                if (precursors?.Length > 1)
-                    precursors = Array.Empty<TransitionGroupDocNode>();
-
                 var graphSpectrum = SkylineWindow.GraphSpectrum;
                 Assert.IsNotNull(precursors);
                 Assert.AreEqual(precursors.Length > 1, graphSpectrum.PrecursorComboVisible);

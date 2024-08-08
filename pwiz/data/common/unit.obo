@@ -1962,6 +1962,26 @@ is_a: UO:0000129 ! absorbed dose unit
 created_by: Luke Slater
 
 [Term]
+id: UO:0010064
+name: milligray per hour
+namespace: unit.ontology
+def: "A derived absorbed dose unit which is equal to one milligray absorbed per hour." [NIST:NIST]
+subset: unit_slim
+synonym: "mGy/h" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010065
+name: milligray per second
+namespace: unit.ontology
+def: "A derived absorbed dose unit which is equal to one milligray absorbed per second." [NIST:NIST]
+subset: unit_slim
+synonym: "mGy/s" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
+
+[Term]
 id: UO:0000142
 name: milligray
 namespace: unit.ontology

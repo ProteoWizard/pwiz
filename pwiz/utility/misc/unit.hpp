@@ -236,14 +236,14 @@ namespace std
 
     inline ostream& operator<< (ostream& o, const doctest::Approx& rhs)
     {
-        o << rhs.toString();
+        o << toString(rhs);
         return o;
     }
 
     template <typename T>
     bool operator==(const vector<T>& lhs, const vector<doctest::Approx>& rhs)
     {
-        if (doctest::isRunningInTest())
+        if (doctest::is_running_in_test)
             REQUIRE(lhs.size() == rhs.size());
         else if (lhs.size() != rhs.size())
             return false;

@@ -23,7 +23,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -203,32 +202,32 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            TransitionFilter.ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, new[] { Adduct },
+            TransitionFilter.ValidateCharges(DocSettingsResources.TransitionFilter_ProductCharges_Product_ion_charges, new[] { Adduct },
                 Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE, false);
 
             if (IsFragment)
             {
                 if (string.IsNullOrEmpty(Fragment))
-                    throw new InvalidDataException(Resources.MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue);
+                    throw new InvalidDataException(DocSettingsResources.MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue);
                 AminoAcid.ValidateAAList(Fragment);
                 if (!string.IsNullOrEmpty(Restrict))
                     AminoAcid.ValidateAAList(Restrict);
                 if (!Terminus.HasValue)
-                    throw new InvalidDataException(Resources.MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs);
+                    throw new InvalidDataException(DocSettingsResources.MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs);
                 if (MIN_MIN_FRAGMENT_LENGTH > MinFragmentLength || MinFragmentLength > MAX_MIN_FRAGMENT_LENGTH)
                 {
-                    throw new InvalidDataException(string.Format(Resources.MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__,
+                    throw new InvalidDataException(string.Format(DocSettingsResources.MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__,
                                                                  MinFragmentLength, MIN_MIN_FRAGMENT_LENGTH, MAX_MIN_FRAGMENT_LENGTH));
                 }
             }
             else
             {
                 if (SettingsCustomIon.MonoisotopicMass == 0 || SettingsCustomIon.AverageMass == 0)
-                    throw new InvalidDataException(Resources.MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
+                    throw new InvalidDataException(DocSettingsResources.MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
                 if (SettingsCustomIon.MonoisotopicMass < MIN_REPORTER_MASS || SettingsCustomIon.AverageMass < MIN_REPORTER_MASS)
-                    throw new InvalidDataException(string.Format(Resources.MeasuredIon_Validate_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__, MIN_REPORTER_MASS));
+                    throw new InvalidDataException(string.Format(DocSettingsResources.MeasuredIon_Validate_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__, MIN_REPORTER_MASS));
                 if (SettingsCustomIon.MonoisotopicMass > MAX_REPORTER_MASS || SettingsCustomIon.AverageMass > MAX_REPORTER_MASS)
-                    throw new InvalidDataException(string.Format(Resources.MeasuredIon_Validate_Reporter_ion_masses_must_be_less_than_or_equal_to__0__, MAX_REPORTER_MASS));
+                    throw new InvalidDataException(string.Format(DocSettingsResources.MeasuredIon_Validate_Reporter_ion_masses_must_be_less_than_or_equal_to__0__, MAX_REPORTER_MASS));
             }
         }
 
@@ -258,15 +257,15 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var charges = TextUtil.ParseInts(reader.GetAttribute(ATTR.charges)); // Old version?
                 if (charges.Length > 1)
-                    throw new InvalidDataException(Resources.MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_);
+                    throw new InvalidDataException(DocSettingsResources.MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_);
                 var parsedIon = CustomIon.Deserialize(reader);
                 Adduct adduct;
                 if (charges.Any())  // Old style - fix it up a little for our revised ideas about custom ion ionization
                 {
                     adduct = Adduct.FromChargeNoMass(charges[0]);
-                    if (string.IsNullOrEmpty(parsedIon.NeutralFormula)) // Adjust the user-supplied masses
+                    if (parsedIon.ParsedMolecule.IsMassOnly) // Adjust the user-supplied masses
                     {
-                        SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
+                        SettingsCustomIon = new SettingsCustomIon(string.Empty, adduct,
                             Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             parsedIon.Name);
@@ -276,7 +275,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (charges[0] > 1) // XML deserializer will have added an H already
                         {
                             var adductProtonated = Adduct.FromChargeProtonated(charges[0]-1);
-                            var formula = adductProtonated.ApplyToFormula(parsedIon.NeutralFormula);
+                            var formula = adductProtonated.ApplyToMolecule(parsedIon.ParsedMolecule).Molecule.ToString();
                             parsedIon = new CustomIon(formula, adduct, parsedIon.MonoisotopicMass, parsedIon.AverageMass, Name);
                         }
                     }
@@ -287,7 +286,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 if (SettingsCustomIon == null)
                 {
-                    SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
+                    SettingsCustomIon = new SettingsCustomIon(parsedIon.ParsedMolecule.ToString(), adduct,
                         parsedIon.MonoisotopicMass,
                         parsedIon.AverageMass,
                         parsedIon.Name);
@@ -313,7 +312,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.NeutralFormula);
+                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.ParsedMolecule.IsMassOnly ? null : SettingsCustomIon.ParsedMolecule.ToString());
                 // Masses are information only, if there is a formula, but Panorama may need these
                 writer.WriteAttribute(ATTR.mass_monoisotopic, SettingsCustomIon.MonoisotopicMass.Value);
                 writer.WriteAttribute(ATTR.mass_average, SettingsCustomIon.AverageMass.Value);

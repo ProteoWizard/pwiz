@@ -28,6 +28,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -120,15 +121,6 @@ namespace pwiz.Skyline.Model.Results
 
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
-        private bool IsTimeNormalArea
-        {
-            get
-            {
-                return !_document.Settings.HasResults ||
-                       _document.Settings.MeasuredResults.IsTimeNormalArea;
-            }
-        }
-
         public void BuildCache()
         {
             //LOG.InfoFormat(@"Start file import: {0}", MSDataFilePath.GetFileName());
@@ -150,8 +142,8 @@ namespace pwiz.Skyline.Model.Results
             MsDataFileUri dataFilePathRecalc = GetRecalcDataFilePath(MSDataFilePath, out dataFilePathPart);
 
             string format = dataFilePathRecalc == null
-                                ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
-                                : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
+                                ? ResultsResources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
+                                : ResultsResources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
             string message = string.Format(format, MSDataFilePath.GetSampleName() ?? MSDataFilePath.GetFileName());
             _status = _status
                 .ChangeMessage(message)
@@ -249,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        throw new InvalidDataException(String.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
+                        throw new InvalidDataException(String.Format(ResultsResources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
                                 dataFilePath.GetSampleOrFileName()));
                     }
 
@@ -362,7 +354,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             int i = _cacheRecalc.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePathRecalc));
             if (i == -1)
-                throw new ArgumentException(string.Format(Resources.ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_, dataFilePathRecalc));
+                throw new ArgumentException(string.Format(ResultsResources.ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_, dataFilePathRecalc));
             var cachedFile = _cacheRecalc.CachedFiles[i];
             return new FileBuildInfo(cachedFile);
         }
@@ -409,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!doSecondPass && listChromData.Any(data => null != data && !IsFirstPassPeptide(data)))
                 {
                     _status = _status.ChangeWarningMessage(
-                        Resources.ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_);
+                        ResultsResources.ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_);
                     _loader.UpdateProgress(_status);
                 }
                 // Let the provider know that it is now safe to use retention time prediction
@@ -443,14 +435,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Write scan ids
-            var scanIdBytes = provider.MSDataFileScanIdBytes;
-            if (scanIdBytes.Length > 0)
-            {
-                _currentFileInfo.LocationScanIds = _fsScans.Stream.Position;
-                _currentFileInfo.SizeScanIds = scanIdBytes.Length;
-                _fsScans.Stream.Write(scanIdBytes, 0, scanIdBytes.Length);
-            }
-
+            _currentFileInfo.WriteResultFileMetadata(provider.ResultFileData, _fsScans.Stream);
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
 
@@ -476,6 +461,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
+            _listResultFileDatas.Add(provider.ResultFileData as ResultFileMetaData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,
@@ -533,31 +519,23 @@ namespace pwiz.Skyline.Model.Results
         private List<PeptideChromDataSets> CalcPeptideChromDataSets(ChromDataProvider provider,
             List<PeptidePrecursorMz> listMzPrecursors, HashSet<IsotopeLabelType> setInternalStandards)
         {
-            double tolerance = _document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            bool singleMatch = provider.IsSingleMzMatch;
-
             var dictPeptideChromData = new Dictionary<PeptideSequenceModKey, PeptideChromDataSets>();
             var listChromData = new List<PeptideChromDataSets>();
 
-            foreach (var chromDataSet in GetChromDataSets(provider))
+            foreach (var matchingGroup in GetMatchingGroups(_document, provider, listMzPrecursors))
             {
-                if (chromDataSet == null)
-                    continue;
-                foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch, tolerance))
-                {
-                    var peptidePercursor = matchingGroup.Key;
-                    var chromDataSetMatch = matchingGroup.Value;
-                    chromDataSetMatch.IsStandard = peptidePercursor != null &&
-                                                   setInternalStandards.Contains(
-                                                       peptidePercursor.NodeGroup.TransitionGroup.LabelType);
+                var peptidePercursor = matchingGroup.Key;
+                var chromDataSetMatch = matchingGroup.Value;
+                chromDataSetMatch.IsStandard = peptidePercursor != null &&
+                                               setInternalStandards.Contains(
+                                                   peptidePercursor.NodeGroup.TransitionGroup.LabelType);
 
-                    AddChromDataSet(provider.IsProcessedScans,
-                        chromDataSetMatch,
-                        peptidePercursor,
-                        dictPeptideChromData,
-                        listChromData,
-                        provider.FileInfo);
-                }
+                AddChromDataSet(provider.IsProcessedScans,
+                    chromDataSetMatch,
+                    peptidePercursor,
+                    dictPeptideChromData,
+                    listChromData,
+                    provider.FileInfo);
             }
 
             listChromData.AddRange(dictPeptideChromData.Values);
@@ -591,7 +569,7 @@ namespace pwiz.Skyline.Model.Results
             return 0;
         }
 
-        private sealed class PeptidePrecursorMz
+        public sealed class PeptidePrecursorMz
         {
             public PeptidePrecursorMz(PeptideDocNode nodePeptide,
                                       TransitionGroupDocNode nodeGroup,
@@ -604,6 +582,15 @@ namespace pwiz.Skyline.Model.Results
 
             public PeptideDocNode NodePeptide { get; private set; }
             public TransitionGroupDocNode NodeGroup { get; private set; }
+
+            public ChromatogramGroupId ChromatogramGroupId
+            {
+                get
+                {
+                    return ChromatogramGroupId.ForPeptide(NodePeptide, NodeGroup);
+                }
+            }
+
             public SignedMz PrecursorMz { get; private set; }
         }
 
@@ -617,13 +604,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider)
+        private static IEnumerable<ChromDataSet> GetChromDataSets(SrmDocument document, ChromDataProvider provider)
         {
-            return GetChromDataSets(_document.Settings.TransitionSettings.FullScan.AcquisitionMethod, provider, IsTimeNormalArea);
-        }
+            var fullScanAcquisitionMethod = document.Settings.TransitionSettings.FullScan.AcquisitionMethod;
+            var isTimeNormalArea = !document.Settings.HasResults || document.Settings.MeasuredResults.IsTimeNormalArea;
 
-        public static IEnumerable<ChromDataSet> GetChromDataSets(FullScanAcquisitionMethod fullScanAcquisitionMethod, ChromDataProvider provider, bool isTimeNormalArea)
-        {
             ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
             foreach (var keyIndex in provider.ChromIds.OrderBy(k => k))
@@ -646,40 +631,9 @@ namespace pwiz.Skyline.Model.Results
             }
             // Caution: for SRM data, we may have just grouped chromatograms that will eventually
             // prove to have discontiguous RT spans once we load them and have time data.
-            yield return chromDataSet;
+            if (chromDataSet != null)
+                yield return chromDataSet;
         }
-//        public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
-//        {
-//            var listKeyIndex = new List<ChromKeyProviderIdPair>(provider.ChromIds);
-//            listKeyIndex.Sort();
-//           
-//            List<ChromDataSet> chromDataSets = new List<ChromDataSet>();
-//            ChromKey lastKey = ChromKey.EMPTY;
-//            ChromDataSet chromDataSet = null;
-//
-//            foreach (var keyIndex in listKeyIndex)
-//            {
-//                var key = keyIndex.Key;
-//                var chromData = new ChromData(key, keyIndex.Value);
-//
-//                if (chromDataSet != null && key.ComparePrecursors(lastKey) == 0)
-//                {
-//                    chromDataSet.Add(chromData);
-//                }
-//                else
-//                {
-//                    if (chromDataSet != null)
-//                        chromDataSets.Add(chromDataSet);
-//
-//                    chromDataSet = new ChromDataSet(isTimeNormalArea, chromData);
-//                }
-//                lastKey = key;
-//            }
-//
-//            Assume.IsNotNull(chromDataSet);
-//            chromDataSets.Add(chromDataSet);
-//            return chromDataSets;
-//        }
 
         private void AddChromDataSet(bool isProcessedScans,
                                             ChromDataSet chromDataSet,
@@ -911,6 +865,24 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
+            SrmDocument document, ChromDataProvider provider)
+        {
+            var mzPrecursors = from nodePep in document.Molecules
+                from TransitionGroupDocNode nodeGroup in nodePep.Children
+                orderby nodeGroup.PrecursorMz
+                select new PeptidePrecursorMz(nodePep, nodeGroup, nodeGroup.PrecursorMz);
+            return GetMatchingGroups(document, provider, mzPrecursors.ToList());
+        }
+
+        private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
+            SrmDocument document, ChromDataProvider provider, List<PeptidePrecursorMz> listMzPrecursors)
+        {
+            return GetChromDataSets(document, provider).SelectMany(chromDataset => GetMatchingGroups(chromDataset, listMzPrecursors,
+                provider.IsSingleMzMatch,
+                document.Settings.TransitionSettings.Instrument.MzMatchTolerance));
+        }
+
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
             ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch, double tolerance)
         {
@@ -919,12 +891,12 @@ namespace pwiz.Skyline.Model.Results
 
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
-            var modSeq = chromDataSet.ModifiedSequence;
+            var chromatogramGroupId = chromDataSet.ChromatogramGroupId;
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
-                if (modSeq != null && !Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedTarget)) // ModifiedSequence for peptides, other id for customIons
+                if (chromatogramGroupId != null && !Equals(chromatogramGroupId, peptidePrecursorMz.ChromatogramGroupId))
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
@@ -1292,7 +1264,7 @@ namespace pwiz.Skyline.Model.Results
 
         private ChromDataProvider CreateChromatogramProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo)
         {
-            return new ChromatogramDataProvider(dataFile, fileInfo, _status, 0, 100, _loader);
+            return new ChromatogramDataProvider(dataFile, fileInfo, _document, _status, 0, 100, _loader);
         }
 
         private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo)
@@ -1331,7 +1303,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (_fs.Stream == null)
                     throw new InvalidDataException(
-                        Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+                        ResultsResources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
                 WriteChromDataSet(chromDataSets.IndexInFile, chromDataSet, dictScoresToIndex, saveRawTimes, chromDataSets.IsProcessedScans);
             }
         }
@@ -1349,7 +1321,7 @@ namespace pwiz.Skyline.Model.Results
             int lenUncompressed = (int)pointsMemoryStream.Length;
             if (_fs.Stream == null)
                 throw new InvalidDataException(
-                    Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+                    ResultsResources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
             _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
 
             // Use existing scores, if they have already been added
@@ -1376,7 +1348,11 @@ namespace pwiz.Skyline.Model.Results
             // Add to header list
             var header = chromDataSet.MakeChromGroupHeaderInfo(groupOfTimeIntensities, lenCompressed, lenUncompressed);
             header.Offset(0, _listTransitions.Count, _peakCount, scoresIndex, location);
-            header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
+            if (chromDataSet.ChromatogramGroupId != null)
+            {
+                header = header.ChangeTextIdIndex(
+                    _chromatogramGroupIds.AddId(chromDataSet.ChromatogramGroupId));
+            }
 
             int? transitionPeakCount = null;
             foreach (var chromData in chromDataSet.Chromatograms)
@@ -1395,7 +1371,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     throw new InvalidDataException(
                         string.Format(
-                            Resources
+                            ResultsResources
                                 .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
                             transitionPeakCount, chromData.Peaks.Count));
                 }
@@ -1516,5 +1492,21 @@ namespace pwiz.Skyline.Model.Results
 
         public int SizeScanIds { get; set; }
         public long LocationScanIds { get; set; }
+
+        public void WriteResultFileMetadata(IResultFileMetadata resultFileMetadata, Stream stream)
+        {
+            if (resultFileMetadata == null)
+            {
+                SizeScanIds = 0;
+                return;
+            }
+
+            var locationScanIds = stream.Position;
+            var bytes = resultFileMetadata.ToByteArray();
+            stream.Write(bytes, 0, bytes.Length);
+            Assume.AreEqual(locationScanIds + bytes.Length, stream.Position);
+            SizeScanIds = bytes.Length;
+            SetFlag(resultFileMetadata is ResultFileMetaData, ChromCachedFile.FlagValues.result_file_data);
+        }
     }
 }

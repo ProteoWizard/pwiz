@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -59,6 +60,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestEditBogusMolecule();
+            TestEditMassWithPrecursorTransitions();
             TestEditWithIsotopeDistribution();
             AsMasses();
             AsFormulas();
@@ -72,13 +75,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMoleculeAsMasses();
@@ -98,13 +99,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMolecule();
@@ -121,6 +120,7 @@ namespace pwiz.SkylineTestFunctional
             docNext = WaitForDocumentChange(docNext);
             TestAddingSmallMoleculePrecursor();
             WaitForDocumentChange(docNext);
+            TestMoleculeEditError(); // Test handling of edits to molecule that don't make sense for child ions
         }
 
         private static void TestEditingSmallMolecule()
@@ -204,6 +204,44 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value, massPrecisionTolerance);
 
         }
+        private static void TestEditBogusMolecule()
+        {
+            // Add a legit molecule, then try to modify it with garbage
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var origDoc = SkylineWindow.Document;
+            RunUI(() =>
+                SkylineWindow.ModifyDocument("", mdoc =>
+                {
+                    return mdoc.AddPeptideGroups(new[]
+                    {
+                        new PeptideGroupDocNode(new PeptideGroup(), mdoc.Annotations, "Molecule Group", "",
+                            new PeptideDocNode[0])
+                    }, true, IdentityPath.ROOT, out _, out _);
+                }));
+            var doc = WaitForDocumentChange(origDoc);
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.Document.MoleculeGroups.ElementAt(0).Id));
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.Formula = "C3H7NO2[M+H]";
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode;
+            });
+            editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.Formula = "[13C]3H7[15N]O2"; // CONSIDER: we should really support this nomenclature but we don't (yet?)
+            });
+            var errorDlg = ShowDialog<MessageDlg>(editMoleculeDlg.OkDialog); // This shouldn't actually close the dialog since the formula is in error and highlighted red
+            OkDialog(errorDlg, errorDlg.OkDialog);
+            OkDialog(editMoleculeDlg, editMoleculeDlg.CancelDialog);
+            RunUI(() => SkylineWindow.NewDocument(true));
+        }
+
         private static void TestEditingSmallMoleculeAsMasses()
         {
             RunUI(() =>
@@ -267,9 +305,7 @@ namespace pwiz.SkylineTestFunctional
                 editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.none; // Simulate user forgets to declare units
                 editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES_GROUP.CollisionalCrossSectionSqA.Value;
             });
-            ShowDialog<MessageDlg>(editMoleculeDlgA.OkDialog);
-            var errorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() =>
+            RunDlg<MessageDlg>(editMoleculeDlgA.OkDialog, errorDlg =>
             {
                 Assert.IsTrue(errorDlg.Message.Contains(Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_));
                 errorDlg.OkDialog();
@@ -284,16 +320,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 editMoleculeDlgA.IonMobility = -TESTVALUES_GROUP.IonMobility.Value;
             });
-            ShowDialog<MessageDlg>(editMoleculeDlgA.OkDialog);
-            errorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() =>
+            RunDlg<MessageDlg>(editMoleculeDlgA.OkDialog, errorDlg =>
             {
                 Assert.IsTrue(errorDlg.Message.Contains(
-                    string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, 
+                    string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_,
                         -TESTVALUES_GROUP.IonMobility.Value)));
                 errorDlg.OkDialog();
-                editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.compensation_V; // But negative CoV is allowed
             });
+            RunUI(() => editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.compensation_V); // But negative CoV is allowed
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var docB = WaitForDocumentChange(doc);
             // Undo that last change
@@ -862,6 +896,38 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        // Test handling of changes to molecule that make no sense with its child ions
+        // e.g. removing atoms that the child ions also want to remove
+        private void TestMoleculeEditError()
+        {
+            // Position ourselves on the first precursor
+            var newDoc = SkylineWindow.Document;
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
+            var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
+            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIonFormula("-C+2H");
+            RunUI(() => moleculeDlg.Adduct = adduct);
+            OkDialog(moleculeDlg, moleculeDlg.OkDialog);
+
+            // The first precursor now has no Carbon - if we try to remove Carbon from parent molecule too that should error out
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() =>
+            {
+                moleculeDlg.FormulaBox.Formula = "HO15"; 
+            });
+            // First precursor's adduct now describes removing a Carbon that doesn't exist
+            RunDlg<MessageDlg>(moleculeDlg.OkDialog, dlg =>
+            {
+                // Trying to exit the dialog should cause a warning about adduct and formula conflict
+                var expected =
+                    string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                        "[M-C+2H]", "C", "HO15");
+                Assert.AreEqual(expected, dlg.Message);
+                dlg.OkDialog(); // Dismiss the warning
+            });
+            OkDialog(moleculeDlg, moleculeDlg.CancelDialog); // Abandon silly change to molecule
+        }
+
         private static void CheckTransitionGroupSortOrder(SrmDocument newDoc)
         {
             foreach (var mol in newDoc.Molecules)
@@ -895,13 +961,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
-                var transitionList =
+            });
+            var docCurrent = SkylineWindow.Document;
+            var transitionList =
                 "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n"+
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n"+
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,";
-                SetClipboardText(transitionList);
-                SkylineWindow.Paste();
-            });
+            SetClipboardText(transitionList);
+            PasteSmallMoleculeListNoAutoManage(); // Paste the clipboard text, dismiss the offer to enable automanage
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 1);
         }
 
@@ -941,17 +1008,26 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
-                var transitionList =
-                    "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
-                SetClipboardText(transitionList);
-                SkylineWindow.Paste();
             });
-            var doc = WaitForDocumentLoaded();
+            var docCurrent = SkylineWindow.Document;
+            var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
+            var doc =    PasteSmallMoleculeList(transitionList); // Paste the text
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
+
+            // Now turn on auto manage children, so settings change has an effect on doc structure
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            {
+                refineDlg.AutoPrecursors = true;
+                refineDlg.AutoTransitions = true;
+                refineDlg.OkDialog();
+            });
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4); // No changes yet, though
 
             // Use transition filter settings to add isotope distribution
             var fullScanDlg = ShowTransitionSettings(TransitionSettingsUI.TABS.Filter);
@@ -968,6 +1044,7 @@ namespace pwiz.SkylineTestFunctional
                 fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
             });
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor));
             using (new CheckDocumentState(1, 1, 2, 10))
@@ -999,6 +1076,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(400.6623, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
             });
             OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
 
             // Verify that this updated all the precursor isotope mz values
             VerifyPrecursorTransitionMz(399.37179364, 0); // M
@@ -1010,7 +1088,6 @@ namespace pwiz.SkylineTestFunctional
             VerifyPrecursorTransitionMz(402.381853413823, 6); // M+1 heavy
             VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
-
 
             // Change the adduct 
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
@@ -1027,19 +1104,67 @@ namespace pwiz.SkylineTestFunctional
 
             });
             OkDialog(editTransitionGroupDlg, editTransitionGroupDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+
             // Verify that this updated all the precursor isotope mz values
-            VerifyPrecursorTransitionMz(199.182259, 0); // M
-            VerifyPrecursorTransitionMz(199.683934336183, 1); // M+1
-            VerifyPrecursorTransitionMz(200.185431221118, 2); // M+2
-            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+            VerifyPrecursorTransitionMz(199.182259, 5); // M
+            VerifyPrecursorTransitionMz(199.683934336183, 6); // M+1
+            VerifyPrecursorTransitionMz(200.185431221118, 7); // M+2
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 9); // fragment should not change
 
             // But the heavy adduct wasn't changed, make sure no change to mz
-            VerifyPrecursorTransitionMz(401.3785033156, 5); // M heavy
-            VerifyPrecursorTransitionMz(402.381853413823, 6); // M+1 heavy
-            VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
+            VerifyPrecursorTransitionMz(401.3785033156, 0); // M heavy
+            VerifyPrecursorTransitionMz(402.381853413823, 1); // M+1 heavy
+            VerifyPrecursorTransitionMz(403.38479203566, 2); // M+2 heavy
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
 
         }
 
+
+        /// <summary>
+        /// Test the fix for updating non-auto-managed precursor transitions
+        /// </summary>
+        private void TestEditMassWithPrecursorTransitions()
+        {
+            // Clear out the document
+            RunUI(() => { SkylineWindow.NewDocument(true); });
+            var docCurrent = SkylineWindow.Document;
+            var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                "Cer,Cer 12:0;2/12:0,,[M-H]1-,398.3639681499,,,,,,\n" + // Precursor transition
+                "Cer,Cer 12:0;2/12:0,,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,,,,,,\n" + // Precursor transition
+                "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,-1,V',,[M-H]1-,186.1863380499,-1,";
+            var doc = PasteSmallMoleculeListNoAutoManage(transitionList); // Paste the text
+            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 6);
+
+            // Position ourselves on the molecule, then edit its mass
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(
+                () => SkylineWindow.ModifyPeptide());
+            RunUI(() =>
+            {
+                var massPrecisionTolerance = 0.0001;
+                Assert.AreEqual(399.371245, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(399.371245, double.Parse(editMoleculeDlg.FormulaBox.AverageText),
+                    massPrecisionTolerance);
+                editMoleculeDlg.FormulaBox.MonoMass = 499.371245; // Change mass
+                editMoleculeDlg.FormulaBox.AverageMass = 499.65436; // Change mass
+                Assert.AreEqual(499.371245, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(499.65436, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            
+            // Verify that this updated all the precursor mz values
+            VerifyPrecursorTransitionMz(498.363969, 0); // M
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 2); // fragment should not change
+
+            VerifyPrecursorTransitionMz(500.370679, 3); // M heavy
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 5); // fragment should not change
+
+        }
     }
 }

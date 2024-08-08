@@ -23,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
@@ -63,6 +64,7 @@ namespace pwiz.Skyline.Util
                 Version = string.Empty;
             }
 
+            IsRunningOnWine = ProcessEx.IsRunningOnWine;
         }
         public enum InstallType { release, daily, developer }
 
@@ -80,6 +82,7 @@ namespace pwiz.Skyline.Util
 
         public static bool IsDeveloperInstall { get; }
         public static bool IsAutomatedBuild { get; private set; }
+        public static bool IsRunningOnWine { get; }
 
         public static bool Is64Bit
         {

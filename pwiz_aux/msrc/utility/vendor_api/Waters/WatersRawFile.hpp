@@ -19,7 +19,6 @@
 // limitations under the License.
 //
 
-
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -36,17 +35,26 @@
 #include <iostream>
 #include <fstream>
 
+#pragma warning (push)
+#pragma warning (disable: 4189)
 //#include "MassLynxRawDataFile.h"
 #include "MassLynxRawBase.hpp"
 #include "MassLynxRawScanReader.hpp"
 #include "MassLynxRawChromatogramReader.hpp"
+#include "MassLynxRawAnalogReader.hpp"
 #include "MassLynxRawInfoReader.hpp"
 //#include "MassLynxRawScanStatsReader.h"
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/winapi/time.hpp>
+
 #include "MassLynxLockMassProcessor.hpp"
 #include "MassLynxRawProcessor.hpp"
 #include "MassLynxParameters.hpp"
+#include "MassLynxScanProcessor.hpp"
+
 //#include "cdtdefs.h"
 //#include "compresseddatacluster.h"
+#pragma warning (pop)
 
 namespace pwiz {
 namespace vendor_api {
@@ -72,7 +80,7 @@ class MassLynxRawProcessorWithProgress : public MassLynxRawProcessor
     public:
     MassLynxRawProcessorWithProgress(const string& rawpath, IterationListenerRegistry* ilr = nullptr) : ilr_(ilr), numSpectra_(100), lastSpectrum_(0)
     {
-        SetRawPath(rawpath);
+        SetRawData(rawpath);
     }
 
     void SetNumSpectra(int numSpectra) { numSpectra_ = numSpectra; }
@@ -96,7 +104,9 @@ struct PWIZ_API_DECL RawData
     mutable Extended::MassLynxRawScanReader Reader;
     Extended::MassLynxRawInfo Info;
     MassLynxRawChromatogramReader ChromatogramReader;
-
+    MassLynxRawAnalogReader AnalogChromatogramReader;
+    std::vector<string> analogChannelNames, analogChannelUnits;
+    
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
         CachedCompressedDataCluster(Extended::MassLynxRawScanReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
@@ -106,6 +116,7 @@ struct PWIZ_API_DECL RawData
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
     const vector<bool>& SonarEnabledByFunctionIndex() const {return sonarEnabledByFunctionIndex;}
+    const set<int>& FunctionsWithChromFiles() const { return functionsWithChromFiles; } // For detecting lockmass function
 
     bool HasIonMobility() {return hasIonMobility_;}
     bool HasSONAR() {return hasSONAR_;}
@@ -113,6 +124,11 @@ struct PWIZ_API_DECL RawData
     const vector<vector<float>>& TimesByFunctionIndex() const {return timesByFunctionIndex;}
     const vector<vector<float>>& TicByFunctionIndex() const {return ticByFunctionIndex;}
 
+    const vector<vector<float>>& AnalogTimesByChannel() const { return analogTimes; }
+    const vector<vector<float>>& AnalogIntensitiesByChannel() const { return analogIntensities; }
+    const vector<string>& AnalogChannelNames() const { return analogChannelNames; }
+    const vector<string>& AnalogChannelUnits() const { return analogChannelUnits; }
+    
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
 
@@ -120,6 +136,7 @@ struct PWIZ_API_DECL RawData
         : Reader(rawpath),
           Info(Reader),
           ChromatogramReader(Reader),
+          AnalogChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
           workingDriftTimeFunctionIndex_(-1),
           workingSonarFunctionIndex_(-1),
@@ -129,19 +146,30 @@ struct PWIZ_API_DECL RawData
           hasIonMobility_(false),
           hasSONAR_(false)
     {
-        LockMass.SetRawReader(Reader);
+        LockMass.SetRawData(Reader);
 
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
         // For functions over 100, the names become _FUNC0100.DAT
         // Keep track of the maximum function number
         string functionPathmask = rawpath + "/_FUNC*.DAT";
+        string chromatogramPathmask = rawpath + "/_CHRO*.DAT";
         vector<bfs::path> functionFilepaths;
+        vector<bfs::path> chromatogramFilepaths;
         expand_pathmask(functionPathmask, functionFilepaths);
+        expand_pathmask(chromatogramPathmask, chromatogramFilepaths);
         map<int, bfs::path> functionFilepathByNumber;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
             string fileName = BFS_STRING(functionFilepaths[i].filename());
             size_t number = lexical_cast<size_t>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
+            // Note whether or not there's a corresponding CHRO file - used in determining lockmass function
+            string chromatogramFileName = fileName;
+            boost::algorithm::replace_all(chromatogramFileName, "_FUNC", "_CHRO");
+            if (boost::range::find_if(chromatogramFilepaths, 
+                [chromatogramFileName](const bfs::path& cfp) { return BFS_STRING(cfp.filename()) == chromatogramFileName; }) != chromatogramFilepaths.end())
+            {
+                functionsWithChromFiles.insert(number - 1); // 0 based
+            }
             functionIndexList.push_back(number-1); // 0-based
             functionFilepathByNumber[number-1] = functionFilepaths[i];
             numSpectra_ += Info.GetScansInFunction(number-1);
@@ -174,6 +202,8 @@ struct PWIZ_API_DECL RawData
             if (!hasProfile_)
                 hasProfile_ = hasProfile_ || Info.IsContinuum(itr.first);
         }
+
+        readAnalogChromatograms();
 
         initHeaderProps(rawpath);
     }
@@ -330,38 +360,6 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
-    void Centroid() const
-    {
-        if (!hasProfile_)
-        {
-            centroidRaw_.reset(const_cast<RawData*>(this), boost::null_deleter());
-            return;
-        }
-
-        string centroidPath = rawpath_ + "\\centroid.raw";
-        if (!bfs::exists(centroidPath))
-            PeakPicker.Centroid(centroidPath);
-
-        if (!centroidRaw_)
-        {
-            try
-            {
-                centroidRaw_.reset(new RawData(centroidPath));
-            }
-            catch (MassLynxRawException&)
-            {
-                bfs::remove_all(centroidPath);
-                PeakPicker.Centroid(centroidPath);
-                centroidRaw_.reset(new RawData(centroidPath));
-            }
-        }
-    }
-
-    boost::shared_ptr<RawData> CentroidRawDataFile() const
-    {
-        return centroidRaw_;
-    }
-
     bool LockMassCanBeApplied() const
     {
         return Info.CanLockMassCorrect();
@@ -412,10 +410,85 @@ struct PWIZ_API_DECL RawData
         }
     }
 
+    double GetLockMassCorrectedMz(float atScanTime, double uncorrectedMz)
+    {
+        if (!LockMassIsApplied())
+            return uncorrectedMz;
+
+        float gain = LockMass.GetLockMassCorrection(atScanTime);
+        return uncorrectedMz * static_cast<double>(gain);
+    }
+
+    void EnableProcessing(bool bEnableDDAProcessing)
+    {
+        ScanProcessor.SetRawData(Reader);
+        if (bEnableDDAProcessing)
+            DDAProcessor.SetRawData(Reader);      
+    }
+
+    unsigned int GetDDAScanCount()
+    {
+        return DDAProcessor.GetScanCount();
+    }
+
+    bool GetDDAScan(const int& nWhichIndex, bool doCentroid, vector<float>& masses, vector<float>& intensities)
+    {
+        MassLynxParameters parameters;
+        return DDAProcessor.SetCentroid(doCentroid).GetScan(nWhichIndex, masses, intensities, parameters);
+    }
+
+    bool GetDDAScanInfo(const int& nWhichIndex, float& RT, int& function, int& startScan, int& endScan, bool& isMS1, float& setMass, float& precursorMass)
+    {
+        MassLynxParameters parameters;
+        bool success = DDAProcessor.GetScanInfo(nWhichIndex, parameters);
+
+        if (success)
+        {
+            RT = lexical_cast<float>(parameters.Get(MassLynxDDAIndexDetail::RT));
+            function = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::FUNCTION));
+            startScan = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::START_SCAN));
+            endScan = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::END_SCAN));
+            isMS1 = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::SCAN_TYPE)) == (int)MassLynxScanType::MS1;
+
+            if (!isMS1)
+            {
+                setMass = lexical_cast<float>(parameters.Get(MassLynxDDAIndexDetail::SET_MASS));
+                precursorMass = lexical_cast<float>(parameters.Get(MassLynxDDAIndexDetail::PRECURSOR_MASS));
+            }
+        }
+        return success;
+    }
+
+    bool GetIsolationWindow(float& lowerOffset, float& upperOffset)
+    {
+        MassLynxParameters parameters = DDAProcessor.GetQuadIsolationWindowParameters();
+        float lowerOffsetParam = lexical_cast<float>(parameters.Get(DDAIsolationWindowParameter::LOWEROFFSET));
+        float upperOffsetParam = lexical_cast<float>(parameters.Get(DDAIsolationWindowParameter::UPPEROFFSET));
+
+        if (lowerOffsetParam == 0 && upperOffsetParam == 0)
+            return false;
+
+        lowerOffset = lowerOffsetParam;
+        upperOffset = upperOffsetParam;
+
+        return true;
+    }
+
+    void ReadScan(int function, int scan, bool doCentroid, vector<float>& masses, vector<float>& intensities)
+    {
+        ScanProcessor.Load(function, scan);
+
+        if (doCentroid)
+            ScanProcessor.Centroid();
+
+        ScanProcessor.GetScan(masses, intensities);
+    }
+
     private:
     MassLynxLockMassProcessor LockMass;
+    Extended::MassLynxDDAProcessor DDAProcessor;
+    MassLynxScanProcessor ScanProcessor;
     mutable MassLynxRawProcessorWithProgress PeakPicker;
-    mutable boost::shared_ptr<RawData> centroidRaw_;
     mutable int workingDriftTimeFunctionIndex_;
     mutable int workingSonarFunctionIndex_; // We're assuming that the Sonar calibration is the same across all functions
     mutable float sonarMassLowerLimit_, sonarMassUpperLimit_;  // We're assuming that the Sonar calibration is the same across all functions
@@ -427,7 +500,12 @@ struct PWIZ_API_DECL RawData
     vector<bool> sonarEnabledByFunctionIndex;
     vector<vector<float>> timesByFunctionIndex;
     vector<vector<float>> ticByFunctionIndex;
+
+    vector<vector<float>> analogTimes;
+    vector<vector<float>> analogIntensities;
+
     map<string, string> headerProps;
+    set<int> functionsWithChromFiles; // Used to puzzle out which MS function is lockmass data
     int numSpectra_; // not separated by ion mobility
     bool hasProfile_; // can only centroid if at least one function is profile mode
     bool hasIonMobility_;
@@ -478,6 +556,24 @@ struct PWIZ_API_DECL RawData
         }
     }
 
+    private:
+
+    void readAnalogChromatograms()
+    {
+        const int channels = AnalogChromatogramReader.GetChannelCount();
+        
+        analogTimes.resize(channels);
+        analogIntensities.resize(channels);
+        analogChannelNames.resize(channels);
+        analogChannelUnits.resize(channels);
+
+        for (int ch = 0; ch < channels; ch++)
+        {
+            AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
+            analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
+            analogChannelUnits[ch] = AnalogChromatogramReader.GetChannelUnits(ch);
+        }
+    }
 };
 
 typedef shared_ptr<RawData> RawDataPtr;

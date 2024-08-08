@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     {
         private const int REPLICATES = 5;
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod]
         public void TestRunToRunRegression()
         {
             TestFilesZip = @"TestFunctional\RunToRunRegressionTest.zip";

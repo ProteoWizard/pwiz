@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -516,7 +515,7 @@ namespace pwiz.Skyline.Model.Results
     public sealed class TransitionChromInfo : ChromInfo
     {
         [Flags]
-        private enum Flags : byte
+        private enum Flags : short
         {
             HasMassError = 1,
             IsFwhmDegenerate = 2,
@@ -526,6 +525,7 @@ namespace pwiz.Skyline.Model.Results
             ForcedIntegration = 32,
             Identified = 64,
             IdentifiedByAlignment = 128,
+            HasPeakShape = 256,
         }
 
         private Flags _flags;
@@ -544,7 +544,8 @@ namespace pwiz.Skyline.Model.Results
                    peak.IsFwhmDegenerate, peak.IsTruncated, 
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
-                   annotations, userSet, peak.IsForcedIntegration)
+                   annotations, userSet, peak.IsForcedIntegration, 
+                   peak.PeakShapeValues)
         {
         }
 
@@ -554,7 +555,8 @@ namespace pwiz.Skyline.Model.Results
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
-                                   Annotations annotations, UserSet userSet, bool isForcedIntegration)
+                                   Annotations annotations, UserSet userSet, bool isForcedIntegration, 
+                                   PeakShapeValues? peakShapeValues)
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
@@ -562,7 +564,7 @@ namespace pwiz.Skyline.Model.Results
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
-            IonMobility = ionMobility;
+            IonMobility = ionMobility ?? IonMobilityFilter.EMPTY;
             Area = area;
             BackgroundArea = backgroundArea;
             Height = height;
@@ -579,6 +581,7 @@ namespace pwiz.Skyline.Model.Results
             UserSet = userSet;
             PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
+            PeakShapeValues = peakShapeValues;
         }
 
         /// <summary>
@@ -668,6 +671,7 @@ namespace pwiz.Skyline.Model.Results
         public short RankByLevel { get; private set; }
 
         private short _pointsAcrossPeak;
+        private PeakShapeValues _peakShapeValue;
 
         public short? PointsAcrossPeak
         {
@@ -679,6 +683,16 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetFlag(Flags.HasPointsAcrossPeak, value.HasValue);
                 _pointsAcrossPeak = value ?? 0;
+            }
+        }
+
+        public PeakShapeValues? PeakShapeValues
+        {
+            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : (PeakShapeValues?) null; }
+            private set
+            {
+                SetFlag(Flags.HasPeakShape, value.HasValue);
+                _peakShapeValue = value.GetValueOrDefault();
             }
         }
 
@@ -803,6 +817,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.UserSet = userSet;
             chromInfo.PointsAcrossPeak = peak.PointsAcross;
             chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
+            chromInfo.PeakShapeValues = peak.PeakShapeValues;
             return chromInfo;
         }
 
@@ -870,7 +885,8 @@ namespace pwiz.Skyline.Model.Results
                    other.UserSet.Equals(UserSet) &&
                    Equals(other.IonMobility, IonMobility) &&
                    other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
-                   Equals(IsForcedIntegration, other.IsForcedIntegration);
+                   Equals(IsForcedIntegration, other.IsForcedIntegration) &&
+                   Equals(PeakShapeValues, other.PeakShapeValues);
             return result; // For ease of breakpoint setting
         }
 
@@ -905,6 +921,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobility.GetHashCode();
                 result = (result*397) ^ PointsAcrossPeak.GetHashCode();
                 result = (result*397) ^ IsForcedIntegration.GetHashCode();
+                result = (result*397) ^ PeakShapeValues.GetHashCode();
                 return result;
             }
         }
@@ -939,12 +956,13 @@ namespace pwiz.Skyline.Model.Results
                 .MSDataFileInfos[transitionPeak.FileIndexInReplicate];
             var fileId = msDataFileInfo.FileId;
             var ionMobilityValue = transitionPeak.IonMobility;
+            var ccs = transitionPeak.IonMobilityCollisionCrossSection;
             IonMobilityFilter ionMobility;
             if (ionMobilityValue.HasValue)
             {
                 var ionMobilityWidth = transitionPeak.IonMobilityWindow;
                 var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
-                ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, null);
+                ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, ccs);
             }
             else
             {
@@ -960,6 +978,13 @@ namespace pwiz.Skyline.Model.Results
                 case SkylineDocumentProto.Types.PeakIdentification.True:
                     peakIdentification = PeakIdentification.TRUE;
                     break;
+            }
+
+            PeakShapeValues? peakShapeValues = null;
+            if (transitionPeak.PeakShapeValues != null)
+            {
+                peakShapeValues = new PeakShapeValues(transitionPeak.PeakShapeValues.StdDev,
+                    transitionPeak.PeakShapeValues.Skewness, transitionPeak.PeakShapeValues.Kurtosis, transitionPeak.PeakShapeValues.ShapeCorrelation);
             }
             return new TransitionChromInfo(
                 fileId, 
@@ -981,8 +1006,9 @@ namespace pwiz.Skyline.Model.Results
                 (short) transitionPeak.RankByLevel,
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
-                transitionPeak.ForcedIntegration
-                );
+                transitionPeak.ForcedIntegration,
+                peakShapeValues
+            );
         }
 
         private bool GetFlag(Flags flag)
@@ -1088,7 +1114,7 @@ namespace pwiz.Skyline.Model.Results
                 elements.Add(new ChromInfoList<TItem>(chromInfoList));
             }
             if (!found)
-                throw new InvalidOperationException(Resources.ResultsGrid_ChangeChromInfo_Element_not_found);
+                throw new InvalidOperationException(ResultsResources.ResultsGrid_ChangeChromInfo_Element_not_found);
             return new Results<TItem>(elements);
         }
 
@@ -1183,7 +1209,7 @@ namespace pwiz.Skyline.Model.Results
             if (chromatogramSets.Count != Count)
             {
                 throw new InvalidDataException(
-                    string.Format(Resources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
+                    string.Format(ResultsResources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
                                   Count, chromatogramSets.Count));
             }
 
@@ -1197,7 +1223,7 @@ namespace pwiz.Skyline.Model.Results
                 if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
+                        string.Format(ResultsResources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
                 }
             }
         }

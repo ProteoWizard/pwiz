@@ -6,7 +6,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Util
@@ -30,17 +29,15 @@ namespace pwiz.Skyline.Util
             {
                 var pair = peptideAnnotationPairs[i];
                 var displayText = PeptideAnnotationPairFinder.GetDisplayText(data.CV, pair.Annotation);
-
-                results.Add(new FindResult(pred,
-                    new BookmarkEnumerator(document,
-                        new Bookmark(document.GetPathTo((int)SrmDocument.Level.Molecules,
-                            document.Molecules.ToList().IndexOf(pair.Peptide)))), new FindMatch(displayText)));
+                var bookmark = new Bookmark(document.GetPathTo((int)SrmDocument.Level.Molecules,
+                    document.Molecules.ToList().IndexOf(pair.Peptide)));
+                results.Add(new FindResult(pred, document, new FindMatch(bookmark, displayText)));
             }
 
             var count = peptideAnnotationPairs.Count;
             if (results.Count != count)
             {
-                MessageDlg.Show(sender, string.Format(Resources.HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides, MAX_FINDRESULTS_PEPTIDES, count));
+                MessageDlg.Show(sender, string.Format(UtilResources.HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides, MAX_FINDRESULTS_PEPTIDES, count));
                 results = results.GetRange(0, MAX_FINDRESULTS_PEPTIDES);
             }
 

@@ -58,6 +58,7 @@
             this.idTimesOtherContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.relativeAbundanceFormattingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.productsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -75,7 +76,6 @@
             this.transformChromNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.firstDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
             this.autoZoomContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -113,6 +113,7 @@
             this.peptideIDTimesContextMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
+            this.relativeAbundanceFormattingMenuItem,
             this.transformChromContextMenuItem,
             this.toolStripSeparator17,
             this.autoZoomContextMenuItem,
@@ -319,6 +320,12 @@
             resources.ApplyResources(this.transitionsContextMenuItem, "transitionsContextMenuItem");
             this.transitionsContextMenuItem.DropDownOpening += new System.EventHandler(this.transitionsMenuItem_DropDownOpening);
             // 
+            // relativeAbundanceFormattingMenuItem
+            // 
+            this.relativeAbundanceFormattingMenuItem.Name = "relativeAbundanceFormattingMenuItem";
+            resources.ApplyResources(this.relativeAbundanceFormattingMenuItem, "relativeAbundanceFormattingMenuItem");
+            this.relativeAbundanceFormattingMenuItem.Click += new System.EventHandler(this.relativeAbundanceFormattingMenuItem_Click);
+            // 
             // allTranContextMenuItem
             // 
             this.allTranContextMenuItem.Name = "allTranContextMenuItem";
@@ -399,7 +406,6 @@
             this.transformChromNoneContextMenuItem,
             this.transformChromInterpolatedContextMenuItem,
             this.secondDerivativeContextMenuItem,
-            this.firstDerivativeContextMenuItem,
             this.smoothSGChromContextMenuItem});
             this.transformChromContextMenuItem.Name = "transformChromContextMenuItem";
             resources.ApplyResources(this.transformChromContextMenuItem, "transformChromContextMenuItem");
@@ -422,12 +428,6 @@
             this.secondDerivativeContextMenuItem.Name = "secondDerivativeContextMenuItem";
             resources.ApplyResources(this.secondDerivativeContextMenuItem, "secondDerivativeContextMenuItem");
             this.secondDerivativeContextMenuItem.Click += new System.EventHandler(this.secondDerivativeMenuItem_Click);
-            // 
-            // firstDerivativeContextMenuItem
-            // 
-            this.firstDerivativeContextMenuItem.Name = "firstDerivativeContextMenuItem";
-            resources.ApplyResources(this.firstDerivativeContextMenuItem, "firstDerivativeContextMenuItem");
-            this.firstDerivativeContextMenuItem.Click += new System.EventHandler(this.firstDerivativeMenuItem_Click);
             // 
             // smoothSGChromContextMenuItem
             // 
@@ -553,6 +553,7 @@
         private System.Windows.Forms.ToolStripMenuItem idTimesOtherContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
         private System.Windows.Forms.ToolStripMenuItem transitionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem relativeAbundanceFormattingMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorsTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem productsTranContextMenuItem;
@@ -570,7 +571,6 @@
         private System.Windows.Forms.ToolStripMenuItem transformChromNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem firstDerivativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator17;
         private System.Windows.Forms.ToolStripMenuItem autoZoomContextMenuItem;

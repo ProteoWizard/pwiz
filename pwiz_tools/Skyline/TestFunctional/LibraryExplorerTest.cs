@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -145,16 +146,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 AddLibrary(editListUI, _testLibs[i]);
             }
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
+            OkDialog(editListUI, editListUI.OkDialog);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => _testLibs.Length == PeptideSettingsUI.AvailableLibraries.Length);
 
             RunUI(() => Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged));
 
-            RunUI(() => PeptideSettingsUI.OkDialog());
-            WaitForClosedForm(PeptideSettingsUI);
+            OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
         }
 
         /// <summary>
@@ -206,14 +205,10 @@ namespace pwiz.SkylineTestFunctional
                 // Find the filter category combo box
                 filterCategoryComboBox = (ComboBox) _viewLibUI.Controls.Find("comboFilterCategory", true)[0];
 
-            });
+                // Filter category combo box should be set to "Name" by default
+                Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
 
-            // Filter category combo box should be set to "Name" by default
-            Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
-
-            // Test filtering by formula
-            RunUI(() =>
-            {
+                // Test filtering by formula
                 filterCategoryComboBox.SelectedIndex =
                     filterCategoryComboBox.FindStringExact(Resources
                         .SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
@@ -231,18 +226,25 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(StringComparer.OrdinalIgnoreCase.Compare(x.DisplayText, y.DisplayText) <= 0);
             }
 
+            // Find all that contain chlorine
+            FilterListAndVerifyCount(filterTextBox, pepList, "*Cl", 3);
+
             // Entering the formula for Midazolam should filter out all other spectra
             var midazolamFormula = "C18H13ClFN3";
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula, 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.Replace("C18", "*"), 1); // Wildcard
 
             // Check case insensitivity
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant().Replace("c18", "*"), 1);
 
             // Clearing search box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*", 6); // Should have same effect as no filter
 
             // Entering 'SD' should filter out all entries as nothing starts with SD
             FilterListAndVerifyCount(filterTextBox, pepList, "SD", 0);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*SD", 0); // Nor does anything contain SD
 
             // Clearing the filter text box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
@@ -259,8 +261,10 @@ namespace pwiz.SkylineTestFunctional
             var midazolamMzStr = midazolamMz.ToString("G", CultureInfo.CurrentCulture);
             var inexactMidazolamMzStr = (midazolamMz + 0.05).ToString("G", CultureInfo.CurrentCulture);
 
-            // Entering '32' should filter the list down to three entries
+            // Entering '32' should filter the list down to two entries
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr.Substring(0, 2), 2);
+            // Entering '*26.0' should yield just one entry
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr.Replace("326", "*26").Substring(0, 4), 1);
 
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr, 1);
@@ -276,6 +280,7 @@ namespace pwiz.SkylineTestFunctional
                     filterCategoryComboBox.FindStringExact("cas");
             });
             FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*928", 1); // Wildcard
 
             // Now switch to a list with multiple molecular IDs
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
@@ -301,6 +306,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             FilterListAndVerifyCount(filterTextBox, pepList, "123", 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*23", 1); // Wildcard
 
 
             // Now test search behavior on a peptide list
@@ -311,6 +317,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Searching for a peptide sequence should work as well
             FilterListAndVerifyCount(filterTextBox, pepList, "CY", 2);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*CY", 31); // Wildcard
+            FilterListAndVerifyCount(filterTextBox, pepList, "*Y", 80); // Wildcard
 
             // Now test filtering by precursor m/z
             RunUI(() =>
@@ -321,6 +329,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Precursor searching should work here as well
             FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*" + (6.4).ToString("G", CultureInfo.CurrentCulture), 3);
 
             // Switch to library with both molecules and peptides
             ShowDialog<AddModificationsDlg>(
@@ -329,12 +338,36 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that we found all of the filter categories
             expectedCategories = new List<string>(categories);
-            expectedCategories.AddRange(new List<string>{ Resources.PeptideTipProvider_RenderTip_Ion_Mobility , Resources.PeptideTipProvider_RenderTip_CCS , "InChI", smiles});
+            var inchi = "InChI";
+            expectedCategories.AddRange(new List<string> { Resources.PeptideTipProvider_RenderTip_Ion_Mobility, Resources.PeptideTipProvider_RenderTip_CCS, inchi, smiles });
             VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
 
+            // * Match IM units
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Ion_Mobility);
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList,
+                "*" + IonMobilityValue.GetUnitsString(eIonMobilityUnits.drift_time_msec), 2);
+
+            // Match SMILES
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex = filterCategoryComboBox.FindStringExact(smiles);
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList, "*=", 1);
+
+            // Match InChI
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex = filterCategoryComboBox.FindStringExact(inchi);
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList, "*C32", 1);
+
+
             // Close the spectral library explorer
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI , _viewLibUI.CancelDialog);
         }
 
         private void TestBasicFunctionality()
@@ -654,7 +687,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("Change static mods", doc => doc.ChangeSettings(phosphoLossSettings)));
 
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn0Click());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn0Click());
 
             // Again, we should be able to match all peptides since the document settings match use the peptides found 
             // in the library.
@@ -679,7 +712,7 @@ namespace pwiz.SkylineTestFunctional
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast";
                 buildBackgroundProteomeDlg.OkDialog();
             });
-            RunUI(peptideSettingsUI.OkDialog);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForDocumentLoaded(); // Give background loader a chance to get the protein metadata too
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
@@ -862,9 +895,8 @@ namespace pwiz.SkylineTestFunctional
                     libComboBox.SelectedIndex = libIndex;
                 });
                 AssertEx.AreComparableStrings(expectError, errWin.Message);
-                errWin.OkDialog();
-                RunUI(() => _viewLibUI.CancelDialog());
-                WaitForClosedForm(_viewLibUI);
+                OkDialog(errWin, errWin.OkDialog);
+                OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
                 return;
             }
 
@@ -925,7 +957,7 @@ namespace pwiz.SkylineTestFunctional
                 _viewLibUI.GraphSettings.ShowCharge2 = false;
             });
             // Add all to document, expect to be asked if we want to add library to doc as well
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
             if (isLipidCreator || isSketchyFragmentAnnotations || libIndex == 10)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
@@ -936,8 +968,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(confirmAdd, confirmAdd.BtnYesClick);
             WaitForDocumentLoaded();
 
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI , _viewLibUI.CancelDialog);
             if (isNIST)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 74, 222, 14358); // Was 666, from when we only took top N ranked by intensity then mz, but now we take that or all annotated
@@ -1020,7 +1051,7 @@ namespace pwiz.SkylineTestFunctional
             SelectLibWithAllMods(_libComboBox, 4);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasMatches);
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => { msgDlg.Btn0Click(); });
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => { msgDlg.Btn0Click(); });
 
             var fmpDlg0 = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             RunUI(() => fmpDlg0.AddFiltered = true);
@@ -1115,11 +1146,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             // Relaunch explorer without modification matching
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(YEAST));
             var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
-            RunUI(matchedPepModsDlg.CancelDialog);
+            OkDialog(matchedPepModsDlg, matchedPepModsDlg.CancelDialog);
             WaitForConditionUI(() => _pepList.Items.Count == 96);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasUnmatchedPeptides);
@@ -1137,8 +1167,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
         private void TestTooltip()
@@ -1155,8 +1184,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
                 Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
             });
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
             RelaunchLibExplorer(true, false, PHOSPHO_LIB); // No ExplicitMods selected
             RunUI(() =>
             {
@@ -1188,16 +1216,14 @@ namespace pwiz.SkylineTestFunctional
                 var pep4 = _viewLibUI.GetTipProvider(3);
                 Assert.AreEqual(pep4.GetMzParts().Count, 0);  // not out of bounds
             });
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
         private void RelaunchLibExplorer(bool showModsDlg, bool okAll, string libName)
         {
             if (_viewLibUI != null)
             {
-                RunUI(() => _viewLibUI.CancelDialog());
-                WaitForClosedForm(_viewLibUI);
+                OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
             }
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(libName));
             if (showModsDlg)

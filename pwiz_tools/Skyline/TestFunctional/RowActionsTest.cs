@@ -24,9 +24,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Databinding.RowActions;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 

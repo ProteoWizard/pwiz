@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                     doc.Settings.ChangePeptideSettings(
                         doc.Settings.PeptideSettings.ChangeAbsoluteQuantification(quantValue)))));
                 WaitForGraphs();
-                CalibrationCurve calibrationCurve = calibrationForm.CalibrationCurve;
+                var calibrationCurve = calibrationForm.CalibrationCurveMetrics;
                 if (quant.MsLevel == 1 && quant.RegressionFit != RegressionFit.NONE)
                 {
                     Assert.IsNotNull(calibrationCurve.ErrorMessage);

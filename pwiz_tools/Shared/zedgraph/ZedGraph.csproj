@@ -17,7 +17,7 @@
     </UpgradeBackupLocation>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ZedGraph.snk</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -127,6 +127,7 @@
     <Compile Include="ZedGraph\JapaneseCandleStick.cs" />
     <Compile Include="ZedGraph\JapaneseCandleStickItem.cs" />
     <Compile Include="ZedGraph\Label.cs" />
+    <Compile Include="ZedGraph\LabelLayout.cs" />
     <Compile Include="ZedGraph\Legend.cs" />
     <Compile Include="ZedGraph\Line.cs" />
     <Compile Include="ZedGraph\LinearAsOrdinalScale.cs" />

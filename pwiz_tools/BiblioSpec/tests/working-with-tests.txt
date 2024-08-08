@@ -12,11 +12,16 @@ in detail.
 
 Inputs
 
-All input files are in inputs.tar.bz2.  They are automatically
-unpacked into BiblioSpec/tests/inputs by bjam as part of the
-proteowizard build process. If you add or change an input file, be
-sure to update the tar file and check the new version into the
-repository.
+The input files for many older tests are in the inputs.tar.bz2 file, 
+but it is no longer being maintained. Instead, newer tests add their 
+inputs directly into git because it's much easier to track changes 
+that way. 
+
+The inputs.tar.bz2 file is automatically extracted during the build 
+process but does not overwrite existing files. If you need to change 
+an input file from the bz2, change it and check it in, but do not 
+modify the bz2 file. The revised copy checked directly into git will 
+be the one that prevails.
 
 Expected outputs
 
@@ -172,4 +177,4 @@ about accepted tolerance of a single column, or all columns if -1 is
 given as the column index, as described above.
 
 
-Last updated Oct 25 2017
+Last updated Feb 10 2023

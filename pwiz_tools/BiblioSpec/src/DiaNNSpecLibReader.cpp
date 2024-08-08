@@ -191,7 +191,11 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
             i += modPrefixLength;
             mod = name.substr(i, end-i);
             CVID unimodCvid = (CVID) (UNIMOD_unimod_root_node + lexical_cast<int>(mod));
-            mods.emplace_back(SeqMod((int) j, pwiz::data::unimod::modification(unimodCvid).deltaMonoisotopicMass()));
+            int position = max(1, static_cast<int>(j));
+            if (!mods.empty() && mods.back().position == position)
+                mods.back().deltaMass += unimod::modification(unimodCvid).deltaMonoisotopicMass();
+            else 
+                mods.emplace_back(position, unimod::modification(unimodCvid).deltaMonoisotopicMass());
             continue;
         }
         ++j;
@@ -476,9 +480,15 @@ class Library {
         in.read((char*)&iRT_min, sizeof(double));
         in.read((char*)&iRT_max, sizeof(double));
         read_array(in, entries, version);
+        auto precursorItr = precursors.begin();
         for (auto &e : entries)
         {
             e.lib = this;
+            if (e.name != *precursorItr)
+            {
+                Verbosity::error("Precursor mismatch between %s and %s in speclib file", e.name.c_str(), precursorItr->c_str());
+            }
+            ++precursorItr;
             entryByModPeptideAndCharge.emplace(e.name, std::ref(e));
         }
         if (version <= -1 && in.peek() != std::char_traits<char>::eof()) read_vector(in, elution_groups);
@@ -587,14 +597,33 @@ bool DiaNNSpecLibReader::parseFile()
         impl_->specLib.read(specLibStream);
     }
 
-    typedef io::CSVReader<8, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> ReportReaderType;
+    typedef io::CSVReader<9, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> ReportReaderType;
 
-    auto diannReportFilepath = bal::replace_last_copy(string(impl_->specLibFile_), "-lib.tsv.speclib", "-report.tsv");
+    string specLibFile = impl_->specLibFile_;
+    bfs::path specLibFilePath(specLibFile);
+
+    auto diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.tsv.speclib", "-report.tsv");
+
+    // special case for FragPipe
+    if (specLibFilePath.filename().string() == "library.tsv.speclib" || specLibFilePath.filename().string() == "lib.predicted.speclib")
+    {
+        for (auto filename : vector<string>{ "diann-output.tsv", "report.tsv" })
+        {
+            auto fragpipeDiannReport = specLibFilePath.parent_path() / "diann-output" / filename;
+            if (bfs::exists(fragpipeDiannReport))
+            {
+                Verbosity::debug("Found DIA-NN tsv/speclib from FragPipe.");
+                diannReportFilepath = fragpipeDiannReport.string();
+                break;
+            }
+        }
+    }
+
     /*if (diannReportFilepath == impl_->specLibFile_)
         throw BlibException(true, "unable to determine DIA-NN report filename for '%s': speclib must end in -lib.tsv.speclib and report must end in -report.tsv", impl_->specLibFile_);
     if (!bfs::exists(diannReportFilepath))
         throw BlibException(true, "could not find DIA-NN report file '%s' for '%s'", bfs::path(diannReportFilepath).filename().string().c_str(), impl_->specLibFile_);*/
-    if (diannReportFilepath == impl_->specLibFile_ || !bfs::exists(diannReportFilepath))
+    if (diannReportFilepath == specLibFile || !bfs::exists(diannReportFilepath))
     {
         // iterate all TSV files in the same directory as the speclib, check the ones sharing the most leading characters, and look for the report headers in them
         vector<bfs::path> siblingTsvFiles;
@@ -622,9 +651,9 @@ bool DiaNNSpecLibReader::parseFile()
             if (kvp.first < 1)
                 break;
 
-            io::CSVReader<1, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> reportReader(kvp.second.string().c_str());
-            reportReader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id");
-            if (reportReader.has_column("Precursor.Id"))
+            io::CSVReader<3, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> reportReader(kvp.second.string().c_str());
+            reportReader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id", "Q.Value", "RT");
+            if (reportReader.has_column("Precursor.Id") && reportReader.has_column("Q.Value") && reportReader.has_column("RT"))
             {
                 diannReportFilepath = kvp.second.string();
                 break;
@@ -645,12 +674,12 @@ bool DiaNNSpecLibReader::parseFile()
     do
     {
         ReportReaderType reportReader(diannReportFilepath.c_str());
-        reportReader.read_header(io::ignore_extra_column, "Run", "Precursor.Id", "Q.Value", "PEP", "RT", "RT.Start", "RT.Stop", "IM");
-        char *run, *precursorId;
-        float qValue, pep, rt, rtStart, rtStop, im;
+        reportReader.read_header(io::ignore_extra_column, "Run", "File.Name", "Protein.Group", "Precursor.Id", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
+        char *run, *fileName, *proteinGrp, *precursorId;
+        float qValue, rt, rtStart, rtStop, im;
         string currentRun;
         hasSkippedRuns = false;
-        while (reportReader.read_row(run, precursorId, qValue, pep, rt, rtStart, rtStop, im))
+        while (reportReader.read_row(run, fileName, proteinGrp, precursorId, qValue, rt, rtStart, rtStop, im))
         {
             if (currentRun.empty())
             {
@@ -658,21 +687,27 @@ bool DiaNNSpecLibReader::parseFile()
                 if (processedRuns.count(run) > 0)
                     continue;
                 currentRun = run;
+                setSpecFileName(run, false);  // make status output report the current spec file
             }
             else if (!bal::equals(currentRun.c_str(), run))
             {
                 // skip rows not from the current runs being processed; another loop iteration will be required
-                hasSkippedRuns = processedRuns.count(run) == 0;
+                hasSkippedRuns = hasSkippedRuns || processedRuns.count(run) == 0;
                 continue;
             }
 
             auto findItr = speclib.entryByModPeptideAndCharge.find(precursorId);
             if (findItr == speclib.entryByModPeptideAndCharge.end())
+            {
+                // skip contaminant proteins if they are not included in the speclib file
+                if (bal::starts_with(proteinGrp, "contaminant_"))
+                    continue;
+
                 throw BlibException(false, "could not find precursorId '%s' in speclib; is '%s' the correct report TSV file?", precursorId, bfs::path(diannReportFilepath).filename().string().c_str());
+            }
 
             auto& speclibEntry = findItr->second.get();
             speclibEntry.curQValue = qValue;
-            speclibEntry.curPEP = pep;
             speclibEntry.curRT = rt;
             speclibEntry.curRTStart = rtStart;
             speclibEntry.curRTStop = rtStop;

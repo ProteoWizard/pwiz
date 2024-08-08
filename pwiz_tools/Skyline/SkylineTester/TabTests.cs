@@ -32,6 +32,7 @@ namespace SkylineTester
         public override void Enter()
         {
             MainWindow.DefaultButton = MainWindow.RunTests;
+            MainWindow.UpdateTestTabControls(); // Force initial (in)visibility of Offset button
         }
 
         public override bool Run()
@@ -54,7 +55,7 @@ namespace SkylineTester
             var args = new StringBuilder();
 
             args.Append("offscreen=");
-            args.Append(MainWindow.Offscreen.Checked);
+            args.Append(MainWindow.Offscreen.Checked || MainWindow.RunParallel.Checked);
 
             if (!MainWindow.RunIndefinitely.Checked)
             {
@@ -85,11 +86,9 @@ namespace SkylineTester
             if (!int.TryParse(MainWindow.TestsRepeatCount.Text, out count))
                 count = 0;
             if (count > 0)
-               args.Append(" repeat=" + MainWindow.TestsRepeatCount.Text);
+                args.Append(" repeat=" + MainWindow.TestsRepeatCount.Text);
 
             var cultures = new List<CultureInfo>();
-            if (MainWindow.TestsEnglish.Checked)
-                cultures.Add(new CultureInfo("en-US"));
             if (MainWindow.TestsChinese.Checked)
                 cultures.Add(new CultureInfo("zh-CHS"));
             if (MainWindow.TestsFrench.Checked)
@@ -98,6 +97,8 @@ namespace SkylineTester
                 cultures.Add(new CultureInfo("ja"));
             if (MainWindow.TestsTurkish.Checked)
                 cultures.Add(new CultureInfo("tr-TR"));
+            if (MainWindow.TestsEnglish.Checked || cultures.Count == 0)
+                cultures.Insert(0, new CultureInfo("en-US"));
 
             args.Append(" language=");
             args.Append(String.Join(",", cultures));
@@ -106,28 +107,50 @@ namespace SkylineTester
 
             if (MainWindow.RunParallel.Checked)
             {
+                // CONSIDER: Should we add a checkbox for this?
+                // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
                 args.AppendFormat(" parallelmode=server workercount={0}", MainWindow.RunParallelWorkerCount.Value);
-                var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
-                if (!dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME))
+                try
                 {
-                    MainWindow.CommandShell.Log($"'{RunTests.DOCKER_IMAGE_NAME}' is missing; building it now.");
-                    if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
+                    var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+                    if (!dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME))
                     {
-                        MainWindow.CommandShell.Log("Prompting for AlwaysUpCLT password. " +
-                                                    "Get it from https://skyline.ms/wiki/home/development/page.view?name=Running%20tests%20in%20parallel%20with%20Docker");
-                        MainWindow.CommandShell.UpdateLog();
-                        var passwordDictionary = new Dictionary<string, string[]> { { "Password", new [] { "" } } };
-                        KeyValueGridDlg.Show(MainWindow, "Enter password for AlwaysUpCLT", passwordDictionary, v => v[0], (s, v) => v[0] = s);
-                        args.AppendFormat(" alwaysupcltpassword=\"{0}\"", passwordDictionary["Password"][0]);
+                        MainWindow.CommandShell.Log($"'{RunTests.DOCKER_IMAGE_NAME}' is missing; building it now.");
+                        if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
+                        {
+                            MainWindow.CommandShell.Log("Prompting for AlwaysUpCLT password. " +
+                                                        "Get it from https://skyline.ms/parallelmode.url");
+                            MainWindow.CommandShell.UpdateLog();
+                            var passwordDictionary = new Dictionary<string, string[]> { { "Password", new[] { "" } } };
+                            KeyValueGridDlg.Show(MainWindow, "Enter password for AlwaysUpCLT", passwordDictionary, v => v[0], (s, v) => v[0] = s);
+                            args.AppendFormat(" alwaysupcltpassword=\"{0}\"", passwordDictionary["Password"][0]);
+                        }
                     }
                 }
+                catch (InvalidOperationException e)
+                {
+                    MainWindow.CommandShell.Log(e.Message);
+                    MainWindow.CommandShell.UpdateLog();
+                    return false;
+                }
             }
+
+            if (MainWindow.RunCoverage.Checked)
+                args.Append(" coverage=on");
 
             args.Append(GetTestList());
 
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
             return true;
+        }
+
+        public override void Cancel()
+        {
+            base.Cancel();
+
+            if (MainWindow.RunParallel.Checked)
+                MainWindow.CommandShell.Stop(true);
         }
 
         public override int Find(string text, int position)

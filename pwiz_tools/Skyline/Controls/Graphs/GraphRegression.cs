@@ -132,14 +132,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
 //            Legend.FontSpec.Size = 12;
 
-            var curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Values, graphData.RegularPoints, Color.Black, SymbolType.Diamond);
+            var curve = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Values, graphData.RegularPoints, Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
             curve.Symbol.Fill = new Fill(COLOR_REGRESSION);
 
             if (graphData.MissingPoints.Any())
             {
-                var curveMissing = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Missing, graphData.MissingPoints, COLOR_MISSING, SymbolType.Diamond);
+                var curveMissing = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Missing, graphData.MissingPoints, COLOR_MISSING, SymbolType.Diamond);
                 curveMissing.Line.IsVisible = false;
                 curveMissing.Symbol.Border.IsVisible = false;
                 curveMissing.Symbol.Fill = new Fill(COLOR_MISSING);
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (graphData.OutlierPoints.Any())
             {
-                var curveOutliers = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Outliers, graphData.OutlierPoints, COLOR_OUTLIERS, SymbolType.Diamond);
+                var curveOutliers = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Outliers, graphData.OutlierPoints, COLOR_OUTLIERS, SymbolType.Diamond);
                 curveOutliers.Line.IsVisible = false;
                 curveOutliers.Symbol.Border.IsVisible = false;
                 curveOutliers.Symbol.Fill = new Fill(COLOR_OUTLIERS);
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 curve = AddCurve(
                     !string.IsNullOrEmpty(graphData.RegressionName)
                         ? graphData.RegressionName
-                        : Resources.RegressionGraphPane_RegressionGraphPane_Regression, lineX, lineY,
+                        : GraphsResources.RegressionGraphPane_RegressionGraphPane_Regression, lineX, lineY,
                     COLOR_LINE_REGRESSION,
                     SymbolType.None);
                 curve.Line.IsAntiAlias = true;
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _labelRegression += string.Format(@" < {0:F03}", graphData.MinCorrelation);
                     if (graphData.MinPoints.HasValue)
-                        _labelRegression = string.Format(Resources.RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_, _labelRegression, graphData.MinPoints.Value);
+                        _labelRegression = string.Format(GraphsResources.RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_, _labelRegression, graphData.MinPoints.Value);
                 }
             }
 
@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 graphData.GetCurvePoints(false, regressionLineCurrent is RegressionLine ? 2 : 1000, out var lineX, out var lineY);
 
-                curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Current, lineX, lineY, COLOR_LINE_REGRESSION_CURRENT, SymbolType.None);
+                curve = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Current, lineX, lineY, COLOR_LINE_REGRESSION_CURRENT, SymbolType.None);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
                 curve.Line.Style = DashStyle.Dash;

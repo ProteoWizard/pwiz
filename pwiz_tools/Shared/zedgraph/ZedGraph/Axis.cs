@@ -799,8 +799,8 @@ namespace ZedGraph
 				SetTransformMatrix( g, pane, scaleFactor );
 
 				double baseVal = _scale.CalcBaseTic();
-				float topPix, rightPix;
-				_scale.GetTopRightPix( pane, out topPix, out rightPix );
+				float topPix;
+				_scale.GetTopRightPix( pane, out topPix, out _ );
 
 				shiftPos = CalcTotalShift( pane, scaleFactor, shiftPos );
 
@@ -839,8 +839,7 @@ namespace ZedGraph
 			this.MinSpace = 0;
 			// Calculate the space required for the current graph assuming scalefactor = 1.0
 			// and apply the bufferFraction
-			float fixedSpace;
-			float space = this.CalcSpace( g, pane, 1.0F, out fixedSpace ) * bufferFraction;
+			float space = this.CalcSpace( g, pane, 1.0F, out _ ) * bufferFraction;
 			// isGrowOnly indicates the minSpace can grow but not shrink
 			if ( isGrowOnly )
 				space = Math.Max( oldSpace, space );

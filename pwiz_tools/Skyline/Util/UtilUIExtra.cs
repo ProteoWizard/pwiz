@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -7,7 +25,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -73,14 +90,14 @@ namespace pwiz.Skyline.Util
                     // Byte count from the beginning of the clipboard to the start of the context, or -1 if no context
                     case @"starthtml":
                         if (startHmtl != 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
                         startHmtl = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the context, or -1 if no context.
                     case @"endhtml":
                         if (startHmtl == 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
                         int endHtml = int.Parse(val);
 
                         _fullText = rawClipboardText.Substring(startHmtl, endHtml - startHmtl);
@@ -89,14 +106,14 @@ namespace pwiz.Skyline.Util
                     //  Byte count from the beginning of the clipboard to the start of the fragment.
                     case @"startfragment":
                         if (startFragment != 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
                         startFragment = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the fragment.
                     case @"endfragment":
                         if (startFragment == 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
                         int endFragment = int.Parse(val);
                         _fragment = rawClipboardText.Substring(startFragment, endFragment - startFragment);
                         break;
@@ -110,7 +127,7 @@ namespace pwiz.Skyline.Util
 
             if (_fullText == null && _fragment == null)
             {
-                throw new FormatException(Resources.HtmlFragment_HtmlFragment_No_data_specified);
+                throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_No_data_specified);
             }
         }
 
@@ -255,86 +272,6 @@ EndSelection:<<<<<<<3
         #endregion // Write to Clipboard
     }
 
-    
-    /// <summary>
-    /// String formatting for file size.
-    /// Downloaded from: http://flimflan.com/blog/FileSizeFormatProvider.aspx 
-    /// </summary>
-    public class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
-    {
-        public object GetFormat(Type formatType)
-        {
-            if (formatType == typeof(ICustomFormatter)) return this;
-            return null;
-        }
-
-        private const string FILE_SIZE_FORMAT = "fs";
-        private const Decimal ONE_KILO_BYTE = 1024M;
-        private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
-        private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
-
-        public string Format(string format, object arg, IFormatProvider formatProvider)
-        {
-            if (format == null || !format.StartsWith(FILE_SIZE_FORMAT))
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            if (arg is string)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            Decimal size;
-
-            try
-            {
-                size = Convert.ToDecimal(arg);
-            }
-            catch (InvalidCastException)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            string suffix;
-
-            if (size > ONE_GIGA_BYTE)
-            {
-                size /= ONE_GIGA_BYTE;
-                suffix = @" GB";
-            }
-            else if (size > ONE_MEGA_BYTE)
-            {
-                size /= ONE_MEGA_BYTE;
-                suffix = @" MB";
-            }
-            else if (size > ONE_KILO_BYTE)
-            {
-                size /= ONE_KILO_BYTE;
-                suffix = @" KB";
-            }
-            else
-            {
-                suffix = @" B";
-            }
-
-            string precision = format.Substring(2);
-            if (String.IsNullOrEmpty(precision))
-                precision = @"2";
-            string formatString = @"{0:N" + precision + @"}{1}";  // Avoid ReSharper analysis
-            return String.Format(formatString, size, suffix);
-        }
-
-        private static string DefaultFormat(string format, object arg, IFormatProvider formatProvider)
-        {
-            IFormattable formattableArg = arg as IFormattable;
-            if (formattableArg != null)
-            {
-                return formattableArg.ToString(format, formatProvider);
-            }
-            return arg.ToString();
-        }
-    }
 
     public static class ComboHelper
     {
@@ -373,12 +310,12 @@ EndSelection:<<<<<<<3
 
         public static string GetPasteErrorMessage()
         {
-            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
         }
 
         public static string GetCopyErrorMessage()
         {
-            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
         }
 
         public static string GetOpenClipboardMessage(string prefix)
@@ -392,7 +329,7 @@ EndSelection:<<<<<<<3
                     GetWindowThreadProcessId(hwnd, out processId);
                     var process = Process.GetProcessById((int)processId);
                     var message = prefix + Environment.NewLine;
-                    message += string.Format(Resources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
+                    message += string.Format(UtilResources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
                             process.ProcessName, processId);
                     return message;
                 }

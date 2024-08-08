@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AlertDlg_GetDefaultButtonText__Retry" xml:space="preserve">
+    <value>&amp;Retry</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
+    <value>Embedded</value>
+  </data>
+  <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="BuildLibraryGridView__colScoreType_Score_Type" xml:space="preserve">
+    <value>Score Type</value>
+  </data>
+  <data name="BuildLibraryGridView__colThreshold_Score_Threshold" xml:space="preserve">
+    <value>Score Threshold</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__" xml:space="preserve">
+    <value>{0} scores indicate the probability that an identification is {1}.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_correct" xml:space="preserve">
+    <value>correct</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_incorrect" xml:space="preserve">
+    <value>incorrect</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_" xml:space="preserve">
+    <value>Score threshold {0} for {1} is unusually permissive.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_" xml:space="preserve">
+    <value>Score threshold {0} for {1} will include all identifications.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_" xml:space="preserve">
+    <value>Score threshold {0} for {1} will only include identifications with perfect scores.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_types_not_loaded_" xml:space="preserve">
+    <value>Score types not loaded.</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
+    <value>Score type not found.</value>
+  </data>
+  <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
+    <value>Score threshold '{0}' is invalid (must be a decimal value between {1} and {2}).</value>
+  </data>
+  <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
+    <value>Error getting score type for this file.</value>
+  </data>
+  <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>Are you sure you want to continue?</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
+    <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library" xml:space="preserve">
+    <value>Add document spectral library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_" xml:space="preserve">
+    <value>Building document library for peptide search.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library" xml:space="preserve">
+    <value>Building Peptide Search Library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__" xml:space="preserve">
+    <value>Failed to build the library {0}.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
+    <value>&amp;Files to search:</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
+    <value>An error occurred attempting to import the {0} library.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library" xml:space="preserve">
+    <value>Loading Library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
+    <value>&amp;Result files:</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
+    <value>Fragment ions must be selected</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect" xml:space="preserve">
+    <value>MS1 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected" xml:space="preserve">
+    <value>MS2 analyzer must be selected.</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect" xml:space="preserve">
+    <value>MS2 Tolerance incorrect</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_cancelled_" xml:space="preserve">
+    <value>Conversion cancelled.</value>
+  </data>
+  <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
+    <value>Conversion failed.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_failed" xml:space="preserve">
+    <value>Search failed.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
+    <value>Starting search...</value>
+  </data>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
+    <value>Reusing Koina predictions from: {0}</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
+    <value>Ran EncyclopeDIA Search</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_" xml:space="preserve">
+    <value>A FASTA file is required for an EncyclopeDIA Koina search.</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="ImportFastaControl_browseFastaBtn_Click_Open_FASTA" xml:space="preserve">
+    <value>Open FASTA</value>
+  </data>
+  <data name="ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model since no results files are being imported. Continue without automatically training an mProphet model, or go back and add at least one results file.</value>
+  </data>
+  <data name="ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__" xml:space="preserve">
+    <value>Failed reading the file {0}.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
+    <value>Insert FASTA</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_document_" xml:space="preserve">
+    <value>Please import FASTA to add peptides to the document.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
+    <value>The document does not contain any precursor transitions.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_" xml:space="preserve">
+    <value>Would you like to change the document settings to automatically pick the precursor transitions specified in the full-scan settings?</value>
+  </data>
+  <data name="ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__" xml:space="preserve">
+    <value>Error adding FASTA file {0}.</value>
+  </data>
+  <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
+    <value>The document must contain at least one precursor transition in order to proceed.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
+    <value>&amp;Next &gt;</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_" xml:space="preserve">
+    <value>Cannot build library from OpenSWATH results mixed with results from other tools.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch" xml:space="preserve">
+    <value>A FASTA file is required for the DDA search.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
+    <value>&amp;Finish</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_" xml:space="preserve">
+    <value>Import FASTA (optional)</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Import_FASTA__required_" xml:space="preserve">
+    <value>Import FASTA (required)</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__" xml:space="preserve">
+    <value>No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_" xml:space="preserve">
+    <value>No results files were specified. Are you sure you want to continue? Continuing will create a template document with no imported results.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>Some results files are still missing. Are you sure you want to continue?</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
+    <value>Feature Detection</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
+    <value>Full-scan MS1 filtering must be enabled in order to import a peptide search.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
+    <value>Full-scan MS1 or MS/MS filtering must be enabled in order to import a peptide search.</value>
+  </data>
+  <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
+    <value>Import Peptide Search</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
+    <value>Select Files to Search</value>
+  </data>
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
+    <value>Could not find all the missing results files.</value>
+  </data>
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Results_Directory" xml:space="preserve">
+    <value>Results Directory</value>
+  </data>
+  <data name="ImportResultsControl_GetPeptideSearchChromatograms_Import_results" xml:space="preserve">
+    <value>Import results</value>
+  </data>
+  <data name="ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files" xml:space="preserve">
+    <value>Browse for Results Files</value>
+  </data>
+  <data name="ListBoxModification_ToString__fixed_" xml:space="preserve">
+    <value>(fixed)</value>
+  </data>
+  <data name="ListBoxModification_ToString__isotopic_label_" xml:space="preserve">
+    <value>(isotopic label)</value>
+  </data>
+  <data name="ListBoxModification_ToString__variable_" xml:space="preserve">
+    <value>(variable)</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize__Edit_modifications" xml:space="preserve">
+    <value>&amp;Edit modifications</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__heavy_modifications___" xml:space="preserve">
+    <value>Edit &amp;heavy modifications...</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__structural_modifications___" xml:space="preserve">
+    <value>Edit &amp;structural modifications...</value>
+  </data>
+  <data name="MatchModificationsControl_ModificationLabelText_DDA_Search" xml:space="preserve">
+    <value>Specify all modifications you want to include in the search:</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
+    <value>{0} must contain a comma separated list of adducts or integers describing charge states with absolute values from {1} to {2}.</value>
+  </data>
+  <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
+    <value>Additional Settings</value>
+  </data>
+  <data name="SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_" xml:space="preserve">
+    <value>Download {0}</value>
+  </data>
+  <data name="TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__" xml:space="preserve">
+    <value>Max m/z {0} must not be less than min m/z {1}.</value>
+  </data>
+  <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
+    <value>{0} must contain a comma separated list of integers describing charge states between {1} and {2}.</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
+    <value>Click 'Embedded' to use embedded spectra.
+Click 'Retry' to try building again after placing the original spectrum files in one of the directories listed above.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
+    <value>Add spectral library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
+    <value>Building detected features library</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
+    <value>Adding detected features to document</value>
+  </data>
+</root>

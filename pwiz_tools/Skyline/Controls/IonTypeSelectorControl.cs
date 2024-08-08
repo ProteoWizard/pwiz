@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ContentAlignment = System.Drawing.ContentAlignment;
 
@@ -36,6 +35,12 @@ namespace pwiz.Skyline.Controls
         Size ExpectedSize { get; }
         Size ButtonSize { get; }
         void Update(GraphSpectrumSettings set, PeptideSettings peptideSet);
+    }
+
+    public interface IMenuControlImplementer
+    {
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new();
+        public void DisconnectHandlers();
     }
 
     public class MenuControl<T> : ToolStripControlHost where T : Panel, IControlSize, new()
@@ -67,11 +72,8 @@ namespace pwiz.Skyline.Controls
 
     public class ChargeSelectionPanel : FlowLayoutPanel, IControlSize
     {
-        public event Action<bool> OnCharge1Changed;
-        public event Action<bool> OnCharge2Changed;
-        public event Action<bool> OnCharge3Changed;
-        public event Action<bool> OnCharge4Changed;
-
+        public event Action<int, bool> OnChargeChanged;
+        
         public ChargeSelectionPanel()
         {
             for (int i = 1; i <= 4; i++)
@@ -140,17 +142,8 @@ namespace pwiz.Skyline.Controls
 
         public void button_Click(object sender, EventArgs e)
         {
-            if (sender is CheckBox button)
-            {
-                if (1.Equals(button.Tag))
-                    OnCharge1Changed?.Invoke(button.Checked);
-                if (2.Equals(button.Tag))
-                    OnCharge2Changed?.Invoke(button.Checked);
-                if (3.Equals(button.Tag))
-                    OnCharge3Changed?.Invoke(button.Checked);
-                if (4.Equals(button.Tag))
-                    OnCharge4Changed?.Invoke(button.Checked);
-            }
+            if (sender is CheckBox { Tag: int charge } button) 
+                OnChargeChanged?.Invoke(charge,  button.Checked);
         }
     }
 
@@ -207,7 +200,7 @@ namespace pwiz.Skyline.Controls
             int colNumber = 0;
             var rowLabel = new Label()
             {
-                Text = Resources.IonTypeSelector_NTermLabel,
+                Text = ControlsResources.IonTypeSelector_NTermLabel,
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -227,7 +220,7 @@ namespace pwiz.Skyline.Controls
             colNumber = 0;
             rowLabel = new Label()
             {
-                Text = Resources.IonTypeSelector_CTermLabel,
+                Text = ControlsResources.IonTypeSelector_CTermLabel,
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -327,7 +320,7 @@ namespace pwiz.Skyline.Controls
                     LayoutSettings.RowCount = 2 + modRowNumber;
                     _allLossesButton = new IonSelectorButton(null)
                     {
-                        Text = Resources.IonTypeSelector_LossesLabel,
+                        Text = ControlsResources.IonTypeSelector_LossesLabel,
                         TextAlign = ContentAlignment.MiddleLeft
                     };
                     Controls.Add(_allLossesButton);
@@ -349,7 +342,7 @@ namespace pwiz.Skyline.Controls
                         var cb = new IonSelectorButton(loss)
                         {
                             Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
-                            Checked = lossButtonStates.Contains(loss.FormulaNoNull)
+                            Checked = lossButtonStates.Contains(loss.PersistentName)
                         };
                         cb.CheckedChanged += LossButton_CheckedChanged;
                         cb.MouseHover += LossButton_MouseHover;
@@ -420,7 +413,7 @@ namespace pwiz.Skyline.Controls
             {
                 //get the list of formulas for the selected losses
                 var losses = Controls.OfType<CheckBox>().ToList().FindAll(cbox => cbox.Tag is FragmentLoss && cbox.Checked)
-                    .Select(cbox => ((FragmentLoss) cbox.Tag).Formula).ToArray();
+                    .Select(cbox => ((FragmentLoss) cbox.Tag).PersistentName).ToArray();
 
                 SetAllLossesButtonState();
                 LossChanged?.Invoke(losses);
@@ -433,11 +426,11 @@ namespace pwiz.Skyline.Controls
             {
                 if(cb.Tag is FragmentLoss loss)
                     _panelToolTip.Show(
-                        string.Format(Resources.IonTypeSelector_LossesTooltip, loss.FormulaNoNull), cb);
+                        string.Format(ControlsResources.IonTypeSelector_LossesTooltip, loss.PersistentName), cb);
                 else if (ReferenceEquals(sender, _allLossesButton))
                 {
-                    var msg = _allLossesButton.Checked ? Resources.IonTypeSelector_DeselectAllLossesTooltip
-                        : Resources.IonTypeSelector_SelectAllLossesTooltip;
+                    var msg = _allLossesButton.Checked ? ControlsResources.IonTypeSelector_DeselectAllLossesTooltip
+                        : ControlsResources.IonTypeSelector_SelectAllLossesTooltip;
                     _panelToolTip.Show(msg, cb);
                 }
             }
@@ -460,7 +453,7 @@ namespace pwiz.Skyline.Controls
                 checkBox.Checked = state;
                 checkBox.CheckedChanged += LossButton_CheckedChanged;
                 if (state)
-                    res.Add((checkBox.Tag as FragmentLoss)?.FormulaNoNull);
+                    res.Add((checkBox.Tag as FragmentLoss)?.PersistentName);
             }
             return res.ToArray();
         }

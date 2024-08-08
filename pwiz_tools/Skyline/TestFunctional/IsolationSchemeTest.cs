@@ -67,9 +67,8 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS, editDlg.IsolationWidthTypeName);
                         editDlg.IsolationSchemeName = "test1"; // Not L10N
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             var editList =
@@ -108,9 +107,8 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.IsolationSchemeName = "test2"; // Not L10N
                         editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.FIXED;
                         editDlg.PrecursorFilter = 50;
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             RunUI(() => editList.SelectItem("test2")); // Not L10N
@@ -126,9 +124,8 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(50, editDlg.PrecursorFilter);
                         editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.RESULTS_WITH_MARGIN;
                         editDlg.PrecursorFilter = 0.5;
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             RunUI(() => editList.SelectItem("test2")); // Not L10N
@@ -143,9 +140,8 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(EditIsolationSchemeDlg.IsolationWidthType.RESULTS_WITH_MARGIN, editDlg.IsolationWidthTypeName);
                     Assert.AreEqual(0.5, editDlg.PrecursorFilter);
                     editDlg.IsolationWidthTypeName = EditIsolationSchemeDlg.IsolationWidthType.RESULTS;
-                    editDlg.OkDialog();
                 });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             RunUI(() => editList.SelectItem("test2")); // Not L10N
@@ -319,9 +315,8 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.IsolationWindowGrid.SetCellValue(100);
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 0);
                         editDlg.IsolationWindowGrid.SetCellValue(500);
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             RunUI(() => editList.SelectItem("test2"));
@@ -338,9 +333,8 @@ namespace pwiz.SkylineTestFunctional
                             {
                                 new double?[] { 100.0, 500.0 }
                             });
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             RunUI(() => editList.SelectItem("test2"));
@@ -408,12 +402,8 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test windows per scan without special handling.
-                RunUI(() =>
-                    {
-                        editDlg.SpecialHandling = IsolationScheme.SpecialHandlingType.NONE;
-                        editDlg.OkDialog();
-                    });
-                WaitForClosedForm(editDlg);
+                RunUI(() => editDlg.SpecialHandling = IsolationScheme.SpecialHandlingType.NONE);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             RunUI(() => editList.SelectItem("test2"));

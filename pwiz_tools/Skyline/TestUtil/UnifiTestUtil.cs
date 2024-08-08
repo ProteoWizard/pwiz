@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestUtil
             {
                 return null;
             }
-            return (UnifiAccount)UnifiAccount.DEFAULT.ChangeUsername("chambers")
+            return (UnifiAccount)UnifiAccount.DEFAULT.ChangeUsername("msconvert")
                 .ChangePassword(password);
 
         }

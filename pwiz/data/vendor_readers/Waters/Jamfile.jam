@@ -51,7 +51,8 @@ rule vendor-api-requirements ( properties * )
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
 	   ! [ without-binary-msdata $(properties) ] &&
-       ! <vendor-api-support>off in $(properties)
+       ! <vendor-api-support>off in $(properties) &&
+       ! <address-model>32 in $(properties)
     {
         result += <source>Reader_Waters_Detail.cpp ;
     }
@@ -65,7 +66,8 @@ rule vendor-api-usage-requirements ( properties * )
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
 	   ! [ without-binary-msdata $(properties) ] &&
-       ! <vendor-api-support>off in $(properties)
+       ! <vendor-api-support>off in $(properties) &&
+       ! <address-model>32 in $(properties)
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
         result += <define>PWIZ_READER_WATERS ;
@@ -88,6 +90,10 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! [ masslynxraw-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>32 in $(properties)
+        {
+            echo "[$(READER_PATH)] 32-bit build: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -144,6 +150,10 @@ rule test-requirements ( properties * )
     else if ! [ masslynxraw-dll-location $(API_PATH) : $(properties) ]
     {
         warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if <address-model>32 in $(properties)
+    {
+        warn-once "[$(READER_PATH)] 32-bit build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
 
     return $(result) ;

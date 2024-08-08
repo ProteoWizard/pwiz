@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool" xml:space="preserve">
+    <value> 和一个冲突工具</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_" xml:space="preserve">
+    <value>冲突报告：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_" xml:space="preserve">
+    <value>冲突报告：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_" xml:space="preserve">
+    <value>冲突工具：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports" xml:space="preserve">
+    <value>错误：存在{0}个冲突报告</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report" xml:space="preserve">
+    <value>错误：存在一个冲突报告</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_" xml:space="preserve">
+    <value>覆盖报告：{0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_" xml:space="preserve">
+    <value>覆盖报告：{0}</value>
+  </data>
+  <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
+    <value>为通过 --background-proteome-file 导入的 protdb 命名</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>驻留时间 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
+    <value>错误：参数 {0} 和 {1} 选项不能一起使用。</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_" xml:space="preserve">
+    <value>下面的参数可用于在“工具”菜单上安装工具，而不依赖于“--in”参数，因为它们独立于特定的 Skyline 文档。</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_Tools_Installation" xml:space="preserve">
+    <value>工具安装</value>
+  </data>
+  <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
+    <value>仪器类型{0}不是针对分离列表导出的有效类型</value>
+  </data>
+  <data name="CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export" xml:space="preserve">
+    <value>仪器类型{0}不是针对方法导出的有效类型</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} 或“{1}”</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
+    <value>错误：正则表达式{0}无法解析。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
+    <value>错误：指定的作业目录{0}不存在。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
+    <value>错误：意外参数 --{0}</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
+    <value>无分离列表将被导出。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_method_will_be_exported_" xml:space="preserve">
+    <value>无方法将被导出。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_" xml:space="preserve">
+    <value>无离子对列表将被导出。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_" xml:space="preserve">
+    <value>警告：“--工具-程序-宏”指令使用错误。</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_" xml:space="preserve">
+    <value>警告：仪器类型{0}无效。请从下方选项中选择：</value>
+  </data>
+  <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>错误：试图排除未知对象名称“{0}”。尝试其中一种方法：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>主要离子对计数 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>运行长度 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_" xml:space="preserve">
+    <value>仪器参数{0}针对最优化无效。</value>
+  </data>
+  <data name="CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export" xml:space="preserve">
+    <value>仪器类型{0}不是针对离子对列表导出的有效类型</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__" xml:space="preserve">
+    <value>错误：模型截止值 ({0}) 必须递减排序，大于零且小于 {1}。</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_" xml:space="preserve">
+    <value>错误：模型截止值不得用于校准 Skyline 默认模型。</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
+    <value>使用参数 {0} 需要具备下面的参数之一：</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_" xml:space="preserve">
+    <value>错误：{0}不匹配正则表达式。</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__" xml:space="preserve">
+    <value>错误：正则表达式的匹配对于{0}来说是空的。</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>样品名“{0}”不符合模式“{1}”。忽视{2}</value>
+  </data>
+  <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
+    <value>正在“{1}”中创建离子迁移库“{0}”…</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>错误：创建得分模型失败。</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>错误：文档中没有诱饵肽段。创建得分模型失败。</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>排除特征得分“{0}”</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>排除特征得分：</value>
+  </data>
+  <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
+    <value>错误：默认 Skyline 模型不允许排除特征得分。</value>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
+    <value>错误：保存注释文件 {0} 失败。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_" xml:space="preserve">
+    <value>色谱图文件{0}导出成功。</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
+    <value>错误：必须至少选定一个色谱图类型</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_" xml:space="preserve">
+    <value>错误：尝试保存色谱图文件{0}失败</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results" xml:space="preserve">
+    <value>错误：文档必须拥有导入的结果</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
+    <value>正在导出色谱图文件{0}…</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
+    <value>错误：您必须借助“--exp-file=path/to/file”参数来指定写入的导出文件。无离子对列表将被导出。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
+    <value>错误：{0}仪器缺少对触发采集的直接方法导出的支持。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_" xml:space="preserve">
+    <value>错误：文件{0}无法保存。 查看指定的文件目录存在并且可写入。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_" xml:space="preserve">
+    <value>错误：文件夹{0}无 Agilent QQQ 方法模板。 文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
+    <value>错误：仪器类型{0}不支持触发采集。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_" xml:space="preserve">
+    <value>错误：保留时间预测计算器无法评分。 查看计算器设置。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_" xml:space="preserve">
+    <value>错误：保留时间预测器无法自动计算回归。 检查以确保文档包含全部所需标准肽段的保留时间。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_" xml:space="preserve">
+    <value>错误：指定的重复测定{0}不存在于文档中。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_" xml:space="preserve">
+    <value>错误：模板扩展名{0}不匹配仪器{1}的预期扩展名。无方法将被导出。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>错误：如要导出预定方法，您必须首先在肽段设置/预测中选择一个保留时间预测器。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_" xml:space="preserve">
+    <value>错误：如要导出预定方法，您必须首先在文档中导入针对所有肽段的结果。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>文件夹 {0} 似乎不包含 Agilent MassHunter 12 方法模板。该文件夹的扩展名应为 .m。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
+    <value>警告：每次注射的最大离子对数必须针对导出策略“蛋白质”和“存储桶”以及预定的方法设定为 {0} 和 {1} 之间的某个数值。您指定了 {3}。默认设置为 {2}。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
+    <value>警告：未指定任何导出策略（从“单一”、“蛋白质”或“存储桶”）。默认设置为“单一”。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_" xml:space="preserve">
+    <value>警告：“添加-能量-斜坡”参数仅适用于 Thermo 离子对列表。该参数将被忽视。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___" xml:space="preserve">
+    <value>警告：供应商{0}在 CE 或 DP 预测设置中不匹配供应商。 无论如何继续导出离子对列表…</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
+    <value>您必须导出一个{0}离子对列表并使用供应商软件来将其手动导入方法文件。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_" xml:space="preserve">
+    <value>查看以确保报告不是只读格式。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
+    <value>错误：尝试将{0}报告保存至{1}失败。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
+    <value>错误：报告{0}无法保存至{1}。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
+    <value>错误：报告{0}不存在。如果名称中存在空格，请在整个命令参数列表周围使用“双引号”。</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Exporting_report__0____" xml:space="preserve">
+    <value>报告{0}导出中…</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__" xml:space="preserve">
+    <value>报告{0}已成功导出至{1}。</value>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
+    <value>错误：试图保存 mProphet 特征文件 {0} 失败。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__" xml:space="preserve">
+    <value>错误：试图保存谱图库文件 {0} 失败。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__" xml:space="preserve">
+    <value>警告：无法找到背景蛋白质组文件{0}。</value>
+  </data>
+  <data name="CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__" xml:space="preserve">
+    <value>错误：无法找到离子迁移库{0}。</value>
+  </data>
+  <data name="CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__" xml:space="preserve">
+    <value>错误：无法找到 iRT 数据库{0}。</value>
+  </data>
+  <data name="CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__" xml:space="preserve">
+    <value>无法找到最优化库{0}。</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__" xml:space="preserve">
+    <value>错误：从目录{0}中读取文件信息失败。</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__" xml:space="preserve">
+    <value>错误：目录{0}中未找到数据源。</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
+    <value>错误：读取注释时失败。</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_" xml:space="preserve">
+    <value>错误：导入峰边界失败。</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_" xml:space="preserve">
+    <value>正在从 {0} 导入峰边界 </value>
+  </data>
+  <data name="CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
+    <value>{0} -&gt; {1} 注释：文件已导入。忽视…</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Adding_results___" xml:space="preserve">
+    <value>结果添加中…</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___" xml:space="preserve">
+    <value>文件写入日期 {0} 晚于 --导入-之前日期 {1}。忽视…</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
+    <value>文件写入日期 {0} 早于 --导入-在-或-之前日期 {1}。忽视…</value>
+  </data>
+  <data name="CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__" xml:space="preserve">
+    <value>错误：无法找到文件{0}的上次写入时间。</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
+    <value>添加 1 个修饰。</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Loading_library" xml:space="preserve">
+    <value>正在加载库</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__" xml:space="preserve">
+    <value>警告：无法找到结果文件“{0}”</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+    <value>iRT 标准设置为 {0}，但找到多个 iRT 标准。必须明确设置 iRT 标准。</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
+    <value>iRT标准名称 '{0}' 无效。</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
+    <value>错误：加载 {0} 失败。</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_" xml:space="preserve">
+    <value>错误：{0}不存在。“--报告-添加”命令失败。</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+    <value>错误：无法从 {0} 导入报告</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__" xml:space="preserve">
+    <value>错误：已取消从 {0} 安装工具。</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_" xml:space="preserve">
+    <value>错误：如要从 zip 中导入工具，您必须指定一个路径，“--工具-添加-zip”必须使用已存在路径。</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Installing_tools_from__0_" xml:space="preserve">
+    <value>工具{0}安装中</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_" xml:space="preserve">
+    <value>错误：导入的分析库{0}缺少离子丰度值。</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_" xml:space="preserve">
+    <value>错误：导入的分析库{0}缺少 iRT 和离子丰度值。</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_" xml:space="preserve">
+    <value>错误：导入的分析库{0}缺少 iRT 值。</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_" xml:space="preserve">
+    <value>正在导入 iRT 离子对列表 {0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
+    <value>已添加：{0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
+    <value>已删除：{0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
+    <value>正在将峰周围的色谱图噪声限制为 +/- {0} 分钟…</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
+    <value>结果最小化为 {0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
+    <value>正在删除未使用的色谱图…</value>
+  </data>
+  <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
+    <value>错误：未添加新结果。跳过 Panorama 导入。</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
+    <value>选择一个 {0}</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_" xml:space="preserve">
+    <value>错误：标记类型“{0}”不在文档中。</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_" xml:space="preserve">
+    <value>错误：重新合并峰失败。</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_" xml:space="preserve">
+    <value>错误：当前的峰得分模型与文档中的一个或多个肽段不兼容。请训练一个新模型。</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__" xml:space="preserve">
+    <value>错误：未知的峰得分模型“{0}”</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
+    <value>错误：您必须先导入结果至文档后才能重新整合。</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removed__0__" xml:space="preserve">
+    <value>{0}已删除。</value>
+    <comment>Context is removed file</comment>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_all_results" xml:space="preserve">
+    <value>正在删除所有结果</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
+    <value>之前的结果删除中 </value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_" xml:space="preserve">
+    <value>错误：获取最优化功能失败{0}.{1}</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_open_log_file__0_" xml:space="preserve">
+    <value>错误：打开日志文件 {0} 失败</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
+    <value>错误：发生故障。正在退出…</value>
+  </data>
+  <data name="CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__" xml:space="preserve">
+    <value>错误：您无法同时导出离子对列表和方法。 这样操作不会导出任何内容。请更改命令行参数。</value>
+  </data>
+  <data name="CommandLine_Run_Exiting___" xml:space="preserve">
+    <value>退出中…</value>
+  </data>
+  <data name="CommandLine_Run_Not_setting_library_" xml:space="preserve">
+    <value>未设定库。</value>
+  </data>
+  <data name="CommandLine_Run_Writing_to_log_file__0_" xml:space="preserve">
+    <value>写入日志文件 {0} 失败</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_" xml:space="preserve">
+    <value>错误：{0}不存在。“--批次-命令”失败。</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_" xml:space="preserve">
+    <value>错误：打开文件{0}失败。“--批次-命令”命令失败。</value>
+  </data>
+  <data name="CommandLine_SaveFile_Saving_file___" xml:space="preserve">
+    <value>文件保存中…</value>
+  </data>
+  <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
+    <value>错误：未能保存至用户配置文件。</value>
+  </data>
+  <data name="CommandLine_SetAnnotations_" xml:space="preserve">
+    <value>错误：已有标题为“{0}”的注释。请使用 --annotation-conflict-resolution= &lt;overwrite | skip&gt;。未添加标题为“{0}”的注释。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
+    <value>错误：尝试更改离子对过滤设置失败。</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_" xml:space="preserve">
+    <value>错误：尝试更改离子对全扫描设置失败。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__" xml:space="preserve">
+    <value>改变离子迁移谱图库分辨力至 {0}。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_" xml:space="preserve">
+    <value>启用基于谱图库离子迁移值的提取。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
+    <value>错误：尝试更改离子迁移设置失败。</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>错误：尝试更改离子对的仪器设置失败。</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
+    <value>错误：文件{0}貌似冗余库。</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>错误：尝试更改离子对的库设置失败。</value>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
+    <value>错误：尝试更改肽段酶解设置失败。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
+    <value>错误：尝试更改肽段过滤设置失败。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
+    <value>错误：尝试更改离子对预测设置失败。</value>
+  </data>
+  <data name="CommandProgressMonitor_UpdateProgressInternal_Message__" xml:space="preserve">
+    <value>消息：</value>
+  </data>
+  <data name="CommandWaitBroker_UpdateProgress_Waiting___" xml:space="preserve">
+    <value>正在等待…</value>
+  </data>
+  <data name="CommandWaitBroker_Wait_Done" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_" xml:space="preserve">
+    <value>下列名称已经存在：
+
+{0}
+
+</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_" xml:space="preserve">
+    <value>名称“{0}”已经存在。</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
+    <value>错误：尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。
+{2}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
+    <value>错误：无法验证对 Panorama 文件夹的访问权限。
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
+    <value>错误：无法验证 Panorama 服务器信息。
+{0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>尝试上传至 Panorama 时出现未知错误。
+{0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>错误：Panorama 服务器 {0} 发生导入错误。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>错误：Panorama 服务器 {0} 上取消了文档导入。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_" xml:space="preserve">
+    <value>错误细节可见于{0}。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
+    <value>工作细节可见于 {0}。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>正在向 Panorama 上传文档</value>
+  </data>
+  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
+    <value>从先前的安装复制外部工具出错</value>
+  </data>
+  <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
+    <value>从先前的安装复制外部工具</value>
+  </data>
+  <data name="Program_Main_Install_32_bit__0__" xml:space="preserve">
+    <value>安装 32 比特{0}</value>
+  </data>
+  <data name="Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version" xml:space="preserve">
+    <value>您正在尝试于 32 比特的操作系统上运行 64 比特的{0}版本。请安装 32 比特版本。</value>
+  </data>
+  <data name="SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching" xml:space="preserve">
+    <value>您是否想要在转换前保存您的当前设置？</value>
+  </data>
+  <data name="SkylineWindow_Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_custom_product_ion__0_" xml:space="preserve">
+    <value>添加自定义子离子 {0}</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_Transition" xml:space="preserve">
+    <value>添加离子对</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
+    <value>自定义分子不能被添加到肽段列表。</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_protein_" xml:space="preserve">
+    <value>自定义分子不能被添加到蛋白质。</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Precursor" xml:space="preserve">
+    <value>添加母离子</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
+    <value>添加分子 {0}</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
+    <value>添加分子和母离子</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
+    <value>添加分子母离子 {0}</value>
+  </data>
+  <data name="SkylineWindow_AddStandardsToDocument_Add_standard_peptides" xml:space="preserve">
+    <value>添加标准肽段</value>
+  </data>
+  <data name="SkylineWindow_BuildAreaGraphMenu_Show_Expected" xml:space="preserve">
+    <value>显示预期的</value>
+  </data>
+  <data name="SkylineWindow_BuildAreaGraphMenu_Show_Library" xml:space="preserve">
+    <value>显示库</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>保存 Panorama 上传位置</value>
+  </data>
+  <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
+    <value>更改设置</value>
+  </data>
+  <data name="SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway" xml:space="preserve">
+    <value>以任何方式单击“确定”以打开文档。</value>
+  </data>
+  <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
+    <value>数据文件“{0}”丢失，并且下列初始仪器输出无法找到：</value>
+  </data>
+  <data name="SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction" xml:space="preserve">
+    <value>离子对设置全扫描保留时间过滤器的设定旨在使用预测的保留时间，但预测算法还未被校准。您是否想要生成全梯度色谱图？</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes" xml:space="preserve">
+    <value>您是否想要保存更改？</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_" xml:space="preserve">
+    <value>无法针对此文档找到谱图库{0}。如果没有库，那么所有谱图 ID 信息将不可用。</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
+    <value>查找谱图库</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library" xml:space="preserve">
+    <value>谱图库</value>
+  </data>
+  <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
+    <value>是否确定要突然终止 Skyline? 您将丢失所有未保存的工作。</value>
+  </data>
+  <data name="SkylineWindow_CreateRegression_Set_regression__0__" xml:space="preserve">
+    <value>设定回归{0}</value>
+  </data>
+  <data name="SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread" xml:space="preserve">
+    <value>文档 UI 属性仅可以在 UI 线程上被访问。</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
+    <value>背景蛋白质组</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Find_Background_Proteome" xml:space="preserve">
+    <value>查找背景蛋白质组</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Proteome_File" xml:space="preserve">
+    <value>蛋白质组文件</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files" xml:space="preserve">
+    <value>离子迁移库文件</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_" xml:space="preserve">
+    <value>指定的离子迁移库无法打开：</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library" xml:space="preserve">
+    <value>查找离子迁移库</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library" xml:space="preserve">
+    <value>离子迁移库</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_Find_iRT_Calculator" xml:space="preserve">
+    <value>查找 iRT 计算器</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator" xml:space="preserve">
+    <value>iRT 计算器</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Database_Files" xml:space="preserve">
+    <value>iRT 数据库文件</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened" xml:space="preserve">
+    <value>指定的数据库文件无法打开：</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library" xml:space="preserve">
+    <value>查找最优化库</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Optimization_Library" xml:space="preserve">
+    <value>最优化库</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Optimization_Library_Files" xml:space="preserve">
+    <value>最优化库文件</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_" xml:space="preserve">
+    <value>指定的数据库文件无法打开：</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_" xml:space="preserve">
+    <value>将峰结束更改为{0:F01}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_" xml:space="preserve">
+    <value>将峰起始更改为{0:F01}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_" xml:space="preserve">
+    <value>将峰更改为{0:F01}-{1:F01}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks" xml:space="preserve">
+    <value>更改峰</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak" xml:space="preserve">
+    <value>删除峰值</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_" xml:space="preserve">
+    <value>原始文件必须重新导入，以显示全扫描：{0}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_" xml:space="preserve">
+    <value>选择峰{0:F01}</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
+    <value>不支持在 ZIP 文件中的文档。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
+    <value>待打开文件的路径太长。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__" xml:space="preserve">
+    <value>首先解压缩文件 {0}，之后打开提取的文件 {1}。</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>导入注释</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_" xml:space="preserve">
+    <value>存在与将要创建的文档库相同名称{0}的现有库。覆盖？</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_" xml:space="preserve">
+    <value>您必须保存 Skyline 文档才能导入分析库。</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library" xml:space="preserve">
+    <value>分析库</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
+    <value>导入分析库</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Failed_importing_file__0__1__" xml:space="preserve">
+    <value>导入文件{0}失败。{1}</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Failed_importing_files" xml:space="preserve">
+    <value>导入文件：</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document" xml:space="preserve">
+    <value>导入 Skyline 文档</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>您是否想要针对下列修饰使用 Unimod 定义？</value>
+  </data>
+  <data name="SkylineWindow_ImportFiles_Import_Skyline_document_data" xml:space="preserve">
+    <value>导入 Skyline 文档数据</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_added" xml:space="preserve">
+    <value>{0} 个离子对已添加</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
+    <value>创建(&amp;C)…</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Keep" xml:space="preserve">
+    <value>保留(&amp;K)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Overwrite" xml:space="preserve">
+    <value>覆盖(&amp;O)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
+    <value>跳过(&amp;S)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
+    <value>添加 iRT 值</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>正在分析输入 {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Associate_Proteins_enabled" xml:space="preserve">
+    <value>关联蛋白质已启用</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
+    <value>列标识为 {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>禁用(&amp;D)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>启用(&amp;E)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
+    <value>正在完成导入</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_" xml:space="preserve">
+    <value>保留现有 iRT 值或使用导入值覆盖？</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_" xml:space="preserve">
+    <value>该文件不包含强度。强度的有效列名称是：</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_" xml:space="preserve">
+    <value>该文件不包含 iRT。iRT 的有效列名称是：</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_" xml:space="preserve">
+    <value>操作过程中的意外文档修改：{0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_" xml:space="preserve">
+    <value>您必须保存 Skyline 文档，以从离子对列表中创建一个谱图库。</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library" xml:space="preserve">
+    <value>创建谱图库</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_" xml:space="preserve">
+    <value>标准肽段似乎不在 iRT-C18 标尺上。您是否想将它们重新校准到这个标尺？</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_transition_list" xml:space="preserve">
+    <value>导入离子对列表</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title" xml:space="preserve">
+    <value>导入离子对列表</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries" xml:space="preserve">
+    <value>导入峰边界</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation" xml:space="preserve">
+    <value>操作过程中的意外文档修改。</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__" xml:space="preserve">
+    <value>读取文件{0}失败。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_" xml:space="preserve">
+    <value>您确定？使用不匹配目标和诱饵训练的峰得分模型可能会产生错误的结果。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
+    <value>继续(&amp;C)</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_continue_" xml:space="preserve">
+    <value>您是否想要继续？</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
+    <value>您是否想要产生新的诱饵或继续使用当前诱饵？</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
+    <value>生成(&amp;G)</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Import__0__" xml:space="preserve">
+    <value>导入{0}</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Import_results" xml:space="preserve">
+    <value>导入结果</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_" xml:space="preserve">
+    <value>文档内包含与目标不匹配的诱饵：</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_" xml:space="preserve">
+    <value>文档缺失以下 iRT 标准肽段：</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
+    <value>本文档不包含诱饵肽段。您想在提取色谱图之前添加诱饵肽段吗? 完成色谱图提取后，Skyline 将使用诱饵色谱图和目标色谱图训练峰得分模型，以选择更合适的峰。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__" xml:space="preserve">
+    <value>在有 {0} 个标准肽段时，需要有与 {2} 关联的 {1}。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_" xml:space="preserve">
+    <value>您必须在导入结果前至少添加一个目标离子对。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results" xml:space="preserve">
+    <value>您必须在导入结果前保存此文档。</value>
+  </data>
+  <data name="SkylineWindow_IntegrateAll_Clear_integrate_all" xml:space="preserve">
+    <value>清除全部合并</value>
+  </data>
+  <data name="SkylineWindow_IntegrateAll_Set_integrate_all" xml:space="preserve">
+    <value>设定全部合并</value>
+  </data>
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
+    <value>在“肽段设置”的“预测”标签中，单击计算器按钮，以编辑当前的 iRT 计算器。</value>
+  </data>
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
+    <value>针对 iRT 计算器的标准肽段仅可以在 iRT 计算器编辑器中设定。</value>
+  </data>
+  <data name="SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread" xml:space="preserve">
+    <value>必须从事件线程调用</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results" xml:space="preserve">
+    <value>尝试重新导入结果失败。</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_" xml:space="preserve">
+    <value>从文档库中删除库运行失败。</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_" xml:space="preserve">
+    <value>从 MIDAS 库中删除库运行失败。</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Manage_results" xml:space="preserve">
+    <value>管理结果</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_" xml:space="preserve">
+    <value>文档必须包含质量规格数据，以管理结果。</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>标记离子对非定量</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>标记离子对定量</value>
+  </data>
+  <data name="SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document" xml:space="preserve">
+    <value>尝试修饰文档失败。</value>
+  </data>
+  <data name="SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved" xml:space="preserve">
+    <value>意外错误已避免保存本会话的全局设置修改。</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_Failure_opening__0__" xml:space="preserve">
+    <value>打开{0}失败。</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
+    <value>加载中…</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
+    <value>正在下载文件 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Loading_remote_server_folders" xml:space="preserve">
+    <value>正在加载远程服务器文件夹</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_" xml:space="preserve">
+    <value>找不到 Panorama 服务器。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>从 Panorama 打开</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_" xml:space="preserve">
+    <value>按“添加”以添加新服务器。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read" xml:space="preserve">
+    <value>压缩文件{0}不可读。</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>此文件上次上传到了：{0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>上传到相同位置？</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
+    <value>重新导入色谱图</value>
+  </data>
+  <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
+    <value>删除 CV 截止值以上的肽段</value>
+  </data>
+  <data name="SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers" xml:space="preserve">
+    <value>删除保留时间异常值</value>
+  </data>
+  <data name="SkylineWindow_ResetDefaultSettings_Reset_default_settings" xml:space="preserve">
+    <value>重置默认设置</value>
+  </data>
+  <data name="SkylineWindow_RestoreDocument_Failed_to_restore_document" xml:space="preserve">
+    <value>恢复文档失败</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Failed_writing_to__0__" xml:space="preserve">
+    <value>写入{0}失败。</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Optimizing_data_file___" xml:space="preserve">
+    <value>优化数据文件…</value>
+  </data>
+  <data name="SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name" xml:space="preserve">
+    <value>文档必须在可以保存为新名称之前被完全加载。</value>
+  </data>
+  <data name="SkylineWindow_SaveSettings_Name_settings" xml:space="preserve">
+    <value>名称设置</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>您是否想要针对下列修饰使用 Unimod 定义？</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__" xml:space="preserve">
+    <value>添加{0}</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__" xml:space="preserve">
+    <value>编辑名称{0}</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_DragDrop_Drag_and_drop" xml:space="preserve">
+    <value>拖放</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__" xml:space="preserve">
+    <value>选择{0}</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Clear_standard_type" xml:space="preserve">
+    <value>清除标准类型</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Set_standard_type_to__0_" xml:space="preserve">
+    <value>将标准类型设定为{0}</value>
+  </data>
+  <data name="SkylineWindow_SetupCalculatorChooser_Auto" xml:space="preserve">
+    <value>自动</value>
+  </data>
+  <data name="SkylineWindow_ShareDocument_Compressing_Files" xml:space="preserve">
+    <value>压缩文件</value>
+  </data>
+  <data name="SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__" xml:space="preserve">
+    <value>尝试创建共享文件{0}失败。</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_Share_Document" xml:space="preserve">
+    <value>共享文档</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents" xml:space="preserve">
+    <value>Skyline 共享文档</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared" xml:space="preserve">
+    <value>文档必须在可以被共享之前被完全加载。</value>
+  </data>
+  <data name="SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings" xml:space="preserve">
+    <value>更改文档设置</value>
+  </data>
+  <data name="SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator" xml:space="preserve">
+    <value>更新{0}计算器</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_ESP_Feature_Files" xml:space="preserve">
+    <value>ESP 特性文件</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
+    <value>导出 ESP 特性</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_Failed_attempting_to_save_ESP_features_to__0__" xml:space="preserve">
+    <value>尝试将 ESP 特性保存至{0}失败。 </value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>文档必须包含针对其导出特性的目标。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>导出谱图库</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>正在导出谱图库 {0}…</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>向 {0} 导出谱图库失败。</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>在导入肽段搜索之前，必须完全加载文档。</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>您必须在导入肽段搜索前保存此文档。</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>文档必须包含针对其导出特性的目标。</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
+    <value>文档必须具有导入的结果。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
+    <value>没有用户帐户，文档无法上传到 Panorama 服务器。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Edit_existing" xml:space="preserve">
+    <value>编辑现有</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
+    <value>按下“继续”，以使用您选择的服务器。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
+    <value>注册</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>文档必须在可以上传之前完全加载。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>文档必须在可以上传之前保存。</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>没有可以上传到的 Panorama 服务器</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_Invalid_file_specified" xml:space="preserve">
+    <value>指定的无效文件。</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_Must_have_a_window_handle_to_begin_processing" xml:space="preserve">
+    <value>必须具备窗口句柄才能开始处理。</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file" xml:space="preserve">
+    <value>URL {0} 不是一个文件。</value>
+  </data>
+  <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
+    <value>正在提交未处理的错误报告</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>以 1% FDR 显示目标，将把重复测定显示类型设置为单次。您是否想要继续？</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR" xml:space="preserve">
+    <value>{0}% FDR 时的目标</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__" xml:space="preserve">
+    <value>尝试加载窗口布局文件{0}失败。</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Rename_or_delete_this_file_to_restore_the_default_layout" xml:space="preserve">
+    <value>重新命名或删除此文件，以恢复默认布局。</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Skyline_may_also_need_to_be_restarted" xml:space="preserve">
+    <value>Skyline 也可能需要重启。</value>
+  </data>
+  <data name="SkylineWindow_UpdateProgressUI_Ready" xml:space="preserve">
+    <value>准备完成</value>
+  </data>
+  <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
+    <value>无可显示的库。您是否想要添加一个库？</value>
+  </data>
+  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+    <value>升级到 {0}（正在下载 {1} 个，共 {2} 个）</value>
+  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+    <value>正在升级 {0}</value>
+  </data>
+  <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
+    <value>值“{0}”对参数 {1} 无效，因为该参数要求使用逗号分隔的注释目标列表 {2}。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
+    <value>按“编辑现有”为现有服务器添加用户帐户信息。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
+    <value>错误：尝试更改肽段修饰设置失败。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
+    <value>必须完全加载文档，然后才能检测特征。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
+    <value>您必须在保存此文档后才能检测特征。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
+    <value>{0} 不是有效文件名，无法上传到 Panorama。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>正在关联肽段与蛋白质</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" xml:space="preserve">
+    <value>DIA 和 DIA-Umpire</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
+    <value>运行肽段搜索</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
+    <value>必须保存此文档，然后才能搜索肽段。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_" xml:space="preserve">
+    <value>在运行肽段搜索之前，必须完全加载文档。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
+    <value>DIA 去卷积后得到的单母离子 MS/MS 谱图库，以及来自于相同运行的原始 DIA 谱图的色谱图</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

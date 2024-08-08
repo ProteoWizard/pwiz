@@ -21,6 +21,10 @@
     <column name="Results!*.Value.Truncated" />
     <column name="Results!*.Value.TransitionResultIsMs1" />
     <column name="Results!*.Value.Locator" />
+    <!-- Additional columns not used by the external tool but which might be used if you run R yourself -->
+    <column name="Precursor.Peptide.Protein.Name" />
+    <column name="Precursor.Peptide.ModifiedSequence" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.FileName" />
     <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
     <filter column="Results!*.Value.TransitionResultIsQuantitative" opname="equals" operand="True" />
   </view>

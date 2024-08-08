@@ -58,7 +58,7 @@ void printSpectrumList(const SpectrumList& sl, ostream& os)
 }
 
 
-SpectrumListPtr createSpectrumList()
+SpectrumListPtr createSpectrumList(string idPrefix = "")
 {
     SpectrumListSimplePtr sl(new SpectrumListSimple);
 
@@ -66,7 +66,7 @@ SpectrumListPtr createSpectrumList()
     {
         SpectrumPtr spectrum(new Spectrum);
         spectrum->index = i;
-        spectrum->id = "scan=" + lexical_cast<string>(100+i);
+        spectrum->id = idPrefix + "scan=" + lexical_cast<string>(100+i);
         spectrum->setMZIntensityPairs(vector<MZIntensityPair>(i), MS_number_of_detector_counts);
 
         // add mz/intensity to the spectra for mzPresent filter
@@ -201,12 +201,12 @@ void testEven(SpectrumListPtr sl)
     for (size_t i=0, end=filter.size(); i<end; i++)
     {
         const SpectrumIdentity& id = filter.spectrumIdentity(i); 
-        unit_assert(id.index == i);
-        unit_assert(id.id == "scan=" + lexical_cast<string>(100+i*2));
+        unit_assert_operator_equal(i, id.index);
+        unit_assert_operator_equal("scan=" + lexical_cast<string>(100+i*2), id.id);
 
         SpectrumPtr spectrum = filter.spectrum(i);
-        unit_assert(spectrum->index == i);
-        unit_assert(spectrum->id == "scan=" + lexical_cast<string>(100+i*2));
+        unit_assert_operator_equal(i, spectrum->index);
+        unit_assert_operator_equal("scan=" + lexical_cast<string>(100+i*2), spectrum->id);
     }
 }
 
@@ -399,10 +399,10 @@ void testScanNumberSet(SpectrumListPtr sl)
     }
 
     unit_assert(filter.size() == 4);
-    unit_assert(filter.spectrumIdentity(0).id == "scan=102");
-    unit_assert(filter.spectrumIdentity(1).id == "scan=103");
-    unit_assert(filter.spectrumIdentity(2).id == "scan=104");
-    unit_assert(filter.spectrumIdentity(3).id == "scan=107");
+    unit_assert(filter.spectrumIdentity(0).id == "controllerType=0 controllerNumber=1 scan=102");
+    unit_assert(filter.spectrumIdentity(1).id == "controllerType=0 controllerNumber=1 scan=103");
+    unit_assert(filter.spectrumIdentity(2).id == "controllerType=0 controllerNumber=1 scan=104");
+    unit_assert(filter.spectrumIdentity(3).id == "controllerType=0 controllerNumber=1 scan=107");
 }
 
 
@@ -836,7 +836,7 @@ void test()
     testSelectedIndices(sl);
     testHasBinaryData(sl);
     testIndexSet(sl);
-    testScanNumberSet(sl);
+    testScanNumberSet(createSpectrumList("controllerType=0 controllerNumber=1 "));
     testScanEventSet(sl);
     testScanTimeRange(sl);
     testMSLevelSet(sl);

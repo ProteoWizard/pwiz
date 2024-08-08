@@ -9,7 +9,7 @@ cat("INSTALLING")
 
 
 install.packages(c("tidyr", "plyr", "dplyr", "reshape2", "seqinr", "ggplot2", "coefplot", 
-                   "forcats", "tibble", "stringr", "purrr", "gridExtra", "pracma", "hablar"), 
+                   "forcats", "tibble", "stringr", "purrr", "gridExtra", "pracma", "hablar", "ade4"), 
                  repos='http://cran.us.r-project.org')
 
 

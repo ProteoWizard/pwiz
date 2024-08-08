@@ -86,7 +86,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_UNIFI::chromatogram(size_t index,
 
 PWIZ_API_DECL void ChromatogramList_UNIFI::makeFullFileChromatogram(pwiz::msdata::ChromatogramPtr& result, const string& chromatogramTag, bool getBinaryData) const
 {
-    static bxp::sregex functionNumberRegex = bxp::sregex::compile("(\\d+)\\:.*");
+    const bxp::sregex functionNumberRegex = bxp::sregex::compile("(\\d+)\\:.*");
     bxp::smatch what;
 
     multimap<double, pair<int, double>> fullFileTIC;
@@ -100,7 +100,7 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::makeFullFileChromatogram(pwiz::msdata
 
         if (!bxp::regex_match(info.id, what, functionNumberRegex))
         {
-            msd_.run.spectrumListPtr->warn_once(("unable to parse function number from chromatogram name: " + info.id).c_str());
+            warn_once(("unable to parse function number from chromatogram name: " + info.id).c_str());
             continue;
         }
 

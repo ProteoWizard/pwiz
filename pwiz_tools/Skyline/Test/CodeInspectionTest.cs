@@ -26,6 +26,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -34,8 +35,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -59,6 +62,18 @@ namespace pwiz.SkylineTest
         {
 
             // Looking for uses of MessageBox where we should really be using MessageDlg
+            const string runDlgOkDlgExemptionComment = @"// Purposely using RunUI instead of OkDialog here";
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null,  // There are no parts of the codebase that should skip this check
+                "AbstractFunctionalTest", // Only files containing this string get inspected for this
+                @"RunUI\(.*(Ok|Cancel)Dialog[^_].*", // Forbidden pattern - match RunUI(()=>foo.OkDialog()), RunUI(foo.CancelDialog) etc
+                true, // Pattern is a regular expression
+                @"use OkDialog() or CancelDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
+                runDlgOkDlgExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
+
+            // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -67,7 +82,7 @@ namespace pwiz.SkylineTest
                 string.Empty, // No file content required for inspection
                 @"MessageBox.Show", // Forbidden pattern
                 false, // Pattern is not a regular expression
-                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '"+ messageBoxExemptionComment+@"'", // Explanation for prohibition, appears in report
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '" + messageBoxExemptionComment + @"'", // Explanation for prohibition, appears in report
                 messageBoxExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
 
             // Looking for forgotten PauseTest() calls that will mess up automated tests
@@ -100,13 +115,23 @@ namespace pwiz.SkylineTest
                 false, // Pattern is not a regular expression
                 @"causes blurry icon issues on HD monitors"); // Explanation for prohibition, appears in report
 
+            // Looking for forms that haven't been declared localizable (those that have won't have direct assignments to Text in designer files)
+            AddTextInspection(@"*.Designer.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
+                string.Empty, // No file content required for inspection
+                new[] { ".Text = \"", ".HeaderText = \"" }, // Forbidden patterns
+                false, // Patterns are not regular expressions
+                @"form should be declared localizable"); // Explanation for prohibition, appears in report
+
             // Looking for unlocalized dialogs
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Required,  // This is a test for things that MUST be in such files
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
                 string.Empty, // No file content required for inspection
-                @".*(new global::System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
+                @".*(new global::System.Resources.ResourceManager|new System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
                 true, // Pattern is a regular expression
                 @"ensures that every dialog is localizable"); // Explanation for requirement, appears in report
 
@@ -121,16 +146,25 @@ namespace pwiz.SkylineTest
                 @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
 
             // Looking for Model code depending on UI code
-            AddTextInspection(@"*.cs", // Examine files with this mask
-                Inspection.Forbidden, // This is a test for things that should NOT be in such files
-                Level.Error, // Any failure is treated as an error, and overall test fails
-                null, // There are no parts of the codebase that should skip this check
-                @"namespace pwiz.Skyline.Model", // If the file contains this, then check for forbidden pattern
-                @".*using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);.*", // Forbidden pattern
-                true, // Pattern is a regular expression
-                @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
-                null, // No explicit exceptions to this rule
-                9); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+            void AddForbiddenUIInspection(string fileMask, string cue, string why, int numberToleratedAsWarnings = 0)
+            {
+                AddTextInspection(fileMask, // Examine files with this mask
+                    Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                    Level.Error, // Any failure is treated as an error, and overall test fails
+                    null, // There are no parts of the codebase that should skip this check
+                    cue, // If the file contains this, then check for forbidden pattern
+                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)", 
+                    true, // Pattern is a regular expression
+                    why, // Explanation for prohibition, appears in report
+                    null, // No explicit exceptions to this rule
+                    numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+            }
+
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 37);
+            // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
+            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
+            AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
+
             // Check for using DataGridView.
             AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
                 "new System.Windows.Forms.DataGridView()", false,
@@ -175,9 +209,12 @@ namespace pwiz.SkylineTest
                 }
             }
 
+            var panoramaHint = typeof(PanoramaClient.PanoramaFolderBrowser); // Bit of a hack to get the test to look in that namespace
+
             // Collect forms that should be exercised in tutorials
             var foundForms = FindForms(new[]
                 {
+                    panoramaHint, // Bit of a hack to get the test to look in that namespace
                     typeof(Form),
                     typeof(FormEx),
                     typeof(DockableFormEx),
@@ -197,6 +234,7 @@ namespace pwiz.SkylineTest
             // Forms that we don't expect to see in any test
             var FormNamesNotExpectedInTutorialTests = new[]
             {
+                panoramaHint.Name, // Bit of a hack to get the test to look in that namespace
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
@@ -223,7 +261,7 @@ namespace pwiz.SkylineTest
                     !FormNamesNotExpectedInTutorialTests.Contains(name) && // Known exclusion?
                     !foundForms.Any(f => name.EndsWith("." + f))) // Or perhaps lookup list declares parent.child
                 {
-                    missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type", name));
+                    missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type (maybe using Form instead of FormEx or CommonFormEx?)", name));
                 }
             }
 
@@ -338,6 +376,38 @@ namespace pwiz.SkylineTest
             }
         }
 
+        /// <summary>
+        /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations 
+        /// </summary>
+        void InspectMisplacedResources(string root, List<string> errors) 
+        {
+            // Look for any .csproj in the immediate subfolder of the main project
+            // Strings which are referenced by these other .csproj files will not get moved
+            var otherProjectPaths = new List<string>();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            foreach (var subfolder in Directory.GetDirectories(root))
+            {
+                var otherProjectPath = Path.Combine(subfolder, Path.GetFileNameWithoutExtension(subfolder) + ".csproj");
+                if (File.Exists(otherProjectPath))
+                {
+                    otherProjectPaths.Add(otherProjectPath);
+                }
+            }
+
+            var resourceFilePath = Path.Combine(root, "Properties\\Resources.resx");
+            var csProjPath = Path.Combine(root, "Skyline.csproj");
+            var resourceAssorter = new ResourceAssorter(csProjPath, resourceFilePath, true, otherProjectPaths.ToArray());
+            var initialErrors = errors.Count;
+            resourceAssorter.DoWork(errors);
+            if (errors.Count > initialErrors)
+            {
+                var exePath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName)??string.Empty, "AssortResources.exe");
+
+                errors.Add($"\nThis can be done with command:\n\"{exePath}\" --resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"\nBefore running this command, save all your changes in the IDE.");
+            }
+        }
+
+
         // Looking for uses of Form where we should really be using FormEx
         private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
         {
@@ -399,10 +469,25 @@ namespace pwiz.SkylineTest
                 foreach (var formType in formTypes)
                 {
                     // Now find all forms that inherit from formType
-                    var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
+                    // Search for forms in the same assembly as the base class with a few exceptions
+                    Assembly assembly;
+                    if (formType == typeof(Form))
+                    {
+                        assembly = typeof(SkylineWindow).Assembly;
+                    }
+                    else if (formType == typeof(CommonFormEx))
+                    {
+                        assembly = typeof(ViewEditor).Assembly;
+                    }
+                    else
+                    {
+                        assembly = formType.Assembly;
+                    }
                     foreach (var form in assembly.GetTypes()
-                        .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
-                                    formType.IsAssignableFrom(t))) // Interface type match
+                                 .Where(t => (t.IsClass && !t.IsAbstract && 
+                                              (t.IsSubclassOf(formType) || // Form type match
+                                               t.IsSubclassOf(typeof(FormEx)) || t.IsSubclassOf(typeof(CommonFormEx)))) // Or acceptably subclassed Form
+                                             || formType.IsAssignableFrom(t))) // Interface type match
                     {
                         var formName = form.Name;
                         // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
@@ -444,7 +529,7 @@ namespace pwiz.SkylineTest
 
         private string GetCodeBaseRoot(out string thisFile)
         {
-            thisFile = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
+            thisFile = new StackTrace(true).GetFrame(0).GetFileName();
             if (string.IsNullOrEmpty(thisFile))
             {
                 AssertEx.Fail("Could not get Skyline directory name for code inspection");
@@ -503,9 +588,9 @@ namespace pwiz.SkylineTest
 
             InspectTutorialAuditLogs(root, results);
 
-            var errorCounts = new Dictionary<PatternDetails, int>();
+            InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
 
-            var inspected = new HashSet<string>();
+            var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)
             {
@@ -519,17 +604,12 @@ namespace pwiz.SkylineTest
                         continue; // Can't inspect yourself!
                     }
 
-                    if (!inspected.Add(filename))
-                    {
-                        continue; // Already inspected (matched multiple filemasks)
-                    }
-
                     var content = File.ReadAllText(filename);
                     var lines = content.Split('\n');
 
                     var lineNum = 0;
-                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
-                        ? requiredPatternsByFileMask[fileMask].Where(kvp =>
+                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.TryGetValue(fileMask, out var value)
+                        ? value.Where(kvp =>
                         {
                             // Do we need to worry about this pattern for this file?
                             var patternDetails = kvp.Value;
@@ -539,9 +619,8 @@ namespace pwiz.SkylineTest
                         }).ToDictionary(k => k.Key, k => false)
                         : null;
                     var forbiddenPatternsForThisFile =
-                        forbiddenPatternsByFileMask
-                            .ContainsKey(fileMask) // Are there any forbidden patterns for this filemask?
-                            ? forbiddenPatternsByFileMask[fileMask].Where(kvp =>
+                        forbiddenPatternsByFileMask.TryGetValue(fileMask, out var patterns) // Are there any forbidden patterns for this filemask?
+                            ? patterns.Where(kvp =>
                             {
                                 // Do we need to worry about this pattern for this file?
                                 var patternDetails = kvp.Value;
@@ -667,10 +746,14 @@ namespace pwiz.SkylineTest
                     if (warnings.Any())
                     {
                         Console.WriteLine();
-                        Console.Write(@"WARNING: ");
+                        var previousWarning = string.Empty;
                         foreach (var warning in warnings)
                         {
-                            Console.WriteLine(warning);
+                            if (string.IsNullOrEmpty(previousWarning))
+                            {
+                                Console.Write(@"WARNING: ");
+                            }
+                            Console.WriteLine(previousWarning = warning);
                         }
                     }
                 }
@@ -693,14 +776,23 @@ namespace pwiz.SkylineTest
                 var incidents = toleratedError.Value;
                 if (incidents < pattern.NumberOfToleratedIncidents)
                 {
-                    results.Add(string.Format("The inspection \"{0}\" is configured to tolerate {1} existing incidents, but only {2} were encountered. To prevent new incidents, the tolerance count must be reduced to {2} in CodeInspectionTest.cs",
+                    results.Add(string.Format("The inspection \"{0}\" is configured to tolerate exactly {1} existing incidents, but only {2} were encountered. To prevent new incidents, the tolerance count must be set to {2} in CodeInspectionTest.cs",
                         pattern.Reason, pattern.NumberOfToleratedIncidents, incidents));
                 }
+                patternsWithToleranceCounts.Remove(pattern); // This has been noted
             }
+            results.AddRange(patternsWithToleranceCounts.Select(pattern => $"The inspection \"{pattern.Reason}\" is configured to tolerate exactly {pattern.NumberOfToleratedIncidents} existing incidents, but none were encountered. To prevent new incidents, the tolerance count must be removed in CodeInspectionTest.cs"));
 
             if (results.Any())
             {
-                var resultsCount = results.Count;
+                var commentCues = new[] // Things that may appear in error list that are not themselves errors
+                {
+                    "non-shared resource(s) should be moved from", 
+                    "This can be done with command", 
+                    "AssortResources.exe"
+                };
+
+                var resultsCount = results.Count(r => !string.IsNullOrEmpty(r) && !commentCues.Any(r.Contains));
                 results.Insert(0, string.Empty);
                 results.Insert(0, string.Format("{0} code inspection failures found:", resultsCount));
                 results.Add(string.Empty);
@@ -761,11 +853,12 @@ namespace pwiz.SkylineTest
         }
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> requiredPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
+        private readonly HashSet<PatternDetails> patternsWithToleranceCounts = new HashSet<PatternDetails>();
 
         private enum Inspection { Forbidden, Required }
         public enum Level { Warn, Error }
 
-        private HashSet<string> allFileMasks = new HashSet<string>();
+        private HashSet<string> allFileMasks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Return a list of directories that we don't care about from a strictly Skyline point of view
         private string[] NonSkylineDirectories()
@@ -806,11 +899,12 @@ namespace pwiz.SkylineTest
             result.Add("Model\\AuditLog\\PropertyNames.Designer.cs");
             result.Add("AsyncRenderControl.Designer.cs");
             result.Add("AsyncChromatogramsGraph2.designer.cs");
+            result.Add("MsGraphExtension.designer.cs");
             result.Add("QuantificationStrings.Designer.cs");
             result.Add("ColorGrid.Designer.cs");
             result.Add("ColumnCaptions.Designer.cs");
             result.Add("ColumnToolTips.Designer.cs");
-            result.Add("FormulaBox.Designer.cs");
+            result.Add("FormulaBox.Designer.cs"); // Has special handling for L10N in FormulaBox.cs
             result.Add("GroupComparisonStrings.Designer.cs");
             result.Add("RecentFileControl.Designer.cs");
             result.Add("settings.designer.cs");
@@ -826,6 +920,22 @@ namespace pwiz.SkylineTest
             return result.ToArray();
         }
 
+        void AddTextInspection(string fileMask, // Which files?
+            Inspection inspectionType, // Required, or forbidden?
+            Level failureType, // Is a failure an error, or a warning
+            string[] ignoredDirectories, // Areas to disregard
+            string cue, // If non-empty, only perform the inspection if file contains this cue
+            string[] patterns, // What we're looking out for (may contain \n)
+            bool isRegEx, // Is the pattern a regular expression?
+            string reason, // Explanation on failure
+            string patternException = null, // Optional string which exempts a pattern match if found in matching line
+            int numberToleratedAsWarnings = 0) // Some inspections we won't fix yet, but we don't want to see any new ones either
+        {
+            foreach (var pattern in patterns)
+            {
+                AddTextInspection(fileMask, inspectionType, failureType, ignoredDirectories, cue, pattern, isRegEx, reason, patternException, numberToleratedAsWarnings);
+            }
+        }
 
         void AddTextInspection(string fileMask,  // Which files?
             Inspection inspectionType, // Required, or forbidden?
@@ -845,7 +955,12 @@ namespace pwiz.SkylineTest
                 rules.Add(fileMask, new Dictionary<Pattern, PatternDetails>());
             }
             var patterns = rules[fileMask];
-            patterns.Add(new Pattern(pattern, isRegEx, patternException), new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings));
+            var patternDetails = new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings);
+            patterns.Add(new Pattern(pattern, isRegEx, patternException), patternDetails);
+            if (numberToleratedAsWarnings > 0)
+            {
+                patternsWithToleranceCounts.Add(patternDetails); // Track these so we know when more are tolerated than necessary
+            }
         }
     }
 }

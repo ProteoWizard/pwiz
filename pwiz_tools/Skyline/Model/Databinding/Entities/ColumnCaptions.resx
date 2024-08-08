@@ -141,6 +141,9 @@
   <data name="AnalyteConcentration">
     <value>Analyte Concentration</value>
   </data>
+  <data name="Analyzer">
+    <value>Analyzer</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -216,6 +219,15 @@
   <data name="CalculatedConcentration">
     <value>Calculated Concentration</value>
   </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>Calculated Concentration Message</value>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>Calculated Concentration Raw</value>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>Calculated Concentration Strict</value>
+  </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
@@ -230,6 +242,9 @@
   </data>
   <data name="Chromatogram">
     <value>Chromatogram</value>
+  </data>
+  <data name="ChromatogramEndTime">
+    <value>Chromatogram End Time</value>
   </data>
   <data name="ChromatogramExtractionWidth">
     <value>Chromatogram Extraction Width</value>
@@ -252,6 +267,9 @@
   <data name="ChromatogramSource">
     <value>Chromatogram Source</value>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>Chromatogram Start Time</value>
+  </data>
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
@@ -266,6 +284,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>Compensation Voltage</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>Concentration Multiplier</value>
@@ -549,6 +570,9 @@
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="Kurtosis">
+    <value>Kurtosis</value>
+  </data>
   <data name="LastPosition">
     <value>Last Position</value>
   </data>
@@ -621,6 +645,9 @@
   <data name="MassErrors">
     <value>Mass Errors</value>
   </data>
+  <data name="MatchingPrecursors">
+    <value>Matching Precursors</value>
+  </data>
   <data name="Max">
     <value>Max</value>
   </data>
@@ -690,6 +717,9 @@
   <data name="MedianPeakArea">
     <value>Median Peak Area</value>
   </data>
+  <data name="Message">
+    <value>Message</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -750,6 +780,18 @@
   <data name="MoleculeListAbundance">
     <value>Molecule List Abundance</value>
   </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>Molecule List Abundance Message</value>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>Molecule List Abundance Strict</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Molecule List Abundance Transition Averaged</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Molecule List Abundance Transition Summed</value>
+  </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
   </data>
@@ -798,6 +840,12 @@
   <data name="MonoisotopicMasses">
     <value>Monoisotopic Masses</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>MS1 Precursors</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MS2 Precursors</value>
+  </data>
   <data name="MsLevel">
     <value>MS Level</value>
   </data>
@@ -812,6 +860,15 @@
   </data>
   <data name="NormalizedArea">
     <value>Normalized Area</value>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>Normalized Area Message</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Normalized Area Raw</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Normalized Area Strict</value>
   </data>
   <data name="NumberOfPoints">
     <value>Number of Points</value>
@@ -848,6 +905,9 @@
   </data>
   <data name="PeakScores">
     <value>Peak Scores</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>Peak StdDev</value>
   </data>
   <data name="Peptide">
     <value>Peptide</value>
@@ -906,6 +966,9 @@
   <data name="PeptideSequenceLength">
     <value>Peptide Sequence Length</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>Peptide Spectrum Match Count</value>
+  </data>
   <data name="PointCount">
     <value>Point Count</value>
   </data>
@@ -923,6 +986,15 @@
   </data>
   <data name="PrecursorCalculatedConcentration">
     <value>Precursor Calculated Concentration</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Precursor Calculated Concentration Message</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>Precursor Calculated Concentration Raw</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>Precursor Calculated Concentration Strict</value>
   </data>
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
@@ -953,6 +1025,15 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>Precursor Normalized Area</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Precursor Normalized Area Message</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Precursor Normalized Area Raw</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Precursor Normalized Area Strict</value>
   </data>
   <data name="PrecursorNote">
     <value>Precursor Note</value>
@@ -987,6 +1068,9 @@
   <data name="PredictedRetentionTime">
     <value>Predicted Retention Time</value>
   </data>
+  <data name="PresetScanConfiguration">
+    <value>Preset Scan Configuration</value>
+  </data>
   <data name="PreviousAa">
     <value>Previous Aa</value>
   </data>
@@ -1016,6 +1100,18 @@
   </data>
   <data name="ProteinAbundance">
     <value>Protein Abundance</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>Protein Abundance Message</value>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>Protein Abundance Strict</value>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Protein Abundance Transition Averaged</value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Protein Abundance Transition Summed</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
@@ -1088,6 +1184,9 @@
   </data>
   <data name="RatioToStandard">
     <value>Ratio To Standard</value>
+  </data>
+  <data name="Raw">
+    <value>Raw</value>
   </data>
   <data name="RawData">
     <value>Raw Data</value>
@@ -1194,8 +1293,20 @@
   <data name="SampleType">
     <value>Sample Type</value>
   </data>
+  <data name="ScanDescription">
+    <value>Scan Description</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>Scan Window Width</value>
+  </data>
   <data name="Score">
     <value>Score</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>Shape Correlation</value>
+  </data>
+  <data name="Skewness">
+    <value>Skewness</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline Version</value>
@@ -1205,6 +1316,9 @@
   </data>
   <data name="SMILES">
     <value>SMILES</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>Spectrum Filter</value>
   </data>
   <data name="SpectrumIds">
     <value>Spectrum Ids</value>
@@ -1254,8 +1368,14 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
   </data>
+  <data name="Strict">
+    <value>Strict</value>
+  </data>
   <data name="SummaryMessage">
     <value>Summary Message</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>Surrogate External Standard</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>Target Qualitative Ion Ratio</value>

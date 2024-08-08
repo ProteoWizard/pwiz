@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditListDlg));
             this.listBox = new System.Windows.Forms.ListBox();
             this.btnOk = new System.Windows.Forms.Button();
@@ -40,6 +41,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnReset = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // listBox
@@ -49,6 +51,7 @@
             this.listBox.Name = "listBox";
             this.listBox.SelectedIndexChanged += new System.EventHandler(this.listBox_SelectedIndexChanged);
             this.listBox.DoubleClick += new System.EventHandler(this.btnEdit_Click);
+            this.listBox.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listBox_MouseMove);
             // 
             // btnOk
             // 
@@ -118,6 +121,12 @@
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
+            // helpTip
+            // 
+            this.helpTip.AutoPopDelay = 32767;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
+            // 
             // EditListDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -157,5 +166,6 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnCopy;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }

@@ -108,6 +108,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataGridViewProgressBar.cs" />
     <Compile Include="FileSizeFormatProvider.cs" />
     <Compile Include="ListViewColumnSorter.cs" />
@@ -212,7 +215,7 @@
     </NativeReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
@@ -247,9 +250,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Forward Lit.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Right Arrow.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Right Arrow.gif" />

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -12,9 +13,8 @@ namespace pwiz.Skyline.Model.AuditLog
         private static readonly Dictionary<Type, Func<object, string>> _conversionFuncs = new Dictionary<Type, Func<object, string>>
         {
             { typeof(Brush), BrushToString },
-            {
-                typeof(Uri), UriToString
-            }
+            { typeof(Uri), UriToString },
+            { typeof(KeyValuePair<string, string>), KeyValuePairToString }
         };
 
         private static string InvariantToString(object obj, int? decimalPlaces)
@@ -96,6 +96,12 @@ namespace pwiz.Skyline.Model.AuditLog
         private static string UriToString(object obj)
         {
             return ((Uri)obj).ToString();
+        }
+
+        private static string KeyValuePairToString(object obj)
+        {
+            var kvp = (KeyValuePair<string, string>) obj;
+            return $@"{kvp.Key} = {kvp.Value.Quote()}";
         }
     }
 }

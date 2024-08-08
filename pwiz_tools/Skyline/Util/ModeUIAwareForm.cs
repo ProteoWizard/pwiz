@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Util
         public class ModeUIExtender : Component, IExtenderProvider // Behaves like a ToolTip, in that its presence in a form allows us to tag components with ModeUI info in the designer
         {
             private Dictionary<IComponent, MODE_UI_HANDLING_TYPE> _handledComponents = new Dictionary<IComponent, MODE_UI_HANDLING_TYPE>();
-            private Dictionary<IComponent, string> _originalToolStripText = new Dictionary<IComponent, string>();
+            private Dictionary<IComponent, MenuTextAndToolTip> _originalToolStripText = new Dictionary<IComponent, MenuTextAndToolTip>();
             public ModeUIExtender(IContainer container)
             {
                 if (container != null)
@@ -95,7 +95,23 @@ namespace pwiz.Skyline.Util
                 return _handledComponents;
             }
 
-            public Dictionary<IComponent, string> GetOriginalToolStripText()
+            public struct MenuTextAndToolTip
+            {
+                public string Text;
+                public string ToolTipText;
+
+                public MenuTextAndToolTip(ToolStripMenuItem item) : this(item.Text, item.ToolTipText)
+                {
+                }
+
+                public MenuTextAndToolTip(string text, string toolTipText)
+                {
+                    Text = text;
+                    ToolTipText = toolTipText;
+                }
+            }
+
+            public Dictionary<IComponent, MenuTextAndToolTip> GetOriginalToolStripText()
             {
                 return _originalToolStripText;
             }
@@ -103,6 +119,11 @@ namespace pwiz.Skyline.Util
             public void AddHandledComponent(IComponent component, MODE_UI_HANDLING_TYPE type)
             {
                 _handledComponents[component] = type;
+            }
+
+            public bool ComponentsDisabledForModeUI(IComponent component)
+            {
+                return PeptideToMoleculeTextMapper.GetComponentsDisabledForModeUI(_handledComponents, Program.ModeUI).Contains(component);
             }
         }
 
@@ -161,16 +182,16 @@ namespace pwiz.Skyline.Util
                 _modeUIToolBarDropDownButton = modeUIToolBarDropDownButton;
                 var dropDown = new ToolStripDropDown();
                 dropDown.Items.Add(NewButton(Resources.UIModeProteomic,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis,
                     handler, SrmDocument.DOCUMENT_TYPE.proteomic));
                 dropDown.Items.Add(NewButton(Resources.UIModeSmallMolecules,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis,
                     handler, SrmDocument.DOCUMENT_TYPE.small_molecules));
                 dropDown.Items.Add(NewButton(Resources.UIModeMixed,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface,
-                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface,
+                    UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls,
                     handler, SrmDocument.DOCUMENT_TYPE.mixed));
                 _modeUIToolBarDropDownButton.DropDown = dropDown;
             }
@@ -227,12 +248,13 @@ namespace pwiz.Skyline.Util
                         if (!dictOriginalText.TryGetValue(menuItem, out var originalText))
                         {
                             // Preserve original text in case we need to restore later
-                            dictOriginalText[menuItem] = menuItem.Text;
+                            dictOriginalText[menuItem] = new ModeUIExtender.MenuTextAndToolTip(menuItem);
                         }
                         else
                         {
                             // Restore original text so translator has a clean start
-                            menuItem.Text = originalText;
+                            menuItem.Text = originalText.Text;
+                            menuItem.ToolTipText = originalText.ToolTipText;
                         }
                     }
                 }
@@ -257,15 +279,16 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            public bool MenuItemHasOriginalText(string name)
+            public bool MenuItemHasOriginalText(ToolStripMenuItem toolStripMenuItem)
             {
                 foreach (var item in _modeUIExtender.GetOriginalToolStripText().Keys)
                 {
                     if (item is ToolStripMenuItem menuItem)
                     {
-                        if (Equals(name, menuItem.Text))
+                        if (Equals(toolStripMenuItem.Text, menuItem.Text) && Equals(toolStripMenuItem.ToolTipText, menuItem.ToolTipText))
                         {
-                            return Equals(name, _modeUIExtender.GetOriginalToolStripText()[menuItem]);
+                            var menuTextAndToolTip = _modeUIExtender.GetOriginalToolStripText()[menuItem];
+                            return Equals(toolStripMenuItem.Text, menuTextAndToolTip.Text) && Equals(toolStripMenuItem.ToolTipText, menuTextAndToolTip.ToolTipText);
                         }
                     }
                 }
@@ -317,16 +340,16 @@ namespace pwiz.Skyline.Util
                 string message = null;
                 if (new_uimode == SrmDocument.DOCUMENT_TYPE.proteomic && hasSmallMolecules)
                 {
-                    message = Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_;
+                    message = UtilResources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_;
                 }
                 else if (new_uimode == SrmDocument.DOCUMENT_TYPE.small_molecules && hasPeptides)
                 {
-                    message = Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_;
+                    message = UtilResources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_;
                 }
 
                 if (message != null)
                 {
-                    message = TextUtil.LineSeparate(message,@" ", Resources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_);
+                    message = TextUtil.LineSeparate(message,@" ", UtilResources.ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_);
                     using (var alert = new AlertDlg(message, MessageBoxButtons.YesNo))
                     {
                         if (alert.ShowAndDispose(_modeUIToolBarDropDownButton.GetCurrentParent()) == DialogResult.Yes)

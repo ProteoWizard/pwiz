@@ -154,7 +154,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioSingle.ZOrder" xml:space="preserve">
-    <value>32</value>
+    <value>33</value>
   </data>
   <data name="radioProtein.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -185,7 +185,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioProtein.ZOrder" xml:space="preserve">
-    <value>31</value>
+    <value>32</value>
   </data>
   <data name="radioBuckets.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -215,7 +215,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioBuckets.ZOrder" xml:space="preserve">
-    <value>30</value>
+    <value>31</value>
   </data>
   <data name="textMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 174</value>
@@ -240,7 +240,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textMaxTransitions.ZOrder" xml:space="preserve">
-    <value>29</value>
+    <value>30</value>
   </data>
   <data name="labelMaxTransitions.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -267,7 +267,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMaxTransitions.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>264, 41</value>
@@ -291,7 +291,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>27</value>
+    <value>28</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>264, 11</value>
@@ -315,7 +315,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>28</value>
+    <value>29</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -342,7 +342,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>26</value>
+    <value>27</value>
   </data>
   <data name="comboTargetType.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 319</value>
@@ -369,7 +369,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboTargetType.ZOrder" xml:space="preserve">
-    <value>25</value>
+    <value>26</value>
   </data>
   <data name="textRunLength.Location" type="System.Drawing.Point, System.Drawing">
     <value>200, 321</value>
@@ -396,7 +396,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRunLength.ZOrder" xml:space="preserve">
-    <value>24</value>
+    <value>25</value>
   </data>
   <data name="textDwellTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>359, 319</value>
@@ -423,7 +423,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textDwellTime.ZOrder" xml:space="preserve">
-    <value>23</value>
+    <value>24</value>
   </data>
   <data name="labelDwellTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -453,7 +453,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelDwellTime.ZOrder" xml:space="preserve">
-    <value>22</value>
+    <value>23</value>
   </data>
   <data name="comboInstrument.Items" xml:space="preserve">
     <value>ABI</value>
@@ -489,7 +489,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboInstrument.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>22</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -516,7 +516,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>21</value>
   </data>
   <data name="labelTemplateFile.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -543,7 +543,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelTemplateFile.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>20</value>
   </data>
   <data name="textTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 407</value>
@@ -568,7 +568,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>19</value>
   </data>
   <data name="btnBrowseTemplate.Location" type="System.Drawing.Point, System.Drawing">
     <value>218, 406</value>
@@ -592,7 +592,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBrowseTemplate.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="cbIgnoreProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -627,7 +627,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbIgnoreProteins.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="cbEnergyRamp.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -793,7 +793,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboPolarityFilter.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="cbTune3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -860,7 +860,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbSortByMz.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="cbSlens.Location" type="System.Drawing.Point, System.Drawing">
     <value>538, 245</value>
@@ -888,7 +888,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbSlens.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="comboTuning.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 14</value>
@@ -980,7 +980,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="textPrimaryCount.Location" type="System.Drawing.Point, System.Drawing">
     <value>34, 4</value>
@@ -1094,7 +1094,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboOptimizing.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="labelOptimizing.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1121,7 +1121,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelOptimizing.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="labelMethods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1148,7 +1148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMethods.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="labelMethodNum.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1175,7 +1175,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMethodNum.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="panelThermoColumns.Location" type="System.Drawing.Point, System.Drawing">
     <value>532, 335</value>
@@ -1199,7 +1199,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoColumns.ZOrder" xml:space="preserve">
-    <value>34</value>
+    <value>35</value>
   </data>
   <data name="panelAbSciexTOF.Location" type="System.Drawing.Point, System.Drawing">
     <value>532, 289</value>
@@ -1223,7 +1223,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAbSciexTOF.ZOrder" xml:space="preserve">
-    <value>33</value>
+    <value>34</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1301,7 +1301,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="panelThermoRt.Location" type="System.Drawing.Point, System.Drawing">
     <value>347, 226</value>
@@ -1325,7 +1325,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
-    <value>35</value>
+    <value>36</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1376,7 +1376,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelSciexTune.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="panelWaters.Location" type="System.Drawing.Point, System.Drawing">
     <value>358, 163</value>
@@ -1400,7 +1400,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelWaters.ZOrder" xml:space="preserve">
-    <value>36</value>
+    <value>37</value>
   </data>
   <data name="labelPolarityFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1430,7 +1430,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelPolarityFilter.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="panelTuneColumns.Location" type="System.Drawing.Point, System.Drawing">
     <value>599, 150</value>
@@ -1457,7 +1457,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelTuneColumns.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnGraph.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 346</value>
@@ -1481,7 +1481,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnGraph.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1532,7 +1532,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelBrukerTimsTof.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="cbSureQuant.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1661,6 +1661,30 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelSureQuant.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textAccumulationTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>359, 340</value>
+  </data>
+  <data name="textAccumulationTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textAccumulationTime.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="textAccumulationTime.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;textAccumulationTime.Name" xml:space="preserve">
+    <value>textAccumulationTime</value>
+  </data>
+  <data name="&gt;&gt;textAccumulationTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textAccumulationTime.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textAccumulationTime.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1695,5 +1719,132 @@
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 9</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>254, 24</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Text" xml:space="preserve">
+    <value>创建 SCIEX OS 
+ Quant 方法(&amp;O)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.ToolTip" xml:space="preserve">
+    <value>将 SCIEX OS Quant 兼容的分析方法导出到相同目录，基本名称与 Analyst 采集方法相同。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.Name" xml:space="preserve">
+    <value>cbExportSciexOSQuantMethod</value>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelXICWidth.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelXICWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 40</value>
+  </data>
+  <data name="labelXICWidth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="labelXICWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 20</value>
+  </data>
+  <data name="labelXICWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelXICWidth.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="labelXICWidth.Text" xml:space="preserve">
+    <value>XIC 宽度 (Da):</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Name" xml:space="preserve">
+    <value>labelXICWidth</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textXICWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 58</value>
+  </data>
+  <data name="textXICWidth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="textXICWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 26</value>
+  </data>
+  <data name="textXICWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="textXICWidth.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Name" xml:space="preserve">
+    <value>textXICWidth</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelAbiSciexOS.Location" type="System.Drawing.Point, System.Drawing">
+    <value>500, 211</value>
+  </data>
+  <data name="panelAbiSciexOS.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 9, 6, 9</value>
+  </data>
+  <data name="panelAbiSciexOS.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 90</value>
+  </data>
+  <data name="panelAbiSciexOS.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="panelAbiSciexOS.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.Name" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
 </root>

@@ -141,6 +141,9 @@
   <data name="AnalyteConcentration">
     <value>アナライト濃度</value>
   </data>
+  <data name="Analyzer">
+    <value>アナライザー</value>
+  </data>
   <data name="Area">
     <value>面積</value>
   </data>
@@ -216,6 +219,18 @@
   <data name="CalculatedConcentration">
     <value>計算濃度</value>
   </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>計算濃度メッセージ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>計算濃度（生データ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>計算濃度（厳密なデータ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="CalibrationCurve">
     <value>校正曲線</value>
   </data>
@@ -230,6 +245,9 @@
   </data>
   <data name="Chromatogram">
     <value>クロマトグラム</value>
+  </data>
+  <data name="ChromatogramEndTime">
+    <value>クロマトグラム終了時間</value>
   </data>
   <data name="ChromatogramExtractionWidth">
     <value>クロマトグラムの抽出幅</value>
@@ -252,6 +270,9 @@
   <data name="ChromatogramSource">
     <value>クロマトグラムのソース</value>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>クロマトグラム開始時間</value>
+  </data>
   <data name="CleavageAa">
     <value>開裂Aa</value>
   </data>
@@ -266,6 +287,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>衝突エネルギー</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>補償電圧</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>濃度乗数</value>
@@ -549,6 +573,9 @@
   <data name="Key">
     <value>キー</value>
   </data>
+  <data name="Kurtosis">
+    <value>尖度</value>
+  </data>
   <data name="LastPosition">
     <value>最後の位置</value>
   </data>
@@ -621,6 +648,9 @@
   <data name="MassErrors">
     <value>質量誤差</value>
   </data>
+  <data name="MatchingPrecursors">
+    <value>一致するプリカーサー</value>
+  </data>
   <data name="Max">
     <value>最大</value>
   </data>
@@ -690,6 +720,9 @@
   <data name="MedianPeakArea">
     <value>ピーク面積の中央値</value>
   </data>
+  <data name="Message">
+    <value>メッセージ</value>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -750,6 +783,22 @@
   <data name="MoleculeListAbundance">
     <value>分子リスト存在量</value>
   </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>分子リストの存在量に関するメッセージ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>分子リスト存在量（厳密なデータ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>分子リスト存在量トランジション（平均）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>分子リスト存在量トランジション（合計）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="MoleculeListLocator">
     <value>分子リストロケーター</value>
   </data>
@@ -798,6 +847,12 @@
   <data name="MonoisotopicMasses">
     <value>モノアイソトピック質量</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>MS1プリカーサー</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MS2プリカーサー</value>
+  </data>
   <data name="MsLevel">
     <value>MSレベル</value>
   </data>
@@ -812,6 +867,18 @@
   </data>
   <data name="NormalizedArea">
     <value>正規化面積</value>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>正規化面積に関するメッセージ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>正規化面積（生データ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>正規化面積（厳密なデータ）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
     <value>ポイント数</value>
@@ -829,13 +896,13 @@
     <value>最適ステップ</value>
   </data>
   <data name="PeakGroupEndTime">
-    <value>ピークグループ終了時刻</value>
+    <value>ピークグループ終了時間</value>
   </data>
   <data name="PeakGroupRetentionTime" xml:space="preserve">
     <value>ピークグループ保持時間</value>
   </data>
   <data name="PeakGroupStartTime">
-    <value>ピークグループ開始時刻</value>
+    <value>ピークグループ開始時間</value>
   </data>
   <data name="PeakQValue">
     <value>ピークのQ値</value>
@@ -848,6 +915,9 @@
   </data>
   <data name="PeakScores">
     <value>ピークスコア</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>ピーク標準偏差</value>
   </data>
   <data name="Peptide">
     <value>ペプチド</value>
@@ -906,6 +976,10 @@
   <data name="PeptideSequenceLength">
     <value>ペプチドシーケンス長</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>ペプチドスペクトル一致数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PointCount">
     <value>点数</value>
   </data>
@@ -923,6 +997,18 @@
   </data>
   <data name="PrecursorCalculatedConcentration">
     <value>プリカーサー計算濃度</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>プリカーサー計算濃度に関するメッセージ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>プリカーサー計算濃度（生データ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>プリカーサー計算濃度（厳密なデータ）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCharge">
     <value>プリカーサー電荷</value>
@@ -953,6 +1039,18 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>プリカーサー正規化面積</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>プリカーサー正規化面積に関するメッセージ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>プリカーサー正規化面積（生データ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>プリカーサー正規化面積（厳密なデータ）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
     <value>プリカーサーメモ</value>
@@ -987,6 +1085,9 @@
   <data name="PredictedRetentionTime">
     <value>予測保持時間</value>
   </data>
+  <data name="PresetScanConfiguration">
+    <value>プリセットスキャン設定</value>
+  </data>
   <data name="PreviousAa">
     <value>前へAa</value>
   </data>
@@ -1016,6 +1117,22 @@
   </data>
   <data name="ProteinAbundance">
     <value>タンパク質存在量</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>タンパク質存在量に関するメッセージ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>タンパク質存在量（厳密なデータ）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>タンパク質存在量トランジション（平均）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>タンパク質存在量トランジション（合計）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション</value>
@@ -1088,6 +1205,10 @@
   </data>
   <data name="RatioToStandard">
     <value>標準に対する比率</value>
+  </data>
+  <data name="Raw">
+    <value>生データ</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
     <value>生データ</value>
@@ -1194,8 +1315,20 @@
   <data name="SampleType">
     <value>試料タイプ</value>
   </data>
+  <data name="ScanDescription">
+    <value>スキャン説明</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>スキャンウィンドウ幅</value>
+  </data>
   <data name="Score">
     <value>スコア</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>形状相関</value>
+  </data>
+  <data name="Skewness">
+    <value>歪度</value>
   </data>
   <data name="SkylineVersion">
     <value>Skylineバージョン</value>
@@ -1205,6 +1338,9 @@
   </data>
   <data name="SMILES">
     <value>SMILES</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>スペクトルフィルタ</value>
   </data>
   <data name="SpectrumIds">
     <value>スペクトルID</value>
@@ -1254,8 +1390,16 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev総面積比</value>
   </data>
+  <data name="Strict">
+    <value>厳密なデータ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="SummaryMessage">
     <value>概要に関するメッセージ</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>サロゲート外部標準</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>ターゲット定性イオン比</value>

@@ -242,6 +242,7 @@ struct PWIZ_API_DECL Spectrum
     virtual IonPolarity getIonPolarity() const = 0;
     virtual DeviceType getDeviceType() const = 0;
     virtual MassRange getMeasuredMassRange() const = 0;
+    virtual double getRetentionTime() const = 0;
     virtual int getParentScanId() const = 0;
     virtual void getPrecursorIons(std::vector<double>& precursorIons) const = 0;
     virtual bool getPrecursorCharge(int& charge) const = 0;
@@ -317,7 +318,7 @@ struct PWIZ_API_DECL Frame
 
     virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
                                          bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
-    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
+    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter, double& tic, double& minMz, double& maxMz) const = 0;
 
     virtual ~Frame() {}
 };
@@ -359,6 +360,9 @@ class PWIZ_API_DECL MassHunterData
 
     virtual const std::vector<Signal>& getSignals() const = 0;
     virtual SignalChromatogramPtr getSignal(const Signal& signal) const = 0;
+
+    virtual int getNonMsScanCount() const = 0;
+    virtual SpectrumPtr getNonMsSpectrum(int index) const = 0;
 
     virtual const pwiz::util::BinaryData<double>& getTicTimes(bool ms1Only = false) const = 0;
     virtual const pwiz::util::BinaryData<double>& getBpcTimes(bool ms1Only = false) const = 0;

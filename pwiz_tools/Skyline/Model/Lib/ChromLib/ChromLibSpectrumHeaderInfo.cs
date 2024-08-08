@@ -26,11 +26,14 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
     [XmlRoot("chromatogram_library_spectrum_header_info")]
     public class ChromLibSpectrumHeaderInfo : SpectrumHeaderInfo
     {
-        public ChromLibSpectrumHeaderInfo(string libraryName, double peakArea, string proteinName) : base(libraryName)
+        public ChromLibSpectrumHeaderInfo(string libraryName, double peakArea, string proteinName, double? score = null, string scoreType = null)
+            : base(libraryName, score, scoreType)
         {
             PeakArea = peakArea;
             Protein = proteinName;
         }
+
+        public override string LibraryTypeName => @"Chromatogram";
 
         public double PeakArea { get; private set; }
 

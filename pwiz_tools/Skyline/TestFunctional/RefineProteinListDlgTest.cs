@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestName()
         {
-            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, true,
+            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, 
                 dlgRefineList =>
                 {
                     dlgRefineList.ProteinsText = TextUtil.LineSeparate(FirstProteinName, SecondProteinName);
@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAccession()
         {
-            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, true,
+            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, 
                dlgRefineList =>
                {
                    dlgRefineList.Accession = true;
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestPreferred()
         {
-            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, true,
+            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, 
                dlgRefineList =>
                {
                    dlgRefineList.Preferred = true;

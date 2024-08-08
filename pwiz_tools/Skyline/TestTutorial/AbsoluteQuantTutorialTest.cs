@@ -207,7 +207,6 @@ namespace pwiz.SkylineTestTutorial
                     importResultsDlg1.OkDialog();
                 });
             WaitForGraphs();
-            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             WaitForCondition(5 * 60 * 1000, // five minutes
                              () =>
                              SkylineWindow.Document.Settings.HasResults &&

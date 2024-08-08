@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -133,8 +132,9 @@ namespace pwiz.Skyline.SettingsUI
                 scoringModel = new MProphetPeakScoringModel(UNNAMED, document);
             }
 
-            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = SettingsUIResources.EditPeakScoringModelDlg_TrainModelClick_Scoring;
                 longWaitDlg.PerformWork(owner, 800, progressMonitor =>
                     _targetDecoyGenerator = new TargetDecoyGenerator(document, scoringModel, scoreProvider, progressMonitor));
                 if (longWaitDlg.IsCanceled)
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.SettingsUI
             catch (InvalidDataException x)
             {
                 MessageDlg.ShowWithException(this,
-                               TextUtil.LineSeparate(string.Format(Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_),
+                               TextUtil.LineSeparate(string.Format(SettingsUIResources.EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_),
                                                      x.Message), x);
             }
 
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.SettingsUI
             _targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
             // If decoy box is checked and no decoys, throw an error
             if (decoyCheckBox.Checked && decoyTransitionGroups.Count == 0)
-                throw new InvalidDataException(string.Format(Resources.EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_));
+                throw new InvalidDataException(string.Format(SettingsUIResources.EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_));
             // Use decoys for training only if decoy box is checked
             if (!decoyCheckBox.Checked)
                 decoyTransitionGroups = new List<IList<FeatureScores>>();
@@ -263,8 +263,9 @@ namespace pwiz.Skyline.SettingsUI
             var initialParams = new LinearModelParams(initialWeights);
 
             // Train the model.
-            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModel_Training})
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = SettingsUIResources.EditPeakScoringModelDlg_TrainModel_Training;
                 longWaitDlg.PerformWork(this, 800, progressMonitor => 
                 {
                     _peakScoringModel = peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, _targetDecoyGenerator, initialParams,
@@ -278,13 +279,11 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver.Items.RaiseListChangedEvents = false;
             try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating,
-                    Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions,
-                    ProgressValue = 0
-                })
-                {
+                    longWaitDlg.Text = SettingsUIResources.EditPeakScoringModelDlg_TrainModel_Calculating;
+                    longWaitDlg.Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions;
+                    longWaitDlg.ProgressValue = 0;
                     int seenContributingScores = 0;
                     int totalContributingScores = _peakScoringModel.Parameters.Weights.Count(w => !double.IsNaN(w));
                     longWaitDlg.PerformWork(this, 800, progressMonitor =>
@@ -416,12 +415,12 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeGraphPanes()
         {
-            InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score);
+            InitGraphPane(zedGraphMProphet.GraphPane, SettingsUIResources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score);
             InitGraphPane(zedGraphSelectedCalculator.GraphPane);
-            InitGraphPane(zedGraphPValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution, 
-                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value);
-            InitGraphPane(zedGraphQValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution,
-                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value);
+            InitGraphPane(zedGraphPValues.GraphPane, SettingsUIResources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution, 
+                                                     SettingsUIResources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value);
+            InitGraphPane(zedGraphQValues.GraphPane, SettingsUIResources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution,
+                                                     SettingsUIResources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value);
         }
 
         /// <summary>
@@ -430,8 +429,8 @@ namespace pwiz.Skyline.SettingsUI
         private static void InitGraphPane(GraphPane graphPane, string titleName = null, string xAxis = null)
         {
             graphPane.Title.Text = titleName ?? string.Empty;
-            graphPane.XAxis.Title.Text = xAxis ?? Resources.EditPeakScoringModelDlg_InitGraphPane_Score;
-            graphPane.YAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Peak_count;
+            graphPane.XAxis.Title.Text = xAxis ?? SettingsUIResources.EditPeakScoringModelDlg_InitGraphPane_Score;
+            graphPane.YAxis.Title.Text = SettingsUIResources.EditPeakScoringModelDlg_InitGraphPane_Peak_count;
             graphPane.XAxis.MinSpace = 50;
             graphPane.XAxis.MajorTic.IsAllTics = false;
             graphPane.YAxis.MajorTic.IsAllTics = false;
@@ -512,14 +511,14 @@ namespace pwiz.Skyline.SettingsUI
             // If there are unknown composite scores, display the model graph but warn the user
             // that the model does not apply to this data and the model should be retrained
             graphPane.Title.Text = hasUnknownScores ? 
-                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_: 
-                                                    Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
+                                                    SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_: 
+                                                    SettingsUIResources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
             graphPaneQ.Title.Text = hasUnknownScores ?
-                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
-                                                    GetModeUIHelper().Translate(Resources.EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides);
+                                                    SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
+                                                    GetModeUIHelper().Translate(SettingsUIResources.EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides);
             graphPaneP.Title.Text = hasUnknownScores ?
-                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
-                                                    GetModeUIHelper().Translate(Resources.EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides);
+                                                    SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
+                                                    GetModeUIHelper().Translate(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides);
 
             if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
@@ -530,21 +529,21 @@ namespace pwiz.Skyline.SettingsUI
 
             // Add bar graphs.
             if (decoyCheckBox.Checked)
-                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
+                graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
-                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, secondBestPoints, _secondBestColor);
-            graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
+                graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, secondBestPoints, _secondBestColor);
+            graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
             // Add bar graphs for p values.
             if (decoyCheckBox.Checked)
-                graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, pHistograms.BinGroups[1], _decoyColor);
+                graphPaneP.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, pHistograms.BinGroups[1], _decoyColor);
             if (secondBestCheckBox.Checked)
-                graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, pHistograms.BinGroups[2], _secondBestColor);
-            graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, pHistograms.BinGroups[0], _targetColor);
+                graphPaneP.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, pHistograms.BinGroups[2], _secondBestColor);
+            graphPaneP.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, pHistograms.BinGroups[0], _targetColor);
 
             // Add bar graph for q values.
-            graphPaneQ.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, qHistograms.BinGroups[0], _targetColor);
-            var piZeroCurve = new LineItem(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_, piZeroLine, Color.Black, SymbolType.None, 3);
+            graphPaneQ.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, qHistograms.BinGroups[0], _targetColor);
+            var piZeroCurve = new LineItem(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_, piZeroLine, Color.Black, SymbolType.None, 3);
             graphPaneP.CurveList.Add(piZeroCurve);
 
             // Graph normal curve if the model is trained and at least some composite scores are valid
@@ -595,13 +594,13 @@ namespace pwiz.Skyline.SettingsUI
                         (_decoyColor.B + _secondBestColor.B)/2);
                     color = Color.FromArgb(alpha, _peakScoringModel.UsesDecoys ? mixColor : _secondBestColor);
                     normLabel = _peakScoringModel.UsesDecoys
-                                    ? Resources.EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution
-                                    : Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution;
+                                    ? SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution
+                                    : SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution;
                 }
                 else
                 {
                     color = Color.FromArgb(alpha, _decoyColor);
-                    normLabel = Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution;
+                    normLabel = SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution;
                 }
                 var curve = new LineItem(normLabel, normalCurve, Color.DarkGray, SymbolType.None)
                     {
@@ -685,10 +684,10 @@ namespace pwiz.Skyline.SettingsUI
             _hasUnknownScores = modelHistograms.HasUnknownScores;
             _allUnknownScores = modelHistograms.AllUnknownScores;
             if (decoyCheckBox.Checked)
-                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
+                graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
-                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, secondBestPoints, _secondBestColor);
-            graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
+                graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, secondBestPoints, _secondBestColor);
+            graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
             ScaleGraph(graphPane, modelHistograms.Min, modelHistograms.Max, _hasUnknownScores);
 
@@ -702,7 +701,7 @@ namespace pwiz.Skyline.SettingsUI
         private static void CreateUnknownLabel(GraphPane graphPane)
         {
             // Create "unknown" label.
-            var unknownLabel = new TextObj(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown, 1.0, 1.02, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
+            var unknownLabel = new TextObj(SettingsUIResources.EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown, 1.0, 1.02, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
             {
                 FontSpec = new FontSpec(graphPane.XAxis.Scale.FontSpec) { IsItalic = true }
             };
@@ -987,7 +986,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = warningStyle;
-                        cell.ToolTipText = cell.ToolTipText ?? Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
+                        cell.ToolTipText = cell.ToolTipText ?? SettingsUIResources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
                     }
                 }
                 // Show row in disabled style if the score is not eligible
@@ -1015,13 +1014,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Create list of calculators and their corresponding weights.
             PeakCalculatorWeight[] peakCalculatorWeights = null;
-            using (var longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating,
-                Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions,
-                ProgressValue = 0
-            })
-            {
+                longWaitDlg.Text = SettingsUIResources.EditPeakScoringModelDlg_TrainModel_Calculating;
+                longWaitDlg.Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions;
+                longWaitDlg.ProgressValue = 0;
                 longWaitDlg.PerformWork(owner, 800, progressMonitor => peakCalculatorWeights =
                     _targetDecoyGenerator.GetPeakCalculatorWeights(_peakScoringModel, progressMonitor));
             }
@@ -1222,15 +1219,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public int GetTargetCount()
         {
-            List<IList<FeatureScores>> targetGroups, decoyGroups;
-            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
+            List<IList<FeatureScores>> targetGroups;
+            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out _);
             return targetGroups.Count;
         }
 
         public int GetDecoyCount()
         {
-            List<IList<FeatureScores>> targetGroups, decoyGroups;
-            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
+            List<IList<FeatureScores>> decoyGroups;
+            _targetDecoyGenerator.GetTransitionGroups(out _, out decoyGroups);
             return decoyGroups.Count;
         }
 
@@ -1261,6 +1258,29 @@ namespace pwiz.Skyline.SettingsUI
         private void zedGraph_ContextMenuBuilder(ZedGraphControl graphControl, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
+        }
+
+        public static PeakScoringModelSpec ShowEditPeakScoringModelDlg(Control owner, PeakScoringModelSpec item,
+            IEnumerable<PeakScoringModelSpec> existing, IFeatureScoreProvider featureScoreProvider)
+        {
+            var document = Program.MainWindow.Document;
+            if (document.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
+            {
+                if (MultiButtonMsgDlg.Show(owner, SettingsUIResources.EditPeakScoringModel_ExplictPeakBoundsWarning,
+                        SettingsUIResources.EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model)
+                    == DialogResult.Cancel)
+                {
+                    return null;
+                }
+            }
+
+            using var editModel = new EditPeakScoringModelDlg(existing);
+            if (editModel.SetScoringModel(owner, item, featureScoreProvider))
+            {
+                if (editModel.ShowDialog(owner) == DialogResult.OK)
+                    return (PeakScoringModelSpec)editModel.PeakScoringModel;
+            }
+            return null;
         }
     }
 }

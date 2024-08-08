@@ -123,14 +123,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 foreach (var pair in newDict)
                 {
-                    if (!_peptideUniquenessDict.ContainsKey(pair.Key))
-                    {
-                        _peptideUniquenessDict.Add(pair.Key, pair.Value);
-                    }
-                    else
-                    {
-                        _peptideUniquenessDict[pair.Key] = pair.Value;
-                    }
+                    _peptideUniquenessDict[pair.Key] = pair.Value;
                 }
                 _enzymeNameForPeptideUniquenessDictDigest = enzyme.Name;
                 if (!_parent.UpdateProgressAndCheckForCancellation(progressMonitor, 100))
@@ -180,7 +173,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return true;  // It certainly wasn't cancelled
             if (progressMonitor.IsCanceled())
                 return false;
-            var message = Resources.BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints;
+            var message = ProteomeResources.BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints;
             progressMonitor.ChangeProgress(s => s.ChangeMessage(message).ChangePercentComplete(pctComplete));
             return true;
         }

@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
             // Set up necessary modifications
             var peptideSettingsUI = ShowPeptideSettings();
             const string oxidationMName = "Oxidation (M)";
-            AddStaticMod(oxidationMName, true, peptideSettingsUI);
+            AddStaticMod(oxidationMName, peptideSettingsUI);
             RunUI(() =>
                       {
                           peptideSettingsUI.PickedStaticMods = new[] {oxidationMName};
@@ -114,8 +114,7 @@ namespace pwiz.SkylineTestFunctional
             // Add all but 2 of the peptides in the library to the document
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var matchedPepsDlg = WaitForOpenForm<AddModificationsDlg>();
-            RunUI(matchedPepsDlg.CancelDialog);
-            WaitForClosedForm<AddModificationsDlg>(); // Wait for cancellation to take effect
+            OkDialog(matchedPepsDlg, matchedPepsDlg.CancelDialog);
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(libraryExplorer.AddAllPeptides);
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
             {

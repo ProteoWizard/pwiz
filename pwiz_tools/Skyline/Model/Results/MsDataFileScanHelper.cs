@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,14 +43,14 @@ namespace pwiz.Skyline.Model.Results
         {
             ScanProvider = new BackgroundScanProvider(successAction, failureAction, ignoreZeroIntensityPoints);
             SourceNames = new string[Helpers.CountEnumValues<ChromSource>()];
-            SourceNames[(int) ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
-            SourceNames[(int) ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
-            SourceNames[(int) ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
+            SourceNames[(int) ChromSource.ms1] = ResultsResources.GraphFullScan_GraphFullScan_MS1;
+            SourceNames[(int) ChromSource.fragment] = ResultsResources.GraphFullScan_GraphFullScan_MS_MS;
+            SourceNames[(int) ChromSource.sim] = ResultsResources.GraphFullScan_GraphFullScan_SIM;
 
             PeakTypeNames = new string[Helpers.CountEnumValues<PeakType>()];
-            PeakTypeNames[(int) PeakType.chromDefault] = Resources.GraphFullScan_PeakType_ChromDefault;
-            PeakTypeNames[(int)PeakType.centroided] = Resources.GraphFullScan_PeakType_Centroided;
-            PeakTypeNames[(int)PeakType.profile] = Resources.GraphFullScan_PeakType_Profile;
+            PeakTypeNames[(int) PeakType.chromDefault] = ResultsResources.GraphFullScan_PeakType_ChromDefault;
+            PeakTypeNames[(int)PeakType.centroided] = ResultsResources.GraphFullScan_PeakType_Centroided;
+            PeakTypeNames[(int)PeakType.profile] = ResultsResources.GraphFullScan_PeakType_Profile;
         }
 
         public BackgroundScanProvider ScanProvider { get; private set; }
@@ -61,7 +61,19 @@ namespace pwiz.Skyline.Model.Results
 
         public int TransitionIndex { get; set; }
 
+        public TransitionFullScanInfo CurrentTransition
+        {
+            get
+            {
+                if (ScanProvider.Transitions.Length > TransitionIndex)
+                    return ScanProvider.Transitions[TransitionIndex];
+                return null;
+            }
+        }
+
         public int ScanIndex { get; set; }
+
+        public int? OptStep { get; private set; }
 
         public string[] SourceNames { get; set; }
 
@@ -77,9 +89,9 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 }
 
-                var oldTimeIntensities = GetTimeIntensities(Source);
+                var oldTimeIntensities = TimeIntensities;
                 _chromSource = value;
-                var newTimeIntensities = GetTimeIntensities(Source);
+                var newTimeIntensities = TimeIntensities;
                 if (newTimeIntensities != null)
                 {
                     if (oldTimeIntensities != null && ScanIndex >= 0 && ScanIndex < oldTimeIntensities.Times.Count)
@@ -174,7 +186,7 @@ namespace pwiz.Skyline.Model.Results
                     maxIonMobility = Math.Max(maxIonMobility, mzHigh); 
                     hasIonMobilityInfo = true; // Well, not really ion mobility info - the drift time dimension is really precursor m/z space
                 }
-                else if (!transition._ionMobilityInfo.HasIonMobilityValue || !transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
+                else if (!transition.IonMobilityInfo.HasIonMobilityValue || !transition.IonMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
                 {
                     // Accept all values
                     minIonMobility = double.MinValue;
@@ -183,9 +195,9 @@ namespace pwiz.Skyline.Model.Results
                 else if (sourceType == ChromSource.unknown || (transition.Source == sourceType && i == TransitionIndex))
                 {
                     // Products and precursors may have different expected ion mobility values in Waters MsE
-                    double startIM = transition._ionMobilityInfo.IonMobility.Mobility.Value -
-                                        transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.Value / 2;
-                    double endIM = startIM + transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.Value;
+                    double startIM = transition.IonMobilityInfo.IonMobility.Mobility.Value -
+                                        transition.IonMobilityInfo.IonMobilityExtractionWindowWidth.Value / 2;
+                    double endIM = startIM + transition.IonMobilityInfo.IonMobilityExtractionWindowWidth.Value;
                     minIonMobility = Math.Min(minIonMobility, startIM);
                     maxIonMobility = Math.Max(maxIonMobility, endIM);
                     hasIonMobilityInfo = true;
@@ -228,6 +240,15 @@ namespace pwiz.Skyline.Model.Results
             return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
         }
 
+        public double? CCSFromIonMobility(double ionMobility, double mz, int charge)
+        {
+            if (ScanProvider == null)
+            {
+                return null;
+            }
+            return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
+        }
+
         public bool IsWatersSonarData { get {  return ScanProvider?. IsWatersSonarData ?? false; } } // For SONAR the drift dimension is actually precursor m/z filter dimension
 
         public bool ProvidesCollisionalCrossSectionConverter
@@ -243,27 +264,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public TimeIntensities GetTimeIntensities(ChromSource source)
-        {
-            if (ScanProvider != null)
-            {
-                foreach (var transition in ScanProvider.Transitions)
-                {
-                    if (transition.Source == source)
-                        return transition.TimeIntensities;
-                }
-            }
-            return null;
-        }
-
-        public IList<int> GetScanIndexes(ChromSource source)
-        {
-            return GetTimeIntensities(source)?.ScanIds;
-        }
+        public TimeIntensities TimeIntensities => ScanProvider?.Transitions
+            .FirstOrDefault(transition => transition.Source == Source)?.TimeIntensities;
 
         public int GetScanIndex()
         {
-            var scanIndexes = GetScanIndexes(Source);
+            var scanIndexes = TimeIntensities?.ScanIds;
             var result = scanIndexes != null ? scanIndexes[ScanIndex] : -1;
             if (result < 0)
                 MsDataSpectra = null;
@@ -293,7 +299,7 @@ namespace pwiz.Skyline.Model.Results
                 : FindScanIndex(times, retentionTime, index, endIndex);
         }
 
-        public void UpdateScanProvider(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        public void UpdateScanProvider(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             ScanProvider.SetScanProvider(scanProvider);
             if (scanProvider != null)
@@ -303,6 +309,7 @@ namespace pwiz.Skyline.Model.Results
                     Assume.Fail($@"unexpected ChromSource '{ScanProvider.Source}' in transition {transitionIndex} ({scanProvider.Transitions[transitionIndex]})");
                 TransitionIndex = transitionIndex;
                 ScanIndex = scanIndex;
+                OptStep = optStep;
                 FileName = scanProvider.DataFilePath.GetFileName();
             }
             else
@@ -310,7 +317,6 @@ namespace pwiz.Skyline.Model.Results
                 MsDataSpectra = null;
                 FileName = null;
             }
-            
         }
         /// <summary>
         /// Provides a constant background thread with responsibility for all interactions
@@ -379,6 +385,15 @@ namespace pwiz.Skyline.Model.Results
             /// Return a collisional cross section for this ion mobility at this mz, if reader supports this
             /// </summary>
             public double? CCSFromIonMobility(IonMobilityValue ionMobility, double mz, int charge)
+            {
+                if (_scanProvider == null)
+                {
+                    return null;
+                }
+                return _scanProvider.CCSFromIonMobility(ionMobility, mz, charge);
+            }
+
+            public double? CCSFromIonMobility(double ionMobility, double mz, int charge)
             {
                 if (_scanProvider == null)
                 {

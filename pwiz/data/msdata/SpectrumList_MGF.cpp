@@ -147,7 +147,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         SelectedIon& selectedIon = precursor.selectedIons.back();
 
         string lineStr;
-	    bool inBeginIons = false;
+        bool inBeginIons = false;
         bool inPeakList = false;
         bool negativePolarity = false;
         double lowMZ = std::numeric_limits<double>::max();
@@ -159,8 +159,8 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
         BinaryData<double>& mzArray = spectrum.getMZArray()->data;
         BinaryData<double>& intensityArray = spectrum.getIntensityArray()->data;
-	    while (getlinePortable(*is_, lineStr))
-	    {
+        while (getlinePortable(*is_, lineStr))
+        {
             size_t lineBegin = lineStr.find_first_not_of(" \t");
             if (lineBegin == string::npos)
             {
@@ -178,21 +178,21 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 // Skip comment lines (lines beginning with #;!/ outside of BEGIN IONS)
                 continue;
             }
-		    if (lineStr.find("BEGIN IONS") == 0)
-		    {
-			    if (inBeginIons)
-			    {
+            if (lineStr.find("BEGIN IONS") == 0)
+            {
+                if (inBeginIons)
+                {
                     throw runtime_error(("[SpectrumList_MGF::parseSpectrum] BEGIN IONS tag found without previous BEGIN IONS being closed at offset " +
                                          lexical_cast<string>(size_t(is_->tellg())-lineStr.length()-1) + "\n"));
-			    }
-			    inBeginIons = true;
-		    }
+                }
+                inBeginIons = true;
+            }
             else if (lineStr.find("END IONS") == 0)
-		    {
-			    if (!inBeginIons)
-				    throw runtime_error(("[SpectrumList_MGF::parseSpectrum] END IONS tag found without opening BEGIN IONS tag at offset " +
+            {
+                if (!inBeginIons)
+                    throw runtime_error(("[SpectrumList_MGF::parseSpectrum] END IONS tag found without opening BEGIN IONS tag at offset " +
                                          lexical_cast<string>(size_t(is_->tellg())-lineStr.length()-1) + "\n"));
-			    inBeginIons = false;
+                inBeginIons = false;
                 inPeakList = false;
                 break;
             }
@@ -204,8 +204,8 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                     {
                         size_t delim = lineStr.find('=');
                         if (delim == string::npos)
-				        {
-					        inPeakList = true;
+                        {
+                            inPeakList = true;
                         }
                         else
                         {
@@ -224,7 +224,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 spectrum.set(MS_spectrum_title, value);
                             }
                             else if (name == "PEPMASS")
-				            {
+                            {
                                 bal::trim(value);
                                 size_t delim2 = value.find(' ');
                                 if (delim2 != string::npos)
@@ -234,9 +234,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 }
                                 else
                                     selectedIon.set(MS_selected_ion_m_z, value, MS_m_z);
-				            }
+                            }
                             else if (name == "CHARGE")
-				            {
+                            {
                                 bal::trim_if(value, bal::is_any_of(" \t\r"));
                                 negativePolarity = bal::ends_with(value, "-");
                                 vector<string> charges;
@@ -255,9 +255,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                     bal::trim_if(value, bal::is_any_of("+-"));
                                     selectedIon.set(MS_charge_state, lexical_cast<int>(value));
                                 }
-				            }
+                            }
                             else if (name == "RTINSECONDS")
-				            {
+                            {
                                 bal::trim(value);
                                 // TODO: handle (multiple) time ranges?
                                 double scanTime = lexical_cast<double>(value);
@@ -272,9 +272,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 spectrum.set(MS_peak_list_raw_scans, value);
                             }
                             else
-				            {
-					            continue; // ignored attribute
-				            }
+                            {
+                                continue; // ignored attribute
+                            }
                         }
                     }
                 }
@@ -288,18 +288,18 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 {
                     // always parse the peaks (intensity must be summed to build TIC)
                     size_t delim = lineStr.find_first_of(" \t");
-				    if(delim == string::npos)
-					    continue;
+                    if(delim == string::npos)
+                        continue;
                     size_t delim2 = lineStr.find_first_not_of(" \t", delim+1);
-     				if(delim2 == string::npos)
-					    continue;
+                    if(delim2 == string::npos)
+                        continue;
                     size_t delim3 = lineStr.find_first_of(" \t\r\n", delim2);
-				    if(delim3 == string::npos)
+                    if(delim3 == string::npos)
                         delim3 = lineStr.length();
 
                     double mz = lexical_cast<double>(lineStr.substr(0, delim));
-				    double inten = lexical_cast<double>(lineStr.substr(delim2, delim3-delim2));
-				    tic += inten;
+                    double inten = lexical_cast<double>(lineStr.substr(delim2, delim3-delim2));
+                    tic += inten;
                     if (inten > basePeakIntensity)
                     {
                         basePeakMZ = mz;
@@ -400,43 +400,43 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
     void createIndex()
     {
         string lineStr;
-	    size_t lineCount = 0;
-	    bool inBeginIons = false;
+        size_t lineCount = 0;
+        bool inBeginIons = false;
         vector<SpectrumIdentity>::iterator curIdentityItr;
         map<string, size_t>::iterator curIdToIndexItr;
 
-	    while (std::getline(*is_, lineStr)) // need accurate line length, so do not use pwiz::util convenience wrapper
-	    {
-		    ++lineCount;
-		    if (lineStr.find("BEGIN IONS") == 0)
-		    {
-			    if (inBeginIons)
-			    {
+        while (std::getline(*is_, lineStr)) // need accurate line length, so do not use pwiz::util convenience wrapper
+        {
+            ++lineCount;
+            if (lineStr.find("BEGIN IONS") == 0)
+            {
+                if (inBeginIons)
+                {
                     throw runtime_error(("[SpectrumList_MGF::createIndex] BEGIN IONS tag found without previous BEGIN IONS being closed at line " +
                                          lexical_cast<string>(lineCount) + "\n"));
 
-			    }
+                }
                 index_.push_back(SpectrumIdentity());
-			    curIdentityItr = index_.begin() + (index_.size()-1);
+                curIdentityItr = index_.begin() + (index_.size()-1);
                 curIdentityItr->index = index_.size()-1;
                 curIdentityItr->id = "index=" + lexical_cast<string>(index_.size()-1);
-			    curIdentityItr->sourceFilePosition = size_t(is_->tellg())-lineStr.length()-1;
+                curIdentityItr->sourceFilePosition = size_t(is_->tellg())-lineStr.length()-1;
                 curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
-			    inBeginIons = true;
-		    }
+                inBeginIons = true;
+            }
             else if (lineStr.find("TITLE=") == 0)
-	    {
+            {
                 // if a title is found, use it as the id in the index used by findSpotID
-	        string title = lineStr.substr(6);
+                string title = lineStr.substr(6);
                 bal::trim(title);
-		titleIDToIndexList_[title].push_back(index_.size()-1);
-	    }
+                titleIDToIndexList_[title].push_back(index_.size()-1);
+            }
             else if (lineStr.find("END IONS") == 0)
-		    {
-			    if (!inBeginIons)
-				    throw runtime_error(("[SpectrumList_MGF::createIndex] END IONS tag found without opening BEGIN IONS tag at line " +
+            {
+                if (!inBeginIons)
+                    throw runtime_error(("[SpectrumList_MGF::createIndex] END IONS tag found without opening BEGIN IONS tag at line " +
                                          lexical_cast<string>(lineCount) + "\n"));
-			    inBeginIons = false;
+                inBeginIons = false;
             }
         }
         is_->clear();

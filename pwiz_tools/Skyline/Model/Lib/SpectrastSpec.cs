@@ -19,7 +19,6 @@
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -32,7 +31,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_SPTXT
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.SpectrastLibrary_SpecFilter_SpectraST_Library, EXT); }            
+            get { return TextUtil.FileDialogFilterAll(LibResources.SpectrastLibrary_SpecFilter_SpectraST_Library, EXT); }            
         }
 
         public SpectrastSpec(string name, string path)
@@ -48,6 +47,11 @@ namespace pwiz.Skyline.Model.Lib
         public override Library LoadLibrary(ILoadMonitor loader)
         {
             return SpectrastLibrary.Load(this, loader);
+        }
+
+        public override string GetLibraryTypeName()
+        {
+            return LibResources.SpectrastLibrary_SpecFilter_SpectraST_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -95,6 +99,8 @@ namespace pwiz.Skyline.Model.Lib
             : base(libraryName, tfRatio, rt, irt, totalIntensity, spectrumCount)
         {
         }
+
+        public override string LibraryTypeName => @"SpectraST";
 
         #region Implementation of IXmlSerializable
 
@@ -157,7 +163,7 @@ namespace pwiz.Skyline.Model.Lib
         public override LibraryFiles LibraryFiles
         {
             // This library doesn't have source file information
-            get { return new LibraryFiles();}
+            get { return LibraryFiles.EMPTY;}
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)

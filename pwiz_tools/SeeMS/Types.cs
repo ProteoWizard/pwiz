@@ -164,6 +164,8 @@ namespace seems
         protected string id;
         public string Id { get { return id; } }
 
+        public string AbbreviatedId { get; protected set; }
+
         protected int index;
         public int Index { get { return index; } }
 
@@ -289,7 +291,7 @@ namespace seems
             this.chromatogramList = chromatogramList;
             this.index = index;
 			//element = chromatogram;
-			id = Element.id;
+			AbbreviatedId = id = Element.id;
             //index = element.index;
 		}
 
@@ -301,7 +303,7 @@ namespace seems
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
             //element = chromatogram;
-            id = Element.id;
+            AbbreviatedId = id = Element.id;
         }
 
         private ChromatogramList chromatogramList;
@@ -394,7 +396,6 @@ namespace seems
             AbbreviatedId = metaSpectrum.AbbreviatedId;
         }
 
-	    public string AbbreviatedId { get; private set; }
         public override string Title { get { return AddSourceToId ? ToString() : AbbreviatedId; } }
         public override string ToString() { return String.Format("{0}/{1}", source.Source.Name, AbbreviatedId); }
 
@@ -477,49 +478,48 @@ namespace seems
             }
         }
 
-		public override ZedGraph.IPointList Points
-		{
-            get
+		public override ZedGraph.IPointList Points => GetPointList(true);
+
+        public ZedGraph.IPointList GetPointList(bool sortAndMakeUnique)
+        {
+            using( Spectrum element = spectrumList.spectrum( index, true ) )
             {
-                using( Spectrum element = spectrumList.spectrum( index, true ) )
+                if (element.defaultArrayLength == 0)
+                    return new ZedGraph.PointPairList();
+
+                IList<double> mzArray = element.getMZArray().data.Storage();
+                IList<double> intensityArray = element.getIntensityArray().data.Storage();
+
+                // only sort centroid spectra; profile spectra are assumed to already be sorted
+                if (sortAndMakeUnique && (element.hasCVParam(CVID.MS_centroid_spectrum) || element.id.StartsWith("merged=")))
                 {
-                    if (element.defaultArrayLength == 0)
-                        return new ZedGraph.PointPairList();
+                    mzArray.Sort(intensityArray);
 
-                    IList<double> mzArray = element.getMZArray().data.Storage();
-                    IList<double> intensityArray = element.getIntensityArray().data.Storage();
-
-                    // only sort centroid spectra; profile spectra are assumed to already be sorted
-                    if (element.hasCVParam(CVID.MS_centroid_spectrum) || element.id.StartsWith("merged="))
+                    if (element.id.StartsWith("merged="))
                     {
-                        mzArray.Sort(intensityArray);
-
-                        if (element.id.StartsWith("merged="))
+                        var uniqueMz = new List<double>(mzArray.Count);
+                        var summedIntensity = new List<double>(mzArray.Count);
+                        uniqueMz.Add(mzArray[0]);
+                        summedIntensity.Add(intensityArray[0]);
+                        for (int i = 1; i < mzArray.Count; ++i)
                         {
-                            var uniqueMz = new List<double>(mzArray.Count);
-                            var summedIntensity = new List<double>(mzArray.Count);
-                            uniqueMz.Add(mzArray[0]);
-                            summedIntensity.Add(intensityArray[0]);
-                            for (int i = 1; i < mzArray.Count; ++i)
+                            if (mzArray[i] == uniqueMz[uniqueMz.Count - 1])
+                                summedIntensity[uniqueMz.Count - 1] += intensityArray[i];
+                            else
                             {
-                                if (mzArray[i] == uniqueMz[uniqueMz.Count - 1])
-                                    summedIntensity[uniqueMz.Count - 1] += intensityArray[i];
-                                else
-                                {
-                                    uniqueMz.Add(mzArray[i]);
-                                    summedIntensity.Add(intensityArray[i]);
-                                }
+                                uniqueMz.Add(mzArray[i]);
+                                summedIntensity.Add(intensityArray[i]);
                             }
-
-                            mzArray = uniqueMz;
-                            intensityArray = summedIntensity;
                         }
-                    }
 
-                    return new ZedGraph.PointPairList(mzArray, intensityArray);
+                        mzArray = uniqueMz;
+                        intensityArray = summedIntensity;
+                    }
                 }
+
+                return new ZedGraph.PointPairList(mzArray, intensityArray);
             }
-		}
+        }
 
         public override pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {

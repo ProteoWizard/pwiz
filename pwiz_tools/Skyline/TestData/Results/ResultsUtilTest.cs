@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestData.Results
             chromInfoList = new ChromInfoList<TransitionChromInfo>(new TransitionChromInfo[] {null, null});
             Assert.AreEqual(0, chromInfoList.Count);
             var transitionChromInfo = new TransitionChromInfo(new ChromFileInfoId(), 0, null, 1, 0, 2, null, 1, 0, 1, 1,
-                false, false, 0, PeakIdentification.FALSE, 0, 0, Annotations.EMPTY, UserSet.FALSE, false);
+                false, false, 0, PeakIdentification.FALSE, 0, 0, Annotations.EMPTY, UserSet.FALSE, false, null);
             chromInfoList = new ChromInfoList<TransitionChromInfo>(new[] {transitionChromInfo});
             Assert.AreEqual(1, chromInfoList.Count);
             chromInfoList = new ChromInfoList<TransitionChromInfo>(new[] {transitionChromInfo, null});

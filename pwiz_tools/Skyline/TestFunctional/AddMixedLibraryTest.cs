@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             // Wait for the list update caused by adding all modifications to complete
             WaitForConditionUI(() => exploreDlg.IsUpdateComplete);
             // Populate the document from library contents
-            RunDlg<MultiButtonMsgDlg>(exploreDlg.AddAllPeptides, messageDlg =>
+            ShowAndDismissDlg<MultiButtonMsgDlg>(exploreDlg.AddAllPeptides, messageDlg =>
             {
                 messageDlg.DialogResult = DialogResult.Yes; // Agree to add lib to document
             });
@@ -130,6 +130,12 @@ namespace pwiz.SkylineTestFunctional
                     libraryIonMobilityInfo, null, 0);
                 AssertEx.AreEqual(eIonMobilityUnits.drift_time_msec, imsFilter.IonMobilityUnits);
                 AssertEx.AreEqual(26.4669, imsFilter.IonMobility.Mobility, 0.001);
+                var libraryIonMobilityInfoNoReplicate = doc.Settings.GetIonMobilities(new[] { libKey }, null); // Formerly this would return nothing if no file was given
+                var imsFilterNoReplicate = doc.Settings.GetIonMobilityFilter(peptideDocNode, precursorDocNode, transitionDocNode,
+                    libraryIonMobilityInfoNoReplicate, null, 0);
+                AssertEx.AreEqual(eIonMobilityUnits.drift_time_msec, imsFilterNoReplicate.IonMobilityUnits);
+                AssertEx.AreEqual(26.4669, imsFilterNoReplicate.IonMobility.Mobility, 0.001);
+
                 if (pass == 1)
                 {
                     break;

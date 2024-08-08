@@ -57,7 +57,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // While developing this test I discovered that Share Minimized was leaving an empty .imsdb file
             // when it should have had 2 entries
             var zipPath = GetTestPath(@"ThermoSureQuantFAIMSTestMinimized.sky.zip");
-            RunDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
+            ShowAndCancelDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
             RunUI(() => SkylineWindow.ShareDocument(zipPath, ShareType.MINIMAL));
             File.Delete(GetTestPath(@"FAIMS_SureQuant.imsdb")); // Make sure we don't use original
             LoadNewDocument(true); // Reset

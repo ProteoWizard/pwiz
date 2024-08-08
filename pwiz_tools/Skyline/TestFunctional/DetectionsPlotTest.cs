@@ -75,12 +75,8 @@ namespace pwiz.SkylineTestFunctional
             });
 
             //verify data correct for 2 q-values
-            RunUI(() =>
-            {
-                propDialog.SetQValueTo(0.003f);
-                propDialog.OkDialog();
-            });
-            WaitForClosedForm(propDialog);
+            RunUI(() => propDialog.SetQValueTo(0.003f));
+            OkDialog(propDialog, propDialog.OkDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
             AssertDataCorrect(pane, 0, 0.003f);
 
@@ -89,12 +85,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 toolbar.pbProperties_Click(graph.GraphControl, new EventArgs());
             });
-            RunUI(() =>
-            {
-                propDialog.SetQValueTo(0.001f);
-                propDialog.OkDialog();
-            });
-            WaitForClosedForm(propDialog);
+            RunUI(() => propDialog.SetQValueTo(0.001f));
+            OkDialog(propDialog, propDialog.OkDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
             AssertDataCorrect(pane, 2, 0.001f);
 
@@ -120,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsNotNull(pane.ToolTip);
-                pane.PopulateTooltip(1);
+                pane.PopulateTooltip(1, null);
                 //verify the tooltip text
                 CollectionAssert.AreEqual(tipText, pane.ToolTip.TipLines);
             });
@@ -132,17 +124,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.EditDelete();
             });
             WaitForGraphs();
-            WaitForConditionUI(() => DetectionPlotData.GetDataCache().Datas.Any((dat) =>
-                    ReferenceEquals(SkylineWindow.DocumentUI, dat.Document) &&
-                    DetectionsGraphController.Settings.QValueCutoff == dat.QValueCutoff),
-                "Cache is not updated on document change.");
 
             //verify that the cache is purged after the document update
-            RunUI(() =>
-            {
-                Assert.IsTrue(DetectionPlotData.GetDataCache().Datas.All((dat) =>
-                    ReferenceEquals(SkylineWindow.DocumentUI, dat.Document)));
-            });
             AssertDataCorrect(pane, 4, 0.001f);
 
             RunUI(() => { SkylineWindow.ShowDetectionsHistogramGraph(); });
@@ -161,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsNotNull(paneHistogram.ToolTip, "No tooltip found.");
-                paneHistogram.PopulateTooltip(5);
+                paneHistogram.PopulateTooltip(5, null);
                 //verify the tooltip text
                 CollectionAssert.AreEqual(histogramTipText, paneHistogram.ToolTip.TipLines);
             });
@@ -177,7 +160,8 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForConditionUI(() => pane.CurrentData != null 
                                            && pane.CurrentData.QValueCutoff == qValue
-                                           && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
+                                           && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PEPTIDE, out _)
+                                           && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PRECURSOR, out _),
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();
             WaitForCondition(() => pane.CurrentData.IsValid);

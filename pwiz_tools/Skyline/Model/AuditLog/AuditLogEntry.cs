@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 //Make the error dialog a bit more user friendly by showing the full chain of nested exceptions in the message
                 //so they don't have to dig through the stack traces to find the root cause.
                 if (msgStrings.Count > 0)
-                    msgStrings.Add(Resources.ExceptionDialog_Caused_by_____);
+                    msgStrings.Add(AuditLogResources.ExceptionDialog_Caused_by_____);
                 msgStrings.Add(ex.Message);
                 ex = ex.InnerException;
 
@@ -256,8 +256,9 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             using (var fileSaver = new FileSaver(fileName))
             {
-                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
+                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8))
                 {
+                    writer.Formatting = Formatting.Indented;
                     WriteToXmlWriter(writer, documentHash);
                 }
 
@@ -1150,7 +1151,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return entry.AppendAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_error_old_msg, SrmDocument.DOCUMENT_TYPE.none,
                     ex.InnerException.GetType().Name, ex.OldUndoRedoMessage)));
             }
-            // ReSharper enable PossibleNullReferenceException
+            // ReSharper restore PossibleNullReferenceException
         }
 
         #endregion Functions to create log entries

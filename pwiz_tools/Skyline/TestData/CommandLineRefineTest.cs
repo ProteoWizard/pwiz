@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
@@ -31,6 +30,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestData
             var listArgs = new List<string>(args);
             listArgs.Insert(0, CommandArgs.ARG_IN.GetArgumentTextWithValue(DocumentPath));
             listArgs.Add(CommandArgs.ARG_OUT.GetArgumentTextWithValue(OutPath));
+            listArgs.Add(CommandArgs.ARG_OVERWRITE.ArgumentText);
             return RunCommand(listArgs.ToArray());
         }
 
@@ -257,7 +258,12 @@ namespace pwiz.SkylineTestData
                 PropertyNames.RefinementSettings_CVCutoff
             };
             // Remove all elements above the cv cutoff
-            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip");
+            var testFilesDirs = new[]
+            {
+                new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip"),
+                new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip"),
+            };
+            TestFilesDir = testFilesDirs[0];
             DocumentPath = InitRefineDocument("Rat_plasma.sky", 19, 29, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             var output = Run(args.ToArray());
@@ -299,10 +305,13 @@ namespace pwiz.SkylineTestData
             IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Make sure error is recorded when peptide have only 1 replicate
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            TestFilesDir = testFilesDirs[1];
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
             AssertEx.Contains(output, Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
+
+            // So that both TestFilesDirs get cleaned up properly
+            TestFilesDirs = testFilesDirs;
         }
 
         [TestMethod]
@@ -418,22 +427,118 @@ namespace pwiz.SkylineTestData
             output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(optLibNoneText));
             AssertEx.Contains(output, "test2", Resources.CommandLine_LogNewEntries_Document_unchanged);
             IsDocumentUnchanged(output);
-
-            // Invalid changes
-            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_CE, Settings.Default.CollisionEnergyList);
-            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_DP, Settings.Default.DeclusterPotentialList);
-            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_COV, Settings.Default.CompensationVoltageList);
-            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_OPTDB, Settings.Default.OptimizationLibraryList);
         }
 
-        private void ValidateInvalidValue<TItem>(CommandArgs.Argument arg, SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+
+        [TestMethod]
+        public void ConsoleArgumentInvalidValuesTest()
+        {
+            var testedArguments = new HashSet<CommandArgs.Argument>
+            {
+                CommandArgs.ARG_PANORAMA_FOLDER,
+                CommandArgs.ARG_TOOL_INITIAL_DIR,
+                CommandArgs.ARG_TOOL_PROGRAM_PATH,
+                CommandArgs.ARG_BGPROTEOME_NAME, // special validation logic tested in ConsoleNewDocumentTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD, // tested in ConsoleModsTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA, // tested in ConsoleModsTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, // tested in ConsoleModsTest
+            };
+            var allArgumentsSet = new HashSet<CommandArgs.Argument>(
+                CommandArgs.AllArguments.Where(a => !a.InternalUse && !testedArguments.Contains(a)));
+
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
+            // Automatically test arguments that have Values
+            foreach (var arg in allArgumentsSet)
+            {
+                if (arg.Values != null)
+                    ValidateInvalidValue(arg, testedArguments);
+                else if (CommandArgs.PATH_TYPE_VALUES.Contains(arg.ValueExample))
+                    ValidateInvalidValuePath(arg, testedArguments);
+                else if (arg.ValueExample != null && !CommandArgs.STRING_TYPE_VALUES.Contains(arg.ValueExample))
+                    ValidateInvalidValueNumeric(arg, testedArguments);
+                else if (arg.ValueExample == null)
+                    ValidateInvalidValueBool(arg, testedArguments);
+                else
+                    ValidateInvalidValueString(arg, testedArguments);
+            }
+
+            // Verify that all arguments have been tested (except InternalUse ones and the ones in the testedArguments initializer)
+            allArgumentsSet.ExceptWith(testedArguments);
+            Assert.AreEqual(0, allArgumentsSet.Count, string.Join(", ", allArgumentsSet.Select(a => a.Name)));
+        }
+
+        private void ValidateInvalidValue(CommandArgs.Argument arg, HashSet<CommandArgs.Argument> testedArguments)
         {
             const string NO_VALUE = "NO VALUE";
             string expected = string.Format(
-                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
-                NO_VALUE, arg.ArgumentText, CommandArgs.GetDisplayNames(list));
+                CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                NO_VALUE, arg.ArgumentText, arg.ValueExample());
             expected = expected.Substring(0, expected.IndexOf(@"None, ", StringComparison.Ordinal) + 6);
-            AssertEx.ThrowsException<CommandArgs.ValueInvalidException>(() => Run(arg.GetArgumentTextWithValue(NO_VALUE)), expected);
+            AssertEx.ThrowsException<CommandArgs.ValueInvalidException>(() => arg.GetArgumentTextWithValue(NO_VALUE), expected);
+            testedArguments.Add(arg);
+        }
+
+        private void ValidateInvalidValueNumeric(CommandArgs.Argument arg, HashSet<CommandArgs.Argument> testedArguments)
+        {
+
+            const string BAD_VALUE = "-1a";
+            string argText = arg.GetArgumentTextWithValue(BAD_VALUE);
+            var args = new[] { "--in=" + DocumentPath, argText };
+            string output = RunCommand(args);
+            string BadValueString(string errorFormat) => string.Format(errorFormat, BAD_VALUE, arg.ArgumentText);
+            var badValueStrings = new[]
+            {
+                BadValueString(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_),
+                BadValueString(Resources.ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_),
+                BadValueString(Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_),
+                BadValueString(Resources.ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_),
+                BadValueString(Resources.ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_),
+                BadValueString(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__),
+                string.Format(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(CommandArgUsage.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+            };
+            Assert.IsTrue(badValueStrings.Any(s => output.Contains(s)),
+                "{0} does not contain any of:\r\n{1}", output, TextUtil.LineSeparate(badValueStrings));
+            testedArguments.Add(arg);
+        }
+
+        private void ValidateInvalidValueBool(CommandArgs.Argument arg, HashSet<CommandArgs.Argument> testedArguments)
+        {
+            const string BAD_VALUE = "-1a";
+            AssertEx.ThrowsException<CommandArgs.ValueUnexpectedException>(() => arg.GetArgumentTextWithValue(BAD_VALUE), arg.ArgumentText);
+            var args = new[] { "--in=" + DocumentPath, "--overwrite", arg.ArgumentText + "=BAD_VALUE" };
+            string output = RunCommand(args);
+            string expected = string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified, arg.ArgumentText);
+            AssertEx.Contains(TextUtil.LineSeparate(args.Append(output)), expected);
+            testedArguments.Add(arg);
+        }
+
+        private void ValidateInvalidValueString(CommandArgs.Argument arg, HashSet<CommandArgs.Argument> testedArguments)
+        {
+            var args = new[] { "--in=" + DocumentPath, "--overwrite", arg.ArgumentText /* no value */ };
+            string output = RunCommand(args);
+            string expected = string.Format(Resources.ValueMissingException_ValueMissingException_, arg.ArgumentText);
+            AssertEx.Contains(TextUtil.LineSeparate(args.Append(output)), expected);
+            testedArguments.Add(arg);
+        }
+
+        private void ValidateInvalidValuePath(CommandArgs.Argument arg, HashSet<CommandArgs.Argument> testedArguments)
+        {
+            const string BAD_VALUE = "Bad:\\Path\\Value";
+            string argText = arg.GetArgumentTextWithValue(BAD_VALUE);
+            var args = new[] { argText };
+            if (arg != CommandArgs.ARG_IN)
+                args = args.Append("--in=" + DocumentPath).ToArray();
+            string output = TextUtil.LineSeparate(args) + RunCommand(args);
+            AssertEx.Contains(output, BAD_VALUE);
+            testedArguments.Add(arg);
         }
 
         private void IsDocumentUnchanged(string output)

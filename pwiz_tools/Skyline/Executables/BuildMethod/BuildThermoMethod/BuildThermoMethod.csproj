@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>BuildThermoMethod</RootNamespace>
     <AssemblyName>BuildThermoMethod</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -33,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>BuildThermoMethod.Program</StartupObject>
@@ -45,11 +47,16 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Thermo.TNG.MethodXMLFactory">
+    <Reference Include="Thermo.TNG.MethodXMLFactory, Version=2.0.0.0, Culture=neutral, PublicKeyToken=35efc4498449bc4c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Thermo.TNG.MethodXMLFactory.dll</HintPath>
     </Reference>
-    <Reference Include="Thermo.TNG.MethodXMLInterface">
+    <Reference Include="Thermo.TNG.MethodXMLInterface, Version=2.0.0.0, Culture=neutral, PublicKeyToken=35efc4498449bc4c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Thermo.TNG.MethodXMLInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="Thermo.TNG.MethodXMLInterface2">
+      <HintPath>.\Thermo.TNG.MethodXMLInterface2.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -58,6 +65,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmlFusion\MethodModifications.cs" />
+    <Compile Include="XmlStellar\MethodModifications.cs" />
     <Compile Include="XmlTsq\HyperionMethod.cs" />
   </ItemGroup>
   <ItemGroup>

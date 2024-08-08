@@ -24,8 +24,10 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using Ionic.Zip;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -35,18 +37,20 @@ namespace pwiz.Skyline.Util
         /// Attempts to download the file located at the specified address to the specified
         /// file path. This function returns true if the download succeeded.
         /// </summary>
-        bool DownloadFileAsync(Uri address, string path);
+        bool DownloadFileAsync(Uri address, string path, out Exception error);
     }
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
     {
-        private readonly ILongWaitBroker _longWaitBroker;
+        private readonly IProgressMonitor _progressMonitor;
+        private IProgressStatus _progressStatus;
         private readonly WebClient _webClient;
         private int FilesDownloaded { get; set; }
 
         // indicate aspects of the most recent download
         private bool DownloadComplete { get; set; }
         private bool DownloadSucceeded { get; set; }
+        private Exception DownloadError { get; set; }
 
         /// <summary>
         /// The asynchronous download client links a webClient to a LongWaitBroker. It supports
@@ -55,21 +59,23 @@ namespace pwiz.Skyline.Util
         /// <param name="waitBroker">The associated LongWaitBroker</param>
         /// <param name="files">The numbers of file this instance is expected to download. This
         /// is used to accurately update the broker's progress value</param>
-        public MultiFileAsynchronousDownloadClient(ILongWaitBroker waitBroker, int files)
+        public MultiFileAsynchronousDownloadClient(IProgressMonitor waitBroker, int files)
         {
-            _longWaitBroker = waitBroker;
+            _progressMonitor = waitBroker;
+            _progressStatus = new ProgressStatus();
             _webClient = new WebClient();
             FilesDownloaded = 0;
 
             _webClient.DownloadProgressChanged += (sender, args) =>
-                {
-                    _longWaitBroker.ProgressValue = (int) Math.Min(100, ((((double) FilesDownloaded)/files)*100)
-                                                                        + ((1.0/files)*args.ProgressPercentage));
-                };
+            {
+                _progressMonitor.UpdateProgress(_progressStatus.ChangePercentComplete((int) Math.Min(100, ((((double) FilesDownloaded)/files)*100)
+                                                                                                          + ((1.0/files)*args.ProgressPercentage))));
+            };
 
             _webClient.DownloadFileCompleted += (sender, args) =>
                 {
                     FilesDownloaded++;
+                    DownloadError = args.Error;
                     DownloadSucceeded = (args.Error == null);
                     DownloadComplete = true;
                 };
@@ -81,29 +87,33 @@ namespace pwiz.Skyline.Util
         /// <param name="address">The Uri of the file to download</param>
         /// <param name="path">The path to download the file to, including the name of 
         /// the file, e.g "C:\Users\Trevor\Downloads\example.txt"</param>
+        /// <param name="error">Contains the error if any</param>
         /// <exception cref="ToolExecutionException">Thrown if the user cancels the download 
         /// using the instances' LongWaitBroker</exception>
-        /// <returns>True if the downlaod was successful, otherwise false</returns>
-        public bool DownloadFileAsync(Uri address, string path)
+        /// <returns>True if the download was successful, otherwise false</returns>
+        public bool DownloadFileAsync(Uri address, string path, out Exception error)
         {
             // reset download status
             DownloadComplete = false;
             DownloadSucceeded = false;
 
             Match file = Regex.Match(address.AbsolutePath, @"[^/]*$");
-            _longWaitBroker.Message = string.Format(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file);
+            _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
+            _progressMonitor.UpdateProgress(_progressStatus);
             _webClient.DownloadFileAsync(address, path);
 
             // while downloading, check to see if the user has canceled the operation
             while (!DownloadComplete)
             {
-                if (_longWaitBroker.IsCanceled)
+                if (_progressMonitor.UpdateProgress(_progressStatus) == UpdateProgressResponse.cancel)
                 {
                     _webClient.CancelAsync();
                     throw new ToolExecutionException(
                         Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
                 }
             }
+
+            error = DownloadError;
             return DownloadSucceeded;
         }
  
@@ -130,6 +140,11 @@ namespace pwiz.Skyline.Util
         public string InstallPath;
 
         /// <summary>
+        /// If not null, the path to a file or directory which if present indicates the file has been installed.
+        /// </summary>
+        public string CheckInstalledPath;
+
+        /// <summary>
         /// The online location of the file to download.
         /// </summary>
         public Uri DownloadUrl;
@@ -152,7 +167,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
         /// </summary>
-        static Uri JRE_URL = new Uri($@"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
+        static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
         public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
 
@@ -163,13 +178,38 @@ namespace pwiz.Skyline.Util
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
     }
 
+    public static class Java8DownloadInfo
+    {
+        static string JRE_FILENAME = @"openlogic-openjdk-jre-8u342-b07-windows-x64";
+        private static string JRE_SUBDIRECTORY = @"openlogic-openjdk-jre-8u342-b07-windows-64";
+
+        /// <summary>
+        /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
+        /// </summary>
+        static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
+        public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory());
+        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe");
+
+        public static FileDownloadInfo[] FilesToDownload => new[]
+        {
+            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, CheckInstalledPath = JavaBinary, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true}
+        }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
+    }
+
     public static class SimpleFileDownloader
     {
-        private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror";
+        private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://ci.skyline.ms/skyline_tool_testing_mirror";
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
-            return Directory.Exists(requiredFile.InstallPath);
+            if (requiredFile.Unzip)
+            {
+                if (requiredFile.CheckInstalledPath != null)
+                    return File.Exists(requiredFile.CheckInstalledPath) || Directory.Exists(requiredFile.CheckInstalledPath);
+                return Directory.Exists(requiredFile.InstallPath);
+            }
+            else
+                return File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
         }
 
         public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)
@@ -186,7 +226,7 @@ namespace pwiz.Skyline.Util
             Console.WriteLine(@"# " + message);
         }
 
-        public static bool DownloadRequiredFiles(IEnumerable<FileDownloadInfo> filesToDownload, ILongWaitBroker waitBroker)
+        public static bool DownloadRequiredFiles(IEnumerable<FileDownloadInfo> filesToDownload, IProgressMonitor waitBroker)
         {
             var filesNotAlreadyDownloaded = FilesNotAlreadyDownloaded(filesToDownload).ToList();
             using (var client = new MultiFileAsynchronousDownloadClient(waitBroker, filesNotAlreadyDownloaded.Count))
@@ -231,8 +271,12 @@ namespace pwiz.Skyline.Util
 
                         using (var fileSaver = new FileSaver(downloadFilename))
                         {
-                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName))
-                                throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
+                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName, out var downloadError))
+                            {
+                                throw new Exception(TextUtil.LineSeparate(
+                                    Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_,
+                                    downloadUrl.ToString()), downloadError);
+                            }
                             fileSaver.Commit();
                         }
 
@@ -244,7 +288,11 @@ namespace pwiz.Skyline.Util
                     }
 
                     if (!requiredFile.Unzip)
+                    {
+                        if (useCachedDownloads && !File.Exists(destinationFilename))
+                            File.Copy(downloadFilename, destinationFilename);
                         continue;
+                    }
 
                     if (unzipTimer != null)
                     {
@@ -296,8 +344,9 @@ namespace pwiz.Skyline.Util
         public bool DownloadSuccess { get; set; }
         public bool CancelDownload { get; set; }
 
-        public bool DownloadFileAsync(Uri address, string fileName)
+        public bool DownloadFileAsync(Uri address, string fileName, out Exception error)
         {
+            error = null;
             if (CancelDownload)
                 throw new ToolExecutionException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
             return DownloadSuccess;

@@ -171,7 +171,7 @@ namespace BuildQTRAPMethod
 
         internal static IAcqMethod GetAcqMethod(string methodFilePath, out MassSpecMethod templateMsMethod)
         {
-            ApplicationClass analyst = new ApplicationClass();
+            var analyst = new ApplicationClass();
 
             // Make sure that Analyst is fully started
             IAcqMethodDirConfig acqMethodDir =  (IAcqMethodDirConfig)analyst.Acquire();
@@ -306,8 +306,9 @@ namespace BuildQTRAPMethod
                 var msMassRange3 = (IMassRange3) msMassRange;
 
                 msMassRange.SetMassRange(transition.PrecursorMz, 0, transition.ProductMz);
-                msMassRange.DwellTime = transition.Dwell;
-                msMassRange3.CompoundID = transition.Label;
+                // DwellTime property is used as retention time in scheduled method
+                msMassRange.DwellTime = transition.Dwell;   // as does transition.Dwell
+                msMassRange3.CompoundID = transition.Label.Replace("precursor", "p");
                 var massRangeParams = (ParamDataColl) msMassRange.MassDepParamTbl;
                 short s;
                 massRangeParams.Description = transition.Label;

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -97,21 +98,20 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetNeutralFormula(NeutralFragmentIon complexFragmentIon)
         {
-            MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
+            var parts = new List<MoleculeMassOffset>();
             for (int i = 0; i < complexFragmentIon.IonChain.Count; i++)
             {
-                result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
+                parts.Add(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
             }
-            result = SubtractLosses(result, complexFragmentIon.Losses);
+            parts.AddRange(ToMoleculeMassOffsets(complexFragmentIon.Losses));
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
-                if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
+                if (false != complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
                 {
-                    result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                    parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
             }
-
-            return result;
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public TypedMass GetFragmentMass(NeutralFragmentIon complexFragmentIon)
@@ -164,8 +164,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (_precursorMassDistribution == null)
             {
                 var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(Settings);
+                var moleculeMassOffset = GetPrecursorFormula();
                 _precursorMassDistribution = fragmentedMoleculeSettings
-                    .GetMassDistribution(GetPrecursorFormula().Molecule, 0, 0);
+                    .GetMassDistribution(moleculeMassOffset.Molecule, moleculeMassOffset.MonoMassOffset, 0);
             }
 
             return _precursorMassDistribution;
@@ -173,19 +174,17 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetPrecursorFormula()
         {
-            var moleculeMassOffset = MoleculeMassOffset.EMPTY;
+            var parts = new List<MoleculeMassOffset>();
             for (int i = 0; i < PeptideStructure.Peptides.Count; i++)
             {
-                moleculeMassOffset =
-                    moleculeMassOffset.Plus(
-                        new MoleculeMassOffset(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula));
+                parts.Add(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula);
             }
 
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
-                moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
-            return moleculeMassOffset;
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public FragmentedMolecule.Settings GetFragmentedMoleculeSettings()
@@ -194,7 +193,6 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         public IEnumerable<NeutralFragmentIon> GetComplexFragmentIons(TransitionGroup transitionGroup,
-            double precursorMz,
             bool useFilter)
         {
             var simpleTransitions = new List<IList<SingleFragmentIon>>();
@@ -213,7 +211,9 @@ namespace pwiz.Skyline.Model.Crosslinking
                 simpleTransitions.Add(_peptideBuilders[i].GetSingleFragmentIons(peptideTransitionGroup, useFilter).ToList());
             }
 
-            return PermuteTransitions(simpleTransitions, Settings.PeptideSettings.Modifications.MaxNeutralLosses);
+            int maxNeutralLosses = Settings.PeptideSettings.Modifications.MaxNeutralLosses;
+            return PermuteTransitions(simpleTransitions, maxNeutralLosses).SelectMany(neutralFragmentIon =>
+                PermuteCleavedCrosslinks(neutralFragmentIon, maxNeutralLosses));
         }
 
         public IEnumerable<TransitionDocNode> GetTransitionDocNodes(TransitionGroup transitionGroup,
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
             bool useFilter)
         {
-            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, precursorMz, useFilter);
+            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, useFilter);
             
             var allTransitions =
                 RemoveUnmeasurable(precursorMz,
@@ -290,6 +290,69 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result;
+        }
+
+        public IEnumerable<NeutralFragmentIon> PermuteCleavedCrosslinks(NeutralFragmentIon neutralFragmentIon, int maxFragmentationEventCount)
+        {
+            var cleavedCrosslinks = neutralFragmentIon.GetCleavedCrosslinks(PeptideStructure).ToList();
+            if (cleavedCrosslinks.Count == 0)
+            {
+                yield return neutralFragmentIon;
+                yield break;
+            }
+
+            if (cleavedCrosslinks.Count + neutralFragmentIon.CountFragmentationEvents() > maxFragmentationEventCount)
+            {
+                yield break;
+            }
+
+            var massType = Settings.TransitionSettings.Prediction.FragmentMassType;
+            foreach (var lossList in PermuteTransitionLosses(
+                         cleavedCrosslinks.Select(crosslink => crosslink.Crosslinker),
+                         massType))
+            {
+                var transitionLosses = new TransitionLosses(lossList.ToList(), massType);
+                yield return neutralFragmentIon.AddLosses(transitionLosses);
+            }
+        }
+
+        public static IList<ImmutableList<TransitionLoss>> PermuteTransitionLosses(IEnumerable<StaticMod> staticMods, MassType massType)
+        {
+            var allLosses = new List<ImmutableList<TransitionLoss>> { ImmutableList<TransitionLoss>.EMPTY };
+            foreach (var group in staticMods.GroupBy(mod => mod))
+            {
+                var staticMod = group.Key;
+                if (staticMod.Losses == null)
+                {
+                    return Array.Empty<ImmutableList<TransitionLoss>>();
+                }
+
+                var transitionLosses = staticMod.Losses.Select(loss => new TransitionLoss(staticMod, loss, massType)).ToList();
+                var integerCombinations = IntegerCombinations(transitionLosses.Count, group.Count());
+                allLosses = allLosses.SelectMany(entry =>
+                {
+                    return integerCombinations.Select(indexes =>
+                        ImmutableList.ValueOf(entry.Concat(indexes.Select(i => transitionLosses[i]))));
+                }).ToList();
+            }
+
+            return allLosses;
+        }
+
+        private static List<ImmutableList<int>> IntegerCombinations(int range, int count)
+        {
+            var list = new List<ImmutableList<int>> { ImmutableList<int>.EMPTY };
+            for (int position = 0; position < count; position++)
+            {
+                list = list.SelectMany(entry => Enumerable.Range(0, range).Select(i =>
+                {
+                    var newEntry = entry.Append(i).ToList();
+                    newEntry.Sort();
+                    return ImmutableList.ValueOf(newEntry);
+                })).Distinct().ToList();
+            }
+
+            return list;
         }
 
         public IEnumerable<TransitionDocNode> MakeTransitionDocNodes(
@@ -437,19 +500,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public MoleculeMassOffset SubtractLosses(MoleculeMassOffset moleculeMassOffset, TransitionLosses transitionLosses)
+        public static IEnumerable<MoleculeMassOffset> ToMoleculeMassOffsets(TransitionLosses transitionLosses)
         {
             if (transitionLosses == null)
             {
-                return moleculeMassOffset;
+                return new[]{MoleculeMassOffset.EMPTY};
             }
 
-            foreach (var loss in transitionLosses.Losses)
-            {
-                moleculeMassOffset = moleculeMassOffset.Minus(FragmentedMolecule.ToMoleculeMassOffset(loss.Loss));
-            }
-
-            return moleculeMassOffset;
+            return transitionLosses.Losses.Select(loss => FragmentedMolecule.LossAsMoleculeMassOffset(loss.Loss));
         }
     }
 }

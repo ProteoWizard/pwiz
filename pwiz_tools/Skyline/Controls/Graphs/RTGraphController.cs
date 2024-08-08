@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,7 +21,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string Text
         {
-            get { return Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times; }
+            get { return GraphsResources.SkylineWindow_CreateGraphRetentionTime_Retention_Times; }
         }
     }
 }

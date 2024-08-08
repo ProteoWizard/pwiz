@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -39,7 +38,7 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
         public double? ExtractionWidth;
-        public IonMobilityFilter _ionMobilityInfo;
+        public IonMobilityFilter IonMobilityInfo;
         public Identity Id;  // ID of the associated TransitionDocNode
         public bool MatchMz(double mz)
         {
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString() // Not user facing, for debug convenience only
         {
-            return $@"name={Name} src={Source} Q1={PrecursorMz} Q2={ProductMz} w={ExtractionWidth} im={_ionMobilityInfo} Id={Id}";
+            return $@"name={Name} src={Source} Q1={PrecursorMz} Q2={ProductMz} w={ExtractionWidth} im={IonMobilityInfo} Id={Id}";
         }
     }
 
@@ -66,6 +65,7 @@ namespace pwiz.Skyline.Model.Results
         bool IsWatersSonarData { get; } // Returns true if data presents as ion mobility but is actually filtered on precursor m/z
         Tuple<int, int> SonarMzToBinRange(double mz, double tolerance); // Maps an mz value into the Waters SONAR bin space
         double? SonarBinToPrecursorMz(int bin); // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
+        double? CCSFromIonMobility(double ionMobility, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         eIonMobilityUnits IonMobilityUnits { get; } 
         bool Adopt(IScanProvider scanProvider);
@@ -83,13 +83,20 @@ namespace pwiz.Skyline.Model.Results
         private WeakReference<MeasuredResults> _measuredResultsReference;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults)
+            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults) :
+            this(docFilePath, dataFilePath, source, times, transitions, measuredResults, null)
+        {
+        }
+
+        public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
+            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults, MsDataFileScanIds msDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
             Source = source;
             Times = times;
             Transitions = transitions;
+            _msDataFileScanIds = msDataFileScanIds;
             _measuredResults = measuredResults;
             _measuredResultsReference = new WeakReference<MeasuredResults>(measuredResults);
         }
@@ -101,6 +108,13 @@ namespace pwiz.Skyline.Model.Results
 
         public Tuple<int,int> SonarMzToBinRange(double mz, double tolerance) {  return _dataFile?.SonarMzToBinRange(mz, tolerance); }
         public double? SonarBinToPrecursorMz(int bin) { return _dataFile?.SonarBinToPrecursorMz(bin); } // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
+
+        public double? CCSFromIonMobility(double ionMobilityValue, double mz, int charge)
+        {
+            if (_dataFile == null)
+                return null;
+            return _dataFile.CCSFromIonMobility(ionMobilityValue, mz, charge);
+        }
 
         public double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge)
         {
@@ -119,16 +133,23 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static bool FileExists(string docFilePath, MsDataFileUri dataFilePath)
+        {
+            return FileExists(docFilePath, dataFilePath, out _);
+        }
+
         /// <summary>
         /// Checks for file existence using ScanProvider search rules (as stated, in doc dir, in doc dir parent)
         /// </summary>
         /// <param name="docFilePath">Full path of the Skyline document that uses the data file</param>
-        /// <param name="dataFilePath">Full path of file to be verified as existing</param>
+        /// <param name="dataFilePath">Full path of file to be verified as existing using search rules</param>
+        /// <param name="dataFileActualPath">Full path of the matching file that was found</param>
         /// <returns>true if file exists as described or in any of the standard search locations</returns>
-        public static bool FileExists(string docFilePath, MsDataFileUri dataFilePath)
+        public static bool FileExists(string docFilePath, MsDataFileUri dataFilePath, out string dataFileActualPath)
         {
             var tester = new ScanProvider(docFilePath, dataFilePath, ChromSource.unknown, null, null, null);
-            return tester.FindDataFilePath() != null;
+            dataFileActualPath = tester.FindDataFilePath();
+            return dataFileActualPath != null;
         }
 
         public bool Adopt(IScanProvider other)
@@ -191,9 +212,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
                 dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                // TODO(brendanx): Improve this error message post-UI freeze
-//                if (dataFileSpectrumStartIndex == -1)
-//                    throw new ArgumentException(string.Format("The stored scan ID {0} was not found in the file {1}.", scanIdText, DataFilePath));
+                if (dataFileSpectrumStartIndex == -1)
+                    throw new ArgumentException(string.Format(ResultsResources.ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___, scanIdText, DataFilePath.RemoveLegacyParameters()));
             }
 
             MsDataSpectrum currentSpectrum;
@@ -252,7 +272,7 @@ namespace pwiz.Skyline.Model.Results
                     var lockMassParameters = DataFilePath.GetLockMassParameters();
                     if (dataFilePath == null)
                         throw new FileNotFoundException(string.Format(
-                            Resources
+                            ResultsResources
                                 .ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
                             DataFilePath));
                     int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);

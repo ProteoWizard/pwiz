@@ -25,14 +25,13 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
 using seems.Misc;
+using Spectrum = pwiz.CLI.msdata.Spectrum;
 
 namespace seems
 {
@@ -43,8 +42,10 @@ namespace seems
 	public partial class SpectrumListForm : DockableForm
 	{
         Dictionary<int, MassSpectrum> spectrumList; // indexable by MassSpectrum.Index
+        TreeViewForm treeViewTooltip;
+        Timer hoverTimer;
 
-		public DataGridView GridView { get { return gridView; } }
+        public DataGridView GridView { get { return gridView; } }
 
 		public event SpectrumListCellClickHandler CellClick;
 		public event SpectrumListCellDoubleClickHandler CellDoubleClick;
@@ -73,7 +74,35 @@ namespace seems
 			InitializeComponent();
 
             initializeGridView( nativeIdFormat );
-		}
+
+            treeViewTooltip = new TreeViewForm();
+            hoverTimer = new Timer { Interval = 3000 };
+
+            hoverTimer.Tick += (sender, args) =>
+            {
+                treeViewTooltip.Hide();
+                hoverTimer.Stop();
+            };
+            treeViewTooltip.TreeView.MouseHover += (sender, args) => hoverTimer.Stop();
+            treeViewTooltip.TreeView.MouseLeave += (sender, args) => hoverTimer.Start();
+
+            var columnHasDetailTooltip = new SortedSet<int>
+            {
+                IcId.Index,
+                DpId.Index,
+                PrecursorInfo.Index,
+                IsolationWindows.Index,
+                ScanInfo.Index
+            };
+
+            gridView.CellMouseMove += (sender, args) =>
+            {
+                if (columnHasDetailTooltip.Contains(args.ColumnIndex))
+                    Cursor = Cursors.Hand;
+                else
+                    Cursor = Cursors.Arrow;
+            };
+        }
 
         private CVID nativeIdFormat = CVID.CVID_Unknown;
         public CVID NativeIdFormat { get { return nativeIdFormat; } }
@@ -422,7 +451,7 @@ namespace seems
 
 		private void gridView_CellMouseClick( object sender, DataGridViewCellMouseEventArgs e )
 		{
-            if( e.RowIndex > -1 && gridView.Columns[e.ColumnIndex] is DataGridViewLinkColumn )
+            if( e.RowIndex > -1 )
                 gridView_ShowCellToolTip( gridView[e.ColumnIndex, e.RowIndex] );
 			OnCellClick( e );
 		}
@@ -460,17 +489,21 @@ namespace seems
                     continue;
 
                 string nodeText;
-                if( param.value.ToString().Length > 0 )
+                string paramValue = param.value.ToString();
+                if (paramValue.Length > 0 )
                 {
+                    if (double.TryParse(paramValue, out double dblValue))
+                        paramValue = dblValue.ToString("G6");
+
                     // has value
                     if( param.units != CVID.CVID_Unknown )
                     {
                         // has value and units
-                        nodeText = String.Format( "{0}: {1} {2}", param.name, param.value, param.unitsName);
+                        nodeText = String.Format( "{0}: {1} {2}", param.name, paramValue, param.unitsName);
                     } else
                     {
                         // has value but no units
-                        nodeText = String.Format( "{0}: {1}", param.name, param.value);
+                        nodeText = String.Format( "{0}: {1}", param.name, paramValue);
                     }
                 } else
                 {
@@ -508,15 +541,19 @@ namespace seems
 
         private void gridView_ShowCellToolTip( DataGridViewCell cell )
         {
-            MassSpectrum spectrum = cell.OwningRow.Tag as MassSpectrum;
+            MassSpectrum spectrum = GetSpectrum(cell.RowIndex);
             Spectrum s = spectrum.Element;
 
-            TreeViewForm treeViewForm = new TreeViewForm( spectrum );
-            TreeView tv = treeViewForm.TreeView;
+            treeViewTooltip.Hide();
 
-            if( gridView.Columns[cell.ColumnIndex].Name == "PrecursorInfo" )
+            TreeView tv = treeViewTooltip.TreeView;
+            tv.Nodes.Clear();
+
+            string columnName = gridView.Columns[cell.ColumnIndex].Name;
+
+            if (columnName == "PrecursorInfo" || columnName == "IsolationWindows")
             {
-                treeViewForm.Text = "Precursor Details";
+                treeViewTooltip.Text = "Precursor Details";
                 if( s.precursors.Count == 0 )
                     tv.Nodes.Add( "No precursor information available." );
                 else
@@ -561,9 +598,9 @@ namespace seems
                         }
                     }
                 }
-            } else if( gridView.Columns[cell.ColumnIndex].Name == "ScanInfo" )
+            } else if (columnName == "ScanInfo")
             {
-                treeViewForm.Text = "Scan Configuration Details";
+                treeViewTooltip.Text = "Scan Configuration Details";
                 if( s.scanList.empty() )
                     tv.Nodes.Add( "No scan details available." );
                 else
@@ -583,9 +620,9 @@ namespace seems
                         }
                     }
                 }
-            } else if( gridView.Columns[cell.ColumnIndex].Name == "InstrumentConfigurationID" )
+            } else if (columnName == "IcId")
             {
-                treeViewForm.Text = "Instrument Configuration Details";
+                treeViewTooltip.Text = "Instrument Configuration Details";
                 InstrumentConfiguration ic = s.scanList.scans[0].instrumentConfiguration;
                 if( ic == null || ic.empty() )
                     tv.Nodes.Add( "No instrument configuration details available." );
@@ -632,9 +669,9 @@ namespace seems
                         swNode.Nodes.Add( "Version: " + sw.version );
                     }
                 }
-            } else if( gridView.Columns[cell.ColumnIndex].Name == "DataProcessing" )
+            } else if (columnName == "DpId")
             {
-                treeViewForm.Text = "Data Processing Details";
+                treeViewTooltip.Text = "Data Processing Details";
                 DataProcessing dp = s.dataProcessing;
                 if( dp == null || dp.empty() )
                     tv.Nodes.Add( "No data processing details available." );
@@ -657,11 +694,24 @@ namespace seems
                 return;
 
             tv.ExpandAll();
-            treeViewForm.StartPosition = FormStartPosition.CenterParent;
-            treeViewForm.AutoSize = true;
-            //treeViewForm.DoAutoSize();
-            treeViewForm.Show( this.DockPanel );
-            //leaveTimer.Start();
+            treeViewTooltip.DoAutoSize();
+            treeViewTooltip.StartPosition = FormStartPosition.Manual;
+
+            Point tentativeLocation = MousePosition;
+            if (tentativeLocation.X + treeViewTooltip.Width > Screen.FromControl(gridView).WorkingArea.Right)
+                tentativeLocation.Offset(-treeViewTooltip.Width, 0);
+            else
+                tentativeLocation.Offset(Cursor.Size.Width, 0);
+            if (tentativeLocation.Y + treeViewTooltip.Height > Screen.FromControl(gridView).WorkingArea.Bottom)
+                tentativeLocation.Offset(0, -treeViewTooltip.Height);
+            treeViewTooltip.Location = tentativeLocation;
+
+            if (treeViewTooltip.Visible)
+                treeViewTooltip.Refresh();
+            else
+                treeViewTooltip.Show( this );
+            hoverTimer.Stop();
+            hoverTimer.Start();
             this.Focus();
         }
 	}

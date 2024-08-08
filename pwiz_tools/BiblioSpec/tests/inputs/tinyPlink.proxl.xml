@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<proxl_input fasta_filename="2019-11-Ecoli-Klevit-Arp23.fasta">
+    <!-- This file was manually spliced together from a real pLink2 result into the existing tiny.proxl.xml test data -->
+    <search_program_info>
+        <search_programs>
+            <search_program name="pLink" display_name="pLink" version="2.3.9">
+                <psm_annotation_types>
+                    <filterable_psm_annotation_types>
+                        <filterable_psm_annotation_type name="Score" description="PLink Primary Score" filter_direction="below" default_filter="false" default_filter_value="0.01"/>
+                    </filterable_psm_annotation_types>
+                    <descriptive_psm_annotation_types>
+                        <descriptive_psm_annotation_type name="Calculated Mass" description="Calculated Mass"/>
+                        <descriptive_psm_annotation_type name="Delta Mass" description="Delta Mass"/>
+                        <descriptive_psm_annotation_type name="Delta Mass (PPM)" description="Delta Mass (PPM)"/>
+                    </descriptive_psm_annotation_types>
+                </psm_annotation_types>
+            </search_program>
+        </search_programs>
+        <default_visible_annotations>
+            <visible_psm_annotations>
+                <search_annotation search_program="pLink" annotation_name="Score"/>
+                <search_annotation search_program="pLink" annotation_name="Calculated Mass"/>
+                <search_annotation search_program="pLink" annotation_name="Delta Mass (PPM)"/>
+            </visible_psm_annotations>
+        </default_visible_annotations>
+    </search_program_info>
+    <linkers>
+        <linker name="bs3">
+            <crosslink_masses>
+                <crosslink_mass mass="138.0680" chemical_formula="C8H10O2"/>
+            </crosslink_masses>
+            <linked_ends>
+                <linked_end>
+                    <residues>
+                        <residue>K</residue>
+                    </residues>
+                    <protein_termini>
+                        <protein_terminus terminus_end="n" distance_from_terminus="0"/>
+                        <protein_terminus terminus_end="n" distance_from_terminus="1"/>
+                    </protein_termini>
+                </linked_end>
+                <linked_end>
+                    <residues>
+                        <residue>K</residue>
+                    </residues>
+                    <protein_termini>
+                        <protein_terminus terminus_end="n" distance_from_terminus="0"/>
+                        <protein_terminus terminus_end="n" distance_from_terminus="1"/>
+                    </protein_termini>
+                </linked_end>
+            </linked_ends>
+        </linker>
+    </linkers>
+    <reported_peptides>
+        <reported_peptide reported_peptide_string="NDEELNKLLGKVTIAQGGVLPNIQAVLLPK(7,11)-LOOP" type="looplink">
+            <peptides>
+                <peptide sequence="NDEELNKLLGKVTIAQGGVLPNIQAVLLPK" unique_id="1">
+                    <linked_positions>
+                        <linked_position position="7"/>
+                        <linked_position position="11"/>
+                    </linked_positions>
+                </peptide>
+            </peptides>
+            <psms>
+                <psm scan_file_name="tinyByonicProxl" scan_number="1" precursor_charge="3" linker_mass="138.0681">
+                    <filterable_psm_annotations>
+                        <filterable_psm_annotation search_program="pLink" annotation_name="Score" value="0.0044412"/>
+                    </filterable_psm_annotations>
+                    <descriptive_psm_annotations>
+                        <descriptive_psm_annotation search_program="pLink" annotation_name="Calculated Mass" value="2501.3470"/>
+                        <descriptive_psm_annotation search_program="pLink" annotation_name="Delta Mass" value="0.0200"/>
+                        <descriptive_psm_annotation search_program="pLink" annotation_name="Delta Mass (PPM)" value="8.0021"/>
+                    </descriptive_psm_annotations>
+                </psm>
+            </psms>
+        </reported_peptide>
+    </reported_peptides>
+    <static_modifications>
+        <static_modification amino_acid="C" mass_change="57.02146"/>
+    </static_modifications>
+    <decoy_labels>
+        <decoy_label prefix="random"/>
+        <decoy_label prefix="decoy"/>
+        <decoy_label prefix="reverse"/>
+        <decoy_label prefix="shuffle"/>
+    </decoy_labels>
+    <configuration_files>
+        <configuration_file search_program="pLink" file_name="pLink_task_2022.05.23.13.14.06.plink">
+            <file_content>W3ZlcnNpb25dCnZlcnNpb24gPSAyLjMuOQpbc2NvcmVdCnNpbXBsZV9zY29yZV90eXBlID0gU1RfWExJTktfT0JNMjUKW2Zsb3ddCmZsb3dfdHlwZSA9IEZUX0lPTl9JTkRFWApwcm9jZXNzb3JfbnVtID0gMgpyZXN1bHRfb3V0cHV0X3BhdGggPSBDOlx0ZXN0XHBMaW5rX3Rhc2tfMjAyMi4wNS4yMy4xMy4xNC4wNlwKW2RhdGFiYXNlXQpkYl9uYW1lID0gSGlzdG9uZTJBMkJfUEFENF9jb21iX3JldmVyIC0gQ29weQplbnp5bWVfbmFtZSA9IFRyeXBzaW4KbWF4X21pc3Nfc2l0ZSA9IDMKbWluX3BlcF9tYXNzID0gMzAwCm1heF9wZXBfbWFzcyA9IDMwMDAwCm1pbl9wZXBfbGVuID0gNgptYXhfcGVwX2xlbiA9IDQ1Clttb2RpZmljYXRpb25dCmZpeF90b3RhbCA9IDAKdmFyX3RvdGFsID0gMQp2YXJfbW9kMSA9IERlYW1pZGF0ZWRbUl0KW2xpbmtlcl0KbGlua2VyX3RvdGFsID0gMgpsaW5rZXIxID0gQlMzCmxpbmtlcjIgPSBCUzNfaGVhdnkKW2lvbnNdCmZyYWdtZW50X3RvbCA9IDIwCmZyYWdtZW50X3RvbF90eXBlID0gcHBtCnBlcHRpZGVfdG9sID0gMjAKcGVwdGlkZV90b2xfdHlwZSA9IHBwbQpzaW1wbGVfaW5zdHJ1bWVudCA9IEhDRC1iYXNpYwpyZWZpbmVkX2luc3RydW1lbnQgPSBIQ0QKW2ZpbHRlcl0KZmlsdGVyX3RvbCA9IDEwCmZpbHRlcl90b2xfdHlwZSA9IHBwbQpGRFIgPSAwLjA1CmZkcl9zZXBhcmF0ZV9vcl9nbG9iYWwgPSBFRlRfSU5UUkFfSU5URVJfU0VQQVJBVEVfRkRSCmV2YWx1ZSA9IDAKW3NwZWN0cnVtXQpzcGVjX3RpdGxlID0gSGlzdG9uZTJBMkJfUEFENF9jb21iX3JldmVyIC0gQ29weV8yMDIyLjA1LjIzCnNwZWNfdHlwZSA9IHBmCnNwZWNfbnVtID0gMgpzcGVjX3BhdGgxID0gRTpcbHVtb3NcdGVzdDFfSENERlQucGYyCnNwZWNfcGF0aDIgPSBFOlxsdW1vc1x0ZXN0Ml9IQ0RGVC5wZjIKW3F1YW50XQpxdWFudCA9IDF8Tm9uZQo=</file_content>
+        </configuration_file>
+    </configuration_files>
+</proxl_input>

@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -90,8 +92,16 @@ namespace pwiz.SkylineTest
                     writer.Write(separator);
                 writer.WriteDsvField(field, separator);
             }
-            var fieldsOut = sb.ToString().ParseDsvFields(separator);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut), "while parsing:\n"+sb+"\nexpected:\n" + string.Join("\n", fields) + "\n\ngot:\n" + string.Join("\n", fieldsOut));
+
+            var line = sb.ToString();
+            var fieldsOut = line.ParseDsvFields(separator);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut),
+                TextUtil.LineSeparate("while parsing:", line, string.Empty, 
+                    "expected:", TextUtil.LineSeparate(fields), string.Empty, 
+                    "got:",TextUtil.LineSeparate(fieldsOut)));
+            var detectedSeparator = AssertEx.DetermineDsvDelimiter(new[] { line }, out var detectedColumnCount);
+            Assert.AreEqual(separator, detectedSeparator);
+            Assert.AreEqual(fields.Length, detectedColumnCount);
         }
 
         [TestMethod]
@@ -156,7 +166,127 @@ namespace pwiz.SkylineTest
 
         }
 
-        [TestMethod, NoParallelTesting]
+        // Test the code to compare strings with same files on different paths
+        [TestMethod]
+        public static void TestNoDiffIgnoringPathDifferences()
+        {
+            // No quotes, tab separated
+            var line1 = "C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
+            var line2 = "D:\\Nightly\\SkylineTesterForNightly_integration_perf\\SkylineTester Files\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\td:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tj:\\dogs\\cats\\blorf";
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // With quotes, tab separated
+            line1 = "\"C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\"\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
+            line2 = "\"D:\\Nightly\\SkylineTesterForNightly_integration_perf\\SkylineTester Files\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\"\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\td:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tj:\\dogs\\birds\\blorf";
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // CSV
+            line1 = line1.Replace("\t", ",");
+            line2 = line2.Replace("\t", ",");
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // European ; separated
+            line1 = line1.Replace(",", ";");
+            line2 = line2.Replace(",", ";");
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // Make sure it actually does catch differences
+            line1 = line1.Replace("MCF", "zzz");
+            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.NoDiff(line1, line2));
+        }
+
+        // Test the code used to compare DSV files with tiny numerical differences (e.g. BullseyeSharp MS2 output files)
+        [TestMethod]
+        public void TestFieldsEqual()
+        {
+
+            AssertEx.FieldsEqual(new StringReader("747.3871 1.01456e+07"),
+                new StringReader("747.3871 1.014561e+07"),
+                null, // Variable field count
+                null, // Ignore no columns
+                true); // Allow for rounding errors
+
+
+            var txtA =
+                "H\tCreationDate Thu May 18 10:22:17 2023\n" +
+                "H\tExtractor\tProteoWizard\n" +
+                "H\tExtractor version\tXcalibur\n" +
+                "H\tSource file\t2021_0810_Eclipse_LiPExp_05_SS3.raw\n" +
+                "S\t3\t3\t613.3168\n" +
+                "I\tNativeID\tcontrollerType=0 controllerNumber=1 scan=3\n" +
+                "I\tRTime\t0.01054074\n" +
+                "I\tBPI\t34995.21\n" +
+                "I\tBPM\t7754\n" +
+                "I\tTIC\t247701.8\n" +
+                "Z\t1\t5432\n" +
+                "181.6542 21635.59\n" +
+                "203.9089 9885.277\n" +
+                "221.082 10638.83\n" +
+                "251.8089 9747.531\n" +
+                "268.5652 8213.748\n" +
+                "300.0618 11877.35\n" +
+                "355.0699 12373.97\n" +
+                "356.0695 23859.23\n" +
+                "357.0657 33525.14\n" +
+                "358.0672 34995.21\n" +
+                "373.2889 8678.741\n" +
+                "510.3278 11798.26\n" +
+                "588.6589 10310.75\n" +
+                "594.7731 10238.01\n" +
+                "940.1085 9085.032\n" +
+                "1124.124 10834.5\n" +
+                "1208.332 10004.55\n" +
+                "S\t6\t6\t422.7364\n" +
+                "I\tNativeID\tcontrollerType=0 controllerNumber=1 scan=6\n" +
+                "I\tRTime\t0.01241985\n" +
+                "I\tBPI\t36354.39\n" +
+                "I\tBPM\t157.0823\n" +
+                "I\tTIC\t150800.6\n" +
+                "Z\t2\t1682.29\n" +
+                "157.0823 36354.39\n" +
+                "181.659 32937.68\n" +
+                "230.6742 8594.602\n" +
+                "384.1447 10770.04\n" +
+                "422.3313 22468.13\n" +
+                "487.0845 9533.217\n" +
+                "780.8187 9651.796\n" +
+                "1014.462 9763.788\n" +
+                "1582.427 10726.89\n";
+
+            var txtB = txtA.Replace("247701.8", "247701.7"). // Could be serializations of 247701.751 and 247701.749
+                Replace("36354.39", "36354.40").
+                Replace("34995.21", "34995.22").
+                Replace("7754", "7754.0").
+                Replace("5432", "5433").
+                Replace("10726.89", "10726.9");
+            AssertEx.FieldsEqual(new StringReader(txtA),
+                new StringReader(txtB),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors - the TIC line in particular is an issue here
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                1); // Skip first line with its timestamp
+
+            // And make sure it catches actual errors
+            var txtC = txtA.Replace("247701.8", "247701.6");
+            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.FieldsEqual(new StringReader(txtA),
+                new StringReader(txtC),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors - the TIC line in particular is an issue here
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                1)); // Skip first line with its timestamp);
+
+            var txtD = txtA.Replace("10726.89", "10726.896");
+            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.FieldsEqual(new StringReader(txtA),
+                new StringReader(txtD),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors - the TIC line in particular is an issue here
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                1)); // Skip first line with its timestamp);
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.
@@ -179,7 +309,8 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(pathTooLong, true));
 
             // Test IOException.
-            const string busyFile = "TestBusyDelete.txt"; // Not L10N
+            TestContext.EnsureTestResultsDir();
+            string busyFile = TestContext.GetTestResultsPath("TestBusyDelete.txt"); // Not L10N
             using (File.CreateText(busyFile))
             {
                 AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(busyFile));
@@ -188,7 +319,7 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(busyFile));
 
             // Test UnauthorizedAccessException.
-            const string readOnlyFile = "TestReadOnlyFile.txt"; // Not L10N
+            string readOnlyFile = TestContext.GetTestResultsPath("TestReadOnlyFile.txt"); // Not L10N
 // ReSharper disable LocalizableElement
             File.WriteAllText(readOnlyFile, "Testing read only file delete.\n"); // Not L10N
 // ReSharper restore LocalizableElement
@@ -285,6 +416,66 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
             Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\ZipFile.zip\BSA_Protea_label_free_meth3.sky", out zipFileName));
             Assert.AreEqual("ZipFile.zip", zipFileName);
+        }
+
+        [TestMethod]
+        public void TestEscapePathForXML()
+        {
+            Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&oops")); // Unescaped ampersand in filename
+            Assert.AreEqual("&amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops")); // More than one
+            Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&amp;oops")); // Already escaped
+            Assert.AreEqual("&amp;oops &amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops &amp;oops")); // Mix of escaped and unescaped
+            Assert.AreEqual("&amp;oops &amp;oops &apos;oops", PathEx.EscapePathForXML("&oops &oops &apos;oops")); // Use of & to escape apostrophe
+        }
+
+        [TestMethod]
+        public void FilesDirTest()
+        {
+            var cleanupLevel = DesiredCleanupLevel;
+            try
+            {
+                var testFilesDir = new TestFilesDir(TestContext, @"Test\DocLoadLibraryTest.zip");
+                // Lock a file and make sure that CleanUp fails
+                // NOTE: This takes seconds because the cleanup code uses TryTwice()
+                const string fileName = "DocWithLibrary.sky";
+                string filePath = testFilesDir.GetTestPath(fileName);
+                using (new StreamReader(filePath))
+                {
+                    // Test the code that names the process locking a file
+                    try
+                    {
+                        var names = string.Join(@", ", FileLockingProcessFinder.GetProcessesUsingFile(filePath).Select(p => p.ProcessName));
+                        AssertEx.Contains(names, Process.GetCurrentProcess().ProcessName);
+                    }
+                    catch
+                    {
+                        // ignored - the mechanism behind FileLockingProcessFinder may not be supported, probably due to insufficient permissions
+                    }
+
+                    // Test our post-test cleanup code's handling of a locked file
+                    if (!Install.IsRunningOnWine)
+                    {
+                        DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                        DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                    }
+                }
+                // Now test successful cleanup
+                DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
+                testFilesDir.Cleanup();
+                AssertEx.FileExists(filePath);
+                DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                testFilesDir.Cleanup();
+                AssertEx.FileNotExists(filePath);
+                AssertEx.IsFalse(Directory.Exists(testFilesDir.FullPath));
+                // CONSIDER: This could be extended to test persistent files and
+                //           ZIP files in the Downloads folder.
+            }
+            finally
+            {
+                DesiredCleanupLevel = cleanupLevel;
+            }
         }
     }
 }

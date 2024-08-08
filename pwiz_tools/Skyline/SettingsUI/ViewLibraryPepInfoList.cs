@@ -31,7 +31,8 @@ namespace pwiz.Skyline.SettingsUI
 {
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
     {
-        private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
+        private readonly ImmutableList<ViewLibraryPepInfo> _allEntries; // Alpha sorted
+        private readonly ImmutableList<int> _naturalSortIndex; // Natural sort order of the members of _allEntries
         private readonly LibKeyModificationMatcher _matcher;
         public bool _mzCalculated;
         public readonly List<string> _stringSearchFields;
@@ -71,6 +72,13 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, string selectedFilterCategory, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
+            var naturalSort = Enumerable.Range(0, _allEntries.Count).OrderBy(i => _allEntries[i], Comparer<ViewLibraryPepInfo>.Create(ComparePepInfosNatural)).ToArray();
+            var naturalSortMap = new int[_allEntries.Count];
+            for (var order = 0; order < naturalSort.Length; order++)
+            {
+                naturalSortMap[naturalSort[order]] = order;
+            }
+            _naturalSortIndex = ImmutableList.ValueOf(naturalSortMap);
             _selectedFilterCategory = selectedFilterCategory;
             _matcher = matcher; // Used to calculate precursor m/z
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in this library?
@@ -111,15 +119,18 @@ namespace pwiz.Skyline.SettingsUI
             _mzCalculated = true;
             foreach(var entry in _allEntries)
             {
-                if (entry.Target != null)
+                if (entry.Key.IsPrecursorKey)
                 {
-                    entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
-
-                    if (progressMonitor.IsCanceled)
-                    {
-                        _mzCalculated = false;
-                        break;
-                    }
+                    entry.PrecursorMz = entry.Key.PrecursorMz.GetValueOrDefault();
+                }
+                else if (entry.Target != null)
+                {
+                    entry.PrecursorMz = entry.CalcMz(_matcher);
+                }
+                if (progressMonitor.IsCanceled)
+                {
+                    _mzCalculated = false;
+                    break;
                 }
             }
         }
@@ -130,6 +141,47 @@ namespace pwiz.Skyline.SettingsUI
         private List<string> FindValidCategories(List<string> categories)
         {
             return categories.Where(category => _allEntries.Any(entry => !GetStringValue(category, entry).Equals(string.Empty))).ToList();
+        }
+
+        /// <summary>
+        /// Find the string value of a property for a ViewLibraryPepInfo, formatted as in user display
+        /// </summary>
+        internal static string GetFormattedPropertyValue(string propertyName, ViewLibraryPepInfo pepInfo)
+        {
+            var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
+            if (property is null)
+            {
+                return string.Empty;
+            }
+
+            var value = property.GetValue(pepInfo);
+            if (value is null)
+            {
+                return string.Empty;
+            }
+
+            string propertyValue;
+            var dbl = value as double? ?? 0;
+
+            // Shorten precursor m/z values to be uniform and match the tool tip
+            if (propertyName.Equals(PRECURSOR_MZ))
+            {
+                propertyValue = ViewLibraryDlg.FormatPrecursorMz(dbl);
+            }
+            else if (propertyName.Equals(CCS))
+            {
+                propertyValue = ViewLibraryDlg.FormatCCS(dbl);
+            }
+            else if (propertyName.Equals(ION_MOBILITY))
+            {
+                propertyValue = ViewLibraryDlg.FormatIonMobility(dbl, pepInfo.IonMobilityUnits);
+            }
+            else
+            {
+                propertyValue = value.ToString();
+            }
+
+            return propertyValue;
         }
 
         /// <summary>
@@ -255,6 +307,29 @@ namespace pwiz.Skyline.SettingsUI
 
         }
 
+        /// <summary>
+        /// Find entries which contain the filter text in the given property
+        /// </summary>
+        private List<int> ContainsSearchByProperty(string filterText)
+        {
+            if (string.IsNullOrEmpty(filterText))
+            {
+                return new List<int>();
+            }
+            var orderedList = _listCache.GetOrCreate(_selectedFilterCategory); // List of indexes of items that have values for property of interest
+            IEnumerable<int> matches;
+            if (_accessionNumberTypes.Contains(_selectedFilterCategory))
+            {
+                matches = orderedList.Where(item => _allEntries[item].OtherKeysDict[_selectedFilterCategory]
+                    .IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+            else
+            {
+                matches = orderedList.Where(item => GetFormattedPropertyValue(_selectedFilterCategory, _allEntries[item])
+                    .IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+            return matches.ToList();
+        }
 
         /// <summary>
         /// Find the indices of entries matching the filter text according to the filter type
@@ -268,43 +343,59 @@ namespace pwiz.Skyline.SettingsUI
             if (string.IsNullOrEmpty(filterText))
             {
                 // Only return entries that have the selected property
-                var ret = _listCache.GetOrCreate(_selectedFilterCategory).OrderBy(info => info);
-                    return ImmutableList.ValueOf(ret);
+                var ret = _listCache.GetOrCreate(_selectedFilterCategory).OrderBy(info => _naturalSortIndex[info]);
+                return ImmutableList.ValueOf(ret);
             }
 
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
             // adduct has special sorting which is different than the way adduct.ToString() would sort.
 
-            // Find the indices of entries that have a field that could match the search term if something was appended to it 
-            var filteredIndices = PrefixSearchByProperty(filterText);
-
-            // Special filtering for numeric properties
-            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
+            List<int> filteredIndices;
+            var isWildcard = filterText.StartsWith(@"*");
+            if (isWildcard)
             {
-                // Add entries that are close to the filter text numerically
-                // Create a list of object references sorted by their absolute difference from target
-                var sortedByDifference = _allEntries.OrderBy(entry => Math.Abs(double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result));
-
-                // Then return everything before the first entry with a difference exceeding our match tolerance
-                var results = sortedByDifference.TakeWhile(entry => !(Math.Abs(
-                    double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) >  FILTER_TOLERANCE)).Select(IndexOf).ToList();
-                filteredIndices = filteredIndices.Union(results).ToList();
+                filterText = filterText.Substring(1);
             }
-
-            // If we have not found any matches yet and it is a peptide list look at all the entries which could match
-            // the target text, if they had something appended to them.
-            if (!filteredIndices.Any())
+            if (isWildcard && filterText.Length>0)
             {
-                var range = CollectionUtil.BinarySearch(_allEntries,
-                    info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
-                        info.UnmodifiedTargetText.Length,
-                        StringComparison.OrdinalIgnoreCase));
-                // Return the elements from the range whose DisplayText actually matches the filter text.
-                return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
-                    .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
+                // For strings starting in "*", find the indices of entries that have a field
+                // that contain the search term
+                filteredIndices = ContainsSearchByProperty(filterText);
+            }
+            else
+            {
+                // Otherwise, find the indices of entries that have a field that could match the search term
+                // if something was appended to it 
+                filteredIndices = PrefixSearchByProperty(filterText);
+
+                // Special filtering for numeric properties
+                if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
+                {
+                    // Add entries that are close to the filter text numerically
+                    // Create a list of object references sorted by their absolute difference from target
+                    var sortedByDifference = _allEntries.OrderBy(entry => Math.Abs(double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result));
+
+                    // Then return everything before the first entry with a difference exceeding our match tolerance
+                    var results = sortedByDifference.TakeWhile(entry => !(Math.Abs(
+                        double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) >  FILTER_TOLERANCE)).Select(IndexOf).ToList();
+                    filteredIndices = filteredIndices.Union(results).ToList();
+                }
+
+                // If we have not found any matches yet and it is a peptide list look at all the entries which could match
+                // the target text, if they had something appended to them.
+                if (!filteredIndices.Any())
+                {
+                    var range = CollectionUtil.BinarySearch(_allEntries,
+                        info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
+                            info.UnmodifiedTargetText.Length,
+                            StringComparison.OrdinalIgnoreCase));
+                    // Return the elements from the range whose DisplayText actually matches the filter text.
+                    filteredIndices = new RangeList(range).Where(i => _allEntries[i].DisplayText
+                        .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
             }
             // Return the indices of the matches sorted alphabetically by display text
-            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => info));
+            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => _naturalSortIndex[info]));
         }
 
         public int IndexOf(LibraryKey libraryKey)
@@ -318,19 +409,48 @@ namespace pwiz.Skyline.SettingsUI
             return range.Length > 0 ? range.Start : -1;
         }
 
+        // Simple alphanumeric sort
         public static int ComparePepInfos(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
         {
             int result = string.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText,
                 StringComparison.OrdinalIgnoreCase);
             if (result == 0)
             {
+                // Same molecule, sort by adduct
                 result = info1.Adduct.CompareTo(info2.Adduct);
-            }
-            if (result == 0)
-            {
-                result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
+                if (result == 0)
+                {
+                    // Last try, alpha sort on whatever Key.ToString() produced
+                    result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
+                }
             }
             return result;
+        }
+
+        // Natural sort (e.g. "xyz200.5" comes before "xyz1200.5")
+        public static int ComparePepInfosNatural(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
+        {
+            var result = NaturalStringComparer.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText);
+
+            if (result == 0)
+            {
+                // Same molecule, sort by adduct
+                result = info1.Adduct.CompareTo(info2.Adduct);
+                if (result == 0)
+                {
+                    // Last try, natural sort on whatever Key.ToString() produced
+                    result = NaturalStringComparer.Compare(info1.KeyString, info2.KeyString);
+                }
+            }
+            return result;
+        }
+
+        public class ViewLibraryPepInfoNaturalComparer : IComparer<ViewLibraryPepInfo>
+        {
+            public int Compare(ViewLibraryPepInfo x, ViewLibraryPepInfo y)
+            {
+                return ComparePepInfosNatural(x, y);
+            }
         }
     }
 }

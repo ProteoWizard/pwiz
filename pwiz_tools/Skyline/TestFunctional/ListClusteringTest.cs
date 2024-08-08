@@ -125,7 +125,7 @@ namespace pwiz.SkylineTestFunctional
                     new[] {PersistedViews.MainGroup.Id.ViewName(reportName)};
                 documentSettingsDlg.OkDialog();
             });
-            string skylineDocumentPath = Path.Combine(TestContext.TestDir, "ListClusteringTest.sky");
+            string skylineDocumentPath = TestContext.GetTestResultsPath("ListClusteringTest.sky");
             RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestDir, skylineDocumentPath)));
             AssertEx.Serializable(SkylineWindow.Document);
             RunUI(()=>listGrid.DataboundGridControl.ShowHeatMap());

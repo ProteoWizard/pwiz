@@ -137,25 +137,28 @@ namespace pwiz.SkylineTestFunctional
             {
                 Peptide peptide = null;
                 Replicate replicate = null;
-                var calibrationCurve = default(LinkValue<CalibrationCurve>);
-                var replicateCalibrationCurve = default(LinkValue<CalibrationCurve>);
+                var calibrationCurve = default(LinkValue<CalibrationCurveMetrics>);
+                var replicateCalibrationCurve = default(LinkValue<CalibrationCurveMetrics>);
                 RunUI(() =>
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];
                     peptide = (Peptide)row.Cells[colPeptide.Index].Value;
                     replicate = (Replicate)row.Cells[colReplicate.Index].Value;
-                    calibrationCurve = (LinkValue<CalibrationCurve>)row.Cells[colCalibrationCurve.Index].Value;
+                    calibrationCurve = (LinkValue<CalibrationCurveMetrics>)row.Cells[colCalibrationCurve.Index].Value;
                     replicateCalibrationCurve =
-                        (LinkValue<CalibrationCurve>)row.Cells[colReplicateCalibrationCurve.Index].Value;
+                        (LinkValue<CalibrationCurveMetrics>)row.Cells[colReplicateCalibrationCurve.Index].Value;
                 });
+                string message = string.Format(
+                    "Row number: {0} Peptide: {1} Replicate: {2} Calibration Curve: {3} Replicate Calibration Curve: {4}",
+                    iRow, peptide, replicate, calibrationCurve, replicateCalibrationCurve);
                 if (hasBatchNames)
                 {
-                    Assert.AreNotEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount);
+                    Assert.AreNotEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount, message);
                 }
                 else
                 {
-                    Assert.AreEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount);
-                    Assert.AreEqual(calibrationCurve.Value.Slope, replicateCalibrationCurve.Value.Slope);
+                    Assert.AreEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount, message);
+                    Assert.AreEqual(calibrationCurve.Value.Slope, replicateCalibrationCurve.Value.Slope, message);
                 }
 
                 int selectedResultsIndexOld = SkylineWindow.SelectedResultsIndex;

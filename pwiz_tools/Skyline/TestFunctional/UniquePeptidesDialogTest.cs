@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_ :
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_;
                 Assert.IsTrue(errorDlg.Message.Contains(expectedErr));
-                RunUI(() => errorDlg.OkDialog());
+                OkDialog(errorDlg, errorDlg.OkDialog);
             }
             else
             {

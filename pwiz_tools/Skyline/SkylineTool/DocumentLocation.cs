@@ -25,6 +25,7 @@ using System.Web;
 
 namespace SkylineTool
 {
+    [Obsolete]
     [Serializable]
     public class DocumentLocation
     {

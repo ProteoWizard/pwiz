@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             const string viewName = "WillAddToDocument";
-            string documentFilePath = TestContext.GetTestPath("DocumentReportTest.sky");
+            string documentFilePath = TestContext.GetTestResultsPath("DocumentReportTest.sky");
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(manageViewsForm.AddView);

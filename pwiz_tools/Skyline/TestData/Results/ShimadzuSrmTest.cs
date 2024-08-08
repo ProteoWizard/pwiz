@@ -38,12 +38,12 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ShimadzuFileTypeTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string extRaw = ExtensionTestContext.ExtShimadzuRaw;
 
             // Do file type check
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("BSA-digest__MRM_optimisation_SL_scheduled_001" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("BSA-digest__MRM_optimisation_SL_scheduled_001" + extRaw)))
             {
                 Assert.IsTrue(msData.IsShimadzuFile);
                 
@@ -56,10 +56,10 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ShimadzuFormatsTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument doc = InitShimadzuDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitShimadzuDocument(TestFilesDir, out docPath);
 
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestData.Results
                 var chromSets = new[]
                 {
                     new ChromatogramSet(replicateName, new[]
-                        { new MsDataFilePath(testFilesDir.GetTestPath("BSA-digest__MRM_optimisation_SL_scheduled_001" + extRaw)),  }),
+                        { new MsDataFilePath(TestFilesDir.GetTestPath("BSA-digest__MRM_optimisation_SL_scheduled_001" + extRaw)),  }),
                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
@@ -77,8 +77,6 @@ namespace pwiz.SkylineTestData.Results
                 AssertResult.IsDocumentResultsState(docResults, replicateName,
                     doc.PeptideCount, doc.PeptideTransitionGroupCount, 0, doc.PeptideTransitionCount, 0);
             }
-
-            testFilesDir.Dispose();
         }
 
         private static SrmDocument InitShimadzuDocument(TestFilesDir testFilesDir, out string docPath)

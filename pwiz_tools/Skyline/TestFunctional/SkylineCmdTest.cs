@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -96,8 +95,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSkylineCmdInEmptyDirectory()
         {
-            var tempPath = TestContext.GetTestPath("SkylineCmdTempDirectory" + Guid.NewGuid());
-            Directory.CreateDirectory(tempPath);
+            TestContext.EnsureTestResultsDir();
+            var tempPath = TestContext.GetTestResultsPath();
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
             File.Copy(FindSkylineCmdExe(), destFileName);
             var processStartInfo = GetProcessStartInfo(string.Empty);

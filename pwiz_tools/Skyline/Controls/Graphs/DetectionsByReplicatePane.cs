@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -33,16 +32,14 @@ namespace pwiz.Skyline.Controls.Graphs
 {
 
     public class DetectionsByReplicatePane : DetectionsPlotPane
-
     {
-
         public DetectionsByReplicatePane(GraphSummary graphSummary) : base(graphSummary)
         {
             XAxis.Type = AxisType.Text;
-            XAxis.Title.Text = Resources.DetectionPlotPane_XAxis_Name;
+            XAxis.Title.Text = GraphsResources.DetectionPlotPane_XAxis_Name;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             var targetData = _detectionData.GetTargetData(Settings.TargetType);
@@ -66,23 +63,21 @@ namespace pwiz.Skyline.Controls.Graphs
             ChangeSelectedIndex(index);
         }
 
-        public override ImmutableList<float> GetToolTipDataSeries()
-        {
-            return ImmutableList.ValueOf(TargetData.TargetsCount.Select(n => (float)n));
-        }
-
-
         public override void UpdateGraph(bool selectionChanged)
         {
             GraphObjList.Clear();
             CurveList.Clear();
             Legend.IsVisible = false;
-            if (!DetectionPlotData.GetDataCache().TryGet(
-                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
-                out _detectionData))
-                return;
 
+            if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
+            {
+                _detectionData = DetectionPlotData.INVALID;
+            }
             AddLabels();
+            if (!_detectionData.IsValid)
+            {
+                return;
+            }
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;
             Legend.IsVisible = Settings.ShowLegend;
@@ -99,7 +94,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var cumulativePoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i] / YScale)).ToList());
             CurveList.Insert(1, 
-                new LineItem(Resources.DetectionPlotPane_CumulativeLine_Name)
+                new LineItem(GraphsResources.DetectionPlotPane_CumulativeLine_Name)
                 {   Points = cumulativePoints,
                     Symbol = emptySymbol,
                     Line = new Line() { Color = Color.Coral, Width = 2}
@@ -110,7 +105,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var allPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i] / YScale)).ToList());
             CurveList.Insert(2, 
-                new LineItem(Resources.DetectionPlotPane_AllRunsLine_Name)
+                new LineItem(GraphsResources.DetectionPlotPane_AllRunsLine_Name)
                 { Symbol = emptySymbol,
                     Points = allPoints,
                     Line = new Line() { Color = Color.Black, Width = 2}
@@ -134,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 //This is a placeholder to make sure the line shows in the legend.
                 CurveList.Insert(3,
                     new LineItem(String.Format(CultureInfo.CurrentCulture, 
-                        Resources.DetectionPlotPane_AtLeastLine_Name, 
+                        GraphsResources.DetectionPlotPane_AtLeastLine_Name, 
                         Settings.RepCount, _detectionData.ReplicateCount, lineY))
                     {
                         Symbol = emptySymbol,
@@ -161,8 +156,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var labelText = String.Format(CultureInfo.CurrentCulture, 
                     TextUtil.LineSeparate(new[]
                         {
-                            Resources.DetectionPlotPane_Label_Mean ,
-                            Resources.DetectionPlotPane_Label_Stddev
+                            GraphsResources.DetectionPlotPane_Label_Mean ,
+                            GraphsResources.DetectionPlotPane_Label_Stddev
                         }
                     ), 
                     stats.Mean(), stats.StdDev());

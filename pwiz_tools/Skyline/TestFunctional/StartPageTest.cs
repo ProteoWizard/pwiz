@@ -146,10 +146,12 @@ namespace pwiz.SkylineTestFunctional
 
         private bool AllTutorialLinksExist(StartPage startPage)
         {
+            using var httpClient = new HttpClient();
             var tutorialActionOriginal = startPage.Tutorial;
             try
             {
-                startPage.Tutorial = TutorialLinksExist;
+                startPage.Tutorial = (s, p, z) =>
+                    TutorialLinksExist(httpClient, s, p, z);
 
                 var boxPanels = new List<ActionBoxControl>();
                 GetControlsOfType(boxPanels, startPage);
@@ -167,15 +169,14 @@ namespace pwiz.SkylineTestFunctional
             return true;
         }
 
-        private void TutorialLinksExist(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+        private void TutorialLinksExist(HttpClient httpClient, string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
         {
             // See if data URIs are accessible
             foreach (var uri in new[] { skyFileLocation, pdfFileLocation, zipSkyFileLocation })
             {
                 if (!string.IsNullOrEmpty(uri) && uri.StartsWith(@"http"))
                 {
-                    var httpClient = new HttpClient();
-                    var response = httpClient.GetAsync(new Uri(uri), HttpCompletionOption.ResponseHeadersRead).Result;
+                    using var response = httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).Result;
                     Assert.IsTrue(response.IsSuccessStatusCode, @"Could not access tutorial doc at " + uri);
                 }
             }

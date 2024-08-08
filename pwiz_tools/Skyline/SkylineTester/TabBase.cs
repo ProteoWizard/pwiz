@@ -53,9 +53,6 @@ namespace SkylineTester
         public virtual void Cancel()
         {
             MainWindow.CommandShell.Stop();
-
-            if (MainWindow.RunParallel.Checked)
-                TestRunnerLib.RunTests.SendDockerKill();
         }
 
         public virtual bool Stop(bool success)

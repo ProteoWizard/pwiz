@@ -33,7 +33,7 @@ using System.Windows.Forms;
 
 namespace MSConvertGUI
 {
-    public sealed partial class TextInputPrompt : Form
+    public sealed partial class TextInputPrompt : BaseForm
     {
         public Regex InputFormat { get; set; }
 

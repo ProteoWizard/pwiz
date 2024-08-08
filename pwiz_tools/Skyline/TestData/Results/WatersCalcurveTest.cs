@@ -42,18 +42,18 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void WatersFileTypeTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string extRaw = ExtensionTestContext.ExtWatersRaw;
 
             // Do file type checks
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)))
             {
                 Assert.IsTrue(msData.IsWatersFile);
                 Assert.IsFalse(msData.IsWatersLockmassCorrectionCandidate);  // This file contains both scan and chromatogram data, we ignore the scan data
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")))
             {
                 Assert.IsTrue(msData.IsWatersFile);
             }
@@ -68,12 +68,12 @@ namespace pwiz.SkylineTestData.Results
             //     Assert.IsTrue(msData.IsThermoFile);
             // }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")))
             {
                 Assert.IsTrue(msData.IsWatersFile);
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")))
             {
                 Assert.IsTrue(msData.IsWatersFile);
             }
@@ -82,10 +82,10 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void WatersMultiReplicateTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument docOriginal = InitWatersDocument(testFilesDir, out docPath);
+            SrmDocument docOriginal = InitWatersDocument(TestFilesDir, out docPath);
             SrmDocument doc = docOriginal;
             var listCachePaths = new List<string>();
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
@@ -94,10 +94,10 @@ namespace pwiz.SkylineTestData.Results
 
                 string[] replicatePaths =
                 {
-                    testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
-                    testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
-                    testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
-                    testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
+                    TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
+                    TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
+                    TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
+                    TestFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                 };
                 // Count peaks where higher concentration replicates show less area
                 int outOfOrder = 0;
@@ -283,16 +283,15 @@ namespace pwiz.SkylineTestData.Results
                 // Cache files should be closed now, and delete successfully.
                 FileEx.SafeDelete(cachePath);
             }
-            testFilesDir.Dispose();
         }
 
         [TestMethod]
         public void WatersMultiFileTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument docOriginal = InitWatersDocument(testFilesDir, out docPath);
+            SrmDocument docOriginal = InitWatersDocument(TestFilesDir, out docPath);
             SrmDocument doc = docOriginal;
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
@@ -302,13 +301,13 @@ namespace pwiz.SkylineTestData.Results
                 {
                     new ChromatogramSet("double", new[]
                         {
-                            MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")),
-                            MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"))
+                            MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")),
+                            MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"))
                         }),
                     new ChromatogramSet("trouble", new[]
                         {
-                            MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)),
-                            MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML"))
+                            MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)),
+                            MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML"))
                         })
                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
@@ -382,26 +381,24 @@ namespace pwiz.SkylineTestData.Results
                     }
                 }
             }
-            testFilesDir.Dispose();
         }
 
         [TestMethod]
         public void WatersMzXmlTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument doc = InitWatersDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitWatersDocument(TestFilesDir, out docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Verify mzXML and mzML contained same results
                 // TODO: Figure out why these don't match well enough to use strict compare
                 AssertResult.MatchChromatograms(docContainer,
-                                                testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
-                                                testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML"),
+                                                TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
+                                                TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML"),
                                                 -1, 0);
             }
-            testFilesDir.Dispose();
         }
 
         [TestMethod]
@@ -409,14 +406,14 @@ namespace pwiz.SkylineTestData.Results
         {
             // First test transition from per-replicate caching strategy to
             // single cache per document strategy.
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             // Open the replicate document, and let it reload the data from mzML
             // showing the document can find data files by name in its own directory,
             // since the document paths will not match those on disk.
             string docPath;
-            var doc = InitWatersDocument(testFilesDir, out docPath);
-            var docReload = InitWatersDocument(testFilesDir, "160109_Mix1_calcurve_rep.sky", out docPath);
+            var doc = InitWatersDocument(TestFilesDir, out docPath);
+            var docReload = InitWatersDocument(TestFilesDir, "160109_Mix1_calcurve_rep.sky", out docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 var streamManager = docContainer.ChromatogramManager.StreamManager;
@@ -436,15 +433,15 @@ namespace pwiz.SkylineTestData.Results
                     "160109_Mix1_calcurve_rep_calcurve_070.skyd",
                     "160109_Mix1_calcurve_rep_calcurve_073.skyd"
                 };
-                GetCacheFiles(testFilesDir, replicateCacheNames);
+                GetCacheFiles(TestFilesDir, replicateCacheNames);
                 // Delete the files these cache
-                DeleteFiles(testFilesDir,
+                DeleteFiles(TestFilesDir,
                     new[]
                 {
                     "160109_Mix1_calcurve_070.mzML",
                     "160109_Mix1_calcurve_073.mzML",
                 });
-                var docCached = InitWatersDocument(testFilesDir, "160109_Mix1_calcurve_rep.sky", out docPath);
+                var docCached = InitWatersDocument(TestFilesDir, "160109_Mix1_calcurve_rep.sky", out docPath);
                 Assert.IsTrue(docContainer.SetDocument(docCached, doc, true));
                 docContainer.AssertComplete();
                 docCached = docContainer.Document;
@@ -459,7 +456,7 @@ namespace pwiz.SkylineTestData.Results
                 // And the replicate cache files should have been removed
                 foreach (var cacheName in replicateCacheNames)
                 {
-                    var path = testFilesDir.GetTestPath(cacheName);
+                    var path = TestFilesDir.GetTestPath(cacheName);
                     Assert.IsFalse(File.Exists(path));
                 }
 
@@ -473,9 +470,9 @@ namespace pwiz.SkylineTestData.Results
                 var listChromatograms = new List<ChromatogramSet>(docCached.Settings.MeasuredResults.Chromatograms)
                 {
                     new ChromatogramSet("extra1",
-                                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)) }),
+                                        new[] { MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)) }),
                     new ChromatogramSet("extra2",
-                                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")) })
+                                        new[] { MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")) })
                 };
 
                 // Adding a new file should cause the cache to grow.
@@ -495,8 +492,8 @@ namespace pwiz.SkylineTestData.Results
                         new ChromatogramSet("double",
                             new[]
                             {
-                                testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
-                                testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
+                                TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
+                                TestFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                             }));
 
                 settings = docGrow.Settings.MeasuredResults.ChangeChromatograms(listChromatograms);
@@ -530,7 +527,7 @@ namespace pwiz.SkylineTestData.Results
 
                 // Test file caches
                 // First reload the files from .mzML
-                docReload = InitWatersDocument(testFilesDir, "160109_Mix1_calcurve_file.sky", out docPath);
+                docReload = InitWatersDocument(TestFilesDir, "160109_Mix1_calcurve_file.sky", out docPath);
                 // Change the path to use the right .skyd file
                 docContainer.DocumentFilePath = docPath;
                 Assert.IsTrue(docContainer.SetDocument(docReload, docOptimized, true));
@@ -549,17 +546,17 @@ namespace pwiz.SkylineTestData.Results
                     "160109_Mix1_calcurve_075.mzML.skyd",
                     "160109_Mix1_calcurve_078.mzML.skyd"
                 };
-                GetCacheFiles(testFilesDir, fileCacheNames);
+                GetCacheFiles(TestFilesDir, fileCacheNames);
                 // Swap the mzML files, so the test will fail, if not reading from the cache
                 // CONSIDER: Should this really work, since they have different time stamps?
-                string file075 = testFilesDir.GetTestPath("160109_Mix1_calcurve_075.mzML");
-                string file078 = testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML");
+                string file075 = TestFilesDir.GetTestPath("160109_Mix1_calcurve_075.mzML");
+                string file078 = TestFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML");
                 string fileTemp = file075 + ".tmp";
                 File.Move(file075, fileTemp);
                 File.Move(file078, file075);
                 File.Move(fileTemp, file078);
 
-                docCached = InitWatersDocument(testFilesDir, "160109_Mix1_calcurve_file.sky", out docPath);
+                docCached = InitWatersDocument(TestFilesDir, "160109_Mix1_calcurve_file.sky", out docPath);
                 // Make sure cache files exactly match the names the loader will look for
                 var listResultsFiles = new List<MsDataFileUri>();
                 foreach (var chromatogram in docCached.Settings.MeasuredResults.Chromatograms)
@@ -567,7 +564,7 @@ namespace pwiz.SkylineTestData.Results
                 for (int i = 0; i < fileCacheNames.Length; i++)
                 {
                     string partPath = ChromatogramCache.PartPathForName(docPath, listResultsFiles[i]);
-                    File.Move(testFilesDir.GetTestPath(fileCacheNames[i]), partPath);
+                    File.Move(TestFilesDir.GetTestPath(fileCacheNames[i]), partPath);
                 }
 
                 Assert.IsTrue(docContainer.SetDocument(docCached, doc, true));
@@ -583,10 +580,8 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(File.Exists(Path.ChangeExtension(docPath, ".skyd")));
                 // And the replicate cache files should have been removed
                 foreach (var cacheName in fileCacheNames)
-                    Assert.IsFalse(File.Exists(testFilesDir.GetTestPath(cacheName)));
+                    Assert.IsFalse(File.Exists(TestFilesDir.GetTestPath(cacheName)));
             }
-
-            testFilesDir.Dispose();
         }
 
         private static void GetCacheFiles(TestFilesDir testFilesDir, IEnumerable<string> fileNames)

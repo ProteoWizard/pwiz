@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<proxl_input fasta_filename="Ribosome_for_XL_all_contained_Proteins_from_shotgun_comb.fasta">
+    <search_program_info>
+        <search_programs>
+            <search_program name="MeroX" display_name="MeroX" version="2.0.1.7">
+                <psm_annotation_types>
+                    <filterable_psm_annotation_types>
+                        <filterable_psm_annotation_type name="score" description="MeroX Score" filter_direction="above" default_filter="false" default_filter_value="50"/>
+                        <filterable_psm_annotation_type name="qvalue" description="The q-value reported by MeroX" filter_direction="below" default_filter="true" default_filter_value="0.01"/>
+                        <filterable_psm_annotation_type name="rank" description="Rank of PSM for scan" filter_direction="below" default_filter="true" default_filter_value="1"/>
+                    </filterable_psm_annotation_types>
+                    <descriptive_psm_annotation_types>
+                        <descriptive_psm_annotation_type name="m/z" description="m/z"/>
+                        <descriptive_psm_annotation_type name="obs. mass" description="obs. mass"/>
+                        <descriptive_psm_annotation_type name="cand. mass" description="cand. mass"/>
+                        <descriptive_psm_annotation_type name="deviation" description="deviation"/>
+                    </descriptive_psm_annotation_types>
+                </psm_annotation_types>
+            </search_program>
+        </search_programs>
+        <default_visible_annotations>
+            <visible_psm_annotations>
+                <search_annotation search_program="MeroX" annotation_name="scan num."/>
+                <search_annotation search_program="MeroX" annotation_name="rank"/>
+                <search_annotation search_program="MeroX" annotation_name="score"/>
+                <search_annotation search_program="MeroX" annotation_name="qvalue"/>
+                <search_annotation search_program="MeroX" annotation_name="m/z"/>
+                <search_annotation search_program="MeroX" annotation_name="obs. mass"/>
+                <search_annotation search_program="MeroX" annotation_name="cand. mass"/>
+                <search_annotation search_program="MeroX" annotation_name="deviation"/>
+            </visible_psm_annotations>
+        </default_visible_annotations>
+    </search_program_info>
+    <linkers>
+        <linker name="DSSO" spacer_arm_length="23.5">
+            <crosslink_masses>
+                <crosslink_mass mass="158.003765" chemical_formula="C6O3SH6"/>
+                <cleaved_crosslink_mass mass="54.010565" chemical_formula="C3OH2"/>
+                <cleaved_crosslink_mass mass="103.993201" chemical_formula="C3O2SH4"/>
+                <cleaved_crosslink_mass mass="85.982636" chemical_formula="C3OSH2"/>
+            </crosslink_masses>
+            <linked_ends>
+                <linked_end>
+                    <residues>
+                        <residue>K</residue>
+                    </residues>
+                </linked_end>
+                <linked_end>
+                    <residues>
+                        <residue>K</residue>
+                    </residues>
+                </linked_end>
+            </linked_ends>
+        </linker>
+    </linkers>
+    <reported_peptides>
+        <reported_peptide reported_peptide_string="LWDKETLEK(4)-MAKTIK(3)" type="crosslink">
+            <peptides>
+                <peptide sequence="LWDKETLEK">
+                    <linked_positions>
+                        <linked_position position="4"/>
+                    </linked_positions>
+                </peptide>
+                <peptide sequence="MAKTIK">
+                    <linked_positions>
+                        <linked_position position="3"/>
+                    </linked_positions>
+                </peptide>
+            </peptides>
+            <psms>
+                <psm scan_file_name="tinyMeroxProxl.mzML" scan_number="22237" precursor_charge="4" precursor_retention_time="3159.7627" precursor_m_z="2010.025586" linker_mass="158.003765">
+                    <filterable_psm_annotations>
+                        <filterable_psm_annotation search_program="MeroX" annotation_name="score" value="78"/>
+                        <filterable_psm_annotation search_program="MeroX" annotation_name="rank" value="1"/>
+                        <filterable_psm_annotation search_program="MeroX" annotation_name="qvalue" value="0.000000"/>
+                    </filterable_psm_annotations>
+                    <descriptive_psm_annotations>
+                        <descriptive_psm_annotation search_program="MeroX" annotation_name="m/z" value="503.2619"/>
+                        <descriptive_psm_annotation search_program="MeroX" annotation_name="obs. mass" value="2010.0256"/>
+                        <descriptive_psm_annotation search_program="MeroX" annotation_name="cand. mass" value="2010.0286"/>
+                        <descriptive_psm_annotation search_program="MeroX" annotation_name="deviation" value="-1.5057"/>
+                    </descriptive_psm_annotations>
+                </psm>
+            </psms>
+        </reported_peptide>
+    </reported_peptides>
+    <static_modifications>
+        <static_modification amino_acid="C" mass_change="57.021464"/>
+    </static_modifications>
+    <decoy_labels>
+        <decoy_label prefix="DEC_"/>
+    </decoy_labels>
+</proxl_input>

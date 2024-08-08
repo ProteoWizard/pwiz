@@ -435,6 +435,15 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized)
         {
+            var directoryName = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directoryName) && !Directory.Exists(directoryName))
+            {
+                var message =
+                    string.Format(
+                        Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
+                        path);
+                throw new DirectoryNotFoundException(message);
+            }
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
             const int majorVer = 0; // This will increment when we add data
             const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
@@ -483,7 +492,7 @@ namespace pwiz.Skyline.Model.IonMobility
         // Throws DatabaseOpeningException
         public static IonMobilityDb GetIonMobilityDb(string path, IProgressMonitor loadMonitor)
         {
-            var status = new ProgressStatus(string.Format(Resources.IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_, path));
+            var status = new ProgressStatus(string.Format(IonMobilityResources.IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_, path));
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status);
 
@@ -513,12 +522,12 @@ namespace pwiz.Skyline.Model.IonMobility
                 }
                 catch (UnauthorizedAccessException x)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_library_file__0_, path);
+                    message = string.Format(IonMobilityResources.IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_library_file__0_, path);
                     xInner = x;
                 }
                 catch (DirectoryNotFoundException x)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_not_exist_, path);
+                    message = string.Format(IonMobilityResources.IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_not_exist_, path);
                     xInner = x;
                 }
                 catch (FileNotFoundException x)

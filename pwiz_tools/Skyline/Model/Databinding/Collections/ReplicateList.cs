@@ -17,29 +17,25 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+using System;
+using System.Collections;
 using System.Linq;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public class ReplicateList : SkylineObjectList<int, Replicate>
+    public class ReplicateList : SkylineObjectList<Replicate>
     {
         public ReplicateList(SkylineDataSchema dataSchema) : base(dataSchema)
         {
         }
-        protected override IEnumerable<int> ListKeys()
+        public override IEnumerable GetItems()
         {
             if (!DataSchema.Document.Settings.HasResults)
             {
-                return new int[0];
+                return Array.Empty<Replicate>();
             }
-            return Enumerable.Range(0, DataSchema.Document.Settings.MeasuredResults.Chromatograms.Count);
-        }
-
-        protected override Replicate ConstructItem(int key)
-        {
-            return new Replicate(DataSchema, key);
+            return Enumerable.Range(0, DataSchema.Document.Settings.MeasuredResults.Chromatograms.Count).Select(i=>new Replicate(DataSchema, i));
         }
     }
 }

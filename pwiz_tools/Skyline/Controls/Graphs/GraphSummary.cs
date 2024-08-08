@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var transitionGroup = transitionGroups[0];
                                 bool hasPrecursors = transitionGroup.Transitions.Any(transition => transition.IsMs1);
                                 bool hasProducts = transitionGroup.Transitions.Any(transition => !transition.IsMs1);
-                                if (hasPrecursors && hasProducts)
+                                if (hasPrecursors && hasProducts && !IsOptimization(transitionGroup))
                                 {
                                     paneKeys = new[] { PaneKey.PRECURSORS, PaneKey.PRODUCTS };
                                 }
@@ -531,13 +531,44 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    paneKeys = StateProvider.SelectionDocument.MoleculeTransitionGroups.Select(
-                        group => new PaneKey(@group.TransitionGroup.LabelType)).Distinct().ToArray();
+                    IEnumerable<PeptideGroupDocNode> moleculeGroups = StateProvider.SelectionDocument.MoleculeGroups;
+                    if (AreaGraphController.AreaScope == AreaScope.protein)
+                    {
+                        var peptideGroupDocNode = (StateProvider.SelectedNode as SrmTreeNode)
+                            ?.GetNodeOfType<PeptideGroupTreeNode>()?.DocNode;
+                        if (peptideGroupDocNode != null)
+                        {  
+                            moleculeGroups = new[] { peptideGroupDocNode };
+                        }
+                    }
+
+                    paneKeys = moleculeGroups
+                        .SelectMany(group => group.Peptides.SelectMany(peptide => peptide.TransitionGroups
+                            .Select(tg => tg.LabelType)))
+                        .Distinct().Select(labelType => new PaneKey(labelType)).ToArray();
                 }
             }
             paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };
             Array.Sort(paneKeys);
             return paneKeys;
+        }
+
+        private static bool IsOptimization(TransitionGroupDocNode nodeTranGroup)
+        {
+            if (nodeTranGroup.Transitions.Any(nodeTran => nodeTran.IsMs1 && nodeTran.ChromInfos.Any()))
+                return false;
+
+            var steps = nodeTranGroup.ChromInfos.Select(info => info.OptimizationStep).OrderBy(step => step).ToArray();
+            if (steps.Length <= 1)
+                return false;
+
+            for (var i = 0; i < steps.Length - 1; i++)
+            {
+                if (steps[i] != steps[i + 1] - 1)
+                    return false;
+            }
+
+            return true;
         }
     }
 
@@ -553,7 +584,8 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram = 1 << 5,
         histogram2d = 1 << 6,
         detections = 1 << 7,
-        detections_histogram = 1 << 8
+        detections_histogram = 1 << 8,
+        abundance = 1 << 9
     }
 
     public static class Extensions
@@ -565,23 +597,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.invalid:
                     return string.Empty;
                 case GraphTypeSummary.replicate:
-                    return Resources.Extensions_CustomToString_Replicate_Comparison;
+                    return GraphsResources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
-                    return Resources.Extensions_CustomToString_Peptide_Comparison;
+                    return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
+                case GraphTypeSummary.abundance:
+                    return GraphsResources.Extensions_CustomToString_Relative_Abundance;
                 case GraphTypeSummary.score_to_run_regression:
-                    return Resources.Extensions_CustomToString_Score_To_Run_Regression;
+                    return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:
-                    return Resources.Extensions_CustomToString_Scheduling;
+                    return GraphsResources.Extensions_CustomToString_Scheduling;
                 case GraphTypeSummary.run_to_run_regression:
-                    return Resources.Extensions_CustomToString_Run_To_Run_Regression;
+                    return GraphsResources.Extensions_CustomToString_Run_To_Run_Regression;
                 case GraphTypeSummary.histogram:
-                    return Resources.Extensions_CustomToString_Histogram;
+                    return GraphsResources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
-                    return Resources.Extensions_CustomToString__2D_Histogram;
+                    return GraphsResources.Extensions_CustomToString__2D_Histogram;
                 case GraphTypeSummary.detections:
-                    return Resources.Extensions_CustomToString_Detections_Replicates;
+                    return GraphsResources.Extensions_CustomToString_Detections_Replicates;
                 case GraphTypeSummary.detections_histogram:
-                    return Resources.Extensions_CustomToString_Detections_Histogram;
+                    return GraphsResources.Extensions_CustomToString_Detections_Histogram;
                 default:
                     return string.Empty;
             }

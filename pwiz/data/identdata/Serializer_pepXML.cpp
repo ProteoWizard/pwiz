@@ -419,7 +419,9 @@ void write_sample_enzyme(XMLWriter& xmlWriter, const IdentData& mzid)
     string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
 
     // find the minimum specificity
-    int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+    int minSpecificity = 2;
+    if (!sip.enzymes.enzymes.empty())
+        minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
     XMLWriter::Attributes attributes;
     attributes.add("name", enzymeName);
@@ -505,10 +507,14 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
 
         // find the maximum missed cleavages
-        int maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
+        int maxMissedCleavages = 0;
+        if (!sip.enzymes.enzymes.empty())
+            maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
 
         // find the minimum specificity
-        int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+        int minSpecificity = 2;
+        if (!sip.enzymes.enzymes.empty())
+            minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
         Formula nTerm(Formula_nTerm), cTerm(Formula_cTerm); 
 
@@ -690,7 +696,7 @@ void write_search_hit(XMLWriter& xmlWriter,
 {
     // we only write search_scores for numeric CVParams and UserParams;
     // examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
-    static boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
+    const bxp::sregex numericRegex = bxp::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
 
     if (!sii.peptidePtr.get())
         throw runtime_error("[write_search_hit] PepXML requires SpectrumIdentificationItem elements to refer to Peptides.");
@@ -1000,6 +1006,7 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
     bool strict;
 };
 
+const string emptyString = string();
 
 struct HandlerSearchSummary : public SAXParser::Handler
 {
@@ -1085,7 +1092,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
         }
     }
 
-    static const string& getValueOrDefault(const std::map<string, string>& keyValueMap, const string& key, const string& defaultValue)
+    static const string& getValueOrDefault(const std::map<string, string>& keyValueMap, const string& key, const string& defaultValue = emptyString)
     {
         std::map<string, string>::const_iterator findItr = keyValueMap.find(key);
         return findItr == keyValueMap.end() ? defaultValue : findItr->second;
@@ -1101,9 +1108,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
         // there's not really a way to avoid hand coding these mappings
 
         // map "decoyprefix" from any search engine; this supports the mzid->pepXML->mzid path
-        string decoyPrefix = getValueOrDefault(kvPairs, "decoyprefix", "");
+        string decoyPrefix = getValueOrDefault(kvPairs, "decoyprefix");
         if (decoyPrefix.empty())
-            decoyPrefix = getValueOrDefault(kvPairs, "decoy_prefix", "");
+            decoyPrefix = getValueOrDefault(kvPairs, "decoy_prefix");
         if (!decoyPrefix.empty())
             _mzid->dataCollection.inputs.searchDatabase[0]->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
 
@@ -1113,8 +1120,8 @@ struct HandlerSearchSummary : public SAXParser::Handler
         {
             case MS_Mascot:
                 {
-                    string parentTolerance = getValueOrDefault(kvPairs, "tol", "");
-                    const string& parentToleranceUnits = getValueOrDefault(kvPairs, "tolu", "");
+                    string parentTolerance = getValueOrDefault(kvPairs, "tol");
+                    const string& parentToleranceUnits = getValueOrDefault(kvPairs, "tolu");
                     if (!parentTolerance.empty() && !parentToleranceUnits.empty())
                     {
                         CVID parentUnits = translateToleranceUnits(parentToleranceUnits);
@@ -1124,8 +1131,8 @@ struct HandlerSearchSummary : public SAXParser::Handler
                         _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance, parentUnits);
                     }
 
-                    string fragmentTolerance = getValueOrDefault(kvPairs, "itol", "");
-                    const string& fragmentToleranceUnits = getValueOrDefault(kvPairs, "itolu", "");
+                    string fragmentTolerance = getValueOrDefault(kvPairs, "itol");
+                    const string& fragmentToleranceUnits = getValueOrDefault(kvPairs, "itolu");
                     if (!fragmentTolerance.empty() && !fragmentToleranceUnits.empty())
                     {
                         CVID fragmentUnits = translateToleranceUnits(fragmentToleranceUnits);
@@ -1136,7 +1143,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     }
 
                     // set predicted fragment series
-                    const string& instrument = getValueOrDefault(kvPairs, "instrument", "");
+                    const string& instrument = getValueOrDefault(kvPairs, "instrument");
                     if (bal::iequals(instrument, "Default"))              translateIonSeriesConsidered("a,a-NH3,b,b-NH3,y,y-NH3");
                     else if (bal::iequals(instrument, "ESI-4-SECT"))      translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y,z");
                     else if (bal::istarts_with(instrument, "ESI"))        translateIonSeriesConsidered("b,b-NH3,b-H2O,y,y-NH3,y-H2O");
@@ -1161,9 +1168,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
             case MS_Pepitome:
                 {
                     // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
-                    const string& precursorMzTolerance = getValueOrDefault(kvPairs, "config: precursormztolerance", "");
-                    const string& precursorMzToleranceUnits = getValueOrDefault(kvPairs, "config: precursormztoleranceunits", "");
-                    const string& precursorMzToleranceRule = getValueOrDefault(kvPairs, "config: precursormztolerancerule", "");
+                    const string& precursorMzTolerance = getValueOrDefault(kvPairs, "config: precursormztolerance");
+                    const string& precursorMzToleranceUnits = getValueOrDefault(kvPairs, "config: precursormztoleranceunits");
+                    const string& precursorMzToleranceRule = getValueOrDefault(kvPairs, "config: precursormztolerancerule");
 
                     if (!precursorMzTolerance.empty() && !precursorMzToleranceUnits.empty())
                     {
@@ -1173,8 +1180,8 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     }
                     else if (!precursorMzToleranceRule.empty())
                     {
-                        const string& avgPrecursorMzTolerance = getValueOrDefault(kvPairs, "config: avgprecursormztolerance", "");
-                        const string& monoPrecursorMzTolerance = getValueOrDefault(kvPairs, "config: monoprecursormztolerance", "");
+                        const string& avgPrecursorMzTolerance = getValueOrDefault(kvPairs, "config: avgprecursormztolerance");
+                        const string& monoPrecursorMzTolerance = getValueOrDefault(kvPairs, "config: monoprecursormztolerance");
                         scoped_ptr<MZTolerance> parentTolerance;
                         if (precursorMzToleranceRule == "auto" || precursorMzToleranceRule == "mono")
                             parentTolerance.reset(new MZTolerance(lexical_cast<MZTolerance>(monoPrecursorMzTolerance)));
@@ -1189,8 +1196,8 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     }
 
                     // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
-                    const string& fragmentMzTolerance = getValueOrDefault(kvPairs, "config: fragmentmztolerance", "");
-                    const string& fragmentMzToleranceUnits = getValueOrDefault(kvPairs, "config: fragmentmztoleranceunits", "");
+                    const string& fragmentMzTolerance = getValueOrDefault(kvPairs, "config: fragmentmztolerance");
+                    const string& fragmentMzToleranceUnits = getValueOrDefault(kvPairs, "config: fragmentmztoleranceunits");
 
                     if (!fragmentMzTolerance.empty() && !fragmentMzToleranceUnits.empty())
                     {
@@ -1214,15 +1221,15 @@ struct HandlerSearchSummary : public SAXParser::Handler
 
             case MS_X_Tandem:
                 {
-                    const string& parentErrorMinus = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error minus", "");
-                    const string& parentErrorPlus = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error plus", "");
-                    const string& parentErrorUnits = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error units", "");
+                    const string& parentErrorMinus = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error minus");
+                    const string& parentErrorPlus = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error plus");
+                    const string& parentErrorUnits = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error units");
                     CVID parentUnits = translateToleranceUnits(parentErrorUnits);
                     if (!parentErrorMinus.empty()) _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentErrorMinus, parentUnits);
                     if (!parentErrorPlus.empty()) _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentErrorPlus, parentUnits);
 
-                    const string& fragmentError = getValueOrDefault(kvPairs, "spectrum, fragment monoisotopic mass error", "");
-                    const string& fragmentErrorUnits = getValueOrDefault(kvPairs, "spectrum, fragment monoisotopic mass error units", "");
+                    const string& fragmentError = getValueOrDefault(kvPairs, "spectrum, fragment monoisotopic mass error");
+                    const string& fragmentErrorUnits = getValueOrDefault(kvPairs, "spectrum, fragment monoisotopic mass error units");
                     CVID fragmentUnits = translateToleranceUnits(fragmentErrorUnits);
                     if (!fragmentError.empty())
                     {
@@ -1230,22 +1237,22 @@ struct HandlerSearchSummary : public SAXParser::Handler
                         _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentError, fragmentUnits);
                     }
 
-                    if (getValueOrDefault(kvPairs, "scoring, a ions", "") == "yes")   translateIonSeriesConsidered("a");
-                    if (getValueOrDefault(kvPairs, "scoring, b ions", "") == "yes")   translateIonSeriesConsidered("b");
-                    if (getValueOrDefault(kvPairs, "scoring, c ions", "") == "yes")   translateIonSeriesConsidered("c");
-                    if (getValueOrDefault(kvPairs, "scoring, x ions", "") == "yes")   translateIonSeriesConsidered("x");
-                    if (getValueOrDefault(kvPairs, "scoring, y ions", "") == "yes")   translateIonSeriesConsidered("y");
-                    if (getValueOrDefault(kvPairs, "scoring, z ions", "") == "yes")   translateIonSeriesConsidered("z+1");
+                    if (getValueOrDefault(kvPairs, "scoring, a ions") == "yes")   translateIonSeriesConsidered("a");
+                    if (getValueOrDefault(kvPairs, "scoring, b ions") == "yes")   translateIonSeriesConsidered("b");
+                    if (getValueOrDefault(kvPairs, "scoring, c ions") == "yes")   translateIonSeriesConsidered("c");
+                    if (getValueOrDefault(kvPairs, "scoring, x ions") == "yes")   translateIonSeriesConsidered("x");
+                    if (getValueOrDefault(kvPairs, "scoring, y ions") == "yes")   translateIonSeriesConsidered("y");
+                    if (getValueOrDefault(kvPairs, "scoring, z ions") == "yes")   translateIonSeriesConsidered("z+1");
                 }
                 break;
 
             case MS_Comet:
                 {
                     if (_sip->analysisSoftwarePtr->version.empty())
-                        _sip->analysisSoftwarePtr->version = getValueOrDefault(kvPairs, "# comet_version ", "");
+                        _sip->analysisSoftwarePtr->version = getValueOrDefault(kvPairs, "# comet_version ");
 
-                    string parentTolerance = getValueOrDefault(kvPairs, "peptide_mass_tolerance", "");
-                    string parentToleranceUnits = getValueOrDefault(kvPairs, "peptide_mass_units", "");
+                    string parentTolerance = getValueOrDefault(kvPairs, "peptide_mass_tolerance");
+                    string parentToleranceUnits = getValueOrDefault(kvPairs, "peptide_mass_units");
                     if (!parentTolerance.empty() && !parentToleranceUnits.empty())
                     {
                         if (parentToleranceUnits == "1") // 0 = amu, 1 = mmu, 2 = ppm
@@ -1257,22 +1264,22 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     // TODO: is using fragment_bin_tol the right way to get a fragmentTolerance?
                     //<parameter name = "fragment_bin_offset" value = "0.400000" / >
                     //<parameter name = "fragment_bin_tol" value = "1.000500" / >
-                    string fragmentTolerance = getValueOrDefault(kvPairs, "fragment_bin_tol", "");
+                    string fragmentTolerance = getValueOrDefault(kvPairs, "fragment_bin_tol");
                     if (!fragmentTolerance.empty())
                     {
                         _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentTolerance, UO_dalton);
                         _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentTolerance, UO_dalton);
                     }
 
-                    bool use_nl_ions = getValueOrDefault(kvPairs, "use_nl_ions", "") == "1";
-                    if (getValueOrDefault(kvPairs, "use_a_ions", "") == "1")   translateIonSeriesConsidered("a");
-                    if (getValueOrDefault(kvPairs, "use_b_ions", "") == "1")   translateIonSeriesConsidered(use_nl_ions ? "b,b-H2O,b-NH3" : "b");
-                    if (getValueOrDefault(kvPairs, "use_c_ions", "") == "1")   translateIonSeriesConsidered("c");
-                    if (getValueOrDefault(kvPairs, "use_x_ions", "") == "1")   translateIonSeriesConsidered("x");
-                    if (getValueOrDefault(kvPairs, "use_y_ions", "") == "1")   translateIonSeriesConsidered(use_nl_ions ? "y,y-H2O,y-NH3" : "y");
-                    if (getValueOrDefault(kvPairs, "use_z_ions", "") == "1")   translateIonSeriesConsidered("z+1");
+                    bool use_nl_ions = getValueOrDefault(kvPairs, "use_nl_ions") == "1";
+                    if (getValueOrDefault(kvPairs, "use_a_ions") == "1")   translateIonSeriesConsidered("a");
+                    if (getValueOrDefault(kvPairs, "use_b_ions") == "1")   translateIonSeriesConsidered(use_nl_ions ? "b,b-H2O,b-NH3" : "b");
+                    if (getValueOrDefault(kvPairs, "use_c_ions") == "1")   translateIonSeriesConsidered("c");
+                    if (getValueOrDefault(kvPairs, "use_x_ions") == "1")   translateIonSeriesConsidered("x");
+                    if (getValueOrDefault(kvPairs, "use_y_ions") == "1")   translateIonSeriesConsidered(use_nl_ions ? "y,y-H2O,y-NH3" : "y");
+                    if (getValueOrDefault(kvPairs, "use_z_ions") == "1")   translateIonSeriesConsidered("z+1");
 
-                    const string& decoyPrefix = getValueOrDefault(kvPairs, "decoy_prefix", "");
+                    const string& decoyPrefix = getValueOrDefault(kvPairs, "decoy_prefix");
                     if (!decoyPrefix.empty())
                         _mzid->dataCollection.inputs.searchDatabase[0]->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
                 }
@@ -2034,7 +2041,7 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
     // match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
     // followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
     // 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
-    static bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+    const bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
 
     PepXMLSpecificity result;
     string &cut = result.cut, &nocut = result.no_cut, &sense = result.sense;

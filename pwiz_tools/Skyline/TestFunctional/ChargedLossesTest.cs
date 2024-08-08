@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardText("EEQYN[+1444.5]STYR+++");
             RunUI(SkylineWindow.Paste);
             VerifyTransitionMzs(SkylineWindow.Document);
-            var saveFileName = TestContext.GetTestPath("ChargedLossesTest.sky");
+            var saveFileName = TestContext.GetTestResultsPath("ChargedLossesTest.sky");
             RunUI(()=>SkylineWindow.SaveDocument(saveFileName));
             RunUI(()=>SkylineWindow.OpenFile(saveFileName));
             VerifyTransitionMzs(SkylineWindow.Document);

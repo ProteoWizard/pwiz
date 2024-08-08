@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "MethodEdit";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-22_2.pdf";
             
             TestFilesZipPaths = new[]
             {
@@ -85,13 +85,11 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.AddInputFiles(new[] { TestFilesDirs[0].GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") }); // Not L10N
             });
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
-            RunUI(() =>
-            {
-                buildLibraryDlg.Grid.SetScoreThreshold(0.95);
-                buildLibraryDlg.OkWizardPage();
-            });
+            RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(0.95));
+            OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
             PeptideSettingsUI peptideSettingsUI1 = peptideSettingsUI;
+            WaitForConditionUI(() => peptideSettingsUI1.PickedLibraries.Contains(YEAST_ATLAS));
             RunUI(() =>
                 {
                     peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Library;
@@ -440,9 +438,8 @@ namespace pwiz.SkylineTestTutorial
                 ITipProvider nodeTip = SkylineWindow.SequenceTree.SelectedNode as ITipProvider;
                 Assert.IsTrue(nodeTip != null && nodeTip.HasTip);
                 var nodeName = SkylineWindow.SequenceTree.Nodes[1].Name;
-                IdentityPath selectPath;
                 SkylineWindow.ModifyDocument("Drag and drop", // Not L10N
-                    doc => doc.MoveNode(SkylineWindow.Document.GetPathTo(0, 1), SkylineWindow.Document.GetPathTo(0, 0), out selectPath));
+                    doc => doc.MoveNode(SkylineWindow.Document.GetPathTo(0, 1), SkylineWindow.Document.GetPathTo(0, 0), out _));
                 Assert.IsTrue(SkylineWindow.SequenceTree.Nodes[0].Name == nodeName);
             });
 

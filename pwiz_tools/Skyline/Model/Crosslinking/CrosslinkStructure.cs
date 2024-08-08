@@ -135,19 +135,19 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, IsotopeLabelType labelType)
         {
-            MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
+            var parts = new List<MoleculeMassOffset>();
             for (int i = 0; i < LinkedPeptides.Count; i++)
             {
                 IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(labelType, LinkedExplicitMods[i]);
-                result = result.Plus(new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence)), 0, 0));
+                parts.Add(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence));
             }
 
             foreach (var crosslink in Crosslinks)
             {
-                result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
 
-            return result;
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public bool IsConnected()
@@ -225,6 +225,47 @@ namespace pwiz.Skyline.Model.Crosslinking
                 newExplicitModsList.Add(LinkedExplicitMods[i]);
             }
             return new CrosslinkStructure(newLinkedPeptides, newExplicitModsList, newCrosslinks);
+        }
+
+        public CrosslinkStructure ChangeGlobalMods(SrmSettings settingsNew)
+        {
+            if (IsEmpty)
+            {
+                return this;
+            }
+            var crosslinkModifications = settingsNew.PeptideSettings.Modifications.StaticModifications
+                .Where(mod => mod.IsCrosslinker).ToDictionary(mod => mod.Name);
+            var newCrosslinks = new List<Crosslink>();
+            foreach (var crosslink in Crosslinks)
+            {
+                if (!crosslinkModifications.TryGetValue(crosslink.Crosslinker.Name, out var newCrosslinker))
+                {
+                    continue;
+                }
+
+                if (crosslink.Crosslinker.Equivalent(newCrosslinker))
+                {
+                    newCrosslinks.Add(crosslink);
+                }
+                else
+                {
+                    newCrosslinks.Add(new Crosslink(newCrosslinker, crosslink.Sites));
+                }
+            }
+
+            var newExplicitMods = new List<ExplicitMods>();
+            foreach (var explicitMods in LinkedExplicitMods)
+            {
+                newExplicitMods.Add(explicitMods.ChangeGlobalMods(settingsNew));
+            }
+
+            if (ArrayUtil.ReferencesEqual(newCrosslinks, Crosslinks) &&
+                ArrayUtil.ReferencesEqual(newExplicitMods, LinkedExplicitMods))
+            {
+                return this;
+            }
+
+            return new CrosslinkStructure(LinkedPeptides, newExplicitMods, newCrosslinks).RemoveDisconnectedPeptides();
         }
 
         public static ExplicitMods MakeEmptyExplicitMods(Peptide peptide)

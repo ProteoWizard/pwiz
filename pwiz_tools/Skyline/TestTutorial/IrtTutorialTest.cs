@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestTutorial
                 RunDlg<GraphRegression>(calibrateDlg.GraphRegression, dlg => dlg.CloseDialog());
                 RunDlg<GraphRegression>(calibrateDlg.GraphIrts, dlg => dlg.CloseDialog());
 
-                RunUI(calibrateDlg.OkDialog);
+                OkDialog(calibrateDlg, calibrateDlg.OkDialog);
             }
             Assert.IsTrue(WaitForConditionUI(() => editIrtCalc1.StandardPeptideCount == 11));
 
@@ -319,8 +319,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 12);
 
-                RunUI(() => exportMethodDlg.OkDialog(GetTestPath(calibrateBasename + TextUtil.EXT_CSV)));
-                WaitForClosedForm(exportMethodDlg);
+                OkDialog(exportMethodDlg, () => exportMethodDlg.OkDialog(GetTestPath(calibrateBasename + TextUtil.EXT_CSV)));
 
                 Assert.AreEqual(332, File.ReadAllLines(GetTestPath(calibrateBasename + "_0001.csv")).Length); // Not L10N
                 Assert.AreEqual(333, File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
@@ -498,7 +497,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab", 21);
 
-                RunUI(peptideSettingsUI.OkDialog);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 WaitForClosedForm(peptideSettingsUI);
             }
 
@@ -541,8 +540,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 24);
 
-                RunUI(() => exportMethodDlg.OkDialog(GetTestPath(scheduledBasename + TextUtil.EXT_CSV)));
-                WaitForClosedForm(exportMethodDlg);
+                OkDialog(exportMethodDlg,() => exportMethodDlg.OkDialog(GetTestPath(scheduledBasename + TextUtil.EXT_CSV)));
             }
 
             Assert.AreEqual(1223, File.ReadAllLines(GetTestPath(scheduledBasename + "_0001.csv")).Length); // Not L10N
@@ -749,8 +747,7 @@ namespace pwiz.SkylineTestTutorial
 
                 var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
-                RunUI(editIrtCalc.OkDialog);
-                WaitForClosedForm(editIrtCalc);
+                OkDialog(editIrtCalc, editIrtCalc.OkDialog);
             }
 
             RunUI(() => SkylineWindow.SaveDocument());

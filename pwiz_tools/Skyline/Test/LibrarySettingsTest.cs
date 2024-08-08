@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -52,13 +53,13 @@ namespace pwiz.SkylineTest
         }
 
         private static SrmDocument CreateNISTLibraryDocument(out LibraryManager libraryManager,
-            out TestDocumentContainer docContainer, out int startRev)
+            out int startRev)
         {
             SrmDocument docLoaded = CreateNISTLibraryDocument(ExampleText.TEXT_FASTA_YEAST_LIB,
                                                               false,
                                                               LibraryLoadTest.TEXT_LIB_YEAST_NIST,
                                                               out libraryManager,
-                                                              out docContainer,
+                                                              out _,
                                                               out startRev);
             AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 12);
             return docLoaded;
@@ -129,9 +130,8 @@ namespace pwiz.SkylineTest
         public void LibraryOnlyPeptidesTest()
         {
             LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
             int startRev;
-            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out docContainer, out startRev);
+            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out startRev);
             Assert.IsTrue(HasAllLibraryInfo(docLoaded));
             AssertEx.Serializable(docLoaded, (doc1, doc2) => ValidateLibraryDocs(doc1, doc2, libraryManager));
 
@@ -248,21 +248,22 @@ namespace pwiz.SkylineTest
             bool equalRanks = (doc2 != null);
             if (equalRanks)
                 it = doc2.Peptides.GetEnumerator();
-
-            foreach (var nodePeptide in doc1.Peptides)
+            using (it)
             {
-                Assert.IsNotNull(nodePeptide.Rank);
-                Assert.IsTrue(nodePeptide.Rank <= 3);
-
-                if (it != null)
+                foreach (var nodePeptide in doc1.Peptides)
                 {
-                    if (!it.MoveNext() || it.Current == null)
-                        Assert.Fail("Unexpected end of peptides.");
-                    if (!Equals(nodePeptide.Rank, it.Current.Rank))
-                        equalRanks = false;
+                    Assert.IsNotNull(nodePeptide.Rank);
+                    Assert.IsTrue(nodePeptide.Rank <= 3);
+
+                    if (it != null)
+                    {
+                        if (!it.MoveNext() || it.Current == null)
+                            Assert.Fail("Unexpected end of peptides.");
+                        if (!Equals(nodePeptide.Rank, it.Current.Rank))
+                            equalRanks = false;
+                    }
                 }
             }
-
             Assert.IsFalse(equalRanks);
         }
 
@@ -270,20 +271,19 @@ namespace pwiz.SkylineTest
         public void LibraryTransitionTest()
         {
             LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
             int startRev;
-            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out docContainer, out startRev);
+            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out startRev);
 
             // Test tolerance range
             SrmSettings settings = docLoaded.Settings.ChangeTransitionLibraries(l =>
-                l.ChangeIonMatchTolerance(TransitionLibraries.MIN_MATCH_TOLERANCE));
+                l.ChangeIonMatchMzTolerance(TransitionLibraries.MIN_MATCH_TOLERANCE));
             SrmDocument docLowTol = docLoaded.ChangeSettings(settings);
             // Use the original low tolerance for transition testing, since
             // the new low tolerance is for high accuracy data.
             docLowTol = docLowTol.ChangeSettings(settings.ChangeTransitionLibraries(l =>
-                l.ChangeIonMatchTolerance(0.1)));
+                l.ChangeIonMatchMzTolerance(0.1)));
             settings = docLowTol.Settings.ChangeTransitionLibraries(l =>
-                l.ChangeIonMatchTolerance(TransitionLibraries.MAX_MATCH_TOLERANCE));
+                l.ChangeIonMatchMzTolerance(TransitionLibraries.GetMaxMatchTolerance(MzTolerance.Units.mz)));
             SrmDocument docHighTol = docLoaded.ChangeSettings(settings);
 
             Assert.AreEqual(docLowTol.PeptideTransitionCount, docHighTol.PeptideTransitionCount);
@@ -303,9 +303,9 @@ namespace pwiz.SkylineTest
 
             SrmSettings setThrow = settings;
             AssertEx.ThrowsException<InvalidDataException>(() =>
-                setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchTolerance(TransitionLibraries.MAX_MATCH_TOLERANCE * 2)));
+                setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchMzTolerance(TransitionLibraries.GetMaxMatchTolerance(MzTolerance.Units.mz) * 2)));
             AssertEx.ThrowsException<InvalidDataException>(() =>
-                setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchTolerance(TransitionLibraries.MIN_MATCH_TOLERANCE / 2)));
+                setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchMzTolerance(TransitionLibraries.MIN_MATCH_TOLERANCE / 2)));
 
             // Picked transition count
             settings = docLoaded.Settings.ChangeTransitionLibraries(l => l.ChangeIonCount(5));

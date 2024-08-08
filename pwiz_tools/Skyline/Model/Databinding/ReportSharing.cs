@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -55,15 +56,17 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static bool ImportSkyrFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)
         {
+            var targetGroup = PersistedViews.MainGroup;
             var reportOrViewSpecList = new ReportOrViewSpecList();
-            reportOrViewSpecList.AddRange(GetExistingReports().Values);
+            reportOrViewSpecList.AddRange(GetExistingReports()
+                .Where(kvp => targetGroup.Id.Equals(kvp.Key.GroupId)).Select(kvp => kvp.Value));
             if (!reportOrViewSpecList.ImportFile(fileName, whichToNotOverWrite))
             {
                 return false;
             }
             foreach (var item in reportOrViewSpecList)
             {
-                SaveReport(PersistedViews.MainGroup, item);
+                SaveReport(targetGroup, item);
             }
             return true;
         }
