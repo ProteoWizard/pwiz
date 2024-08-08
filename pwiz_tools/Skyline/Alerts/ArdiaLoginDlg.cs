@@ -1064,38 +1064,7 @@ namespace pwiz.Skyline.Alerts
 
             webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage;
 
-            //   START:  Stuffing in launch Register Device here to see if can get working
-
-            // Account = Account.ChangeApplicationCode("6fFwDy55");
-
             var ardiaRegistrationEntry_BeforeRegister = GetSavedArdiaRegistrationEntry();
-
-
-            // !!!!!!!!!!!!!!!!
-
-            //  TODO DJJ  FAKE
-
-            // if (_firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake)
-            // {
-            //     _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = false;
-            //
-            //     //  Use One of following "applicationCode_BeforeRegister = ..."
-            //
-            //     //  TODO  DJJ  FAKE set to null so do Client Registration always
-            //
-            //     // applicationCode_BeforeRegister = null;
-            //
-            //     //  TODO  DJJ  FAKE set to "FAKE"" so do Client Registration always
-            //
-            //     applicationCode_BeforeRegister = "FAKE";
-            //
-            //     SetSavedArdiaApplicationCode(applicationCode_BeforeRegister);
-            // }
-
-            // !!!!!!!!!!!!!!!!
-
-
-            // var applicationCode_BeforeRegister = Account.ApplicationCode;
 
             if (FORCE_DO_REGISTRATION_WITH_ARDIA_STEP)
             {
@@ -1148,15 +1117,6 @@ namespace pwiz.Skyline.Alerts
                 throw new Exception(@"ardiaRegistrationEntry_AfterRegister == null");
             }
 
-
-            // !!!!!!!!!!!!!!!!
-
-            // applicationCode_AfterRegister = "FAKE"; // TODO DJJ  See what happens when have invalid application code at the Login URL
-
-            // !!!!!!!!!!!!!!!!
-
-            //   END:  Stuffing in launch Register Device here to see if can get working
-
             //  Start of User Login
 
             Reset_ProgrammaticLoginFlags();
@@ -1165,19 +1125,9 @@ namespace pwiz.Skyline.Alerts
 
             var applicationCode_AfterRegister = ardiaRegistrationEntry_AfterRegister.ClientApplicationCode;
 
-            //  TODO DJJ FAKE alter the _baseUrl for TESTING  
-            // ardiaServer_BaseUrl = "FAKE" + ardiaServer_BaseUrl;
-
             // Navigate to the login page
             var loginUrl = @$"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl={_ardiaServerURL_Transport}{ardiaServer_BaseUrl}/";
-
-            // _ardia_LoginUrl = loginUrl;
-
-            //  TODO.  Test returnURL of localhost with port for possibly log in with system browser
-            // var loginUrl = $"{_ardiaServerURL_Transport}api.{ardiaServer_BaseUrl}/session-management/bff/login?applicationcode={applicationCode_AfterRegister}&returnUrl=http://localhost:8888/";
-
-            // MessageDlg.Show(this, "loginUrl: " + loginUrl);
-
+            
             //  NOTE:  Opening the Login URL with invalid "applicationcode" results in 401 HTTP status code along with returned contents of:  "Unknown Client. Please register/activate the client"
 
             webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL;
@@ -1185,15 +1135,7 @@ namespace pwiz.Skyline.Alerts
             webView.CoreWebView2.Navigate(loginUrl);
 
             //  When Application Code is invalid, the Webview at 'login' URL shows "Unknown Client. Please register/activate the client"
-
-            //  OLD LOGIN
-
-            // Navigate to the login page
-            // webView.CoreWebView2.Navigate($@"{Account.ServerUrl}/login");
-
         }
-
-        // private string _ardia_LoginUrl;
 
         private void CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
         {
@@ -1230,7 +1172,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (!eventArgs.IsSuccess)
             {
-                var currentURLofWebview = webView.Source.AbsolutePath; // Use instead of _ardia_LoginUrl?  This is the current URL of the webview
+                var currentURLofWebview = webView.Source.AbsolutePath;
 
                 if (eventArgs.HttpStatusCode == 401)
                 {
@@ -1290,7 +1232,6 @@ namespace pwiz.Skyline.Alerts
                     {
                         //  For Register Device, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
             
-            
                         var errorMessage =
                             string.Format(
                                 "Error Registering Skyline Instance in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
@@ -1300,10 +1241,6 @@ namespace pwiz.Skyline.Alerts
                         DialogResult = DialogResult.OK;
             
                         return false;
-            
-                        //  TODO  How to close dialog here with failure instead.
-            
-                        // throw new Exception(discoveryDocument.Error);
                     }
             
                     var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
@@ -1319,21 +1256,12 @@ namespace pwiz.Skyline.Alerts
                     var clientCode = await CreateNewClient(userTokenResponse);
                     var ardiaRegistrationEntry = await ActivateClient(clientCode, userTokenResponse);
 
-
                     SetSavedArdiaRegistrationData(ardiaRegistrationEntry);
 
                     await CheckForBffHostCookie();
-
-                    // StoreClientCredentials(identityClient);
                 }
                 catch (HttpRequestException e)
                 {
-                    var eToString = e.ToString();
-                    
-                    // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
-                    //
-                    // var eMessage = e.Message;
-            
                     if (e.Message.Contains(@"403"))
                     {
                         MessageDlg.Show(this, "RegisterDevice_UsingWebView(): Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
@@ -1344,17 +1272,9 @@ namespace pwiz.Skyline.Alerts
                     }
             
                     return false;
-            
-                    //  added throw to code from Thermo
-                    // throw;
                 }
                 catch (Exception e)
                 {
-                    var st = e.StackTrace;
-                    var type = e.GetType();
-                    var fullName = type.FullName;
-                    var source = e.Source;
-                    var eToString = e.ToString();
                     var errorMessage =
                         string.Format(
                             "Error Registering Skyline Instance in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}",
@@ -1362,9 +1282,6 @@ namespace pwiz.Skyline.Alerts
                     MessageDlg.ShowWithException(this, errorMessage, e);
             
                     return false;
-            
-                    //  added throw to code from Thermo
-                    // throw;
                 }
             }
             
