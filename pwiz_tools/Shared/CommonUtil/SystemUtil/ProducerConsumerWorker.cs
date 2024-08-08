@@ -224,7 +224,7 @@ namespace pwiz.Common.SystemUtil
         public void Clear()
         {
             // Clear work queue.
-            while (_queue.TryTake(out _))
+            while (_queue != null && _queue.TryTake(out _))
             {
             }
 
@@ -308,18 +308,17 @@ namespace pwiz.Common.SystemUtil
         public void Dispose()
         {
             Abort(true);
-            if (_queue != null)
-            {
-                var queue = _queue;
-                _queue = null;
-                queue.Dispose();
-            }
+            SafeDispose(ref _queue);
+            SafeDispose(ref _threadExit);
+        }
 
-            if (_threadExit != null)
+        private void SafeDispose<T>(ref T disposable) where T : IDisposable
+        {
+            if (disposable != null)
             {
-                var threadExit = _threadExit;
-                _threadExit = null;
-                threadExit.Dispose();
+                var d = disposable;
+                disposable = default;
+                d.Dispose();
             }
         }
     }
