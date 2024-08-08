@@ -179,7 +179,7 @@
     <value>数据不够</value>
   </data>
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
-    <value>正在计算...</value>
+    <value>正在计算…</value>
   </data>
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_CV" xml:space="preserve">
     <value>变异系数</value>
@@ -191,7 +191,7 @@
     <value>中位数：{0}</value>
   </data>
   <data name="AreaCVHistogramGraphPane_AddLabels_Calculating____" xml:space="preserve">
-    <value>正在计算...</value>
+    <value>正在计算…</value>
   </data>
   <data name="AreaCVHistogramGraphPane_AddLabels_Median___0_" xml:space="preserve">
     <value>中位数：{0}</value>
@@ -246,6 +246,10 @@
   </data>
   <data name="AreaReplicateGraphPane_UpdateGraph_Step__0_" xml:space="preserve">
     <value>步骤 {0}</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
+    <value>总数:</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
     <value>强度</value>
@@ -339,7 +343,7 @@
     <value>  标准偏差：{1:#,##0}</value>
   </data>
   <data name="DetectionPlotPane_WaitingForData_Label" xml:space="preserve">
-    <value>正在计算（按 Esc 取消）...</value>
+    <value>正在计算（按 Esc 取消）…</value>
   </data>
   <data name="DetectionPlotPane_XAxis_Name" xml:space="preserve">
     <value>重复测定</value>
@@ -527,7 +531,7 @@
     <comment>replaces 3D graph filter button's tooltip when "ion mobility" data is actually Waters SONAR</comment>
   </data>
   <data name="GraphFullScan_LoadScan_Loading___" xml:space="preserve">
-    <value>加载中...</value>
+    <value>加载中…</value>
   </data>
   <data name="GraphFullScan_LoadScan_Spectrum_unavailable" xml:space="preserve">
     <value>谱图不可用</value>
@@ -711,6 +715,34 @@
   </data>
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
     <value>谱图信息不可用</value>
+  </data>
+  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
+    <value>肽段排名</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
+    <value>相对丰度</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
+    <value>蛋白质排名</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
+    <value>分子排名</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels" xml:space="preserve">
+    <value>自动排列标签</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout" xml:space="preserve">
+    <value>暂停标签布局</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout" xml:space="preserve">
+    <value>恢复标签布局</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
     <value>肽段</value>

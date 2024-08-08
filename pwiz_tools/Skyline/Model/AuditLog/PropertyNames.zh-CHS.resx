@@ -1103,6 +1103,25 @@
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
+  <data name="HardklorSettings_Charges" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
+    <value>最小强度 PPM</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSettings_MinIdotP" xml:space="preserve">
+    <value>最小同位素点积</value>
+  </data>
+  <data name="HardklorSettings_Instrument" xml:space="preserve">
+    <value>仪器</value>
+  </data>
+  <data name="HardklorSettings_Resolution" xml:space="preserve">
+    <value>分辨率</value>
+  </data>
+  <data name="HardklorSettings_SignalToNoise" xml:space="preserve">
+    <value>噪声信号</value>
+  </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
     <value>自动训练 mProphet 模型</value>
   </data>
@@ -1129,6 +1148,10 @@
   </data>
   <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
     <value>配置全扫描设置</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
+    <value>Hardklor 搜索设置</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
     <value>导入 FASTA</value>
@@ -1762,5 +1785,26 @@
   </data>
   <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
     <value>最小质荷比</value>
+  </data>
+  <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
+    <value>按基因水平分组</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
+    <value>相对丰度格式</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
+    <value>格式化行</value>
+  </data>
+  <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
+    <value>最大 Q 值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">
+    <value>得分阈值</value>
+  </data>
+  <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
+    <value>得分类型</value>
   </data>
 </root>

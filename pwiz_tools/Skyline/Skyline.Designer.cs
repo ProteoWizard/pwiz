@@ -1507,7 +1507,6 @@ namespace pwiz.Skyline
             // excludeTargetsPeptideListMenuItem
             // 
             this.excludeTargetsPeptideListMenuItem.Checked = global::pwiz.Skyline.Properties.Settings.Default.ExcludePeptideListsFromAbundanceGraph;
-            this.excludeTargetsPeptideListMenuItem.CheckOnClick = true;
             this.excludeTargetsPeptideListMenuItem.Name = "excludeTargetsPeptideListMenuItem";
             resources.ApplyResources(this.excludeTargetsPeptideListMenuItem, "excludeTargetsPeptideListMenuItem");
             this.excludeTargetsPeptideListMenuItem.Click += new System.EventHandler(this.excludeTargetsPeptideListMenuItem_Click);
@@ -1515,7 +1514,6 @@ namespace pwiz.Skyline
             // excludeTargetsStandardsMenuItem
             // 
             this.excludeTargetsStandardsMenuItem.Checked = global::pwiz.Skyline.Properties.Settings.Default.ExcludeStandardsFromAbundanceGraph;
-            this.excludeTargetsStandardsMenuItem.CheckOnClick = true;
             this.excludeTargetsStandardsMenuItem.Name = "excludeTargetsStandardsMenuItem";
             resources.ApplyResources(this.excludeTargetsStandardsMenuItem, "excludeTargetsStandardsMenuItem");
             this.excludeTargetsStandardsMenuItem.Click += new System.EventHandler(this.excludeTargetsStandardsMenuItem_Click);

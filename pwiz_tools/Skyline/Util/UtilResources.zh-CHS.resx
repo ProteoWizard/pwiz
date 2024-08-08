@@ -305,6 +305,10 @@
   <data name="PublishDocumentDlg_UploadSharedZipFile_Uploading_File" xml:space="preserve">
     <value>上传文件</value>
   </data>
+  <data name="Server_GetKey___anonymous_" xml:space="preserve">
+    <value> （匿名）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="Server_ReadXml_A_Panorama_server_must_be_specified" xml:space="preserve">
     <value>必须指定 Panorama 服务器。</value>
   </data>
@@ -331,5 +335,17 @@
   </data>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
     <value>尝试将缺少一个元素的列表序列化。</value>
+  </data>
+  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___" xml:space="preserve">
+    <value>无法将“{0}”解析为文本“{1}”中的质量偏移</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>您想前往 Panorama 吗?</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Panorama 服务器 {0} 上发生导入错误。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

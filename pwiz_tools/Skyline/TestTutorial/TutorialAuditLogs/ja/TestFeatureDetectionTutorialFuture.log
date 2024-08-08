@@ -1,13 +1,13 @@
-Undo Redo : スペクトルライブラリ「Pass0 detected features」が追加されました
-Summary   : スペクトルライブラリ「Pass0 detected features」が追加されました
+Undo Redo : スペクトルライブラリ「Pass0 検出されたフィーチャー」が追加されました
+Summary   : スペクトルライブラリ「Pass0 検出されたフィーチャー」が追加されました
 All Info  :
-スペクトルライブラリ「Pass0 detected features」が追加されました
+スペクトルライブラリ「Pass0 検出されたフィーチャー」が追加されました
 スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
 スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドはなしです
 スペクトルライブラリを構築>曖昧な一致を含むは真です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
-スペクトルライブラリを構築>ワークフローは"Feature Detection"です
+スペクトルライブラリを構築>ワークフローは"フィーチャーの検出"です
 スペクトルライブラリを構築>入力ファイルタイプは"DDA生データ (ライブラリの検索と構築)"です
 Extra Info: ファイルを検索 = 
 [
@@ -25,7 +25,7 @@ Extra Info: ファイルを検索 =
 iRT標準ペプチド = なし,
 曖昧な一致を含む = 真,
 ドキュメント内のペプチドをフィルタリング = 偽,
-ワークフロー = "Feature Detection",
+ワークフロー = "フィーチャーの検出",
 入力ファイルタイプ = "DDA生データ (ライブラリの検索と構築)"
 
 Undo Redo : 分子検索がインポートされました
@@ -38,13 +38,13 @@ All Info  :
 分子検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"Orbi3_SA_IP_"です
 分子検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_01"です
 分子検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"Default"です
-分子検索のインポート>Hardklor Search Settings>Min idotpは"0.9"です
-分子検索のインポート>Hardklor Search Settings>Signal to noiseは"3.01"です
-分子検索のインポート>Hardklor Search Settings>Instrumentは"TOF"です
-分子検索のインポート>Hardklor Search Settings>Resolutionは"10000"です
-分子検索のインポート>Hardklor Search Settings>Charges："2"が含まれています
-分子検索のインポート>Hardklor Search Settings>Charges："3"が含まれています
-分子検索のインポート>Hardklor Search Settings>Min intensity PPMは"5"です
+分子検索のインポート>Hardklor検索設定>最小同位体内積は"0.9"です
+分子検索のインポート>Hardklor検索設定>信号対ノイズ比は"3.01"です
+分子検索のインポート>Hardklor検索設定>装置は"TOF"です
+分子検索のインポート>Hardklor検索設定>分解能は"10000"です
+分子検索のインポート>Hardklor検索設定>電荷："2"が含まれています
+分子検索のインポート>Hardklor検索設定>電荷："3"が含まれています
+分子検索のインポート>Hardklor検索設定>最小強度PPMは"5"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -60,30 +60,30 @@ Extra Info: クロマトグラムを抽出 =
 {
     同位体標識濃縮 = "Default"
 },
-Hardklor Search Settings = 
+Hardklor検索設定 = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF",
-    Resolution = "10000",
-    Charges = 
+    最小同位体内積 = "0.9",
+    信号対ノイズ比 = "3.01",
+    装置 = "TOF",
+    分解能 = "10000",
+    電荷 = 
     [
         "2",
         "3"
     ],
-    Min intensity PPM = "5"
+    最小強度PPM = "5"
 }
 
-Undo Redo : スペクトルライブラリ「Pass1 detected features」が追加されました
-Summary   : スペクトルライブラリ「Pass1 detected features」が追加されました
+Undo Redo : スペクトルライブラリ「Pass1 検出されたフィーチャー」が追加されました
+Summary   : スペクトルライブラリ「Pass1 検出されたフィーチャー」が追加されました
 All Info  :
-スペクトルライブラリ「Pass1 detected features」が追加されました
+スペクトルライブラリ「Pass1 検出されたフィーチャー」が追加されました
 スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
 スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
 スペクトルライブラリを構築>iRT標準分子はなしです
 スペクトルライブラリを構築>曖昧な一致を含むは真です
 スペクトルライブラリを構築>ドキュメント内の分子をフィルタリングは偽です
-スペクトルライブラリを構築>ワークフローは"Feature Detection"です
+スペクトルライブラリを構築>ワークフローは"フィーチャーの検出"です
 スペクトルライブラリを構築>入力ファイルタイプは"DDA生データ (ライブラリの検索と構築)"です
 Extra Info: ファイルを検索 = 
 [
@@ -101,7 +101,7 @@ Extra Info: ファイルを検索 =
 iRT標準分子 = なし,
 曖昧な一致を含む = 真,
 ドキュメント内の分子をフィルタリング = 偽,
-ワークフロー = "Feature Detection",
+ワークフロー = "フィーチャーの検出",
 入力ファイルタイプ = "DDA生データ (ライブラリの検索と構築)"
 
 Undo Redo : 分子検索がインポートされました
@@ -114,13 +114,13 @@ All Info  :
 分子検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"Orbi3_SA_IP_"です
 分子検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_01"です
 分子検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"Default"です
-分子検索のインポート>Hardklor Search Settings>Min idotpは"0.9"です
-分子検索のインポート>Hardklor Search Settings>Signal to noiseは"3.01"です
-分子検索のインポート>Hardklor Search Settings>Instrumentは"TOF"です
-分子検索のインポート>Hardklor Search Settings>Resolutionは"10000"です
-分子検索のインポート>Hardklor Search Settings>Charges："2"が含まれています
-分子検索のインポート>Hardklor Search Settings>Charges："3"が含まれています
-分子検索のインポート>Hardklor Search Settings>Min intensity PPMは"5"です
+分子検索のインポート>Hardklor検索設定>最小同位体内積は"0.9"です
+分子検索のインポート>Hardklor検索設定>信号対ノイズ比は"3.01"です
+分子検索のインポート>Hardklor検索設定>装置は"TOF"です
+分子検索のインポート>Hardklor検索設定>分解能は"10000"です
+分子検索のインポート>Hardklor検索設定>電荷："2"が含まれています
+分子検索のインポート>Hardklor検索設定>電荷："3"が含まれています
+分子検索のインポート>Hardklor検索設定>最小強度PPMは"5"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -136,17 +136,17 @@ Extra Info: クロマトグラムを抽出 =
 {
     同位体標識濃縮 = "Default"
 },
-Hardklor Search Settings = 
+Hardklor検索設定 = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF",
-    Resolution = "10000",
-    Charges = 
+    最小同位体内積 = "0.9",
+    信号対ノイズ比 = "3.01",
+    装置 = "TOF",
+    分解能 = "10000",
+    電荷 = 
     [
         "2",
         "3"
     ],
-    Min intensity PPM = "5"
+    最小強度PPM = "5"
 }
 

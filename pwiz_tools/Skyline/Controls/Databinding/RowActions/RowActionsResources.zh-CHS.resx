@@ -119,22 +119,22 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="DeletePeptides_GetMenuItemText_Delete_Molecules___" xml:space="preserve">
-    <value>删除分子...</value>
+    <value>删除分子…</value>
   </data>
   <data name="DeletePeptides_MenuItemText_Delete_Peptides___" xml:space="preserve">
-    <value>删除肽段...</value>
+    <value>删除肽段…</value>
   </data>
   <data name="DeletePrecursors_MenuItemText_Delete_Precursors___" xml:space="preserve">
-    <value>删除母离子...</value>
+    <value>删除母离子…</value>
   </data>
   <data name="DeleteProteins_MenuItemText_Delete_Molecule_Lists___" xml:space="preserve">
-    <value>删除分子列表...</value>
+    <value>删除分子列表…</value>
   </data>
   <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
-    <value>删除蛋白质...</value>
+    <value>删除蛋白质…</value>
   </data>
   <data name="DeleteTransitions_MenuItemText_Delete_Transitions___" xml:space="preserve">
-    <value>删除离子对...</value>
+    <value>删除离子对…</value>
   </data>
   <data name="RemovePeaksAction_RemovePeaks_No_peaks_are_selected" xml:space="preserve">
     <value>未选择峰</value>
@@ -161,10 +161,10 @@
     <value>您是否确定想要删除此肽段峰？</value>
   </data>
   <data name="RemovePeptides_MenuItemText_Remove_Molecule_Peaks___" xml:space="preserve">
-    <value>删除分子峰...</value>
+    <value>删除分子峰…</value>
   </data>
   <data name="RemovePeptides_MenuItemText_Remove_Peptide_Peaks___" xml:space="preserve">
-    <value>删除肽段峰...</value>
+    <value>删除肽段峰…</value>
   </data>
   <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_" xml:space="preserve">
     <value>您是否确定想要从 {1} 个母离子中删除这 {0} 个峰？</value>
@@ -173,7 +173,7 @@
     <value>您是否确定想要删除此母离子峰？</value>
   </data>
   <data name="RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___" xml:space="preserve">
-    <value>删除母离子峰...</value>
+    <value>删除母离子峰…</value>
   </data>
   <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_" xml:space="preserve">
     <value>您是否确定想要从 {1} 个离子对中删除这 {0} 个峰？</value>
@@ -185,7 +185,7 @@
     <value>您是否确定想要删除此离子对峰？</value>
   </data>
   <data name="RemoveTransitions_MenuItemText_Remove_Transition_Peaks___" xml:space="preserve">
-    <value>删除离子对峰...</value>
+    <value>删除离子对峰…</value>
   </data>
   <data name="SkylineViewContext_DeleteDocNodes_Delete_items" xml:space="preserve">
     <value>删除项</value>

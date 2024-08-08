@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>503</ApplicationRevision>
-    <ApplicationVersion>23.1.1.503</ApplicationVersion>
+    <ApplicationRevision>196</ApplicationRevision>
+    <ApplicationVersion>24.1.1.196</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -484,6 +484,9 @@
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -527,6 +530,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
+    <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -2754,6 +2758,12 @@
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MatchExpressionListDlg.ja.resx">
+      <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MatchExpressionListDlg.zh-CHS.resx">
+      <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\MatchExpressionListDlg.resx">
       <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3649,6 +3659,12 @@
     <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
+      <DependentUpon>RetentionTimesResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.zh-CHS.resx">
+      <DependentUpon>RetentionTimesResources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -299,6 +299,7 @@
     <Compile Include="DataBinding\Filtering\FilterPage.cs" />
     <Compile Include="DataBinding\Filtering\FilterPages.cs" />
     <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
+    <Compile Include="DataBinding\RowItemEnumerator.cs" />
     <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
@@ -380,6 +381,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\MultiProgressControl.ja.resx">
+      <DependentUpon>MultiProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\MultiProgressControl.zh-CHS.resx">
+      <DependentUpon>MultiProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\MultiProgressControl.resx">
       <DependentUpon>MultiProgressControl.cs</DependentUpon>
     </EmbeddedResource>
