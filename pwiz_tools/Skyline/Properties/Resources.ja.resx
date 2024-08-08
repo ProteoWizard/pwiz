@@ -3567,9 +3567,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential" xml:space="preserve">
     <value>デクラスタリングポテンシャル</value>
   </data>
-  <data name="HtmlFragment_ClipBoardText_From_Clipboard" xml:space="preserve">
-    <value>クリップボードから</value>
-  </data>
   <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
     <value>選択ファイルまたはモデルはドキュメント内のクロマトグラムに対するピーク境界を割り当てていません。 別のモデルまたはファイルを選択してください。</value>
   </data>
