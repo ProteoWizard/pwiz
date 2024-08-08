@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Alerts
 
         private async void StartLogin_WithArdia_ButtonClicked()
         {
-            wizardPagesLoginPhases.SelectedIndex = REGISTER_IN_PROGRESS_wizardPagesRegisterPhases_INDEX;
+            wizardPagesLoginPhases.SelectedIndex = LOGIN_IN_PROGRESS_wizardPagesLoginPhases_INDEX;
 
             try
             {
