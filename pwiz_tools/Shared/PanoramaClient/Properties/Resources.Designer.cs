@@ -72,6 +72,34 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating Panorama folder {0}..
+        /// </summary>
+        public static string AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder already exists: {0}..
+        /// </summary>
+        public static string AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error deleting Panorama folder {0}..
+        /// </summary>
+        public static string AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was an error deleting the temporary zip file on the server..
         /// </summary>
         public static string AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_ {

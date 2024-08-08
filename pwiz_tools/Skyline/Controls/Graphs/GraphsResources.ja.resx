@@ -247,6 +247,10 @@
   <data name="AreaReplicateGraphPane_UpdateGraph_Step__0_" xml:space="preserve">
     <value>ステップ{0}</value>
   </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
+    <value>合計：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
     <value>強度</value>
   </data>
@@ -711,6 +715,34 @@
   </data>
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
     <value>スペクトル情報が利用不可</value>
+  </data>
+  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
+    <value>ペプチドランク</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
+    <value>相対的存在量</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
+    <value>タンパク質のランク</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
+    <value>分子のランク</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels" xml:space="preserve">
+    <value>ラベルの自動配置</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout" xml:space="preserve">
+    <value>ラベルレイアウトを中断</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout" xml:space="preserve">
+    <value>ラベルレイアウトを再開</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
     <value>ペプチド</value>

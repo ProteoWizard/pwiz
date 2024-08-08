@@ -224,7 +224,12 @@ namespace pwiz.Skyline.Model
         [Track(defaultValues:typeof(DefaultValuesNull))]
         public StandardType GlobalStandardType { get; private set; }
 
-        public Target ModifiedTarget { get; private set; }
+        private Target _modifiedTarget;
+        public Target ModifiedTarget 
+        {
+            get => IsProteomic ? _modifiedTarget : Peptide.Target;
+            private set => _modifiedTarget = value;
+        }
         public string ModifiedSequence { get { return ModifiedTarget.Sequence; } }
 
         public Target OriginalMoleculeTarget { get; private set; }

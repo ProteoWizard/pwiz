@@ -98,6 +98,8 @@ class PWIZ_API_DECL Reader
 
         Config();
         Config(const Config& rhs);
+
+        void instrumentMetadataError(const std::string& msg) const;
     };
 
 

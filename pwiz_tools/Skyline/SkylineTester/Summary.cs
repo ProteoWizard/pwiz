@@ -179,6 +179,11 @@ namespace SkylineTester
                 RegenerateSummaryFile();
             }
 
+            if (!File.Exists(SummaryFile))
+            {
+                return;
+            }
+
             XElement summary;
             try
             {

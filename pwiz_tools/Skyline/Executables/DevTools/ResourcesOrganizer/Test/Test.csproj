@@ -1,0 +1,136 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>12.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <None Remove="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ColumnToolTips.ja.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ColumnToolTips.ja.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ColumnToolTips.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ColumnToolTips.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ColumnToolTips.zh-CHS.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ColumnToolTips.zh-CHS.testfile" />
+    <None Remove="ImportLocalizationCsvTest\EditServerDlg.ja.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\EditServerDlg.ja.testfile" />
+    <None Remove="ImportLocalizationCsvTest\EditServerDlg.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\EditServerDlg.testfile" />
+    <None Remove="ImportLocalizationCsvTest\EditServerDlg.zh-CHS.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\EditServerDlg.zh-CHS.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ImportPeptideSearchDlg.ja.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ImportPeptideSearchDlg.ja.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ImportPeptideSearchDlg.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ImportPeptideSearchDlg.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ImportPeptideSearchDlg.zh-CHS.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\ImportPeptideSearchDlg.zh-CHS.testfile" />
+    <None Remove="ImportLocalizationCsvTest\KoinaResources.ja.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\KoinaResources.ja.testfile" />
+    <None Remove="ImportLocalizationCsvTest\KoinaResources.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\KoinaResources.testfile" />
+    <None Remove="ImportLocalizationCsvTest\KoinaResources.zh-CHS.resx.testfile" />
+    <None Remove="ImportLocalizationCsvTest\KoinaResources.zh-CHS.testfile" />
+    <None Remove="ResourcesFileTest\Resources.ja.resx.testfile" />
+    <None Remove="ResourcesFileTest\Resources.resx.testfile" />
+    <None Remove="ResourcesFileTest\Resources.zh-CHS.resx.testfile" />
+    <None Remove="ResourcesFileTest\Skyline.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.resx.testfile" />
+    <None Remove="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v23.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.ja.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.resx.testfile" />
+    <EmbeddedResource Include="BuildPeptideSearchLibraryControlTest\v24.BuildPeptideSearchLibraryControl.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.ja.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\ColumnToolTips.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\EditServerDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\EditServerDlg.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\EditServerDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\ImportPeptideSearchDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\ImportPeptideSearchDlg.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\ImportPeptideSearchDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\KoinaResources.ja.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\KoinaResources.resx.testfile" />
+    <EmbeddedResource Include="ImportLocalizationCsvTest\KoinaResources.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v23.AboutDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v24.AboutDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v24.AboutDlg.resx.testfile" />
+    <EmbeddedResource Include="LocalizationIssueTypeTest\v24.AboutDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="ResourcesFileTest\Resources.ja.resx.testfile">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourcesFileTest\Resources.resx.testfile">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourcesFileTest\Resources.zh-CHS.resx.testfile">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourcesFileTest\Skyline.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v23.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.ja.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.resx.testfile" />
+    <EmbeddedResource Include="VolcanoPlotFormattingDlgTest\v24.VolcanoPlotFormattingDlg.zh-CHS.resx.testfile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ResourcesOrganizer\ResourcesOrganizer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NHibernate">
+      <HintPath>..\lib\NHibernate\NHibernate.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration.ConfigurationManager">
+      <HintPath>..\lib\System.Configuration.ConfigurationManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\lib\sqlite\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Extensions">
+      <HintPath>..\lib\System.Resources.Extensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+</Project>

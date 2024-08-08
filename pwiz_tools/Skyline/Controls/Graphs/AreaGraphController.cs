@@ -218,7 +218,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
                 case GraphTypeSummary.abundance:
-                    GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary, (pane as SummaryRelativeAbundanceGraphPane)?.ColorRows) };
+                    if (!(pane is AreaRelativeAbundanceGraphPane))
+                        GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary) };
                     break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))

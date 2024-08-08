@@ -172,4 +172,44 @@
   <data name="MsconvertDdaConverter_Run_Starting_msconvert_conversion_" xml:space="preserve">
     <value>msconvert変換を開始しています</value>
   </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
+    <value>保持時間のアラインメント：{0}対{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
+    <value>複数の繰り返し測定で発生するフィーチャーの検索中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
+    <value>詳細はHardklor/Bullseyeログをご覧ください</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_" xml:space="preserve">
+    <value>{0}と{1}のアラインメント中のエラー：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
+    <value>「{0}」の保持時間アラインメントの準備中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_" xml:space="preserve">
+    <value>{0}を有するペプチド様フィーチャーの検索中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_" xml:space="preserve">
+    <value>{0}を有するHardklor結果内の一貫したフィーチャーを検索中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
+    <value>ファイル「{0}」を{1}に変換中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_" xml:space="preserve">
+    <value>最小同位体ドット積(&amp;D)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
+    <value>Hardklorは、アベラジンモデルを使用してMS1スキャンでペプチド様フィーチャーを検索します。Hardklorが発見したフィーチャーは、SkylineではHardklorがその特徴に一致する同位体分布を生成するために使用した化学式を持つ小分子として表現されます。さらに、高分解能ピークの質量対電荷比に一致させるために質量オフセットも付加されます。これは質量分析計のMS1ピークの原因となる分子の実際の式ではなく、一致する同位体分布の近似値です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

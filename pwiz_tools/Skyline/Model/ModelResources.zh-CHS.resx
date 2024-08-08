@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation" xml:space="preserve">
     <value>未能发现有效的 Analyst 安装</value>
   </data>
@@ -179,10 +178,10 @@
     <value>{0} ({1} - {2})</value>
   </data>
   <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
-    <value>所有目标的离子迁移必须介于此模板方法中指定的 {0} 和 {1} 之间。请使用其他模板方法，或更改以下目标的离子迁移值:</value>
+    <value>所有目标的离子迁移值必须介于此模板方法中指定的 {0} 和 {1} 之间。请使用其他模板方法，或更改下列目标的离子迁移值:</value>
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___" xml:space="preserve">
-    <value>正在获取时序安排...</value>
+    <value>正在获取时序安排…</value>
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>时序安排故障（无目标？）</value>
@@ -797,5 +796,27 @@
   </data>
   <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
     <value>在路径 {1} 中已经使用了名称“{0}”</value>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
+    <value>发现多个 UniMod 匹配项；添加末端和/或氨基酸特异性以选择单个匹配项</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_" xml:space="preserve">
+    <value>发现一个以上的 UniMod 匹配项，但给定的特异性 ({0}) 不匹配其中任何一项。</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_no_UniMod_match" xml:space="preserve">
+    <value>无 UniMod 匹配项</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
+    <value>检测到的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>库强度</value>
   </data>
 </root>
