@@ -512,7 +512,7 @@ namespace pwiz.Skyline.Alerts
             }
 
             var identityBaseUri = new UriBuilder { Scheme = "https", Host = $"identity.{_ardiaServerURL_BaseURL}" }.Uri;
-            var clientStatusEndpointPath = "api/v2/Clients/clientStatus";
+            var clientStatusEndpointPath = @"api/v2/Clients/clientStatus";
             var credentialsValidationUri = new UriBuilder(identityBaseUri)
             {
                 Path = clientStatusEndpointPath,
@@ -584,7 +584,7 @@ namespace pwiz.Skyline.Alerts
                 }
 
                 var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
-                var verificationUri = $"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
+                var verificationUri = @$"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
 
                 // Create a new browser process to open the verification URL in the default system web browser
                 _browserProcess = new Process()
@@ -856,15 +856,15 @@ namespace pwiz.Skyline.Alerts
             if (context != null)
             {
                 // Get the PAT token from the context request
-                var patToken = context.Request.QueryString["pat"];
+                var patToken = context.Request.QueryString[@"pat"];
                 var sessionCookieUrl = GetBrowserSessionCookieUrl();
                 var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {patToken}");
+                httpClient.DefaultRequestHeaders.Add(@"Authorization", @$"Bearer {patToken}");
                 // Get the session cookie from the Session Management API
                 var httpClientResponse = await httpClient.GetAsync(sessionCookieUrl);
                 // Get the session cookie value from the response
                 var sessionCookie = await httpClientResponse.Content.ReadAsStringAsync();
-                var domain = $"api.{_ardiaServerURL_BaseURL}";
+                var domain = @$"api.{_ardiaServerURL_BaseURL}";
                 // Create a new cookie object to store the Bff-Host cookie value
                 _bffCookie = new Cookie
                 {
@@ -898,7 +898,7 @@ namespace pwiz.Skyline.Alerts
             var returnUriEncoded = WebUtility.UrlEncode(returnUri);
 
             var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
-            var loginEndpointPath = "session-management/bff/login";
+            var loginEndpointPath = @"session-management/bff/login";
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
             var applicationName = ardiaRegistrationEntry.ClientName;
             var useArdiaDPoP = false;
@@ -936,7 +936,7 @@ namespace pwiz.Skyline.Alerts
             var returnUri = GetBrowserReturnUrl();
 
             var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
-            var patTokenEndpoint = "session-management/bff/identity-server/tokenApi/pat";
+            var patTokenEndpoint = @"session-management/bff/identity-server/tokenApi/pat";
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
 
             // Construct the PAT token URL
@@ -953,7 +953,7 @@ namespace pwiz.Skyline.Alerts
         private string GetBrowserSessionCookieUrl()
         {
             var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
-            var sessionCookieEndpoint = "session-management/api/v1/SessionManagement/sessioncookie";
+            var sessionCookieEndpoint = @"session-management/api/v1/SessionManagement/sessioncookie";
 
             // Construct the session cookie URL
             var sessionCookieUrl = new UriBuilder(apiBaseUri)
