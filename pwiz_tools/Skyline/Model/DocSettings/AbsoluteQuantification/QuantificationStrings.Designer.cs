@@ -404,6 +404,33 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bootstrap Curve.
+        /// </summary>
+        public static string CalibrationGraphControl_DoUpdate_Bootstrap_Curve {
+            get {
+                return ResourceManager.GetString("CalibrationGraphControl_DoUpdate_Bootstrap_Curve", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit of Detection.
+        /// </summary>
+        public static string CalibrationGraphControl_DoUpdate_Limit_of_Detection {
+            get {
+                return ResourceManager.GetString("CalibrationGraphControl_DoUpdate_Limit_of_Detection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lower Limit of Quantification.
+        /// </summary>
+        public static string CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification {
+            get {
+                return ResourceManager.GetString("CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Concentration Ratio.
         /// </summary>
         public static string Concentration_Ratio {
@@ -458,11 +485,20 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bilinear turning point (legacy).
+        /// </summary>
+        public static string LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy {
+            get {
+                return ResourceManager.GetString("LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bilinear turning point.
         /// </summary>
-        public static string LodCalculation_TURNING_POINT_Bilinear_turning_point {
+        public static string LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point {
             get {
-                return ResourceManager.GetString("LodCalculation_TURNING_POINT_Bilinear_turning_point", resourceCulture);
+                return ResourceManager.GetString("LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point", resourceCulture);
             }
         }
         
@@ -530,11 +566,29 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimize transitions.
+        /// </summary>
+        public static string OptimizeDocumentTransitionsForm_Apply_Optimize_transitions {
+            get {
+                return ResourceManager.GetString("OptimizeDocumentTransitionsForm_Apply_Optimize_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Normalized Area: {0}.
         /// </summary>
         public static string QuantificationResult_ToString_Normalized_Area___0_ {
             get {
                 return ResourceManager.GetString("QuantificationResult_ToString_Normalized_Area___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LOD: {0} LLOQ: {1}.
+        /// </summary>
+        public static string QuantLimit_ToString_LOD___0__LLOQ___1_ {
+            get {
+                return ResourceManager.GetString("QuantLimit_ToString_LOD___0__LLOQ___1_", resourceCulture);
             }
         }
         

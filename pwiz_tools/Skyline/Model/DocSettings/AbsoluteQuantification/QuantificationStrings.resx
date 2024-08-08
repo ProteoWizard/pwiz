@@ -255,8 +255,8 @@
   <data name="LodCalculation_NONE_None" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point" xml:space="preserve">
-    <value>Bilinear turning point</value>
+  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy" xml:space="preserve">
+    <value>Bilinear turning point (legacy)</value>
   </data>
   <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">
     <value>Blank plus 2 * SD</value>
@@ -334,6 +334,25 @@
   </data>
   <data name="MsLevelOption_DEFAULT_Default" xml:space="preserve">
     <value>Default</value>
+  </data>
+  <data name="LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point" xml:space="preserve">
+    <value>Bilinear turning point</value>
+  </data>
+  <data name="CalibrationGraphControl_DoUpdate_Bootstrap_Curve" xml:space="preserve">
+    <value>Bootstrap Curve</value>
+  </data>
+  <data name="CalibrationGraphControl_DoUpdate_Limit_of_Detection" xml:space="preserve">
+    <value>Limit of Detection</value>
+  </data>
+  <data name="CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification" xml:space="preserve">
+    <value>Lower Limit of Quantification</value>
+  </data>
+  <data name="OptimizeDocumentTransitionsForm_Apply_Optimize_transitions" xml:space="preserve">
+    <value>Optimize transitions</value>
+  </data>
+  <data name="QuantLimit_ToString_LOD___0__LLOQ___1_" xml:space="preserve">
+    <value>LOD: {0} LLOQ: {1}</value>
+    <comment>"LOD" stands for "Limit of detection" and "LLOQ" stands for "Lower limit of quantification"</comment>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType" xml:space="preserve">
     <value>{0} ({1})</value>

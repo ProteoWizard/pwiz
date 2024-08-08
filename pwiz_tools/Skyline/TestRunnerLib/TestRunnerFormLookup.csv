@@ -30,6 +30,7 @@ BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 CalibrationForm,TestCalibration
+CalibrationCurveOptionsDlg,TestCalibration
 CandidatePeakForm,TestCandidatePeaks
 ChangeIrtPeptidesDlg,IrtFunctionalTest
 ChooseFormatDlg,TestGroupComparisonPivotEditor
