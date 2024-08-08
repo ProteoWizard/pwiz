@@ -504,7 +504,7 @@ namespace pwiz.Skyline.Alerts
             var clientId = ardia_ArdiaRegistrationCodeEntry.ClientId;
             var clientName = ardia_ArdiaRegistrationCodeEntry.ClientName;
 
-            // clientCode = "FAKE";
+            // clientCode = "FAKE";  //  Testing code to force error
 
             if (string.IsNullOrEmpty(clientCode) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientName))
             {
@@ -523,16 +523,11 @@ namespace pwiz.Skyline.Alerts
             {
                 using (var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest))
                 {
-                    // var statusCode = clientCredentialsResponse.StatusCode;
-                    // var statusCodeString = statusCode.ToString();
-                    // if (statusCode == HttpStatusCode.Unauthorized)
-                    // {
-                    //     var z = 0;
-                    // }
-
                     using (var contentTask = clientCredentialsResponse.Content.ReadAsStringAsync())
                     {
                         var content = contentTask.Result;
+
+                        //  Parse the content as JSON and get property clientCodeStatus
 
                         var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
 
@@ -541,11 +536,9 @@ namespace pwiz.Skyline.Alerts
                             return false;
                         }
 
-                        //  Parse the content as JSON and get property clientCodeStatus
-
                         if (clientStatusResultObject.clientCodeStatus.Contains(@"has been activated"))
                         {
-                            return true;
+                            return true; // ApplicationCode is valid
                         }
 
                         return false;
@@ -568,7 +561,6 @@ namespace pwiz.Skyline.Alerts
                 if (discoveryDocument.IsError)
                 {
                     //  For Register Device, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
-
 
                     var errorMessage =
                         string.Format(
@@ -612,17 +604,9 @@ namespace pwiz.Skyline.Alerts
                 var ardiaRegistrationEntry = await ActivateClient(clientCode, userTokenResponse);
 
                 SetSavedArdiaRegistrationData(ardiaRegistrationEntry);
-                
-                // StoreClientCredentials(identityClient);
             }
             catch (HttpRequestException e)
             {
-                var eToString = e.ToString();
-
-                // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
-                //
-                // var eMessage = e.Message;
-
                 if (e.Message.Contains(@"403"))
                 {
                     return RegisterDevice_UsingSystemDefaultBrowser_ResultEnum.FAIL_NOT_AUTHORIZED;
@@ -636,11 +620,6 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                var st = e.StackTrace;
-                var type = e.GetType();
-                var fullName = type.FullName;
-                var source = e.Source;
-                var eToString = e.ToString();
                 var errorMessage =
                     string.Format(
                         "Error Registering Skyline Instance in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}",
@@ -648,18 +627,13 @@ namespace pwiz.Skyline.Alerts
                 MessageDlg.ShowWithException(this, errorMessage, e);
 
                 return RegisterDevice_UsingSystemDefaultBrowser_ResultEnum.FAIL_GENERAL;
-
-                //  added throw to code from Thermo
-                // throw;
             }
 
             return RegisterDevice_UsingSystemDefaultBrowser_ResultEnum.SUCCESS;
         }
 
         // Methods required to log into the Ardia platform and retrieve the Bff-Host cookie using the default system web browser
-
-        //  was public async Task<Cookie> BrowserLogin()
-
+        
         // Method used to log the user into the Ardia platform using the default system web browser
         public async Task<Cookie> LoginIn_UsingSystemDefaultBrowser()
         {
@@ -716,32 +690,6 @@ namespace pwiz.Skyline.Alerts
                 Stop_HTTPListener();
             }
         }
-
-        // Method used to log the user out of the Ardia platform using the default system web browser
-        // public async Task BrowserLogout()
-        // {
-        //     var logoutUrl = await GetBrowserLogoutUrl();
-        //
-        //     await Task.Run(() =>
-        //     {
-        //         if (logoutUrl != null)
-        //         {
-        //             _browserProcess = new Process()
-        //             {
-        //                 StartInfo = new ProcessStartInfo
-        //                 {
-        //                     FileName = logoutUrl,
-        //                     UseShellExecute = true,
-        //                     Verb = string.Empty
-        //                 }
-        //             };
-        //             _browserProcess.Start();
-        //         }
-        //     });
-        //
-        //     // Show a message box to indicate that the user has logged out successfully
-        //     MessageBox.Show("User logged out successfully.");
-        // }
 
         // Method used to initiate the browser login process
         private void InitiateBrowserLoginProcess()
