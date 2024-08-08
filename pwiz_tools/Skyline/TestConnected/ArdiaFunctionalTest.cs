@@ -214,7 +214,8 @@ namespace pwiz.SkylineTestConnected
 
             // corrupt the cookie (simulate it being expired) and try reimporting again
             //Settings.Default.LastArdiaLoginCookieByUsername[_account.Username] = "foobar";
-            _account = _account.ChangeBffHostCookie("foobar");
+            // _account = _account.ChangeBffHostCookie("foobar");
+            _account.BffHostCookie_NotPersisted = "foobar";
 
             // delete local files
             foreach (var rawName in _openPaths.Last())

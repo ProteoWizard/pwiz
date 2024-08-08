@@ -54,14 +54,20 @@ namespace pwiz.Skyline.Alerts
 
             string applicationCode = null;
 
+            ArdiaRegistrationCodeEntry entry = null;
+
             {
-                if (!Settings.Default.ArdiaRegistrationCodes.TryGetValue(ardiaServerURL,
-                        out applicationCode))
+                if (!Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(ardiaServerURL,
+                        out entry))
                 {
                     applicationCode = null;
                 }
+                else if (entry != null)
+                {
+                    applicationCode = entry.ClientApplicationCode;
+                }
             }
-
+            
             return applicationCode;
         }
 
@@ -138,9 +144,9 @@ namespace pwiz.Skyline.Alerts
             using (var handler = new HttpClientHandler() { CookieContainer = cookieContainer })
             using (var httpClient = Account.GetAuthenticatedHttpClient())
             {
-                // cookieContainer.Add(new Uri($"https://api.{_baseUrl}"), new Cookie(_bffCookie.Name, _bffCookie.Value));
-                // httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                // httpClient.DefaultRequestHeaders.Add("applicationCode", applicationCode);
+                cookieContainer.Add(new Uri($"https://api.{_baseUrl}"), new Cookie(_bffCookie.Name, _bffCookie.Value));
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.Add("applicationCode", applicationCode);
                 // Add the x-csrf header to the request
                 httpClient.DefaultRequestHeaders.Add("x-csrf", "1");
 

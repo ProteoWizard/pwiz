@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditRemoteAccountDlg));
             this.lblServerUrl = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -56,6 +57,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.textArdiaServerURL = new System.Windows.Forms.TextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBoxUnifi.SuspendLayout();
             this.wizardPagesByAccountType.SuspendLayout();
             this.tabUnifiSettings.SuspendLayout();
@@ -213,6 +215,7 @@
             // 
             resources.ApplyResources(this.btnLogoutArdia, "btnLogoutArdia");
             this.btnLogoutArdia.Name = "btnLogoutArdia";
+            this.toolTip1.SetToolTip(this.btnLogoutArdia, resources.GetString("btnLogoutArdia.ToolTip"));
             this.btnLogoutArdia.UseVisualStyleBackColor = true;
             this.btnLogoutArdia.Click += new System.EventHandler(this.btnLogoutArdia_Click);
             // 
@@ -294,5 +297,6 @@
         private System.Windows.Forms.TextBox textArdiaServerURL;
         private System.Windows.Forms.Button btnLogoutArdia;
         private System.Windows.Forms.CheckBox cbArdiaDeleteRawAfterImport;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

@@ -18,10 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -178,7 +182,99 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnLogoutArdia_Click(object sender, EventArgs e)
         {
-            // MessageDlg.Show(this, "Logout Clicked");
+            logoutArdia_UsingSystemDefaultBrowser();
+        }
+
+        private async void logoutArdia_UsingSystemDefaultBrowser()
+        {
+            var logoutUrl = await GetBrowserLogoutUrl();
+
+            await Task.Run(() =>
+            {
+                if (logoutUrl != null)
+                {
+                    Process browserProcess = new Process()
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = logoutUrl,
+                            UseShellExecute = true,
+                            Verb = string.Empty
+                        }
+                    };
+                    browserProcess.Start();
+                }
+            });
+
+        }
+
+        // Method used to get the logout URL for the browser login process
+        private async Task<string> GetBrowserLogoutUrl()
+        {
+            var _baseUrl = _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Replace("https://", "");
+
+            ArdiaRegistrationCodeEntry ardiaRegistrationEntry = null;
+
+            {
+                if (!Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(_baseUrl,
+                        out ardiaRegistrationEntry))
+                {
+                    ardiaRegistrationEntry = null;
+                }
+            }
+            if (ardiaRegistrationEntry == null)
+            {
+                MessageDlg.Show(this, "ERROR: No Ardia registration code for URL");
+            }
+            
+            var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
+
+            var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_baseUrl}" }.Uri;
+            var baseUri = new UriBuilder { Scheme = "https", Host = _baseUrl }.Uri;
+            var userEndpointPath = "session-management/bff/user";
+            var userEndpointUri = new Uri(apiBaseUri, userEndpointPath);
+
+            var cookieContainer = new CookieContainer();
+            using (var handler = new HttpClientHandler() { CookieContainer = cookieContainer })
+            using (var httpClient = new HttpClient(handler) { BaseAddress = baseUri })
+            {
+                // Add the Bff-Host cookie to the cookie container
+                cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", _ardiaAccount_CurrentlyLoggedIn.BffHostCookie_NotPersisted));
+                // Add the required headers to the request
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.Add("applicationCode", applicationCode);
+                httpClient.DefaultRequestHeaders.Add("x-csrf", "1");
+
+                var response = await httpClient.GetAsync(userEndpointUri);
+                response.EnsureSuccessStatusCode();
+                var responseString = await response.Content.ReadAsStringAsync();
+                var responseJson = JsonConvert.DeserializeObject<IEnumerable<IDictionary<string, string>>>(responseString);
+                // Get the logout URL from the response JSON object
+                var logoutUrl = responseJson.FirstOrDefault(x => x["type"] == "bff:logout_url")["value"];
+
+                if (logoutUrl != null)
+                {
+                    var logoutEndpointPath = logoutUrl.Split('?')[0];
+                    // The query string contains the session ID
+                    var queryString = logoutUrl.Split('?')[1];
+
+                    // Construct the complete logout URL
+                    var completeLogoutUrl = new UriBuilder(apiBaseUri)
+                    {
+                        Path = logoutEndpointPath,
+                        Query = $"{queryString}&applicationcode={applicationCode}"
+                    }.Uri.ToString();
+                    return completeLogoutUrl.ToString();
+                }
+                else
+                    return null;
+            }
+        }
+
+
+        private void logoutArdia_UsingWebView_Using_ArdiaLogoutDlg()
+        {
+            //  CURRENTLY UNUSED
 
             var z = 0;
 

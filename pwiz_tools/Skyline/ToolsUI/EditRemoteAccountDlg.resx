@@ -429,6 +429,102 @@
   <data name="groupBoxUnifi.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="&gt;&gt;tbxClientSecret.Name" xml:space="preserve">
+    <value>tbxClientSecret</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.Name" xml:space="preserve">
+    <value>lblClientSecret</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.Name" xml:space="preserve">
+    <value>tbxClientScope</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.Name" xml:space="preserve">
+    <value>lblClientScope</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.Name" xml:space="preserve">
+    <value>tbxIdentityServer</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.Name" xml:space="preserve">
+    <value>lblIdentityServer</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="groupBoxUnifi.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 142</value>
+  </data>
+  <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
+    <value>288, 144</value>
+  </data>
+  <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="groupBoxUnifi.Text" xml:space="preserve">
+    <value>Advanced Unifi Settings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxUnifi.Name" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;groupBoxUnifi.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxUnifi.Parent" xml:space="preserve">
+    <value>tabUnifiSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxUnifi.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="tbxClientSecret.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -585,30 +681,6 @@
   <data name="&gt;&gt;lblIdentityServer.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="groupBoxUnifi.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 142</value>
-  </data>
-  <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 144</value>
-  </data>
-  <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="groupBoxUnifi.Text" xml:space="preserve">
-    <value>Advanced Unifi Settings</value>
-  </data>
-  <data name="&gt;&gt;groupBoxUnifi.Name" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;groupBoxUnifi.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxUnifi.Parent" xml:space="preserve">
-    <value>tabUnifiSettings</value>
-  </data>
-  <data name="&gt;&gt;groupBoxUnifi.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -680,6 +752,12 @@
   </data>
   <data name="btnLogoutArdia.Text" xml:space="preserve">
     <value>Logout Ardia</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="btnLogoutArdia.ToolTip" xml:space="preserve">
+    <value>This will also log out from Ardia session in default browser.</value>
   </data>
   <data name="&gt;&gt;btnLogoutArdia.Name" xml:space="preserve">
     <value>btnLogoutArdia</value>
@@ -872,6 +950,12 @@
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.557, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditRemoteAccountDlg</value>
