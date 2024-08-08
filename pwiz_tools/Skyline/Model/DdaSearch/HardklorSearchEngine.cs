@@ -1002,7 +1002,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2, IProgressMonitor progressMonitor, int? threadCount)
         {
-            return spectra1.PerformAlignment(progressMonitor, spectra2, threadCount);
+            return spectra1.PerformAlignment(progressMonitor, spectra2, .60, threadCount); // Use just the center 60% of the spectra for alignment - start and end are typically noisy
         }
 
         public static int TotalAlignmentSteps(int count) => count + // Read each mzml
