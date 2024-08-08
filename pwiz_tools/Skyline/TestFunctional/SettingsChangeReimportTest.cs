@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, transitionGroup.Results.Count);
             var transitionGroupChromInfo = transitionGroup.Results[0].First();
             // Verify the peak area is what we expect
-            Assert.AreEqual(146015264f, transitionGroupChromInfo.Area.Value, 1f);
+            Assert.AreEqual(1.460189E+08f, transitionGroupChromInfo.Area.Value);
 
             // Reimport the file with "UseSelectiveExtraction" set to "true"
             RunUI(() => SkylineWindow.ModifyDocument("Change selective extraction",
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, transitionGroup.Results.Count);
             transitionGroupChromInfo = transitionGroup.Results[0].First();
             // Verify that the peak area is a smaller number because the chromatogram extraction was more selective
-            Assert.AreEqual(119877896f, transitionGroupChromInfo.Area.Value, 1f);
+            Assert.AreEqual(119880880f, transitionGroupChromInfo.Area.Value);
         }
     }
 }

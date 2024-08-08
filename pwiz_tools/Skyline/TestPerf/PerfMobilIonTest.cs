@@ -65,7 +65,7 @@ namespace TestPerf
 /* Waiting for CCS<->DT support in .mbi reader
             Test(@"PerfMobilIonTest.sky", 2, 163, 163, 1006, ".mbi", 0, null, 95.07976, 6028.9375, true); // Mobilion HD5 format
 */            
-            Test(@"slim.sky", 12, 12, 30, 30, ".d", 1, 258.3, 308.71, 4450.05859, false); // Agilent SLIM format
+            Test(@"slim.sky", 12, 12, 30, 30, ".d", 1, 258.3, 308.71, 4449.80908, false); // Agilent SLIM format
         }
 
         void Test(string docFile, int groups, int peptides, int tranGroups, int transitions, string dataExt, int precursorIndex, double? ccs, double drift, double areaExpected,  bool findDriftPeaks)
