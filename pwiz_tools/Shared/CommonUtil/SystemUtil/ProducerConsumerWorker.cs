@@ -179,7 +179,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     //CONSIDER: observed a hang here with two file loader threads trying to take from 
                     //an empty queue. Maybe should use TryDequeue instead.
-                    var item = _queue.Take();
+                    var item = _queue?.Take();
                     if (item == null)
                         break;
                     _consume(item, (int) threadIndex);
@@ -196,7 +196,7 @@ namespace pwiz.Common.SystemUtil
             }
             try
             {
-                _threadExit.Signal();
+                _threadExit?.Signal();
             }
             catch
             {
@@ -308,8 +308,19 @@ namespace pwiz.Common.SystemUtil
         public void Dispose()
         {
             Abort(true);
-            if (_queue != null) _queue.Dispose();
-            if (_threadExit != null) _threadExit.Dispose();
+            if (_queue != null)
+            {
+                var queue = _queue;
+                _queue = null;
+                queue.Dispose();
+            }
+
+            if (_threadExit != null)
+            {
+                var threadExit = _threadExit;
+                _threadExit = null;
+                threadExit.Dispose();
+            }
         }
     }
 }
