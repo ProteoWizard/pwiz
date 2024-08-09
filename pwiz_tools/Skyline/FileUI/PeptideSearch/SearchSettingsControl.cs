@@ -145,6 +145,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             MSAmanda,
             MSGFPlus,
             MSFragger,
+            Comet,
             Hardklor
         }
 
@@ -234,6 +235,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case SearchEngine.MSFragger:
                     fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
                     break;
+                case SearchEngine.Comet:
+                    fileDownloadInfo = CometSearchEngine.FilesToDownload;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -257,6 +261,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     else
                         dataType = ImportPeptideSearch.IsGpfData ? MsFraggerSearchEngine.DataType.dia_gpf : MsFraggerSearchEngine.DataType.dia;
                     return new MsFraggerSearchEngine(dataType);
+                case SearchEngine.Comet:
+                    if (!EnsureRequiredFilesDownloaded(CometSearchEngine.FilesToDownload))
+                        SelectedSearchEngine = SearchEngine.Comet;
+                    return new CometSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
