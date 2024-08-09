@@ -215,111 +215,124 @@ namespace pwiz.Skyline.Model.DdaSearch
             _progressStatus = status;
             _success = true;
 
-            try
+            void RunInner()
             {
-                _intermediateFiles = new List<string>();
-                _fastaFilepath = FastaFileNames[0];
-                EnsureFastaHasDecoys();
-
-                var paramsFileText = new StringBuilder(defaultClosedConfig);
-                
-                SetMsFraggerParam(paramsFileText, @"num_threads", 0);
-                SetMsFraggerParam(paramsFileText, @"database_name", _fastaFilepath);
-                SetMsFraggerParam(paramsFileText, @"decoy_prefix", _decoyPrefix);
-                SetMsFraggerParam(paramsFileText, @"precursor_mass_lower", (-_precursorMzTolerance.Value).ToString(CultureInfo.InvariantCulture));
-                SetMsFraggerParam(paramsFileText, @"precursor_mass_upper", _precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
-                SetMsFraggerParam(paramsFileText, @"precursor_mass_units", (int)_precursorMzTolerance.Unit);
-                SetMsFraggerParam(paramsFileText, @"fragment_mass_tolerance", _fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
-                SetMsFraggerParam(paramsFileText, @"fragment_mass_units", (int)_fragmentMzTolerance.Unit);
-                SetMsFraggerParam(paramsFileText, @"fragment_ion_series", _fragmentIons);
-                SetMsFraggerParam(paramsFileText, @"num_enzyme_termini", _ntt);
-                SetMsFraggerParam(paramsFileText, @"allowed_missed_cleavage_1", _maxMissedCleavages);
-                SetMsFraggerParam(paramsFileText, @"search_enzyme_name_1", _enzyme.Name ?? @"unnamed");
-                SetMsFraggerParam(paramsFileText, @"search_enzyme_cut_1", _enzyme.CleavageC ?? _enzyme.CleavageN);
-                SetMsFraggerParam(paramsFileText, @"search_enzyme_nocut_1", _enzyme.RestrictC ?? _enzyme.RestrictN);
-                SetMsFraggerParam(paramsFileText, @"search_enzyme_sense_1", _enzyme.IsCTerm ? @"C" : @"N");
-                SetMsFraggerParam(paramsFileText, @"max_variable_mods_per_peptide", _maxVariableMods);
-                foreach (var settingName in MSFRAGGER_SETTINGS)
-                    SetMsFraggerParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
-                paramsFileText.Append(_modParams);
-
-                string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Environment.CurrentDirectory;
-
-                string paramsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"msfragger.params") : Path.GetTempFileName();
-                _intermediateFiles.Add(paramsFile);
-                File.WriteAllText(paramsFile, paramsFileText.ToString());
-
-                long javaMaxHeapMB = Math.Min(24 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
-
-                // Run MSFragger
-                var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                        $@"-Xmx{javaMaxHeapMB}M -jar """ + MsFraggerBinary + $@""" ""{paramsFile}""")// ""{spectrumFilename}""")
+                try
                 {
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
-                foreach (var filename in SpectrumFileNames)
-                    psi.Arguments += $@" ""{filename}""";
-                pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
+                    _intermediateFiles = new List<string>();
+                    _fastaFilepath = FastaFileNames[0];
+                    EnsureFastaHasDecoys();
 
-                string cruxParamsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"crux.params") : Path.GetTempFileName();
-                _intermediateFiles.Add(cruxParamsFile);
-                var cruxParamsFileText = GetCruxParamsText();
-                File.WriteAllText(cruxParamsFile, cruxParamsFileText);
+                    var paramsFileText = new StringBuilder(defaultClosedConfig);
+                    
+                    SetMsFraggerParam(paramsFileText, @"num_threads", 0);
+                    SetMsFraggerParam(paramsFileText, @"database_name", _fastaFilepath);
+                    SetMsFraggerParam(paramsFileText, @"decoy_prefix", _decoyPrefix);
+                    SetMsFraggerParam(paramsFileText, @"precursor_mass_lower", (-_precursorMzTolerance.Value).ToString(CultureInfo.InvariantCulture));
+                    SetMsFraggerParam(paramsFileText, @"precursor_mass_upper", _precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
+                    SetMsFraggerParam(paramsFileText, @"precursor_mass_units", (int)_precursorMzTolerance.Unit);
+                    SetMsFraggerParam(paramsFileText, @"fragment_mass_tolerance", _fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
+                    SetMsFraggerParam(paramsFileText, @"fragment_mass_units", (int)_fragmentMzTolerance.Unit);
+                    SetMsFraggerParam(paramsFileText, @"fragment_ion_series", _fragmentIons);
+                    SetMsFraggerParam(paramsFileText, @"num_enzyme_termini", _ntt);
+                    SetMsFraggerParam(paramsFileText, @"allowed_missed_cleavage_1", _maxMissedCleavages);
+                    SetMsFraggerParam(paramsFileText, @"search_enzyme_name_1", _enzyme.Name ?? @"unnamed");
+                    SetMsFraggerParam(paramsFileText, @"search_enzyme_cut_1", _enzyme.CleavageC ?? _enzyme.CleavageN);
+                    SetMsFraggerParam(paramsFileText, @"search_enzyme_nocut_1", _enzyme.RestrictC ?? _enzyme.RestrictN);
+                    SetMsFraggerParam(paramsFileText, @"search_enzyme_sense_1", _enzyme.IsCTerm ? @"C" : @"N");
+                    SetMsFraggerParam(paramsFileText, @"max_variable_mods_per_peptide", _maxVariableMods);
+                    foreach (var settingName in MSFRAGGER_SETTINGS)
+                        SetMsFraggerParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
+                    paramsFileText.Append(_modParams);
 
-                // Run Crux Percolator
-                string cruxOutputDir = Path.Combine(defaultOutputDirectory, "crux-output");
-                psi.FileName = CruxBinary;
-                psi.Arguments = $@"percolator --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
+                    string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Environment.CurrentDirectory;
 
-                foreach (var settingName in PERCOLATOR_SETTINGS)
-                    psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
+                    string paramsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"msfragger.params") : Path.GetTempFileName();
+                    _intermediateFiles.Add(paramsFile);
+                    File.WriteAllText(paramsFile, paramsFileText.ToString());
 
-                foreach (var spectrumFilename in SpectrumFileNames)
-                {
-                    string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                        spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
-                    string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
-                    string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
-                    _intermediateFiles.Add(cruxInputFilepath);
-                    FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, this);
-                    psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
+                    long javaMaxHeapMB = Math.Min(24 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
 
-                    if (spectrumFilename.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_THERMO_RAW)
+                    // Run MSFragger
+                    var pr = new ProcessRunner();
+                    var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
+                            $@"-Xmx{javaMaxHeapMB}M -jar """ + MsFraggerBinary + $@""" ""{paramsFile}""")// ""{spectrumFilename}""")
                     {
-                        string unwantedMzMl = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + @"_uncalibrated.mzML");
-                        File.Delete(unwantedMzMl);
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+                    foreach (var filename in SpectrumFileNames)
+                        psi.Arguments += $@" ""{filename}""";
+                    // ReSharper disable once LocalizableElement
+                    _progressStatus = _progressStatus.ChangeMessage($"Running MSFragger:\r\n\"{psi.FileName}\" {psi.Arguments}");
+                    if (UpdateProgressResponse.cancel == UpdateProgress(_progressStatus))
+                        return;
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
+
+                    string cruxParamsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"crux.params") : Path.GetTempFileName();
+                    _intermediateFiles.Add(cruxParamsFile);
+                    var cruxParamsFileText = GetCruxParamsText();
+                    File.WriteAllText(cruxParamsFile, cruxParamsFileText);
+
+                    // Run Crux Percolator
+                    string cruxOutputDir = Path.Combine(defaultOutputDirectory, "crux-output");
+                    psi.FileName = CruxBinary;
+                    psi.Arguments = $@"percolator --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
+
+                    foreach (var settingName in PERCOLATOR_SETTINGS)
+                        psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
+
+                    foreach (var spectrumFilename in SpectrumFileNames)
+                    {
+                        string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
+                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                        string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
+                        string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
+                        _intermediateFiles.Add(cruxInputFilepath);
+                        FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, this);
+                        psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
+
+                        if (spectrumFilename.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_THERMO_RAW)
+                        {
+                            string unwantedMzMl = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
+                                spectrumFilename.GetFileNameWithoutExtension() + @"_uncalibrated.mzML");
+                            File.Delete(unwantedMzMl);
+                        }
                     }
+
+                    // ReSharper disable once LocalizableElement
+                    _progressStatus = _progressStatus.ChangeMessage($"Running Crux Percolator:\r\n\"{psi.FileName}\" {psi.Arguments}");
+                    if (UpdateProgressResponse.cancel == UpdateProgress(_progressStatus))
+                        return;
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
+
+                    var qvalueByPsmId = new Dictionary<string, double>();
+                    // Read PSMs from text files and update original pepXMLs with Percolator scores
+                    string percolatorTargetPsmsTsv = Path.Combine(cruxOutputDir, @"percolator.target.psms.txt");
+                    string percolatorDecoyPsmsTsv = Path.Combine(cruxOutputDir, @"percolator.decoy.psms.txt");
+                    GetPercolatorScores(percolatorTargetPsmsTsv, qvalueByPsmId);
+                    GetPercolatorScores(percolatorDecoyPsmsTsv, qvalueByPsmId);
+
+                    foreach (var spectrumFilename in SpectrumFileNames)
+                    {
+                        string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
+                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                        string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
+                        FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId, this);
+                    }
+
+                    DeleteIntermediateFiles();
+
+                    _progressStatus = _progressStatus.NextSegment();
                 }
-
-                pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
-
-                var qvalueByPsmId = new Dictionary<string, double>();
-                // Read PSMs from text files and update original pepXMLs with Percolator scores
-                string percolatorTargetPsmsTsv = Path.Combine(cruxOutputDir, @"percolator.target.psms.txt");
-                string percolatorDecoyPsmsTsv = Path.Combine(cruxOutputDir, @"percolator.decoy.psms.txt");
-                GetPercolatorScores(percolatorTargetPsmsTsv, qvalueByPsmId);
-                GetPercolatorScores(percolatorDecoyPsmsTsv, qvalueByPsmId);
-
-                foreach (var spectrumFilename in SpectrumFileNames)
+                catch (Exception ex)
                 {
-                    string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                        spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
-                    string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
-                    FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId, this);
+                    _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
+                    _success = false;
                 }
-
-                DeleteIntermediateFiles();
-
-                _progressStatus = _progressStatus.NextSegment();
             }
-            catch (Exception ex)
-            {
-                _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
-                _success = false;
-            }
+
+            RunInner();
 
             if (IsCanceled && !_progressStatus.IsCanceled)
             {
@@ -452,7 +465,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 string lastPsmId = "";
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
-                    if (line.Contains(@" < spectrum_query"))
+                    if (line.Contains(@"<spectrum_query"))
                         lastPsmId = lastPsmIdRegex.Replace(line, "$1");
                     else if (line.Contains(@"<search_score name=""hyperscore"""))
                     {
