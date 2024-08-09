@@ -240,7 +240,6 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
     
     if (iss.good())
         iss >> assumeSorted;
-    cout << assumeSorted << endl;
     if (open!='[' || comma!=',' || close!=']')
     {
         throw user_error("scanTime filter argument does not have form \"[\"<startTime>,<endTime>\"]\", ignored.");
@@ -979,6 +978,84 @@ UsageInfo usage_mzPrecursors = {"<precursor_mz_list> [mzTol=<mzTol (10 ppm)>] [t
     "used, the filter drops spectra that match the various criteria instead of keeping them."
     };
 
+SpectrumListPtr filterCreator_isolationWindows(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg = carg;
+
+    auto mzTol = parseKeyValuePair<MZTolerance, 2>(arg, "mzTol=", MZTolerance(10, MZTolerance::PPM));
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+
+    char open = '\0', comma = '\0', close = '\0';
+    pair<double, double> window;
+    std::set<pair<double, double>> setMz;
+
+    istringstream iss(arg);
+    while (iss)
+    {
+        iss >> open;
+        if (open != '[')
+            break;
+        iss >> window.first >> comma >> window.second >> close;
+
+        if (open != '[' || comma != ',' || close != ']')
+            throw user_error("[SpectrumListFactory::filterCreator_isolationWindows()] expected a list of isolation windows formatted like \"[123.4,234.5] [345.6,456.7]\"");
+        setMz.insert(window);
+    }
+
+    if (setMz.empty())
+        throw user_error("[SpectrumListFactory::filterCreator_isolationWindows()] expected a list of isolation windows formatted like \"[123.4,234.5] [345.6,456.7]\"");
+
+    return SpectrumListPtr(new
+        SpectrumList_Filter(msd.run.spectrumListPtr,
+            SpectrumList_FilterPredicate_IsolationWindowSet(setMz, mzTol, mode), ilr));
+}
+UsageInfo usage_isolationWindows = { "<isolation_window_list> [mzTol=<mzTol (10 ppm)>] [mode=<include|exclude (include)>]",
+    "Filters spectra based on precursor isolation windows found in the <isolation_window_list>, with <mzTol> m/z tolerance. To retain "
+    "only spectra with isolation windows [123.4,153.4] and [567.8,617.8], use --filter \"isolationWindows [123.4,153.4] [567.8,617.8]\". "
+    "Note that this filter will drop MS1 scans unless you include [0,0] in the list of isolation windows."
+    "   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, \"5 PPM\" or \"2.1 MZ\".\n"
+    "   <mode> is optional and must be either \"include\" (the default) or \"exclude\".  If \"exclude\" is "
+    "used, the filter drops spectra that match the various criteria instead of keeping them."
+};
+
+SpectrumListPtr filterCreator_isolationWidth(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg = carg;
+
+    auto mzTol = parseKeyValuePair<MZTolerance, 2>(arg, "mzTol=", MZTolerance(10, MZTolerance::PPM));
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+
+    char open = '\0', comma = '\0', close = '\0';
+    std::set<double> setMz;
+
+    istringstream iss(arg);
+    iss >> open;
+    while (isdigit(iss.peek()))
+    {
+        double mz = 0;
+        iss >> mz;
+        setMz.insert(mz);
+        if (iss.peek() == ',')
+            iss >> comma;
+    }
+    iss >> close;
+
+    if (open != '[' || close != ']')
+        throw user_error("[SpectrumListFactory::filterCreator_isolationWidth()] expected a list of m/z values formatted like \"[1.23,5.67,7.89]\"");
+
+    return SpectrumListPtr(new
+        SpectrumList_Filter(msd.run.spectrumListPtr,
+            SpectrumList_FilterPredicate_IsolationWidthSet(setMz, mzTol, mode), ilr));
+}
+UsageInfo usage_isolationWidth = { "<isolation_width_list> [mzTol=<mzTol (10 ppm)>] [mode=<include|exclude (include)>]",
+    "Filters spectra based on precursor isolation width values found in the <isolation_width_list>, with <mzTol> m/z tolerance. To retain "
+    "only spectra with isolation width values of 1.5 and 2.3, use --filter \"isolationWidth [1.5,2.3]\". "
+    "Note that this filter will drop MS1 scans unless you include 0.0 in the list of isolation width values."
+    "   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, \"5 PPM\" or \"2.1 MZ\".\n"
+    "   <mode> is optional and must be either \"include\" (the default) or \"exclude\".  If \"exclude\" is "
+    "used, the filter drops spectra that match the various criteria instead of keeping them."
+};
+
 SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet msLevelSet;
@@ -1629,6 +1706,8 @@ JumpTableEntry jumpTable_[] =
     {"threshold", usage_thresholdFilter, filterCreator_thresholdFilter},
     {"mzWindow", usage_mzWindow, filterCreator_mzWindow},
     {"mzPrecursors", usage_mzPrecursors, filterCreator_mzPrecursors},
+    {"isolationWindows", usage_isolationWindows, filterCreator_isolationWindows},
+    {"isolationWidth", usage_isolationWidth, filterCreator_isolationWidth},
     {"defaultArrayLength", usage_defaultArrayLength, filterCreator_defaultArrayLength},
     {"zeroSamples", usage_zeroSamples , filterCreator_ZeroSamples},
     {"mzPresent", usage_mzPresent, filterCreator_mzPresent},

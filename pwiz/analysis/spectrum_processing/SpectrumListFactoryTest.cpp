@@ -24,6 +24,7 @@
 #include "SpectrumListFactory.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/msdata/TextWriter.hpp"
 #include <cstring>
 
 
@@ -567,7 +568,6 @@ void testWrapThermoScanFilter()
         msd.run.spectrumListPtr = originalSL;
         SpectrumListFactory::wrap(msd, "thermoScanFilter contains exclude 395.0000-1005.0000");
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
-        cout << sl->size()<<endl;
         unit_assert(sl->size() == 4);
         unit_assert(sl->spectrumIdentity(0).id == "scan=19");
         unit_assert(sl->spectrumIdentity(1).id == "scan=20");
@@ -680,6 +680,124 @@ void testWrapPrecursorMzSet()
     unit_assert_throws_what(SpectrumListFactory::wrap(msd, "mzPrecursors [0,445.34] target=42"), user_error, "[SpectrumListFactory::filterCreator_mzPrecursors()] invalid value for 'target' parameter: 42");
 }
 
+void testWrapIsolationWindowSet()
+{
+    MSData msd;
+    ostringstream str;
+    examples::initializeTiny(msd);
+    auto originalSL = msd.run.spectrumListPtr;
+
+    {
+        SpectrumListFactory::wrap(msd, "isolationWindows [444,446]"); // default tolerance does not match to 1.0 (-0.5, 0.5)
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(0, sl->size());
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWindows [444,446] mzTol=1mz");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(1, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWindows [444,446] mzTol=1 mz"); // mzTol should still parse correctly with a space
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(1, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWindows [444.8,445.8] mode=exclude"); // only 1 MS2 left, but MS1s aren't excluded now
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal_message(4, sl->size(), "\n" + (TextWriter(str)(sl), str.str()));
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=22", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(3).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWindows [0,0] [445, 446] mzTol=1mz"); // bring back the MS1s explicitly
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal_message(4, sl->size(), "\n" + (TextWriter(str)(sl), str.str()));
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(3).id);
+    }
+
+    msd.run.spectrumListPtr = originalSL;
+    string expectedError = "[SpectrumListFactory::filterCreator_isolationWindows()] expected a list of isolation windows formatted like \"[123.4,234.5] [345.6,456.7]\"";
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "isolationWindows mode=include"), user_error, expectedError);
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "isolationWindows (123)"), user_error, expectedError);
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "isolationWindows [123]"), user_error, expectedError);
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "isolationWindows [123;124]"), user_error, expectedError);
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "isolationWindows [123-124]"), user_error, expectedError);
+}
+
+void testWrapIsolationWidthSet()
+{
+    MSData msd;
+    ostringstream str;
+    examples::initializeTiny(msd);
+    auto originalSL = msd.run.spectrumListPtr;
+
+    {
+        SpectrumListFactory::wrap(msd, "isolationWidth [0.9]"); // default tolerance does not match to 1.0 (-0.5, 0.5)
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(0, sl->size());
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWidth [0.9] mzTol=0.2mz");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(2, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWidth [0.9] mzTol=0.2 mz"); // mzTol should still parse correctly with a space
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(2, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWidth [0.9] mode=exclude"); // only 1 MS2 left, but MS1s aren't excluded now
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal_message(5, sl->size(), "\n" + (TextWriter(str)(sl), str.str()));
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("scan=22", sl->spectrumIdentity(3).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(4).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "isolationWidth [0,1.0]"); // bring back the MS1s explicitly
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal_message(5, sl->size(), "\n" + (TextWriter(str)(sl), str.str()));
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("scan=22", sl->spectrumIdentity(3).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(4).id);
+    }
+
+    msd.run.spectrumListPtr = originalSL;
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "isolationWidth mode=include"), user_error,
+        "[SpectrumListFactory::filterCreator_isolationWidth()] expected a list of m/z values formatted like \"[1.23,5.67,7.89]\"");
+}
+
 void testWrapMZPresent()
 {
     MSData msd;
@@ -774,6 +892,8 @@ void test()
     testWrapTitleMaker();
     testWrapThermoScanFilter();
     testWrapPrecursorMzSet();
+    testWrapIsolationWindowSet();
+    testWrapIsolationWidthSet();
     testWrapMZPresent();
     testWrapETDFilter();
 }
