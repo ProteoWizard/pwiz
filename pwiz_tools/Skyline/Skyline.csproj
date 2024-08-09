@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>171</ApplicationRevision>
-    <ApplicationVersion>24.0.9.171</ApplicationVersion>
+    <ApplicationRevision>196</ApplicationRevision>
+    <ApplicationVersion>24.1.1.196</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -489,6 +489,9 @@
     <Compile Include="FileUI\PeakBoundaryImporterUI.cs" />
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>

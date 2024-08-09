@@ -8,6 +8,7 @@ using System.Threading;
 using FluentFTP;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -100,7 +101,10 @@ namespace SkylineBatch
                     {
                         string userName = server.FileSource.Username, password = server.FileSource.Password;
                         if (!string.IsNullOrEmpty(userName) || !string.IsNullOrEmpty(password))
-                            PanoramaUtil.ValidateServerAndUser(ref uri, userName, password);
+                        {
+                            var validatedPanoramaServer = new WebPanoramaClient(uri, userName, password).ValidateServer();
+                            uri = validatedPanoramaServer.URI;
+                        }
 
                         var chosenServer = Uri.UnescapeDataString(uri.GetLeftPart(UriPartial.Authority));
                         JToken files;
@@ -128,7 +132,7 @@ namespace SkylineBatch
                                 var pathOnServer = (string)file["id"];
                                 var downloadUri = new Uri(chosenServer + pathOnServer);
                                 var panoramaServerUri = new Uri(chosenServer);
-                                var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri), server.FileSource.Username, server.FileSource.Password,
+                                var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri, server.FileSource.Username, server.FileSource.Password),
                                      cancelToken);
                                 fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
                                     new Server(new RemoteFileSource(server.FileSource.Name + " TEST2", downloadUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty), size,
@@ -201,9 +205,9 @@ namespace SkylineBatch
             if (cancelToken.IsCancellationRequested)
                 return null;
             var uri = GetFilesJsonUri(server, relativePath);
-            var webClient = new WebPanoramaClient(new Uri(Uri.UnescapeDataString(uri.GetLeftPart(UriPartial.Authority))));
+            var webClient = new WebPanoramaClient(new Uri(Uri.UnescapeDataString(uri.GetLeftPart(UriPartial.Authority))), server.FileSource.Username, server.FileSource.Password);
             var jsonAsString =
-                webClient.DownloadStringAsync(uri, server.FileSource.Username, server.FileSource.Password, cancelToken);
+                webClient.DownloadStringAsync(uri, cancelToken);
             if (cancelToken.IsCancellationRequested)
                 return null;
             var panoramaJsonObject = JsonConvert.DeserializeObject<JObject>(jsonAsString);

@@ -969,7 +969,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>正在导入结果...</value>
+    <value>正在导入结果…</value>
   </data>
   <data name="&gt;&gt;imageListLock.Name" xml:space="preserve">
     <value>imageListLock</value>
