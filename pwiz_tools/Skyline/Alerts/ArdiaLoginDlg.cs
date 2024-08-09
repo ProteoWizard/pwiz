@@ -66,8 +66,10 @@ namespace pwiz.Skyline.Alerts
         public ArdiaAccount Account { get; private set; }
         public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
 
+        private Uri _ardiaServer_URI;
         private string _ardiaServerURL_BaseURL;
         private string _ardiaServerURL_Transport;
+
 
 
         //  Used for log in to Ardia in Default System Browser
@@ -109,6 +111,8 @@ namespace pwiz.Skyline.Alerts
             {
                 var serverUrl = Account.ServerUrl;
 
+                _ardiaServer_URI = new Uri(serverUrl, UriKind.Absolute);
+
                 var transport_HTTPS = @"https://";
                 var transport_HTTP = @"http://";
 
@@ -128,18 +132,20 @@ namespace pwiz.Skyline.Alerts
                     _ardiaServerURL_BaseURL = serverUrl;
                     _ardiaServerURL_Transport = "";
                 }
-
-                this.FormClosing += (sender, e) =>
-                {
-                    // _formClosing_Called = true;
-
-                    _cancellationTokenSource.Cancel();
-
-                    _cancellationTokenSource.Dispose();
-
-                    Stop_HTTPListener();
-                };
+                
             }
+
+
+            this.FormClosing += (sender, e) =>
+            {
+                // _formClosing_Called = true;
+
+                _cancellationTokenSource.Cancel();
+
+                _cancellationTokenSource.Dispose();
+
+                Stop_HTTPListener();
+            };
 
             // To support command line, need to do something completely different since Ardia objects to Skyline code having username/password and also programmatic sign in to Ardia not possible for MFA and other possible issues.
             //
@@ -520,7 +526,7 @@ namespace pwiz.Skyline.Alerts
                 return false;
             }
 
-            var identityBaseUri = new UriBuilder { Scheme = "https", Host = $"identity.{_ardiaServerURL_BaseURL}" }.Uri;
+            var identityBaseUri = new UriBuilder { Scheme = _ardiaServer_URI.Scheme, Host = $"identity.{_ardiaServerURL_BaseURL}" }.Uri;
             var clientStatusEndpointPath = @"api/v2/Clients/clientStatus";
             var credentialsValidationUri = new UriBuilder(identityBaseUri)
             {
@@ -908,7 +914,7 @@ namespace pwiz.Skyline.Alerts
 
             var returnUriEncoded = WebUtility.UrlEncode(returnUri);
 
-            var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
+            var apiBaseUri = new UriBuilder { Scheme = _ardiaServer_URI.Scheme, Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
             var loginEndpointPath = @"session-management/bff/login";
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
             var applicationName = ardiaRegistrationEntry.ClientName;
@@ -946,7 +952,7 @@ namespace pwiz.Skyline.Alerts
 
             var returnUri = GetBrowserReturnUrl();
 
-            var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
+            var apiBaseUri = new UriBuilder { Scheme = _ardiaServer_URI.Scheme, Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
             var patTokenEndpoint = @"session-management/bff/identity-server/tokenApi/pat";
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
 
@@ -963,7 +969,7 @@ namespace pwiz.Skyline.Alerts
         // Method used to get the session cookie URL for the browser login process
         private string GetBrowserSessionCookieUrl()
         {
-            var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
+            var apiBaseUri = new UriBuilder { Scheme = _ardiaServer_URI.Scheme, Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
             var sessionCookieEndpoint = @"session-management/api/v1/SessionManagement/sessioncookie";
 
             // Construct the session cookie URL

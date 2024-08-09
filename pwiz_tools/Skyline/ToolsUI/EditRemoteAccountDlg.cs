@@ -225,12 +225,14 @@ namespace pwiz.Skyline.ToolsUI
         // Method used to get the logout URL for the browser login process
         private async Task<string> GetBrowserLogoutUrl()
         {
-            var _baseUrl = _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Replace("https://", "");
+            var serverUri = new Uri(_ardiaAccount_CurrentlyLoggedIn.ServerUrl, UriKind.Absolute);
+
+            var baseUrl = _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Replace("https://", "");
 
             ArdiaRegistrationCodeEntry ardiaRegistrationEntry = null;
 
             {
-                if (!Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(_baseUrl,
+                if (!Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(baseUrl,
                         out ardiaRegistrationEntry))
                 {
                     ardiaRegistrationEntry = null;
@@ -244,8 +246,8 @@ namespace pwiz.Skyline.ToolsUI
             
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
 
-            var apiBaseUri = new UriBuilder { Scheme = "https", Host = $"api.{_baseUrl}" }.Uri;
-            var baseUri = new UriBuilder { Scheme = "https", Host = _baseUrl }.Uri;
+            var apiBaseUri = new UriBuilder { Scheme = serverUri.Scheme, Host = $"api.{baseUrl}" }.Uri;
+            var baseUri = new UriBuilder { Scheme = serverUri.Scheme, Host = baseUrl }.Uri;
             var userEndpointPath = "session-management/bff/user";
             var userEndpointUri = new Uri(apiBaseUri, userEndpointPath);
 
