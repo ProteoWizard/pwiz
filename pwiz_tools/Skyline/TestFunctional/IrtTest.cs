@@ -1459,7 +1459,7 @@ namespace pwiz.SkylineTestFunctional
             TestStandardDocument(IrtStandard.CIRT,
                 IrtStandard.CIRT.Peptides.Where(pep => !IrtStandard.CIRT_SHORT.Contains(pep.ModifiedTarget)).Take(20));
 
-            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test.sky")));
         }
 
         private void TestStandardDocument(IrtStandard standard, IEnumerable<DbIrtPeptide> overrideStandards = null, int numTransitions = 3)
@@ -1473,7 +1473,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<EditIrtCalcDlg>(peptideSettings.AddCalculator, dlg =>
             {
                 dlg.CalcName = string.Format("Test {0}", standard.Name);
-                dlg.CreateDatabase(TestContext.GetTestPath("test.irtdb"));
+                dlg.CreateDatabase(TestContext.GetTestResultsPath("test.irtdb"));
                 dlg.StandardPeptides = standards;
                 dlg.OkDialog();
             });
