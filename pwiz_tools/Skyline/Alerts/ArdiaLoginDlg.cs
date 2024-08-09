@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ArdiaLoginDlg : FormEx
     {
-        private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = true;
+        private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = false;
 
 
         private static readonly int TESTING_WEBVIEW_WIZARD_PAGE_INDEX = 0;
