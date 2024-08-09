@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             dda,
             prm,
-            dia,
+            dia, // currently means deconvolution with DIA-Umpire
             feature_detection
         }
 
@@ -552,6 +552,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     _pagesToSkip.Clear();
                     ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
+                    ImportPeptideSearch.IsDIASearch = WorkflowType == Workflow.prm; // DIA-Umpire is more like DDA search
                     ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     if (!BuildPepSearchLibControl.UseExistingLibrary)
                     {
