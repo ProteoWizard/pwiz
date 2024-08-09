@@ -40,7 +40,7 @@ namespace detail {
 
 
 SpectrumList_Mobilion::SpectrumList_Mobilion(MSData& msd, const MBIFilePtr& rawdata, const Reader::Config& config)
-    : msd_(msd), rawdata_(rawdata), config_(config), lastFrame_(-1)
+    : msd_(msd), mbiFile_(rawdata), rawdata_(&mbiFile_->file), config_(config), lastFrame_(-1)
 {
     createIndex();
 }
@@ -102,7 +102,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
-    int msLevel = frame->IsFragmentationData() ? 2 : 1;
+    int msLevel = frame->isFragmentationData() ? 2 : 1;
     CVID spectrumType = msLevel == 2 ? MS_MSn_spectrum : MS_MS1_spectrum;
 
     result->set(spectrumType);
@@ -114,20 +114,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
     if (detailLevel == DetailLevel_InstantMetadata)
         return result;
 
-    auto fileMetadata = rawdata_->Metadata();
-    auto frameMetadata = frame->Metadata();
+    auto fileMetadata = rawdata_->GetGlobalMetaData();
+    auto frameMetadata = frame->GetFrameMetaData();
 
-    result->set(translatePolarity(frameMetadata.ReadString("frm-polarity")));
+    result->set(translatePolarity(frameMetadata->ReadString(MBISDK::MBIAttr::FrameKey::FRM_POLARITY)));
     result->set(MS_profile_spectrum);
     
     /*result->set(MS_base_peak_m_z, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_MASS));
     result->set(MS_base_peak_intensity, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_INTENSITY));
     result->defaultArrayLength = binaryDataSource.lock()->GetScanStat<int>(ie.function, scan, MassLynxScanItem::PEAKS_IN_SCAN);*/
 
-    result->set(MS_total_ion_current, frame->TotalIntensity());
+    result->set(MS_total_ion_current, frame->GetFrameTotalIntensity());
 
     // CONSIDER: is there a better way to get minMZ?
-    double minMZ = 0, maxMZ = fileMetadata.ReadDouble("adc-mass-spec-range");
+    double minMZ = 0, maxMZ = fileMetadata->ReadDouble(MBISDK::MBIAttr::GlobalKey::ADC_MASS_SPEC_RANGE);
     scan.scanWindows.push_back(ScanWindow(minMZ, maxMZ, MS_m_z));
 
     if (detailLevel < DetailLevel_FastMetadata)
@@ -135,7 +135,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
 
     if (!config_.combineIonMobilitySpectra)
     {
-        double driftTime = frame->Calibration().IndexToMicroseconds(ie.scan);
+        double driftTime = frame->GetArrivalBinTimeOffset(ie.scan);
         scan.set(MS_ion_mobility_drift_time, driftTime, UO_millisecond);
     }
 
@@ -149,7 +149,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
         
         precursor.activation.set(MS_beam_type_collision_induced_dissociation); // AFAIK there is no Agilent QTOF instrument with a trap collision cell
 
-        double collisionEnergy = frame->GetFragmentationMetadata().fragEnergy;
+        double collisionEnergy = frame->GetCollisionEnergy();
         if (collisionEnergy > 0)
             precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
 
@@ -179,23 +179,25 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
     }
     else
     {
-        auto scan = frame->GetScan(ie.scan);
-        auto mzData = scan->MzData();
 
-        result->defaultArrayLength = mzData.size();
+        std::vector<double> mz;
+        std::vector<size_t> intensity;
+        if (!frame->GetScanDataMzIndexedSparse(ie.scan, &mz, &intensity))
+            throw runtime_error("[SpectrumList_MBI::spectrum] error getting scan data");
+
+        result->defaultArrayLength = mz.size();
         if (detailLevel == DetailLevel_FullMetadata)
             return result;
 
-        mzArray.resize(mzData.size());
-        intensityArray.resize(mzData.size());
+        mzArray.resize(mz.size());
+        intensityArray.resize(mz.size());
         auto mzArrayItr = mzArray.begin();
         auto intensityArrayItr = intensityArray.begin();
-        for (auto mzIntPair : mzData)
+        auto intensityItr = intensity.begin();
+        for (const auto& mzItr : mz)
         {
-            *mzArrayItr = mzIntPair.first;
-            *intensityArrayItr = mzIntPair.second;
-            ++mzArrayItr;
-            ++intensityArrayItr;
+            *mzArrayItr++ = mzItr;
+            *intensityArrayItr++ = *intensityItr++;
         }
         result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
     }
@@ -230,43 +232,39 @@ PWIZ_API_DECL double SpectrumList_Mobilion::ccsToIonMobility(double ccs, double 
 
 PWIZ_API_DECL void SpectrumList_Mobilion::getCombinedSpectrumData(Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
 {
+    auto nonEmpty = frame.GetNonZeroScanIndices(); // List of indexes of non-empty scans
+
+    std::vector<double> mzScan;
+    std::vector<size_t> intensityScan;
     int totalPoints = 0;
     for (int i : frame.GetNonZeroScanIndices())
-        totalPoints += frame.GetScan(i)->Data().size();
-
-    auto calibration = frame.Calibration();
-    auto mobiligram = frame.Mobiligram();
-    auto mobiligramItr = mobiligram.begin();
+    {
+        frame.GetScanDataMzIndexedSparse(i, &mzScan, &intensityScan);
+        totalPoints += mzScan.size();
+    }
 
     mz.resize(totalPoints);
     intensity.resize(totalPoints);
     driftTime.resize(totalPoints);
-    int currentPoints = 0; // zero intensity samples may be dropped so final total may be lower than totalPoints
     auto mzItr = &mz[0], intensityItr = &intensity[0], driftTimeItr = &driftTime[0];
-    for (int i=0; i < frame.NumScans(); ++i)
+    for (auto scanIndex : nonEmpty)
     {
-        double driftTimeMs = mobiligramItr->first; // frame.Calibration().IndexToMicroseconds(i);
-        ++mobiligramItr;
+        double driftTimeMs = frame.GetArrivalBinTimeOffset(scanIndex);
 
         if (!chemistry::MzMobilityWindow::mobilityValueInBounds(config_.isolationMzAndMobilityFilter, driftTimeMs))
             continue;
 
-        auto scan = frame.GetScan(i);
-        if (scan->TotalIntensity() == 0)
-            continue;
+        frame.GetScanDataMzIndexedSparse(scanIndex, &mzScan, &intensityScan);
 
-        auto scanData = scan->Data();
-        for (const auto& mzBinIntensityPair : scanData)
+        auto intensityScanItr = intensityScan.begin();
+        for (const auto& mzScanItr : mzScan)
         {
-            if (config_.ignoreZeroIntensityPoints && mzBinIntensityPair.second == 0)
-                continue;
-
-            *mzItr++ = calibration.IndexToMz(mzBinIntensityPair.first);
-            *intensityItr++ = mzBinIntensityPair.second;
+            *mzItr++ = mzScanItr;
+            *intensityItr++ = *intensityScanItr++;
             *driftTimeItr++ = driftTimeMs;
-            ++currentPoints;
         }
     }
+    auto currentPoints = mzItr - &mz[0];
     mz.resize(currentPoints);
     intensity.resize(currentPoints);
     driftTime.resize(currentPoints);
@@ -279,7 +277,7 @@ PWIZ_API_DECL void SpectrumList_Mobilion::createIndex()
 {
     using namespace boost::spirit::karma;
 
-    for (size_t i=0; i < rawdata_->NumFrames(); ++i)
+    for (size_t i = 1; i <= rawdata_->NumFrames(); ++i)
     {
         if (config_.combineIonMobilitySpectra)
         {
@@ -290,7 +288,7 @@ PWIZ_API_DECL void SpectrumList_Mobilion::createIndex()
 
             std::back_insert_iterator<std::string> sink(ie.id);
             generate(sink, "merged=" << int_ << " frame=" << int_,
-                (ie.index + 1), (ie.frame + 1));
+                (ie.index + 1), ie.frame);
             idToIndexMap_[ie.id] = ie.index;
         }
         else
@@ -306,7 +304,7 @@ PWIZ_API_DECL void SpectrumList_Mobilion::createIndex()
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink, "frame=" << int_ << " scan=" << int_,
-                    (ie.frame + 1), (ie.scan + 1));
+                    ie.frame, (ie.scan + 1));
                 idToIndexMap_[ie.id] = ie.index;
             }
         }

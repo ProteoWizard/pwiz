@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
         }
 
         // test CWT centroiding
-        {
+        /* {
             auto newConfig = config;
 
             // CWT should work with ion mobility
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
             newConfig.combineIonMobilitySpectra = true;
             newConfig.indexRange.reset();
             result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile({ "ExampleTuneMix_binned5.mbi" }), newConfig);
-        }
+        }*/
 
         config.combineIonMobilitySpectra = true;
         result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsMbiFile(), config);

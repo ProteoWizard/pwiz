@@ -29,14 +29,29 @@
 
 #ifdef PWIZ_READER_MOBILION
 #include "pwiz_aux/msrc/utility/vendor_api/Mobilion/MBIFile.h"
-using namespace MBI;
+using namespace MBISDK;
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 namespace Mobilion {
+PWIZ_API_DECL class MBIFileWrapper
+{
+	public:
+	MBIFileWrapper(const std::string& filepath)
+		: file(filepath.c_str())
+	{
+		file.Init();
+	}
 
-typedef boost::shared_ptr<MBIFile> MBIFilePtr;
+	~MBIFileWrapper()
+	{
+		file.Close();
+	}
+
+	MBIFile file;
+};
+typedef boost::shared_ptr<MBIFileWrapper> MBIFilePtr;
 
 PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(const MBIFilePtr& rawdata);
