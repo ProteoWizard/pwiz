@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ArdiaLoginDlg : FormEx
     {
-        private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = false;
+        private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = true;
 
 
         private static readonly int TESTING_WEBVIEW_WIZARD_PAGE_INDEX = 0;
@@ -310,38 +310,47 @@ namespace pwiz.Skyline.Alerts
 
         protected override void OnShown(EventArgs e)
         {
-            // was using BffHostCookie_PersistedButNeverSet
-            if (!Account.BffHostCookie_NotPersisted.IsNullOrEmpty())
+            try
             {
-                _bffCookie = new Cookie(@"Bff-Host", Account.BffHostCookie_NotPersisted);
-                AuthenticatedHttpClientFactory = GetFactory();
+                // was using BffHostCookie_PersistedButNeverSet
+                if (!Account.BffHostCookie_NotPersisted.IsNullOrEmpty())
+                {
+                    _bffCookie = new Cookie(@"Bff-Host", Account.BffHostCookie_NotPersisted);
+                    AuthenticatedHttpClientFactory = GetFactory();
 
-                // check that cookie is still valid
-                using var client = AuthenticatedHttpClientFactory();
-                var response = client.GetAsync(Account.GetFolderContentsUrl()).Result;
-                try
-                {
-                    response.EnsureSuccessStatusCode();
-                    DialogResult = DialogResult.OK;
-                    return;
+                    // check that cookie is still valid
+                    using var client = AuthenticatedHttpClientFactory();
+                    var response = client.GetAsync(Account.GetFolderContentsUrl()).Result;
+                    try
+                    {
+                        response.EnsureSuccessStatusCode();
+                        DialogResult = DialogResult.OK;
+                        return;
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
                 }
-                catch (Exception)
+
+                if (string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
+                    string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password))
                 {
-                    // ignored
+                    //  Login via System Default Browser.   Standard way to Login
+
+                    Initialize_LoginIn_SystemDefaultBrowser();
                 }
+                else
+                {   //   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
+
+                    Initialize_LoginIn_WebView();
+                }
+
             }
-
-            if (string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
-                string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password))
+            catch (Exception exception)
             {
-                //  Login via System Default Browser.   Standard way to Login
-
-                Initialize_LoginIn_SystemDefaultBrowser();
-            }
-            else
-            {   //   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
-
-                Initialize_LoginIn_WebView();
+                MessageDlg.ShowWithException(this, "Error connecting to Ardia server", exception);
+                DialogResult = DialogResult.OK;
             }
         }
 
@@ -523,27 +532,47 @@ namespace pwiz.Skyline.Alerts
             {
                 using (var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest))
                 {
-                    using (var contentTask = clientCredentialsResponse.Content.ReadAsStringAsync())
+                    if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
                     {
-                        var content = contentTask.Result;
+                        //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
 
-                        //  Parse the content as JSON and get property clientCodeStatus
+                        var errorMessage =
+                            string.Format(
+                                "Error validating Skyline Instance registration in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
+                                credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
+                        MessageDlg.Show(this, errorMessage);
+                    }
+                    else if (!clientCredentialsResponse.IsSuccessStatusCode)
+                    {
 
-                        var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
+                        //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
 
-                        if (clientStatusResultObject == null || clientStatusResultObject.clientCodeStatus == null)
-                        {
-                            return false;
-                        }
+                        var errorMessage =
+                            string.Format(
+                                "Error validating Skyline Instance registration in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
+                                credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
+                        MessageDlg.Show(this, errorMessage);
+                    }
 
-                        if (clientStatusResultObject.clientCodeStatus.Contains(@"has been activated"))
-                        {
-                            return true; // ApplicationCode is valid
-                        }
+                    clientCredentialsResponse.EnsureSuccessStatusCode();
 
+                    var content = await clientCredentialsResponse.Content.ReadAsStringAsync();
+
+                    //  Parse the content as JSON and get property clientCodeStatus
+
+                    var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
+
+                    if (clientStatusResultObject == null || clientStatusResultObject.clientCodeStatus == null)
+                    {
                         return false;
                     }
 
+                    if (clientStatusResultObject.clientCodeStatus.Contains(@"has been activated"))
+                    {
+                        return true; // ApplicationCode is valid
+                    }
+
+                    return false;
                 }
             }
         }
@@ -699,6 +728,8 @@ namespace pwiz.Skyline.Alerts
 
             int portAddition = 0;
 
+            string returnUrl = null;
+
             while (true)
             {
                 try
@@ -708,7 +739,7 @@ namespace pwiz.Skyline.Alerts
                     _httpListener_Port = portNumber_StartNumber + portAddition;
 
                     // Get the return URL for the http listener
-                    var returnUrl = GetBrowserReturnUrl();
+                    returnUrl = GetBrowserReturnUrl();
 
                     // Create a new HttpListener instance and start listening for incoming requests on the redirect URL
                     _httpListener = new HttpListener();
@@ -717,25 +748,6 @@ namespace pwiz.Skyline.Alerts
                     // Set the timeout values for the HttpListener
                     _httpListener.TimeoutManager.IdleConnection = TimeSpan.FromMinutes(2.5);
                     _httpListener.TimeoutManager.HeaderWait = TimeSpan.FromMinutes(2.5);
-
-                    // Get the login URL for the browser login process
-                    var loginUrl = GetBrowserLoginUrl(returnUrl);
-
-                    // Create a new browser process to open the login URL in the default system web browser
-                    _browserProcess = new Process()
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            FileName = loginUrl,
-                            UseShellExecute = true,
-                            Verb = string.Empty
-                        }
-                    };
-                    // Start the browser process to open the login URL in the default system web browser
-                    _browserProcess.Start();
-
-                    // Begin the HttpListener request callback
-                    var result = _httpListener.BeginGetContext(RequestCallback, _httpListener);
 
                     break; //  Exit Loop since successful create of listener
                 }
@@ -749,92 +761,143 @@ namespace pwiz.Skyline.Alerts
                     portAddition++;
                 }
             }
+
+            // Get the login URL for the browser login process
+            var loginUrl = GetBrowserLoginUrl(returnUrl);
+
+            // Create a new browser process to open the login URL in the default system web browser
+            _browserProcess = new Process()
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = loginUrl,
+                    UseShellExecute = true,
+                    Verb = string.Empty
+                }
+            };
+            // Start the browser process to open the login URL in the default system web browser
+            _browserProcess.Start();
+
+            // Begin the HttpListener request callback
+            var result = _httpListener.BeginGetContext(RequestCallback, _httpListener);
+
+            var z = 0;
         }
 
         // Method used to handle the request callback from the HttpListener when the user logs in and retrieve the PAT token
         private async void RequestCallback(IAsyncResult asyncResult)
         {
-            if (_cancellationToken.IsCancellationRequested)
+            try
             {
-                return;
-            }
-
-            // Get the HttpListener instance and the context from the async result
-            var httpListener = (HttpListener)asyncResult.AsyncState;
-            var context = httpListener.EndGetContext(asyncResult);
-            if (context != null)
-            {
-                var request = context.Request;
-                var response = context.Response;
-
-                var responseString = GetBrowserLoginResponseString();
-                var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                response.ContentLength64 = buffer.Length;
-                var responseOutput = response.OutputStream;
-                // Write the response to the output stream
-                await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith((task) => {
-                    responseOutput.Close();
-                });
-            }
-
-            var patTokenUrl = GetBrowserPatTokenUrl();
-            // Create a new browser process to open the PAT token URL in the default system web browser
-            _browserProcess = new Process()
-            {
-                StartInfo = new ProcessStartInfo
+                if (_cancellationToken.IsCancellationRequested)
                 {
-                    FileName = patTokenUrl,
-                    UseShellExecute = true,
-                    Verb = string.Empty
+                    return;
                 }
-            };
-            // Start the browser process to open the PAT token URL in the default system web browser
-            _browserProcess.Start();
 
-            // Begin the HttpListener PAT request callback
-            _httpListener.BeginGetContext(PatRequestCallback, _httpListener);
+                // Get the HttpListener instance and the context from the async result
+                var httpListener = (HttpListener)asyncResult.AsyncState;
+                var context = httpListener.EndGetContext(asyncResult);
+                if (context != null)
+                {
+                    var request = context.Request;
+                    var response = context.Response;
+
+                    var responseString = GetBrowserLoginResponseString();
+                    var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                    response.ContentLength64 = buffer.Length;
+                    var responseOutput = response.OutputStream;
+                    // Write the response to the output stream
+                    await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith((task) => {
+                        responseOutput.Close();
+                    });
+                }
+
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                var patTokenUrl = GetBrowserPatTokenUrl();
+                // Create a new browser process to open the PAT token URL in the default system web browser
+                _browserProcess = new Process()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = patTokenUrl,
+                        UseShellExecute = true,
+                        Verb = string.Empty
+                    }
+                };
+                // Start the browser process to open the PAT token URL in the default system web browser
+                _browserProcess.Start();
+
+                // Begin the HttpListener PAT request callback
+                _httpListener.BeginGetContext(PatRequestCallback, _httpListener);
+            }
+            catch (Exception e)
+            {
+                Program.ReportException(e);
+            }
         }
 
         // Method used to handle the PAT request callback from the HttpListener when the user logs in and retrieve the session cookie
         private async void PatRequestCallback(IAsyncResult asyncResult)
         {
-            // Get the HttpListener instance and the context from the async result
-            var httpListener = (HttpListener)asyncResult.AsyncState;
-            var context = httpListener.EndGetContext(asyncResult);
-            if (context != null)
+            try
             {
-                // Get the PAT token from the context request
-                var patToken = context.Request.QueryString[@"pat"];
-                var sessionCookieUrl = GetBrowserSessionCookieUrl();
-                var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add(@"Authorization", @$"Bearer {patToken}");
-                // Get the session cookie from the Session Management API
-                var httpClientResponse = await httpClient.GetAsync(sessionCookieUrl);
-                // Get the session cookie value from the response
-                var sessionCookie = await httpClientResponse.Content.ReadAsStringAsync();
-                var domain = @$"api.{_ardiaServerURL_BaseURL}";
-                // Create a new cookie object to store the Bff-Host cookie value
-                _bffCookie = new Cookie
+                if (_cancellationToken.IsCancellationRequested)
                 {
-                    Name = "Bff-Host",
-                    Value = JsonConvert.DeserializeObject<string>(sessionCookie),
-                    Domain = domain,
-                    Path = "/",
-                    Secure = true,
-                    HttpOnly = true
-                };
+                    return;
+                }
 
-                // Send a response to the browser to close the window
-                var listenerResponse = context.Response;
-                var responseString = GetBrowserLoginResponseString();
-                var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                listenerResponse.ContentLength64 = buffer.Length;
-                var responseOutput = listenerResponse.OutputStream;
-                // Write the response to the output stream
-                await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith((task) =>
+                // Get the HttpListener instance and the context from the async result
+                var httpListener = (HttpListener)asyncResult.AsyncState;
+                var context = httpListener.EndGetContext(asyncResult);
+                if (context != null)
                 {
-                    responseOutput.Close();
-                });
+                    // Get the PAT token from the context request
+                    var patToken = context.Request.QueryString[@"pat"];
+                    var sessionCookieUrl = GetBrowserSessionCookieUrl();
+                    var httpClient = new HttpClient();
+                    httpClient.DefaultRequestHeaders.Add(@"Authorization", @$"Bearer {patToken}");
+                    // Get the session cookie from the Session Management API
+                    var httpClientResponse = await httpClient.GetAsync(sessionCookieUrl);
+
+                    if (_cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    // Get the session cookie value from the response
+                    var sessionCookie = await httpClientResponse.Content.ReadAsStringAsync();
+                    var domain = @$"api.{_ardiaServerURL_BaseURL}";
+                    // Create a new cookie object to store the Bff-Host cookie value
+                    _bffCookie = new Cookie
+                    {
+                        Name = "Bff-Host",
+                        Value = JsonConvert.DeserializeObject<string>(sessionCookie),
+                        Domain = domain,
+                        Path = "/",
+                        Secure = true,
+                        HttpOnly = true
+                    };
+
+                    // Send a response to the browser to close the window
+                    var listenerResponse = context.Response;
+                    var responseString = GetBrowserLoginResponseString();
+                    var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                    listenerResponse.ContentLength64 = buffer.Length;
+                    var responseOutput = listenerResponse.OutputStream;
+                    // Write the response to the output stream
+                    await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith((task) =>
+                    {
+                        responseOutput.Close();
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Program.ReportException(e);
             }
         }
 
@@ -1098,9 +1161,6 @@ namespace pwiz.Skyline.Alerts
                     MessageDlg.Show(this, errorMessage);
 
                     //  404 may result in something different being triggered
-
-                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
-
                 }
                 else
                 {
@@ -1357,7 +1417,8 @@ namespace pwiz.Skyline.Alerts
         // Create a new client in the Ardia platform using the user access token obtained from the token response
         private async Task<string> CreateNewClient(TokenResponse userTokenResponse)
         {
-            try {
+            try
+            {
                 var newClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients";
                 var accessToken = userTokenResponse.AccessToken;
                 var clientName = @$"SkylineSampleApp{Guid.NewGuid().ToString()}";
@@ -1381,7 +1442,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (HttpRequestException e)
             {
-                var eToString = e.ToString();
+                // var eToString = e.ToString();
                 
                 // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
                 //
@@ -1403,7 +1464,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                throw new Exception(e.Message, e);
+                throw;
             }
         }
 
