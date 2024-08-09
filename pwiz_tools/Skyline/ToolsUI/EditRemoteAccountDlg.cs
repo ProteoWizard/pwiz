@@ -189,6 +189,20 @@ namespace pwiz.Skyline.ToolsUI
         {
             var logoutUrl = await GetBrowserLogoutUrl();
 
+            // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
+            //   Getting removed regardless of what the user does in the child window
+            _ardiaAccount_CurrentlyLoggedIn.ResetAuthenticatedHttpClientFactory();
+
+            _ardiaAccount_CurrentlyLoggedIn = null;
+
+            process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+
+
+            if (logoutUrl == null)
+            {
+                return;
+            }
+
             await Task.Run(() =>
             {
                 if (logoutUrl != null)
@@ -225,6 +239,7 @@ namespace pwiz.Skyline.ToolsUI
             if (ardiaRegistrationEntry == null)
             {
                 MessageDlg.Show(this, "ERROR: No Ardia registration code for URL");
+                return null;
             }
             
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
@@ -267,31 +282,30 @@ namespace pwiz.Skyline.ToolsUI
                     return completeLogoutUrl.ToString();
                 }
                 else
+                {
+                    MessageDlg.Show(this, "ERROR: Unable to compute URL for logout");
                     return null;
+                }
             }
         }
 
-
-        private void logoutArdia_UsingWebView_Using_ArdiaLogoutDlg()
-        {
-            //  CURRENTLY UNUSED
-
-            var z = 0;
-
-            using var logoutDlg = new ArdiaLogoutDlg(_ardiaAccount_CurrentlyLoggedIn);
-            if (DialogResult.Cancel == logoutDlg.ShowDialog(this))
-            {
-                z = 1;
-            }
-
-            // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
-            //   Getting removed regardless of what the user does in the child window
-            _ardiaAccount_CurrentlyLoggedIn.ResetAuthenticatedHttpClientFactory();
-
-            _ardiaAccount_CurrentlyLoggedIn = null;
-
-            process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
-        }
+        //  CURRENTLY UNUSED Logout from Ardia using WebView
+        //
+        // private void logoutArdia_UsingWebView_Using_ArdiaLogoutDlg()
+        // {
+        //     using var logoutDlg = new ArdiaLogoutDlg(_ardiaAccount_CurrentlyLoggedIn);
+        //     if (DialogResult.Cancel == logoutDlg.ShowDialog(this))
+        //     {
+        //     }
+        //
+        //     // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
+        //     //   Getting removed regardless of what the user does in the child window
+        //     _ardiaAccount_CurrentlyLoggedIn.ResetAuthenticatedHttpClientFactory();
+        //
+        //     _ardiaAccount_CurrentlyLoggedIn = null;
+        //
+        //     process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+        // }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
