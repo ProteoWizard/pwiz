@@ -787,13 +787,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (cirtResult.Regression == null)
                     {
                         msg.AppendLine(string.Format(
-                            Resources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_,
+                            IrtResources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_,
                             _picker.CirtPeptideCount));
                     }
                     else
                     {
                         msg.AppendLine(string.Format(
-                            Resources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_,
+                            IrtResources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_,
                             _picker.CirtPeptideCount, cirtResult.Count
                         ));
                         msg.AppendLine();
