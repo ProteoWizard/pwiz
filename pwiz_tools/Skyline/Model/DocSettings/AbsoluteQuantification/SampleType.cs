@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using SymbolType=ZedGraph.SymbolType;
@@ -49,17 +50,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             SymbolType = symbolType;
         }
 
+        public static readonly ImmutableList<SampleType> ALL = ImmutableList.ValueOf(new[]
+        {
+            UNKNOWN,
+            STANDARD,
+            QC,
+            SOLVENT,
+            BLANK,
+            DOUBLE_BLANK
+        });
+
         public static IList<SampleType> ListSampleTypes()
         {
-            return new[]
-            {
-                UNKNOWN,
-                STANDARD,
-                QC,
-                SOLVENT,
-                BLANK,
-                DOUBLE_BLANK
-            };
+            return ALL;
         }
 
         public static SampleType FromName(string name)
