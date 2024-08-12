@@ -966,6 +966,10 @@ namespace pwiz.Skyline.Menus
                     SkylineWindow.ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
                 }
             }
+
+            if (candidatePeaksToolStripMenuItem.Enabled != enable)
+                candidatePeaksToolStripMenuItem.Enabled = enable;
+
             if (peakAreasMenuItem.Enabled != enable)
             {
                 peakAreasMenuItem.Enabled = enable;
@@ -1006,6 +1010,7 @@ namespace pwiz.Skyline.Menus
                 }
             }
             chromatogramsMenuItem.Enabled = enable;
+            calibrationCurveMenuItem.Enabled = enable;
             transitionsMenuItem.Enabled = enable;
             transformChromMenuItem.Enabled = enable;
             autoZoomMenuItem.Enabled = enable;
@@ -1027,6 +1032,8 @@ namespace pwiz.Skyline.Menus
             {
                 libraryMatchToolStripMenuItem.Enabled = enable;
                 ionTypesMenuItem.Enabled = enable;
+                specialIonsMenuItem.Enabled = enable;
+                precursorIonMenuItem.Enabled = enable;
                 chargesMenuItem.Enabled = enable;
                 ranksMenuItem.Enabled = enable;
             }
@@ -1068,7 +1075,7 @@ namespace pwiz.Skyline.Menus
             spectrumGridForm.Show(SkylineWindow);
         }
 
-        private void otherGridsMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void liveReportsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             // The "Spectrum Grid" menu item is only visible if the user was holding down shift
             spectrumGridMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);

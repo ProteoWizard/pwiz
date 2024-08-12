@@ -33,5 +33,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public double X { get; private set; }
         public double Y { get; private set; }
         public double Weight { get; private set; }
+
+        public override string ToString()
+        {
+            if (Weight == 1)
+            {
+                return string.Format(@"({0},{1})", X, Y);
+            }
+
+            return string.Format(@"({0},{1},{2})", X, Y, Weight);
+        }
     }
 }
