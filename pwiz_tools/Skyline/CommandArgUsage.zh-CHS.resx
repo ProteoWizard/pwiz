@@ -288,6 +288,14 @@
   <data name="_import_threads" xml:space="preserve">
     <value>将使用主进程中的线程并行导入的文件数量（相当于用户界面中的“同时导入的文件”），之后各个文件的结果将被汇集。在适当的条件下，这可以带来 2-4 倍的性能提升。务必使用您的系统进行测试。</value>
   </data>
+  <data name="_import_pep_list" xml:space="preserve">
+    <value>导入肽段或肽段母离子（带电荷状态）列表，列表名称可由 --import-pep-list-name 指定。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_import_pep_list_name" xml:space="preserve">
+    <value>导入的肽段列表名称由 --import-pep-list 指定。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="_import_transition_list" xml:space="preserve">
     <value>导入包含 Q1、Q3 和肽段序列的简单离子对列表。 还支持 CSV 格式并具有合适标题的分子离子对列表。</value>
   </data>
@@ -529,8 +537,11 @@ http://localhost:8080</value>
   <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
     <value>指定提供的 ZIP 文件中的冲突的自定义注释是否应覆盖（“true”）或跳过（“false”）现有注释。</value>
   </data>
-  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
-    <value>文档设置</value>
+  <data name="CommandArgs_GROUP_SETTINGS_Transition_Settings" xml:space="preserve">
+    <value>离子对设置</value>
+  </data>
+  <data name="CommandArgs_GROUP_SETTINGS_Peptide_Settings" xml:space="preserve">
+    <value>肽段设置</value>
   </data>
   <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
     <value>路径/到/文件</value>
@@ -655,77 +666,57 @@ Waters</value>
     <value>如果还使用了“--refine-add-label-type”，则将删除（默认）或添加指定同位素标记类型的母离子。</value>
   </data>
   <data name="_refine_min_peptides" xml:space="preserve">
-    <value>含有少于此数目肽段的蛋白质将
-被从文档中删除。</value>
+    <value>含有少于此数目肽段的蛋白质将被从文档中删除。</value>
   </data>
   <data name="_refine_min_transitions" xml:space="preserve">
-    <value>含有少于此数目离子对的母离子将
-被从文档中删除。</value>
+    <value>含有少于此数目离子对的母离子将被从文档中删除。</value>
   </data>
   <data name="_refine_missing_library" xml:space="preserve">
     <value>将删除与库匹配不对应的所有目标。</value>
   </data>
   <data name="_refine_remove_duplicates" xml:space="preserve">
-    <value>所有在文档中不是唯一的肽段
-将被删除。</value>
+    <value>所有在文档中不是唯一的肽段将被删除。</value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
-    <value>将删除所有重复的肽段以仅留下
-首次出现的任何肽段。</value>
+    <value>将删除所有重复的肽段以仅留下首次出现的任何肽段。</value>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
     <value>&lt;标记类型&gt;</value>
   </data>
   <data name="_refine_max_peak_found_ratio" xml:space="preserve">
-    <value>峰值发现率高于此数字的所有元素
-将从文件中删除：
+    <value>峰值发现率高于此数字的所有元素将从文件中删除：
 
 绿色 = 1.0
-橙色 &amp;gt;= 0.5
-红色 &amp;lt; 0.5</value>
+橙色 &gt;= 0.5
+红色 &lt; 0.5</value>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
-    <value>所有平均峰面积值排名
-大于此数目的离子对将被
-从文档中删除。</value>
+    <value>所有平均峰面积值排名大于此数目的离子对将被从文档中删除。</value>
   </data>
   <data name="_refine_max_transition_peak_rank" xml:space="preserve">
-    <value>所有平均峰面积值排名
-大于此数目的离子对将被
-从文档中删除。</value>
+    <value>所有平均峰面积值排名大于此数目的离子对将被从文档中删除。</value>
   </data>
   <data name="_refine_min_dotp" xml:space="preserve">
-    <value>所有对库谱图点积的子离子峰面积
-小于此阈值的母离子都将被
-从文档中删除。</value>
+    <value>所有对库谱图点积的子离子峰面积小于此阈值的母离子都将被从文档中删除。</value>
   </data>
   <data name="_refine_min_idotp" xml:space="preserve">
-    <value>所有对预期同位素峰分布点积的 MS1 母离子
-峰面积小于此阈值的母离子都将
-被从文档中删除。</value>
+    <value>所有对预期同位素峰分布点积的 MS1 母离子峰面积小于此阈值的母离子都将被从文档中删除。</value>
   </data>
   <data name="_refine_min_peak_found_ratio" xml:space="preserve">
-    <value>所有峰值检出比大于此数目的元素
-都将被从文档中删除：
+    <value>所有峰值检出比大于此数目的元素都将被从文档中删除：
 
 绿色 = 1.0
-橙色 &amp;gt;= 0.5
-红色 &amp;lt; 0.5</value>
+橙色 &gt;= 0.5
+红色 &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
-    <value>母离子将被从文档中删除
-直到具有最佳保留时间计算的线性
-回归相关系数的目标值
-超过此阈值。</value>
+    <value>母离子将被从文档中删除直到具有最佳保留时间计算的线性回归相关系数的目标值超过此阈值。</value>
   </data>
   <data name="_refine_missing_results" xml:space="preserve">
-    <value>没有测量结果的所有元素都将
-被从文档中删除。</value>
+    <value>没有测量结果的所有元素都将被从文档中删除。</value>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
-    <value>当较小的、选择性较低的离子仅产生少量
-更大的峰面积时，导致细化以选择更大的
-产物离子。</value>
+    <value>当较小的、选择性较低的离子仅产生少量更大的峰面积时，导致细化以选择更大的产物离子。</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
     <value>在细化值计算中仅使用每种肽段的最佳重复测定。（用于分段洗脱）</value>
@@ -928,7 +919,183 @@ Waters</value>
   <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
     <value>用于从中导入分离方案的 path/to/result-file</value>
   </data>
+  <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
+    <value>导出其他文件类型</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_speclib_file" xml:space="preserve">
+    <value>将当前文档中的实验数据导出为谱图库文件。峰面积用作谱图强度，峰顶点时间用作保留时间，如果文档中有 iRT 值，这些值也会存储在库中。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
+    <value>用于从导出的文件中按名称排除特定的特征得分。用户界面中可以找到这些名称。该参数可多次使用，以排除多个特征。需要使用 --exp-mprophet-features 参数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_features" xml:space="preserve">
+    <value>以 mProphet 格式导出每个肽段的所有单个特征得分、复合物得分、p 值和 q 值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
+    <value>仅包含最佳得分峰的特征得分。需要使用 --exp-mprophet-features 参数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_mprophet_targets_only" xml:space="preserve">
+    <value>只包含目标特征得分。需要使用 --exp-mprophet-features 参数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations" xml:space="preserve">
+    <value>按照 --import-annotations 要求的格式，将文档中的所有注释导出到包含 ElementLocator 字段的文本文件。也可以使用 --exp-annotations-include-properties 来包含属性。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
+    <value>用于删除所导出注释中的空白行。需要使用 --exp-annotations 参数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations_include_object" xml:space="preserve">
+    <value>用于指定在导出的注释中包含哪些对象类型。默认为包含所有对象类型。该参数可多次使用，来指定多种对象类型。需要使用 --exp-annotations 参数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_exp_annotations_include_properties" xml:space="preserve">
+    <value>用于在导出的注释中包含所有属性。默认为不包含任何属性。需要使用 --exp-annotations 参数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
+    <value>在每个蛋白质中排除所有在此氨基酸位置前开始的肽段。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
+    <value>排除因紧邻前方或后方位置具有剪切位点而产生的肽段， 例如，针对胰蛋白酶的 RR、KK、RK 和 KR</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_length" xml:space="preserve">
+    <value>要向文档添加的肽段的最大长度。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_min_length" xml:space="preserve">
+    <value>要向文档添加的肽段的最小长度。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
+    <value>文档设置</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_name" xml:space="preserve">
+    <value>向文档添加指定名称的注释。具有相同名称的现有注释将被覆盖。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_targets" xml:space="preserve">
+    <value>逗号分隔的目标类型列表，用于在 --annotation-name 操作中应用注释。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_type" xml:space="preserve">
+    <value>在 --annotation-name 操作中定义注释的数据类型。默认为文本。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_values" xml:space="preserve">
+    <value>在 --annotation-name 操作中为 value_list 类型注释提供的逗号分隔值列表。仅在 --annotation-type=value_list 操作中需要使用。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
+    <value>"&lt;value&gt;, &lt;value&gt;, &lt;value&gt;..."</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_conflict_resolution" xml:space="preserve">
+    <value>指定在使用 --annotation-name、--annotation-file 或 --annotation-add-from-environment 时，如何通过覆盖或跳过注释名称冲突来解决注释名称冲突（默认情况下是为冲突输出错误消息）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_annotation_file" xml:space="preserve">
+    <value>从 XML 格式文件向文档和环境添加注释。有关 XML 格式文件的示例，请查看用户界面窗口“工具 &gt; 选项 &gt;杂项”中指定的 user.config 文件。具有相同名称的现有注释将被覆盖。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_background_proteome_file" xml:space="preserve">
+    <value>要应用于打开的文档的背景蛋白质组 (protdb) 文件的路径。可以通过 --background-proteome-name 指定文件名，否则默认为此文件名。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_background_proteome_name" xml:space="preserve">
+    <value>要应用于打开的文档的背景蛋白质组名称。背景蛋白质组指定注入质谱仪的样品基质中可能存在的全部蛋白质。如果 Skyline 中尚未定义该名称，还必须通过 --background-proteome-file 设置 protdb 文件路径。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_digest_enzyme" xml:space="preserve">
+    <value>蛋白酶定义用于解析蛋白质序列（作为目标添加到文档）中的肽段序列。作为目标添加的肽段列表会忽略此设置，但会计算遗漏的酶解位点数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_missed_cleavages" xml:space="preserve">
+    <value>当考虑到蛋白质酶解时，肽段中允许的 最大遗漏的酶解位点数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_unique_by" xml:space="preserve">
+    <value>“蛋白质”不包括出现在背景蛋白质组中的多个蛋白质中的任何肽段。 “基因”不包括出现在背景蛋白质组中的多个基因蛋白质中的任何肽段。 “物种”不包括出现在背景蛋白质组中的多个物种蛋白质中的任何肽段。适用于包含多个物种的样品混合物。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_verbose_errors" xml:space="preserve">
+    <value>请在出错时为程序输出添加额外信息，此举可能对 Skyline 开发人员有所帮助。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
+    <value>关联肽段与基因（或基因组）而不关联蛋白质，并对这种关联应用简约法选项。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
+    <value>完整名称（如“Oxidation (M)” | 简称 (Oxi)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__" xml:space="preserve">
+    <value>UniMod ID (如“35”)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_integrate_all" xml:space="preserve">
+    <value>如果设置，所有在积分边界之间贡献任何信号的离子对都会被视为找到的离子对。如未设置，只有共洗脱的离子对才视为找到的离子对。无论设置与否，积分边界之间的所有定量离子对信号都会相加，从而得出母离子的总面积。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_mod" xml:space="preserve">
+    <value>向文档中添加 UniMod 修饰。必须通过 PSI-MS 名称和位点（“Oxidation (M)”）来指定修饰。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_unimod_aa" xml:space="preserve">
+    <value>提供 --pep-add-unimod 添加的最后一个肽段修饰的氨基酸特异性。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_unimod_term" xml:space="preserve">
+    <value>提供 --pep-add-unimod 添加的最后一个肽段修饰的末端特异性。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_unimod" xml:space="preserve">
+    <value>通过 UniMod ID 向文档中添加 UniMod 修饰。如果修饰有多个特异性，必须使用 --pep-add-unimod-aa 或 --pep-add-unimod-term 来选择要向文档添加的特异性。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_clear_mods" xml:space="preserve">
+    <value>清除当前打开文档中的所有肽段修饰。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_losses" xml:space="preserve">
+    <value>在任何肽段上允许出现的最大 中性丢失数目。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_max_variable_mods" xml:space="preserve">
+    <value>在任何肽段上允许出现的 最大可变修饰数目。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
+    <value>{0} 或 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>值“{0}”对于参数 {1} 无效。使用 {2} 中的一个</value>
+  </data>
+  <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
+    <value>无法添加肽段修饰“{0}”：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
+    <value>值“{0}”对于参数“{1}”无效：必须为 {2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_associate_proteins_fasta" xml:space="preserve">
+    <value>关联文档中的肽段与给定 FASTA 中的蛋白质。如果未提供此参数，但提供了其他 --associate-proteins 选项，将使用 --import-fasta 中的 FASTA。如果 --import-fasta 也未提供，则使用上次用来关联蛋白质的 FASTA。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="_pep_add_mod_variable" xml:space="preserve">
+    <value>若为“true”，则添加可变修饰；若为“false”，则添加静态修饰。仅对结构修饰有效，但仅限丢失的修饰（如氨和水损失）除外。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

@@ -69,8 +69,9 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(nodeCysOxi.HasExplicitMods);
             Assert.IsFalse(nodeCysOxi.ExplicitMods.HasHeavyModifications);
             // Modifications should match by name.
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_MOD_BY_NAME).ExplicitMods.StaticModifications.Contains(mod => 
-                Equals(mod.Modification.Name,  "Phospho (ST)")));
+            var pepModNode = MATCHER.GetModifiedNode(STR_MOD_BY_NAME);
+            Assert.IsTrue(pepModNode.ExplicitMods.StaticModifications.Contains(mod => 
+                mod.Modification.EquivalentAll(UniMod.GetModification("Phospho (ST)", true).ChangeExplicit(true))));
             // Test can find terminal modification
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_TERM_ONLY).ExplicitMods.HeavyModifications.Contains(mod => 
                 mod.Modification.EquivalentAll(UniMod.GetModification("Label:13C(6) (C-term R)", false))));
@@ -78,8 +79,9 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_MOD_BY_NAME).ExplicitMods.StaticModifications.Contains(mod =>
                 mod.Modification.Terminus == null));
             // Test matching negative masses
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_AMMONIA_LOSS).ExplicitMods.StaticModifications.Contains(mod =>
-                mod.Modification.EquivalentAll(UniMod.GetModification("Ammonia-loss (N-term C)", true))));
+            var pepAmmoniaModNode = MATCHER.GetModifiedNode(STR_AMMONIA_LOSS);
+            Assert.IsTrue(pepAmmoniaModNode.ExplicitMods.StaticModifications.Contains(mod =>
+                mod.Modification.EquivalentAll(UniMod.GetModification("Ammonia-loss (N-term C)", true).ChangeExplicit(true))));
 
             // General and specific
             // If all AAs modified, try for most general modification.

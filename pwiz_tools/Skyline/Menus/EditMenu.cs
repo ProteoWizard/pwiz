@@ -1220,7 +1220,7 @@ namespace pwiz.Skyline.Menus
                     try
                     {
                         SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false);
                     }
                     catch (Exception exception)
                     {
@@ -1531,6 +1531,11 @@ namespace pwiz.Skyline.Menus
                                     // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.  
                                     var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
+                                    if (doc.Settings.HasResults)
+                                    {
+                                        // If the document has results, remember the original name of the molecule so the chromatograms do not get orphaned
+                                        newNode = newNode.RememberOriginalTarget(nodePep);
+                                    }
                                     // Nothing to do if the node is not changing
                                     if (Equals(nodePep, newNode))
                                         return doc;
@@ -1853,7 +1858,7 @@ namespace pwiz.Skyline.Menus
                 bool changed = false;
                 var idPathSet = peptidePathGroup.ToHashSet();
                 var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
-                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                    Tuple.Create(tg.LabelType, tg.PrecursorAdduct)).ToList();
                 var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {

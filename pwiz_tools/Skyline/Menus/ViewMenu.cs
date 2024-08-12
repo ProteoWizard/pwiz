@@ -30,7 +30,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -1015,7 +1015,7 @@ namespace pwiz.Skyline.Menus
         public void EnableGraphSpectrum(Action ensureLayoutLocked, SrmSettings settings, bool deserialized)
         {
             bool hasLibraries = settings.PeptideSettings.Libraries.HasLibraries;
-            bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
+            bool enable = hasLibraries || KoinaHelpers.KoinaSettingsValid;
             if (enable)
             {
                 UpdateIonTypeMenu();
@@ -1032,7 +1032,7 @@ namespace pwiz.Skyline.Menus
             }
 
             // Make sure we don't keep a spectrum graph around because it was
-            // persisted when Prosit settings were on and they no longer are
+            // persisted when Koina settings were on and they no longer are
             if ((enableChanging && !deserialized) || (deserialized && !hasLibraries && !enable))
             {
                 ensureLayoutLocked();

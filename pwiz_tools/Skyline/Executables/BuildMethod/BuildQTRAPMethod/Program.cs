@@ -307,10 +307,7 @@ namespace BuildQTRAPMethod
 
                 msMassRange.SetMassRange(transition.PrecursorMz, 0, transition.ProductMz);
                 // DwellTime property is used as retention time in scheduled method
-                if(RTWindowInSeconds.HasValue && transition.Rt.HasValue)
-                    msMassRange.DwellTime = transition.Rt.Value;
-                else 
-                    msMassRange.DwellTime = transition.Dwell;
+                msMassRange.DwellTime = transition.Dwell;   // as does transition.Dwell
                 msMassRange3.CompoundID = transition.Label.Replace("precursor", "p");
                 var massRangeParams = (ParamDataColl) msMassRange.MassDepParamTbl;
                 short s;

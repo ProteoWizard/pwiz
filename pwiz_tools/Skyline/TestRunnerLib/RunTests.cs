@@ -52,6 +52,7 @@ namespace TestRunnerLib
         public readonly bool DoNotRunInNightly;
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
+        public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -73,6 +74,9 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
+
+            var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
+            SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -371,27 +375,37 @@ namespace TestRunnerLib
                     CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 }
 
-                // Run the test and time it.
-                if (test.TestInitialize != null)
-                    test.TestInitialize.Invoke(testObject, null);
-
-                if (CheckCrtLeaks > 0)
+                if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
                 {
-                    // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                    // If we ever want to enable this functionality again, we need to find another .dll
-                    // to put this in.
-                    //CrtDebugHeap.Checkpoint();
-                }
-                test.TestMethod.Invoke(testObject, null);
-                if (CheckCrtLeaks > 0)
-                {
-                    //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
-                }
+                    if (test.SkipTestUntil != null)
+                        Log("Note: SkipTestUntil attribute is present, but the skip date has been reached so the test will run.");
 
-                // Need to set the test outcome to passed or it won't get set which impacts cleanup
-                TestContext.HasPassed = true;
-                if (test.TestCleanup != null)
-                    test.TestCleanup.Invoke(testObject, null);
+                    // Run the test and time it.
+                    if (test.TestInitialize != null)
+                        test.TestInitialize.Invoke(testObject, null);
+
+                    if (CheckCrtLeaks > 0)
+                    {
+                        // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
+                        // If we ever want to enable this functionality again, we need to find another .dll
+                        // to put this in.
+                        //CrtDebugHeap.Checkpoint();
+                    }
+                    test.TestMethod.Invoke(testObject, null);
+                    if (CheckCrtLeaks > 0)
+                    {
+                        //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
+                    }
+
+                    // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                    TestContext.HasPassed = true;
+                    if (test.TestCleanup != null)
+                        test.TestCleanup.Invoke(testObject, null);
+                }
+                else if (test.SkipTestUntil != null)
+                {
+                    Log("Skipping due to SkipTestUntil attribute (until {0})", test.SkipTestUntil.Value.ToShortDateString());
+                }
 
                 // Check for any left over files
                 var allEntries = CleanUpTestDir(tmpTestDir, true);
@@ -1200,16 +1214,26 @@ namespace TestRunnerLib
                 yield return dockerWorkerName;
         }
 
-        public static void SendDockerKill(string workerNames = null)
+        public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
         {
             workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            try
+            {
+                if (hostWorkerPid > 0)
+                    Process.GetProcessById(hostWorkerPid).Kill();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
+            }
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
             Console.WriteLine(@$"docker kill {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
-            Process.Start(psi);
+            Process.Start(psi)?.WaitForExit();
         }
     }
 }

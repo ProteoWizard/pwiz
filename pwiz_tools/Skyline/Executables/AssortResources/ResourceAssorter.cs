@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#nullable enable
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -101,7 +102,7 @@ namespace AssortResources
         /// Do the moves (or inspection) for strings needing relocation
         /// </summary>
         /// <param name="inspectionResults">If non-null, write inspection results to this list instead of console (used by Skyline code inspection test)</param>
-        public void DoWork(List<string> inspectionResults = null)
+        public void DoWork(List<string>? inspectionResults = null)
         {
             var folders = CsProjFile.ListAllSourceFiles()
                 .ToLookup(path => Path.GetDirectoryName(path) ?? string.Empty);

@@ -30,6 +30,7 @@ using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Database.NHibernate;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -254,8 +255,11 @@ namespace pwiz.Skyline.Util
         {
             lock (this)
             {
-                stream.CloseStream();
-                act();
+                using (stream.ReaderWriterLock.CancelAndGetWriteLock())
+                {
+                    stream.CloseStream();
+                    act();
+                }
             }
         }
 
@@ -303,6 +307,7 @@ namespace pwiz.Skyline.Util
         where TDisp : IDisposable
     {
         private readonly ConnectionPool _connectionPool;
+        private QueryLock _readerWriterLock = new QueryLock(CancellationToken.None);
 
         /// <summary>
         /// Creates the immutable identifier for a long-lived connection.
@@ -338,7 +343,18 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public void Disconnect()
         {
-            _connectionPool.Disconnect(this);
+            using (ReaderWriterLock.CancelAndGetWriteLock())
+            {
+                _connectionPool.Disconnect(this);
+            }
+        }
+
+        public QueryLock ReaderWriterLock 
+        {
+            get
+            {
+                return _readerWriterLock;
+            }
         }
     }
 
@@ -383,6 +399,8 @@ namespace pwiz.Skyline.Util
         /// document.
         /// </summary>
         void CloseStream();
+
+        QueryLock ReaderWriterLock { get; }
     }
 
     /// <summary>
@@ -974,10 +992,13 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
-                {
-                    Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete({path})");
-                }
+                Helpers.TryTwice(() =>
+                    {
+                        if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
+                        {
+                            Directory.Delete(path, true);
+                        }
+                    }, $@"Directory.Delete({path})");
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }

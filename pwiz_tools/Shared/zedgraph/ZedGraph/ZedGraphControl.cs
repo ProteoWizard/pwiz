@@ -476,6 +476,9 @@ namespace ZedGraph
 		private int _dragIndex;
 		private CurveItem _dragCurve;
 		private PointPair _dragStartPair;
+
+		private LabeledPoint _dragText;
+		private bool _isTextDragging;
 		/// <summary>
 		/// private field that stores the state of the scale ranges prior to starting a panning action.
 		/// </summary>

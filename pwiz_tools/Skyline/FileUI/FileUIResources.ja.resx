@@ -184,8 +184,16 @@
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>選択したフォルダにBruker TOFメソッドテンプレートが含まれていないようです。フォルダは、.m拡張子が付き、submethods.xmlファイルを含むと予測されています。</value>
   </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>選択したフォルダにはAgilent MassHunter 12メソッドテンプレートが含まれていないようです。このフォルダには拡張子.mが必要です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>選択したフォルダには、Agilent QQQメソッドテンプレートが含まれていないようです。フォルダには.m拡張子が付き、qqqacqmethod.xsdファイルを含むと予測されています。</value>
+    <value>Agilent 6400シリーズ装置タイプのメソッドには.m拡張子が付き、qqqacqmethod.xsdファイルが含まれると予測されています。これがAgilent TQメソッドである場合は、装置タイプとして「Agilent MassHunter 12以降」を選択してください。</value>
+    <comment>Needs Review:English text changed
+Old English:The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.
+Current English:Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose "Agilent MassHunter 12 or higher" as your instrument type.
+Old Localized:選択したフォルダには、Agilent QQQメソッドテンプレートが含まれていないようです。フォルダには.m拡張子が付き、qqqacqmethod.xsdファイルを含むと予測されています。</comment>
   </data>
   <data name="ExportMethodDlg_btnGraph_Click_An_error_occurred_" xml:space="preserve">
     <value>エラーが発生しました。</value>
@@ -279,6 +287,10 @@
   </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>フォルダ{0}にBruker TOFメソッドテンプレートが含まれていないようです。フォルダは、.m拡張子が付き、submethods.xmlファイルを含むと予測されています。</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>フォルダ{0}にはAgilent MassHunter 12メソッドテンプレートが含まれていないようです。このフォルダには拡張子.mが必要です。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
     <value>フォルダ{0}には、Agilent QQQメソッドテンプレートが含まれていないようです。フォルダには.m拡張子が付き、qqqacqmethod.xsdファイルを含むと予測されています。</value>

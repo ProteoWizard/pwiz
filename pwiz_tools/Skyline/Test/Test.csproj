@@ -157,6 +157,7 @@
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
+    <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />
@@ -276,6 +277,7 @@
     <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
+    <Compile Include="SrmSettingsNewTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />

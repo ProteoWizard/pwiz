@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace AssortResources
         public CsProjFile(string filePath, XDocument document)
         {
             ProjFilePath = filePath;
-            string projectFolder = Path.GetDirectoryName(filePath);
+            string projectFolder = Path.GetDirectoryName(filePath)!;
             if (!projectFolder.EndsWith("\\"))
             {
                 projectFolder += "\\";
