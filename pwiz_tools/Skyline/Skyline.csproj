@@ -838,6 +838,7 @@
       <DependentUpon>FileUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
+    <Compile Include="Util\UserMessage.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
