@@ -712,6 +712,7 @@ on one.SourceFile = two.SourceFile";
         {
             get { return _hasExplicitBoundsQValues; }
         }
+
         public override bool HasExplicitBounds
         {
             get

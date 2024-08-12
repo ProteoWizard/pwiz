@@ -1551,16 +1551,18 @@ namespace pwiz.Skyline.Model.Lib
             }
             return null;
         }
+
+        public override bool HasExplicitBoundsQValues
+        {
+            get { return _hasExplicitBoundsQValues; }
+        }
+
         public override bool HasExplicitBounds
         {
             get
             {
                 return _anyExplicitPeakBounds;
             }
-        }
-        public override bool HasExplicitBoundsQValues
-        {
-            get { return _hasExplicitBoundsQValues; }
         }
 
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
@@ -1870,7 +1872,7 @@ namespace pwiz.Skyline.Model.Lib
         private int FindSource(MsDataFileUri filePath)
         {
             return _libraryFiles.FindIndexOf(filePath);
-        }
+            }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
