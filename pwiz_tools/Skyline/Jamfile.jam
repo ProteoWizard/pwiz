@@ -46,7 +46,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
-    constant SKYLINE_YEAR : 23 ;
+    constant SKYLINE_YEAR : 24 ;
     constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
     constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
@@ -160,7 +160,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineCmd /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
-        msbuild $(SKYLINE_PATH)/Executables/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Executables/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);Platform="Any CPU";OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
 

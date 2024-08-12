@@ -158,7 +158,7 @@
     <value>スコアタイプが見つかりません。</value>
   </data>
   <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
-    <value>スコアしきい値「{0}」が無効です(10進値は{1}から{2}の間である必要があります)。</value>
+    <value>スコア閾値「{0}」が無効です(10進値は{1}から{2}の間である必要があります)。</value>
   </data>
   <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>このファイルのスコアタイプを取得中にエラーが発生しました。</value>
@@ -286,6 +286,10 @@
   <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>まだ欠損している結果ファイルがあります。本当に続行しますか？</value>
   </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
+    <value>フィーチャーの検出</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
     <value>ペプチド検索をインポートするには、フルスキャンMS1フィルタを有効にする必要があります。</value>
   </data>
@@ -294,6 +298,10 @@
   </data>
   <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
     <value>ペプチド検索のインポート</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
+    <value>検索するファイルを選択</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
     <value>欠損したすべての結果ファイルを見つけることができませんでした。</value>
@@ -346,5 +354,16 @@
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
     <value>埋め込みスペクトルを使用するには、「埋め込み」をクリックしてください。
 上記にリストしたディレクトリの1つにオリジナルのスペクトルファイルを入れた後、もう一度構築を試みるには「再試行」をクリックしてください。</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
+    <value>スペクトルライブラリを追加</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
+    <value>検出したフィーチャーのライブラリを構築中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
+    <value>検出したフィーチャーをドキュメントに追加中</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

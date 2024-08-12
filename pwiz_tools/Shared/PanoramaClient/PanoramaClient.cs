@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
@@ -183,6 +185,7 @@ namespace pwiz.PanoramaClient
 
             // Wait for import to finish before returning.
             var startTime = DateTime.UtcNow;
+            var importFailed = false;
             while (true)
             {
                 if (progressMonitor.IsCanceled)
@@ -196,6 +199,7 @@ namespace pwiz.PanoramaClient
                 if (row == null)
                     continue;
 
+                var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
                 var status = new ImportStatus((string)row[@"Status"]);
                 if (status.IsComplete)
                 {
@@ -203,13 +207,29 @@ namespace pwiz.PanoramaClient
                     return new Uri(ServerUri, (string)row[@"_labkeyurl_Description"]);
                 }
 
-                else if (status.IsError || status.IsCancelled)
+                else if (status.IsCancelled)
                 {
-                    var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
-                    var e = new PanoramaImportErrorException(ServerUri, jobUrl, status.IsCancelled);
+                    var e = new PanoramaImportErrorException(ServerUri, jobUrl, null, status.IsCancelled);
                     progressMonitor.UpdateProgress(
                         _progressStatus = _progressStatus.ChangeErrorException(e));
                     throw e;
+                }
+                else if (status.IsError )
+                {
+                    var error = (string)row[@"Info"];
+                    if (@"Import failed".Equals(error) && !importFailed)
+                    {
+                        // We will see "Import failed" if we happen to query the status before the actual error message is set on job on the Panorama server.
+                        // Check the status one more time.
+                        importFailed = true;
+                    }
+                    else
+                    {
+                        var e = new PanoramaImportErrorException(ServerUri, jobUrl, error, status.IsCancelled);
+                        progressMonitor.UpdateProgress(
+                            _progressStatus = _progressStatus.ChangeErrorException(e));
+                        throw e;
+                    }
                 }
 
                 UpdateProgressAndWait(status, progressMonitor, startTime);
@@ -487,6 +507,72 @@ namespace pwiz.PanoramaClient
                 }
             }
         }
+
+        public void CreateTargetedMsFolder(string parentFolderPath, string folderName)
+        {
+            var folderToCreate = $@"{parentFolderPath}/{folderName}";
+
+            if (FolderExists(folderToCreate))
+            {
+                // Folder exists on the server at the given path. Cannot create a folder with the same name
+                throw new PanoramaServerException(string.Format(
+                    Resources.AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__,
+                    folderToCreate));
+            }
+
+            ValidateFolder(parentFolderPath, FolderPermission.admin, false); // Parent folder should exist and have admin permissions.
+
+
+            //Create JSON body for the request
+            var requestData = new Dictionary<string, string>
+            {
+                [@"name"] = folderName,
+                [@"title"] = folderName,
+                [@"description"] = folderName,
+                [@"type"] = @"normal",
+                [@"folderType"] = @"Targeted MS"
+            };
+            string createRequest = JsonConvert.SerializeObject(requestData);
+
+            using (var requestHelper = GetRequestHelper())
+            {
+                var requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", parentFolderPath, @"createContainer", string.Empty, true);
+                requestHelper.Post(requestUri, createRequest,
+                    string.Format(
+                        Resources.AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__,
+                        folderToCreate));
+            }
+        }
+
+        public  bool FolderExists(string folderPath)
+        {
+            try
+            {
+                ValidateFolder(folderPath, null);
+                return true;
+            }
+            catch (PanoramaServerException)
+            {
+                // We expect this exception if the folder does not exist
+            }
+
+            return false;
+        }
+
+        public void DeleteFolderIfExists(string folderPath)
+        {
+            if (FolderExists(folderPath))
+            {
+                using (var requestHelper = GetRequestHelper())
+                {
+                    var requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", string.Empty, true);
+                    requestHelper.Post(requestUri, "",
+                        string.Format(
+                            Resources.AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__,
+                            folderPath));
+                }
+            }
+        }
     }
 
     public class WebPanoramaClient : AbstractPanoramaClient
@@ -512,11 +598,12 @@ namespace pwiz.PanoramaClient
                 {
                     var response = ex.Response as HttpWebResponse;
                     var responseUri = response?.ResponseUri;
-                    throw new PanoramaServerException(
-                        new ErrorMessageBuilder(ServerStateEnum.missing.Error(uri))
-                            .ExceptionMessage(ex.Message)
-                            .LabKeyError(PanoramaUtil.GetErrorFromWebException(ex))
-                            .Uri(responseUri != null && !uri.Equals(responseUri) ? responseUri : null).ToString(), ex);
+
+                    throw PanoramaServerException.CreateWithResponseDisposal(
+                        ServerStateEnum.missing.Error(uri),
+                        responseUri != null && !uri.Equals(responseUri) ? responseUri : null,
+                        PanoramaUtil.GetErrorFromWebException,
+                        ex);
                 }
                 else if (tryNewProtocol)
                 {
@@ -535,8 +622,11 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri))
-                    .Uri(uri).ExceptionMessage(ex.Message).LabKeyError(PanoramaUtil.GetErrorFromWebException(ex)).ToString(), ex);
+                throw PanoramaServerException.CreateWithResponseDisposal(
+                    ServerStateEnum.unknown.Error(ServerUri), 
+                    uri,
+                    PanoramaUtil.GetErrorFromWebException,
+                    ex);
             }
         }
 
@@ -570,11 +660,11 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
-                    .Uri(PanoramaUtil.GetEnsureLoginUri(pServer))
-                    .ExceptionMessage(ex.Message)
-                    .LabKeyError(PanoramaUtil.GetErrorFromWebException(ex))
-                    .ToString(), ex);
+                throw PanoramaServerException.CreateWithResponseDisposal(
+                    UserStateEnum.unknown.Error(ServerUri), 
+                    PanoramaUtil.GetEnsureLoginUri(pServer), 
+                    PanoramaUtil.GetErrorFromWebException, 
+                    ex);
             }
         }
 
@@ -649,11 +739,12 @@ namespace pwiz.PanoramaClient
                         {
                             return EnsureLogin(redirectedServer);
                         }
-                        else
-                        {
-                            throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                                .Uri(requestUri).ExceptionMessage(ex.Message).LabKeyError(PanoramaUtil.GetErrorFromWebException(ex)).ToString(), ex); // User cannot be authenticated
-                        }
+
+                        throw PanoramaServerException.CreateWithResponseDisposal(
+                            UserStateEnum.nonvalid.Error(ServerUri), 
+                            requestUri, 
+                            PanoramaUtil.GetErrorFromWebException, 
+                            ex);
                     }
 
                     if (!pServer.HasUserAccount())
@@ -664,8 +755,11 @@ namespace pwiz.PanoramaClient
                         return pServer;
                     }
 
-                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                        .Uri(requestUri).ExceptionMessage(ex.Message).LabKeyError(PanoramaUtil.GetErrorFromWebException(ex)).ToString(), ex); // User cannot be authenticated
+                    throw PanoramaServerException.CreateWithResponseDisposal(
+                        UserStateEnum.nonvalid.Error(ServerUri),
+                        requestUri, 
+                        PanoramaUtil.GetErrorFromWebException, 
+                        ex);
                 }
 
                 throw;
@@ -738,6 +832,33 @@ namespace pwiz.PanoramaClient
                 ? string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded),
                     string.Format(formatProvider, @"{0:fs1}", fileSize))
                 : string.Format(formatProvider, @"{0:fs1}", downloaded);
+        }
+
+        public string DownloadStringAsync(Uri queryUri, CancellationToken cancelToken)
+        {
+            string data = null;
+            Exception error = null;
+            using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
+            {
+                bool finishedDownloading = false;
+                webClient.DownloadStringAsync(queryUri);
+                webClient.DownloadStringCompleted += (sender, e) =>
+                {
+                    error = e.Error;
+                    if (error == null)
+                        data = e.Result;
+                    finishedDownloading = true;
+                };
+                while (!finishedDownloading)
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        webClient.CancelAsync();
+                }
+            }
+
+            if (error != null)
+                throw error;
+            return data;
         }
     }
 

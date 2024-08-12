@@ -196,6 +196,10 @@
   <data name="EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library" xml:space="preserve">
     <value>Koina出力のEncyclopeDIAライブラリへの変換</value>
   </data>
+  <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
+    <value>クロマトグラムライブラリの待機中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
     <value>クロマトグラムライブラリ({1}の{0})：{2}の生成</value>
   </data>
@@ -218,7 +222,7 @@
     <value>ライブラリヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
   </data>
   <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
-    <value>明示的なピーク境界を無視</value>
+    <value>表示されたピーク境界を無視</value>
   </data>
   <data name="LibrarySpec_PEP_RANK_COPIES_Spectrum_count" xml:space="preserve">
     <value>スペクトル数</value>
@@ -286,6 +290,14 @@
   </data>
   <data name="NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio" xml:space="preserve">
     <value>TFRatio</value>
+  </data>
+  <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
+    <value>EncyclopeDIAタスクが失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
+    <value>スペクトルの逆多重化：{0}/{1}</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
     <value>平均質量</value>

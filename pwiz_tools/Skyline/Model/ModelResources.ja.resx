@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation" xml:space="preserve">
     <value>有効なAnalystのインストールが見つかりませんでした</value>
   </data>
@@ -797,5 +796,27 @@
   </data>
   <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
     <value>「{0}」という名前は既にパス{1}で使用されています。</value>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
+    <value>UniModに一致する結果が複数見つかりました。末端および/またはアミノ酸の特異性で絞り込み、一致する結果を1つだけ選択してください</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_" xml:space="preserve">
+    <value>UniModに一致する結果が複数見つかりましたが、指定した特異性（{0}）に一致するものはありませんでした。</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_no_UniMod_match" xml:space="preserve">
+    <value>UniModに一致する結果はありません</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
+Needs Review:New resource</comment>
+  </data>
+  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
+    <value>検出されたフィーチャー</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>ライブラリ強度</value>
   </data>
 </root>

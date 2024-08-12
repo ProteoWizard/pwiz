@@ -219,12 +219,66 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Min isotope &amp;dot product:.
+        /// </summary>
+        public static string HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Looking for features occurring in multiple replicates.
         /// </summary>
         public static string HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates {
             get {
                 return ResourceManager.GetString("HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multip" +
                         "le_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Align replicates.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Align_replicates {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Align_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing {0} for RT alignment.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0}.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Reading__0_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Reading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for common features across replicates.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for Hardklor/Bullseye completion.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion", resourceCulture);
             }
         }
         
@@ -239,7 +293,7 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retention time alignment: {0} vs {1}.
+        ///   Looks up a localized string similar to RT alignment: {0} vs {1}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_ {
             get {
@@ -259,21 +313,29 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for peptide-like features with {0}.
+        ///   Looks up a localized string similar to Waiting for next file.
         /// </summary>
-        public static string HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_ {
+        public static string HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file {
             get {
-                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_", resourceCulture);
+                return ResourceManager.GetString("HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for persistent features in Hardklor results with {0}.
+        ///   Looks up a localized string similar to Searching for peptide-like features.
         /// </summary>
-        public static string HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_ {
+        public static string HardklorSearchEngine_Run_Searching_for_peptide_like_features {
             get {
-                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_wi" +
-                        "th__0_", resourceCulture);
+                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_peptide_like_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for persistent features in Hardklor results.
+        /// </summary>
+        public static string HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results", resourceCulture);
             }
         }
         
@@ -283,6 +345,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
         public static string HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details {
             get {
                 return ResourceManager.GetString("HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution..
+        /// </summary>
+        public static string HardklorSearchEngine_SearchEngineBlurb {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_SearchEngineBlurb", resourceCulture);
             }
         }
         
