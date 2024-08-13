@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2017 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +18,7 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Resources;
 using System.Text;
 using System.Xml.Serialization;
@@ -31,7 +29,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Koina.Config;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 using System.Globalization;
 using System.Reflection;
@@ -96,78 +93,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,
-            RefinementSettings.ConvertToSmallMoleculesMode mode)
-        {
-            if (doc == null)
-            {
-                using (var cmd = new CommandLine())
-                {
-                    Assert.IsTrue(cmd.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
-                    var docLoad = cmd.Document;
-                    using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
-                    {
-                        docContainer.SetDocument(docLoad, null, true);
-                        docContainer.AssertComplete();
-                        doc = docContainer.Document;
-                    }
-                }
-            }
-            if (mode == RefinementSettings.ConvertToSmallMoleculesMode.none)
-            {
-                return doc;
-            }
 
-            var docOriginal = doc;
-            var refine = new RefinementSettings();
-            docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
-            var docSmallMol =
-                refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
-            if (docSmallMol.MeasuredResults != null)
-            {
-                foreach (var stream in docSmallMol.MeasuredResults.ReadStreams)
-                {
-                    stream.CloseStream();
-                }
-            }
-            var listChromatograms = new List<ChromatogramSet>();
-            if (dataPaths != null)
-            {
-                foreach (var dataPath in dataPaths)
-                {
-                    if (!string.IsNullOrEmpty(dataPath))
-                    {
-                        listChromatograms.Add(AssertResult.FindChromatogramSet(docSmallMol, new MsDataFilePath(dataPath)) ??
-                                              new ChromatogramSet(Path.GetFileName(dataPath).Replace('.', '_'),
-                                                  new[] { dataPath }));
-                    }
-                }
-            }
-            var docResults = docSmallMol.ChangeMeasuredResults(listChromatograms.Any() ? new MeasuredResults(listChromatograms) : null);
-
-            // Since refine isn't in a document container, have to close the streams manually to avoid file locking trouble (thanks, Nick!)
-            foreach (var library in docResults.Settings.PeptideSettings.Libraries.Libraries)
-            {
-                foreach (var stream in library.ReadStreams)
-                {
-                    stream.CloseStream();
-                }
-            }
-
-            // Save and restore to ensure library caches
-            var cmdline = new CommandLine();
-            cmdline.SaveDocument(docResults, docPath, TextWriter.Null);
-            Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
-            docResults = cmdline.Document;
-            using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
-            {
-                docContainer.SetDocument(docResults, null, true);
-                docContainer.AssertComplete();
-                doc = docContainer.Document;
-            }
-            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
-            return doc;
-        }
         public static void EnableAuditLogging(string path)
         {
             var doc = ResultsUtil.DeserializeDocument(path);

@@ -1403,6 +1403,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form, Action cancelAction)
+        {
+            RunUI(cancelAction);
+            WaitForClosedForm(form);
+        }
+
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
@@ -2201,12 +2207,36 @@ namespace pwiz.SkylineTestUtil
             ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
+        private static SrmDocument DoSmallMoleculeListPaste(string text)
+        {
+            var docOrig = SkylineWindow.Document;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (!text.Contains(Environment.NewLine) && File.Exists(text))
+                {
+                    text = File.ReadAllText(text); // That was a filename rather than a transition list
+                }
+                SetClipboardText(text);
+            }
+            var confirmColumnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            OkDialog(confirmColumnsDlg, confirmColumnsDlg.OkDialog);
+            return docOrig;
+        }
+
+        // Paste a small molecule transition list with no expectation of an offer to automanage
+        public static SrmDocument PasteSmallMoleculeList(string text = null)
+        {
+            var docOrig = DoSmallMoleculeListPaste(text);
+            return WaitForDocumentChangeLoaded(docOrig);
+        }
+
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static void PasteSmallMoleculeListNoAutoManage()
+        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
         {
-            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Paste);
-            OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
+            var docOrig = DoSmallMoleculeListPaste(text);
+            DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+            return WaitForDocumentChangeLoaded(docOrig);
         }
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
@@ -2229,7 +2259,6 @@ namespace pwiz.SkylineTestUtil
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
             var currentDoc = SkylineWindow.Document;
-
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
