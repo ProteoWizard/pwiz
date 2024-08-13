@@ -88,8 +88,10 @@ inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
     ((os) << (!(x) ? pwiz::util::unit_assert_message(__FILE__, __LINE__, #x) + "\n" : ""))
 
 
-#define unit_assert_operator_equal(expected, actual) \
-    (!((expected) == (actual)) ? throw std::runtime_error(pwiz::util::unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual)) : 0)
+#define unit_assert_operator_equal(expected, actual) unit_assert_operator_equal_message(expected, actual, "")
+
+#define unit_assert_operator_equal_message(expected, actual, message) \
+    (!((expected) == (actual)) ? throw std::runtime_error(pwiz::util::unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual) + (message)) : 0)
 
 #define unit_assert_operator_equal_to_stream(expected, actual, os) \
     ((os) << (!((expected) == (actual)) ? pwiz::util::unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual) + "\n" : ""))

@@ -129,7 +129,7 @@ namespace TestPerf
                 IrtIntercept = -67.652,
 
                 FinalTargetCounts = new[] { 11, 215, 279, 1673 },
-                ScoringModelCoefficients = "-0.1511|-0.5825|5.5995|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
+                ScoringModelCoefficients = "-0.1511|-0.5825|5.5994|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
                 MassErrorStats = new[]
                 {
                     new[] {3.3, 3.7},
