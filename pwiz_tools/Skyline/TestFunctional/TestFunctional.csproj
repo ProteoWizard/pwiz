@@ -402,7 +402,7 @@
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
-    <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="PythonInstallerLegacyDlgTest.cs" />
     <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />

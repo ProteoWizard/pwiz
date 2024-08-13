@@ -4836,14 +4836,14 @@
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.ja.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.ja.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.zh-CHS.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.zh-CHS.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.ja.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
@@ -4966,11 +4966,11 @@
     <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstaller.cs">
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstaller.Designer.cs">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.Designer.cs">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\RInstaller.cs">
       <SubType>Form</SubType>
