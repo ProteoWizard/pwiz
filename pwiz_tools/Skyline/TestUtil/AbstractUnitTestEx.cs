@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Resources;
 using System.Text;
@@ -143,13 +144,6 @@ namespace pwiz.SkylineTestUtil
                 var assemblyName = assembly.GetName().Name;
                 var manager = new ResourceManager(assemblyName, assembly);
 
-                // preload the dictionary with all tested languages to minimize the appearance of memory leaks
-                foreach (string lang in _testLanguages)
-                {
-                    var culture = new CultureInfo(lang);
-                    resourceSet = _systemResources[culture] = manager.GetResourceSet(culture, true, true);
-                    _systemResourceString[resourceSet] = new Dictionary<string, string>();
-                }
                 if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
                 {
                     resourceSet = _systemResources[CultureInfo.CurrentUICulture] = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
@@ -165,7 +159,6 @@ namespace pwiz.SkylineTestUtil
             return string.Format(formatString, args);
         }
 
-        private readonly string[] _testLanguages = { "en", "fr", "tr", "ja", "zh-CHS" };
         private static Dictionary<CultureInfo, ResourceSet> _systemResources = new Dictionary<CultureInfo, ResourceSet>();
         private static Dictionary<ResourceSet, Dictionary<string, string>> _systemResourceString =
             new Dictionary<ResourceSet, Dictionary<string, string>>();
