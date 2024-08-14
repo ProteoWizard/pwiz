@@ -682,6 +682,16 @@ namespace pwiz.SkylineTestUtil
             return  (millis * waitMultiplier) / SLEEP_INTERVAL; // Return the wait cycle count
         }
 
+        /// <summary>
+        /// Convenience function for getting a value on the UI thread
+        /// </summary>
+        public static T GetUIValue<T>(Func<T> act)
+        {
+            T result = default;
+            RunUI(() => result = act() );
+            return result;
+        }
+
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
             int waitCycles = GetWaitCycles(millis);
@@ -696,7 +706,7 @@ namespace pwiz.SkylineTestUtil
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formType += "." + multipleViewProvider.ShowingFormView.GetType().Name;
+                        formType += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
                         var formName = "(" + typeof (TDlg).Name + ")";
                         RunUI(() =>
                         {
@@ -742,7 +752,7 @@ namespace pwiz.SkylineTestUtil
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formTypeName += "." + multipleViewProvider.ShowingFormView.GetType().Name;
+                        formTypeName += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
                         var formName = "(" + formType.Name + ")";
                         RunUI(() =>
                         {
