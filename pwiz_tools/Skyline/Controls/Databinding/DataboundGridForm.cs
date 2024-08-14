@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Controls.Databinding
             return databoundGridControl.FindColumn(propertyPath);
         }
 
-        public bool IsComplete
+        public virtual bool IsComplete
         {
             get
             {

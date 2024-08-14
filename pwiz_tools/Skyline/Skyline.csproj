@@ -371,6 +371,18 @@
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.Designer.cs">
+      <DependentUpon>CalibrationCurveOptionsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\Calibration\CalibrationGraphControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\Calibration\CalibrationGraphControl.Designer.cs">
+      <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
@@ -524,6 +536,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BootstrapFiguresOfMeritCalculator.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -654,6 +668,12 @@
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\GroupComparison\MsLevelOption.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\ScoredBilinearCurve.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearTransitionOptimizer.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearRegressionFit.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeTransitionDetails.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeType.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\TransitionsQuantLimit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
@@ -2703,6 +2723,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.zh-CHS.resx">
       <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.resx">
+      <DependentUpon>CalibrationCurveOptionsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationGraphControl.resx">
+      <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.ja.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
