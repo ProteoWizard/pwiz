@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
 using pwiz.Skyline.Alerts;
@@ -173,6 +174,20 @@ namespace pwiz.SkylineTestFunctional
             // Make sure explorer handles this adduct type
             var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() => AssertEx.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
+            OkDialog(viewLibUI, viewLibUI.CancelDialog);
+
+            // Now check for handling when adduct tries to label more atoms than are present in the molecule
+            var sslLines = File.ReadAllLines(TestFilesDir.GetTestPath("library_valid\\heavy_adduct.ssl")).ToList();
+            var badSSL = sslLines[1].Replace("ms2\t2","ms2\t3").Replace(@"M6C13", @"M66C13"); // Molecule is C54H83N15O20 so this makes no sense
+            sslLines.Add(badSSL);
+            File.WriteAllLines(TestFilesDir.GetTestPath("library_valid\\heavy_adduct_bad.ssl"), sslLines);
+            BuildLibraryValid("heavy_adduct_bad.ssl", true, false, false, 2);
+            // Make sure explorer handles this adduct, which is a bad match for the molecule
+            viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            RunUI(() => AssertEx.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
+            // Add All should cause some notifications since one of them is bad
+            var filterMatchedDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => viewLibUI.AddAllPeptides());
+            OkDialog(filterMatchedDlg, filterMatchedDlg.CancelDialog);
             OkDialog(viewLibUI, viewLibUI.CancelDialog);
 
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index

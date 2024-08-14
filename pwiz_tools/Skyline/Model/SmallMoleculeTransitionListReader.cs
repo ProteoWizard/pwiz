@@ -381,6 +381,7 @@ namespace pwiz.Skyline.Model
         {
             return exception is InvalidOperationException
                    || exception is InvalidDataException
+                   || exception is InvalidChemicalModificationException
                    || exception is ArgumentException;
         }
 

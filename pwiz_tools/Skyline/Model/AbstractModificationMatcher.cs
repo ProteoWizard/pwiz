@@ -496,9 +496,9 @@ namespace pwiz.Skyline.Model
                                 return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
                             }
                         }
-                        catch (InvalidDataException e)
+                        catch (InvalidChemicalModificationException e)
                         {
-                            Trace.TraceWarning(e.Message); // Adduct makes no sense for target formula etc
+                            Trace.TraceWarning(e.Message); // Adduct makes no sense for target formula
                         }
                     }
                 }

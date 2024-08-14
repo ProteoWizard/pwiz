@@ -921,6 +921,11 @@ namespace pwiz.Skyline.SettingsUI
                 SetGraphItem(new NoDataMSGraphItem(SettingsUIResources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
                 return;
             }
+            catch (InvalidChemicalModificationException e)
+            {
+                SetGraphItem(new NoDataMSGraphItem(e.Message));
+                return;
+            }
             catch (IOException)
             {
                 SetGraphItem(new NoDataMSGraphItem(SettingsUIResources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
@@ -2677,8 +2682,16 @@ namespace pwiz.Skyline.SettingsUI
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
-                    _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
-                    _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                    try
+                    {
+                        _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
+                        _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                    }
+                    catch (InvalidChemicalModificationException e)
+                    {
+                        _mz = double.NaN;
+                        _mzRangePartsToDraw = new List<TextColor>() { new TextColor(e.Message) };
+                    }
                 }
                 else
                 {
@@ -3016,11 +3029,14 @@ namespace pwiz.Skyline.SettingsUI
             if (!_comboBoxUpdated)
             {
                 comboRedundantSpectra.BeginUpdate();
-                foreach (ComboOption opt in _currentOptions)
+                if (_currentOptions != null)
                 {
-                    if (!opt.SpectrumInfoLibrary.IsBest)
+                    foreach (ComboOption opt in _currentOptions)
                     {
-                        comboRedundantSpectra.Items.Add(opt);
+                        if (!opt.SpectrumInfoLibrary.IsBest)
+                        {
+                            comboRedundantSpectra.Items.Add(opt);
+                        }
                     }
                 }
 
