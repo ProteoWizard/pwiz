@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
-                    _labeledPoints.Add(new LabeledPoint(selected, row.Peptide.IdentityPath){Point = point, Label = label, Curve = lineItem}); 
+                    _labeledPoints.Add(new LabeledPoint(selected, row.Peptide?.IdentityPath ?? row.Protein.IdentityPath){Point = point, Label = label, Curve = lineItem}); 
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -1040,6 +1040,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public int SelectedCount { get; private set; }
             public int OutCount { get; private set; }
             public int InCount { get; private set; }
+        }
+
+        public LabelLayout LabelLayout
+        {
+            get { return zedGraphControl.GraphPane.Layout; }
         }
 
         #endregion
