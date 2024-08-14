@@ -1229,8 +1229,7 @@ namespace pwiz.Skyline.Properties
                 var calibrationCurveOptions = (CalibrationCurveOptions) this[@"CalibrationCurveOptions"];
                 if (calibrationCurveOptions == null)
                 {
-                    calibrationCurveOptions = new CalibrationCurveOptions();
-                    CalibrationCurveOptions = calibrationCurveOptions;
+                    CalibrationCurveOptions = calibrationCurveOptions = CalibrationCurveOptions.DEFAULT;
                 }
                 return calibrationCurveOptions;
             }
@@ -2359,7 +2358,8 @@ namespace pwiz.Skyline.Properties
             IEnumerable<IonMobilityLibrary> existing, object tag)
         {
             var ionMobilityFilteringUserControl = (owner as IonMobilityFilteringUserControl) ??
-                                                  (owner as TransitionSettingsUI)!.IonMobilityControl;
+                                                  ((owner as TransitionSettingsUI)?.IonMobilityControl) ??  // Accessed via Settings>TransitionSettings>IonMobility>Add
+                                                  ((owner as Form)?.Owner as TransitionSettingsUI)?.IonMobilityControl; // Accessed via Settings>TransitionSettings>IonMobility>EditList>Add|EditCurrent
             var ionMobilityWindowWidthCalculator = ionMobilityFilteringUserControl!.IonMobilityWindowWidthCalculator;
             using var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing, ionMobilityWindowWidthCalculator);
             if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)

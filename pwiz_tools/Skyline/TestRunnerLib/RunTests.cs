@@ -1214,16 +1214,26 @@ namespace TestRunnerLib
                 yield return dockerWorkerName;
         }
 
-        public static void SendDockerKill(string workerNames = null)
+        public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
         {
             workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            try
+            {
+                if (hostWorkerPid > 0)
+                    Process.GetProcessById(hostWorkerPid).Kill();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
+            }
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
             Console.WriteLine(@$"docker kill {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
-            Process.Start(psi);
+            Process.Start(psi)?.WaitForExit();
         }
     }
 }

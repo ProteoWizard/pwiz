@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.Irt
             return persistPath;
         }
 
-        private DbIrtPeptide NewPeptide(DbIrtPeptide dbPeptide)
+        private static DbIrtPeptide NewPeptide(DbIrtPeptide dbPeptide)
         {
             return new DbIrtPeptide(dbPeptide.ModifiedTarget,
                                     dbPeptide.Irt,
@@ -185,6 +185,11 @@ namespace pwiz.Skyline.Model.Irt
         public IEnumerable<Target> GetStandardPeptides()
         {
             return _database.StandardPeptides;
+        }
+
+        public IEnumerable<Target> GetLibraryPeptides()
+        {
+            return _database.LibraryPeptides;
         }
 
         public IEnumerable<DbIrtPeptide> GetDbIrtPeptides()
@@ -522,6 +527,52 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
+        #endregion
+
+        #region test support
+
+        /// <summary>
+        /// Saves the database with peptides represented as small molecules.
+        /// </summary>
+        /// <param name="pathDestDir">The directory to save to</param>
+        /// <param name="document">The document for which peptides are to be kept</param>
+        /// <returns>The full path to the file saved</returns>
+        public override string PersistAsSmallMolecules(string pathDestDir, SrmDocument document)
+        {
+            RequireUsable();
+            return PersistAsSmallMolecules(PersistencePath, pathDestDir, _database);
+        }
+
+        public static string PersistAsSmallMolecules(string currentPersistencePath, string pathDestDir = null, IrtDb database = null)
+        {
+            database ??= IrtDb.GetIrtDb(currentPersistencePath, null);
+            pathDestDir ??= Path.GetDirectoryName(currentPersistencePath) ?? string.Empty;
+
+            var persistPath = Path.Combine(pathDestDir, Path.GetFileName(currentPersistencePath) ?? string.Empty);  // ReSharper
+            if (!string.IsNullOrEmpty(persistPath))
+            {
+                var dir = Path.GetDirectoryName(persistPath) ?? string.Empty;
+                var fname = Path.GetFileNameWithoutExtension(persistPath)+@"_"+ RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + Path.GetExtension(persistPath);
+                persistPath = Path.Combine(dir, fname);
+            }
+
+            using var fs = new FileSaver(persistPath);
+            var irtDb = IrtDb.CreateIrtDb(fs.SafeName);
+
+            var dbPeptides = database.ReadPeptides().ToList();
+            var persistPeptides = dbPeptides.Select(NewPeptide).ToList();
+            for (var i = 0; i < persistPeptides.Count; i++)
+            {
+                var dbPeptide = persistPeptides[i];
+                dbPeptide.ModifiedTarget = new Target(RefinementSettings.MoleculeFromPeptideSequence(dbPeptide.PeptideModSeq));
+                persistPeptides[i] = dbPeptide;
+            }
+
+            irtDb.UpdatePeptides(persistPeptides);
+            fs.Commit();
+
+            return persistPath;
+        }
         #endregion
     }
 

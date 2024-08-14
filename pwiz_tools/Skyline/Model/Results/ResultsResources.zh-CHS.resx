@@ -296,6 +296,10 @@
   <data name="ResultsGrid_ChangeChromInfo_Element_not_found" xml:space="preserve">
     <value>未发现元素</value>
   </data>
+  <data name="ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___" xml:space="preserve">
+    <value>在文件“{1}”中找不到扫描 ID“{0}”。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_" xml:space="preserve">
     <value>数据文件{0}无法找到，无论是在原始位置还是在文档或文档父文件夹中。</value>
   </data>
@@ -325,5 +329,25 @@
   </data>
   <data name="VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_" xml:space="preserve">
     <value>无法在目录{2}中找到 {0}或{1}。 请重新安装 ProteinPilot 软件以便处理 .group 文件。</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_" xml:space="preserve">
+    <value>由于明确保留时间 {1} 不介于 {2} 和 {3} 之间，因此丢弃“{0}”的色谱图</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
+    <value>需要提供离子对设置离子迁移过滤窗口类型值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
+    <value>不支持混合离子迁移类型</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataFileInstrumentInfo_CCSFromIonMobility_no_conversion" xml:space="preserve">
+    <value>供应商提供的库无法确定迁移率为 {1:0.###}、质荷比为 {2:0.####}、电荷为 {3} 的 {0} 的 CCS。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
+    <value>供应商提供的库无法确定 CCS 为 {1:0.###}、质荷比为 {2:0.####}、电荷为 {3} 的 {0} 的离子迁移。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

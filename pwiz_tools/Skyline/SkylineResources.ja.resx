@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool" xml:space="preserve">
     <value> があり、</value>
   </data>
@@ -141,6 +140,10 @@
   </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_" xml:space="preserve">
     <value>上書きレポート：{0}</value>
+  </data>
+  <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
+    <value>--background-proteome-file操作でインポートされたprotdbに与える名前</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>ドウェル時間{0}は{1}から{2}の間でなければなりません。</value>
@@ -187,6 +190,10 @@
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_" xml:space="preserve">
     <value>警告： 装置タイプ{0}が有効ではありません。次から選択してください：</value>
+  </data>
+  <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>エラー：不明なオブジェクト名「{0}」を除外しようとしています。次のいずれかをお試しください。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>プライマリトランジション数{0}は{1}と{2}の間でなければなりません。</value>
@@ -236,6 +243,10 @@
   <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
     <value>エラー：デフォルトのSkylineモデルではフィーチャースコアを除外できません。</value>
   </data>
+  <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
+    <value>エラー：注釈ファイル{0}の保存に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_" xml:space="preserve">
     <value>クロマトグラムファイル{0}が正常にエクスポートされました。</value>
   </data>
@@ -284,6 +295,10 @@
   <data name="CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_" xml:space="preserve">
     <value>エラー： スケジュールメソッドをエクスポートするには、まずドキュメント内のすべてのペプチドに対する結果をインポートする必要があります。</value>
   </data>
+  <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>フォルダ{0}にはAgilent MassHunter 12メソッドテンプレートが含まれていないようです。このフォルダには拡張子.mが必要です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
     <value>警告： インジェクション毎の最大トランジションは、エクスポート方法「タンパク質」と「バケット」、またスケジュールメソッドに対し、{0}と{1}の間の値に設定されなければなりません。{3}が指定されました。{2}にデフォルト中。</value>
   </data>
@@ -316,6 +331,14 @@
   </data>
   <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__" xml:space="preserve">
     <value>レポート{0}が{1}に正常にエクスポートされました。</value>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
+    <value>エラー：mProphetフィーチャーファイル{0}の保存に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__" xml:space="preserve">
+    <value>エラー：スペクトルライブラリファイル{0}の保存に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__" xml:space="preserve">
     <value>警告： バックグラウンドプロテオームファイル{0}が見つかりませんでした。</value>
@@ -483,6 +506,10 @@
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>エラー：ユーザー設定ファイルへの保存に失敗しました。</value>
   </data>
+  <data name="CommandLine_SetAnnotations_" xml:space="preserve">
+    <value>エラー：「{0}」というタイトルの注釈が既に存在しています。--annotation-conflict-resolution= &lt;overwrite | skip&gt;を使用してください。「{0}」というタイトルの注釈は追加されませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
     <value>エラー：トランジションフィルタ設定の変更に失敗しました。</value>
   </data>
@@ -506,6 +533,14 @@
   </data>
   <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
     <value>エラー：トランジションライブラリ設定を変更しようとして失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
+    <value>エラー：ペプチド消化設定の変更に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
+    <value>エラー：ペプチドフィルタ設定の変更に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
     <value>エラー：トランジション予測設定の変更に失敗しました。</value>
@@ -920,6 +955,26 @@
   <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
     <value>読み込み中...</value>
   </data>
+  <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
+    <value>ファイル{0}をダウンロード中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Loading_remote_server_folders" xml:space="preserve">
+    <value>リモートサーバーのフォルダを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_" xml:space="preserve">
+    <value>Panoramaサーバーが見つかりませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Panoramaから開く</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_" xml:space="preserve">
+    <value>[追加] を押して新規サーバーを追加してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read" xml:space="preserve">
     <value>zipファイル{0}を読み取れません。</value>
   </data>
@@ -1037,6 +1092,14 @@
   <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
     <value>続行</value>
   </data>
+  <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
+    <value>ユーザーアカウントがないと、ドキュメントをPanoramaサーバーにアップロードできません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Edit_existing" xml:space="preserve">
+    <value>既存の編集</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
     <value>続行を押して選択したサーバーを使用します。</value>
   </data>
@@ -1094,7 +1157,51 @@
   <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
     <value>{0}をアップグレードしています</value>
   </data>
+  <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
+    <value>値「{0}」は、注釈ターゲット{2}のカンマ区切りリストを必要とする引数{1}には有効ではありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
+    <value>[既存の編集] をクリックして、既存のサーバーのユーザーアカウント情報を追加します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
+    <value>エラー：ペプチド修飾設定の変更に失敗しました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
+    <value>フィーチャー検出を実行する前に、ドキュメントを完全に読み込む必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
+    <value>フィーチャー検出を実行する前に、このドキュメントを保存する必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
+    <value>{0}は、Panoramaにアップロードできる有効なファイル名ではありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>ペプチドをタンパク質と関連付け</value>
+    <value>ペプチドをタンパク質に関連付け</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" xml:space="preserve">
+    <value>DIA-Umpireを使用したDIA</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
+    <value>ペプチド検索の実行</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索の実行前に、このドキュメントを保存する必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索を実行する前に、ドキュメントを完全に読み込む必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
+    <value>シングルプリカーサーMS/MSスペクトルにデコンボリューションしたDIAから得られたライブラリと、同じランの生DIAスペクトルから得られたクロマトグラム</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

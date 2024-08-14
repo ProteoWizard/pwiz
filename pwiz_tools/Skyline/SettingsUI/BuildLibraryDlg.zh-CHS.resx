@@ -238,7 +238,7 @@
     <value>15, 69</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 13</value>
+    <value>66, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -299,7 +299,7 @@
     <value>12</value>
   </data>
   <data name="iRTPeptidesLabel.Text" xml:space="preserve">
-    <value>iRT 标准肽段(&amp;I)：</value>
+    <value>iRT 标准肽段(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
     <value>iRTPeptidesLabel</value>
@@ -459,6 +459,10 @@
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>包含不明确匹配项(&amp;M)</value>
   </data>
+  <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
+    <value>选中将保留与多个肽段匹配的谱图。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
   </data>
@@ -487,7 +491,7 @@
     <value>14</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
-    <value>保留冗余库(&amp;K)</value>
+    <value>保留冗余库(&amp;E)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
     <value>选中并保留冗余库的副本，您可以在
@@ -522,6 +526,10 @@
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
     <value>文档肽筛选器(&amp;D)</value>
+  </data>
+  <data name="cbFilter.ToolTip" xml:space="preserve">
+    <value>选中将仅过滤文档中的肽段。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
@@ -601,21 +609,6 @@
   <data name="&gt;&gt;panelFilesKoinaProperties.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="koinaInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 44</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 13</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
-    <value>信息/设置</value>
-  </data>
   <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
     <value>koinaInfoSettingsBtn</value>
   </data>
@@ -628,24 +621,6 @@
   <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="koinaDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="koinaDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 42</value>
-  </data>
-  <data name="koinaDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>51, 17</value>
-  </data>
-  <data name="koinaDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="koinaDataSourceRadioButton.Text" xml:space="preserve">
-    <value>Pro&amp;sit</value>
-  </data>
   <data name="&gt;&gt;koinaDataSourceRadioButton.Name" xml:space="preserve">
     <value>koinaDataSourceRadioButton</value>
   </data>
@@ -657,21 +632,6 @@
   </data>
   <data name="&gt;&gt;koinaDataSourceRadioButton.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 19</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 17</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
-    <value>文件(&amp;F)</value>
   </data>
   <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
     <value>dataSourceFilesRadioButton</value>
@@ -757,20 +717,56 @@
   <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="koinaInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
+    <value>190, 44</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 13</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
+    <value>信息/设置</value>
+  </data>
+  <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="koinaDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="koinaDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 42</value>
+  </data>
+  <data name="koinaDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 17</value>
+  </data>
+  <data name="koinaDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="koinaDataSourceRadioButton.Text" xml:space="preserve">
+    <value>&amp;Koina</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 17</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
+    <value>文件(&amp;F)</value>
+  </data>
   <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="gridInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="gridInputFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 38</value>
-  </data>
-  <data name="gridInputFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>460, 336</value>
-  </data>
-  <data name="gridInputFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Name" xml:space="preserve">
     <value>gridInputFiles</value>
@@ -784,21 +780,6 @@
   <data name="&gt;&gt;gridInputFiles.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnAddPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>477, 96</value>
-  </data>
-  <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 23</value>
-  </data>
-  <data name="btnAddPaths.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnAddPaths.Text" xml:space="preserve">
-    <value>添加路径(&amp;H)…</value>
-  </data>
   <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
     <value>btnAddPaths</value>
   </data>
@@ -810,21 +791,6 @@
   </data>
   <data name="&gt;&gt;btnAddPaths.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 19</value>
-  </data>
-  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
-  </data>
-  <data name="label7.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label7.Text" xml:space="preserve">
-    <value>输入文件(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -838,25 +804,6 @@
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>477, 67</value>
-  </data>
-  <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 23</value>
-  </data>
-  <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="btnAddDirectory.Text" xml:space="preserve">
-    <value>添加目录(&amp;D)…</value>
-  </data>
-  <data name="btnAddDirectory.ToolTip" xml:space="preserve">
-    <value>添加在根目录下查找到的所有可接受的谱图文件。
-您可以取消选中您不希望添加到库中的文件。</value>
-  </data>
   <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
     <value>btnAddDirectory</value>
   </data>
@@ -868,24 +815,6 @@
   </data>
   <data name="&gt;&gt;btnAddDirectory.ZOrder" xml:space="preserve">
     <value>3</value>
-  </data>
-  <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>477, 38</value>
-  </data>
-  <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 23</value>
-  </data>
-  <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnAddFile.Text" xml:space="preserve">
-    <value>添加文件(&amp;F)…</value>
-  </data>
-  <data name="btnAddFile.ToolTip" xml:space="preserve">
-    <value>从单一目录中添加一个或多个文件。</value>
   </data>
   <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>
@@ -922,6 +851,85 @@
   </data>
   <data name="&gt;&gt;panelFiles.ZOrder" xml:space="preserve">
     <value>4</value>
+  </data>
+  <data name="gridInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="gridInputFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 38</value>
+  </data>
+  <data name="gridInputFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>460, 336</value>
+  </data>
+  <data name="gridInputFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnAddPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
+    <value>477, 96</value>
+  </data>
+  <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 23</value>
+  </data>
+  <data name="btnAddPaths.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnAddPaths.Text" xml:space="preserve">
+    <value>添加路径(&amp;H)…</value>
+  </data>
+  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 19</value>
+  </data>
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>输入文件(&amp;I)：</value>
+  </data>
+  <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
+    <value>477, 67</value>
+  </data>
+  <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 23</value>
+  </data>
+  <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnAddDirectory.Text" xml:space="preserve">
+    <value>添加目录(&amp;D)…</value>
+  </data>
+  <data name="btnAddDirectory.ToolTip" xml:space="preserve">
+    <value>添加在根目录下查找到的所有可接受的谱图文件。
+您可以取消选中您不希望添加到库中的文件。</value>
+  </data>
+  <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>477, 38</value>
+  </data>
+  <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 23</value>
+  </data>
+  <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnAddFile.Text" xml:space="preserve">
+    <value>添加文件(&amp;F)…</value>
+  </data>
+  <data name="btnAddFile.ToolTip" xml:space="preserve">
+    <value>从单一目录中添加一个或多个文件。</value>
   </data>
   <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>

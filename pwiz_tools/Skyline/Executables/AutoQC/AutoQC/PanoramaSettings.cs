@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -83,8 +82,8 @@ namespace AutoQC
             }
             try
             {
-                // User should have insert permissions in the folder, and the folder should be of type TargetedMS
-                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.insert);
+                // User should have admin permissions in the folder, and the folder should be of type TargetedMS
+                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.admin);
             }
             catch (Exception ex)
             {
@@ -314,13 +313,8 @@ namespace AutoQC
 
         public void PingPanorama()
         {
-            var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
-            var postData = new NameValueCollection
-            {
-                [@"softwareVersion"] = Program.Version()
-            };
-            
-            _requestHelper.Post(uri, postData, null);
+           var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
+           _requestHelper.Post(uri, string.Empty, null);
         }
 
         public void Init()

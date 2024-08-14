@@ -241,8 +241,11 @@
   <data name="NistLibrary_SpecFilter_NIST_Spectral_Library" xml:space="preserve">
     <value>NIST Spectral Library</value>
   </data>
-  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
+    <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>Could not read the precursor m/z value "{0}"</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__" xml:space="preserve">
+    <value>Could not read the precursor CCS value "{0}"</value>
   </data>
   <data name="NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__" xml:space="preserve">
     <value>Invalid format at peak {0} for {1}.</value>

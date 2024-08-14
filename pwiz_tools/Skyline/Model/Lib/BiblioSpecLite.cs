@@ -2174,7 +2174,14 @@ namespace pwiz.Skyline.Model.Lib
                             sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
                             var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
                             var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
-                            sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
+                            if (ScoreType.INVARIANT_NAMES.Contains(scoreType))
+                            {
+                                sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
+                            }
+                            else
+                            {
+                                sheetInfo.ScoreType = scoreType;
+                            }
                         }
                         return sheetInfo;
                     }

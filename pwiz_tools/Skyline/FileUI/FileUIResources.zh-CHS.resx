@@ -184,8 +184,16 @@
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>选定的文件夹无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
   </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>所选文件夹似乎不包含 Agilent MassHunter 12 方法模板。该文件夹的扩展名应为 .m。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>选定的文件夹无 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
+    <value>Agilent 6400 系列仪器类型方法的扩展名应为 .m，并且应当包含文件 qqqacqmethod.xsd。如果是采用 Agilent TQ 方法，请选择“Agilent MassHunter 12 或更高版本”作为仪器类型。</value>
+    <comment>Needs Review:English text changed
+Old English:The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.
+Current English:Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose "Agilent MassHunter 12 or higher" as your instrument type.
+Old Localized:选定的文件夹无 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</comment>
   </data>
   <data name="ExportMethodDlg_btnGraph_Click_An_error_occurred_" xml:space="preserve">
     <value>发生了错误。</value>
@@ -280,6 +288,10 @@
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>文件夹{0}无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>文件夹 {0} 似乎不包含 Agilent MassHunter 12 方法模板。该文件夹的扩展名应为 .m。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
     <value>文件夹{0}无 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
   </data>
@@ -293,7 +305,7 @@
     <value>模板文件{0}不存在。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_" xml:space="preserve">
-    <value>本文档的离子对预测设置设定为通过离子对使用优化值。</value>
+    <value>本文档的离子对预测设置设定为使用离子对的优化值。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
@@ -302,7 +314,7 @@
     <value>离子对列表</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_" xml:space="preserve">
-    <value>通过离子对使用优化值对此类仪器无效。您想改为通过母离子使用优化值吗?</value>
+    <value>使用离子对的优化值对此类仪器无效。您想改为使用母离子的优化值吗?</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead" xml:space="preserve">
     <value>您是否愿意使用默认值替代？</value>
@@ -410,7 +422,7 @@
     <value>文本“{0}”并不是选定文件的后缀。</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___" xml:space="preserve">
-    <value>正在检查错误...</value>
+    <value>正在检查错误…</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z" xml:space="preserve">
     <value>分子式和/或母离子质荷比</value>

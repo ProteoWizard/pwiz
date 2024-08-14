@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -944,6 +945,15 @@ namespace pwiz.Skyline.Model
         public const string TestingConvertedFromProteomic = "zzzTestingConvertedFromProteomic";
         public static string TestingConvertedFromProteomicPeptideNameDecorator = @"pep_"; // Testing aid: use this to make sure name of a converted peptide isn't a valid peptide seq
         
+        public static CustomMolecule MoleculeFromPeptideSequence(string sequence)
+        {
+            var moleculeFormula = SrmSettings.MonoisotopicMassCalc.GetMolecularFormula(sequence);
+            var mol = ParsedMolecule.Create(moleculeFormula); // Convert to ParsedMolecule
+            var customMolecule = new CustomMolecule(mol,
+                RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + sequence);
+            return customMolecule;
+        }
+
         public SrmDocument ConvertToSmallMolecules(SrmDocument document, 
             string pathForLibraryFiles, // In case we translate libraries etc
             ConvertToSmallMoleculesMode mode = ConvertToSmallMoleculesMode.formulas, 
@@ -961,6 +971,24 @@ namespace pwiz.Skyline.Model
                 invertChargesMode == ConvertToSmallMoleculesChargesMode.none && // Too much trouble adjusting mz in libs
                 mode != ConvertToSmallMoleculesMode.masses_only && // Need a proper ID for libraries
                 document.Settings.PeptideSettings.Libraries.IsLoaded; // If original doc never loaded libraries, don't worry about converting
+
+            // Retention time prediction
+            var prediction = newdoc.Settings.PeptideSettings.Prediction;
+            var peptideTimes = prediction?.RetentionTime?.PeptideTimes;
+            if (canConvertLibraries && peptideTimes != null)
+            {
+                var calc = prediction.RetentionTime.Calculator;
+                var newDbFile =  calc.PersistAsSmallMolecules(Path.GetDirectoryName(calc.PersistencePath), newdoc);
+                if (newDbFile != null)
+                {
+                    var irtCalcName = Path.GetFileNameWithoutExtension(newDbFile);
+                    var calcIrt = new RCalcIrt(irtCalcName, newDbFile);
+                    var retentionTimeRegression = prediction.RetentionTime.ChangeCalculator(calcIrt);
+                    retentionTimeRegression = (RetentionTimeRegression)retentionTimeRegression.ChangeName(irtCalcName);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptidePrediction(p =>
+                        prediction.ChangeRetentionTime(retentionTimeRegression)));
+                }
+            }
 
             // Make small molecule filter settings look like peptide filter settings
             var ionTypes = new List<IonType>();
@@ -1236,10 +1264,8 @@ namespace pwiz.Skyline.Model
                                                       @" " + ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath, newLoadedDb);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangeTransitionIonMobilityFiltering(im => im.ChangeLibrary(spec)));
                 }
-            }            
-            // No retention time prediction for small molecules (yet?)
-            newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
-                newdoc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(null))));
+            }
+
             newdoc = ForceReloadChromatograms(newdoc);
             CloseLibraryStreams(newdoc);
             return newdoc;
