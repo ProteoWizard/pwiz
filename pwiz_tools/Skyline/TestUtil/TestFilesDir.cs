@@ -90,13 +90,15 @@ namespace pwiz.SkylineTestUtil
             }
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
+            IsExtractHere = isExtractHere;
             if (PersistentFiles != null)
                 PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
 
             // record the size of the persistent directory after extracting
-            var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(PersistentFilesDir);
+            var targetDir = isExtractHere ? Path.Combine(PersistentFilesDir ?? "", directoryName) : PersistentFilesDir;
+            var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(targetDir);
             if (persistentDirInfo != null && Directory.Exists(PersistentFilesDir))
             {
                 var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
@@ -121,6 +123,7 @@ namespace pwiz.SkylineTestUtil
         public string PersistentFilesDir { get; private set; }
 
         public string[] PersistentFiles { get; private set; }
+        private bool IsExtractHere { get; }
 
         /// <summary>
         /// The sum of all file sizes in the persistent files dir after extracting the ZIP.
@@ -292,10 +295,12 @@ namespace pwiz.SkylineTestUtil
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
+            var lastDirectoryName = Path.GetFileName(FullPath) ?? "";
+            var targetDir = IsExtractHere ? Path.Combine(PersistentFilesDir ?? "", lastDirectoryName) : PersistentFilesDir;
             List<FileInfo> currentFileInfos;
             try
             {
-                var persistentDirInfo = new DirectoryInfo(PersistentFilesDir);
+                var persistentDirInfo = new DirectoryInfo(targetDir);
                 currentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
             }
             catch (Exception ex)
