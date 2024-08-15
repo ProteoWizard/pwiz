@@ -170,5 +170,56 @@ namespace pwiz.SkylineTest
                 return misOrdered;
             }
         }
+
+        [TestMethod]
+        public void TestEnforceMaxWordLength()
+        {
+            Assert.AreEqual(6, GetMaxWordLength("Hello, world"));
+            Assert.AreEqual(6, GetMaxWordLength("Hello world!"));
+            Assert.AreEqual(5, GetMaxWordLength("Hello-world"));
+            foreach (var input in new[]
+                     {
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                         "The quick brown fox jumps over a lazy dog",
+                     })
+            {
+                int inputMaxWordLength = GetMaxWordLength(input);
+                var inputWithoutSpaces = input.Replace(" ", "");
+                for (int enforcedMaxWordLength = 1; enforcedMaxWordLength <= input.Length; enforcedMaxWordLength++)
+                {
+                    var result = TextUtil.EnforceMaxWordLength(input, enforcedMaxWordLength);
+                    if (inputMaxWordLength <= enforcedMaxWordLength)
+                    {
+                        Assert.AreEqual(input, result);
+                    }
+                    else
+                    {
+                        Assert.AreNotEqual(input, result);
+                        Assert.AreEqual(enforcedMaxWordLength, GetMaxWordLength(result));
+                        var resultWithoutSpaces = result.Replace(" ", "");
+                        Assert.AreEqual(inputWithoutSpaces, resultWithoutSpaces);
+                    }
+                }
+            }
+        }
+
+        private int GetMaxWordLength(string str)
+        {
+            int maxWordLength = 0;
+            int currentWordLength = 0;
+            foreach (var ch in str)
+            {
+                if (char.IsWhiteSpace(ch) || ch == '-')
+                {
+                    maxWordLength = Math.Max(maxWordLength, currentWordLength);
+                    currentWordLength = 0;
+                }
+                else
+                {
+                    currentWordLength++;
+                }
+            }
+            return Math.Max(maxWordLength, currentWordLength);
+        }
     }
 }
