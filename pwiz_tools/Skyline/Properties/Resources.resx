@@ -3573,9 +3573,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential" xml:space="preserve">
     <value>Declustering Potential</value>
   </data>
-  <data name="HtmlFragment_ClipBoardText_From_Clipboard" xml:space="preserve">
-    <value>From Clipboard</value>
-  </data>
   <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
     <value>The selected file or model does not assign peak boundaries to any chromatograms in the document.  Please select a different model or file.</value>
   </data>
