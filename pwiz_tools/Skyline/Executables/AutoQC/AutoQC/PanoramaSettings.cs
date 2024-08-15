@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using AutoQC.Properties;
+using pwiz.PanoramaClient;
 using SharedBatch;
 
 namespace AutoQC
@@ -59,23 +60,20 @@ namespace AutoQC
             PanoramaServer panoramaServer;
             try
             {
-                panoramaServer = new PanoramaServer(new Uri(PanoramaUtil.ServerNameToUrl(panoramaServerUrl)),
-                    PanoramaUserEmail, PanoramaPassword);
+                panoramaServer = new PanoramaServer(PanoramaUtil.ServerNameToUri(panoramaServerUrl), PanoramaUserEmail,
+                    PanoramaPassword);
             }
             catch (UriFormatException e)
             {
                 throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_, panoramaServerUrl, e.Message));
             }
 
-            var panoramaClient = new WebPanoramaClient(panoramaServer.ServerUri);
+            var panoramaClient = new WebPanoramaClient(panoramaServer.URI, PanoramaUserEmail, PanoramaPassword);
             try
             {
-                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
-                // If the server URI was fixed during validation - e.g. protocol changed from http to https OR the context path (/labkey) was added or removed.
-                if (panoramaClient.ServerUri != null)
-                {
-                    panoramaServer = new PanoramaServer(panoramaClient.ServerUri, PanoramaUserEmail, PanoramaPassword);
-                }
+                // Get the validated server. The server URI may have been fixed during validation - e.g. protocol changed from http to https
+                // OR the context path (/labkey) added or removed.
+                panoramaServer = panoramaClient.ValidateServer();
             }
             catch (Exception ex)
             {
@@ -84,10 +82,8 @@ namespace AutoQC
             }
             try
             {
-                PanoramaUtil.VerifyFolder(panoramaClient,
-                    new Server(panoramaServer.ServerUri, PanoramaUserEmail,
-                        PanoramaPassword),
-                    PanoramaFolder);
+                // User should have admin permissions in the folder, and the folder should be of type TargetedMS
+                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.admin);
             }
             catch (Exception ex)
             {
@@ -95,7 +91,7 @@ namespace AutoQC
                 throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Error_verifying_Panorama_folder_information___0_, ex.Message));
             }
 
-            return panoramaServer.ServerUri;
+            return panoramaServer.URI;
         }
 
         public void ValidateSettings(bool doServerCheck)
@@ -279,7 +275,7 @@ namespace AutoQC
         private readonly Logger _logger;
         private short _status; //1 = success; 2 = fail
         private Timer _timer;
-        private IPanoramaClient _panoramaClient;
+        private IRequestHelper _requestHelper;
         private string _exceptionMessage;
 
         public PanoramaPinger(PanoramaSettings panoramaSettings, Logger logger)
@@ -296,10 +292,7 @@ namespace AutoQC
 
             try
             {
-                _panoramaClient.PingPanorama(_panoramaSettings.PanoramaFolder,
-                    _panoramaSettings.PanoramaUserEmail,
-                    _panoramaSettings.PanoramaPassword
-                     );
+                PingPanorama();
 
                 if (_status != 1)
                 {
@@ -318,9 +311,16 @@ namespace AutoQC
             }
         }
 
+        public void PingPanorama()
+        {
+           var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
+           _requestHelper.Post(uri, string.Empty, null);
+        }
+
         public void Init()
         {
-            _panoramaClient = new WebPanoramaClient(_panoramaSettings.PanoramaServerUri);
+            _requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(_panoramaSettings.PanoramaServerUri,
+                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword));
             _timer = new Timer(e => { PingPanoramaServer(); });
             _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5)); // Ping Panorama every 5 minutes.
         }
@@ -328,6 +328,7 @@ namespace AutoQC
         public void Stop()
         {
             _timer.Dispose();
+            _requestHelper.Dispose();
             _status = 0;
         }
     }

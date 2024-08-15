@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
                 var unknownCurve = FindCurve(calibrationForm.ZedGraphControl, SampleType.UNKNOWN.ToString());
                 Assert.IsNotNull(unknownCurve);
                 var standardCurve = FindCurve(calibrationForm.ZedGraphControl,
-                    CalibrationForm.QualifyCurveNameWithSurrogate(SampleType.STANDARD.ToString(), surrogateStandard));
+                    CalibrationGraphControl.QualifyCurveNameWithSurrogate(SampleType.STANDARD.ToString(), surrogateStandard));
                 Assert.IsNotNull(standardCurve);
                 int indexFirstStandard = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.IndexOf(
                     chromatogramSet =>
