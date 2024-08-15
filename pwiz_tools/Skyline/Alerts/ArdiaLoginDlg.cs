@@ -538,18 +538,10 @@ namespace pwiz.Skyline.Alerts
             {
                 using (var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest))
                 {
-                    if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
+                    if (!(clientCredentialsResponse.StatusCode == HttpStatusCode.OK ||
+                          clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound))
                     {
-                        //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
-
-                        var errorMessage =
-                            string.Format(
-                                "Error validating Skyline Instance registration in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
-                                credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
-                        MessageDlg.Show(this, errorMessage);
-                    }
-                    else if (!clientCredentialsResponse.IsSuccessStatusCode)
-                    {
+                        //  "NotFound (404)" returned when ApplicationCode is not found so process that status code in the next step
 
                         //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
 
@@ -558,29 +550,122 @@ namespace pwiz.Skyline.Alerts
                                 "Error validating Skyline Instance registration in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
                                 credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
                         MessageDlg.Show(this, errorMessage);
+
+                        clientCredentialsResponse.EnsureSuccessStatusCode();
                     }
 
-                    clientCredentialsResponse.EnsureSuccessStatusCode();
-
-                    var content = await clientCredentialsResponse.Content.ReadAsStringAsync();
-
-                    //  Parse the content as JSON and get property clientCodeStatus
-
-                    var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
-
-                    if (clientStatusResultObject == null || clientStatusResultObject.clientCodeStatus == null)
+                    try
                     {
-                        return false;
-                    }
+                        var content = await clientCredentialsResponse.Content.ReadAsStringAsync();
 
-                    if (clientStatusResultObject.clientCodeStatus.Contains(@"has been activated"))
+                        //  Parse the content as JSON and validate content
+
+                        try
+                        {
+                            var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
+
+                            if (clientStatusResultObject == null)
+                            {
+                                if (clientCredentialsResponse.StatusCode == HttpStatusCode.OK)
+                                {
+                                    //  200 HTTP Status code for OK and NOT able to parse or process the webservice response so present this error
+                                    var errorMessage =
+                                        string.Format(
+                                            "Error validating Skyline Instance registration in Ardia as Client. Failed to process result from webservice call to URL {0}. Server URL: {1}",
+                                            credentialsValidationUri, Account.ServerUrl);
+                                    MessageDlg.Show(this, errorMessage);
+                                }
+                                else if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
+                                {
+                                    //  404 HTTP Status code for NotFound and NOT able to parse or process the webservice response so present this error
+                                    var errorMessage =
+                                        string.Format(
+                                            "Error validating Skyline Instance registration in Ardia as Client. Failed to process webservice response.  Probably failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
+                                            credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
+                                    MessageDlg.Show(this, errorMessage);
+                                }
+                                else
+                                {
+                                    var errorMessage =
+                                        string.Format(
+                                            "Error validating Skyline Instance registration in Ardia as Client. Failed to process webservice response. URL {0}. Server URL: {1}",
+                                            credentialsValidationUri, Account.ServerUrl);
+                                    MessageDlg.Show(this, errorMessage);
+                                }
+                                return false;
+                            }
+
+                            if (IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientCodeStatus) &&
+                                IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientIdStatus) &&
+                                IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientNameStatus))
+                            {
+                                return true; // ApplicationCode is valid
+                            }
+
+                            return false;
+
+                        }
+                        catch (Exception e)
+                        {
+                            if (clientCredentialsResponse.StatusCode == HttpStatusCode.OK)
+                            {
+                                //  200 HTTP Status code for OK and NOT able to parse or process the webservice response so present this error
+                                var errorMessage =
+                                    string.Format(
+                                        "Error validating Skyline Instance registration in Ardia as Client. Failed to process result from webservice call to URL {0}. Server URL: {1}",
+                                        credentialsValidationUri, Account.ServerUrl);
+                                MessageDlg.ShowWithException(this, errorMessage, e);
+                            }
+                            else if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
+                            {
+                                //  404 HTTP Status code for NotFound and NOT able to parse or process the webservice response so present this error
+                                var errorMessage =
+                                    string.Format(
+                                        "Error validating Skyline Instance registration in Ardia as Client. Failed to process webservice response.  Probably failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
+                                        credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
+                                MessageDlg.ShowWithException(this, errorMessage, e);
+                            }
+                            else
+                            {
+                                var errorMessage =
+                                    string.Format(
+                                        "Error validating Skyline Instance registration in Ardia as Client. Failed to process webservice response. URL {0}. Server URL: {1}",
+                                        credentialsValidationUri, Account.ServerUrl);
+                                MessageDlg.ShowWithException(this, errorMessage, e);
+                            }
+                            return false;
+                        }
+
+                    }
+                    catch (Exception e)
                     {
-                        return true; // ApplicationCode is valid
-                    }
+                        if (!clientCredentialsResponse.IsSuccessStatusCode)
+                        {
+                            //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
 
-                    return false;
+                            var errorMessage =
+                                string.Format(
+                                    "Error validating Skyline Instance registration in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}",
+                                    credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse.ToString());
+                            MessageDlg.Show(this, errorMessage);
+
+                            clientCredentialsResponse.EnsureSuccessStatusCode();
+                        }
+
+                        throw;
+                    }
                 }
             }
+        }
+
+        // Check if the given status string contains the "has been activated" message
+        private bool IsClientRegistrationActivated_SingleField(string status)
+        {
+            if (status == null)
+            {
+                return false;
+            }
+            return status.Contains(@"has been activated");
         }
 
 
