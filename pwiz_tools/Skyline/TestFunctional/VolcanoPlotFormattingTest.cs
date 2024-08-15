@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
     public class VolcanoPlotFormattingTest : AbstractFunctionalTestEx
     {
         private static readonly string GROUP_COMPARISON_NAME = "Test_Group_Comparison";
-        private bool IsLayoutTest = false;
+        private bool IsLayoutTest;
 
         #region Data
 
