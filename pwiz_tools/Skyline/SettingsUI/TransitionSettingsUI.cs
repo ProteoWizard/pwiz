@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.SettingsUI
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
             var spectrumFilter = SpectrumFilter;
             FilterPages filterPages = null;
-            if (spectrumFilter.IsEmpty)
+            if (!spectrumFilter.IsEmpty)
             {
                 filterPages = spectrumFilter.GetFilterPages();
             }

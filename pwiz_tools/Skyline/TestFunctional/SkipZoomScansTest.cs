@@ -19,8 +19,12 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -39,16 +43,32 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
-        {
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ZoomScanTest.sky")));
+        {        
+            RunUI(()=>
+            {
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ZoomScanTest.sky"));
+            });
+            RunLongDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
+            {
+                RunUI(()=>transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.Instrument);
+                RunDlg<EditSpectrumFilterDlg>(transitionSettingsUi.EditSpectrumFilter, editSpectrumFilterDlg =>
+                {
+                    editSpectrumFilterDlg.SelectPage(1);
+                    var row = editSpectrumFilterDlg.RowBindingList.AddNew();
+                    Assert.IsNotNull(row);
+                    row.SetProperty(SpectrumClassColumn.IsolationWindowWidth);
+                    row.SetOperation(FilterOperations.OP_IS_LESS_THAN);
+                    row.SetValue(10);
+                    editSpectrumFilterDlg.OkDialog();
+                });
+            }, transitionSettingsUi=>transitionSettingsUi.OkDialog());
             
             var mzmlPath = TestFilesDir.GetTestPath("zoomtest.mzML");
             ImportResultsFile(mzmlPath);
-
             using var msdatafile = new MsDataFileImpl(TestFilesDir.GetTestPath(mzmlPath));
             var spectra = Enumerable.Range(0, msdatafile.SpectrumCount).Select(msdatafile.GetSpectrum)
                 .ToDictionary(spectrum=> spectrum.Id);
-            var zoomSpectra = spectra.Values.Where(spectrum => spectrum.ZoomScan).ToList();
+            var zoomSpectra = spectra.Values.Where(spectrum =>IsZoomScan(spectrum)).ToList();
             Assert.AreNotEqual(0, zoomSpectra.Count);
 
             var document = SkylineWindow.Document;
@@ -72,9 +92,20 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var spectrumMetadata = resultFileMetadata.SpectrumMetadatas[timeIntensities.ScanIds[iSpectrum]];
                     Assert.IsTrue(spectra.TryGetValue(spectrumMetadata.Id, out var spectrum), "Could not find spectrum {0}", spectrumMetadata.Id);
-                    Assert.IsFalse(spectrum.ZoomScan);
+                    Assert.IsFalse(IsZoomScan(spectrum));
                 }
             }
+        }
+
+        private bool IsZoomScan(MsDataSpectrum spectrum)
+        {
+            var precursors = spectrum.GetPrecursorsByMsLevel(1);
+            if (precursors.Count == 0)
+            {
+                return false;
+            }
+            Assert.AreEqual(1, precursors.Count);
+            return 10 < precursors[0].IsolationWidth;
         }
     }
 }
