@@ -1113,6 +1113,9 @@ namespace pwiz.Skyline.Model.Results
                             if (nextSpectrum.Mzs.Length == 0)
                                 continue;
 
+                            if (nextSpectrum.Metadata.ZoomScan)
+                                continue;
+
                             double? rt = nextSpectrum.RetentionTime;
                             if (!rt.HasValue)
                                 continue;
