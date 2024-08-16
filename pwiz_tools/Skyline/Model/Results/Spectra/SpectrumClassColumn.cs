@@ -17,13 +17,17 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -64,10 +68,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static readonly SpectrumClassColumn Analyzer =
             MakeColumn(nameof(SpectrumClass.Analyzer), spectrum => spectrum.Analyzer);
 
+        public static readonly SpectrumClassColumn IsolationWindowWidth = MakeColumn(
+            nameof(SpectrumClass.IsolationWindowWidth),
+            spectrum => GetIsolationWindowWidth(spectrum.GetPrecursors(1)));
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
             Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage,
-            PresetScanConfiguration, MsLevel, Analyzer
+            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth
         });
 
         public static readonly ImmutableList<SpectrumClassColumn> MS1 = ImmutableList.ValueOf(new[]
@@ -242,6 +250,42 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return collisionEnergies[0];
             }
 
+            return null;
+        }
+
+        private static double? GetIsolationWindowWidth(IEnumerable<SpectrumPrecursor> precursors)
+        {
+            double totalWidth = 0;
+            Tuple<double, double> currentRange = null;
+            foreach (var precursor in precursors.OrderBy(precursor=>precursor.PrecursorMz - precursor.IsolationWindowLowerWidth))
+            {
+                double? lowerMz = precursor.PrecursorMz - precursor.IsolationWindowLowerWidth;
+                double? upperMz = precursor.PrecursorMz + precursor.IsolationWindowUpperWidth;
+                if (!lowerMz.HasValue || !upperMz.HasValue)
+                {
+                    continue;
+                }
+                if (lowerMz <= currentRange?.Item2)
+                {
+                    currentRange = Tuple.Create(currentRange.Item1,
+                        Math.Max(currentRange.Item2, upperMz.Value));
+                }
+                else
+                {
+                    if (currentRange != null)
+                    {
+                        totalWidth += currentRange.Item2 - currentRange.Item1;
+                    }
+
+                    currentRange = Tuple.Create(lowerMz.Value, upperMz.Value);
+                }
+            }
+
+            if (currentRange != null)
+            {
+                return totalWidth + currentRange.Item2 - currentRange.Item1;
+            }
+            Assume.AreEqual(0.0, totalWidth);
             return null;
         }
     }
