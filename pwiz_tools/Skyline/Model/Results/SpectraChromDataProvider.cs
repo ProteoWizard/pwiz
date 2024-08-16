@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (NeedMaxIonMobilityValue(dataFile))
                 _maxIonMobilityValue = dataFile.GetMaxIonMobility();
-            _globalSpectrumClassFilter = _document.Settings.TransitionSettings.FullScan.SpectrumFilter.MakePredicate();
+            _globalSpectrumClassFilter = _document.Settings.TransitionSettings.FullScan.SpectrumClassFilter.MakePredicate();
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);

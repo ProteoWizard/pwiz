@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Optimization;
@@ -212,7 +213,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
-                                                      FullScanMassAnalyzerType.none, null, null, false, false,
+                                                      FullScanMassAnalyzerType.none, null, null, false,
                                                       null, RetentionTimeFilterType.none, 0);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
@@ -2318,7 +2319,6 @@ namespace pwiz.Skyline.Model.DocSettings
                                     FullScanMassAnalyzerType precursorMassAnalyzer,
                                     double? precursorRes,
                                     double? precursorResMz,
-                                    bool ignoreSim,
                                     bool selectiveExtraction,
                                     IsotopeEnrichments isotopeEnrichments,
                                     RetentionTimeFilterType retentionTimeFilterType,
@@ -2334,7 +2334,6 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorMassAnalyzer = precursorMassAnalyzer;
             PrecursorRes = precursorRes;
             PrecursorResMz = precursorResMz;
-            IgnoreSimScans = ignoreSim;
 
             UseSelectiveExtraction = selectiveExtraction;
 
@@ -2503,8 +2502,13 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double RetentionTimeFilterLength { get; private set; }
 
-        [TrackChildren(true)]
-        public SpectrumClassFilter SpectrumFilter { get; private set; }
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+
+        [TrackChildren]
+        public IList<FilterClause> SpectrumFilter
+        {
+            get { return SpectrumClassFilter.Clauses; }
+        }
 
         public bool IsEnabled
         {
@@ -2753,7 +2757,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         public TransitionFullScan ChangeSpectrumFilter(SpectrumClassFilter spectrumFilter)
         {
-            return ChangeProp(ImClone(this), im => im.SpectrumFilter = spectrumFilter);
+            return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumFilter);
         }
 
 
@@ -2956,8 +2960,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         PrecursorResMz = reader.GetNullableDoubleAttribute(ATTR.precursor_res_mz) ?? DEFAULT_RES_MZ;
                 }
             }
-
-            IgnoreSimScans = reader.GetBoolAttribute(ATTR.ignore_sim_scans);
+            SpectrumClassFilter = default;
+            if (reader.GetBoolAttribute(ATTR.ignore_sim_scans))
+            {
+                SpectrumClassFilter = IgnoreSimScansFilter;
+            }
             UseSelectiveExtraction = reader.GetBoolAttribute(ATTR.selective_extraction);
             RetentionTimeFilterType = RetentionTimeFilterType.none;
             RetentionTimeFilterLength = 0;
@@ -2993,7 +3000,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Consume tag
             reader.Read();
-
             if (hasInnerTags)
             {
                 // Read enrichment tags, if present.
@@ -3010,6 +3016,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     IsolationScheme = readIsolationHelper.Deserialize(reader);
                 }
 
+                var spectrumFilter = SpectrumClassFilter.ReadXml(reader);
+                if (!spectrumFilter.IsEmpty)
+                {
+                    SpectrumClassFilter = spectrumFilter;
+                }
                 // If there is an inner tag, there must be an end tag.
                 reader.ReadEndElement();
             }
@@ -3051,6 +3062,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(IsotopeEnrichments);
             if (AcquisitionMethod == FullScanAcquisitionMethod.DIA && IsolationScheme != null)
                 writer.WriteElement(IsolationScheme);
+            SpectrumClassFilter.WriteXml(writer);
         }
 
         #endregion
@@ -3112,6 +3124,22 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public static readonly SpectrumClassFilter IgnoreSimScansFilter = new SpectrumClassFilter(
+            new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
+                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1)),
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.ScanWindowWidth)),
+                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN,
+                        Results.SpectrumFilter.SIM_ISOLATION_CUTOFF))
+            }),
+            new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
+                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1))
+            })
+        );
     }
 
     [XmlRoot("transition_integration")]

@@ -1088,7 +1088,7 @@ namespace pwiz.Skyline
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
+                    newSettings = newSettings.ChangeSpectrumFilter(TransitionFullScan.IgnoreSimScansFilter);
                 }
 
                 if (commandArgs.FullScanAcquisitionMethod != FullScanAcquisitionMethod.None)

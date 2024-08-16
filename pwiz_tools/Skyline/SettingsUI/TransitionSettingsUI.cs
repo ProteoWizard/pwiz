@@ -202,7 +202,7 @@ namespace pwiz.Skyline.SettingsUI
 
             DoIsolationSchemeChanged();
             cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
-            SpectrumFilter = _transitionSettings.FullScan.SpectrumFilter;
+            SpectrumFilter = _transitionSettings.FullScan.SpectrumClassFilter;
         }
 
         public const double SureQuantMzMatchTolerance = 0.007;
@@ -337,12 +337,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return FullScanSettingsControl.PrecursorResMz; }
             set { FullScanSettingsControl.PrecursorResMz = value; }
-        }
-
-        public bool IgnoreSimScans
-        {
-            get { return FullScanSettingsControl.IgnoreSimScans; }
-            set { FullScanSettingsControl.IgnoreSimScans = value; }
         }
 
         public bool UseSelectiveExtraction
@@ -1342,6 +1336,24 @@ namespace pwiz.Skyline.SettingsUI
         }
         private void btnEditSpectrumFilter_Click(object sender, EventArgs e)
         {
+            EditSpectrumFilter();
+        }
+
+        public SpectrumClassFilter SpectrumFilter
+        {
+            get
+            {
+                return _spectrumFilter;
+            }
+            set
+            {
+                _spectrumFilter = value;
+                tbxSpectrumFilter.Text = SpectrumFilter.ToString();
+            }
+        }
+
+        public void EditSpectrumFilter()
+        {
             var skylineDataSchema = new SkylineDataSchema(_parent, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
             var spectrumFilter = SpectrumFilter;
@@ -1366,19 +1378,6 @@ namespace pwiz.Skyline.SettingsUI
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 SpectrumFilter = SpectrumClassFilter.FromFilterPages(dlg.FilterPages);
-            }
-        }
-
-        public SpectrumClassFilter SpectrumFilter
-        {
-            get
-            {
-                return _spectrumFilter;
-            }
-            set
-            {
-                _spectrumFilter = value;
-                tbxSpectrumFilter.Text = SpectrumFilter.ToString();
             }
         }
     }
