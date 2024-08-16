@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1091,6 +1090,7 @@ namespace pwiz.ProteowizardWrapper
                 NegativeCharge = NegativePolarity(spectrum),
                 ScanDescription = GetScanDescription(spectrum),
                 Metadata = GetSpectrumMetadata(spectrum),
+                ZoomScan = spectrum.hasCVParam(CVID.MS_zoom_scan)
             };
             using var spectrumScanList = spectrum.scanList;
             using var scans = spectrumScanList.scans;
@@ -1184,10 +1184,6 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
             var metadata = new SpectrumMetadata(id.abbreviate(spectrum.id), retentionTime.Value);
-            if (spectrum.hasCVParam(CVID.MS_zoom_scan))
-            {
-                metadata = metadata.ChangeZoomScan(true);
-            }
             var precursorsByMsLevel = new List<IEnumerable<SpectrumPrecursor>>();
             foreach (var level in GetPrecursorsByMsLevel(spectrum))
             {
@@ -1221,7 +1217,6 @@ namespace pwiz.ProteowizardWrapper
                     metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
                 }
             }
-
             double? scanWindowLowerLimit = null;
             double? scanWindowUpperLimit = null;
             foreach (var scan in spectrum.scanList.scans)
@@ -1991,6 +1986,7 @@ namespace pwiz.ProteowizardWrapper
         {
             return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime} im={MinIonMobility??_ionMobility?.Mobility}:{MaxIonMobility??_ionMobility?.Mobility}";
         }
+        public bool ZoomScan { get; set; }
     }
 
     public sealed class MsInstrumentConfigInfo

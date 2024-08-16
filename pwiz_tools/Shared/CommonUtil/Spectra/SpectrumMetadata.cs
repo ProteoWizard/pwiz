@@ -111,13 +111,6 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.Analyzer = value);
         }
 
-        public bool ZoomScan { get; private set; }
-
-        public SpectrumMetadata ChangeZoomScan(bool value)
-        {
-            return ChangeProp(ImClone(this), im => im.ZoomScan = value);
-        }
-        
         protected bool Equals(SpectrumMetadata other)
         {
             return _precursorsByMsLevel.Equals(other._precursorsByMsLevel) && Id == other.Id &&
