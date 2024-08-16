@@ -18,8 +18,10 @@
  */
 
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -70,6 +72,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var document = WaitForDocumentLoaded(400000);
 
             // If we get here, problem is solved
+
+            // delete lockmass file
+            var lmgtFile = Path.Combine(GetTestPath(TestFilesPersistent[0]), "lmgt.inf");
+            FileEx.SafeDelete(lmgtFile);
         }
     }
 }

@@ -267,6 +267,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // Run Crux Percolator
                 string cruxOutputDir = Path.Combine(defaultOutputDirectory, "crux-output");
+                _intermediateFiles.Add(cruxOutputDir);
                 psi.FileName = CruxBinary;
                 psi.Arguments = $@"percolator --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
 
@@ -279,6 +280,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                     string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
                     _intermediateFiles.Add(cruxInputFilepath);
+                    _intermediateFiles.Add(cruxFixedInputFilepath);
                     FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath);
                     psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
 
@@ -297,6 +299,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     string msfraggerPepXmlFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), @".pepXML");
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
+                    _intermediateFiles.Add(msfraggerPepXmlFilepath);
                     FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId);
                 }
 
