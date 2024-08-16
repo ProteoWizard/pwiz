@@ -151,6 +151,9 @@
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="OneOf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\OneOf.3.0.271\lib\net45\OneOf.dll</HintPath>
+    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -750,6 +753,7 @@
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
+    <Compile Include="Model\Tools\PythonInstaller.cs" />
     <Compile Include="Model\TransitionLossMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
@@ -854,6 +858,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\PythonInstallerDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\PythonInstallerDlg.Designer.cs">
+      <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
@@ -4040,6 +4050,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Model\Koina\Config\KoinaConfig_development.xml" />
+    <None Include="packages.config" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="PreBuildEvents.bat" />
     <Protobuf Include="ProtocolBuffers\grpc_service.proto" />
@@ -4835,6 +4846,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerDlg.resx">
+      <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.ja.resx">
       <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>

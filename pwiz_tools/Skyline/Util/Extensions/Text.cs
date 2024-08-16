@@ -35,6 +35,13 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public static class TextUtil
     {
+        public const string HYPHEN = "-";
+        public const string SPACE = " ";
+        public const string CARET = @"^";
+        public const string AMPERSAND = @"&";
+        public const string EQUAL = @"=";
+        public const string FORWARD_SLASH = @"/";
+
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
 
