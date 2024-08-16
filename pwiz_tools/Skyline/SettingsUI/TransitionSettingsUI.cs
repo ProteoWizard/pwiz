@@ -23,13 +23,18 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
@@ -68,6 +73,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly int _lower_margin;
         private IonType[] InitialPeptideIonTypes;
         private IonType[] InitialSmallMoleculeIonTypes;
+        private SpectrumClassFilter _spectrumFilter;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -196,6 +202,7 @@ namespace pwiz.Skyline.SettingsUI
 
             DoIsolationSchemeChanged();
             cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
+            SpectrumFilter = _transitionSettings.FullScan.SpectrumFilter;
         }
 
         public const double SureQuantMzMatchTolerance = 0.007;
@@ -643,7 +650,7 @@ namespace pwiz.Skyline.SettingsUI
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return;
-
+            fullScan = fullScan.ChangeSpectrumFilter(SpectrumFilter);
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
             if (!IonMobilityControl.ValidateIonMobilitySettings(helper, out var ionMobilityFiltering))
@@ -652,8 +659,7 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref ionMobilityFiltering, IonMobility);
 
             TransitionSettings settings = new TransitionSettings(prediction,
-                filter, libraries, integration, instrument, fullScan, ionMobilityFiltering);
-
+                    filter, libraries, integration, instrument, fullScan, ionMobilityFiltering);
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
             {
@@ -1332,6 +1338,47 @@ namespace pwiz.Skyline.SettingsUI
                     IonMatchTolerance = matchTolerance / 1000;
                 else
                     IonMatchTolerance = matchTolerance * 1000;
+            }
+        }
+        private void btnEditSpectrumFilter_Click(object sender, EventArgs e)
+        {
+            var skylineDataSchema = new SkylineDataSchema(_parent, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
+            var spectrumFilter = SpectrumFilter;
+            FilterPages filterPages = null;
+            if (spectrumFilter.IsEmpty)
+            {
+                filterPages = spectrumFilter.GetFilterPages();
+            }
+
+            if (!(filterPages?.Pages.Count > 0))
+            {
+                filterPages = FilterPages.Blank(SpectrumClassFilter.Ms1FilterPage, SpectrumClassFilter.Ms2FilterPage);
+            }
+
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            dlg.CreateCopyEnabled = false;
+            if (filterPages.Pages.Count == 2 && filterPages.Clauses[0].IsEmpty)
+            {
+                // When editing a blank filter with two pages, start with the "MS2" page selected 
+                dlg.SelectPage(1);
+            }
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                SpectrumFilter = SpectrumClassFilter.FromFilterPages(dlg.FilterPages);
+            }
+        }
+
+        public SpectrumClassFilter SpectrumFilter
+        {
+            get
+            {
+                return _spectrumFilter;
+            }
+            set
+            {
+                _spectrumFilter = value;
+                tbxSpectrumFilter.Text = SpectrumFilter.ToString();
             }
         }
     }

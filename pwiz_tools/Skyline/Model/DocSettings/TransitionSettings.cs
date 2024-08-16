@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(true)]
         public TransitionIonMobilityFiltering IonMobilityFiltering { get; private set; }
-        
+
         public bool IsMeasurablePrecursor(double mz)
         {
             if (!Instrument.IsMeasurable(mz))
@@ -135,8 +136,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.FullScan = prop);
         }
-
-        
 
 
         #endregion
@@ -2503,6 +2502,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public RetentionTimeFilterType RetentionTimeFilterType { get; private set; }
         [Track]
         public double RetentionTimeFilterLength { get; private set; }
+
+        [TrackChildren(true)]
+        public SpectrumClassFilter SpectrumFilter { get; private set; }
+
         public bool IsEnabled
         {
             get { return IsEnabledMs || IsEnabledMsMs; }
@@ -2631,6 +2634,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+
+
         #region Property change methods
 
         public TransitionFullScan ChangeAcquisitionMethod(FullScanAcquisitionMethod typeProp, IsolationScheme isolationScheme)
@@ -2746,6 +2751,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 im.RetentionTimeFilterLength = retentionTimeFilterLength;
             });
         }
+        public TransitionFullScan ChangeSpectrumFilter(SpectrumClassFilter spectrumFilter)
+        {
+            return ChangeProp(ImClone(this), im => im.SpectrumFilter = spectrumFilter);
+        }
+
 
         #endregion
 
@@ -3065,7 +3075,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 other.UseSelectiveExtraction == UseSelectiveExtraction &&
                 other.PrecursorResMz.Equals(PrecursorResMz) &&
                 other.RetentionTimeFilterType == RetentionTimeFilterType &&
-                other.RetentionTimeFilterLength == RetentionTimeFilterLength;
+                other.RetentionTimeFilterLength == RetentionTimeFilterLength &&
+                SpectrumFilter.Equals(other.SpectrumFilter);
         }
 
         public override bool Equals(object obj)
@@ -3095,6 +3106,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ UseSelectiveExtraction.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterType.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterLength.GetHashCode();
+                result = (result*397) ^ SpectrumFilter.GetHashCode();
                 return result;
             }
         }

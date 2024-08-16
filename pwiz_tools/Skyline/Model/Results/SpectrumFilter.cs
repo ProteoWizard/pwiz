@@ -24,10 +24,12 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Spectra;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -104,6 +106,7 @@ namespace pwiz.Skyline.Model.Results
                 _configInfoList = instrumentInfo.ConfigInfoList;
                 _sourceHasDeclaredMSnSpectra = instrumentInfo.HasDeclaredMSnSpectra;
             }
+
             IsFirstPass = firstPass;
 
             var comparer = PrecursorTextId.PrecursorTextIdComparerInstance;
