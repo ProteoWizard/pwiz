@@ -1089,7 +1089,8 @@ namespace pwiz.ProteowizardWrapper
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum),
                 ScanDescription = GetScanDescription(spectrum),
-                Metadata = GetSpectrumMetadata(spectrum)
+                Metadata = GetSpectrumMetadata(spectrum),
+                ZoomScan = spectrum.hasCVParam(CVID.MS_zoom_scan)
             };
             using var spectrumScanList = spectrum.scanList;
             using var scans = spectrumScanList.scans;
@@ -1994,6 +1995,7 @@ namespace pwiz.ProteowizardWrapper
         {
             return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime} im={MinIonMobility??_ionMobility?.Mobility}:{MaxIonMobility??_ionMobility?.Mobility}";
         }
+        public bool ZoomScan { get; set; }
     }
 
     public sealed class MsInstrumentConfigInfo
