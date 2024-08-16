@@ -1065,6 +1065,8 @@ namespace pwiz.Skyline.Model
                     IList<DocNode> childrenNew = new List<DocNode>();
                     foreach (TransitionDocNode nodeTransition in nodeResult.Children)
                     {
+                        if (nodeTransition.Transition.MassIndex != 0 && isotopeDist == null)
+                            continue;
                         if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
                             settingsNew.TransitionSettings.Filter.IsAvailableReporterIon(nodeTransition) &&
                             settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
