@@ -25,7 +25,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -362,14 +361,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
             return FilterPages.Blank(GenericFilterPage);
-        }
-
-        public class DefValues : DefaultValues
-        {
-            protected override IEnumerable<object> _values
-            {
-                get { yield return default(SpectrumClassFilter); }
-            }
         }
     }
 }

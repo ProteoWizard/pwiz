@@ -841,7 +841,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double[] GetTotalIonCurrent()
         {
-            if (ChromatogramList == null)
+            if (ChromatogramList == null || ChromatogramList.size() == 0)
             {
                 return null;
             }

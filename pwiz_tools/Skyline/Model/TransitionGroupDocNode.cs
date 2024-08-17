@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model
 
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
-        [TrackChildren]
+        [TrackChildren(defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IList<FilterClause> SpectrumFilter
         {
             get { return SpectrumClassFilter.Clauses; }

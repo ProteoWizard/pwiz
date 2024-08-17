@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch(Exception)
             {
-                // If exception thrown before construction is complete than Dispose will not be called.
+                // If exception thrown before construction is complete then Dispose will not be called.
                 if (_spectra == null)
                     dataFile.Dispose();
                 else

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Linq;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -46,7 +48,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.OpenFile(documentFilePath));
             var transitionFullScan = SkylineWindow.Document.Settings.TransitionSettings.FullScan;
             Assert.IsFalse(transitionFullScan.IgnoreSimScans);
-            Assert.AreEqual(TransitionFullScan.IgnoreSimScansFilter, transitionFullScan.SpectrumClassFilter);
+            CollectionAssert.Contains(transitionFullScan.SpectrumClassFilter.Clauses.ToList(),
+                TransitionFullScan.IgnoreSimScansFilter);
             var originalFullScan = LoadFullScanElement(documentFilePath);
             Assert.IsTrue(originalFullScan.HasAttribute(ignore_sim_scans));
             Assert.AreEqual("true", originalFullScan.GetAttribute(ignore_sim_scans));

@@ -36,11 +36,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
     public abstract class SpectrumClassColumn
     {
         public static readonly SpectrumClassColumn Ms1Precursors =
-            new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors), spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(1)), () => SpectraResources.SpectrumClassColumn_Ms1Precursors_MS1);
+            new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors),
+                spectrum => SpectrumPrecursorMzs(spectrum.GetPrecursors(1)),
+                () => SpectraResources.SpectrumClassColumn_Ms1Precursors_MS1);
 
         public static readonly SpectrumClassColumn Ms2Precursors =
-            new PrecursorsColumn(nameof(SpectrumClass.Ms2Precursors), 
-                spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(2)), ()=>SpectraResources.SpectrumClassColumn_Ms2Precursors_MS2);
+            new PrecursorsColumn(nameof(SpectrumClass.Ms2Precursors),
+                spectrum => SpectrumPrecursorMzs(spectrum.GetPrecursors(2)),
+                () => SpectraResources.SpectrumClassColumn_Ms2Precursors_MS2);
 
         public static readonly SpectrumClassColumn ScanDescription =
             MakeColumn(nameof(SpectrumClass.ScanDescription), spectrum => spectrum.ScanDescription);
@@ -285,6 +288,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             Assume.AreEqual(0.0, totalWidth);
             return null;
+        }
+
+        /// <summary>
+        /// Returns a SpectrumPrecursors with only the m/z values (i.e. ignoring collision energy and isolation window width)
+        /// </summary>
+        private static SpectrumPrecursors SpectrumPrecursorMzs(IEnumerable<SpectrumPrecursor> precursors)
+        {
+            return SpectrumPrecursors.FromPrecursors(precursors.Select(precursor =>
+                new SpectrumPrecursor(precursor.PrecursorMz)));
         }
     }
 }

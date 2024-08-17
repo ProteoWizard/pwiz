@@ -138,6 +138,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.FullScan = prop);
         }
 
+        
+
 
         #endregion
 
@@ -2504,7 +2506,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
-        [TrackChildren]
+        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IList<FilterClause> SpectrumFilter
         {
             get { return SpectrumClassFilter.Clauses; }
@@ -3012,6 +3014,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Consume tag
             reader.Read();
+
             if (hasInnerTags)
             {
                 // Read enrichment tags, if present.
