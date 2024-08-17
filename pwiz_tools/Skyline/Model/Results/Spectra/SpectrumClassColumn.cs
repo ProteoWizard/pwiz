@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,7 +24,6 @@ using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 

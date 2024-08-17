@@ -173,13 +173,10 @@
             // 
             // panelEditor
             // 
-            this.panelEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.panelEditor, "panelEditor");
             this.panelEditor.Controls.Add(this.panelClauses);
             this.panelEditor.Controls.Add(this.panelPages);
             this.panelEditor.Controls.Add(this.lblDescription);
-            resources.ApplyResources(this.panelEditor, "panelEditor");
             this.panelEditor.Name = "panelEditor";
             // 
             // panelPages

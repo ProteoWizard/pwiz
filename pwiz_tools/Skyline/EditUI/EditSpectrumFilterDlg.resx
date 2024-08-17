@@ -142,7 +142,7 @@
     <value>0, 0</value>
   </data>
   <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>682, 181</value>
+    <value>670, 169</value>
   </data>
   <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -151,7 +151,7 @@
     <value>dataGridViewEx1</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
     <value>panelClauses</value>
@@ -199,7 +199,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnReset.Location" type="System.Drawing.Point, System.Drawing">
-    <value>714, 200</value>
+    <value>713, 206</value>
   </data>
   <data name="btnReset.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -310,10 +310,10 @@
     <value>Delete</value>
   </data>
   <data name="toolStripFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>682, 0</value>
+    <value>670, 0</value>
   </data>
   <data name="toolStripFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 181</value>
+    <value>24, 169</value>
   </data>
   <data name="toolStripFilter.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -337,10 +337,10 @@
     <value>Fill</value>
   </data>
   <data name="panelClauses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 55</value>
+    <value>6, 61</value>
   </data>
   <data name="panelClauses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>706, 181</value>
+    <value>694, 169</value>
   </data>
   <data name="panelClauses.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -364,7 +364,7 @@
     <value>Top</value>
   </data>
   <data name="lblDescription.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>6, 6</value>
   </data>
   <data name="lblDescription.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
@@ -393,14 +393,17 @@
   <data name="&gt;&gt;lblDescription.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="panelEditor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
   <data name="panelPages.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
   <data name="panelPages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 19</value>
+    <value>6, 25</value>
   </data>
   <data name="panelPages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>706, 36</value>
+    <value>694, 36</value>
   </data>
   <data name="panelPages.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -419,6 +422,9 @@
   </data>
   <data name="panelEditor.Location" type="System.Drawing.Point, System.Drawing">
     <value>1, -1</value>
+  </data>
+  <data name="panelEditor.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="panelEditor.Size" type="System.Drawing.Size, System.Drawing">
     <value>706, 236</value>

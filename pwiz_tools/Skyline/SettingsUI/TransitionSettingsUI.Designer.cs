@@ -96,7 +96,6 @@
             this.textTolerance = new System.Windows.Forms.TextBox();
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.tabInstrument = new System.Windows.Forms.TabPage();
-            this.groupBoxSpectrumFilter = new System.Windows.Forms.GroupBox();
             this.tbxSpectrumFilter = new System.Windows.Forms.TextBox();
             this.btnEditSpectrumFilter = new System.Windows.Forms.Button();
             this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
@@ -126,6 +125,7 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.label13 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -136,7 +136,6 @@
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
-            this.groupBoxSpectrumFilter.SuspendLayout();
             this.tabIonMobility.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -634,7 +633,9 @@
             // 
             // tabInstrument
             // 
-            this.tabInstrument.Controls.Add(this.groupBoxSpectrumFilter);
+            this.tabInstrument.Controls.Add(this.btnEditSpectrumFilter);
+            this.tabInstrument.Controls.Add(this.tbxSpectrumFilter);
+            this.tabInstrument.Controls.Add(this.label13);
             this.tabInstrument.Controls.Add(this.cbxTriggeredAcquisition);
             this.tabInstrument.Controls.Add(this.textMaxInclusions);
             this.tabInstrument.Controls.Add(this.label21);
@@ -659,14 +660,6 @@
             resources.ApplyResources(this.tabInstrument, "tabInstrument");
             this.tabInstrument.Name = "tabInstrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxSpectrumFilter
-            // 
-            this.groupBoxSpectrumFilter.Controls.Add(this.tbxSpectrumFilter);
-            this.groupBoxSpectrumFilter.Controls.Add(this.btnEditSpectrumFilter);
-            resources.ApplyResources(this.groupBoxSpectrumFilter, "groupBoxSpectrumFilter");
-            this.groupBoxSpectrumFilter.Name = "groupBoxSpectrumFilter";
-            this.groupBoxSpectrumFilter.TabStop = false;
             // 
             // tbxSpectrumFilter
             // 
@@ -835,6 +828,11 @@
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
+            // label13
+            // 
+            resources.ApplyResources(this.label13, "label13");
+            this.label13.Name = "label13";
+            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -867,8 +865,6 @@
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
-            this.groupBoxSpectrumFilter.ResumeLayout(false);
-            this.groupBoxSpectrumFilter.PerformLayout();
             this.tabIonMobility.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -971,6 +967,6 @@
         private System.Windows.Forms.ComboBox comboToleranceUnits;
         private System.Windows.Forms.TextBox tbxSpectrumFilter;
         private System.Windows.Forms.Button btnEditSpectrumFilter;
-        private System.Windows.Forms.GroupBox groupBoxSpectrumFilter;
+        private System.Windows.Forms.Label label13;
     }
 }

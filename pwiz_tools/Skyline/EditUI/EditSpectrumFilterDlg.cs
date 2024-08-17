@@ -181,6 +181,18 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        public bool CreateCopyVisible
+        {
+            get
+            {
+                return cbCreateCopy.Visible;
+            }
+            set
+            {
+                cbCreateCopy.Visible = value;
+            }
+        }
+
         private void btnReset_Click(object sender, EventArgs e)
         {
             Reset();

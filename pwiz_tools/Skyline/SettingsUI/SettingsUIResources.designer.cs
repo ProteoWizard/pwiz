@@ -2729,6 +2729,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature..
+        /// </summary>
+        public static string TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on" +
+                        "_the_Full_Scan_tab_in_order_to_use_this_feature_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Before performing a multiplexed DIA scan, the instrument&apos;s firmware inclusion limit must be specified..
         /// </summary>
         public static string TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified {

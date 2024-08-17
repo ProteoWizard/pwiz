@@ -74,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI
         private IonType[] InitialPeptideIonTypes;
         private IonType[] InitialSmallMoleculeIonTypes;
         private SpectrumClassFilter _spectrumFilter;
-
+        
         public TransitionSettingsUI(SkylineWindow parent)
         {
             InitializeComponent();
@@ -1298,6 +1298,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (smallMolIons.Count > 0)
                 textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
+            UpdateSpectrumFilterText();
         }
 
         public bool TriggeredAcquisition
@@ -1348,33 +1349,70 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 _spectrumFilter = value;
-                tbxSpectrumFilter.Text = SpectrumFilter.ToString();
+                UpdateSpectrumFilterText();
             }
+        }
+
+        private void UpdateSpectrumFilterText()
+        {
+            tbxSpectrumFilter.Text = SpectrumClassFilter.FromFilterPages(GetFilterPages()).GetText(true);
+        }
+
+        public FilterPages GetFilterPages()
+        {
+            var filterPages = SpectrumFilter.GetFilterPages();
+            if (filterPages.Pages.Contains(SpectrumClassFilter.GenericFilterPage))
+            {
+                return filterPages;
+            }
+
+            var requiredPages = new List<FilterPage>();
+            if (PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None)
+            {
+                requiredPages.Add(SpectrumClassFilter.Ms1FilterPage);
+            }
+            if (AcquisitionMethod != FullScanAcquisitionMethod.None)
+            {
+                requiredPages.Add(SpectrumClassFilter.Ms2FilterPage);
+            }
+
+            var newPages = new List<FilterPage>();
+            var newClauses = new List<FilterClause>();
+            foreach (var requiredPage in requiredPages)
+            {
+                bool found = false;
+                for (int i = 0; i < filterPages.Pages.Count; i++)
+                {
+                    if (Equals(requiredPage, filterPages.Pages[i]))
+                    {
+                        found = true;
+                        newPages.Add(filterPages.Pages[i]);
+                        newClauses.Add(filterPages.Clauses[i]);
+                    }
+                }
+
+                if (!found)
+                {
+                    newPages.Add(requiredPage);
+                    newClauses.Add(FilterClause.EMPTY);
+                }
+            }
+
+            return new FilterPages(newPages, newClauses);
         }
 
         public void EditSpectrumFilter()
         {
             var skylineDataSchema = new SkylineDataSchema(_parent, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
-            var spectrumFilter = SpectrumFilter;
-            FilterPages filterPages = null;
-            if (!spectrumFilter.IsEmpty)
+            var filterPages = GetFilterPages();
+            if (filterPages.Pages.Count == 0)
             {
-                filterPages = spectrumFilter.GetFilterPages();
+                MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_);
+                return;
             }
-
-            if (!(filterPages?.Pages.Count > 0))
-            {
-                filterPages = FilterPages.Blank(SpectrumClassFilter.Ms1FilterPage, SpectrumClassFilter.Ms2FilterPage);
-            }
-
             using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
-            dlg.CreateCopyEnabled = false;
-            if (filterPages.Pages.Count == 2 && filterPages.Clauses[0].IsEmpty)
-            {
-                // When editing a blank filter with two pages, start with the "MS2" page selected 
-                dlg.SelectPage(1);
-            }
+            dlg.CreateCopyVisible = false;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 SpectrumFilter = SpectrumClassFilter.FromFilterPages(dlg.FilterPages);
