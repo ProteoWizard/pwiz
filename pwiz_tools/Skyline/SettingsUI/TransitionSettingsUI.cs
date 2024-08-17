@@ -644,7 +644,7 @@ namespace pwiz.Skyline.SettingsUI
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return;
-            fullScan = fullScan.ChangeSpectrumFilter(SpectrumFilter);
+            fullScan = fullScan.ChangeSpectrumFilter(SpectrumClassFilter.FromFilterPages(GetFilterPages()));
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
             if (!IonMobilityControl.ValidateIonMobilitySettings(helper, out var ionMobilityFiltering))
@@ -1358,6 +1358,10 @@ namespace pwiz.Skyline.SettingsUI
             tbxSpectrumFilter.Text = SpectrumClassFilter.FromFilterPages(GetFilterPages()).GetText(true);
         }
 
+        /// <summary>
+        /// Returns the appropriate set of spectrum filter pages that should be displayed in the filter editor,
+        /// taking into account whether MS1 and MS2 are enabled on the full scan tab.
+        /// </summary>
         public FilterPages GetFilterPages()
         {
             var filterPages = SpectrumFilter.GetFilterPages();

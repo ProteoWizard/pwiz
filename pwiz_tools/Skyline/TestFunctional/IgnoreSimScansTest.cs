@@ -93,7 +93,10 @@ namespace pwiz.SkylineTestFunctional
                         });
                 }, transitionSettingsUI=>transitionSettingsUI.OkDialog());
             }
-            Assert.AreEqual(SkylineWindow.Document.Settings.TransitionSettings.FullScan.SpectrumClassFilter, TransitionFullScan.IgnoreSimScansFilter);
+
+            Assert.AreEqual(TransitionFullScan.IgnoreSimScansFilter,
+                SkylineWindow.Document.Settings.TransitionSettings.FullScan.SpectrumClassFilter.Clauses
+                    .FirstOrDefault());
 
             using (new WaitDocumentChange(null, true))
             {

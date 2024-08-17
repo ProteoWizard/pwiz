@@ -2083,7 +2083,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!result.TransitionSettings.FullScan.SpectrumClassFilter.IsEmpty)
                 {
                     var fullScan = result.TransitionSettings.FullScan;
-                    if (TransitionFullScan.IgnoreSimScansFilter.Equals(fullScan.SpectrumClassFilter))
+                    if (fullScan.SpectrumClassFilter.Clauses.Contains(TransitionFullScan.IgnoreSimScansFilter))
                     {
                         fullScan = fullScan.ChangeIgnoreSimScans(true);
                     }

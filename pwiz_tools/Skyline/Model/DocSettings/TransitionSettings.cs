@@ -2760,7 +2760,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumFilter);
         }
 
-
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -2963,7 +2962,20 @@ namespace pwiz.Skyline.Model.DocSettings
             SpectrumClassFilter = default;
             if (reader.GetBoolAttribute(ATTR.ignore_sim_scans))
             {
-                SpectrumClassFilter = IgnoreSimScansFilter;
+                if (PrecursorIsotopes == FullScanPrecursorIsotopes.None)
+                {
+                    // Set "IgnoreSimScans" to true so Validate will throw exception
+                    IgnoreSimScans = true;
+                }
+                else
+                {
+                    var clauses = new List<FilterClause> { IgnoreSimScansFilter };
+                    if (AcquisitionMethod != FullScanAcquisitionMethod.None)
+                    {
+                        clauses.Add(SpectrumClassFilter.Ms2FilterPage.Discriminant);
+                    }
+                    SpectrumClassFilter = new SpectrumClassFilter(clauses);
+                }
             }
             UseSelectiveExtraction = reader.GetBoolAttribute(ATTR.selective_extraction);
             RetentionTimeFilterType = RetentionTimeFilterType.none;
@@ -3125,21 +3137,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public static readonly SpectrumClassFilter IgnoreSimScansFilter = new SpectrumClassFilter(
-            new FilterClause(new[]
-            {
-                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1)),
+        public static readonly FilterClause IgnoreSimScansFilter = new FilterClause(
+            SpectrumClassFilter.Ms1FilterPage.Discriminant.FilterSpecs.Append(
                 new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.ScanWindowWidth)),
                     FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN,
-                        Results.SpectrumFilter.SIM_ISOLATION_CUTOFF))
-            }),
-            new FilterClause(new[]
-            {
-                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1))
-            })
-        );
+                        Results.SpectrumFilter.SIM_ISOLATION_CUTOFF)
+                )));
     }
 
     [XmlRoot("transition_integration")]
