@@ -140,7 +140,7 @@ namespace AutoQC
             var initialState = AutoQcState;
             var state = initialState.Copy();
             state.BaseState.SelectIndex(-1);
-            SetState(initialState, state, false);
+            SetState(initialState, state);
         }
 
         public void SortByValue(int columnIndex)
@@ -424,12 +424,9 @@ namespace AutoQC
 
         public override void SelectLog(int selected)
         {
-            lock (_loggerLock)
-            {
-                if (selected < 0 || selected >= AutoQcState.LogList.Count) // Accessing the AutoQcState property requires the _lock 
-                    throw new IndexOutOfRangeException("No log at index: " + selected);
-                SelectedLog = selected;
-            }
+            if (selected < 0 || selected >= AutoQcState.LogList.Count) // Accessing the AutoQcState property requires _lock 
+                throw new IndexOutOfRangeException("No log at index: " + selected);
+            SelectedLog = selected;
         }
 
         public void SelectLogOfSelectedConfig()

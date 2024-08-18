@@ -227,11 +227,13 @@ namespace AutoQC
             {
                 ((ConfigRunner)configRunner).ChangeStatus(runnerStatus, false);
             }
-            // Do not update the selected log file
-            // Trying to update the log files in MainForm.UpdateUiLogFiles() results in a UI freeze since AutoQcConfigManager.SetState() 
-            // holds the lock that the Main thread tries to acquire in SelectLog (via event comboConfigs_SelectedIndexChanged that gets
-            // triggered when the selected index in the logs combo box is changed)
-            _configManager.SetState(initialState, state, false);
+            _configManager.SetState(initialState, state,
+                false); // Set updatedLogFiles to false.  We do not need to update the selected log file when a config is disabled.
+                        // Setting updatedLogFiles is set to true causes a UI freeze, because:
+                        // This method is called from a worker thread that will acquire a lock in SetState().
+                        // Calling MainForm.UpdateUiLogFiles() in SetState() will change the selected index in the logs combobox on the Main thread
+                        // triggering the event comboConfigs_SelectedIndexChanged. This will call AutoQcConfigManager.SelectLog() on the Main thread
+                        // and will attempt to acquire the same lock, causing a deadlock.
         }
 
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -362,9 +364,7 @@ namespace AutoQC
             {
                 comboConfigs.Items.Clear();
                 comboConfigs.Items.AddRange(_configManager.GetLogNameList());
-                comboConfigs.SelectedIndex = _configManager.SelectedLog; // This will trigger comboConfigs_SelectedIndexChanged()
-                                                                         // -> ConfigManager.SelectLog() will be called on the Main thread
-                                                                         // This can cause a deadlock if another thread is holding the lock
+                comboConfigs.SelectedIndex = _configManager.SelectedLog;
             });
         }
 

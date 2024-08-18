@@ -40,9 +40,6 @@ namespace AutoQC
         private FileSystemWatcher InitFileSystemWatcher()
         {
             var fileWatcher = new FileSystemWatcher();
-            fileWatcher.Created += (s, e) => FileChanged();
-            // fileWatcher.Renamed += (s, e) => FileRenamed(e);
-            fileWatcher.Deleted += (s, e) => FileChanged();
             fileWatcher.Changed += (s, e) => FileChanged();
             fileWatcher.Error += (s, e) => OnFileWatcherError(e);
             return fileWatcher;
