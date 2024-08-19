@@ -145,4 +145,7 @@
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>
   </data>
+  <data name="SpectrumClassFilter_GetText_All" xml:space="preserve">
+    <value>All</value>
+  </data>
 </root>
