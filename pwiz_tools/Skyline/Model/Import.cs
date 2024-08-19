@@ -788,6 +788,9 @@ namespace pwiz.Skyline.Model
             var libraryIntensity = rowReader.LibraryIntensity;
             var productMz = rowReader.ProductMz;
             var note = rowReader.Note;
+            var precursorNote = rowReader.PrecursorNote;
+            var moleculeNote = rowReader.MoleculeNote;
+            var moleculeListNote = rowReader.MoleculeListNote;
             if (irt == null && rowReader.IrtColumn != -1)
             {
                 var error = new TransitionImportErrorInfo(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
@@ -970,6 +973,9 @@ namespace pwiz.Skyline.Model
             }
 
             public string Note { get { return ColumnString(Fields, Indices.NoteColumn); } }
+            public string PrecursorNote { get { return ColumnString(Fields, Indices.PrecursorNoteColumn); } }
+            public string MoleculeNote { get { return ColumnString(Fields, Indices.MoleculeNoteColumn); } }
+            public string MoleculeListNote { get { return ColumnString(Fields, Indices.MoleculeListNoteColumn); } }
 
             public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
             {
@@ -2449,6 +2455,12 @@ namespace pwiz.Skyline.Model
 
         public int NoteColumn { get; set; }
 
+        public int PrecursorNoteColumn { get; set; }
+
+        public int MoleculeNoteColumn { get; set; }
+
+        public int MoleculeListNoteColumn { get; set; }
+
         public int SLensColumn { get; set; }
 
         public int ConeVoltageColumn { get; set; }
@@ -2590,7 +2602,10 @@ namespace pwiz.Skyline.Model
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.coneVoltage, header, nameof(ConeVoltageColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, header, nameof(ExplicitCompensationVoltageColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, header, nameof(ExplicitDeclusteringPotentialColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.note, header, nameof(NoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.transitionNote, header, nameof(NoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.precursorNote, header, nameof(PrecursorNoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeNote, header, nameof(MoleculeNoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeListNote, header, nameof(MoleculeListNoteColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header, nameof(LabelTypeColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, header, nameof(PrecursorAdductColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header, nameof(ProductAdductColumn));
