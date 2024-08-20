@@ -509,7 +509,7 @@
       <Name>Skyline</Name>
     </ProjectReference>
     <ProjectReference Include="..\SkylineTool\SkylineTool.csproj">
-      <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
+      <Project>{ba04a8f2-a1a4-48e3-b139-74c069fa84c2}</Project>
       <Name>SkylineTool</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">

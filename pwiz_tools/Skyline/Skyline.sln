@@ -63,8 +63,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineTester", "SkylineTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTest", "CommonTest\CommonTest.csproj", "{3F077244-13E5-4815-BA55-31F030042E06}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineTool", "SkylineTool\SkylineTool.csproj", "{3FD4E167-8F9C-4116-8122-67C7AD143490}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightly", "SkylineNightly\SkylineNightly.csproj", "{32A40878-3053-4FFA-96C1-23FC27D46B65}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnected", "TestConnected\TestConnected.csproj", "{5D4E9180-FD66-4C11-8C16-11921865EDBD}"
@@ -76,6 +74,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramaClient", "..\Shared\PanoramaClient\PanoramaClient.csproj", "{BF849CF8-25D7-4619-B001-9ED8E3771C44}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BullseyeSharp", "BullseyeSharp\BullseyeSharp.csproj", "{4F4C2045-4C86-46F2-A297-C05FC4A48A15}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkylineTool", "SkylineTool\SkylineTool.csproj", "{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -229,14 +229,6 @@ Global
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x64.Build.0 = Release|x64
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x86.ActiveCfg = Release|x86
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x86.Build.0 = Release|x86
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.Build.0 = Debug|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.Build.0 = Debug|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x64.ActiveCfg = Release|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x64.Build.0 = Release|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x86.ActiveCfg = Release|Any CPU
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x86.Build.0 = Release|Any CPU
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Debug|x64.ActiveCfg = Debug|x64
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Debug|x64.Build.0 = Debug|x64
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Debug|x86.ActiveCfg = Debug|x86
@@ -285,6 +277,14 @@ Global
 		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x64.Build.0 = Release|x64
 		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x86.ActiveCfg = Release|x64
 		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x86.Build.0 = Release|x64
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Debug|x64.Build.0 = Debug|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Debug|x86.Build.0 = Debug|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Release|x64.ActiveCfg = Release|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Release|x64.Build.0 = Release|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Release|x86.ActiveCfg = Release|Any CPU
+		{BA04A8F2-A1A4-48E3-B139-74C069FA84C2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
