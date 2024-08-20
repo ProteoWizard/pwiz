@@ -193,7 +193,7 @@ namespace AutoQC
             var dialog = new OpenFileDialog
             {
                 Filter = TextUtil.FileDialogFilter("CSV (Comma delimited)", TextUtil.EXT_CSV),
-                InitialDirectory = FileUtil.GetInitialDirectory(textSkylinePath.Text, _lastEnteredAnnotationsFilePath)
+                InitialDirectory = FileUtil.GetInitialDirectory(_lastEnteredAnnotationsFilePath, textSkylinePath.Text)
             };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
