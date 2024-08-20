@@ -263,6 +263,12 @@ namespace pwiz.Skyline.ToolsUI
                 httpClient.DefaultRequestHeaders.Add("x-csrf", "1");
 
                 var response = await httpClient.GetAsync(userEndpointUri);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    //  Ardia session cookie is not valid so already logged out so just drop the session in Skyline
+                    return null;
+                }
                 response.EnsureSuccessStatusCode();
                 var responseString = await response.Content.ReadAsStringAsync();
                 var responseJson = JsonConvert.DeserializeObject<IEnumerable<IDictionary<string, string>>>(responseString);
