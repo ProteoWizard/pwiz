@@ -91,6 +91,15 @@ namespace pwiz.Common.SystemUtil.Caching
             return 0;
         }
 
+        public double GetDeepProgressValue()
+        {
+            if (_workOrder != null)
+            {
+                return Math.Max(0, Math.Min(100, Cache.GetDeepProgressValue(_workOrder)));
+            }
+            return 0;
+        }
+
         public Exception GetError()
         {
             if (_workOrder != null)

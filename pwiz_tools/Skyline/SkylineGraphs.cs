@@ -76,6 +76,7 @@ namespace pwiz.Skyline
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
+        private PeakImputationForm _peakImputationForm;
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
@@ -514,6 +515,7 @@ namespace pwiz.Skyline
             DestroyAuditLogForm();
             DestroyCalibrationForm();
             DestroyCandidatePeakForm();
+            DestroyPeakImputationForm();
 
             DestroyImmediateWindow();
             HideFindResults(true);
@@ -663,6 +665,11 @@ namespace pwiz.Skyline
             {
                 return _immediateWindow ?? CreateImmediateWindow();
             }
+
+            if (Equals(persistentString, typeof(PeakImputationForm).ToString()))
+            {
+                return _peakImputationForm ?? CreatePeakImputationForm();
+            }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
                 if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
@@ -805,6 +812,20 @@ namespace pwiz.Skyline
             }
         }
 
+        private GraphValues.IRetentionTimeTransformOp _retentionTimeTransformOp;
+        public GraphValues.IRetentionTimeTransformOp RetentionTimeTransformOp
+        {
+            get
+            {
+                return _retentionTimeTransformOp;
+            }
+            set
+            {
+                _retentionTimeTransformOp = value;
+                UpdateGraphPanes();
+            }
+        }
+
         public bool AlignToRtPrediction
         {
             get { return null == AlignToFile && _alignToPrediction; }
@@ -825,6 +846,10 @@ namespace pwiz.Skyline
 
         public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
         {
+            if (null != RetentionTimeTransformOp)
+            {
+                return RetentionTimeTransformOp;
+            }
             if (null != AlignToFile)
             {
                 return GraphValues.AlignToFileOp.GetAlignmentToFile(AlignToFile, Document.Settings);
@@ -6028,6 +6053,49 @@ namespace pwiz.Skyline
         void candidatePeakForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             _candidatePeakForm = null;
+        }
+        #endregion
+        #region Peak Imputation
+
+        public void ShowPeakImputation()
+        {
+            if (_peakImputationForm != null && !Program.SkylineOffscreen)
+            {
+                _peakImputationForm.Activate();
+            }
+            else
+            {
+                _peakImputationForm ??= CreatePeakImputationForm();
+                if (_peakImputationForm != null)
+                {
+                    var rect = GetFloatingRectangleForNewWindow();
+                    rect.Width = Math.Max(800, rect.Width);
+                    _peakImputationForm.Show(dockPanel, GetFloatingRectangleForNewWindow());
+                }
+            }
+        }
+
+        public PeakImputationForm CreatePeakImputationForm()
+        {
+            Assume.IsNull(_peakImputationForm);
+            _peakImputationForm = new PeakImputationForm(this);
+            _peakImputationForm.FormClosed += peakImputationForm_FormClosed;
+            return _peakImputationForm;
+        }
+
+        private void DestroyPeakImputationForm()
+        {
+            if (null != _peakImputationForm)
+            {
+                _peakImputationForm.FormClosed -= peakImputationForm_FormClosed;
+                _peakImputationForm.Close();
+                _peakImputationForm = null;
+            }
+        }
+
+        void peakImputationForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _peakImputationForm = null;
         }
         #endregion
     }

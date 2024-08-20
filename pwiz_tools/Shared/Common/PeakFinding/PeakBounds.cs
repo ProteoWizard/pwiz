@@ -56,5 +56,6 @@ namespace pwiz.Common.PeakFinding
         {
             return string.Format(CultureInfo.InvariantCulture, @"[{0:R},{1:R}]", StartTime, EndTime);
         }
+
     }
 }
