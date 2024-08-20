@@ -223,8 +223,10 @@ namespace pwiz.Skyline.Model
 
         public static bool IsValidIsotopeTransition(Transition transition, IsotopeDistInfo isotopeDist)
         {
-            if (isotopeDist == null || !transition.IsPrecursor())
+            if (!transition.IsPrecursor())
                 return true;
+            if (isotopeDist == null)
+                return transition.MassIndex == 0;
             int i = isotopeDist.MassIndexToPeakIndex(transition.MassIndex);
             return 0 <= i && i < isotopeDist.CountPeaks;
         }
