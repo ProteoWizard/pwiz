@@ -11,7 +11,7 @@ report_proteinlocators = """<?xml version="1.0"?>
 </views>"""
 
 connectionname = sys.argv[1]
-toolservicecmdexe = os.path.dirname(os.path.realpath(__file__)) + "/bin/ToolServiceCmd.exe"
+toolservicecmdexe = os.path.dirname(os.path.realpath(__file__)) + "/ToolServiceCmd.exe"
 
 args=[toolservicecmdexe, 'GetReport', '--connectionname', connectionname]
 print "Executing command ", args

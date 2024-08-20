@@ -12,6 +12,6 @@ pushd "%~dp0ExampleTool"
 %SevenZipExe% a %outputZip% * tool-inf\*
 popd
 pushd %~dp0ToolServiceCmd\bin\%Configuration%\net8.0
-%SevenZipExe% a %outputZip% *.dll *.exe
+%SevenZipExe% a %outputZip% *.dll *.exe *.json
 if %Configuration%==Debug %SevenZipExe% a %outputZip% *.pdb
 popd
