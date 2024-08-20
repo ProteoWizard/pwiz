@@ -2669,7 +2669,7 @@ namespace pwiz.SkylineTestFunctional
                     var exportReportDlg =
                         ShowDialog<ExportLiveReportDlg>(() => SkylineWindow.ShowExportReportDialog());
                     RunUI(() => exportReportDlg.ReportName = allNotes);
-                    RunUI(()=> exportReportDlg.OkDialog(reportFile, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture)));
+                    OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(reportFile, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture)));
                     WaitForCondition(() => File.Exists(reportFile));
                 }
             }
