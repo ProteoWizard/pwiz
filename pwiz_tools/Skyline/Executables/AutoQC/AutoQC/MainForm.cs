@@ -221,8 +221,7 @@ namespace AutoQC
         {
             var initialState = _configManager.AutoQcState;
 
-            var state = initialState.Copy();
-            state.DisableConfig(initialState.BaseState.GetConfigIndex(iconfig.GetName()), this);
+            var state = initialState.DisableConfig(initialState.BaseState.GetConfigIndex(iconfig.GetName()), this);
             if (runnerStatus != RunnerStatus.Stopped && state.ConfigRunners.TryGetValue(iconfig.GetName(), out var configRunner))
             {
                 ((ConfigRunner)configRunner).ChangeStatus(runnerStatus, false);

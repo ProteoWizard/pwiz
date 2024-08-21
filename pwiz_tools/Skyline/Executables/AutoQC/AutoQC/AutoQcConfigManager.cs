@@ -94,7 +94,7 @@ namespace AutoQC
                 {
                     _state = newState.Copy();
                     _logList = _state.LogList;
-					SelectedLog = -1;
+                    SelectedLog = -1;
                     if (_state.BaseState.HasSelectedConfig())
                     {
                         var selectedConfig = _state.BaseState.GetSelectedConfig();
