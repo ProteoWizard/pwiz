@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -168,10 +167,9 @@ namespace pwiz.SkylineTestFunctional
                     editIrtDlg.OpenDatabase(TestFilesDir.GetTestPath("RetentionTimeFilterTest.irtdb"));
                     editIrtDlg.CalcName = calcName;
                 });
-                
-                SkylineWindow.BeginInvoke(new Action(editIrtDlg.OkDialog));
-                var multiButtonMsgDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                OkDialog(multiButtonMsgDlg, ()=>multiButtonMsgDlg.DialogResult = DialogResult.Yes);
+
+                var multiButtonMsgDlg = ShowDialog<MultiButtonMsgDlg>(editIrtDlg.OkDialog);
+                OkDialog(multiButtonMsgDlg, multiButtonMsgDlg.ClickYes);
                 var editRtDlg = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
                 RunUI(() =>
                 {
@@ -187,8 +185,8 @@ namespace pwiz.SkylineTestFunctional
                     peptideSettingsDlg.UseMeasuredRT(false);
                 });
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
-                AssertEx.AreEqual(calcName, SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator.Name);
                 docBeforeImport = WaitForDocumentChange(docBeforeSettingsChange);
+                AssertEx.AreEqual(calcName, SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator.Name);
                 Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);

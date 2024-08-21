@@ -118,4 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Units_mz" xml:space="preserve">
+    <value>质荷比</value>
+  </data>
+  <data name="Units_ppm" xml:space="preserve">
+    <value>ppm</value>
+  </data>
+  <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
+    <value>读取 {0} 字节失败。源可能已损坏。</value>
+  </data>
+  <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
+    <value>运行命令：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

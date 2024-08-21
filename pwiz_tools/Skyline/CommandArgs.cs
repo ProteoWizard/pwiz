@@ -550,7 +550,11 @@ namespace pwiz.Skyline
         public string FastaPath { get; private set; }
         public bool KeepEmptyProteins { get; private set; }
 
-        // Transition list and assay library import
+        // Peptide list, transition list and assay library import
+        public static readonly Argument ARG_IMPORT_PEP_LIST = new DocArgument(@"import-pep-list", PATH_TO_FILE,
+            (c, p) => c.PeptideListPath = p.ValueFullPath);
+        public static readonly Argument ARG_IMPORT_PEP_LIST_NAME = new DocArgument(@"import-pep-list-name", NAME_VALUE,
+            (c, p) => c.PeptideListName = p.Value);
         public static readonly Argument ARG_IMPORT_TRANSITION_LIST = new DocArgument(@"import-transition-list", PATH_TO_FILE,
             (c, p) => c.ParseListPath(p, false));
         public static readonly Argument ARG_IMPORT_ASSAY_LIBRARY = new DocArgument(@"import-assay-library", PATH_TO_FILE,
@@ -567,11 +571,13 @@ namespace pwiz.Skyline
             (c, p) => c.IrtCalcName = p.Value);
 
         private static readonly ArgumentGroup GROUP_IMPORT_LIST = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries, false,
-            ARG_IMPORT_TRANSITION_LIST, ARG_IMPORT_ASSAY_LIBRARY, ARG_IGNORE_TRANSITION_ERRORS, ARG_IRT_STANDARDS_GROUP_NAME,
-            ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH, ARG_IRT_CALC_NAME)
+            ARG_IMPORT_PEP_LIST, ARG_IMPORT_PEP_LIST_NAME, ARG_IMPORT_TRANSITION_LIST, ARG_IMPORT_ASSAY_LIBRARY,
+            ARG_IGNORE_TRANSITION_ERRORS, ARG_IRT_STANDARDS_GROUP_NAME, ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH,
+            ARG_IRT_CALC_NAME)
         {
             Dependencies =
             {
+                { ARG_IMPORT_PEP_LIST_NAME, ARG_IMPORT_PEP_LIST },
                 { ARG_IRT_STANDARDS_GROUP_NAME, ARG_IMPORT_ASSAY_LIBRARY },
                 { ARG_IRT_STANDARDS_FILE, ARG_IMPORT_ASSAY_LIBRARY },
             },
@@ -586,6 +592,8 @@ namespace pwiz.Skyline
             }
         };
 
+        public string PeptideListPath { get; private set; }
+        public string PeptideListName { get; private set; }
         public string TransitionListPath { get; private set; }
         public bool IsTransitionListAssayLibrary { get; private set; }
         public bool IsIgnoreTransitionErrors { get; private set; }
@@ -663,6 +671,11 @@ namespace pwiz.Skyline
         public bool ImportingFasta
         {
             get { return !string.IsNullOrWhiteSpace(FastaPath); }
+        }
+
+        public bool ImportingPeptideList
+        {
+            get { return !string.IsNullOrWhiteSpace(PeptideListPath); }
         }
 
         public bool ImportingTransitionList
@@ -1407,6 +1420,8 @@ namespace pwiz.Skyline
         }
 
 
+        public static readonly Argument ARG_AP_FASTA = new Argument(@"associate-proteins-fasta", PATH_TO_FILE,
+            (c, p) => c.AssociateProteinsFasta = p.ValueFullPath);
         public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins",
             (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_GENE_LEVEL = new Argument(@"associate-proteins-gene-level-parsimony",
@@ -1418,19 +1433,21 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_AP_REMOVE_SUBSETS = new Argument(@"associate-proteins-remove-subsets",
             (c, p) => c.AssociateProteinsRemoveSubsetProteins = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
-            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
+            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.GetValueInt(1, 10000)) { WrapValue = true };
 
-        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
-            ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
+        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => SkylineResources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
+                ARG_AP_FASTA, ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 
+        public string AssociateProteinsFasta { get; private set; }
         public bool? AssociateProteinsGroupProteins { get; private set; }
         public bool? AssociateProteinsGeneLevelParsimony { get; private set; }
         public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
         public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
         public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
         public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
-        public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
+        public bool AssociatingProteins => !AssociateProteinsFasta.IsNullOrEmpty() ||
+                                           AssociateProteinsFindMinimalProteinList.HasValue ||
                                            AssociateProteinsGroupProteins.HasValue ||
                                            AssociateProteinsGeneLevelParsimony.HasValue ||
                                            AssociateProteinsMinPeptidesPerProtein.HasValue ||
@@ -1557,6 +1574,9 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_PEPTIDE_ADD_MOD_TERM = new DocArgument(@"pep-add-unimod-term", MOD_TERMINUS_VALUE,
             (c, p) => PeptideMod.SetTerminus(c.PeptideMods, p.Value));
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD_VARIABLE = new DocArgument(@"pep-add-mod-variable", BOOL_VALUE,
+            (c, p) => PeptideMod.SetVariable(c.PeptideMods, p.ValueBool));
+
         public static readonly Argument ARG_PEPTIDE_MAX_VAR_MODS = new DocArgument(@"pep-max-variable-mods", INT_VALUE,
             (c, p) => c.PeptideMaxVariableMods = p.GetValueInt(PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS));
         public static readonly Argument ARG_PEPTIDE_MAX_LOSSES = new DocArgument(@"pep-max-losses", INT_VALUE,
@@ -1624,7 +1644,7 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_PEPTIDE_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Peptide_Settings, false,
             ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
             ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS,
-            ARG_PEPTIDE_ADD_MOD, ARG_PEPTIDE_ADD_UNIMOD, ARG_PEPTIDE_ADD_MOD_AA, ARG_PEPTIDE_ADD_MOD_TERM,
+            ARG_PEPTIDE_ADD_MOD, ARG_PEPTIDE_ADD_UNIMOD, ARG_PEPTIDE_ADD_MOD_AA, ARG_PEPTIDE_ADD_MOD_TERM, ARG_PEPTIDE_ADD_MOD_VARIABLE,
             ARG_PEPTIDE_CLEAR_MODS, ARG_PEPTIDE_MAX_VAR_MODS, ARG_PEPTIDE_MAX_LOSSES)
         {
             LeftColumnWidth = 40,
@@ -1821,6 +1841,7 @@ namespace pwiz.Skyline
             public string NameOrUniModId { get; }
             public string AAs { get; set; }
             public ModTerminus? Terminus { get; set; }
+            public bool? IsVariable { get; set; }
 
             public static void SetAA(PeptideMod[] mods, string aas)
             {
@@ -1844,6 +1865,14 @@ namespace pwiz.Skyline
                     "c" => ModTerminus.C,
                     _ => throw new ValueInvalidModTerminusException(ARG_PEPTIDE_ADD_MOD_TERM, terminus)
                 };
+            }
+
+            public static void SetVariable(PeptideMod[] mods, bool variable)
+            {
+                if (mods.IsNullOrEmpty())
+                    throw new ArgumentException(Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_);
+
+                mods.Last().IsVariable = variable;
             }
         }
 
@@ -2686,6 +2715,11 @@ namespace pwiz.Skyline
                     throw new ValueInvalidException(this, value, Values);
 
                 return ArgumentText + '=' + value;
+            }
+
+            public static string operator +(Argument arg, string value)
+            {
+                return arg.GetArgumentTextWithValue(value);
             }
 
             public string ArgumentDescription

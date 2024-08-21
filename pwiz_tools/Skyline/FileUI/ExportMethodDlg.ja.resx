@@ -1717,4 +1717,131 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
+  <data name="cbExportSciexOSQuantMethod.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 9</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>254, 24</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.Text" xml:space="preserve">
+    <value>SCIEX OS 
+ Quantメソッドを作成(&amp;O)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="cbExportSciexOSQuantMethod.ToolTip" xml:space="preserve">
+    <value>SCIEX OS Quantと互換性のある分析メソッドを、Analyst取得メソッドと同じディレクトリと同じベース名でエクスポートします。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.Name" xml:space="preserve">
+    <value>cbExportSciexOSQuantMethod</value>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;cbExportSciexOSQuantMethod.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelXICWidth.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelXICWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 40</value>
+  </data>
+  <data name="labelXICWidth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="labelXICWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 20</value>
+  </data>
+  <data name="labelXICWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelXICWidth.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="labelXICWidth.Text" xml:space="preserve">
+    <value>XIC幅（Da）：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Name" xml:space="preserve">
+    <value>labelXICWidth</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textXICWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 58</value>
+  </data>
+  <data name="textXICWidth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="textXICWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 26</value>
+  </data>
+  <data name="textXICWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="textXICWidth.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Name" xml:space="preserve">
+    <value>textXICWidth</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelAbiSciexOS.Location" type="System.Drawing.Point, System.Drawing">
+    <value>500, 211</value>
+  </data>
+  <data name="panelAbiSciexOS.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 9, 6, 9</value>
+  </data>
+  <data name="panelAbiSciexOS.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 90</value>
+  </data>
+  <data name="panelAbiSciexOS.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="panelAbiSciexOS.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.Name" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelAbiSciexOS.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
 </root>

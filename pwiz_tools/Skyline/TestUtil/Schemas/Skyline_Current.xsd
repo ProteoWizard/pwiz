@@ -495,6 +495,7 @@
                 <xs:attribute name="windows_per_scan" type="xs:nonNegativeInteger"/>
               </xs:complexType>
             </xs:element>
+            <xs:element name="spectrum_filter" type="spectrum_filter_type" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
           <xs:attribute name="precursor_filter" type="xs:double"/>
           <xs:attribute name="precursor_left_filter" type="xs:double"/>
@@ -600,15 +601,7 @@
       <xs:element name="group_comparison" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="format_detail" minOccurs="0" maxOccurs="unbounded">
-              <xs:complexType>
-                <xs:attribute name="color" type="xs:string"/>
-                <xs:attribute name="expr" type="xs:string"/>
-                <xs:attribute name="labeled" type="xs:boolean"/>
-                <xs:attribute name="symbol_type" type="xs:string"/>
-                <xs:attribute name="point_size" type="xs:string"/>
-              </xs:complexType>
-            </xs:element>
+            <xs:element name="format_detail" type="format_detail_type" minOccurs="0" maxOccurs="unbounded" />
           </xs:sequence>
           <xs:attribute name="name" type="xs:string"/>
           <xs:attribute name="control_annotation" type="xs:string"/>
@@ -773,6 +766,13 @@
               </xs:complexType>
             </xs:element>
           </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="relative_abundance_formatting" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="format_detail" type="format_detail_type" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -1158,19 +1158,7 @@
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
         <xs:sequence>
-          <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="unbounded">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:attribute name="column" type="xs:string"/>
-                    <xs:attribute name="opname" type="xs:string"/>
-                    <xs:attribute name="operand" type="xs:string"/>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:complexType>
-          </xs:element>
+          <xs:element name="spectrum_filter" type="spectrum_filter_type" minOccurs="0" maxOccurs="unbounded" />
           <xs:element name="bibliospec_spectrum_info" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:complexContent>
@@ -1994,4 +1982,22 @@
       <xs:enumeration value="aligned" />
     </xs:restriction>
   </xs:simpleType>
+  <xs:complexType name="format_detail_type">
+    <xs:attribute name="color" type="xs:string"/>
+    <xs:attribute name="expr" type="xs:string"/>
+    <xs:attribute name="labeled" type="xs:boolean"/>
+    <xs:attribute name="symbol_type" type="xs:string"/>
+    <xs:attribute name="point_size" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="spectrum_filter_type">
+    <xs:sequence>
+      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="column" type="xs:string"/>
+          <xs:attribute name="opname" type="xs:string"/>
+          <xs:attribute name="operand" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
 </xs:schema>

@@ -166,7 +166,127 @@ namespace pwiz.SkylineTest
 
         }
 
+        // Test the code to compare strings with same files on different paths
         [TestMethod]
+        public static void TestNoDiffIgnoringPathDifferences()
+        {
+            // No quotes, tab separated
+            var line1 = "C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
+            var line2 = "D:\\Nightly\\SkylineTesterForNightly_integration_perf\\SkylineTester Files\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\td:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tj:\\dogs\\cats\\blorf";
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // With quotes, tab separated
+            line1 = "\"C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\"\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
+            line2 = "\"D:\\Nightly\\SkylineTesterForNightly_integration_perf\\SkylineTester Files\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\"\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\td:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tj:\\dogs\\birds\\blorf";
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // CSV
+            line1 = line1.Replace("\t", ",");
+            line2 = line2.Replace("\t", ",");
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // European ; separated
+            line1 = line1.Replace(",", ";");
+            line2 = line2.Replace(",", ";");
+            AssertEx.NoDiff(line1, line2, null, null, true);
+            // Make sure it actually does catch differences
+            line1 = line1.Replace("MCF", "zzz");
+            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.NoDiff(line1, line2));
+        }
+
+        // Test the code used to compare DSV files with tiny numerical differences (e.g. BullseyeSharp MS2 output files)
+        [TestMethod]
+        public void TestFieldsEqual()
+        {
+
+            AssertEx.FieldsEqual(new StringReader("747.3871 1.01456e+07"),
+                new StringReader("747.3871 1.014561e+07"),
+                null, // Variable field count
+                null, // Ignore no columns
+                true); // Allow for rounding errors
+
+
+            var txtA =
+                "H\tCreationDate Thu May 18 10:22:17 2023\n" +
+                "H\tExtractor\tProteoWizard\n" +
+                "H\tExtractor version\tXcalibur\n" +
+                "H\tSource file\t2021_0810_Eclipse_LiPExp_05_SS3.raw\n" +
+                "S\t3\t3\t613.3168\n" +
+                "I\tNativeID\tcontrollerType=0 controllerNumber=1 scan=3\n" +
+                "I\tRTime\t0.01054074\n" +
+                "I\tBPI\t34995.21\n" +
+                "I\tBPM\t7754\n" +
+                "I\tTIC\t247701.8\n" +
+                "Z\t1\t5432\n" +
+                "181.6542 21635.59\n" +
+                "203.9089 9885.277\n" +
+                "221.082 10638.83\n" +
+                "251.8089 9747.531\n" +
+                "268.5652 8213.748\n" +
+                "300.0618 11877.35\n" +
+                "355.0699 12373.97\n" +
+                "356.0695 23859.23\n" +
+                "357.0657 33525.14\n" +
+                "358.0672 34995.21\n" +
+                "373.2889 8678.741\n" +
+                "510.3278 11798.26\n" +
+                "588.6589 10310.75\n" +
+                "594.7731 10238.01\n" +
+                "940.1085 9085.032\n" +
+                "1124.124 10834.5\n" +
+                "1208.332 10004.55\n" +
+                "S\t6\t6\t422.7364\n" +
+                "I\tNativeID\tcontrollerType=0 controllerNumber=1 scan=6\n" +
+                "I\tRTime\t0.01241985\n" +
+                "I\tBPI\t36354.39\n" +
+                "I\tBPM\t157.0823\n" +
+                "I\tTIC\t150800.6\n" +
+                "Z\t2\t1682.29\n" +
+                "157.0823 36354.39\n" +
+                "181.659 32937.68\n" +
+                "230.6742 8594.602\n" +
+                "384.1447 10770.04\n" +
+                "422.3313 22468.13\n" +
+                "487.0845 9533.217\n" +
+                "780.8187 9651.796\n" +
+                "1014.462 9763.788\n" +
+                "1582.427 10726.89\n";
+
+            var txtB = txtA.Replace("247701.8", "247701.7"). // Could be serializations of 247701.751 and 247701.749
+                Replace("36354.39", "36354.40").
+                Replace("34995.21", "34995.22").
+                Replace("7754", "7754.0").
+                Replace("5432", "5433").
+                Replace("10726.89", "10726.9");
+            AssertEx.FieldsEqual(new StringReader(txtA),
+                new StringReader(txtB),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors - the TIC line in particular is an issue here
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                1); // Skip first line with its timestamp
+
+            // And make sure it catches actual errors
+            var txtC = txtA.Replace("247701.8", "247701.6");
+            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.FieldsEqual(new StringReader(txtA),
+                new StringReader(txtC),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors - the TIC line in particular is an issue here
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                1)); // Skip first line with its timestamp);
+
+            var txtD = txtA.Replace("10726.89", "10726.896");
+            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.FieldsEqual(new StringReader(txtA),
+                new StringReader(txtD),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors - the TIC line in particular is an issue here
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                1)); // Skip first line with its timestamp);
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.

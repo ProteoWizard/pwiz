@@ -225,7 +225,12 @@ namespace pwiz.Skyline.Model
         [Track(defaultValues:typeof(DefaultValuesNull))]
         public StandardType GlobalStandardType { get; private set; }
 
-        public Target ModifiedTarget { get; private set; }
+        private Target _modifiedTarget;
+        public Target ModifiedTarget 
+        {
+            get => IsProteomic ? _modifiedTarget : Peptide.Target;
+            private set => _modifiedTarget = value;
+        }
         public string ModifiedSequence { get { return ModifiedTarget.Sequence; } }
 
         public Target OriginalMoleculeTarget { get; private set; }
@@ -523,7 +528,8 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Returns the index of the "best" result for a peptide.  This is currently
-        /// base solely on total peak area, could be enhanced in the future to be
+        /// based solely on total peak area, exclusive of things marked as not participating in scoring
+        /// like reporter ions.  Could be enhanced in the future to be
         /// more like picking the best peak in the import code, including factors
         /// such as peak-found-ratio and dot-product.
         /// </summary>
@@ -583,7 +589,7 @@ namespace pwiz.Skyline.Model
                         for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
                             var chromInfo = result[iChromInfo];
-                            if (chromInfo.Area > 0)
+                            if (nodeTran.ParticipatesInScoring && chromInfo.Area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += chromInfo.Area;
                                 tranMeasured++;
@@ -766,6 +772,14 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Children.Cast<TransitionGroupDocNode>();
+            }
+        }
+
+        public IEnumerable<TransitionDocNode> QuantifiableTransitions
+        {
+            get
+            {
+                return TransitionGroups.SelectMany(t => t.Transitions).Where(t => t.ExplicitQuantitative);
             }
         }
 

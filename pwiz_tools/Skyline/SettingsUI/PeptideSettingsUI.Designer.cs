@@ -447,6 +447,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
             this.comboLodMethod.Name = "comboLodMethod";
             this.helpTip.SetToolTip(this.comboLodMethod, resources.GetString("comboLodMethod.ToolTip"));
+            this.comboLodMethod.SelectedIndexChanged += new System.EventHandler(this.comboLodMethod_SelectedIndexChanged);
             // 
             // tbxMaxLoqCv
             // 
@@ -487,6 +488,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboRegressionFit, "comboRegressionFit");
             this.comboRegressionFit.Name = "comboRegressionFit";
             this.helpTip.SetToolTip(this.comboRegressionFit, resources.GetString("comboRegressionFit.ToolTip"));
+            this.comboRegressionFit.SelectedIndexChanged += new System.EventHandler(this.comboRegressionFit_SelectedIndexChanged);
             // 
             // comboWeighting
             // 
@@ -784,8 +786,11 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.tabQuantification.Controls.Add(this.comboMultiplexing);
             this.tabQuantification.Controls.Add(this.lblMultiplexing);
+            this.tabQuantification.Controls.Add(this.label20);
             this.tabQuantification.Controls.Add(this.cbxSimpleRatios);
+            this.tabQuantification.Controls.Add(this.tbxIonRatioThreshold);
             this.tabQuantification.Controls.Add(this.groupBoxFiguresOfMerit);
+            this.tabQuantification.Controls.Add(this.lblIonRatioThreshold);
             this.tabQuantification.Controls.Add(this.tbxQuantUnits);
             this.tabQuantification.Controls.Add(this.lblQuantUnits);
             this.tabQuantification.Controls.Add(this.comboQuantMsLevel);
@@ -816,10 +821,7 @@ namespace pwiz.Skyline.SettingsUI
             // groupBoxFiguresOfMerit
             // 
             resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
-            this.groupBoxFiguresOfMerit.Controls.Add(this.label20);
             this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqBias);
-            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxIonRatioThreshold);
-            this.groupBoxFiguresOfMerit.Controls.Add(this.lblIonRatioThreshold);
             this.groupBoxFiguresOfMerit.Controls.Add(this.comboLodMethod);
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblCaclulateLodBy);
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBias);

@@ -1570,7 +1570,7 @@
     <value>3</value>
   </data>
   <data name="labelNormalize.Text" xml:space="preserve">
-    <value>正規化（&amp;N）：</value>
+    <value>正規化(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;labelNormalize.Name" xml:space="preserve">
     <value>labelNormalize</value>
@@ -1687,7 +1687,7 @@
     <value>2</value>
   </data>
   <data name="labelDetections.Text" xml:space="preserve">
-    <value>検出（&amp;D）：</value>
+    <value>検出(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;labelDetections.Name" xml:space="preserve">
     <value>labelDetections</value>

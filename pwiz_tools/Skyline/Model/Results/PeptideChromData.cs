@@ -957,8 +957,15 @@ namespace pwiz.Skyline.Model.Results
                     if (explicitRT < dataSet.MinRawTime || dataSet.MaxRawTime < explicitRT)
                     {
                         string precursorText = GetTextForNode(NodePep, dataSet.NodeGroup, null);
-                        Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
-                            precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
+                        if (dataSet.MinRawTime > dataSet.MaxRawTime)
+                        {
+                            Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, precursorText);
+                        }
+                        else
+                        {
+                            Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                                precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
+                        }
                         DataSets.RemoveAt(i);
                     }
                     else
@@ -966,11 +973,18 @@ namespace pwiz.Skyline.Model.Results
                         for (var j = dataSet.Chromatograms.Count - 1; j >= 0; j--)
                         {
                             var chrom = dataSet.Chromatograms[j];
-                            if (explicitRT < chrom.Times.First() || chrom.Times.Last() < explicitRT)
+                            if (!chrom.Times.Any() || (explicitRT < chrom.Times.First() || chrom.Times.Last() < explicitRT))
                             {
                                 string transitionText = GetTextForNode(NodePep, dataSet.NodeGroup, chrom.DocNode);
-                                Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
-                                    transitionText, explicitRT, chrom.Times.First(), chrom.Times.Last());
+                                if (!chrom.Times.Any())
+                                {
+                                    Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, transitionText);
+                                }
+                                else
+                                {
+                                    Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                                        transitionText, explicitRT, chrom.Times.First(), chrom.Times.Last());
+                                }
                                 dataSet.Chromatograms.RemoveAt(j);
                             }
                         }
@@ -1087,7 +1101,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1 && t.NodeTran.ParticipatesInScoring).ToArray(); // Don't use reporter ions in peak picking
                     if (Data.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
                     {
                         Ms2TranstionPeakData = ChromDataPeakList.EMPTY;

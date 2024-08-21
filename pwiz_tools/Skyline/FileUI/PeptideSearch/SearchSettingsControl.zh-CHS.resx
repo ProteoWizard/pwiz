@@ -126,7 +126,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbMS1TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Name" xml:space="preserve">
     <value>cbMS1TolUnit</value>
@@ -138,7 +138,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>21</value>
   </data>
   <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -150,7 +150,7 @@
     <value>79, 13</value>
   </data>
   <data name="lblMs1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="lblMs1Tolerance.Text" xml:space="preserve">
     <value>MS1 耐受性(&amp;)：</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>20</value>
   </data>
   <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 106</value>
@@ -174,7 +174,7 @@
     <value>121, 20</value>
   </data>
   <data name="txtMS1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.Name" xml:space="preserve">
     <value>txtMS1Tolerance</value>
@@ -186,7 +186,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>19</value>
   </data>
   <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 146</value>
@@ -195,7 +195,7 @@
     <value>121, 20</value>
   </data>
   <data name="txtMS2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.Name" xml:space="preserve">
     <value>txtMS2Tolerance</value>
@@ -207,7 +207,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>16</value>
   </data>
   <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -219,7 +219,7 @@
     <value>79, 13</value>
   </data>
   <data name="lblMs2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="lblMs2Tolerance.Text" xml:space="preserve">
     <value>MS2 耐受性(&amp;2)：</value>
@@ -234,7 +234,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>17</value>
   </data>
   <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
     <value>153, 146</value>
@@ -243,7 +243,7 @@
     <value>70, 21</value>
   </data>
   <data name="cbMS2TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.Name" xml:space="preserve">
     <value>cbMS2TolUnit</value>
@@ -255,7 +255,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>18</value>
   </data>
   <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -267,7 +267,7 @@
     <value>76, 13</value>
   </data>
   <data name="lblFragmentIons.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="lblFragmentIons.Text" xml:space="preserve">
     <value>碎片离子(&amp;F)：</value>
@@ -282,7 +282,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblFragmentIons.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>15</value>
   </data>
   <data name="cbFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 190</value>
@@ -291,7 +291,7 @@
     <value>210, 21</value>
   </data>
   <data name="cbFragmentIons.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.Name" xml:space="preserve">
     <value>cbFragmentIons</value>
@@ -303,7 +303,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>14</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -316,7 +316,7 @@
     <value>107, 23</value>
   </data>
   <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>19</value>
   </data>
   <data name="btnAdditionalSettings.Text" xml:space="preserve">
     <value>其他设置(&amp;D)</value>
@@ -331,7 +331,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>13</value>
   </data>
   <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -355,7 +355,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;pBLogo.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>12</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -367,7 +367,7 @@
     <value>29, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
+    <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>单位：</value>
@@ -382,7 +382,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>11</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -394,7 +394,7 @@
     <value>29, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>单位：</value>
@@ -409,7 +409,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>10</value>
   </data>
   <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -418,13 +418,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblMaxVariableMods.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 274</value>
+    <value>13, 274</value>
   </data>
   <data name="lblMaxVariableMods.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 13</value>
   </data>
   <data name="lblMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>14</value>
   </data>
   <data name="lblMaxVariableMods.Text" xml:space="preserve">
     <value>最大可变修饰数(&amp;V)：</value>
@@ -439,7 +439,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>9</value>
   </data>
   <data name="cbMaxVariableMods.Items" xml:space="preserve">
     <value>0</value>
@@ -478,7 +478,7 @@
     <value>44, 21</value>
   </data>
   <data name="cbMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;cbMaxVariableMods.Name" xml:space="preserve">
     <value>cbMaxVariableMods</value>
@@ -490,7 +490,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>8</value>
   </data>
   <data name="searchEngineComboBox.Items" xml:space="preserve">
     <value>MSAmanda</value>
@@ -508,7 +508,7 @@
     <value>118, 21</value>
   </data>
   <data name="searchEngineComboBox.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.Name" xml:space="preserve">
     <value>searchEngineComboBox</value>
@@ -520,7 +520,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>7</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -535,7 +535,7 @@
     <value>79, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>29</value>
+    <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>搜索引擎(&amp;S)：</value>
@@ -550,7 +550,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>6</value>
   </data>
   <data name="cbMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 239</value>
@@ -559,7 +559,7 @@
     <value>210, 21</value>
   </data>
   <data name="cbMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
-    <value>31</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.Name" xml:space="preserve">
     <value>cbMs2Analyzer</value>
@@ -571,7 +571,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>4</value>
   </data>
   <data name="lblMs2Analyzer.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -586,7 +586,7 @@
     <value>74, 13</value>
   </data>
   <data name="lblMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
-    <value>30</value>
+    <value>12</value>
   </data>
   <data name="lblMs2Analyzer.Text" xml:space="preserve">
     <value>MS2 分析仪(&amp;A)：</value>
@@ -601,7 +601,311 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="labelPPM.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPPM.Location" type="System.Drawing.Point, System.Drawing">
+    <value>66, 138</value>
+  </data>
+  <data name="labelPPM.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 13</value>
+  </data>
+  <data name="labelPPM.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelPPM.Text" xml:space="preserve">
+    <value>PPM</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;labelPPM.Name" xml:space="preserve">
+    <value>labelPPM</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textHardklorMinIntensityPPM.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 135</value>
+  </data>
+  <data name="textHardklorMinIntensityPPM.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 20</value>
+  </data>
+  <data name="textHardklorMinIntensityPPM.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
+    <value>忽略相对于样品中所有检测到的特征强度总和小于此值的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
+    <value>textHardklorMinIntensityPPM</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="labelMinIntensityPPM.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMinIntensityPPM.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 119</value>
+  </data>
+  <data name="labelMinIntensityPPM.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 13</value>
+  </data>
+  <data name="labelMinIntensityPPM.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelMinIntensityPPM.Text" xml:space="preserve">
+    <value>最小强度比例(&amp;I)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
+    <value>labelMinIntensityPPM</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textHardklorMinIdotP.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 36</value>
+  </data>
+  <data name="textHardklorMinIdotP.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 20</value>
+  </data>
+  <data name="textHardklorMinIdotP.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.Name" xml:space="preserve">
+    <value>textHardklorMinIdotP</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelHardklorMinIdotP.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelHardklorMinIdotP.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelHardklorMinIdotP.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 20</value>
+  </data>
+  <data name="labelHardklorMinIdotP.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 13</value>
+  </data>
+  <data name="labelHardklorMinIdotP.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelHardklorMinIdotP.Text" xml:space="preserve">
+    <value>最小同位素点积(&amp;D)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Name" xml:space="preserve">
+    <value>labelHardklorMinIdotP</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 85</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 20</value>
+  </data>
+  <data name="textHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
+    <value>设置 Hardklor 配置的信噪比阈值，即峰在谱图窗口中要被纳入得分算法考虑范围而必须超过的相对丰度。请注意，这是局部噪声阈值，适用于识别该肽段的谱图面积。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>textHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 69</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 13</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
+    <value>最小信噪比(&amp;S)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>lblHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="groupBoxHardklor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>178, 254</value>
+  </data>
+  <data name="groupBoxHardklor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 168</value>
+  </data>
+  <data name="groupBoxHardklor.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="groupBoxHardklor.Text" xml:space="preserve">
+    <value>搜索参数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 339</value>
+  </data>
+  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 20</value>
+  </data>
+  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="textCutoff.ToolTip" xml:space="preserve">
+    <value>得分为 1.0 至 0，1.0 最有可能正确，用来为将包含在库结果中的谱图提供截止值。
+对于 TPP pepXML，此值为 PeptideProphet 的最小概率。对于 Mascot，此值为 1，即最大预期值。对于 SEQUEST SQT，此值为 1，即最大 FDR。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
+    <value>textCutoff</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCutoff.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 323</value>
+  </data>
+  <data name="labelCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="labelCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="labelCutoff.Text" xml:space="preserve">
+    <value>截止得分(&amp;C)：</value>
+    <comment>Needs Review:English text changed
+Old English:Q value cutoff:
+Current English:&amp;Cut-off score:
+Old Localized:Q 值截止：</comment>
+  </data>
+  <data name="&gt;&gt;labelCutoff.Name" xml:space="preserve">
+    <value>labelCutoff</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblSearchEngineBlurb.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="lblSearchEngineBlurb.Location" type="System.Drawing.Point, System.Drawing">
+    <value>348, 57</value>
+  </data>
+  <data name="lblSearchEngineBlurb.Size" type="System.Drawing.Size, System.Drawing">
+    <value>36, 230</value>
+  </data>
+  <data name="lblSearchEngineBlurb.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="lblSearchEngineBlurb.Text" xml:space="preserve">
+    <value>(blurb)</value>
+  </data>
+  <data name="&gt;&gt;lblSearchEngineBlurb.Name" xml:space="preserve">
+    <value>lblSearchEngineBlurb</value>
+  </data>
+  <data name="&gt;&gt;lblSearchEngineBlurb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSearchEngineBlurb.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblSearchEngineBlurb.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -611,6 +915,12 @@
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 425</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SearchSettingsControl</value>

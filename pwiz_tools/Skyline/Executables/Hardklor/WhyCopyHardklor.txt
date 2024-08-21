@@ -1,0 +1,9 @@
+This is a fork of the Hardklor project at https://github.com/mhoopmann/hardklor.
+
+As you can see there's also a fork of the MSToolkit code used by Hardklor. Both contain just enough changes to support use in Skyline. 
+
+In Hardklor, there are a couple of uninitialized variables and infinite loops that get caught in the MSVC debugger, I've fixed those. But mostly it's about optionally including extra isotope envelope info in the output file. 
+
+Note the Visual Studio project I created for this is not actually used in Skyline production - bjam is the build system for that.
+
+Note that git clone won't populate these directories unless you add the --recurse-submodules argument.

@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -190,14 +191,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return SequenceMassCalc.PersistentMZ(DocNode.PrecursorMz); }
         }
 
+        /// <summary>
+        /// Predicted collision energy, not to be confused with <see cref="ExplicitCollisionEnergy"/>.
+        /// </summary>
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        public double CollisionEnergy
+        public double? CollisionEnergy
         {
             get
             {
-                // Note this is the predicited CE, explicit CE has its own display column
-                return SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy
-                                  .GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
+                var collisionEnergyRegression = SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy;
+                if (collisionEnergyRegression == null || Equals(collisionEnergyRegression, CollisionEnergyList.NONE))
+                {
+                    return null;
+                }
+
+                return collisionEnergyRegression.GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
             }
         }
 

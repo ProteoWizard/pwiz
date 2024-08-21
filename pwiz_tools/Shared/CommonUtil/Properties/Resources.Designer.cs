@@ -86,5 +86,13 @@ namespace pwiz.Common.Properties {
                 return ResourceManager.GetString("Units_ppm", resourceCulture);
             }
         }
+        /// <summary>
+        ///   Looks up a localized string similar to Run command:.
+        /// </summary>
+        internal static string ProcessRunner_Run_Run_command_ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
+            }
+        }
     }
 }

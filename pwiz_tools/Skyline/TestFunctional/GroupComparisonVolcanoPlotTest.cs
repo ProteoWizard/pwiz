@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
                 p.CheckBoxFilter.Checked = true;
             });
 
-            // Check if the the points that are not within cutoff have been removed -> outCount should stay the same, selectedCount and inCount 0
+            // Check if the points that are not within cutoff have been removed -> outCount should stay the same, selectedCount and inCount 0
             WaitForVolcanoPlotPointCount(grid, 42);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 0, 42, 0));
 
@@ -192,9 +192,15 @@ namespace pwiz.SkylineTestFunctional
             var curveCounts = plot.GetCurveCounts();
             Assert.AreEqual(showingBounds, FoldChangeVolcanoPlot.AnyCutoffSettingsValid);
             Assert.AreEqual(showingBounds ? 5 : 2,  curveCounts.CurveCount);
-            Assert.AreEqual(selectedCount, curveCounts.SelectedCount);
-            Assert.AreEqual(outCount, curveCounts.OutCount);
-            Assert.AreEqual(inCount, curveCounts.InCount);
+
+            if (selectedCount != curveCounts.SelectedCount ||
+                outCount != curveCounts.OutCount ||
+                inCount != curveCounts.InCount)
+            {
+                Assert.Fail("Volcano plot expected: selectedCount={0}, outCount={1}, inCount={2}; actual: selectedCount={3}, outCount={4}, inCount={5}",
+                    selectedCount, outCount, inCount,
+                    curveCounts.SelectedCount, curveCounts.OutCount, curveCounts.InCount);
+            }
         }
 
         private static void OpenVolcanoPlotProperties(FoldChangeVolcanoPlot volcanoPlot, Action<VolcanoPlotPropertiesDlg> action)

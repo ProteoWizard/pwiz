@@ -551,7 +551,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
 
                     foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings,
-                                 replicateEntry.Key.ReplicateIndex, ComparisonDef.UseZeroForMissingPeaks))
+                                 replicateEntry.Key.ReplicateIndex, ComparisonDef.UseZeroForMissingPeaks).Where(kvp=>!kvp.Value.Truncated))
                     {
                         var dataRowDetails = new DataRowDetails
                         {

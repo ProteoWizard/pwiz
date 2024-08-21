@@ -117,6 +117,7 @@ namespace pwiz.Skyline.Model.Results
         public void Dispose()
         {
             _multiFileLoader.DoneAddingFiles();
+            _multiFileLoader.Dispose();
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -248,7 +249,23 @@ namespace pwiz.Skyline.Model.Results
                 //           practice we have only one document container per process
                 lock (_finishLock)
                 {
-                    FinishLoadSynch(documentPath, resultsLoad, resultsPrevious);
+                    try
+                    {
+                        FinishLoadSynch(documentPath, resultsLoad, resultsPrevious);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ExceptionUtil.IsProgrammingDefect(ex))
+                        {
+                            throw;
+                        }
+                        foreach (var chromatogramStatus in _multiFileLoader.Status.ProgressList)
+                        {
+                            _multiFileLoader.ChangeStatus((ChromatogramLoadingStatus)chromatogramStatus.ChangeErrorException(ex));
+                        }
+
+                        _loadMonitor.UpdateProgress(_multiFileLoader.Status);
+                    }
                 }
             }
 

@@ -97,8 +97,17 @@ namespace SortRESX
                 return false;
             }
 
-            bool preserveElementOrder = PreserveOrderInResourcesResx 
-                                        && Path.GetFileNameWithoutExtension(path) == "Resources";
+            bool preserveElementOrder = false;
+            if (PreserveOrderInResourcesResx)
+            {
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+                if (fileNameWithoutExtension == "Resources" || fileNameWithoutExtension != null &&
+                    Path.GetFileNameWithoutExtension(fileNameWithoutExtension) == "Resources")
+                {
+                    preserveElementOrder = true;
+                }
+            }
+            
             return SortResxFile(path, preserveElementOrder);
         }
 

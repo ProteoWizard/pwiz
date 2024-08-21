@@ -382,6 +382,24 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Vendor-supplied library is unable to determine CCS for {0} with mobility={1:0.###}, mz={2:0.####}, and charge={3}..
+        /// </summary>
+        public static string DataFileInstrumentInfo_CCSFromIonMobility_no_conversion {
+            get {
+                return ResourceManager.GetString("DataFileInstrumentInfo_CCSFromIonMobility_no_conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vendor-supplied library is unable to determine ion mobility for {0} with CCS={1:0.###}, mz={2:0.####}, and charge={3}..
+        /// </summary>
+        public static string DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion {
+            get {
+                return ResourceManager.GetString("DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS.
         /// </summary>
         public static string GraphFullScan_GraphFullScan_MS_MS {
@@ -432,6 +450,26 @@ namespace pwiz.Skyline.Model.Results {
         public static string GraphFullScan_PeakType_Profile {
             get {
                 return ResourceManager.GetString("GraphFullScan_PeakType_Profile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to need a value for  Transition Settings  Ion mobility filtering  Window type.
+        /// </summary>
+        public static string IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type {
+            get {
+                return ResourceManager.GetString("IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settin" +
+                        "gs___ion_mobility_filtering___Window_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mixed ion mobility types are not supported.
+        /// </summary>
+        public static string IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported {
+            get {
+                return ResourceManager.GetString("IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" +
+                        "", resourceCulture);
             }
         }
         
@@ -587,6 +625,16 @@ namespace pwiz.Skyline.Model.Results {
             get {
                 return ResourceManager.GetString("PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___bec" +
                         "ause_the_explicit_retention_time__1__is_not_between__2__and__3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discarding empty chromatograms for {0}.
+        /// </summary>
+        public static string PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_ {
+            get {
+                return ResourceManager.GetString("PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" +
+                        "", resourceCulture);
             }
         }
         

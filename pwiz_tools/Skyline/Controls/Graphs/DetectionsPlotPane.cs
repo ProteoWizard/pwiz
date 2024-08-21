@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
         {
-            MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI?.MeasuredResults.Chromatograms.Count ?? 0;
+            MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults?.Chromatograms.Count ?? 0;
 
             Settings.RepCount = MaxRepCount / 2;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)

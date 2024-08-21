@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool HasVisibleLoss(ICollection<string> showLosses)
         {
             return showLosses == null || Losses == null ||
-                   Losses.Losses.Any(loss => showLosses.Contains(loss.Loss.Formula));
+                   Losses.Losses.Any(loss => showLosses.Contains(loss.Loss.PersistentName));
         }
 
     }

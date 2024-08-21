@@ -37,11 +37,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textPath = new System.Windows.Forms.TextBox();
             this.iRTPeptidesLabel = new System.Windows.Forms.Label();
-            this.panelProperties = new System.Windows.Forms.Panel();
-            this.panelFilesPrositProperties = new System.Windows.Forms.Panel();
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
-            this.panelFilesProps = new System.Windows.Forms.Panel();
             this.actionLabel = new System.Windows.Forms.Label();
             this.comboAction = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
@@ -49,11 +46,12 @@
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
-            this.prositInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
-            this.prositDataSourceRadioButton = new System.Windows.Forms.RadioButton();
-            this.dataSourceFilesRadioButton = new System.Windows.Forms.RadioButton();
+            this.radioCarafeSource = new System.Windows.Forms.RadioButton();
+            this.radioAlphaSource = new System.Windows.Forms.RadioButton();
+            this.koinaInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
+            this.radioKoinaSource = new System.Windows.Forms.RadioButton();
+            this.radioFilesSource = new System.Windows.Forms.RadioButton();
             this.btnBrowse = new System.Windows.Forms.Button();
-            this.panelFiles = new System.Windows.Forms.Panel();
             this.gridInputFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.btnAddPaths = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
@@ -61,12 +59,37 @@
             this.btnAddFile = new System.Windows.Forms.Button();
             this.btnPrevious = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.panelProperties.SuspendLayout();
-            this.panelFilesPrositProperties.SuspendLayout();
-            this.panelFilesProps.SuspendLayout();
+            this.tabControlMain = new pwiz.Skyline.Controls.WizardPages();
+            this.tabProperties = new System.Windows.Forms.TabPage();
+            this.tabControlDataSource = new pwiz.Skyline.Controls.WizardPages();
+            this.tabFilesSource = new System.Windows.Forms.TabPage();
+            this.tabCarafeSource = new System.Windows.Forms.TabPage();
+            this.tabKoinaSource = new System.Windows.Forms.TabPage();
+            this.tabFiles = new System.Windows.Forms.TabPage();
+            this.tabLearn = new System.Windows.Forms.TabPage();
+            this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
+            this.tabPageDocument = new System.Windows.Forms.TabPage();
+            this.btnLearningDocBrowse = new System.Windows.Forms.Button();
+            this.textLearningDoc = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tabPageLibraries = new System.Windows.Forms.TabPage();
+            this.listLibraries = new System.Windows.Forms.CheckedListBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.comboLearnFrom = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tabAlphaSource = new System.Windows.Forms.TabPage();
             this.dataSourceGroupBox.SuspendLayout();
-            this.panelFiles.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
+            this.tabControlMain.SuspendLayout();
+            this.tabProperties.SuspendLayout();
+            this.tabControlDataSource.SuspendLayout();
+            this.tabFilesSource.SuspendLayout();
+            this.tabKoinaSource.SuspendLayout();
+            this.tabFiles.SuspendLayout();
+            this.tabLearn.SuspendLayout();
+            this.tabControlLearning.SuspendLayout();
+            this.tabPageDocument.SuspendLayout();
+            this.tabPageLibraries.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -111,28 +134,7 @@
             // 
             resources.ApplyResources(this.iRTPeptidesLabel, "iRTPeptidesLabel");
             this.iRTPeptidesLabel.Name = "iRTPeptidesLabel";
-            // 
-            // panelProperties
-            // 
-            resources.ApplyResources(this.panelProperties, "panelProperties");
-            this.panelProperties.Controls.Add(this.panelFilesPrositProperties);
-            this.panelProperties.Controls.Add(this.dataSourceGroupBox);
-            this.panelProperties.Controls.Add(this.btnBrowse);
-            this.panelProperties.Controls.Add(this.label2);
-            this.panelProperties.Controls.Add(this.textPath);
-            this.panelProperties.Controls.Add(this.textName);
-            this.panelProperties.Controls.Add(this.label4);
-            this.panelProperties.Name = "panelProperties";
-            // 
-            // panelFilesPrositProperties
-            // 
-            this.panelFilesPrositProperties.Controls.Add(this.ceLabel);
-            this.panelFilesPrositProperties.Controls.Add(this.ceCombo);
-            this.panelFilesPrositProperties.Controls.Add(this.panelFilesProps);
-            this.panelFilesPrositProperties.Controls.Add(this.comboStandards);
-            this.panelFilesPrositProperties.Controls.Add(this.iRTPeptidesLabel);
-            resources.ApplyResources(this.panelFilesPrositProperties, "panelFilesPrositProperties");
-            this.panelFilesPrositProperties.Name = "panelFilesPrositProperties";
+            this.modeUIHandler.SetUIMode(this.iRTPeptidesLabel, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // ceLabel
             // 
@@ -145,16 +147,6 @@
             this.ceCombo.FormattingEnabled = true;
             resources.ApplyResources(this.ceCombo, "ceCombo");
             this.ceCombo.Name = "ceCombo";
-            // 
-            // panelFilesProps
-            // 
-            this.panelFilesProps.Controls.Add(this.actionLabel);
-            this.panelFilesProps.Controls.Add(this.comboAction);
-            this.panelFilesProps.Controls.Add(this.cbIncludeAmbiguousMatches);
-            this.panelFilesProps.Controls.Add(this.cbKeepRedundant);
-            this.panelFilesProps.Controls.Add(this.cbFilter);
-            resources.ApplyResources(this.panelFilesProps, "panelFilesProps");
-            this.panelFilesProps.Name = "panelFilesProps";
             // 
             // actionLabel
             // 
@@ -176,6 +168,7 @@
             // 
             resources.ApplyResources(this.cbIncludeAmbiguousMatches, "cbIncludeAmbiguousMatches");
             this.cbIncludeAmbiguousMatches.Name = "cbIncludeAmbiguousMatches";
+            this.helpTip.SetToolTip(this.cbIncludeAmbiguousMatches, resources.GetString("cbIncludeAmbiguousMatches.ToolTip"));
             this.cbIncludeAmbiguousMatches.UseVisualStyleBackColor = true;
             // 
             // cbKeepRedundant
@@ -189,6 +182,7 @@
             // 
             resources.ApplyResources(this.cbFilter, "cbFilter");
             this.cbFilter.Name = "cbFilter";
+            this.helpTip.SetToolTip(this.cbFilter, resources.GetString("cbFilter.ToolTip"));
             this.cbFilter.UseVisualStyleBackColor = true;
             // 
             // comboStandards
@@ -197,39 +191,59 @@
             this.comboStandards.FormattingEnabled = true;
             resources.ApplyResources(this.comboStandards, "comboStandards");
             this.comboStandards.Name = "comboStandards";
+            this.modeUIHandler.SetUIMode(this.comboStandards, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
             // dataSourceGroupBox
             // 
-            this.dataSourceGroupBox.Controls.Add(this.prositInfoSettingsBtn);
-            this.dataSourceGroupBox.Controls.Add(this.prositDataSourceRadioButton);
-            this.dataSourceGroupBox.Controls.Add(this.dataSourceFilesRadioButton);
+            this.dataSourceGroupBox.Controls.Add(this.radioCarafeSource);
+            this.dataSourceGroupBox.Controls.Add(this.radioAlphaSource);
+            this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
+            this.dataSourceGroupBox.Controls.Add(this.radioKoinaSource);
+            this.dataSourceGroupBox.Controls.Add(this.radioFilesSource);
             resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
             this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
-            // prositInfoSettingsBtn
+            // radioCarafeSource
             // 
-            resources.ApplyResources(this.prositInfoSettingsBtn, "prositInfoSettingsBtn");
-            this.prositInfoSettingsBtn.Name = "prositInfoSettingsBtn";
-            this.prositInfoSettingsBtn.TabStop = true;
-            this.prositInfoSettingsBtn.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.prositInfoSettingsBtn_LinkClicked);
+            resources.ApplyResources(this.radioCarafeSource, "radioCarafeSource");
+            this.radioCarafeSource.Name = "radioCarafeSource";
+            this.radioCarafeSource.TabStop = true;
+            this.radioCarafeSource.UseVisualStyleBackColor = true;
+            this.radioCarafeSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
             // 
-            // prositDataSourceRadioButton
+            // radioAlphaSource
             // 
-            resources.ApplyResources(this.prositDataSourceRadioButton, "prositDataSourceRadioButton");
-            this.prositDataSourceRadioButton.Name = "prositDataSourceRadioButton";
-            this.prositDataSourceRadioButton.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.radioAlphaSource, "radioAlphaSource");
+            this.radioAlphaSource.Name = "radioAlphaSource";
+            this.radioAlphaSource.TabStop = true;
+            this.radioAlphaSource.UseVisualStyleBackColor = true;
+            this.radioAlphaSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
             // 
-            // dataSourceFilesRadioButton
+            // koinaInfoSettingsBtn
             // 
-            resources.ApplyResources(this.dataSourceFilesRadioButton, "dataSourceFilesRadioButton");
-            this.dataSourceFilesRadioButton.Checked = true;
-            this.dataSourceFilesRadioButton.Name = "dataSourceFilesRadioButton";
-            this.dataSourceFilesRadioButton.TabStop = true;
-            this.dataSourceFilesRadioButton.UseVisualStyleBackColor = true;
-            this.dataSourceFilesRadioButton.CheckedChanged += new System.EventHandler(this.dataSourceFilesRadioButton_CheckedChanged);
+            resources.ApplyResources(this.koinaInfoSettingsBtn, "koinaInfoSettingsBtn");
+            this.koinaInfoSettingsBtn.Name = "koinaInfoSettingsBtn";
+            this.koinaInfoSettingsBtn.TabStop = true;
+            this.koinaInfoSettingsBtn.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.koinaInfoSettingsBtn_LinkClicked);
+            // 
+            // radioKoinaSource
+            // 
+            resources.ApplyResources(this.radioKoinaSource, "radioKoinaSource");
+            this.radioKoinaSource.Name = "radioKoinaSource";
+            this.radioKoinaSource.UseVisualStyleBackColor = true;
+            this.radioKoinaSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
+            // 
+            // radioFilesSource
+            // 
+            resources.ApplyResources(this.radioFilesSource, "radioFilesSource");
+            this.radioFilesSource.Checked = true;
+            this.radioFilesSource.Name = "radioFilesSource";
+            this.radioFilesSource.TabStop = true;
+            this.radioFilesSource.UseVisualStyleBackColor = true;
+            this.radioFilesSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
             // 
             // btnBrowse
             // 
@@ -237,16 +251,6 @@
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
-            // 
-            // panelFiles
-            // 
-            resources.ApplyResources(this.panelFiles, "panelFiles");
-            this.panelFiles.Controls.Add(this.gridInputFiles);
-            this.panelFiles.Controls.Add(this.btnAddPaths);
-            this.panelFiles.Controls.Add(this.label7);
-            this.panelFiles.Controls.Add(this.btnAddDirectory);
-            this.panelFiles.Controls.Add(this.btnAddFile);
-            this.panelFiles.Name = "panelFiles";
             // 
             // gridInputFiles
             // 
@@ -296,33 +300,198 @@
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
             // 
+            // tabControlMain
+            // 
+            resources.ApplyResources(this.tabControlMain, "tabControlMain");
+            this.tabControlMain.Controls.Add(this.tabProperties);
+            this.tabControlMain.Controls.Add(this.tabFiles);
+            this.tabControlMain.Controls.Add(this.tabLearn);
+            this.tabControlMain.Name = "tabControlMain";
+            this.tabControlMain.SelectedIndex = 0;
+            this.tabControlMain.TabStop = false;
+            // 
+            // tabProperties
+            // 
+            this.tabProperties.BackColor = System.Drawing.SystemColors.Control;
+            this.tabProperties.Controls.Add(this.tabControlDataSource);
+            this.tabProperties.Controls.Add(this.textPath);
+            this.tabProperties.Controls.Add(this.comboStandards);
+            this.tabProperties.Controls.Add(this.dataSourceGroupBox);
+            this.tabProperties.Controls.Add(this.iRTPeptidesLabel);
+            this.tabProperties.Controls.Add(this.label4);
+            this.tabProperties.Controls.Add(this.btnBrowse);
+            this.tabProperties.Controls.Add(this.textName);
+            this.tabProperties.Controls.Add(this.label2);
+            resources.ApplyResources(this.tabProperties, "tabProperties");
+            this.tabProperties.Name = "tabProperties";
+            // 
+            // tabControlDataSource
+            // 
+            resources.ApplyResources(this.tabControlDataSource, "tabControlDataSource");
+            this.tabControlDataSource.Controls.Add(this.tabFilesSource);
+            this.tabControlDataSource.Controls.Add(this.tabAlphaSource);
+            this.tabControlDataSource.Controls.Add(this.tabCarafeSource);
+            this.tabControlDataSource.Controls.Add(this.tabKoinaSource);
+            this.tabControlDataSource.Name = "tabControlDataSource";
+            this.tabControlDataSource.SelectedIndex = 0;
+            this.tabControlDataSource.TabStop = false;
+            // 
+            // tabFilesSource
+            // 
+            this.tabFilesSource.BackColor = System.Drawing.SystemColors.Control;
+            this.tabFilesSource.Controls.Add(this.cbIncludeAmbiguousMatches);
+            this.tabFilesSource.Controls.Add(this.actionLabel);
+            this.tabFilesSource.Controls.Add(this.comboAction);
+            this.tabFilesSource.Controls.Add(this.cbKeepRedundant);
+            this.tabFilesSource.Controls.Add(this.cbFilter);
+            resources.ApplyResources(this.tabFilesSource, "tabFilesSource");
+            this.tabFilesSource.Name = "tabFilesSource";
+            // 
+            // tabCarafeSource
+            // 
+            this.tabCarafeSource.BackColor = System.Drawing.SystemColors.Control;
+            resources.ApplyResources(this.tabCarafeSource, "tabCarafeSource");
+            this.tabCarafeSource.Name = "tabCarafeSource";
+            // 
+            // tabKoinaSource
+            // 
+            this.tabKoinaSource.BackColor = System.Drawing.SystemColors.Control;
+            this.tabKoinaSource.Controls.Add(this.ceLabel);
+            this.tabKoinaSource.Controls.Add(this.ceCombo);
+            resources.ApplyResources(this.tabKoinaSource, "tabKoinaSource");
+            this.tabKoinaSource.Name = "tabKoinaSource";
+            // 
+            // tabFiles
+            // 
+            this.tabFiles.BackColor = System.Drawing.SystemColors.Control;
+            this.tabFiles.Controls.Add(this.gridInputFiles);
+            this.tabFiles.Controls.Add(this.btnAddPaths);
+            this.tabFiles.Controls.Add(this.btnAddFile);
+            this.tabFiles.Controls.Add(this.label7);
+            this.tabFiles.Controls.Add(this.btnAddDirectory);
+            resources.ApplyResources(this.tabFiles, "tabFiles");
+            this.tabFiles.Name = "tabFiles";
+            // 
+            // tabLearn
+            // 
+            this.tabLearn.BackColor = System.Drawing.SystemColors.Control;
+            this.tabLearn.Controls.Add(this.tabControlLearning);
+            this.tabLearn.Controls.Add(this.comboLearnFrom);
+            this.tabLearn.Controls.Add(this.label1);
+            resources.ApplyResources(this.tabLearn, "tabLearn");
+            this.tabLearn.Name = "tabLearn";
+            // 
+            // tabControlLearning
+            // 
+            resources.ApplyResources(this.tabControlLearning, "tabControlLearning");
+            this.tabControlLearning.Controls.Add(this.tabPageDocument);
+            this.tabControlLearning.Controls.Add(this.tabPageLibraries);
+            this.tabControlLearning.Name = "tabControlLearning";
+            this.tabControlLearning.SelectedIndex = 0;
+            this.tabControlLearning.TabStop = false;
+            // 
+            // tabPageDocument
+            // 
+            this.tabPageDocument.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPageDocument.Controls.Add(this.btnLearningDocBrowse);
+            this.tabPageDocument.Controls.Add(this.textLearningDoc);
+            this.tabPageDocument.Controls.Add(this.label5);
+            resources.ApplyResources(this.tabPageDocument, "tabPageDocument");
+            this.tabPageDocument.Name = "tabPageDocument";
+            // 
+            // btnLearningDocBrowse
+            // 
+            resources.ApplyResources(this.btnLearningDocBrowse, "btnLearningDocBrowse");
+            this.btnLearningDocBrowse.Name = "btnLearningDocBrowse";
+            this.btnLearningDocBrowse.UseVisualStyleBackColor = true;
+            this.btnLearningDocBrowse.Click += new System.EventHandler(this.btnLearningDocBrowse_Click);
+            // 
+            // textLearningDoc
+            // 
+            resources.ApplyResources(this.textLearningDoc, "textLearningDoc");
+            this.textLearningDoc.Name = "textLearningDoc";
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // tabPageLibraries
+            // 
+            this.tabPageLibraries.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPageLibraries.Controls.Add(this.listLibraries);
+            this.tabPageLibraries.Controls.Add(this.label3);
+            resources.ApplyResources(this.tabPageLibraries, "tabPageLibraries");
+            this.tabPageLibraries.Name = "tabPageLibraries";
+            // 
+            // listLibraries
+            // 
+            resources.ApplyResources(this.listLibraries, "listLibraries");
+            this.listLibraries.FormattingEnabled = true;
+            this.listLibraries.Name = "listLibraries";
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // comboLearnFrom
+            // 
+            this.comboLearnFrom.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLearnFrom.FormattingEnabled = true;
+            this.comboLearnFrom.Items.AddRange(new object[] {
+            resources.GetString("comboLearnFrom.Items"),
+            resources.GetString("comboLearnFrom.Items1")});
+            resources.ApplyResources(this.comboLearnFrom, "comboLearnFrom");
+            this.comboLearnFrom.Name = "comboLearnFrom";
+            this.comboLearnFrom.SelectedIndexChanged += new System.EventHandler(this.comboLearnFrom_SelectedIndexChanged);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // tabAlphaSource
+            // 
+            this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
+            resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
+            this.tabAlphaSource.Name = "tabAlphaSource";
+            // 
             // BuildLibraryDlg
             // 
             this.AcceptButton = this.btnNext;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.tabControlMain);
             this.Controls.Add(this.btnPrevious);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnNext);
-            this.Controls.Add(this.panelProperties);
-            this.Controls.Add(this.panelFiles);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "BuildLibraryDlg";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BuildLibraryDlg_FormClosing);
-            this.panelProperties.ResumeLayout(false);
-            this.panelProperties.PerformLayout();
-            this.panelFilesPrositProperties.ResumeLayout(false);
-            this.panelFilesPrositProperties.PerformLayout();
-            this.panelFilesProps.ResumeLayout(false);
-            this.panelFilesProps.PerformLayout();
             this.dataSourceGroupBox.ResumeLayout(false);
             this.dataSourceGroupBox.PerformLayout();
-            this.panelFiles.ResumeLayout(false);
-            this.panelFiles.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).EndInit();
+            this.tabControlMain.ResumeLayout(false);
+            this.tabProperties.ResumeLayout(false);
+            this.tabProperties.PerformLayout();
+            this.tabControlDataSource.ResumeLayout(false);
+            this.tabFilesSource.ResumeLayout(false);
+            this.tabFilesSource.PerformLayout();
+            this.tabKoinaSource.ResumeLayout(false);
+            this.tabKoinaSource.PerformLayout();
+            this.tabFiles.ResumeLayout(false);
+            this.tabFiles.PerformLayout();
+            this.tabLearn.ResumeLayout(false);
+            this.tabLearn.PerformLayout();
+            this.tabControlLearning.ResumeLayout(false);
+            this.tabPageDocument.ResumeLayout(false);
+            this.tabPageDocument.PerformLayout();
+            this.tabPageLibraries.ResumeLayout(false);
+            this.tabPageLibraries.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -336,8 +505,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textPath;
         private System.Windows.Forms.Label iRTPeptidesLabel;
-        private System.Windows.Forms.Panel panelProperties;
-        private System.Windows.Forms.Panel panelFiles;
         private System.Windows.Forms.Button btnAddDirectory;
         private System.Windows.Forms.Button btnAddFile;
         private System.Windows.Forms.Label label7;
@@ -347,11 +514,9 @@
         private System.Windows.Forms.Button btnAddPaths;
         private System.Windows.Forms.ComboBox comboStandards;
         private System.Windows.Forms.GroupBox dataSourceGroupBox;
-        private System.Windows.Forms.RadioButton prositDataSourceRadioButton;
-        private System.Windows.Forms.RadioButton dataSourceFilesRadioButton;
-        private System.Windows.Forms.LinkLabel prositInfoSettingsBtn;
-        private System.Windows.Forms.Panel panelFilesPrositProperties;
-        private System.Windows.Forms.Panel panelFilesProps;
+        private System.Windows.Forms.RadioButton radioKoinaSource;
+        private System.Windows.Forms.RadioButton radioFilesSource;
+        private System.Windows.Forms.LinkLabel koinaInfoSettingsBtn;
         private System.Windows.Forms.Label actionLabel;
         private System.Windows.Forms.ComboBox comboAction;
         private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
@@ -360,5 +525,26 @@
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
         private FileUI.PeptideSearch.BuildLibraryGridView gridInputFiles;
+        private pwiz.Skyline.Controls.WizardPages tabControlMain;
+        private System.Windows.Forms.TabPage tabProperties;
+        private System.Windows.Forms.TabPage tabFiles;
+        private pwiz.Skyline.Controls.WizardPages tabControlDataSource;
+        private System.Windows.Forms.TabPage tabFilesSource;
+        private System.Windows.Forms.TabPage tabCarafeSource;
+        private System.Windows.Forms.TabPage tabKoinaSource;
+        private System.Windows.Forms.RadioButton radioAlphaSource;
+        private System.Windows.Forms.TabPage tabLearn;
+        private System.Windows.Forms.ComboBox comboLearnFrom;
+        private System.Windows.Forms.Label label1;
+        private pwiz.Skyline.Controls.WizardPages tabControlLearning;
+        private System.Windows.Forms.TabPage tabPageLibraries;
+        private System.Windows.Forms.TabPage tabPageDocument;
+        private System.Windows.Forms.CheckedListBox listLibraries;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnLearningDocBrowse;
+        private System.Windows.Forms.TextBox textLearningDoc;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.RadioButton radioCarafeSource;
+        private System.Windows.Forms.TabPage tabAlphaSource;
     }
 }

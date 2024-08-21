@@ -1220,7 +1220,7 @@ namespace pwiz.Skyline.Menus
                     try
                     {
                         SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false);
                     }
                     catch (Exception exception)
                     {
@@ -1846,6 +1846,7 @@ namespace pwiz.Skyline.Menus
         public SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
             SpectrumClassFilter spectrumClassFilter, bool copy, out int changeCount)
         {
+            var originalDocument = document;
             changeCount = 0;
             foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
             {
@@ -1907,10 +1908,18 @@ namespace pwiz.Skyline.Menus
                 {
                     newTransitionGroups.Sort(Peptide.CompareGroups);
                     peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
+                    if (!document.DeferSettingsChanges)
+                    {
+                        document = document.BeginDeferSettingsChanges();
+                    }
                     document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
                 }
             }
 
+            if (document.DeferSettingsChanges)
+            {
+                document = document.EndDeferSettingsChanges(originalDocument, null);
+            }
             return document;
         }
     }

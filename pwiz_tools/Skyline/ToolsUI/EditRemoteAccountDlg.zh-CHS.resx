@@ -243,7 +243,7 @@
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 111</value>
   </data>
-  <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+  <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
   <data name="textPassword.Size" type="System.Drawing.Size, System.Drawing">
@@ -432,7 +432,7 @@
   <data name="tbxClientSecret.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 113</value>
   </data>
-  <data name="tbxClientSecret.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+  <data name="tbxClientSecret.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
   <data name="tbxClientSecret.Size" type="System.Drawing.Size, System.Drawing">

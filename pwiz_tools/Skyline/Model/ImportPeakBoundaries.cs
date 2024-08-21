@@ -22,7 +22,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -236,6 +238,36 @@ namespace pwiz.Skyline.Model
                 doc = Import(reader, progressMonitor, lineCount, isMinutes, removeMissing, changePeaks);
             }
             return doc;
+        }
+
+        public ModifiedDocument ModifyDocument(SrmDocument.DOCUMENT_TYPE documentType, string inputFile, IProgressMonitor progressMonitor, long lineCount,
+            bool removeMissing = false, bool changePeaks = true)
+        {
+            var originalDocument = Document;
+            var modifiedDocument =
+                new ModifiedDocument(Import(inputFile, progressMonitor, lineCount, removeMissing, changePeaks));
+            if (ReferenceEquals(modifiedDocument.Document, originalDocument))
+            {
+                return null;
+            }
+
+            var docPair = SrmDocumentPair.Create(originalDocument, modifiedDocument.Document, documentType);
+            var allInfo = new List<MessageInfo>();
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, UnrecognizedPeptides);
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
+                UnrecognizedFiles.Select(AuditLogPath.Create));
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, UnrecognizedChargeStates);
+
+            var auditLogEntry = AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries,
+                    docPair.OldDocumentType,
+                    Path.GetFileName(inputFile))
+                .AppendAllInfo(allInfo);
+            return modifiedDocument.ChangeAuditLogEntry(auditLogEntry);
+        }
+
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
+        {
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
         }
 
         public bool IsMinutesPeakBoundaries(TextReader reader)

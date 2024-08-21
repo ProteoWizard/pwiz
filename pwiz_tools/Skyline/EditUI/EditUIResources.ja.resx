@@ -462,4 +462,16 @@ Example: Looplink: T [4]
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
     <value>これらのタンパク質に含まれるもの：</value>
   </data>
+  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>すべてのペプチドを説明する最小の遺伝子グループを検索する(&amp;M)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
+    <value>遺伝子あたりの最小ペプチド数(&amp;N)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
+    <value>サブセットの遺伝子を削除(&amp;R)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

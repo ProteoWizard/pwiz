@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(2, spectrumGrid.DataGridView.RowCount);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.PresetScanConfiguration, CheckState.Unchecked);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.Ms2Precursors, CheckState.Unchecked);
+                spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.IsolationWindowWidth, CheckState.Unchecked);
             });
             WaitForConditionUI(() => spectrumGrid.IsComplete());
             RunUI(()=>spectrumGrid.DataGridView.SelectAll());

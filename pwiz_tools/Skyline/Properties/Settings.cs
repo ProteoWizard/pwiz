@@ -1229,8 +1229,7 @@ namespace pwiz.Skyline.Properties
                 var calibrationCurveOptions = (CalibrationCurveOptions) this[@"CalibrationCurveOptions"];
                 if (calibrationCurveOptions == null)
                 {
-                    calibrationCurveOptions = new CalibrationCurveOptions();
-                    CalibrationCurveOptions = calibrationCurveOptions;
+                    CalibrationCurveOptions = calibrationCurveOptions = CalibrationCurveOptions.DEFAULT;
                 }
                 return calibrationCurveOptions;
             }
@@ -2186,7 +2185,7 @@ namespace pwiz.Skyline.Properties
         {
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A),
-            // new RetentionScoreCalculator(RetentionTimeRegression.PROSITRTCALC)
+            // new RetentionScoreCalculator(RetentionTimeRegression.KOINARTCALC)
         };
 
         /// <summary>
@@ -2380,12 +2379,14 @@ namespace pwiz.Skyline.Properties
         public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,
             IEnumerable<IonMobilityLibrary> existing, object tag)
         {
-            using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing))
+            var ionMobilityFilteringUserControl = (owner as IonMobilityFilteringUserControl) ??
+                                                  ((owner as TransitionSettingsUI)?.IonMobilityControl) ??  // Accessed via Settings>TransitionSettings>IonMobility>Add
+                                                  ((owner as Form)?.Owner as TransitionSettingsUI)?.IonMobilityControl; // Accessed via Settings>TransitionSettings>IonMobility>EditList>Add|EditCurrent
+            var ionMobilityWindowWidthCalculator = ionMobilityFilteringUserControl!.IonMobilityWindowWidthCalculator;
+            using var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing, ionMobilityWindowWidthCalculator);
+            if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
             {
-                if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
-                {
-                    return editIonMobilityLibraryDlg.IonMobilityLibrary;
-                }
+                return editIonMobilityLibraryDlg.IonMobilityLibrary;
             }
 
             return null;
@@ -2452,16 +2453,8 @@ namespace pwiz.Skyline.Properties
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)
         {
-            using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
-            {
-                if (editModel.SetScoringModel(owner, item, tag as IFeatureScoreProvider))
-                {
-                    if (editModel.ShowDialog(owner) == DialogResult.OK)
-                        return (PeakScoringModelSpec)editModel.PeakScoringModel;
-                }
-
-                return null;
-            }
+            return EditPeakScoringModelDlg.ShowEditPeakScoringModelDlg(owner, item, existing ?? this,
+                tag as IFeatureScoreProvider);
         }
 
         public void EnsureDefault()

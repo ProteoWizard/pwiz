@@ -182,5 +182,42 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(tuple.Item2, monoMz, .0001);
             }
         }
+
+        [TestMethod]
+        public void TestModifiedSequenceParser()
+        {
+            var unmodifiedSequence = new ModifiedSequence("PEPTIDE", MassType.Monoisotopic);
+            Assert.AreEqual("PEPTIDE", unmodifiedSequence.GetUnmodifiedSequence());
+            Assert.AreEqual(0, unmodifiedSequence.ExplicitMods.Count);
+
+            var modifiedSequence1 = new ModifiedSequence("PEPT[UNIMOD:21]IDE", MassType.Monoisotopic);
+            Assert.AreEqual("PEPTIDE", modifiedSequence1.GetUnmodifiedSequence());
+            Assert.AreEqual(1, modifiedSequence1.ExplicitMods.Count);
+            Assert.AreEqual("Phospho (ST)", modifiedSequence1.ExplicitMods[0].Name);
+
+            var modifiedSequence2 = new ModifiedSequence("PC[unimod:4]PT[UNIMOD:21]IDE", MassType.Monoisotopic);
+            Assert.AreEqual("PCPTIDE", modifiedSequence2.GetUnmodifiedSequence());
+            Assert.AreEqual(2, modifiedSequence2.ExplicitMods.Count);
+            Assert.AreEqual("Carbamidomethyl (C)", modifiedSequence2.ExplicitMods[0].Name);
+            Assert.AreEqual("Phospho (ST)", modifiedSequence2.ExplicitMods[1].Name);
+
+            var modifiedSequence3 = new ModifiedSequence("C[unimod:4]PT[UNIMOD:21]IDEK[UNIMOD:2016]", MassType.Monoisotopic);
+            Assert.AreEqual("CPTIDEK", modifiedSequence3.GetUnmodifiedSequence());
+            Assert.AreEqual(3, modifiedSequence3.ExplicitMods.Count);
+            Assert.AreEqual("Carbamidomethyl (C)", modifiedSequence3.ExplicitMods[0].Name);
+            Assert.AreEqual("Phospho (ST)", modifiedSequence3.ExplicitMods[1].Name);
+            Assert.AreEqual("TMTpro (K)", modifiedSequence3.ExplicitMods[2].Name);
+
+            var modifiedSequence4 = new ModifiedSequence("C[Carbamidomethyl (C)]PT[Phospho (ST)]IDEK[TMTpro (K)]", MassType.Monoisotopic);
+            Assert.AreEqual("CPTIDEK", modifiedSequence4.GetUnmodifiedSequence());
+            Assert.AreEqual(3, modifiedSequence4.ExplicitMods.Count);
+            Assert.AreEqual("Carbamidomethyl (C)", modifiedSequence4.ExplicitMods[0].Name);
+            Assert.AreEqual("Phospho (ST)", modifiedSequence4.ExplicitMods[1].Name);
+            Assert.AreEqual("TMTpro (K)", modifiedSequence4.ExplicitMods[2].Name);
+
+            AssertEx.ThrowsException<FormatException>(() => new ModifiedSequence("C[Carbamidomethyl]PT[Phospho]IDEK[TMTpro]", MassType.Monoisotopic),
+                string.Format(ModelResources.ModificationMatcher_ThrowUnimodException_Unrecognized_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___,
+                    0, "C[Carbamidomethyl]PT[Phospho]IDEK[TMTpro]", 1, "C[Carbamidomethyl]"));
+        }
     }
 }

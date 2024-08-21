@@ -96,7 +96,6 @@
     <Compile Include="LongWaitOperation.cs" />
     <Compile Include="MainFormUtils.cs" />
     <Compile Include="PanoramaJsonObject.cs" />
-    <Compile Include="PanoramaUtil.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="ProgramLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

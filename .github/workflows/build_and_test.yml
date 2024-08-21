@@ -59,7 +59,7 @@ jobs:
 #          }
         - {
             name: "macOS Latest Clang",
-            os: macos-latest,
+            os:	macos-12,
             compiler: 'latest clang',
             toolset: 'toolset=darwin'
           }

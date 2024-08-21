@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsNotNull(pane.ToolTip);
-                pane.PopulateTooltip(1);
+                pane.PopulateTooltip(1, null);
                 //verify the tooltip text
                 CollectionAssert.AreEqual(tipText, pane.ToolTip.TipLines);
             });
@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsNotNull(paneHistogram.ToolTip, "No tooltip found.");
-                paneHistogram.PopulateTooltip(5);
+                paneHistogram.PopulateTooltip(5, null);
                 //verify the tooltip text
                 CollectionAssert.AreEqual(histogramTipText, paneHistogram.ToolTip.TipLines);
             });

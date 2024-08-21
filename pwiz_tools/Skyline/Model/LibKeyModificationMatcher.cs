@@ -57,12 +57,15 @@ namespace pwiz.Skyline.Model
                 foreach (var matchPair in Matches)
                 {
                     var structuralMod = matchPair.Value.StructuralMod;
-                        StaticMod mod1 = structuralMod;
+                    StaticMod mod1 = structuralMod;
                     if (structuralMod != null && !lightMods.Contains(mod => mod.Equivalent(mod1)))
                     {
                         // Make all found structural mods variable, unless they are preexisting modifications.
                         if (!UserDefinedTypedMods.ContainsKey(structuralMod) || structuralMod.IsUserSet)
-                            structuralMod = structuralMod.ChangeVariable(true);
+                        {
+                            if (structuralMod.IsVariablePossible)
+                                structuralMod = structuralMod.ChangeVariable(true);
+                        }
                         // Set modification to be implicit if it appears to be implicit in the library.
                         if (!UserDefinedTypedMods.ContainsKey(structuralMod) && !IsVariableMod(structuralMod))
                             structuralMod = structuralMod.ChangeExplicit(false);

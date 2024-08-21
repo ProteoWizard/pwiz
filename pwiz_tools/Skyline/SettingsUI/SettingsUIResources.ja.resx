@@ -724,6 +724,10 @@
   <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_" xml:space="preserve">
     <value>フィルタされたライブラリのパスを入力してください。</value>
   </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>ヘルプ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
     <value>式は標準の化学表記法（例：「C2H6O」）で書かれています。  重同位体は、プライム（例：C13のC'）か、存在量が低い安定同位体の場合ダブルプライム（例：O17のO"、O18のO'）で表されます。</value>
   </data>
@@ -1133,5 +1137,60 @@
   </data>
   <data name="WindowType_MEASUREMENT_Measurement" xml:space="preserve">
     <value>測定</value>
+  </data>
+  <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
+    <value>
+
+このライブラリエントリはプリカーサー情報のみを提供します。表示できるスペクトルはありません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
+    <value>分間の検出されたフィーチャー</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
+    <value>Hardklorは、1価から{0}価の同位体エンベロープを参照します。その結果のライブラリには、ここに記載された電荷のイオンのみが含まれます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
+    <value>これはHardklorが想定する値であり、変更はできません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_" xml:space="preserve">
+    <value>HardklorのFWHM計算に使うMSデータタイプを設定します。通常は [セントロイド化] に設定します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_" xml:space="preserve">
+    <value>HardklorのFWHM計算に使う質量分析計のタイプを設定します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
+    <value>装置の値(&amp;I)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
+    <value>装置の値（フルスキャン設定より）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient" xml:space="preserve">
+    <value>{0}メソッドは通常、質量分析計がスペクトルを取得する時間範囲を指定します。
+Skylineで保持時間フィルタリングを適用する必要は通常ありません。適用すると、抽出イオンクロマトグラムの切断につながる可能性があります。
+このオプションは、取得方法に同じm/zの複数ターゲットが含まれている場合にのみ使用してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
+    <value>このドキュメントに対してピークスコアモデルをトレーニングしますか？ 
+このドキュメントはスペクトルライブラリから得たピーク境界を使用します。このような境界を使用する場合、Skylineは独自のピーク検出を実行しません。
+ピークスコアモデルをトレーニングする前に、以下の手順に従うことを推奨します。
+
+1. [設定] &gt; [ペプチド設定 - ライブラリ] タブに移動して [リストの編集] をクリックします。
+2. ライブラリのアイテムを選択して [編集] をクリックし、[指定されたピーク境界を使用する] チェックボックスをオフにします。
+3. [編集] &gt; [結果を管理] に移動して [再スコア] ボタンをクリックします。
+これにより、Skylineにはピークの質を評価するためのさまざまな候補ピークが提示されます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
+    <value>モデルのトレーニング</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

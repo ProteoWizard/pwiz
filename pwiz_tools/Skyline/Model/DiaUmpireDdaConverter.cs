@@ -76,9 +76,11 @@ namespace pwiz.Skyline.Model
 
             for (int i = 0; i < OriginalSpectrumSources.Length; ++i)
             {
-                // TODO/CONSIDER: source path may not be writable
-                string outputFilepath = Path.Combine(Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? "",
-                    OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
+                string outputDirectory = Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? string.Empty;
+                if (Program.FunctionalTest || !DirectoryEx.IsWritable(outputDirectory))
+                    outputDirectory = Path.GetDirectoryName(Program.MainWindow.DocumentFilePath) ?? string.Empty;
+
+                var outputFilepath = Path.Combine(outputDirectory, OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
                 ConvertedSpectrumSources[i] = new MsDataFilePath(outputFilepath);
             }
         }

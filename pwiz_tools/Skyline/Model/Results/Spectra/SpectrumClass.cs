@@ -66,6 +66,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             private set;
         }
 
+        [Format(Formats.Mz)]
         public double? ScanWindowWidth { get; private set; }
 
         public int PresetScanConfiguration { get; private set; }
@@ -73,5 +74,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public int MsLevel { get; private set; }
 
         public string Analyzer { get; private set; }
+
+        [Format(Formats.Mz)]
+        public double? IsolationWindowWidth { get; private set; }
     }
 }

@@ -190,6 +190,7 @@ namespace pwiz.Common.DataBinding.Internal
             var sortRows = new SortRow[unsortedRows.Count];
             for (int iRow = 0; iRow < sortRows.Length; iRow++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
             }
             Array.Sort(sortRows);

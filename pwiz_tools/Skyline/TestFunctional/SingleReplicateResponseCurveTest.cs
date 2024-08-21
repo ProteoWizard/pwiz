@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(linearCalibrationCurve.Slope, calibrationCurveMetrics.Value.Slope);
                     Assert.AreEqual(linearCalibrationCurve.Intercept, calibrationCurveMetrics.Value.Intercept);
                     var calculatedConcentration = calibrationCurve.GetXValueForLimitOfDetection(totalArea);
-                    Assert.AreEqual(calculatedConcentration.Value, quantificationResult.Value.CalculatedConcentration.Value, .0001);
+                    Assert.AreEqual(calculatedConcentration.Value, quantificationResult.Value.CalculatedConcentration.Strict.Value, .0001);
                     var expectedConcentration = precursorResult.Precursor.PrecursorConcentration;
                     var accuracy = calculatedConcentration / expectedConcentration;
                     Assert.AreEqual(accuracy.Value, quantificationResult.Value.Accuracy.Value, .0001);

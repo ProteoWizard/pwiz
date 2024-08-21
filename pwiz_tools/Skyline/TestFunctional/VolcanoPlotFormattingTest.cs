@@ -314,7 +314,6 @@ namespace pwiz.SkylineTestFunctional
 
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
             }
-            
             AssertVolcanoPlotCorrect(volcanoPlot, matchExprInfos.Select(info => info.ExpectedPointsInfo).ToArray());
 
             switch (removeMode)
@@ -363,7 +362,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(matchedCount, pointsInfos.Length);
 
                 var labelIndex = 0;
-                var remainingObjs = plot.GraphObjList.Count;
+                var remainingObjs = plot.GraphObjList.OfType<TextObj>().Count();
 
                 var unselectedStartIndex = plot.LabeledPoints.FindIndex(p => !p.IsSelected);
 
@@ -398,7 +397,8 @@ namespace pwiz.SkylineTestFunctional
                             var label = (TextObj) graphObj;
 
                             Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
-                            Assert.AreEqual(label.Location.X, pointPair.X);
+                            // With automated label layout label's coordinates do not match the point coordinates.
+                            //Assert.AreEqual(label.Location.X, pointPair.X);
                             //Assert.AreEqual(label.Location.Y, pointPair.Y);
 
                             Assert.AreEqual(labeledPoint.Label, label);

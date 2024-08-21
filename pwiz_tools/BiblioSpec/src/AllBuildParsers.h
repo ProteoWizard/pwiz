@@ -34,6 +34,7 @@
 #include "MaxQuantReader.h"
 #include "MSFReader.h"
 #include "mzTabReader.h"
+#include "HardklorReader.h"
 #include "SslReader.h"
 #include "TandemNativeParser.h"
 #include "PwizReader.h"

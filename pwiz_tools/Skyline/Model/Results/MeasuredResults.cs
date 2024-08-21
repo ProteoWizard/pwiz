@@ -1879,13 +1879,20 @@ namespace pwiz.Skyline.Model.Results
                         string cachePath = cachePartial.CachePath;
                         bool isSharedCache = _resultsClone.IsSharedCache(cachePartial);
 
+                        var readStream = cachePartial.ReadStream;
                         // Close partial cache file
                         try { cachePartial.Dispose(); }
                         catch (IOException) { }
 
                         // Remove from disk if not shared and not the final cache
                         if (!isSharedCache && !Equals(cache.CachePath, cachePath))
-                            _loadMonitor.StreamManager.Delete(cachePartial.CachePath);
+                        {
+                            _loadMonitor.StreamManager.ConnectionPool.DisconnectWhile(readStream,
+                                () =>
+                                {
+                                    _loadMonitor.StreamManager.Delete(cachePartial.CachePath);
+                                });
+                        }
                     }
 
                     _resultsClone.SetClonedCacheState(cache);

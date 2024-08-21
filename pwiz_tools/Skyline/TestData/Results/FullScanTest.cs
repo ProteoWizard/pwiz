@@ -394,7 +394,7 @@ namespace pwiz.SkylineTestData.Results
             {
                 var oldDoc = doc;
                 AssertEx.Serializable(oldDoc);
-                doc = ConvertToSmallMolecules(doc, ref docPath, null, smallMoleculeTestMode);
+                doc = AsSmallMoleculeTestUtil.ConvertToSmallMolecules(doc, ref docPath, null, smallMoleculeTestMode);
                 AssertEx.Serializable(doc);
                 expectedRevisionNumber = null;
 

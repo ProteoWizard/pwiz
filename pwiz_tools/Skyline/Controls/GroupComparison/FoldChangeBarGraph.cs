@@ -148,10 +148,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var groupComparisonModel = FoldChangeBindingSource.GroupComparisonModel;
             var groupComparisonDef = groupComparisonModel.GroupComparisonDef;
             var document = groupComparisonModel.Document;
-            var sequences = new List<Tuple<string, bool>>();
+            var sequences = new List<UniquePrefixGenerator.TargetLabel>();
 
             foreach (var nodePep in document.Molecules)
-                sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
+                sequences.Add(new UniquePrefixGenerator.TargetLabel(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
             var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
             var textLabels = new List<string>();
             var rows = GetFoldChangeRows(_bindingListSource).ToArray();

@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -28,6 +29,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ZedGraph
 {
@@ -141,6 +143,19 @@ namespace ZedGraph
 		/// </summary>
 		/// <seealso cref="Default.LineType"/>
 		private LineType _lineType;
+
+		private LabelLayout _labelLayout;
+
+		public bool EnableLabelLayout
+		{
+			get => _labelLayout != null;
+			set
+			{
+				if (!value)
+					_labelLayout = null;
+			}
+		}
+		public LabelLayout Layout => _labelLayout;
 
 	#endregion
 
@@ -848,7 +863,7 @@ namespace ZedGraph
 			foreach ( Axis axis in _y2AxisList )
 				axis.Scale.ResetScaleData();
 			*/
-		}
+        }
 
 		internal void DrawGrid( Graphics g, float scaleFactor )
 		{
@@ -1507,9 +1522,98 @@ namespace ZedGraph
 			return slices;
 		}
 
-	#endregion
+		#endregion
 
 	#region General Utility Methods
+
+        public void AdjustLabelSpacings(List<LabeledPoint> labPoints, Control parentControl)
+        {
+            if (!labPoints.Any())
+                return;
+            // Need this to make sure the coordinate transforms work correctly.
+            XAxis.Scale.SetupScaleData(this, XAxis);
+            YAxis.Scale.SetupScaleData(this, YAxis);
+
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight), parentControl);
+
+                var visiblePoints = new List<LabeledPoint>();
+                foreach (var labeledPoint in labPoints)
+                {
+                    if (_labelLayout.IsPointVisible(labeledPoint.Point))
+                    {
+                        visiblePoints.Add(labeledPoint);
+                        labeledPoint.Label.IsVisible = true;
+                    }
+                    else
+                        labeledPoint.Label.IsVisible = false;
+                }
+
+                if (visiblePoints.Any())
+                {
+                    GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
+                    foreach (var point in visiblePoints)
+                    {
+                        if (_labelLayout.PlaceLabel(point, g))
+                            _labelLayout.DrawConnector(point, g);
+                    }
+                }
+            }
+        }
+
+        public LabeledPoint OverLabel(Point mousePt)
+        {
+            if (_labelLayout != null)
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    if (FindNearestObject(mousePt, g, out var nearestObj, out _))
+                    {
+                        if (nearestObj is TextObj label && _labelLayout.LabeledPoints.TryGetValue(label, out var labPoint))
+                            return labPoint;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
+        {
+            labPoint = OverLabel(mousePt);
+            return labPoint !=	null;
+        }
+
+        public RectangleF GetRect(TextObj obj, Graphics g)
+        {
+            PointF pix = obj.Location.Transform(this);
+            var points = obj.FontSpec.GetBox(g, obj.Text, pix.X, pix.Y, obj.Location.AlignH,
+                obj.Location.AlignV, CalcScaleFactor(), new SizeF());
+            double x0;
+            double y0;
+            ReverseTransform(points[0], out x0, out y0);
+
+            double x1;
+            double y1;
+            ReverseTransform(points[2], out x1, out y1);
+
+            float width = (float)(x1 - x0);
+            float height = (float)(y0 - y1);
+            var rect = new RectangleF((float)x0, (float)y0, width, height);
+
+            return rect;
+        }
+
+        public RectangleF GetRectScreen(TextObj obj, Graphics g)
+        {
+            PointF pix = obj.Location.Transform(this);
+            var points = obj.FontSpec.GetBox(g, obj.Text, pix.X, pix.Y, obj.Location.AlignH,
+                obj.Location.AlignV, CalcScaleFactor(), new SizeF());
+            var res = new RectangleF(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
+            return res;
+        }
+
 		/// <summary>
 		/// Transform a data point from the specified coordinate type
 		/// (<see cref="CoordType"/>) to screen coordinates (pixels).

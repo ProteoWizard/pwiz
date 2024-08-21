@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using pwiz.PanoramaClient;
 using SharedBatch;
 using SharedBatchTest;
 
@@ -33,19 +34,17 @@ namespace AutoQCTest
         {
             // Create a Panorama folder for the test
             var panoramaServerUri = new Uri(SERVER_URL);
-            _panoramaClient = new WebPanoramaClient(panoramaServerUri);
+            _panoramaClient = new WebPanoramaClient(panoramaServerUri, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
 
             var random = new Random();
-            FolderOperationStatus status;
             string uniqueFolderName;
             do
             {
                 uniqueFolderName = PANORAMA_FOLDER_PREFIX + random.Next(1000, 9999);
-                status = _panoramaClient.CreateFolder(PANORAMA_PARENT_PATH, uniqueFolderName, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
             }
-            while (FolderOperationStatus.alreadyexists == status);
-            
-            Assert.AreEqual(FolderOperationStatus.OK, status, "Expected folder to be successfully created");
+            while (_panoramaClient.FolderExists(uniqueFolderName));
+
+            AssertEx.NoExceptionThrown<Exception>(() => _panoramaClient.CreateTargetedMsFolder(PANORAMA_PARENT_PATH, uniqueFolderName));
             _testPanoramaFolder = uniqueFolderName;
         }
 
@@ -56,9 +55,7 @@ namespace AutoQCTest
         public void TestCleanup()
         {
             // Delete the Panorama test folder
-            Assert.AreEqual(FolderOperationStatus.OK,
-                _panoramaClient.DeleteFolder($"{PANORAMA_PARENT_PATH}/{_testPanoramaFolder}/", PANORAMA_USER_NAME,
-                    PANORAMA_PASSWORD));
+            AssertEx.NoExceptionThrown<Exception>(() => _panoramaClient.DeleteFolderIfExists($"{PANORAMA_PARENT_PATH}/{_testPanoramaFolder}/"));
         }
 
         [TestMethod]
@@ -123,15 +120,17 @@ namespace AutoQCTest
 
         private async Task<bool> SuccessfulPanoramaUpload(string uniqueFolder)
         {
-            var panoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl(SERVER_URL));
+            var panoramaServerUri = PanoramaUtil.ServerNameToUri(SERVER_URL);
             var labKeyQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", $"{PANORAMA_PARENT_PATH}/{uniqueFolder}",
                 "selectRows", "schemaName=targetedms&queryName=runs", true);
-            var webClient = new WebPanoramaClient(panoramaServerUri);
+            var requestHelper =
+                new PanoramaRequestHelper(new WebClientWithCredentials(panoramaServerUri, PANORAMA_USER_NAME,
+                    PANORAMA_PASSWORD));
             var startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             var x = startTime;
             while (x < startTime + TIMEOUT_80SEC)
             {
-                var jsonAsString = webClient.DownloadString(labKeyQuery, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
+                var jsonAsString = requestHelper.DoGet(labKeyQuery);
                 var json = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
                 if (json.rowCount > 0) return true;
                 await Task.Delay(WAIT_3SEC);

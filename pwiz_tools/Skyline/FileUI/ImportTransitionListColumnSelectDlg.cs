@@ -110,9 +110,9 @@ namespace pwiz.Skyline.FileUI
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,SrmDocument.DOCUMENT_TYPE.proteomic),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
@@ -658,7 +658,7 @@ namespace pwiz.Skyline.FileUI
                 Importer.RowReader.Lines = savedLines.Take(N_DISPLAY_LINES).ToArray();
                 // Try importing that list to check for errors
                 docImport = _docCurrent.ImportMassList(Importer.Inputs, Importer, null,
-                    _insertPath, out _, out _, out _, out _, out _, null,
+                    _insertPath, out _, out _, out _, out _, out _, false, null,
                     SrmDocument.DOCUMENT_TYPE.none, false);
             }
             finally
@@ -1331,7 +1331,7 @@ namespace pwiz.Skyline.FileUI
                             : new Dictionary<string, FastaSequence>();
                         insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                             _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                            out insertionParams.LibrarySpectra, out var testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, readerType, hasHeaders, 
+                            out insertionParams.LibrarySpectra, out var testErrorList, out insertionParams.PeptideGroups, true, insertionParams.ColSelections, readerType, hasHeaders, 
                             insertionParams.ProteinAssociations);
                         errorCheckCanceled = progressMonitor.IsCanceled;
                         if (!errorCheckCanceled)

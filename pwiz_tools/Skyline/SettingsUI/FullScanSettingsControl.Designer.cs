@@ -43,7 +43,6 @@
             this.radioUseSchedulingWindow = new System.Windows.Forms.RadioButton();
             this.radioKeepAllTime = new System.Windows.Forms.RadioButton();
             this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
-            this.cbIgnoreSim = new System.Windows.Forms.CheckBox();
             this.labelPrecursorPPM = new System.Windows.Forms.Label();
             this.comboEnrichments = new System.Windows.Forms.ComboBox();
             this.labelEnrichments = new System.Windows.Forms.Label();
@@ -167,7 +166,6 @@
             // 
             // groupBoxMS1
             // 
-            this.groupBoxMS1.Controls.Add(this.cbIgnoreSim);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorPPM);
             this.groupBoxMS1.Controls.Add(this.comboEnrichments);
             this.groupBoxMS1.Controls.Add(this.labelEnrichments);
@@ -186,13 +184,6 @@
             resources.ApplyResources(this.groupBoxMS1, "groupBoxMS1");
             this.groupBoxMS1.Name = "groupBoxMS1";
             this.groupBoxMS1.TabStop = false;
-            // 
-            // cbIgnoreSim
-            // 
-            resources.ApplyResources(this.cbIgnoreSim, "cbIgnoreSim");
-            this.cbIgnoreSim.Name = "cbIgnoreSim";
-            this.toolTip.SetToolTip(this.cbIgnoreSim, resources.GetString("cbIgnoreSim.ToolTip"));
-            this.cbIgnoreSim.UseVisualStyleBackColor = true;
             // 
             // labelPrecursorPPM
             // 
@@ -475,6 +466,5 @@
         private System.Windows.Forms.Label labelProductPPM;
         private System.Windows.Forms.CheckBox cbHighSelectivity;
         private IonMobility.IonMobilityFilteringUserControl usercontrolIonMobilityFiltering;
-        private System.Windows.Forms.CheckBox cbIgnoreSim;
     }
 }

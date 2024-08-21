@@ -351,6 +351,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
             progressMonitor ??= new SilentProgressMonitor(cancellationToken);
+            RowItemEnumerator rowItemEnumerator;
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
@@ -361,16 +362,17 @@ namespace pwiz.Skyline.Controls.Databinding
                         bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
                     }
                 }
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
-                    .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
-                if (progressMonitor.IsCanceled)
-                    return false;
-
-                writer.Flush();
-                progressMonitor.UpdateProgress(status = status.Complete());
+                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
             }
+
+            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
+                .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
+            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
+            if (progressMonitor.IsCanceled)
+                return false;
+            writer.Flush();
+            progressMonitor.UpdateProgress(status = status.Complete());
             return true;
         }
 
