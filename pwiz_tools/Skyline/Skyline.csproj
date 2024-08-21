@@ -103,6 +103,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="OneOf" Version="3.0.271" />
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
@@ -151,9 +152,6 @@
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="OneOf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\OneOf.3.0.271\lib\net45\OneOf.dll</HintPath>
-    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -4050,7 +4048,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Model\Koina\Config\KoinaConfig_development.xml" />
-    <None Include="packages.config" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="PreBuildEvents.bat" />
     <Protobuf Include="ProtocolBuffers\grpc_service.proto" />

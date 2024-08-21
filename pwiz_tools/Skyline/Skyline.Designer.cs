@@ -369,6 +369,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuTreeNode
             // 
+            this.contextMenuTreeNode.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuTreeNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cutContextMenuItem,
             this.copyContextMenuItem,
@@ -576,6 +577,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuSpectrum
             // 
+            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ionTypesContextMenuItem,
             this.fragmentionsContextMenuItem,
@@ -775,6 +777,7 @@ namespace pwiz.Skyline
             // contextMenuRetentionTimes
             // 
             this.contextMenuRetentionTimes.AllowMerge = false;
+            this.contextMenuRetentionTimes.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
             this.timePlotContextMenuItem,
@@ -1132,6 +1135,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuPeakAreas
             // 
+            this.contextMenuPeakAreas.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuPeakAreas.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaGraphContextMenuItem,
             this.graphTypeToolStripMenuItem,
@@ -1534,6 +1538,7 @@ namespace pwiz.Skyline
             // statusStrip
             // 
             resources.ApplyResources(this.statusStrip, "statusStrip");
+            this.statusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusGeneral,
             this.statusProgress,
@@ -1591,6 +1596,7 @@ namespace pwiz.Skyline
             // mainToolStrip
             // 
             this.mainToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.mainToolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.mainToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolBarButton,
             this.openToolBarButton,
@@ -1703,6 +1709,8 @@ namespace pwiz.Skyline
             // 
             // menuMain
             // 
+            this.menuMain.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.menuMain.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -2300,6 +2308,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuMassErrors
             // 
+            this.contextMenuMassErrors.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuMassErrors.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorGraphContextMenuItem,
             this.massErrorPropsContextMenuItem,
@@ -2492,6 +2501,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuDetections
             // 
+            this.contextMenuDetections.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuDetections.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.detectionsTargetToolStripMenuItem,
             this.detectionsGraphTypeToolStripMenuItem,
