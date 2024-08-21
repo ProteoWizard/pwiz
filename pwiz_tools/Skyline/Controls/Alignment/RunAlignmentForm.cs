@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Controls.Alignment
                 return new CurveResult("Cancelled");
             }
             
-            var bestPath = new PointPairList(similarityMatrix.FindBestPath(false).ToList());
+            var bestPath = new PointPairList(similarityMatrix.GetBestPointCandidates(null, null).Select(pt=>new PointPair(pt.X, pt.Y)).ToList());
             if (curveSettings.RegressionOptions.RegressionMethod.HasValue && curveSettings.CurveFormat.LineDashStyle.HasValue)
             {
                 var lineItem = PerformKdeAlignment(bestPath);
@@ -198,7 +198,6 @@ namespace pwiz.Skyline.Controls.Alignment
             {
                 AlignmentResult = new AlignmentResult()
                 {
-                    NumberOfPoints = similarityMatrix.Points.Count
                 }
             };
         }
@@ -206,21 +205,20 @@ namespace pwiz.Skyline.Controls.Alignment
         private SimilarityGrid GetSimilarityMatrix(CalculatedValues calculatedValues, RetentionTimeData dataX,
             RetentionTimeData dataY, RegressionOptions regressionOptions)
         {
-            dataX = dataX.ChangeSpectra(dataX.Spectra.TruncateSummariesTo(regressionOptions.SpectrumDigestLength));
-            dataY = dataY.ChangeSpectra(dataY.Spectra.TruncateSummariesTo(regressionOptions.SpectrumDigestLength));
+            // dataX = dataX.ChangeSpectra(dataX.Spectra.TruncateSummariesTo(regressionOptions.SpectrumDigestLength));
+            // dataY = dataY.ChangeSpectra(dataY.Spectra.TruncateSummariesTo(regressionOptions.SpectrumDigestLength));
             var key = Tuple.Create(dataX, dataY);
-            if (calculatedValues.TryGetValue(key, out SimilarityMatrix similarityMatrix))
+            if (calculatedValues.TryGetValue(key, out SimilarityGrid similarityMatrix))
             {
                 return similarityMatrix;
             }
             using var longWaitDlg = new LongWaitDlg();
-            longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+            longWaitDlg.PerformWork(this, 1000, new Action<ILongWaitBroker>(progressMonitor =>
             {
-                var progressStatus = new ProgressStatus("Computing Similarity Matrix");
                 similarityMatrix =
-                    dataX.Spectra.GetSimilarityMatrix(progressMonitor, progressStatus, dataY.Spectra);
+                    dataX.Spectra.GetSimilarityGrid(dataY.Spectra);
                 calculatedValues.AddValue(key, similarityMatrix);
-            });
+            }));
             return similarityMatrix;
         }
 
@@ -230,13 +228,6 @@ namespace pwiz.Skyline.Controls.Alignment
             kdeAligner.Train(pointPairList.Select(point=>point.X).ToArray(), pointPairList.Select(point=>point.Y).ToArray(), CancellationToken.None);
             kdeAligner.GetSmoothedValues(out var xArr, out var yArr);
             return new LineItem(null, new PointPairList(xArr, yArr), Color.Black, SymbolType.None);
-        }
-
-        private ClusteredHeatMapItem MakeSimilarityMatrix(SimilarityMatrix similarityMatrix)
-        {
-            var pointPairList = new PointPairList();
-            pointPairList.AddRange(similarityMatrix.Points.Select(point=>new PointPair(point.X, point.Y) {Tag = GetColor(point.Z)}));
-            return new ClusteredHeatMapItem("Similarity Matrix", pointPairList);
         }
 
         private static Color GetColor(double similarity)
@@ -280,7 +271,6 @@ namespace pwiz.Skyline.Controls.Alignment
             int? msLevel = null;
             var spectra = new List<SpectrumSummary>();
             int? digestLength = 16;
-            bool halfPrecision = true;
             foreach (var spectrum in metadataList)
             {
                 if (msLevel.HasValue && msLevel != spectrum.SpectrumMetadata.MsLevel)
@@ -288,7 +278,7 @@ namespace pwiz.Skyline.Controls.Alignment
                     continue;
                 }
 
-                IList<double> digest = spectrum.SummaryValue;
+                IList<double> digest = spectrum.SummaryValue?.ToList();
                 if (digest?.Count > 0)
                 {
                     while (digest.Count > digestLength.Value)
@@ -297,10 +287,6 @@ namespace pwiz.Skyline.Controls.Alignment
                     }
                 }
 
-                if (halfPrecision)
-                {
-                    digest = digest.Select(v => (double)((HalfPrecisionFloat)v)).ToList();
-                }
                 spectra.Add(new SpectrumSummary(spectrum.SpectrumMetadata, digest));
             }
 

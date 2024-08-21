@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         Source = chromSource,
                         ExtractionWidth = 0,
                     };
-                    var msDataFileScanIds = new ResultFileMetaData(_spectra.Select(metadata=>new SpectrumSummary(metadata, null))).ToMsDataFileScanIds();
+                    var msDataFileScanIds = new ResultFileMetaData(_spectra.Select(metadata=>new SpectrumSummary(metadata))).ToMsDataFileScanIds();
                     IScanProvider scanProvider = new ScanProvider(DataSchema.SkylineWindow.DocumentFilePath,
                         _dataFileUri, chromSource, timeIntensities.Times,
                         new[] {transitionFullScanInfo}, null, msDataFileScanIds);

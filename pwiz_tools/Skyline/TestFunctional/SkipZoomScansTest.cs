@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreNotEqual(0, timeIntensities.NumPoints);
                 for (int iSpectrum = 0; iSpectrum < timeIntensities.NumPoints; iSpectrum++)
                 {
-                    var spectrumMetadata = resultFileMetadata.SpectrumMetadatas[timeIntensities.ScanIds[iSpectrum]];
+                    var spectrumMetadata = resultFileMetadata.SpectrumSummaries[timeIntensities.ScanIds[iSpectrum]].SpectrumMetadata;
                     Assert.IsTrue(spectra.TryGetValue(spectrumMetadata.Id, out var spectrum), "Could not find spectrum {0}", spectrumMetadata.Id);
                     Assert.IsFalse(IsZoomScan(spectrum));
                 }
