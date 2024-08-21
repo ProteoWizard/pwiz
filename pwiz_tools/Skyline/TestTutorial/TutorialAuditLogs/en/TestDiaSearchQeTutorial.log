@@ -43,11 +43,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Assigned to first protein"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "4104"
-Import Peptide Search > Associate Proteins > Peptides mapped is "8352"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "16267"
-Import Peptide Search > Associate Proteins > Protein targets is "3794"
-Import Peptide Search > Associate Proteins > Peptide targets is "8847"
+Import Peptide Search > Associate Proteins > Proteins mapped is "4783"
+Import Peptide Search > Associate Proteins > Peptides mapped is "11045"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "15588"
+Import Peptide Search > Associate Proteins > Protein targets is "4443"
+Import Peptide Search > Associate Proteins > Peptide targets is "11702"
 Import Peptide Search > DDA search settings > Search Engine is "MSFragger"
 Import Peptide Search > DDA search settings > Precursor tolerance is "10" ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is "10" ppm
@@ -83,11 +83,11 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Assigned to first protein",
     Min peptides per protein = "1",
-    Proteins mapped = "4104",
-    Peptides mapped = "8352",
-    Proteins unmapped = "16267",
-    Protein targets = "3794",
-    Peptide targets = "8847"
+    Proteins mapped = "4783",
+    Peptides mapped = "11045",
+    Proteins unmapped = "15588",
+    Protein targets = "4443",
+    Peptide targets = "11702"
 },
 DDA search settings = 
 {

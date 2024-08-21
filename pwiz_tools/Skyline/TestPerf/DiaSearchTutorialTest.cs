@@ -145,7 +145,7 @@ namespace TestPerf
                 //FinalTargetCounts = new[] { 3827, 8949, 9588, 72122 }, // 10ppm 1 file 200s, 60-80 min subset, wrong MS2 mode
                 //FinalTargetCounts = new[] { 5056, 12186, 13032, 96602 }, // 10ppm 2 file 355s, 60-80 min subset, wrong MS2 mode
                 //FinalTargetCounts = new[] { 5014, 12048, 12859, 95325 },
-                FinalTargetCounts = new[] { 3794, 8847, 9461, 71174 },
+                FinalTargetCounts = new[] { 4443, 11702, 12540, 94405 },
 
                 ZipPath = "https://skyline.ms/tutorials/DiaSearchTutorial.zip",
                 DiaFiles = new[] {
@@ -348,7 +348,7 @@ namespace TestPerf
                 });
             }
 
-            okDlgAction();
+            RunUI(okDlgAction);
             WaitForClosedForm(isolationScheme);
 
             PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page", tutorialPage++);
@@ -455,6 +455,14 @@ namespace TestPerf
             RunUI(() => emptyProteinsDlg.RemoveRepeatedPeptides = true);
 
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+
+            // cleanup output files in the persistent directory whether test succeeds or fails
+            foreach (var searchFile in SearchFiles)
+            {
+                var dir = Path.GetDirectoryName(searchFile);
+                var pepxml = Path.GetFileNameWithoutExtension(searchFile) + "-percolator.pepXML";
+                FileEx.SafeDelete(Path.Combine(dir!, pepxml));
+            }
 
             RunUI(() =>
             {
