@@ -51,8 +51,8 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
                 {
                     UseRawFiles
-                               ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies.zip"
-                               : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzmlV2.zip", // V2 has updated WIFF->mzML including machine serial #
+                               ? @"https://skyline.ms/tutorials/GroupedStudies.zip"
+                               : @"https://skyline.ms/tutorials/GroupedStudiesMzmlV2.zip", // V2 has updated WIFF->mzML including machine serial #
                     @"TestTutorial\GroupedStudiesViews.zip"
                 };
             RunFunctionalTest();

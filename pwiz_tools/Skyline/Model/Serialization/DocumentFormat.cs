@@ -115,7 +115,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_25 = new DocumentFormat(22.25); // spectrum class filters and peptide_integration minOccurs
         public static readonly DocumentFormat VERSION_23_1 = new DocumentFormat(23.1); // Release format
         public static readonly DocumentFormat VERSION_23_11 = new DocumentFormat(23.11); // Surrogate calibration curve
-        public static readonly DocumentFormat CURRENT = VERSION_23_11;
+        public static readonly DocumentFormat VERSION_23_12 = new DocumentFormat(23.12); // gene level parsimony
+        public static readonly DocumentFormat CURRENT = VERSION_23_12;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

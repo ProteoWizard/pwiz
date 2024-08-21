@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestTutorial
 
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.gs.washington.edu/tutorials/LibraryExplorer.zip",
+                @"https://skyline.ms/tutorials/LibraryExplorer.zip",
                 @"TestTutorial\LibraryExplorerViews.zip"
             };
             RunFunctionalTest();

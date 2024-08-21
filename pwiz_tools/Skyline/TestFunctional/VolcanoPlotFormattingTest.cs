@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
@@ -232,6 +233,7 @@ namespace pwiz.SkylineTestFunctional
                     
                 VerifyMatchExpressions(volcanoPlot, matchExprInfo, 0, i % 2 == 0 ? RemoveMode.Cancel : RemoveMode.Undo); // Alternate remove mode
             }
+            TestMatchExpressionListDlg(volcanoPlot);
         }
 
         private void SetVolcanoPlotPerProtein(Control owner, bool perProtein)
@@ -380,8 +382,8 @@ namespace pwiz.SkylineTestFunctional
 
                     Assert.AreEqual(pointInfo.Color, lineItem.Symbol.Fill.Color);
                     Assert.AreEqual(pointInfo.PointCount, curveItem.Points.Count);
-                    Assert.AreEqual(FoldChangeVolcanoPlot.PointSymbolToSymbolType(pointInfo.PointSymbol), lineItem.Symbol.Type);
-                    Assert.AreEqual(FoldChangeVolcanoPlot.PointSizeToFloat(pointInfo.PointSize), lineItem.Symbol.Size);
+                    Assert.AreEqual(DotPlotUtil.PointSymbolToSymbolType(pointInfo.PointSymbol), lineItem.Symbol.Type);
+                    Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), lineItem.Symbol.Size);
 
                     if (pointInfo.Labeled)
                     {
@@ -395,7 +397,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.IsInstanceOfType(graphObj, typeof(TextObj));
                             var label = (TextObj) graphObj;
 
-                            Assert.AreEqual(FoldChangeVolcanoPlot.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
+                            Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
                             Assert.AreEqual(label.Location.X, pointPair.X);
                             //Assert.AreEqual(label.Location.Y, pointPair.Y);
 
@@ -414,6 +416,54 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        private void TestMatchExpressionListDlg(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            var exprInfo = MATCH_EXPR_INFOS[0][0];
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
+            {
+                var bindingList = formattingDlg.GetCurrentBindingList();
+                bindingList.Add(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
+                    exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
+                    exprInfo.ExpectedPointsInfo.PointSize));
+                formattingDlg.ClickCreateExpression(bindingList.Count - 1);
+            });
+            var matchExprListDlg = ShowDialog<MatchExpressionListDlg>(createExprDlg.ClickEnterList);
+            RunUI(() =>
+            {
+                // Set the match option to "Protein Gene"
+                createExprDlg.matchComboBox.SelectedIndex = 4;
+            });
+            var proteinList = "Aldoc" + '\n' + "Serpinc1";
+            RunUI(() =>
+            {
+                // Verify that typing into the list is parsed to a REGEX
+                matchExprListDlg.proteinsTextBox.Text = proteinList;
+                Assert.AreEqual(createExprDlg.Expression, "(?i)^Aldoc$|^Serpinc1$");
+            });
+            // Two proteins should match
+            WaitForCreateRowsChange(createExprDlg, 2);
+            RunUI(() =>
+            {
+                // Test case insensitivity
+                matchExprListDlg.proteinsTextBox.Clear();
+                matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpperInvariant();
+            });
+            // Two proteins should match
+            WaitForCreateRowsChange(createExprDlg, 2);
+            RunUI(() =>
+            {
+                // Test empty text: which will match everything
+                matchExprListDlg.proteinsTextBox.Text = string.Empty;
+            });
+            // All proteins should match
+            WaitForCreateRowsChange(createExprDlg, 48);
+        }
+        private void WaitForCreateRowsChange(CreateMatchExpressionDlg createDlg, int expectedRows)
+        {
+            WaitForConditionUI(() => createDlg.MatchingRows.Count() == expectedRows,
+                string.Format("Expecting {0} rows", expectedRows));
+        }
         public class ParseInfo
         {
             public ParseInfo(MatchExpression expected, string expression, Type exceptionType = null)

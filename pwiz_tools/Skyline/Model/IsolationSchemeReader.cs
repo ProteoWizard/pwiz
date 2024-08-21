@@ -137,7 +137,10 @@ namespace pwiz.Skyline.Model
             return Math.Round(overlap / 2, 4);
         }
 
-        private const int MAX_SPECTRA_PER_CYCLE = 400; // SCIEX has used 100 and Thermo MSX can use 20 * 5, Astral using 300
+        // SCIEX has used 100, Thermo MSX can use 20 * 5, Astral using 300,
+        // A user may want to simulate a gas phase fractionation isolation scheme which might
+        // contain 300 to 1200 m/z by 1 m/z isolation windows or 900 total
+        private const int MAX_SPECTRA_PER_CYCLE = 1000;
         private const int MAX_MULTI_CYCLE = MAX_SPECTRA_PER_CYCLE * 3;
 
         private IsolationRange[] ReadIsolationRanges(MsDataFileUri dataSource, IsolationRange[] isolationRanges)

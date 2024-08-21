@@ -133,6 +133,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association..
+        /// </summary>
+        internal static string _associate_proteins_gene_level_parsimony {
+            get {
+                return ResourceManager.GetString("_associate_proteins_gene_level_parsimony", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteins that match the same set of peptides will be combined into a single target in the document..
         /// </summary>
         internal static string _associate_proteins_group_proteins {

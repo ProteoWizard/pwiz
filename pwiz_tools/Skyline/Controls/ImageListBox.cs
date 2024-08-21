@@ -35,8 +35,10 @@ namespace pwiz.Skyline.Controls
 
             void ICollection.CopyTo(Array array, int index) 
             {
-                for (IEnumerator e = GetEnumerator(); e.MoveNext();)
-                    array.SetValue(e.Current, index++);
+                foreach (var item in this)
+                {
+                    array.SetValue(item, index++);
+                }
             }
 
             bool ICollection.IsSynchronized 
@@ -115,7 +117,7 @@ namespace pwiz.Skyline.Controls
 
             public IEnumerator GetEnumerator() 
             {
-                return owner.DoGetEnumerator(); 
+                return owner.GetBaseItems().GetEnumerator(); 
             }
 
             public bool Contains(object item)
@@ -145,8 +147,10 @@ namespace pwiz.Skyline.Controls
 
             public void AddRange(ImageListBoxItem[] items)
             {
-                for(IEnumerator e = items.GetEnumerator(); e.MoveNext();)
-                    owner.DoInsertItem(Count, (ImageListBoxItem)e.Current);
+                foreach (var item in items)
+                {
+                    owner.DoInsertItem(Count, item);
+                }
             }
 
             public void Clear()
@@ -173,10 +177,9 @@ namespace pwiz.Skyline.Controls
         {
             return (ImageListBoxItem)base.Items[index];
         }
-
-        private IEnumerator DoGetEnumerator()
+        private IEnumerable GetBaseItems()
         {
-            return base.Items.GetEnumerator();
+            return base.Items;
         }
 
         private int DoGetItemCount()

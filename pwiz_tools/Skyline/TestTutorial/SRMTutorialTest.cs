@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
             //IsPauseForScreenShots = true;
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.gs.washington.edu/tutorials/SrmTutorialTest.zip",
+                @"https://skyline.ms/tutorials/SrmTutorialTest.zip",
                 @"TestTutorial\SRMViews.zip"
             };
             RunFunctionalTest();

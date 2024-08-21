@@ -399,6 +399,8 @@ namespace pwiz.Skyline.Model.Results
             // data files with the extension <basename>.c.mzXML.  So, this needs
             // to be able to match <basename> with <basename>.c, and Vanderbilt
             // has a pipeline that generates mzML files all uppercase
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(prefix))
+                return false;
             if (!name.ToLower().StartsWith(prefix.ToLower()))
                 return false;
             if (name.Length == prefix.Length || name[prefix.Length] == '.')

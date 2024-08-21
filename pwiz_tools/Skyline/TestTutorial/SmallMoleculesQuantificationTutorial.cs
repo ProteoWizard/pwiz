@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeQuantification";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-23_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]

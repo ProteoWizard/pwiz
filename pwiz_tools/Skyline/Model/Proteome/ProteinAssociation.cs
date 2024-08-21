@@ -25,11 +25,15 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteomeDatabase.DataModel;
+using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -38,10 +42,21 @@ namespace pwiz.Skyline.Model.Proteome
         private SrmDocument _document;
         private StringSearch _peptideTrie;
         private Dictionary<string, List<PeptideDocNode>> _peptideToPath;
-        private Dictionary<PeptideDocNode, List<IProteinRecord>> _peptideToProteins, _peptideToProteinGroups;
-        private MappingResultsInternal _results, _finalResults, _proteinGroupResults;
-        private IDictionary<IProteinRecord, PeptideAssociationGroup> _proteinGroupAssociations;
-        private HashSet<PeptideDocNode> _peptidesRemovedByFilters;
+        private Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> _peptideToProteins;
+        private MappingResultsInternal _results, _finalResults;
+        private HashSet<ReferenceValue<PeptideDocNode>> _peptidesRemovedByFilters;
+
+        private static IEqualityComparer<PeptideDocNode> ReferenceEqualityComparer = ReferenceValue.EQUALITY_COMPARER;
+        private IDictionary<string, ProteinMetadata> _proteinToMetadata { get; set; }
+
+        internal class ProteinOrGeneGroupResultCache
+        {
+            public MappingResultsInternal Results { get; set; }
+            public Dictionary<IProteinRecord, PeptideAssociationGroup> PeptideGroupByProteinOrGeneGroup { get; set; }
+            public Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> PeptideToProteinOrGeneGroup { get; set; }
+        }
+
+        private Dictionary<bool, ProteinOrGeneGroupResultCache> _proteinOrGeneGroupResultCacheByGeneLevel;
 
         public IDictionary<IProteinRecord, PeptideAssociationGroup> AssociatedProteins { get; private set; }
         public IDictionary<IProteinRecord, PeptideAssociationGroup> ParsimoniousProteins { get; private set; }
@@ -74,12 +89,17 @@ namespace pwiz.Skyline.Model.Proteome
 
         private void ResetMapping()
         {
-            _proteinGroupAssociations = null;
-            _proteinGroupResults = null;
+            _proteinOrGeneGroupResultCacheByGeneLevel = new Dictionary<bool, ProteinOrGeneGroupResultCache>()
+            {
+                { false, null },
+                { true, null }
+            };
             _finalResults = null;
-            _peptideToProteinGroups = null;
             _peptideToProteins = null;
             _peptidesRemovedByFilters = null;
+            _proteinToMetadata = null;
+            AssociatedProteins = null;
+            ParsimoniousProteins = null;
         }
 
         public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
@@ -116,7 +136,7 @@ namespace pwiz.Skyline.Model.Proteome
         private Dictionary<IProteinRecord, PeptideAssociationGroup> FindProteinMatches(IProteinSource proteinSource, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             var localResults = new MappingResultsInternal();
-            var peptideToProteins = new Dictionary<PeptideDocNode, List<IProteinRecord>>();
+            var peptideToProteins = new Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>>();
 
             var proteinAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
             int maxProgressValue = 0;
@@ -136,6 +156,10 @@ namespace pwiz.Skyline.Model.Proteome
 
                 foreach (var result in trieResults)
                 {
+                    if (broker.IsCanceled)
+                    {
+                        break;
+                    }
                     if (!peptidesMatched.Add(result.Keyword))
                         continue;
 
@@ -178,16 +202,23 @@ namespace pwiz.Skyline.Model.Proteome
                         ++localResults.ProteinsUnmapped;
                 }
             });
-            
+
+            if (broker.IsCanceled)
+                return null;
+
             Assume.IsTrue(localResults.ProteinsMapped + localResults.ProteinsUnmapped > 0);
 
             var distinctPeptideDocNodes = _peptideToPath.SelectMany(kvp => kvp.Value);
             int distinctTargetPeptideCount = distinctPeptideDocNodes.Where(p => !p.IsDecoy).Select(p => p.Peptide.Target).Distinct().Count();
             _peptideToProteins = peptideToProteins;
             _results = localResults;
-            _results.PeptidesMapped = peptideToProteins.Keys.Select(p => p.Peptide.Target).Distinct().Count();
+            _results.PeptidesMapped = peptideToProteins.Keys.Select(p => p.Value.Peptide.Target).Distinct().Count();
             _results.PeptidesUnmapped = distinctTargetPeptideCount - _results.PeptidesMapped;
             _results.FinalProteinCount = proteinAssociations.Count;
+
+            _proteinToMetadata = new Dictionary<string, ProteinMetadata>();
+            foreach (var kvp in proteinAssociations)
+                _proteinToMetadata[kvp.Key.Sequence.Name] = kvp.Key.Metadata;
 
             return proteinAssociations;
         }
@@ -197,9 +228,10 @@ namespace pwiz.Skyline.Model.Proteome
         {
             public static ParsimonySettings DEFAULT = new ParsimonySettings() { MinPeptidesPerProtein = 1 };
 
-            public ParsimonySettings(bool groupProteins, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein)
+            public ParsimonySettings(bool groupProteins, bool geneLevel, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein)
             {
                 GroupProteins = groupProteins;
+                GeneLevelParsimony = geneLevel;
                 FindMinimalProteinList = findMinimalProteinList;
                 RemoveSubsetProteins = removeSubsetProteins;
                 SharedPeptides = sharedPeptides;
@@ -208,6 +240,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             [Track(ignoreDefaultParent:true)]
             public bool GroupProteins { get; private set; }
+
+            [Track(defaultValues: typeof(DefaultValuesFalse))]
+            public bool GeneLevelParsimony { get; private set; }
 
             [Track(ignoreDefaultParent: true)]
             public bool FindMinimalProteinList { get; private set; }
@@ -227,6 +262,7 @@ namespace pwiz.Skyline.Model.Proteome
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 return obj.GroupProteins == GroupProteins &&
+                       obj.GeneLevelParsimony == GeneLevelParsimony &&
                        obj.FindMinimalProteinList == FindMinimalProteinList &&
                        obj.RemoveSubsetProteins == RemoveSubsetProteins &&
                        obj.SharedPeptides == SharedPeptides &&
@@ -247,6 +283,7 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     int result = MinPeptidesPerProtein;
                     result = (result * 397) ^ GroupProteins.GetHashCode();
+                    result = (result * 397) ^ GeneLevelParsimony.GetHashCode();
                     result = (result * 397) ^ FindMinimalProteinList.GetHashCode();
                     result = (result * 397) ^ RemoveSubsetProteins.GetHashCode();
                     result = (result * 397) ^ SharedPeptides.GetHashCode();
@@ -269,6 +306,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 min_peptides_per_protein,
                 group_proteins,
+                gene_level_parsimony,
                 find_minimal_protein_list,
                 remove_subset_proteins,
                 shared_peptides
@@ -283,6 +321,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 MinPeptidesPerProtein = reader.GetIntAttribute(Attr.min_peptides_per_protein, 1);
                 GroupProteins = reader.GetBoolAttribute(Attr.group_proteins);
+                GeneLevelParsimony = reader.GetBoolAttribute(Attr.gene_level_parsimony);
                 FindMinimalProteinList = reader.GetBoolAttribute(Attr.find_minimal_protein_list);
                 RemoveSubsetProteins = reader.GetBoolAttribute(Attr.remove_subset_proteins);
                 SharedPeptides = reader.GetEnumAttribute(Attr.shared_peptides, SharedPeptides.DuplicatedBetweenProteins);
@@ -301,6 +340,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 writer.WriteAttribute(Attr.min_peptides_per_protein, MinPeptidesPerProtein, 1);
                 writer.WriteAttribute(Attr.group_proteins, GroupProteins, false);
+                writer.WriteAttribute(Attr.gene_level_parsimony, GeneLevelParsimony, false);
                 writer.WriteAttribute(Attr.find_minimal_protein_list, FindMinimalProteinList, false);
                 writer.WriteAttribute(Attr.remove_subset_proteins, RemoveSubsetProteins, false);
                 writer.WriteAttribute(Attr.shared_peptides, SharedPeptides, SharedPeptides.DuplicatedBetweenProteins);
@@ -324,6 +364,7 @@ namespace pwiz.Skyline.Model.Proteome
             int PeptidesUnmapped { get; }
 
             bool GroupProteins { get; }
+            bool GeneLevelParsimony { get; }
             bool FindMinimalProteinList { get; }
             bool RemoveSubsetProteins { get; }
             SharedPeptides SharedPeptides { get; }
@@ -355,6 +396,7 @@ namespace pwiz.Skyline.Model.Proteome
                     RemoveSubsetProteins = RemoveSubsetProteins,
                     SharedPeptides = SharedPeptides,
                     GroupProteins = GroupProteins,
+                    GeneLevelParsimony = GeneLevelParsimony,
                     MinPeptidesPerProtein = MinPeptidesPerProtein
                 };
             }
@@ -365,12 +407,13 @@ namespace pwiz.Skyline.Model.Proteome
             public int PeptidesUnmapped { get; set; }
 
             public bool GroupProteins { get; set; }
+            public bool GeneLevelParsimony { get; set; }
             public bool FindMinimalProteinList { get; set; }
             public bool RemoveSubsetProteins { get; set; }
             public SharedPeptides SharedPeptides { get; set; }
             public int MinPeptidesPerProtein { get; set; }
 
-            public ParsimonySettings ParsimonySettings => new ParsimonySettings(GroupProteins, FindMinimalProteinList,
+            public ParsimonySettings ParsimonySettings => new ParsimonySettings(GroupProteins, GeneLevelParsimony, FindMinimalProteinList,
                 RemoveSubsetProteins, SharedPeptides, MinPeptidesPerProtein);
 
             public int FinalProteinCount { get; set; }
@@ -408,35 +451,43 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return _hash;
             }
+
+            public override string ToString()
+            {
+                return string.Join(TextUtil.SEPARATOR_CSV.ToString(), Peptides.Select(p => p.ModifiedSequenceDisplay));
+            }
         }
 
-        public void ApplyParsimonyOptions(bool groupProteins, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein, ILongWaitBroker broker)
+        public void ApplyParsimonyOptions(bool groupProteins, bool geneLevel, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein, ILongWaitBroker broker)
         {
-            Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups = _peptideToProteins;
+            Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> peptideToProteinGroups = _peptideToProteins;
 
             broker.Message = ProteomeResources.AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options;
 
-            _peptidesRemovedByFilters = new HashSet<PeptideDocNode>();
+            _peptidesRemovedByFilters = new HashSet<ReferenceValue<PeptideDocNode>>();
 
-            if (groupProteins)
+            if (groupProteins || geneLevel)
             {
-                if (_proteinGroupAssociations == null)
+                if (_proteinOrGeneGroupResultCacheByGeneLevel[geneLevel] == null)
                 {
-                    _proteinGroupResults = _results.Clone();
-                    _proteinGroupResults.GroupProteins = true;
-                    _proteinGroupAssociations = CalculateProteinGroups(_proteinGroupResults, broker);
+                    var cache = _proteinOrGeneGroupResultCacheByGeneLevel[geneLevel] = new ProteinOrGeneGroupResultCache();
+                    cache.Results = _results.Clone();
+                    cache.Results.GroupProteins = true;
+                    cache.Results.GeneLevelParsimony = geneLevel;
+                    cache.PeptideGroupByProteinOrGeneGroup = CalculateProteinOrGeneGroups(cache.Results, geneLevel, broker);
 
-                    if (_proteinGroupAssociations == null)
+                    if (cache.PeptideGroupByProteinOrGeneGroup == null)
                         return;
                 }
 
-                _finalResults = _proteinGroupResults.Clone();
-                ParsimoniousProteins = _proteinGroupAssociations;
-                peptideToProteinGroups = _peptideToProteinGroups;
+                _finalResults = _proteinOrGeneGroupResultCacheByGeneLevel[geneLevel].Results.Clone();
+                ParsimoniousProteins = _proteinOrGeneGroupResultCacheByGeneLevel[geneLevel].PeptideGroupByProteinOrGeneGroup;
+                peptideToProteinGroups = _proteinOrGeneGroupResultCacheByGeneLevel[geneLevel].PeptideToProteinOrGeneGroup;
             }
             else
             {
                 _finalResults = _results;
+                _finalResults.GeneLevelParsimony = false;
                 ParsimoniousProteins = AssociatedProteins;
             }
 
@@ -561,11 +612,65 @@ namespace pwiz.Skyline.Model.Proteome
             _finalResults.FinalSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
         }
 
-        private Dictionary<IProteinRecord, PeptideAssociationGroup> CalculateProteinGroups(MappingResultsInternal results, ILongWaitBroker broker)
+        public class GeneLevelEqualityComparer : EqualityComparer<IProteinRecord>
+        {
+            public override bool Equals(IProteinRecord x, IProteinRecord y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (ReferenceEquals(null, x)) return false;
+                if (ReferenceEquals(null, y)) return false;
+                if (x.Metadata.Gene.IsNullOrEmpty() && y.Metadata.Gene.IsNullOrEmpty()) return x.Sequence.Equals(y.Sequence);
+                if (x.Metadata.Gene.IsNullOrEmpty() != y.Metadata.Gene.IsNullOrEmpty()) return false;
+
+                return x.Metadata.Gene.Equals(y.Metadata.Gene);
+            }
+
+            public override int GetHashCode(IProteinRecord obj)
+            {
+                if (obj.Metadata.Gene == null)
+                    return obj.Sequence.GetHashCode();
+                return obj.Metadata.Gene.GetHashCode();
+            }
+        }
+        
+        public static IProteinRecord GenerateConcatenatedSequenceIfNecessary(Dictionary<IProteinRecord, List<PeptideDocNode>> proteinToPeptides)
+        {
+            if (proteinToPeptides.Count == 1)
+                return proteinToPeptides.Keys.First();
+
+            var longestProtein = proteinToPeptides.OrderByDescending(kvp2 => kvp2.Key.Sequence.Sequence.Length).First().Key;
+            var allPeptides = proteinToPeptides.Values.SelectMany(o => o).Distinct(ReferenceEqualityComparer).ToList();
+            if (allPeptides.All(node => longestProtein.Sequence.Sequence.Contains(node.Peptide.Sequence)))
+                return longestProtein;
+
+            // each protein's individual metadata is kept, but all protein sequences are replaced by the concatenated sequence
+            var concatenatedSequence = string.Concat(proteinToPeptides.Keys.Select(p => p.Sequence.Sequence));
+            return new FastaRecord(longestProtein.RecordIndex, 0,
+                new FastaSequenceGroup(longestProtein.Sequence.Name,
+                    proteinToPeptides.Keys.Select(p => new FastaSequence(p.Sequence.Name,
+                        p.Sequence.Description, p.Sequence.Alternatives, concatenatedSequence)).ToList()),
+                new ProteinGroupMetadata(proteinToPeptides.Keys.Select(p => p.Metadata).ToList()));
+        }
+
+        private Dictionary<IProteinRecord, PeptideAssociationGroup> CalculateProteinOrGeneGroups(MappingResultsInternal results, bool geneLevel, ILongWaitBroker broker)
         {
             var _peptideGroupToProteins = new Dictionary<PeptideAssociationGroup, List<IProteinRecord>>();
 
-            foreach(var kvp in AssociatedProteins)
+            var proteinOrGeneToPeptideGroup = AssociatedProteins;
+            if (geneLevel)
+            {
+                // gene to protein to peptides; the top level dictionary uses the GeneLevelEqualityComparer
+                var proteinsByGene = AssociatedProteins.GroupBy(kvp => kvp.Key, new GeneLevelEqualityComparer());
+                var geneToPeptides = new Dictionary<IProteinRecord, Dictionary<IProteinRecord, List<PeptideDocNode>>>(new GeneLevelEqualityComparer());
+                foreach (var group in proteinsByGene)
+                    geneToPeptides.Add(group.Key, group.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Peptides));
+
+                // now pick the protein with the longest sequence if it contains all the peptides, or a concatenation of all of the sequences if not
+                proteinOrGeneToPeptideGroup = geneToPeptides.ToDictionary(kvp => GenerateConcatenatedSequenceIfNecessary(kvp.Value),
+                    kvp => new PeptideAssociationGroup(kvp.Value.Values.SelectMany(o => o).Distinct(ReferenceEqualityComparer).ToList()));
+            }
+
+            foreach(var kvp in proteinOrGeneToPeptideGroup)
                 if (!_peptideGroupToProteins.ContainsKey(kvp.Value))
                     _peptideGroupToProteins.Add(kvp.Value, new List<IProteinRecord> { kvp.Key });
                 else
@@ -574,19 +679,22 @@ namespace pwiz.Skyline.Model.Proteome
             results.FinalPeptideCount = 0;
             results.FinalProteinCount = _peptideGroupToProteins.Count;
 
-            broker.Message = ProteomeResources.ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups;
-            var proteinGroupAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
+            if (geneLevel)
+                broker.Message = ProteomeResources.ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups;
+            else
+                broker.Message = ProteomeResources.ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups;
+            var proteinGroupAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>(geneLevel ? new GeneLevelEqualityComparer() : EqualityComparer<IProteinRecord>.Default);
 
-            _peptideToProteinGroups = new Dictionary<PeptideDocNode, List<IProteinRecord>>();
+            var peptideToProteinOrGeneGroups = _proteinOrGeneGroupResultCacheByGeneLevel[geneLevel].PeptideToProteinOrGeneGroup = new Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>>();
             Action<IProteinRecord, PeptideAssociationGroup> addPeptideAssociations =
                 (protein, peptides) =>
                 {
                     foreach (var peptide in peptides.Peptides)
                     {
-                        if (!_peptideToProteinGroups.ContainsKey(peptide))
-                            _peptideToProteinGroups.Add(peptide, new List<IProteinRecord> {protein});
+                        if (!peptideToProteinOrGeneGroups.ContainsKey(peptide))
+                            peptideToProteinOrGeneGroups.Add(peptide, new List<IProteinRecord> {protein});
                         else
-                            _peptideToProteinGroups[peptide].Add(protein);
+                            peptideToProteinOrGeneGroups[peptide].Add(protein);
                     }
                 };
 
@@ -607,10 +715,16 @@ namespace pwiz.Skyline.Model.Proteome
                     continue;
                 }
 
+                string ProteinOrGeneGroupName(IProteinRecord p)
+                {
+                    if (geneLevel && !p.Metadata.Gene.IsNullOrEmpty()) return p.Metadata.Gene;
+                    return p.Sequence.Name;
+                }
+
                 var proteinsByRecordIndex = kvp.Value.OrderBy(p => p.RecordIndex).ToList();
-                var proteinGroupName = string.Join(ProteinGroupMetadata.GROUP_SEPARATOR, proteinsByRecordIndex.Select(p => p.Sequence.Name));
+                var proteinGroupName = string.Join(ProteinGroupMetadata.GROUP_SEPARATOR, proteinsByRecordIndex.Select(ProteinOrGeneGroupName).Distinct());
                 var proteinFastaSequence = new FastaSequenceGroup(proteinGroupName, proteinsByRecordIndex.Select(r => r.Sequence).ToList());
-                var proteinGroup = new FastaRecord(kvp.Value[0].RecordIndex, 0, proteinFastaSequence);
+                var proteinGroup = new FastaRecord(kvp.Value[0].RecordIndex, 0, proteinFastaSequence, kvp.Value[0].Metadata);
                 proteinGroupAssociations[proteinGroup] = kvp.Key;
                 addPeptideAssociations(proteinGroup, kvp.Key);
             }
@@ -621,7 +735,7 @@ namespace pwiz.Skyline.Model.Proteome
         /// <summary>
         /// Calculate clusters (connected components) for protein/peptide associations
         /// </summary>
-        private Dictionary<int, IEnumerable<IProteinRecord>> CalculateClusters(Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups, ILongWaitBroker broker)
+        private Dictionary<int, IEnumerable<IProteinRecord>> CalculateClusters(Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> peptideToProteinGroups, ILongWaitBroker broker)
         {
             var clusterByProteinGroup = new Dictionary<IProteinRecord, int>();
             int clusterId = 0;
@@ -667,7 +781,7 @@ namespace pwiz.Skyline.Model.Proteome
             return clusterByProteinGroup.GroupBy(kvp => kvp.Value, kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => (IEnumerable<IProteinRecord>) kvp);
         }
 
-        private ISet<IProteinRecord> FindMinimalProteinSet(Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups, ILongWaitBroker broker)
+        private ISet<IProteinRecord> FindMinimalProteinSet(Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> peptideToProteinGroups, ILongWaitBroker broker)
         {
             var proteinsByCluster = CalculateClusters(peptideToProteinGroups, broker);
 
@@ -705,7 +819,7 @@ namespace pwiz.Skyline.Model.Proteome
             return minimalProteinList.Keys.ToHashSet();
         }
 
-        private ISet<IProteinRecord> FindSubsetProteins(Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups, ILongWaitBroker broker)
+        private ISet<IProteinRecord> FindSubsetProteins(Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> peptideToProteinGroups, ILongWaitBroker broker)
         {
             var proteinsByCluster = CalculateClusters(peptideToProteinGroups, broker);
 
@@ -788,7 +902,8 @@ namespace pwiz.Skyline.Model.Proteome
                     throw new InvalidOperationException(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
                 }
 
-                _peptideToPath = peptidesForMatching.GroupBy(node => GetPeptideSequence(node.Peptide)).ToDictionary(k => k.Key, g => g.ToList());
+                _peptideToPath = peptidesForMatching.GroupBy(node => GetPeptideSequence(node.Peptide))
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
             }
 
             _peptideTrie = new StringSearch(_peptideToPath.Keys, broker.CancellationToken);
@@ -824,13 +939,17 @@ namespace pwiz.Skyline.Model.Proteome
             var appendPeptideLists = new List<PeptideGroupDocNode>();
 
             // Move unmapped peptides from FastaSequence node to "Unmapped Peptides" list
-            var unmappedPeptideNodes = _peptideToPath.SelectMany(kvp => kvp.Value).Where(p => !p.IsDecoy).ToHashSet();
-            unmappedPeptideNodes.ExceptWith(ParsimoniousProteins.Values.SelectMany(pag => pag.Peptides));
+            var unmappedPeptideNodes = _peptideToPath.Values.SelectMany(list => list).Where(p => !p.IsDecoy)
+                .Select(ReferenceValue.Of).ToHashSet();
+            unmappedPeptideNodes.ExceptWith(ParsimoniousProteins.Values.SelectMany(pag => pag.Peptides.Select(ReferenceValue.Of)));
             unmappedPeptideNodes.ExceptWith(_peptidesRemovedByFilters);
 
             // Modifies and adds old groups that still contain unmatched peptides to newPeptideGroups
             foreach (var nodePepGroup in current.MoleculeGroups)
             {
+                if (monitor.IsCanceled)
+                    return null;
+
                 var peptideDocNodes = nodePepGroup.Children.Where(node => node is PeptideDocNode).Cast<PeptideDocNode>().ToList();
 
                 // Drop empty peptide lists
@@ -851,21 +970,35 @@ namespace pwiz.Skyline.Model.Proteome
                 if (peptideDocNodes.All(node => node.GlobalStandardType == StandardType.IRT))
                 {
                     newPeptideGroups.Add(nodePepGroup);
-                    unmappedPeptideNodes.ExceptWith(peptideDocNodes); // do not count iRT peptides as unmapped
+                    unmappedPeptideNodes.ExceptWith(peptideDocNodes.Select(ReferenceValue.Of)); // do not count iRT peptides as unmapped
                     continue;
                 }
 
                 // Keep peptide lists that contain unmapped peptides
                 if (nodePepGroup.IsProteomic && nodePepGroup.IsPeptideList)
                 {
+                    var mappedTargets = _peptideToProteins.Select(node => node.Key.Value.Target).ToHashSet();
+
                     // If a peptide list peptide is unmapped, leave it in the peptide list but remove it from the global unmapped list
-                    var peptidesByMappedStatus = peptideDocNodes.ToLookup(node => _peptideToProteins.Contains(kvp => kvp.Key.Target == node.Target), node => node);
+                    var peptidesByMappedStatus = new Dictionary<bool, IList<ReferenceValue<PeptideDocNode>>>
+                    {
+                        { false, new List<ReferenceValue<PeptideDocNode>>() },
+                        { true, new List<ReferenceValue<PeptideDocNode>>() }
+                    };
+
+                    foreach (var node in peptideDocNodes)
+                    {
+                        if (monitor.IsCanceled)
+                            return null;
+
+                        peptidesByMappedStatus[mappedTargets.Contains(node.Target)].Add(node);
+                    }
                     var unmappedPeptides = peptidesByMappedStatus[false].ToHashSet();
                     unmappedPeptideNodes.ExceptWith(unmappedPeptides);
 
                     // If it was mapped, remove it from the peptide list
                     var mappedPeptides = peptidesByMappedStatus[true];
-                    var mappedPeptideIndexes = mappedPeptides.Select(node => node.Peptide.GlobalIndex);
+                    var mappedPeptideIndexes = mappedPeptides.Select(node => node.Value.Peptide.GlobalIndex);
                     var newPeptideList = (PeptideGroupDocNode) nodePepGroup.RemoveAll(mappedPeptideIndexes.ToList());
 
                     // Only keep the list if it still has peptides
@@ -899,7 +1032,7 @@ namespace pwiz.Skyline.Model.Proteome
 
             if (unmappedPeptideNodes.Count > 0)
             {
-                var unmappedNakedPeptides = unmappedPeptideNodes.Select(node => node.RemoveFastaSequence());
+                var unmappedNakedPeptides = unmappedPeptideNodes.Select(node => node.Value.RemoveFastaSequence());
                 var unmappedPeptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
                     Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides, string.Empty, unmappedNakedPeptides.ToArray());
                 appendPeptideLists.Add(unmappedPeptideList);
@@ -911,6 +1044,7 @@ namespace pwiz.Skyline.Model.Proteome
             foreach (var keyValuePair in proteinAssociationsList)
             {
                 var protein = keyValuePair.Key.Sequence;
+                var metadata = keyValuePair.Key.Metadata;
                 var children = new List<PeptideDocNode>();
                 foreach (PeptideDocNode peptideDocNode in keyValuePair.Value.Peptides)
                 {
@@ -919,10 +1053,17 @@ namespace pwiz.Skyline.Model.Proteome
                         children.Add(peptideDocNode.ChangeFastaSequence(protein));
                 }
 
-                var proteinOrGroupMetadata = protein is FastaSequenceGroup
-                    ? new ProteinGroupMetadata((protein as FastaSequenceGroup).FastaSequenceList.Select(s => new ProteinMetadata(s.Name, s.Description)).ToList())
-                    : new ProteinMetadata(protein.Name, protein.Description);
+                var proteinOrGroupMetadata = protein is FastaSequenceGroup group
+                    ? new ProteinGroupMetadata(group.FastaSequenceList.Select(s =>
+                    {
+                        var proteinMetadata = _proteinToMetadata[s.Name];
+                        return new ProteinMetadata(s.Name, s.Description, proteinMetadata.PreferredName,
+                            proteinMetadata.Accession, proteinMetadata.Gene, proteinMetadata.Species);
+                    }).ToList())
+                    : new ProteinMetadata(protein.Name, protein.Description, metadata.PreferredName, metadata.Accession,
+                        metadata.Gene, metadata.Species);
                 var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray());
+                //peptideGroupDocNode = peptideGroupDocNode.ChangeName(protein.Name).ChangeDescription(protein.Description);
                 newPeptideGroups.Add(peptideGroupDocNode);
 
                 if (monitor.IsCanceled)
@@ -950,7 +1091,8 @@ namespace pwiz.Skyline.Model.Proteome
         {
             int index = 0;
             long streamLength = stream.Length;
-            foreach (var fastaData in FastaData.ParseFastaFile(new StreamReader(stream)))
+            var wefi = new WebEnabledFastaImporter();
+            foreach (var fastaData in wefi.Import(new StreamReader(stream)))
             {
                 yield return new FastaRecord(index, (int) (stream.Position * 100 / streamLength), fastaData);
                 index++;
@@ -961,6 +1103,7 @@ namespace pwiz.Skyline.Model.Proteome
         {
             int RecordIndex { get; }
             FastaSequence Sequence { get; }
+            ProteinMetadata Metadata { get; }
             int Progress { get; }
         }
 
@@ -971,15 +1114,17 @@ namespace pwiz.Skyline.Model.Proteome
 
         private class BackgroundProteomeRecord : IProteinRecord
         {
-            public BackgroundProteomeRecord(int index, FastaSequence sequence, int progress)
+            public BackgroundProteomeRecord(int index, FastaSequence sequence, ProteinMetadata metadata, int progress)
             {
                 RecordIndex = index;
                 Sequence = sequence;
                 Progress = progress;
+                Metadata = metadata;
             }
 
             public int RecordIndex { get; }
             public FastaSequence Sequence { get; }
+            public ProteinMetadata Metadata { get; }
             public int Progress { get; }
         }
 
@@ -1000,7 +1145,7 @@ namespace pwiz.Skyline.Model.Proteome
                 get
                 {
                     for (int i = 0; i < DbProteins.Count; ++i)
-                        yield return new BackgroundProteomeRecord(i, Proteome.MakeFastaSequence(DbProteins[i]), i * 100 / DbProteins.Count);
+                        yield return new BackgroundProteomeRecord(i, Proteome.MakeFastaSequence(DbProteins[i]), DbProteins[i].ProteinMetadata, i * 100 / DbProteins.Count);
                 }
             }
 
@@ -1017,16 +1162,36 @@ namespace pwiz.Skyline.Model.Proteome
         /// </summary>
         private class FastaRecord : IProteinRecord
         {
-            public FastaRecord(int recordIndex, int progress, FastaSequence fastaSequence)
+            public FastaRecord(int recordIndex, int progress, FastaSequence fastaSequence, ProteinMetadata metadata)
             {
                 RecordIndex = recordIndex;
                 Progress = progress;
                 Sequence = fastaSequence;
+                Metadata = metadata;
+            }
+
+            public FastaRecord(int recordIndex, int progress, DbProtein protein)
+            {
+                RecordIndex = recordIndex;
+                Progress = progress;
+
+                var firstName = protein.Names.First();
+                var alternatives = protein.Names.Skip(1).Select(o => o.GetProteinMetadata()).ToList();
+                Sequence = new FastaSequence(firstName.Name, firstName.Description, alternatives, protein.Sequence);
+                Metadata = firstName.GetProteinMetadata();
             }
 
             public int RecordIndex { get; }
             public int Progress { get; }
             public FastaSequence Sequence { get; }
+            public ProteinMetadata Metadata { get; }
+
+            public override string ToString()
+            {
+                if (Metadata.Gene.IsNullOrEmpty())
+                    return $@"{Sequence.Name}:{Helpers.TruncateString(Sequence.Sequence, 30)}";
+                return $@"{Sequence.Name} ({Metadata.Gene}):{Helpers.TruncateString(Sequence.Sequence, 30)}";
+            }
         }
 
         public class FastaSource : IProteinSource

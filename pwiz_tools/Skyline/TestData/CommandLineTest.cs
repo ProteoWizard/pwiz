@@ -409,7 +409,7 @@ namespace pwiz.SkylineTestData
             StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
             StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
 
-            // test importing FASTA and associating proteins
+            // test importing FASTA and associating proteins and adding special ions
             settings = new[]
             {
                 "--in=" + docPath,
@@ -420,6 +420,8 @@ namespace pwiz.SkylineTestData
                 "--associate-proteins-minimal-protein-list",
                 "--associate-proteins-remove-subsets",
                 "--associate-proteins-min-peptides=2",
+                "--tran-product-add-special-ion=TMT-127L",
+                "--tran-product-add-special-ion=TMT-127H"
             };
             output = RunCommand(settings);
             doc = ResultsUtil.DeserializeDocument(docPath);
@@ -429,6 +431,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
             Assert.AreEqual(2, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
+            Assert.AreEqual(2, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
 
             // test associating proteins in a file with a previously imported FASTA
             settings = new[]
@@ -449,7 +452,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
             Assert.AreEqual(1, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
 
-            // test changing parameter order
+            // test changing parameter order and adding special ions after clearing them
             settings = new[]
             {
                 "--new=" + docPath,
@@ -457,6 +460,9 @@ namespace pwiz.SkylineTestData
                 "--full-scan-precursor-res=5",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-isotopes=Count",
+                "--tran-product-clear-special-ions",
+                "--tran-product-add-special-ion=TMT-127L",
+                "--tran-product-add-special-ion=TMT-127H"
             };
 
             output = RunCommand(settings);
@@ -465,6 +471,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
+            Assert.AreEqual(2, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
 
             // test case insensitive enum parsing
             settings = new[]

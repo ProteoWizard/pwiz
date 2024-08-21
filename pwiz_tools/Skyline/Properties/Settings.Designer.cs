@@ -991,7 +991,52 @@ namespace pwiz.Skyline.Properties {
                 this["AreaLogScale"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AreaProteinTargets
+        {
+            get
+            {
+                return ((bool)(this["AreaProteinTargets"]));
+            }
+            set
+            {
+                this["AreaProteinTargets"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExcludePeptideListsFromAbundanceGraph
+        {
+            get
+            {
+                return ((bool)(this["ExcludePeptideListsFromAbundanceGraph"]));
+            }
+            set
+            {
+                this["ExcludePeptideListsFromAbundanceGraph"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExcludeStandardsFromAbundanceGraph
+        {
+            get
+            {
+                return ((bool)(this["ExcludeStandardsFromAbundanceGraph"]));
+            }
+            set
+            {
+                this["ExcludeStandardsFromAbundanceGraph"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("document")]

@@ -78,7 +78,7 @@ namespace TestPerf
 //            IsRecordMode = true;
             CoverShotName = "PRM-Orbitrap";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-Orbitrap-21_2.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRMOrbitrap-22_2.pdf";
 
             TestFilesZipPaths = new[]
             {

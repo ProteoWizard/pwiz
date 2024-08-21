@@ -393,7 +393,7 @@ namespace pwiz.Common.SystemUtil
                 return false;
 
             // If the collection is empty the first call to MoveNext will return false
-            return !enumerable.GetEnumerator().MoveNext();
+            return !enumerable.Cast<object>().Any();
         }
 
         public override bool IsDefault(object obj, object parentObject)

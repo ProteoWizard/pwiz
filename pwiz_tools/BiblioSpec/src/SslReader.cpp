@@ -123,6 +123,10 @@ SslReader::SslReader(BlibBuilder& maker,
     fileReader.addOptionalColumn("score", sslPSM::setScore);
     fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
 
+    fileReader.addOptionalColumn("ion-mobility", sslPSM::setIonMobility);
+    fileReader.addOptionalColumn("ion-mobility-units", sslPSM::setIonMobilityUnits);
+    fileReader.addOptionalColumn("ccs", sslPSM::setCCS);
+
     // add the optional small molecule columns
     fileReader.addOptionalColumn("inchikey", sslPSM::setInchiKey);
     fileReader.addOptionalColumn("adduct", sslPSM::setPrecursorAdduct);

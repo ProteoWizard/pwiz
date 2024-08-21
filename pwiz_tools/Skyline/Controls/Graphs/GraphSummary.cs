@@ -128,6 +128,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _activeLibrary;
         private int _targetResultsIndex;
         private int _originalResultsIndex;
+        public SkylineWindow Window;
+        public bool ShowFormattingDlg;
 
         private GraphSummaryToolbar _toolbar;
         public GraphSummaryToolbar Toolbar
@@ -584,7 +586,8 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram = 1 << 5,
         histogram2d = 1 << 6,
         detections = 1 << 7,
-        detections_histogram = 1 << 8
+        detections_histogram = 1 << 8,
+        abundance = 1 << 9
     }
 
     public static class Extensions
@@ -599,6 +602,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     return GraphsResources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
                     return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
+                case GraphTypeSummary.abundance:
+                    return Resources.Extensions_CustomToString_Relative_Abundance;
                 case GraphTypeSummary.score_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:

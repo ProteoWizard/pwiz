@@ -164,17 +164,30 @@ namespace pwiz.Skyline.Model.Proteome
                                     }
                                     else if (nodePepGroup.ProteinMetadata.NeedsSearch())
                                     {
-                                        var proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.Name);
-                                        if ((proteinMetadata == null) && !Equals(nodePepGroup.Name, nodePepGroup.OriginalName))
-                                            proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.OriginalName); // Original name might hit
-                                        if ((proteinMetadata == null) && !String.IsNullOrEmpty(nodePepGroup.ProteinMetadata.Accession))
-                                            proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.ProteinMetadata.Accession); // Parsed accession might hit
-                                        if ((proteinMetadata != null) && !proteinMetadata.NeedsSearch())
+                                        void CheckBackgroundProteome(FastaSequence seq, ProteinMetadata proteinMetadataOrGroup, int i)
                                         {
-                                            // Background proteome has already resolved this
-                                            _processedNodes.Add(nodePepGroup.Id.GlobalIndex, proteinMetadata);
-                                            nResolved++;
+                                            var currentProteinMetadata = proteinMetadataOrGroup.ProteinMetadataList[i];
+                                            var proteinMetadata = proteomeDb.GetProteinMetadataByName(seq.Name);
+                                            if ((proteinMetadata == null) && !Equals(nodePepGroup.Name, nodePepGroup.OriginalName))
+                                                proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.OriginalName); // Original name might hit
+                                            if ((proteinMetadata == null) && !String.IsNullOrEmpty(currentProteinMetadata.Accession))
+                                                proteinMetadata = proteomeDb.GetProteinMetadataByName(currentProteinMetadata.Accession); // Parsed accession might hit
+                                            if ((proteinMetadata != null) && !proteinMetadata.NeedsSearch())
+                                            {
+                                                // Background proteome has already resolved this
+                                                if (_processedNodes.TryGetValue(nodePepGroup.Id.GlobalIndex, out var processedProteinGroupMetadata))
+                                                    _processedNodes[nodePepGroup.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(proteinMetadata);
+                                                else
+                                                    _processedNodes.Add(nodePepGroup.Id.GlobalIndex, nodePepGroup.ProteinMetadata.ChangeSingleProteinMetadata(proteinMetadata));
+                                            }
                                         }
+
+                                        for (var i = 0; i < nodePepGroup.ProteinMetadata.ProteinMetadataList.Count; i++)
+                                        {
+                                            var fastaSequenceOrGroup = nodePepGroup.PeptideGroup as FastaSequence;
+                                            CheckBackgroundProteome(fastaSequenceOrGroup?.FastaSequenceList[i], nodePepGroup.ProteinMetadata, i);
+                                        }
+                                        nResolved++;
                                     }
 
                                     if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved / nUnresolved, ref progressStatus))

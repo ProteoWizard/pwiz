@@ -828,7 +828,12 @@ namespace pwiz.Skyline.Model.Results
         private IList<ChromDataPeak> MergePeaks()
         {
             List<ChromDataPeak> allPeaks = new List<ChromDataPeak>();
-            var listEnumerators = _listChromData.ConvertAll(item => item.RawPeaks.GetEnumerator());
+            using var allEnumerators = new DisposableCollection<IEnumerator<IFoundPeak>>();
+            foreach (var chromData in _listChromData)
+            {
+                allEnumerators.Add(chromData.RawPeaks.GetEnumerator());
+            }
+            var listEnumerators = allEnumerators.ToList();
             // Merge with list of chrom data that will match the enumerators
             // list, as completed enumerators are removed.
             var listUnmerged = new List<ChromData>(_listChromData);
@@ -853,10 +858,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var peak = listEnumerators[i].Current;
                     if (peak == null)
-                        throw new InvalidOperationException(ResultsResources.ChromDataSet_MergePeaks_Unexpected_null_peak);
+                        throw new InvalidOperationException(ResultsResources
+                            .ChromDataSet_MergePeaks_Unexpected_null_peak);
                     float intensity = peak.Area;
                     int isId = peak.Identified ? 1 : 0;
-                    if (isId > maxId  || (isId == maxId && intensity > maxIntensity))
+                    if (isId > maxId || (isId == maxId && intensity > maxIntensity))
                     {
                         maxId = isId;
                         maxIntensity = intensity;
@@ -876,7 +882,8 @@ namespace pwiz.Skyline.Model.Results
                 // These are not useful in SRM.
                 // TODO: Fix Crawdad peak detection to make this unnecessary
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex && maxPeak.EndIndex != maxPeak.TimeIndex)
+                if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex &&
+                    maxPeak.EndIndex != maxPeak.TimeIndex)
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     allPeaks.Add(new ChromDataPeak(maxData, maxPeak));
                 if (!maxEnumerator.MoveNext())
@@ -885,6 +892,7 @@ namespace pwiz.Skyline.Model.Results
                     listUnmerged.RemoveAt(iMaxEnumerator);
                 }
             }
+
             return allPeaks;
         }
 

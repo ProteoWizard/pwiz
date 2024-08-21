@@ -69,13 +69,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = false;  // Mzml isn't faster for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/PeakPicking_2-5.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PeakPicking_2-5.pdf";
 
             TestFilesZipPaths = new[]
                 {
                     UseRawFiles
-                        ? @"https://skyline.gs.washington.edu/tutorials/PeakPicking.zip"
-                        : @"https://skyline.gs.washington.edu/tutorials/PeakPickingMzml_2.zip",
+                        ? @"https://skyline.ms/tutorials/PeakPicking.zip"
+                        : @"https://skyline.ms/tutorials/PeakPickingMzml_2.zip",
                     @"TestTutorial\PeakPickingViews.zip"
                 };
             RunFunctionalTest();

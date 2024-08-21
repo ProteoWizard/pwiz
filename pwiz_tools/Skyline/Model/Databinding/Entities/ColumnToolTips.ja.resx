@@ -1246,13 +1246,13 @@ Double Blank（ダブルブランク）</value>
     <value>装置メソッドによってスペクトルに追加されたテキスト説明</value>
   </data>
   <data name="ScanWindowWidth">
-    <value>スペクトルの強度値として考えられるm/z値の上限値と下限値の差</value>
+    <value>スペクトルが強度値を持つと考えられるm/z値の上限値と下限値の差</value>
   </data>
   <data name="Score">
     <value>各機能の数値。</value>
   </data>
   <data name="ShapeCorrelation">
-    <value>同じプリカーサー下にあるすべてのトランジションの中央値ピーク形状と比較した場合の、このトランジションのクロマトグラフピークのピアソンの相関関係。</value>
+    <value>プリカーサーが同一のすべてのトランジションの中央値ピーク形状と比較した場合の、このトランジションのクロマトグラフピークのピアソンの相関関係。</value>
   </data>
   <data name="Skewness">
     <value>クロマトグラムピークの非対称性の尺度。</value>
@@ -1267,7 +1267,7 @@ Double Blank（ダブルブランク）</value>
     <value>標準分子ID</value>
   </data>
   <data name="SpectrumFilter">
-    <value>抽出されたイオンクロマトグラムに含まれるようにスペクトルが満たさなければならない追加基準</value>
+    <value>抽出イオンクロマトグラムに含まれるようにスペクトルが満たさなければならない追加基準</value>
   </data>
   <data name="SpectrumIds">
     <value>クロマトグラムに寄与するスペクトルの識別子です。</value>

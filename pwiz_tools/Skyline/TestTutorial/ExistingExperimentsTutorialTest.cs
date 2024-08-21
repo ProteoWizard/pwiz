@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = false;
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-21_2.pdf";
 
             TestFilesZipPaths = new[]
                 {

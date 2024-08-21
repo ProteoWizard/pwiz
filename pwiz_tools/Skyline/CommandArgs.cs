@@ -1399,6 +1399,8 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins",
             (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_GENE_LEVEL = new Argument(@"associate-proteins-gene-level-parsimony",
+            (c, p) => c.AssociateProteinsGeneLevelParsimony = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_SHARED_PEPTIDES = DocArgument.FromEnumType<SharedPeptides>(@"associate-proteins-shared-peptides",
             (c, p) => c.AssociateProteinsSharedPeptides = p);
         public static readonly Argument ARG_AP_MINIMAL_LIST = new Argument(@"associate-proteins-minimal-protein-list",
@@ -1409,16 +1411,18 @@ namespace pwiz.Skyline
             (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
-            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
+            ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 
         public bool? AssociateProteinsGroupProteins { get; private set; }
+        public bool? AssociateProteinsGeneLevelParsimony { get; private set; }
         public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
         public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
         public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
         public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
         public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
                                            AssociateProteinsGroupProteins.HasValue ||
+                                           AssociateProteinsGeneLevelParsimony.HasValue ||
                                            AssociateProteinsMinPeptidesPerProtein.HasValue ||
                                            AssociateProteinsRemoveSubsetProteins.HasValue ||
                                            AssociateProteinsSharedPeptides.HasValue;
@@ -1680,7 +1684,8 @@ namespace pwiz.Skyline
                        FilterProductTypes != null ||
                        FilterStartProductIon != null ||
                        FilterEndProductIon != null ||
-                       FilterUseDIAWindowExclusion != null;
+                       FilterUseDIAWindowExclusion != null ||
+                       FilterSpecialIons != null;
             }
         }
 

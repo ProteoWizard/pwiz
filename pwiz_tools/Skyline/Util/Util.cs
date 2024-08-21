@@ -1395,8 +1395,8 @@ namespace pwiz.Skyline.Util
         /// <returns>True if the two IEnumerables enumerate over equal objects</returns>
         public static bool Equals<TItem>(IEnumerable<TItem> e1, IEnumerable<TItem> e2)
         {
-            IEnumerator<TItem> enum1 = e1.GetEnumerator();
-            IEnumerator<TItem> enum2 = e2.GetEnumerator();
+            using IEnumerator<TItem> enum1 = e1.GetEnumerator();
+            using IEnumerator<TItem> enum2 = e2.GetEnumerator();
             bool b1, b2;
             while (MoveNext(enum1, out b1, enum2, out b2))
             {

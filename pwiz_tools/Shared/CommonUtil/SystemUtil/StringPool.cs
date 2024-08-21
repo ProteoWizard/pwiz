@@ -34,12 +34,15 @@ namespace pwiz.Common.SystemUtil
             {
                 return null;
             }
-            string result;
-            if (_dictionary.TryGetValue(s, out result))
+            lock (_dictionary)
             {
-                return result;
+                string result;
+                if (_dictionary.TryGetValue(s, out result))
+                {
+                    return result;
+                }
+                _dictionary.Add(s, s);
             }
-            _dictionary.Add(s, s);
             return s;
         }
     }

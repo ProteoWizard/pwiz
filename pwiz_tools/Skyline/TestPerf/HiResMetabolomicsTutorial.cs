@@ -55,7 +55,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 //            IsCoverShotMode = true;
             CoverShotName = "HiResMetabolomics";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-23_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesPersistent = new[] { ExtWatersRaw };

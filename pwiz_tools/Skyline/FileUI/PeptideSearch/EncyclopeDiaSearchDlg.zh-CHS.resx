@@ -748,7 +748,7 @@
     <value>2</value>
   </data>
   <data name="narrowWindowPage.Text" xml:space="preserve">
-    <value>窄窗口分数</value>
+    <value>窄窗口部分</value>
   </data>
   <data name="&gt;&gt;narrowWindowPage.Name" xml:space="preserve">
     <value>narrowWindowPage</value>
@@ -1171,7 +1171,7 @@
     <value>4</value>
   </data>
   <data name="runSearchPage.Text" xml:space="preserve">
-    <value>运行搜索</value>
+    <value>进行搜索</value>
   </data>
   <data name="&gt;&gt;runSearchPage.Name" xml:space="preserve">
     <value>runSearchPage</value>

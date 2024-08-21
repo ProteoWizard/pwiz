@@ -1018,4 +1018,7 @@ Useful in sample mixtures including multiple species.</value>
   <data name="_verbose_errors" xml:space="preserve">
     <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
   </data>
+  <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
+    <value>Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association.</value>
+  </data>
 </root>

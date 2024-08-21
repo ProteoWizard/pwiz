@@ -92,9 +92,6 @@ namespace pwiz.SkylineTestTutorial
                 @"TestTutorial\AuditLogViews.zip"
             };
 
-            if(IsPauseForScreenShots)
-                PanoramaSetup();
-
             RunFunctionalTest();
         }
 
@@ -473,6 +470,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
             else
             {
+                PanoramaSetup();
+
                 PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
                 var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);

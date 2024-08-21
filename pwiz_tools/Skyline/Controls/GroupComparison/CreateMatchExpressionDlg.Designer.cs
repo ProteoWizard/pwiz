@@ -44,6 +44,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.matchComboBox = new System.Windows.Forms.ComboBox();
             this.linkRegex = new System.Windows.Forms.LinkLabel();
+            this.enterListButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -74,7 +75,6 @@
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.nameColumn});
             this.dataGridView1.DataSource = this.bindingSource1;
-            this.dataGridView1.MaximumColumnCount = null;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowHeadersVisible = false;
@@ -154,12 +154,20 @@
             this.linkRegex.TabStop = true;
             this.linkRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkRegex_LinkClicked);
             // 
+            // enterListButton
+            // 
+            resources.ApplyResources(this.enterListButton, "enterListButton");
+            this.enterListButton.Name = "enterListButton";
+            this.enterListButton.UseVisualStyleBackColor = true;
+            this.enterListButton.Click += new System.EventHandler(this.enterListButton_Click);
+            // 
             // CreateMatchExpressionDlg
             // 
             this.AcceptButton = this.okButton;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
+            this.Controls.Add(this.enterListButton);
             this.Controls.Add(this.linkRegex);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.expressionTextBox);
@@ -194,9 +202,10 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox foldChangeComboBox;
-        private System.Windows.Forms.ComboBox matchComboBox;
+        public System.Windows.Forms.ComboBox matchComboBox;
         private System.Windows.Forms.LinkLabel linkRegex;
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.DataGridViewLinkColumn nameColumn;
+        private System.Windows.Forms.Button enterListButton;
     }
 }

@@ -55,7 +55,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMolLibraries";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries-20_2.pdf";
 
             TestFilesZipPaths = new[]
             {

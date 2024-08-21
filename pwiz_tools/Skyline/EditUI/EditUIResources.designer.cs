@@ -134,6 +134,15 @@ namespace pwiz.Skyline.EditUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find &amp;minimal gene group list that explains all peptides.
+        /// </summary>
+        public static string AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find &amp;minimal protein group list that explains all peptides.
         /// </summary>
         public static string AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides {
@@ -149,6 +158,15 @@ namespace pwiz.Skyline.EditUI {
             get {
                 return ResourceManager.GetString("AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_" +
                         "imported_fasta_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mi&amp;n peptides per gene.
+        /// </summary>
+        public static string AssociateProteinsDlg_Min_peptides_per_gene {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Min_peptides_per_gene", resourceCulture);
             }
         }
         
@@ -177,6 +195,15 @@ namespace pwiz.Skyline.EditUI {
             get {
                 return ResourceManager.GetString("AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_prote" +
                         "ins_or_protein_groups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Remove subset genes.
+        /// </summary>
+        public static string AssociateProteinsDlg_Remove_subset_genes {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Remove_subset_genes", resourceCulture);
             }
         }
         

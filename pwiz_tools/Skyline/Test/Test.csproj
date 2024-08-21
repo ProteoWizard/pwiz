@@ -148,6 +148,7 @@
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />

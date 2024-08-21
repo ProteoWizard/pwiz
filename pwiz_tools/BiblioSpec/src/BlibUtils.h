@@ -69,6 +69,7 @@ const char* specIdTypeToString(SPEC_ID_TYPE specIdType);
  */
 enum IONMOBILITY_TYPE { IONMOBILITY_NONE, IONMOBILITY_DRIFTTIME_MSEC, IONMOBILITY_INVERSEREDUCED_VSECPERCM2, IONMOBILITY_COMPENSATION_V, NUM_IONMOBILITY_TYPES };
 const char* ionMobilityTypeToString(IONMOBILITY_TYPE ionMobilityType);
+IONMOBILITY_TYPE parseIonMobilityType(const char* ionMobilityType);
 
 /**
  * All possible scores from different search algorithms.

@@ -2644,6 +2644,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group at gene level.
+        /// </summary>
+        public static string ParsimonySettings_GeneLevelParsimony {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_GeneLevelParsimony", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Group proteins.
         /// </summary>
         public static string ParsimonySettings_GroupProteins {

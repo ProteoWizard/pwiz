@@ -481,10 +481,11 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) &&
+            var equals = base.Equals(obj) &&
                    Equals(obj._name, _name) &&
                    ArrayUtil.EqualsDeep(obj.FastaSequenceList, FastaSequenceList) &&
                    obj.IsDecoy == IsDecoy;
+            return equals;
         }
 
         public override bool Equals(object obj)

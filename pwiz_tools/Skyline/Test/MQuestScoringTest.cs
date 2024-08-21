@@ -195,7 +195,7 @@ namespace pwiz.SkylineTest
             {
                 MQuestScoreEquals(calcProductMassError, 0.99112, peptideData);
                 MQuestScoreEquals(calcIntensity, 2.84732, peptideData);
-                MQuestScoreEquals(calcCrossCorr, double.NaN, peptideData);  // Not enough fragment ions
+                MQuestScoreEquals(calcCrossCorr, 0.92422, peptideData);
             }
             foreach (var peptideData in new[] {peptidePeakDataFull, peptidePeakDataMs1Full})
             {
@@ -205,7 +205,7 @@ namespace pwiz.SkylineTest
             MQuestScoreEquals(calcPrecursorMassError, double.NaN, peptidePeakData);
             MQuestScoreEquals(calcPrecursorMassError, 5.0, peptidePeakDataMs1);
             MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakData);
-            MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakDataMs1);   // Not enough MS1 transitions
+            MQuestScoreEquals(calcIdotp, 0.795167, peptidePeakDataMs1);
             MQuestScoreEquals(calcIdotp, 0.783653, peptidePeakDataMs1Full);
 
             var peakData1NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, 0.5);

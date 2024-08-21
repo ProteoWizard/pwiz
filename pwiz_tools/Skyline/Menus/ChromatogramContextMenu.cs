@@ -318,6 +318,10 @@ namespace pwiz.Skyline.Menus
             }
         }
 
+        public void AddRelativeAbundanceFormattingMenu(ToolStrip menuStrip, int iInsert)
+        {
+            menuStrip.Items.Insert(iInsert, relativeAbundanceFormattingMenuItem);
+        }
 
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
@@ -619,6 +623,11 @@ namespace pwiz.Skyline.Menus
             if (qcTraceItem == null)
                 throw new InvalidOperationException(@"qcMenuItem_Click must be triggered by a ToolStripMenuItem");
             SkylineWindow.ShowQc(qcTraceItem.Text);
+        }
+
+        private void relativeAbundanceFormattingMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowRelativeAbundanceFormatting();
         }
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {

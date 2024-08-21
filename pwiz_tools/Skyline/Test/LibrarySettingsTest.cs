@@ -248,21 +248,22 @@ namespace pwiz.SkylineTest
             bool equalRanks = (doc2 != null);
             if (equalRanks)
                 it = doc2.Peptides.GetEnumerator();
-
-            foreach (var nodePeptide in doc1.Peptides)
+            using (it)
             {
-                Assert.IsNotNull(nodePeptide.Rank);
-                Assert.IsTrue(nodePeptide.Rank <= 3);
-
-                if (it != null)
+                foreach (var nodePeptide in doc1.Peptides)
                 {
-                    if (!it.MoveNext() || it.Current == null)
-                        Assert.Fail("Unexpected end of peptides.");
-                    if (!Equals(nodePeptide.Rank, it.Current.Rank))
-                        equalRanks = false;
+                    Assert.IsNotNull(nodePeptide.Rank);
+                    Assert.IsTrue(nodePeptide.Rank <= 3);
+
+                    if (it != null)
+                    {
+                        if (!it.MoveNext() || it.Current == null)
+                            Assert.Fail("Unexpected end of peptides.");
+                        if (!Equals(nodePeptide.Rank, it.Current.Rank))
+                            equalRanks = false;
+                    }
                 }
             }
-
             Assert.IsFalse(equalRanks);
         }
 
