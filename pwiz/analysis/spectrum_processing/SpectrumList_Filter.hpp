@@ -226,6 +226,41 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public Spectru
 };
 
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_IsolationWindowSet : public SpectrumList_Filter::Predicate
+{
+public:
+
+    SpectrumList_FilterPredicate_IsolationWindowSet(const std::set<std::pair<double, double>>& isolationWindowSet, chemistry::MZTolerance tolerance, FilterMode mode);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const { return boost::logic::indeterminate; }
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+    virtual std::string describe() const { return "set of precursor isolation windows"; }
+
+private:
+    std::set<std::pair<double, double>> isolationWindowSet_;
+    chemistry::MZTolerance tolerance_;
+    FilterMode mode_;
+
+    static std::pair<double, double> getIsolationWindow(const msdata::Spectrum& spectrum);
+};
+
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_IsolationWidthSet : public SpectrumList_Filter::Predicate
+{
+public:
+    SpectrumList_FilterPredicate_IsolationWidthSet(const std::set<double>& isolationWidthSet, chemistry::MZTolerance tolerance, FilterMode mode);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const { return boost::logic::indeterminate; }
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+    virtual std::string describe() const { return "set of precursor isolation window widths"; }
+
+private:
+    std::set<double> isolationWidthSet_;
+    chemistry::MZTolerance tolerance_;
+    FilterMode mode_;
+
+    static double getIsolationWidth(const msdata::Spectrum& spectrum);
+};
+
+
 class PWIZ_API_DECL SpectrumList_FilterPredicate_DefaultArrayLengthSet : public SpectrumList_Filter::Predicate
 {
     public:

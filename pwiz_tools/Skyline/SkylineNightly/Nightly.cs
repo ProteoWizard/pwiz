@@ -110,7 +110,7 @@ namespace SkylineNightly
         public const int DEFAULT_DURATION_HOURS = 9;
         public const int PERF_DURATION_HOURS = 12;
 
-        public Nightly(RunMode runMode, string decorateSrcDirName = null)
+        public Nightly(RunMode runMode, string decorateSrcDirName = null, string logDir = null)
         {
             _runMode = runMode;
             _nightly = new Xml("nightly");
@@ -119,7 +119,7 @@ namespace SkylineNightly
             
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
-            _logDir = Path.Combine(nightlyDir, "Logs");
+            _logDir = logDir ?? Path.Combine(nightlyDir, "Logs");
             // Clean up after any old screengrab directories
             var logDirScreengrabs = Path.Combine(_logDir, "NightlyScreengrabs");
             if (Directory.Exists(logDirScreengrabs))
@@ -700,8 +700,9 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isIntegration = new Regex(@"git\.exe.*clone.*-b").IsMatch(log);
-            var isTrunk = !isIntegration && !log.Contains("Testing branch at");
+            var matchBranch = new Regex(@"git\.exe.*clone.*-b.*SkylineTesterForNightly_([a-z]+)").Match(log);
+            bool isTrunk = !matchBranch.Success;
+            bool isIntegration = matchBranch.Success && Equals("integration", matchBranch.Groups[1].Value);
 
             var machineName = Environment.MachineName;
             // Get machine name from logfile name, in case it's not from this machine

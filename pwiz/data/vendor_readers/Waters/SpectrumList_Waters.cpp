@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "Reader_Waters_Detail.hpp"
 #include <boost/spirit/include/karma.hpp>
 #include "boost/foreach_field.hpp"
@@ -604,27 +605,15 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
 
 PWIZ_API_DECL void SpectrumList_Waters::calculatePeakMetadata(SpectrumPtr& spectrum, const vector<float>& mz, const vector<float>& intensity)
 {
-    double tic = 0;
+    const auto metadata = pwiz::analysis::SpectrumList_MetadataFixer::calculatePeakMetadata(mz, intensity);
     if (!mz.empty())
     {
-        double bpmz, bpi = -1;
-        for (size_t i = 0, end = mz.size(); i < end; ++i)
-        {
-            tic += intensity[i];
-            if (bpi < intensity[i])
-            {
-                bpi = intensity[i];
-                bpmz = mz[i];
-            }
-        }
-
-        spectrum->set(MS_base_peak_intensity, bpi, MS_number_of_detector_counts);
-        spectrum->set(MS_base_peak_m_z, bpmz, MS_m_z);
-        spectrum->set(MS_lowest_observed_m_z, mz.front(), MS_m_z);
-        spectrum->set(MS_highest_observed_m_z, mz.back(), MS_m_z);
+        spectrum->set(MS_base_peak_intensity, metadata.basePeakY, MS_number_of_detector_counts);
+        spectrum->set(MS_base_peak_m_z, metadata.basePeakX, MS_m_z);
+        spectrum->set(MS_lowest_observed_m_z, metadata.lowestX, MS_m_z);
+        spectrum->set(MS_highest_observed_m_z, metadata.highestX, MS_m_z);
     }
-
-    spectrum->set(MS_TIC, tic, MS_number_of_detector_counts);
+    spectrum->set(MS_TIC, metadata.totalY, MS_number_of_detector_counts);
 }
 
 PWIZ_API_DECL bool SpectrumList_Waters::calibrationSpectraAreOmitted() const

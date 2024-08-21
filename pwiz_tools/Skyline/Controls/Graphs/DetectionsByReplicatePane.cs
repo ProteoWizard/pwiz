@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -33,16 +32,14 @@ namespace pwiz.Skyline.Controls.Graphs
 {
 
     public class DetectionsByReplicatePane : DetectionsPlotPane
-
     {
-
         public DetectionsByReplicatePane(GraphSummary graphSummary) : base(graphSummary)
         {
             XAxis.Type = AxisType.Text;
             XAxis.Title.Text = GraphsResources.DetectionPlotPane_XAxis_Name;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             var targetData = _detectionData.GetTargetData(Settings.TargetType);
@@ -66,23 +63,21 @@ namespace pwiz.Skyline.Controls.Graphs
             ChangeSelectedIndex(index);
         }
 
-        public override ImmutableList<float> GetToolTipDataSeries()
-        {
-            return ImmutableList.ValueOf(TargetData.TargetsCount.Select(n => (float)n));
-        }
-
-
         public override void UpdateGraph(bool selectionChanged)
         {
             GraphObjList.Clear();
             CurveList.Clear();
             Legend.IsVisible = false;
-            if (!DetectionPlotData.GetDataCache().TryGet(
-                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
-                out _detectionData))
-                return;
 
+            if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
+            {
+                _detectionData = DetectionPlotData.INVALID;
+            }
             AddLabels();
+            if (!_detectionData.IsValid)
+            {
+                return;
+            }
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;
             Legend.IsVisible = Settings.ShowLegend;

@@ -60,7 +60,7 @@ namespace BiblioSpec {
  * The three possible ways a spectrum may be identified in both result
  * files and spectrum files.  
  */
-enum SPEC_ID_TYPE { SCAN_NUM_ID, INDEX_ID, NAME_ID };
+enum SPEC_ID_TYPE { UNKNOWN=-1, SCAN_NUM_ID, INDEX_ID, NAME_ID };
 const char* specIdTypeToString(SPEC_ID_TYPE specIdType);
 
 /**
@@ -95,6 +95,7 @@ enum PSM_SCORE_TYPE {
     BYONIC_PEP,               // byonic .mzid files
     PEPTIDE_SHAKER_CONFIDENCE,// peptideshaker .mzid files
     GENERIC_QVALUE,
+    HARDKLOR_IDOTP, // Hardklor "The dot-product score of this feature to the theoretical model."  - we convert input Cosine Angle Correlation values to Normalized Contrast Angle for .blib
 
     NUM_PSM_SCORE_TYPES
 };

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -111,9 +112,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public string FormulaNoNull
+        public string PersistentName
         {
-            get { return ParsedMolecule.IsNullOrEmpty(_formula) ? DocSettingsResources.Loss_FormulaUnknown : _formula.ToString(); }
+            get { return ToString(CultureInfo.InvariantCulture); }
         }
 
         [Track]
@@ -305,14 +306,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            return ToString(MassType.Monoisotopic);
+            return ToString(CultureInfo.CurrentCulture);
         }
 
-        public string ToString(MassType massType)
+        public string ToString(IFormatProvider formatProvider)
         {
+            return ToString(MassType.Monoisotopic, formatProvider);
+        }
+
+        public string ToString(MassType massType, IFormatProvider formatProvider = null)
+        {
+            formatProvider ??= CultureInfo.CurrentCulture;
             string str = Formula != null ?
-                string.Format(@"{0:F04} - {1}", GetMass(massType), Formula) :
-                string.Format(@"{0:F04}", GetMass(massType));
+                string.Format(formatProvider, @"{0:F04} - {1}", GetMass(massType), Formula) :
+                string.Format(formatProvider, @"{0:F04}", GetMass(massType));
             if (Charge != 0)
             {
                 str += Transition.GetChargeIndicator(Adduct.FromCharge(Charge, Adduct.ADDUCT_TYPE.charge_only));

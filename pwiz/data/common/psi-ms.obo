@@ -1,10 +1,8 @@
 format-version: 1.2
-data-version: 4.1.136
-date: 10:11:2023 11:30
-saved-by: Chris Bielow
+data-version: 4.1.163
+date: 19:07:2024 07:15
+saved-by: Joshua Klein
 auto-generated-by: OBO-Edit 2.3.1
-import: http://purl.obolibrary.org/obo/pato.obo
-import: http://purl.obolibrary.org/obo/stato.owl
 default-namespace: MS
 namespace-id-rule: * MS:$sequence(7,0,9999999)$
 namespace-id-rule: * PEFF:$sequence(7,0,9999999)$
@@ -45,6 +43,7 @@ name: has_units
 [Typedef]
 id: part_of
 name: part_of
+xref: BFO:0000050
 is_transitive: true
 
 [Typedef]
@@ -183,6 +182,19 @@ id: NCIT:C60694
 name: Principal Component
 def: "One of the axes representing the projection of varience resulting from principal component analysis." [] {http://purl.obolibrary.org/obo/NCIT_C60694="NCI"}
 is_a: NCIT:C19044 ! Statistical Technique
+
+[Term]
+id: NCIT:C25337
+name: Number
+def: "A numeral or string of numerals expressing value, quantity, or identification." [] {http://purl.obolibrary.org/obo/NCIT_P378="NCI"}
+is_a: NCIT:C20189 ! Property or Attribute
+
+[Term]
+id: NCIT:C150827
+name: Number of Occurrences
+def: "The number of times something happened." [] {http://purl.obolibrary.org/obo/NCIT_P378="NCI"}
+synonym: "Number of Occurrences" EXACT [] {http://purl.obolibrary.org/obo/NCIT_P383="PT", http://purl.obolibrary.org/obo/NCIT_P384="NCI"}
+is_a: NCIT:C25337 ! Number
 
 [Term]
 id: MS:0000000
@@ -2893,6 +2905,12 @@ def: "The formation of gas-phase ions by the interaction of a pulsed laser with 
 is_a: MS:1000247 ! desorption ionization
 
 [Term]
+id: MS:1000394
+name: no sequence database
+def: "No reference sequence database was used in the search process to determine the identified peptide sequence, for example as with de novo sequencing." [PSI:PI]
+is_a: MS:1001347 ! database file format
+
+[Term]
 id: MS:1000395
 name: liquid secondary ionization
 def: "The ionization of any species by the interaction of a focused beam of ions with a sample that is dissolved in a solvent matrix. See also fast atom bombardment and secondary ionization." [PSI:MS]
@@ -4690,6 +4708,12 @@ is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
 
 [Term]
+id: MS:1000660
+name: Xevo MRT MS
+def: "Waters Corporation Xevo MRT Mass Spectrometer." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
 id: MS:1000661
 name: GPS Explorer
 def: "SCIEX or Applied Biosystems software for data acquisition and analysis." [PSI:MS]
@@ -5827,6 +5851,7 @@ xref: binary-data-type:MS\:1000521 "32-bit float"
 xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units UO:0000012 ! kelvin
+relationship: has_units UO:0000027 ! degree Celsius
 
 [Term]
 id: MS:1000823
@@ -5877,6 +5902,16 @@ name: isolation window upper offset
 def: "The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymmetric about the target m/z." [PSI:MS]
 is_a: MS:1000792 ! isolation window attribute
 relationship: has_units MS:1000040 ! m/z
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1000830
+name: precision
+def: "Precision is the degree of how close repeated measurements are to each other. This can, for example, be expressed using the standard deviation." [PSI:MS]
+comment: See MS:1000014 for the related term of accuracy.
+is_a: MS:1000480 ! mass analyzer attribute
+relationship: has_units MS:1000040 ! m/z
+relationship: has_units UO:0000169 ! parts per million
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -6132,9 +6167,9 @@ relationship: has_value_type xsd:string ! The allowed value-type for this CV ter
 
 [Term]
 id: MS:1000868
-name: SMILES formula
+name: SMILES string
 def: "The simplified molecular input line entry specification or SMILES is a specification for unambiguously describing the structure of a chemical compound using a short ASCII string." [EDAM:2301]
-is_a: MS:1000864 ! chemical formula
+is_a: MS:1000867 ! structural formula
 relationship: has_value_type xsd:string ! The allowed value-type for this CV term
 
 [Term]
@@ -9521,6 +9556,7 @@ name: SpectraST
 def: "Open-source software for mass spectral library creation and searching, developed at the Institute for Systems Biology and the Hong Kong University of Science and Technology. Part of the Trans-Proteomic Pipeline." [PSI:PI]
 is_a: MS:1001456 ! analysis software
 is_a: MS:1003207 ! library creation software
+is_a: MS:1003406 ! spectrum clustering software
 
 [Term]
 id: MS:1001478
@@ -17870,6 +17906,19 @@ is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
 
 [Term]
+id: MS:1002715
+name: temperature chromatogram
+def: "Representation of temperature versus time." [PSI:MS]
+is_a: MS:1000626 ! chromatogram type
+
+[Term]
+id: MS:1002716
+name: measured element
+def: "The component or dimension of an object being measured, for example the temperature of an instrument component over time." [PSI:MS]
+relationship: part_of MS:1000513 ! binary data array
+relationship: has_value_type xsd:string ! The allowed value-type for this CV term
+
+[Term]
 id: MS:1002719
 name: Pegasus BT
 def: "LECO bench-top GC time-of-flight mass spectrometer." [PSI:PI]
@@ -19419,6 +19468,7 @@ id: MS:1002954
 name: collisional cross sectional area
 def: "Structural molecular descriptor for the effective interaction area between the ion and neutral gas measured in ion mobility mass spectrometry." [PSI:PI]
 is_a: MS:1000861 ! molecular entity property
+is_a: MS:1000455 ! ion selection attribute
 relationship: has_units UO:0000324 ! square angstrom
 relationship: has_value_type xsd:double ! The allowed value-type for this CV term
 
@@ -19992,12 +20042,14 @@ id: MS:1003043
 name: number of residues
 def: "Number of amino acid residues in a peptide, commonly referred to as the peptide length." [PSI:PI]
 is_a: MS:1000887 ! peptide attribute
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003044
 name: number of missed cleavages
 def: "Number of amino acid residue bonds that should have been cleaved by the cleavage agent used, but were not." [PSI:PI]
 is_a: MS:1000887 ! peptide attribute
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003045
@@ -21533,6 +21585,7 @@ id: MS:1003270
 name: proforma peptidoform ion notation
 def: "A string describing the peptidoform ion using the PSI ProForma notation, which should include the charge state, and optionally the adduct type." [PSI:PI]
 is_a: MS:1003256 ! peptidoform ion attribute
+relationship: has_value_type xsd:string ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003271
@@ -21723,12 +21776,14 @@ id: MS:1003298
 name: contributing replicate spectrum keys
 def: "A list of cross references to contributing replicate spectra in the same library, in the form of library spectrum keys." [PSI:PI]
 relationship: part_of MS:1003297 ! contributing replicate spectrum
+relationship: has_value_type MS:1002712 ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003299
 name: contributing replicate spectrum USI
 def: "A list of cross references to contributing replicate spectra, in the form of PSI Universal Spectrum Identifiers." [PSI:PI]
 relationship: part_of MS:1003297 ! contributing replicate spectrum
+relationship: has_value_type xsd:string ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003300
@@ -21754,7 +21809,7 @@ synonym: "SSM" EXACT []
 id: MS:1003303
 name: spectral similarity
 def: "A measure of how similar two spectra are, based on the features of the spectra (the locations and intensities of peaks) alone." [PSI:PI]
-is_a: MS:1002694 ! single identification attribute
+is_a: MS:1002694 ! single identification result attribute
 relationship: part_of MS:1003302 ! spectrum-spectrum match
 
 [Term]
@@ -21962,7 +22017,7 @@ relationship: has_value_type xsd:string ! The allowed value-type for this CV ter
 [Term]
 id: MS:1003333
 name: regular expression for encoding identifications based on multiple spectra.
-def:  "^(?<MULTIPLE_SPECTRA_IDENTIFIER>[0-9]+)(?::(?<PARENT_OR_CHILD>P|C))$" [PSI:MS]
+def:  "^(?<MULTIPLE_SPECTRA_IDENTIFIER>[0-9]+)(?::(?<PARENT_OR_CHILD>P|C))?$" [PSI:MS]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -21993,7 +22048,7 @@ name: crosslinked PSM-level global FDR
 def: "Estimation of the global false discovery rate of crosslinked peptide spectrum matches." [PSI:MS]
 is_a: MS:1002701 ! PSM-level result list statistic
 is_a: MS:1002483 ! PSM-level statistical threshold
-is_a: MS:1002664 ! interaction score derived from  crosslinking
+is_a: MS:1002664 ! interaction score derived from crosslinking
 relationship: has_value_type xsd:double ! The allowed value-type for this CV term
 
 [Term]
@@ -22002,7 +22057,7 @@ name: peptide-pair sequence-level global FDR
 def: "Estimation of the global false discovery rate for distinct peptide-pairs (id est multiple PSMs have been collapsed to one entry). Applicable in the case of crosslinked peptides or noncovalently associated peptides." [PSI:MS]
 is_a: MS:1002703 ! peptide sequence-level result list statistic
 is_a: MS:1002484 ! peptide-level statistical threshold
-is_a: MS:1002664 ! interaction score derived from  crosslinking
+is_a: MS:1002664 ! interaction score derived from crosslinking
 relationship: has_value_type xsd:double ! The allowed value-type for this CV term
 
 [Term]
@@ -22305,7 +22360,7 @@ is_a: MS:1001457 ! data processing software
 id: MS:1003383
 name: timsTOF Ultra
 def: "Bruker Daltonics' timsTOF Ultra." [PSI:MS]
-is_a: MS:1003123! Bruker Daltonics timsTOF series
+is_a: MS:1003123 ! Bruker Daltonics timsTOF series
 
 [Term]
 id: MS:1003384
@@ -22433,6 +22488,47 @@ id: MS:1003402
 name: pymzqc
 def: "A Python package for reading, validating, and writing mzQC files." [https://github.com/MS-Quality-hub/pymzqc]
 is_a: MS:1003399 ! quality control software
+
+[Term]
+id: MS:1003403
+name: InChI
+def: "IUPAC International Chemical Identifier." [PMID:26136848]
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1000867 ! structural formula
+relationship: has_value_type xsd:string ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003404
+name: timsTOF HT
+def: "Bruker Daltonics' timsTOF HT." [PSI:MS]
+is_a: MS:1003123 ! Bruker Daltonics timsTOF series
+
+[Term]
+id: MS:1003405
+name: mzRecal
+def: "MS1 recalibration using identified peptides as internal calibrants." [DOI:10.1093/bioinformatics/btab056, PMID:33538780, https://github.com/524D/mzrecal]
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1003406
+name: spectrum clustering software
+def: "Software designed to group multiple mass spectra by high similarity, generally with the goal of grouping replicate spectra derived from the same analyte." [PSI:MS]
+is_a: MS:1000531 ! software
+
+[Term]
+id: MS:1003409
+name: Stellar
+def: "Thermo Scientific Stellar mass spectrometer contains a quadrupole mass filter, a collision cell, and a quadrupole linear ion trap mass analyzer." [PSI:MS]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1003410
+name: electron beam energy
+def: "The kinetic energy of the electron beam used in dissociation methods induced by a free electron beam, such as electron-capture dissociation (ECD), electron-detachment dissociation (EDD), and electron-activated dissociation (EAD)." [PSI:MS]
+is_a: MS:1000510 ! precursor activation attribute
+relationship: has_units UO:0000266 ! electronvolt
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
 
 [Term]
 id: MS:4000000
@@ -22605,8 +22701,6 @@ relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000018 ! XIC metric
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_value_concept MS:1000086 ! full width at half-maximum
-relationship: has_value_concept STATO:0000291 ! quantile
-relationship: has_units UO:0000010 ! second
 
 [Term]
 id: MS:4000052
@@ -22620,14 +22714,12 @@ relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000018 ! XIC metric
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
-relationship: has_value_concept STATO:0000105 ! log signal intensity ratio
-relationship: has_value_concept UO:0000191 ! fraction
 
 [Term]
 id: MS:4000053
 name: chromatography duration
 def: "The retention time duration of the chromatography in seconds." [PSI:MS]
-comment: Longer duration may indicate a better chromatographic separation of compounds which depends, however, also on the sampling/scan rate of the MS instrument. 
+comment: Longer duration may indicate a better chromatographic separation of compounds which depends, however, also on the sampling/scan rate of the MS instrument.
 synonym: "RT-Duration" RELATED [PMID:24494671]
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
@@ -22702,7 +22794,6 @@ relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000017 ! chromatogram metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
-relationship: has_value_concept STATO:0000105 ! log signal intensity ratio
 
 [Term]
 id: MS:4000058
@@ -22718,7 +22809,6 @@ relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000017 ! chromatogram metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
-relationship: has_value_concept STATO:0000105 ! log signal intensity ratio
 
 [Term]
 id: MS:4000059
@@ -22760,8 +22850,6 @@ relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
 relationship: has_value_type xsd:int ! The allowed value-type for this CV term
 relationship: has_value_concept NCIT:C45781 ! Density
-relationship: has_value_concept STATO:0000291 ! quantile
-relationship: has_units UO:0000189 ! count unit
 
 [Term]
 id: MS:4000062
@@ -22777,7 +22865,6 @@ relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
 relationship: has_value_type xsd:int ! The allowed value-type for this CV term
 relationship: has_value_concept NCIT:C45781 ! Density
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_units UO:0000189 ! count unit
 
 [Term]
@@ -22877,7 +22964,6 @@ relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000019 ! MS metric
 relationship: has_units MS:1000040 ! m/z
-relationship: has_value_concept STATO:0000035 ! range
 
 [Term]
 id: MS:4000070
@@ -22889,7 +22975,6 @@ relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000016 ! retention time metric
 relationship: has_units UO:0000010 ! second
-relationship: has_value_concept STATO:0000035 ! range
 
 [Term]
 id: MS:4000071
@@ -22906,6 +22991,7 @@ relationship: has_units UO:0000189 ! count unit
 id: MS:4000072
 name: observed mass accuracy
 def: "Observed mass accuracy in ppm, calculated by 1E6 x (observed m/z - theoretical m/z)/theoretical m/z of a selected and identified ion in a mass spectrum." [PSI:MS]
+is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000014 ! single spectrum based metric
 relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23245,7 +23331,7 @@ relationship: has_column MS:1000285 ! total ion current
 id: MS:4000105
 name: ion injection parameters
 def: "Tabular representation of the parameters around ion selection like the amount of time spent filling an ion trapping device for each scan acquisition." [PSI:MS]
-is_a: MS:4000005 ! table name: scan window upper limit
+is_a: MS:4000005 ! table
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_column MS:1000767 ! native spectrum identifier format
@@ -23287,7 +23373,6 @@ comment: The distribution of peak densities in MS1 can provide insight into the 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23298,7 +23383,6 @@ comment: The distribution of peak densities in MS1 can provide insight into the 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23309,7 +23393,6 @@ comment: The distribution of peak densities in MS1 can provide insight into the 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23320,7 +23403,6 @@ comment: The distribution of peak densities in MS1 can provide insight into the 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23331,7 +23413,6 @@ comment: The distribution of peak densities in MS2 can provide insight into the 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23342,7 +23423,6 @@ comment: The distribution of peak densities in MS2 can provide insight into the 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23353,7 +23433,6 @@ comment: The distribution of peak densities in MS2 can provide insight into the 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23364,7 +23443,6 @@ comment: The distribution of peak densities in MS2 can provide insight into the 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23375,7 +23453,6 @@ comment: The intensity distribution of the precursors informs about the dynamic 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23387,7 +23464,6 @@ comment: The intensity distribution of the precursors informs about the dynamic 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23399,7 +23475,6 @@ comment: The intensity distribution of the precursors informs about the dynamic 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23411,7 +23486,6 @@ comment: The intensity distribution of the precursors informs about the dynamic 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23423,7 +23497,6 @@ comment: The intensity distribution of the precursors informs about the dynamic 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23435,7 +23508,6 @@ comment: The Signal-to-noise ratio in MS1 distribution can provide insight to th
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23446,7 +23518,6 @@ comment: The signal-to-noise ratio in MS1 distribution can provide insight into 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23457,7 +23528,6 @@ comment: The Signal-to-noise ratio in MS1 distribution can provide insight into 
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23468,7 +23538,6 @@ comment: The Signal-to-noise ratio in MS1 distribution can provide insight into 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23479,7 +23548,6 @@ comment: The Signal-to-noise ratio in MS1 distribution can provide insight into 
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23490,7 +23558,6 @@ comment: A high signal-to-noise ratio in MS2 distribution can explain a high rat
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23501,7 +23568,6 @@ comment: A high signal-to-noise ratio in MS2 distribution can explain a high rat
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23512,7 +23578,6 @@ comment: A high signal-to-noise ratio in MS2 distribution can explain a high rat
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23523,7 +23588,6 @@ comment: A high signal-to-noise ratio in MS2 distribution can explain a high rat
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23534,7 +23598,6 @@ comment: A high signal-to-noise ratio in MS2 distribution can explain a high rat
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
@@ -23544,7 +23607,6 @@ def: "From the distribution of ion injection times (MS:1000927) for MS1, the qua
 comment: Injection time distribution can be used to gauge the suitability of used instrument settings for the sample content used.
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23556,7 +23618,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23568,7 +23629,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23580,7 +23640,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23592,7 +23651,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000021 ! MS1 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23603,7 +23661,6 @@ def: "From the distribution of ion injection times (MS:1000927) for MS2, the qua
 comment: Injection time distribution can be used to gauge the suitability of used instrument settings for the sample content used.
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23615,7 +23672,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23627,7 +23683,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000003 ! single value
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23639,7 +23694,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23651,7 +23705,6 @@ comment: Injection time distribution can be used to gauge the suitability of use
 is_a: MS:4000004 ! n-tuple
 relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000036 ! outlier
 relationship: has_units UO:0000028 ! millisecond
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -23659,6 +23712,7 @@ relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 id: MS:4000141
 name: outlier threshold criterion
 def: "The definition of the outlier criteria applied." [PSI:MS]
+is_a: MS:4000080 ! QC non-metric term
 
 [Term]
 id: MS:4000142
@@ -23732,8 +23786,8 @@ name: MS2 precursor median m/z of identified quantification data points
 def: "Median m/z value for MS2 precursors of all quantification data points after user-defined acceptance criteria are applied. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The m/z distribution informs about the dynamic range of the acquisition.
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
-is_a: MS:4000020 ! ion source metric
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
 relationship: has_units MS:1000040 ! m/z
 
@@ -23743,8 +23797,8 @@ name: interquartile RT period for identified quantification data points
 def: "The interquartile retention time period, in seconds, for all quantification data points after user-defined acceptance criteria are applied over the complete run. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: Longer duration may indicate a better chromatographic separation of compounds which depends, however, also on the sampling/scan rate of the MS instrument.
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
-is_a: MS:4000017 ! chromatogram metric
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000017 ! chromatogram metric
 relationship: has_units UO:0000010 ! second
 synonym: "C-2A"  RELATED [PMID:19837981]
 
@@ -23752,10 +23806,10 @@ synonym: "C-2A"  RELATED [PMID:19837981]
 id: MS:4000154
 name: rate of the interquartile RT period for identified quantification data points
 def: "The rate of identified quantification data points for the interquartile retention time period, in identified quantification data points per second. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
-comment: Higher rates may indicate a more efficient sampling and identification. 
+comment: Higher rates may indicate a more efficient sampling and identification.
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
-is_a: MS:4000017 ! chromatogram metric
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000017 ! chromatogram metric
 relationship: has_units UO:0000106 ! hertz
 synonym: "C-2B"  RELATED [PMID:19837981]
 
@@ -23765,8 +23819,8 @@ name: area under TIC
 def: "The area under the total ion chromatogram." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition. Differences between samples of an experiment may indicate differences in the dynamic range and/or in the sample content.
 is_a: MS:4000003 ! single value
-is_a: MS:4000009 ! ID free
-is_a: MS:4000017 ! chromatogram metric
+relationship: has_metric_category MS:4000009 ! ID free
+relationship: has_metric_category MS:4000017 ! chromatogram metric
 
 [Term]
 id: MS:4000156
@@ -23774,17 +23828,16 @@ name: area under TIC RT quantiles
 def: "The area under the total ion chromatogram of the retention time quantiles. Number of quantiles are given by the n-tuple." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition along the chromatographic separation. Differences between samples of an experiment may indicate differences in chromatographic performance, differences in the dynamic range and/or in the sample content.
 is_a: MS:4000004 ! n-tuple
-is_a: MS:4000009 ! ID free
-is_a: MS:4000017 ! chromatogram metric
+relationship: has_metric_category MS:4000009 ! ID free
+relationship: has_metric_category MS:4000017 ! chromatogram metric
 
 [Term]
 id: MS:4000157
 name: extent of identified MS2 precursor intensity
 def: "Ratio of 95th over 5th percentile of MS2 precursor intensity for all quantification data points after user-defined acceptance criteria are applied. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
 synonym: "MS1-3A"  RELATED [PMID:19837981]
 
@@ -23793,18 +23846,16 @@ id: MS:4000158
 name: median of TIC values in the RT range in which the middle half of quantification data points are identified
 def: "Median of TIC values in the RT range in which half of quantification data points are identified (RT values of Q1 to Q3 of identifications). These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition along the chromatographic separation.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 
 [Term]
 id: MS:4000159
 name: median of TIC values in the shortest RT range in which half of the quantification data points are identified
-def: "Median of TIC values in the shortest RT range in which half of the quantification data points are identified. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS] 
+def: "Median of TIC values in the shortest RT range in which half of the quantification data points are identified. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition along the chromatographic separation.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 synonym: "MS1-2B"  RELATED [PMID:19837981]
 
 [Term]
@@ -23812,9 +23863,8 @@ id: MS:4000160
 name: MS2 precursor intensity range
 def: "Minimum and maximum MS2 precursor intensity recorded." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000004 ! n-tuple
-is_a: MS:4000009 ! ID free
+relationship: has_metric_category MS:4000009 ! ID free
 relationship: has_metric_category MS:4000022 ! MS2 metric
 
 [Term]
@@ -23823,9 +23873,8 @@ name: identified MS2 precursor intensity distribution
 def: "From the distribution of identified MS2 precursor intensities, the quantiles. E.g. a value triplet represents the quartiles Q1, Q2, Q3. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition in relation to identifiability.
 is_a: MS:4000004 ! n-tuple
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23835,9 +23884,8 @@ name: unidentified MS2 precursor intensity distribution
 def: "From the distribution of unidentified MS2 precursor intensities, the quantiles. E.g. a value triplet represents the quartiles Q1, Q2, Q3. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition in relation to identifiability.
 is_a: MS:4000004 ! n-tuple
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000291 ! quantile
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23847,9 +23895,8 @@ name: identified MS2 precursor intensity distribution mean
 def: "From the distribution of identified MS2 precursor intensities, the mean. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition in relation to identifiability.
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23859,9 +23906,8 @@ name: unidentified MS2 precursor intensity distribution mean
 def: "From the distribution of unidentified MS2 precursor intensities, the mean. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition in relation to identifiability.
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000401 ! sample mean
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23871,9 +23917,8 @@ name: identified MS2 precursor intensity distribution sigma
 def: "From the distribution of identified MS2 precursor intensities, the sigma value. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition in relation to identifiability.
 is_a: MS:4000003 ! single value
-relationship: has_metric_category MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
@@ -23883,20 +23928,18 @@ name: unidentified MS2 precursor intensity distribution sigma
 def: "From the distribution of unidentified MS2 precursor intensities, the sigma value. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: The metric informs about the dynamic range of the acquisition in relation to identifiability.
 is_a: MS:4000003 ! single value
-relationship: has_metric_category MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
-relationship: has_value_concept STATO:0000237 ! standard deviation
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 relationship: has_units MS:1000043 ! intensity unit
 
 [Term]
 id: MS:4000167
-name: ratio of 1+ over 2+ of all MS2 known precursor charges 
+name: ratio of 1+ over 2+ of all MS2 known precursor charges
 def: "The ratio of 1+ over 2+ MS2 precursor charge count of all spectra." [PSI:MS]
 comment: High ratios of 1+/2+ MS2 precursor charge count may indicate inefficient ionization.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23907,12 +23950,11 @@ synonym: "MS2-PrecZ-2" RELATED [PMID:24494671]
 
 [Term]
 id: MS:4000168
-name: ratio of 1+ over 2+ of identified MS2 known precursor charges 
+name: ratio of 1+ over 2+ of identified MS2 known precursor charges
 def: "The ratio of 1+ over 2+ MS2 precursor charge count of identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: High ratios of 1+/2+ MS2 precursor charge count may indicate inefficient ionization in relation to identifiability.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23923,12 +23965,11 @@ synonym: "MS2-PrecZ-2" RELATED [PMID:24494671]
 
 [Term]
 id: MS:4000169
-name: ratio of 3+ over 2+ of all MS2 known precursor charges 
+name: ratio of 3+ over 2+ of all MS2 known precursor charges
 def: "The ratio of 3+ over 2+ MS2 precursor charge count of all spectra." [PSI:MS]
 comment: Higher ratios of 3+/2+ MS2 precursor charge count may indicate e.g. preference for longer peptides.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23939,12 +23980,11 @@ synonym: "MS2-PrecZ-3" RELATED [PMID:24494671]
 
 [Term]
 id: MS:4000170
-name: ratio of 3+ over 2+ of identified MS2 known precursor charges 
+name: ratio of 3+ over 2+ of identified MS2 known precursor charges
 def: "The ratio of 3+ over 2+ MS2 precursor charge count of identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: Higher ratios of 3+/2+ MS2 precursor charge count may indicate e.g. preference for longer peptides in relation to identifiability.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23955,12 +23995,11 @@ synonym: "MS2-PrecZ-3" RELATED [PMID:24494671]
 
 [Term]
 id: MS:4000171
-name: ratio of 4+ over 2+ of all MS2 known precursor charges 
+name: ratio of 4+ over 2+ of all MS2 known precursor charges
 def: "The ratio of 4+ over 2+ MS2 precursor charge count of all spectra." [PSI:MS]
 comment: Higher ratios of 3+/2+ MS2 precursor charge count may indicate e.g. preference for longer peptides.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23971,12 +24010,11 @@ synonym: "MS2-PrecZ-4" RELATED [PMID:24494671]
 
 [Term]
 id: MS:4000172
-name: ratio of 4+ over 2+ of identified MS2 known precursor charges 
+name: ratio of 4+ over 2+ of identified MS2 known precursor charges
 def: "The ratio of 4+ over 2+ MS2 precursor charge count of identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: Higher ratios of 3+/2+ MS2 precursor charge count may indicate e.g. preference for longer peptides in relation to identifiability.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -23990,9 +24028,8 @@ id: MS:4000173
 name: mean MS2 precursor charge in all spectra
 def: "Mean MS2 precursor charge in all spectra" [PSI:MS]
 comment: Higher charges may indicate inefficient ionization or e.g. preference for longer peptides.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -24009,9 +24046,8 @@ id: MS:4000174
 name: mean MS2 precursor charge in identified spectra
 def: "Mean MS2 precursor charge in identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: Higher charges may indicate inefficient ionization or e.g. preference for longer peptides in relation to identifiability.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -24028,9 +24064,8 @@ id: MS:4000175
 name: median MS2 precursor charge in all spectra
 def: "Median MS2 precursor charge in all spectra" [PSI:MS]
 comment: Higher charges may indicate inefficient ionization and/or e.g. preference for longer peptides.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000009 ! ID free metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -24047,9 +24082,8 @@ id: MS:4000176
 name: median MS2 precursor charge in identified spectra
 def: "Median MS2 precursor charge in identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
 comment: Higher charges may indicate inefficient ionization and/or e.g. preference for longer peptides in relation to identifiability.
-is_a: MS:4000001 ! QC metric
 is_a: MS:4000003 ! single value
-is_a: MS:4000008 ! ID based
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_metric_category MS:4000012 ! single run based metric
 relationship: has_metric_category MS:4000020 ! ion source metric
 relationship: has_metric_category MS:4000022 ! MS2 metric
@@ -24060,6 +24094,80 @@ synonym: "MS2-PrecZ-3" RELATED [PMID:24494671]
 synonym: "MS2-PrecZ-4" RELATED [PMID:24494671]
 synonym: "MS2-PrecZ-5" RELATED [PMID:24494671]
 synonym: "MS2-PrecZ-more" RELATED [PMID:24494671]
+
+[Term]
+id: MS:4000177
+name: contaminant protein abundance fraction
+def: "The fraction of total protein abundance in a mass spectrometry run or a group of runs which can be attributed to a user-defined list of contaminant proteins (e.g. using the cRAP contaminant database)." [PSI:MS]
+comment: "High values may indicate a sample handling issue, and/or insufficient sample concentration."
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_value_type xsd:float ! The allowed value-type for this CV
+relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
+relationship: has_order MS:1002109 ! lower score better
+synonym: "PG: Contaminants" NARROW []
+
+[Term]
+id: MS:4000178
+name: precursor ppm deviation mean
+def: "The mean of the distribution of observed precursor mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied" [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000021 ! MS1 metric
+relationship: has_value_concept MS:1000014 ! accuracy
+relationship: has_units UO:0000169 ! parts per million
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:4000179
+name: precursor ppm deviation sigma
+def: "The standard deviation of the distribution of observed precursor mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied" [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000021 ! MS1 metric
+relationship: has_value_concept MS:1000830 ! precision
+relationship: has_units UO:0000169 ! parts per million
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:4000180
+name: table of missed cleavage counts
+def: "The number of identified peptides with corresponding number of missed cleavages after user-defined acceptance criteria are applied. The number of missed cleavages per peptide is given in the 'number of missed cleavages' column, the respective count of such peptides identified in the 'Number of Occurrences' column. The highest 'missed cleavages' row is to be interpreted as that number of missed cleavages or higher." [PSI:MS]
+is_a: MS:4000005 ! table
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_column MS:1003044 ! number of missed cleavages
+relationship: has_column NCIT:C150827 ! Number of Occurrences
+
+[Term]
+id: MS:4000181
+name: identified MS2 quarter RT fraction
+def: "The interval used for acquisition of the first, second, third, and fourth quarter of all identified MS2 events divided by retention time duration." [PSI:MS]
+comment: The metric informs about the dynamic range of the MS2 identification process along the chromatographic separation. For MS2 scans, the comparability of the values depends on the acquisition mode and settings to select ions for fragmentation.
+is_a: MS:4000004 ! n-tuple
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000022 ! MS2 metric
+relationship: has_metric_category MS:4000016 ! retention time metric
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+relationship: has_units UO:0000191 ! fraction
+synonym: "RT-MSMS-Q1" RELATED [PMID:24494671]
+synonym: "RT-MSMS-Q2" RELATED [PMID:24494671]
+synonym: "RT-MSMS-Q3" RELATED [PMID:24494671]
+synonym: "RT-MSMS-Q4" RELATED [PMID:24494671]
+
+[Term]
+id: MS:1003407
+name: Scout
+def: "Identifying crosslinked peptides in complex protein mixtures" [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1003408
+name: Scout score
+def: "Scout identification search engine score" [PSI:MS]
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1003407 ! higher score better
+relationship: has_value_type xsd:double ! The allowed value-type for this CV term
 
 [Term]
 id: PEFF:0000001
@@ -24495,7 +24603,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the distance between two points." [Wikipedia:Wikipedia]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001708
 created_by: george gkoutos
 
 [Term]
@@ -24505,8 +24612,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the amount of matter/energy of a physical object." [Wikipedia:Wikipedia]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0000125
-relationship: is_unit_of PATO:0000128
 created_by: george gkoutos
 
 [Term]
@@ -24518,8 +24623,6 @@ def: "A unit which is a standard measure of the dimension in which events occur 
 subset: unit_group_slim
 synonym: "time derived unit" EXACT []
 is_a: UO:0000000
-relationship: is_unit_of PATO:0000165
-relationship: is_unit_of PATO:0001309
 created_by: george gkoutos
 
 [Term]
@@ -24531,7 +24634,6 @@ def: "A unit which is a standard measure of the average kinetic energy of the pa
 subset: unit_group_slim
 synonym: "temperature derived unit" EXACT []
 is_a: UO:0000000
-relationship: is_unit_of PATO:0000146
 created_by: george gkoutos
 
 [Term]
@@ -24647,7 +24749,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the amount of a 2-dimensional flat surface." [UOC:GVG]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001709
 created_by: george gkoutos
 
 [Term]
@@ -24658,7 +24759,6 @@ def: "A density unit which is a standard measure of the mass of a substance in a
 subset: unit_group_slim
 synonym: "mass per unit volume" EXACT []
 is_a: UO:0000182
-relationship: is_unit_of PATO:0001353
 created_by: george gkoutos
 
 [Term]
@@ -24668,7 +24768,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas." [NIST:NIST]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001710
 created_by: george gkoutos
 
 [Term]
@@ -24689,7 +24788,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the number of repetitive actions in a particular time." [NIST:NIST]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0000044
 created_by: george gkoutos
 
 [Term]
@@ -24710,7 +24808,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the force applied to a given area." [NIST:NIST]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001025
 created_by: george gkoutos
 
 [Term]
@@ -24730,8 +24827,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc)." [NIST:NIST]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001021
-relationship: is_unit_of PATO:0001026
 created_by: george gkoutos
 
 [Term]
@@ -24751,7 +24846,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the figure or space formed by the junction of two lines or planes." [Wikipedia:Wikipedia]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0000133
 created_by: george gkoutos
 
 [Term]
@@ -24811,7 +24905,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the influence exerted by some mass." [Wikipedia:Wikipedia]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001019
 created_by: george gkoutos
 
 [Term]
@@ -24877,7 +24970,6 @@ namespace: unit.ontology
 def: "A unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field." [Wikipedia:Wikipedia]
 subset: unit_group_slim
 is_a: UO:0000000
-relationship: is_unit_of PATO:0001464
 created_by: george gkoutos
 
 [Term]
@@ -24997,7 +25089,6 @@ subset: unit_slim
 synonym: "microlitres per minute" EXACT []
 synonym: "uL/min" EXACT []
 is_a: UO:0000270
-relationship: is_unit_of PATO:0001574
 created_by: george gkoutos
 
 [Term]

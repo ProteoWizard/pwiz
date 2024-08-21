@@ -95,7 +95,7 @@ struct FrameImpl : public Frame
 
     virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
                                          bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const;
-    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const;
+    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter, double& tic, double& minMz, double& maxMz) const;
 
     private:
     int frameIndex_;
@@ -587,7 +587,7 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
     CATCH_AND_FORWARD
 }
 
-size_t FrameImpl::getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const
+size_t FrameImpl::getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter, double& tic, double& minMz, double& maxMz) const
 {
     try
     {
@@ -598,6 +598,10 @@ size_t FrameImpl::getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, co
 
         MIDAC::IMidacSpecDataMs^ specData = (MIDAC::IMidacSpecDataMs^) specData_;
 
+        minMz = DBL_MAX;
+        maxMz = 0;
+        tic = 0;
+
         if (ignoreZeroIntensityPoints)
         {
             int expectedNonZeroPoints = 0;
@@ -606,8 +610,26 @@ size_t FrameImpl::getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, co
                 imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
                 double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
 
-                if (chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
-                    expectedNonZeroPoints += specData->NonZeroPoints;
+                if (!chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
+                    continue;
+
+                expectedNonZeroPoints += specData->NonZeroPoints;
+
+                imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Peak, true, (MIDAC::IMidacSpecDataMs^%) specData);
+
+                for (int j = 0, end = specData->XArray->Length; j < end; ++j)
+                {
+                    double mz = specData->XArray[j];
+                    double intensity = specData->YArray[j];
+                    if (intensity == 0)
+                        continue;
+
+                    tic += intensity;
+                    if (minMz > mz)
+                        minMz = mz;
+                    if (mz > maxMz)
+                        maxMz = mz;
+                }
             }
             return expectedNonZeroPoints;
         }
@@ -618,11 +640,25 @@ size_t FrameImpl::getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, co
             imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
             double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
 
-            if (chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
+            if (!chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
+                continue;
+
+            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
+
+            for (int j = 0, end = specData->XArray->Length; j < end; ++j)
             {
-                imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
-                expectedPoints += specData->XArray->Length + 1; // add 1 for missing trailing zero
+                double mz = specData->XArray[j];
+                double intensity = specData->YArray[j];
+                if (intensity == 0)
+                    continue;
+
+                tic += intensity;
+                if (minMz > mz)
+                    minMz = mz;
+                if (mz > maxMz)
+                    maxMz = mz;
             }
+            expectedPoints += specData->XArray->Length + 1; // add 1 for missing trailing zero
         }
         return expectedPoints;
     }

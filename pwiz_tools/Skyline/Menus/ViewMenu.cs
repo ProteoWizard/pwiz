@@ -31,7 +31,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -967,6 +967,10 @@ namespace pwiz.Skyline.Menus
                     SkylineWindow.ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
                 }
             }
+
+            if (candidatePeaksToolStripMenuItem.Enabled != enable)
+                candidatePeaksToolStripMenuItem.Enabled = enable;
+
             if (peakAreasMenuItem.Enabled != enable)
             {
                 peakAreasMenuItem.Enabled = enable;
@@ -1007,6 +1011,7 @@ namespace pwiz.Skyline.Menus
                 }
             }
             chromatogramsMenuItem.Enabled = enable;
+            calibrationCurveMenuItem.Enabled = enable;
             transitionsMenuItem.Enabled = enable;
             transformChromMenuItem.Enabled = enable;
             autoZoomMenuItem.Enabled = enable;
@@ -1016,7 +1021,7 @@ namespace pwiz.Skyline.Menus
         public void EnableGraphSpectrum(Action ensureLayoutLocked, SrmSettings settings, bool deserialized)
         {
             bool hasLibraries = settings.PeptideSettings.Libraries.HasLibraries;
-            bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
+            bool enable = hasLibraries || KoinaHelpers.KoinaSettingsValid;
             if (enable)
             {
                 UpdateIonTypeMenu();
@@ -1028,12 +1033,14 @@ namespace pwiz.Skyline.Menus
             {
                 libraryMatchToolStripMenuItem.Enabled = enable;
                 ionTypesMenuItem.Enabled = enable;
+                specialIonsMenuItem.Enabled = enable;
+                precursorIonMenuItem.Enabled = enable;
                 chargesMenuItem.Enabled = enable;
                 ranksMenuItem.Enabled = enable;
             }
 
             // Make sure we don't keep a spectrum graph around because it was
-            // persisted when Prosit settings were on and they no longer are
+            // persisted when Koina settings were on and they no longer are
             if ((enableChanging && !deserialized) || (deserialized && !hasLibraries && !enable))
             {
                 ensureLayoutLocked();
@@ -1069,7 +1076,7 @@ namespace pwiz.Skyline.Menus
             spectrumGridForm.Show(SkylineWindow);
         }
 
-        private void otherGridsMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void liveReportsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             // The "Spectrum Grid" menu item is only visible if the user was holding down shift
             spectrumGridMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);

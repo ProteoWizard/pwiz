@@ -22,17 +22,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.CLI.analysis;
-using pwiz.CLI.msdata;
-using pwiz.CLI.util;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.ProteowizardWrapper
 {
-    public class DiaUmpire : MsDataFileImpl
+    public static class DiaUmpire
     {
-        private readonly SpectrumList_DiaUmpire.Config _diaUmpireConfig;
-        private readonly IterationListenerToMonitor _ilrMonitor;
-
         public enum WindowScheme
         {
             // ReSharper disable InconsistentNaming
@@ -61,12 +55,101 @@ namespace pwiz.ProteowizardWrapper
 
             public Config()
             {
-                var defaultConfig = new SpectrumList_DiaUmpire.Config();
-                defaultConfig.instrumentParameters.AdjustFragIntensity = false;
+                var defaultConfig = new InstrumentParameter();
+                defaultConfig.AdjustFragIntensity = false;
 
                 Parameters = new Dictionary<string, object>();
-                foreach (var prop in typeof(SpectrumList_DiaUmpire.Config.InstrumentParameter).GetProperties())
-                    Parameters[prop.Name] = prop.GetValue(defaultConfig.instrumentParameters);
+                foreach (var prop in typeof(InstrumentParameter).GetFields())
+                    Parameters[prop.Name] = prop.GetValue(defaultConfig);
+            }
+
+            public class InstrumentParameter
+            {
+                public InstrumentParameter()
+                {
+                    // default parameters from TTOF5600
+                    MS1PPM = 30;
+                    MS2PPM = 40;
+                    SN = 2;
+                    MS2SN = 2;
+                    MinMSIntensity = 5;
+                    MinMSMSIntensity = 1;
+                    MinRTRange = 0.1f;
+                    MaxNoPeakCluster = 4;
+                    MinNoPeakCluster = 2;
+                    MaxMS2NoPeakCluster = 4;
+                    MinMS2NoPeakCluster = 2;
+                    MaxCurveRTRange = 1.5f;
+                    Resolution = 17000;
+                    RTtol = 0.1f;
+                    Denoise = true;
+                    EstimateBG = true;
+                    RemoveGroupedPeaks = true;
+                }
+
+                // ReSharper disable InconsistentNaming
+                public int Resolution;
+                public float MS1PPM;
+                public float MS2PPM;
+                public float SN;
+                public float MinMSIntensity;
+                public float MinMSMSIntensity;
+                public int NoPeakPerMin = 150;
+                public float MinRTRange;
+                public int StartCharge = 2;
+                public int EndCharge = 5;
+                public int MS2StartCharge = 2;
+                public int MS2EndCharge = 4;
+                public float MaxCurveRTRange;
+                public float RTtol;
+                public float MS2SN;
+                public int MaxNoPeakCluster;
+                public int MinNoPeakCluster;
+                public int MaxMS2NoPeakCluster;
+                public int MinMS2NoPeakCluster;
+                public bool Denoise;
+                public bool EstimateBG;
+                public bool DetermineBGByID = false;
+                public bool RemoveGroupedPeaks;
+                public bool Deisotoping = false;
+                public bool BoostComplementaryIon = true;
+                public bool AdjustFragIntensity = true;
+                public int RPmax = 25;
+                public int RFmax = 300;
+                public float RTOverlap = (float)0.3;
+                public float CorrThreshold = (float)0.2;
+                public float DeltaApex = (float)0.6;
+                public float SymThreshold = (float)0.3;
+                public int NoMissedScan = 1;
+                public int MinPeakPerPeakCurve = 1;
+                public float MinMZ = 200;
+                public int MinFrag = 10;
+                public float MiniOverlapP = (float)0.2;
+                public bool CheckMonoIsotopicApex = false;
+                public bool DetectByCWT = true;
+                public bool FillGapByBK = true;
+                public float IsoCorrThreshold = (float)0.2;
+                public float RemoveGroupedPeaksCorr = (float)0.3;
+                public float RemoveGroupedPeaksRTOverlap = (float)0.3;
+                public float HighCorrThreshold = (float)0.7;
+                public int MinHighCorrCnt = 10;
+                public int TopNLocal = 6;
+                public int TopNLocalRange = 100;
+                public float IsoPattern = (float)0.3;
+                public float StartRT = 0;
+                public float EndRT = 9999;
+                public bool TargetIDOnly = false;
+                public bool MassDefectFilter = true;
+                public float MinPrecursorMass = 600;
+                public float MaxPrecursorMass = 15000;
+                public bool UseOldVersion = false;
+                public float RT_window_Targeted = -1;
+                public int SmoothFactor = 5;
+                public bool DetectSameChargePairOnly = false;
+                public float MassDefectOffset = (float)0.1;
+                public int MS2PairTopN = 5;
+                public bool MS2Pairing = true;
+                // ReSharper restore InconsistentNaming
             }
 
             public enum InstrumentPreset
@@ -201,96 +284,9 @@ namespace pwiz.ProteowizardWrapper
 
             internal static IEnumerable<string> GetDiaUmpireParameters()
             {
-                return typeof(SpectrumList_DiaUmpire.Config.InstrumentParameter).GetFields().Select(f => f.Name);
+                return typeof(InstrumentParameter).GetFields().Select(f => f.Name);
             }
-
-            internal SpectrumList_DiaUmpire.Config GetDiaUmpireConfig()
-            {
-                var config = new SpectrumList_DiaUmpire.Config();
-
-                foreach (var prop in typeof(SpectrumList_DiaUmpire.Config.InstrumentParameter).GetProperties())
-                {
-                    switch (prop.GetValue(config.instrumentParameters))
-                    {
-                        case float f:
-                        case double d:
-                            prop.SetValue(config.instrumentParameters, Convert.ToSingle(Parameters[prop.Name], CultureInfo.InvariantCulture));
-                            break;
-                        case int i:
-                            prop.SetValue(config.instrumentParameters, Convert.ToInt32(Parameters[prop.Name], CultureInfo.InvariantCulture));
-                            break;
-                        case bool b:
-                            prop.SetValue(config.instrumentParameters, Parameters[prop.Name].ToString().ToLowerInvariant() == "true" ||
-                                                                       Parameters[prop.Name].ToString() == "1");
-                            break;
-                        default:
-                            throw new InvalidDataException(@"unexpected type in SpectrumList_DiaUmpire.Config.InstrumentParameter");
-                    }
-                }
-
-                config.maxThreads = Convert.ToInt32(Parameters["Thread"]);
-                config.spillFileFormat = UseMzMlSpillFile ? MSDataFile.Format.Format_mzML : MSDataFile.Format.Format_MZ5;
-                config.exportMs1ClusterTable = config.exportMs2ClusterTable = true;
-
-                config.diaTargetWindowScheme = (SpectrumList_DiaUmpire.Config.TargetWindow.Scheme) WindowScheme;
-                foreach (var window in VariableWindows.Select(w => new SpectrumList_DiaUmpire.Config.TargetWindow(w.Start, w.End)))
-                    config.diaVariableWindows.Add(window);
-
-                return config;
-            }
-        }
-
-        public DiaUmpire(string path, int sampleIndex,
-                         Config diaUmpireConfig,
-                         LockMassParameters lockmassParameters = null,
-                         bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
-                         bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
-                         bool ignoreZeroIntensityPoints = false,
-                         int preferOnlyMsLevel = 0,
-                         bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
-                         bool trimNativeId = true,
-                         IProgressMonitor progressMonitor = null)
-            : base(path, sampleIndex, lockmassParameters, simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra,
-                requireVendorCentroidedMS1, requireVendorCentroidedMS2, ignoreZeroIntensityPoints, preferOnlyMsLevel,
-                combineIonMobilitySpectra, trimNativeId)
-        {
-            _diaUmpireConfig = diaUmpireConfig.GetDiaUmpireConfig();
-
-            if (progressMonitor != null)
-                _ilrMonitor = new IterationListenerToMonitor(progressMonitor);
-        }
-
-        protected override SpectrumList SpectrumList
-        {
-            get
-            {
-                if (_spectrumList != null)
-                    return _spectrumList;
-
-                var ilr = new IterationListenerRegistry();
-                if (_ilrMonitor != null)
-                    ilr.addListenerWithTimer(_ilrMonitor, 5);
-                _spectrumList = new SpectrumList_DiaUmpire(_msDataFile, base.SpectrumList, _diaUmpireConfig, ilr);
-                return _spectrumList;
-            }
-        }
-
-        public void WriteToFile(string outputFilepath, bool mz5Format)
-        {
-            var config = new MSDataFile.WriteConfig
-            {
-                compression = MSDataFile.Compression.Compression_Zlib,
-                format = mz5Format ? MSDataFile.Format.Format_MZ5 : MSDataFile.Format.Format_mzML,
-                indexed = true,
-                precision = MSDataFile.Precision.Precision_32 // CONSIDER: is 64-bit precision needed for these pseudo-spectra?
-            };
-
-            var ilr = new IterationListenerRegistry();
-            if (_ilrMonitor != null)
-                ilr.addListenerWithTimer(_ilrMonitor, 5);
-            //_msDataFile.run.id += "-inprocess";
-            _msDataFile.run.spectrumList = SpectrumList;
-            MSDataFile.write(_msDataFile, outputFilepath, config, ilr);
+            
         }
     }
 }

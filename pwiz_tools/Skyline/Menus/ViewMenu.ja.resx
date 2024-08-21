@@ -248,10 +248,10 @@
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
-  <data name="spectralLibrariesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="libraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="spectralLibrariesToolStripMenuItem.Text" xml:space="preserve">
+  <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
     <value>スペクトルライブラリ(&amp;L)</value>
   </data>
   <data name="toolStripSeparator32.Size" type="System.Drawing.Size, System.Drawing">
@@ -702,6 +702,13 @@
   <data name="areaPeptideComparisonMenuItem.Text" xml:space="preserve">
     <value>ペプチドの比較(&amp;P)</value>
   </data>
+  <data name="areaRelativeAbundanceMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="areaRelativeAbundanceMenuItem.Text" xml:space="preserve">
+    <value>相対的存在量(&amp;A)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="areaCVHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -789,10 +796,10 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>ドキュメントグリッド(&amp;G)</value>
   </data>
-  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="liveReportsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+  <data name="liveReportsMenuItem.Text" xml:space="preserve">
     <value>その他のグリッド(&amp;H)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
@@ -987,10 +994,10 @@
   <data name="&gt;&gt;toolStripSeparator41.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;spectralLibrariesToolStripMenuItem.Name" xml:space="preserve">
-    <value>spectralLibrariesToolStripMenuItem</value>
+  <data name="&gt;&gt;libraryExplorerMenuItem.Name" xml:space="preserve">
+    <value>libraryExplorerMenuItem</value>
   </data>
-  <data name="&gt;&gt;spectralLibrariesToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;libraryExplorerMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator32.Name" xml:space="preserve">
@@ -1425,10 +1432,10 @@
   <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;otherGridsMenuItem.Name" xml:space="preserve">
-    <value>otherGridsMenuItem</value>
+  <data name="&gt;&gt;liveReportsMenuItem.Name" xml:space="preserve">
+    <value>liveReportsMenuItem</value>
   </data>
-  <data name="&gt;&gt;otherGridsMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;liveReportsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">

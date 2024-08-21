@@ -214,6 +214,7 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\MS2DeisotoperTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\MzShiftFilter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorMassFilter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefault.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefaultTest.cpp" />
@@ -948,6 +949,7 @@
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MzShiftFilter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_Demux.hpp" />

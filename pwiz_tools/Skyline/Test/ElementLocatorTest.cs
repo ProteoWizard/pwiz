@@ -50,6 +50,17 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
+        public void TestEmptyNameElementLocator()
+        {
+            var locatorProtein = new ElementLocator("", null).ChangeParent(DocumentRef.PROTOTYPE.ToElementLocator()).ChangeType("MoleculeGroup");
+            VerifyElementLocator(locatorProtein);
+            var locatorPeptide = new ElementLocator("ELVIS", null).ChangeParent(locatorProtein).ChangeType("Molecule");
+            VerifyElementLocator(locatorPeptide);
+            var locatorEmptyPeptide = new ElementLocator("", null).ChangeParent(locatorProtein).ChangeType("Molecule");
+            VerifyElementLocator(locatorEmptyPeptide);
+        }
+
+        [TestMethod]
         public void TestElementLocatorQuote()
         {
             Assert.AreEqual("a", ElementLocator.QuoteIfSpecial("a"));

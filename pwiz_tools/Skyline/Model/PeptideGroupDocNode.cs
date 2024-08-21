@@ -525,6 +525,17 @@ namespace pwiz.Skyline.Model
             return string.Compare(p1.ProteinMetadata.Gene ?? String.Empty, p2.ProteinMetadata.Gene ?? String.Empty, StringComparison.InvariantCultureIgnoreCase);
         }
 
+        public PeptideGroupDocNode ForgetOriginalMoleculeTargets()
+        {
+            var newChildren = Molecules.Select(mol => mol.ChangeOriginalMoleculeTarget(null)).Cast<DocNode>().ToList();
+            if (ArrayUtil.ReferencesEqual(newChildren, Children))
+            {
+                return this;
+            }
+
+            return (PeptideGroupDocNode) ChangeChildren(newChildren);
+        }
+
         #region object overrides
 
         public bool Equals(PeptideGroupDocNode obj)

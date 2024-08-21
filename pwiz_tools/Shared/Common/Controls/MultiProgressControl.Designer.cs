@@ -1,4 +1,5 @@
-﻿namespace pwiz.Common.Controls
+﻿
+namespace pwiz.Common.Controls
 {
     partial class MultiProgressControl
     {
@@ -13,6 +14,11 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
+            foreach(System.Windows.Forms.DataGridViewRow row in progressGridView.Rows)
+                foreach(System.Windows.Forms.DataGridViewCell cell in row.Cells)
+                    cell.Dispose();
+            NameColumn.Dispose();
+            ProgressColumn.Dispose();
             if (disposing && (components != null))
             {
                 components.Dispose();

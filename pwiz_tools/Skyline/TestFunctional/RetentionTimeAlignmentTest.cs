@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -92,12 +93,12 @@ namespace pwiz.SkylineTestFunctional
             var alignedRetentionTimes10To1 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
+                DocumentRetentionTimes.REFINEMENT_THRESHOLD, 
                 RegressionMethodRT.linear, CancellationToken.None);
             var alignedRetentionTimes1To10 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
+                DocumentRetentionTimes.REFINEMENT_THRESHOLD, 
                 RegressionMethodRT.linear, CancellationToken.None);
             var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
             Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);
@@ -133,7 +134,8 @@ namespace pwiz.SkylineTestFunctional
                       {
                           var curves = alignmentForm.RegressionGraph.GraphPane.CurveList;
                           var outlierCurve = curves.Find(curveItem => Resources.AlignmentForm_UpdateGraph_Outliers == curveItem.Label.Text);
-                          var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text == Resources.AlignmentForm_UpdateGraph_Peptides_Refined);
+                          var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text ==
+                                                                         Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, SkylineWindow.Document.DocumentType));
                           Assert.AreEqual(alignedRetentionTimes1To10.OutlierIndexes.Count, outlierCurve.Points.Count);
                           Assert.AreEqual(alignedRetentionTimes1To10.RegressionPointCount, outlierCurve.Points.Count + goodPointsCurve.Points.Count);
                       });

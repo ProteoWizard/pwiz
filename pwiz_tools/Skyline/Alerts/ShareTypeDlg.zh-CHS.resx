@@ -393,7 +393,7 @@
     <value>1</value>
   </data>
   <data name="btnSelectReplicateFiles.Text" xml:space="preserve">
-    <value>选择文件...</value>
+    <value>选择文件…</value>
   </data>
   <data name="&gt;&gt;btnSelectReplicateFiles.Name" xml:space="preserve">
     <value>btnSelectReplicateFiles</value>

@@ -16,14 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
-using ZedGraph;
+using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 {
@@ -50,10 +50,10 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 
         public SpectrumSummary this[int index] => _summaries[index];
 
-        private static Tuple<double, double, ImmutableList<ImmutableList<SpectrumPrecursor>>> GetSpectrumDigestKey(
+        private static DigestKey GetSpectrumDigestKey(
             SpectrumSummary spectrumSummary)
         {
-            if (spectrumSummary.SummaryValue.Count == 0)
+            if (spectrumSummary.SummaryValueLength == 0 || spectrumSummary.SummaryValueArray.All(v=>0 == v))
             {
                 return null;
             }
@@ -67,102 +67,18 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             var precursorsByMsLevel = ImmutableList.ValueOf(Enumerable
                 .Range(1, spectrumSummary.SpectrumMetadata.MsLevel - 1)
                 .Select(level => spectrumSummary.SpectrumMetadata.GetPrecursors(level)));
-            return Tuple.Create(spectrumSummary.SpectrumMetadata.ScanWindowLowerLimit.Value,
-                spectrumSummary.SpectrumMetadata.ScanWindowUpperLimit.Value, precursorsByMsLevel);
+            return new DigestKey(spectrumSummary.SpectrumMetadata.ScanWindowLowerLimit.Value,
+                spectrumSummary.SpectrumMetadata.ScanWindowUpperLimit.Value, spectrumSummary.SummaryValueLength,
+                precursorsByMsLevel);
         }
 
-        public SimilarityMatrix GetSimilarityMatrix(
-            IProgressMonitor progressMonitor,
-            IProgressStatus status,
-            IEnumerable<SpectrumSummary> spectrumSummaries)
-        {
-            var byDigestKey = spectrumSummaries.ToLookup(GetSpectrumDigestKey);
-            int completedCount = 0;
-            var lists = new IList<PointPair>[Count];
-            ParallelEx.For(0, Count, index =>
-            {
-                var spectrum = this[index];
-                var key = GetSpectrumDigestKey(spectrum);
-                if (key != null)
-                {
-                    var pointPairs = new List<PointPair>();
-                    foreach (var otherSpectrum in byDigestKey[key])
-                    {
-                        if (true == progressMonitor?.IsCanceled)
-                        {
-                            break;
-                        }
-
-                        var score = CalculateSimilarityScore(spectrum.SummaryValue,
-                            otherSpectrum.SummaryValue);
-                        if (score.HasValue)
-                        {
-                            pointPairs.Add(new PointPair(spectrum.RetentionTime, otherSpectrum.RetentionTime, score.Value));
-                        }
-                    }
-
-                    lists[index] = pointPairs;
-                }
-
-                if (progressMonitor != null)
-                {
-                    lock (progressMonitor)
-                    {
-                        completedCount++;
-                        int progressValue = completedCount * 100 / lists.Length;
-                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressValue));
-                    }
-                }
-            });
-            return new SimilarityMatrix(lists.SelectMany(v=> v ?? Array.Empty<PointPair>()));
-        }
-        public static double? CalculateSimilarityScore(IList<double> xList, IList<double> yList)
-        {
-            if (xList.Count != yList.Count)
-            {
-                return null;
-            }
-            double sumXX = 0;
-            double sumXY = 0;
-            double sumYY = 0;
-            for (int i = 0; i < xList.Count; i++)
-            {
-                double x = xList[i];
-                double y = yList[i];
-                sumXX += x * x;
-                sumXY += x * y;
-                sumYY += y * y;
-            }
-
-            if (sumXX <= 0 || sumYY <= 0)
-            {
-                return null;
-            }
-
-            return sumXY / Math.Sqrt(sumXX * sumYY);
-        }
-
-        public SpectrumSummaryList TruncateSummariesTo(int length)
-        {
-            var newSpectra = new List<SpectrumSummary>();
-            foreach (var spectrum in this)
-            {
-                if (spectrum.SummaryValue.Count <= length)
-                {
-                    newSpectra.Add(spectrum);
-                    continue;
-                }
-
-                IList<double> summaryValue = spectrum.SummaryValue;
-                while (summaryValue.Count > length)
-                {
-                    summaryValue = SpectrumSummary.HaarWaveletTransform(summaryValue);
-                }
-                newSpectra.Add(new SpectrumSummary(spectrum.SpectrumMetadata, summaryValue));
-            }
-
-            return new SpectrumSummaryList(newSpectra);
-        }
+        /// <summary>
+        /// Minimum number of a spectra with the same key (i.e. same MS Level and Precursor)
+        /// to do an alignment between. (That is, it does not make sense to try to align to
+        /// DDA spectra which happen to have the same precursor m/z-- the same precursor
+        /// needs to have been sampled several times)
+        /// </summary>
+        private const int MIN_SPECTRA_FOR_ALIGNMENT = 20;
 
         public IEnumerable<SpectrumMetadata> SpectrumMetadatas
         {
@@ -188,6 +104,109 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         public override int GetHashCode()
         {
             return _summaries.GetHashCode();
+        }
+
+        private class DigestKey
+        {
+            public DigestKey(double scanWindowLowerLimit, double scanWindowUpperLimit, int summaryValueLength, ImmutableList<ImmutableList<SpectrumPrecursor>> precursors)
+            {
+                ScanWindowLowerLimit = scanWindowLowerLimit;
+                ScanWindowUpperLimit = scanWindowUpperLimit;
+                SummaryValueLength = summaryValueLength;
+                Precursors = precursors;
+
+            }
+
+            public double ScanWindowLowerLimit { get; }
+            public double ScanWindowUpperLimit { get; }
+            public int SummaryValueLength { get; }
+            public ImmutableList<ImmutableList<SpectrumPrecursor>> Precursors { get; }
+
+            protected bool Equals(DigestKey other)
+            {
+                return ScanWindowLowerLimit.Equals(other.ScanWindowLowerLimit) &&
+                       ScanWindowUpperLimit.Equals(other.ScanWindowUpperLimit) && Precursors.Equals(other.Precursors);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((DigestKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = ScanWindowLowerLimit.GetHashCode();
+                    hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Precursors.GetHashCode();
+                    return hashCode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove all of the spectra whose scan window or precursors are not common enough to do
+        /// alignment on
+        /// </summary>
+        /// <returns></returns>
+        public SpectrumSummaryList RemoveRareSpectra()
+        {
+            var digestKeysToKeep = this.GroupBy(GetSpectrumDigestKey)
+                .Where(group => group.Count() >= MIN_SPECTRA_FOR_ALIGNMENT).Select(group => group.Key).ToHashSet();
+            return new SpectrumSummaryList(this.Where(spectrum =>
+                digestKeysToKeep.Contains(GetSpectrumDigestKey(spectrum))));
+        }
+
+        public SimilarityGrid GetSimilarityGrid(SpectrumSummaryList that)
+        {
+            var thisByDigestKey = this.ToLookup(GetSpectrumDigestKey);
+            var thatByDigestKey = that.ToLookup(GetSpectrumDigestKey);
+            int bestCount = 0;
+            DigestKey bestDigestKey = null;
+            foreach (var group in thisByDigestKey)
+            {
+                if (group.Key == null)
+                {
+                    continue;
+                }
+
+                var count = group.Count() * thatByDigestKey[group.Key].Count();
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    bestDigestKey = group.Key;
+                }
+            }
+
+            if (bestCount == 0)
+            {
+                return null;
+            }
+
+            return new SimilarityGrid(thisByDigestKey[bestDigestKey], thatByDigestKey[bestDigestKey]);
+        }
+
+        public KdeAligner PerformAlignment(IProgressMonitor progressMonitor, SpectrumSummaryList spectra2, double? startingWindowSizeProportion, int? threadCount)
+        {
+            var similarityGrid = GetSimilarityGrid(spectra2);
+            var candidatePoints = similarityGrid.GetBestPointCandidates(progressMonitor, threadCount);
+            if (candidatePoints == null)
+            {
+                return null;
+            }
+
+            var bestPoints = SimilarityGrid.FilterBestPoints(candidatePoints);
+            var kdeAligner = new KdeAligner();
+            if (startingWindowSizeProportion.HasValue)
+            {
+                kdeAligner.StartingWindowSizeProportion = startingWindowSizeProportion.Value;
+            }
+            kdeAligner.Train(bestPoints.Select(pt => pt.XRetentionTime).ToArray(), bestPoints.Select(pt=>pt.YRetentionTime).ToArray(), CancellationToken.None);
+            return kdeAligner;
         }
     }
 }

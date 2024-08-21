@@ -642,6 +642,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string retentionTime = getRetentionTime(scan);
     string lowMz = spectrum.cvParam(MS_lowest_observed_m_z).value;
     string highMz = spectrum.cvParam(MS_highest_observed_m_z).value;
+    string startMz = !scan.scanWindows.empty() ? scan.scanWindows[0].cvParamValueOrDefault(MS_scan_window_lower_limit, string()) : "";
+    string endMz = !scan.scanWindows.empty() ? scan.scanWindows[0].cvParamValueOrDefault(MS_scan_window_upper_limit, string()) : "";
     string basePeakMz = spectrum.cvParam(MS_base_peak_m_z).value;
     string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
@@ -685,6 +687,10 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         attributes.add("lowMz", lowMz);
     if (!highMz.empty())
         attributes.add("highMz", highMz);
+    if (!startMz.empty())
+        attributes.add("startMz", startMz);
+    if (!endMz.empty())
+        attributes.add("endMz", endMz);
     if (!basePeakMz.empty())
         attributes.add("basePeakMz", basePeakMz);
     if (!basePeakIntensity.empty())

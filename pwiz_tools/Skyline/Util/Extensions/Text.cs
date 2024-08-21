@@ -70,8 +70,8 @@ namespace pwiz.Skyline.Util.Extensions
         /// The CSV separator character for a given culture.  Like Excel, a comma
         /// is used unless the decimal separator is a comma.  This allows exported CSV
         /// files to be imported directly into Excel on the same system.
-        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         /// </summary>
+        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         public static char GetCsvSeparator(IFormatProvider cultureInfo)
         {
             var numberFormat = cultureInfo.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -379,6 +379,21 @@ namespace pwiz.Skyline.Util.Extensions
         public static string LineSeparate(params string[] lines)
         {
             return LineSeparate(lines.AsEnumerable());
+        }
+
+        /// <summary>
+        /// Utility function for <see cref="string"/> like <see cref="File"/> ReadLines().
+        /// </summary>
+        /// <param name="text">Text possibly multi-line</param>
+        /// <returns>Enumerable lines without line endings</returns>
+        public static IEnumerable<string> ReadLines(this string text)
+        {
+            using var reader = new StringReader(text);
+            var lines = new List<string>();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                lines.Add(line);
+            return lines;
         }
 
         /// <summary>
@@ -738,6 +753,50 @@ namespace pwiz.Skyline.Util.Extensions
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Insert spaces if necessary to ensure that the string has no regions with
+        /// more than <paramref name="maxWordLength"/> non-whitespace characters.
+        /// This ensures that text measuring code will not spend too long looking for
+        /// word breaks.
+        /// </summary>
+        public static string EnforceMaxWordLength(string str, int maxWordLength)
+        {
+            if (str.Length <= maxWordLength)
+            {
+                return str;
+            }
+
+            int currentWordLength = 0;
+            StringBuilder stringBuilder = null;
+            
+            for (int i = 0; i < str.Length; i++)
+            {
+                var ch = str[i];
+                if (char.IsWhiteSpace(ch) || ch == '-')
+                {
+                    currentWordLength = 0;
+                }
+                else
+                {
+                    if (currentWordLength == maxWordLength)
+                    {
+                        stringBuilder ??= new StringBuilder(str.Substring(0, i));
+                        stringBuilder.Append(' ');
+                        currentWordLength = 0;
+                    }
+                    currentWordLength++;
+                }
+
+                stringBuilder?.Append(ch);
+            }
+
+            if (stringBuilder == null)
+            {
+                return str;
+            }
+            return stringBuilder.ToString();
         }
     }
 

@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyline", "Skyline.csproj", "{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}"
 	ProjectSection(ProjectDependencies) = postProject
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15} = {4F4C2045-4C86-46F2-A297-C05FC4A48A15}
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A} = {FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}
 	EndProjectSection
 EndProject
@@ -73,6 +74,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramaClient", "..\Shared\PanoramaClient\PanoramaClient.csproj", "{BF849CF8-25D7-4619-B001-9ED8E3771C44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BullseyeSharp", "BullseyeSharp\BullseyeSharp.csproj", "{4F4C2045-4C86-46F2-A297-C05FC4A48A15}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -274,6 +277,14 @@ Global
 		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x64.Build.0 = Release|x64
 		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x86.ActiveCfg = Release|Any CPU
 		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x86.Build.0 = Release|Any CPU
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Debug|x64.ActiveCfg = Debug|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Debug|x64.Build.0 = Debug|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Debug|x86.ActiveCfg = Debug|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Debug|x86.Build.0 = Debug|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x64.ActiveCfg = Release|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x64.Build.0 = Release|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x86.ActiveCfg = Release|x64
+		{4F4C2045-4C86-46F2-A297-C05FC4A48A15}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

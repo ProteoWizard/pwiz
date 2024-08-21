@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.2.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.9.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -991,52 +991,43 @@ namespace pwiz.Skyline.Properties {
                 this["AreaLogScale"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AreaProteinTargets
-        {
-            get
-            {
+        public bool AreaProteinTargets {
+            get {
                 return ((bool)(this["AreaProteinTargets"]));
             }
-            set
-            {
+            set {
                 this["AreaProteinTargets"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ExcludePeptideListsFromAbundanceGraph
-        {
-            get
-            {
+        public bool ExcludePeptideListsFromAbundanceGraph {
+            get {
                 return ((bool)(this["ExcludePeptideListsFromAbundanceGraph"]));
             }
-            set
-            {
+            set {
                 this["ExcludePeptideListsFromAbundanceGraph"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ExcludeStandardsFromAbundanceGraph
-        {
-            get
-            {
+        public bool ExcludeStandardsFromAbundanceGraph {
+            get {
                 return ((bool)(this["ExcludeStandardsFromAbundanceGraph"]));
             }
-            set
-            {
+            set {
                 this["ExcludeStandardsFromAbundanceGraph"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("document")]
@@ -2794,48 +2785,48 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Prosit {
+        public bool Koina {
             get {
-                return ((bool)(this["Prosit"]));
+                return ((bool)(this["Koina"]));
             }
             set {
-                this["Prosit"] = value;
+                this["Koina"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string PrositIntensityModel {
+        public string KoinaIntensityModel {
             get {
-                return ((string)(this["PrositIntensityModel"]));
+                return ((string)(this["KoinaIntensityModel"]));
             }
             set {
-                this["PrositIntensityModel"] = value;
+                this["KoinaIntensityModel"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string PrositRetentionTimeModel {
+        public string KoinaRetentionTimeModel {
             get {
-                return ((string)(this["PrositRetentionTimeModel"]));
+                return ((string)(this["KoinaRetentionTimeModel"]));
             }
             set {
-                this["PrositRetentionTimeModel"] = value;
+                this["KoinaRetentionTimeModel"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string PrositServer {
+        public string KoinaServer {
             get {
-                return ((string)(this["PrositServer"]));
+                return ((string)(this["KoinaServer"]));
             }
             set {
-                this["PrositServer"] = value;
+                this["KoinaServer"] = value;
             }
         }
         
@@ -2854,12 +2845,12 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("27")]
-        public int PrositNCE {
+        public int KoinaNCE {
             get {
-                return ((int)(this["PrositNCE"]));
+                return ((int)(this["KoinaNCE"]));
             }
             set {
-                this["PrositNCE"] = value;
+                this["KoinaNCE"] = value;
             }
         }
         
@@ -3483,6 +3474,71 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["FullScanPropertySheetVisible"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10.0")]
+        public double FeatureFindingMinIntensityPPM {
+            get {
+                return ((double)(this["FeatureFindingMinIntensityPPM"]));
+            }
+            set {
+                this["FeatureFindingMinIntensityPPM"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.98")]
+        public double FeatureFindingMinIdotP {
+            get {
+                return ((double)(this["FeatureFindingMinIdotP"]));
+            }
+            set {
+                this["FeatureFindingMinIdotP"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public double FeatureFindingSignalToNoise {
+            get {
+                return ((double)(this["FeatureFindingSignalToNoise"]));
+            }
+            set {
+                this["FeatureFindingSignalToNoise"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool GroupComparisonAvoidLabelOverlap
+        {
+            get
+            {
+                return ((bool)(this["GroupComparisonAvoidLabelOverlap"]));
+            }
+            set
+            {
+                this["GroupComparisonAvoidLabelOverlap"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GroupComparisonSuspendLabelLayout
+        {
+            get
+            {
+                return ((bool)(this["GroupComparisonSuspendLabelLayout"]));
+            }
+            set
+            {
+                this["GroupComparisonSuspendLabelLayout"] = value;
             }
         }
     }

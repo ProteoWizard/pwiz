@@ -50,15 +50,20 @@ namespace seems
             dataGridView.VirtualMode = true;
             //dataGridView.Rows.Insert( 0, pointList.Count );
 
-            Refresh();
+            RefreshData();
 
             if (mobilityArray != null)
-                dataGridView.Columns.Add("mobility", "Ion Mobility");
+                dataGridView.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    Name = "mobility",
+                    HeaderText = "Ion Mobility",
+                    ReadOnly = true
+                });
         }
 
         private void dataGridView_CellValueNeeded( object sender, DataGridViewCellValueEventArgs e )
         {
-            if( pointList == null  )
+            if( pointList == null )
                 throw new InvalidOperationException( "cell value needed but point list is null" );
 
             if( e.ColumnIndex == 0 )
@@ -66,9 +71,23 @@ namespace seems
             else if (e.ColumnIndex == 1)
                 e.Value = pointList[e.RowIndex].Y;
             else
-            {
                 e.Value = mobilityArray[e.RowIndex];
+        }
+
+        private void RefreshData()
+        {
+            if (item.Id.StartsWith("merged="))
+            {
+                pointList = spectrum.GetPointList(false);
+                var s = item.Source.Source.MSDataFile.run.spectrumList.spectrum(spectrum.Index, true);
+                mobilityArray = s.GetIonMobilityArray();
             }
+            else
+            {
+                pointList = item.Points;
+            }
+
+            dataGridView.RowCount = pointList.Count;
         }
 
         /// <summary>
@@ -76,14 +95,7 @@ namespace seems
         /// </summary>
         public override void Refresh()
         {
-            pointList = item.Points;
-            dataGridView.RowCount = pointList.Count;
-
-            if (item.Id.StartsWith("merged="))
-            {
-                var s = item.Source.Source.MSDataFile.run.spectrumList.spectrum(spectrum.Index, true);
-                mobilityArray = s.GetIonMobilityArray();
-            }
+            RefreshData();
             base.Refresh();
         }
 

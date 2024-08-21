@@ -163,7 +163,35 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-            switch (chromDisplayState.AutoZoomChrom)
+
+            var autoZoom = chromDisplayState.AutoZoomChrom;
+            if (!bestPeaks.Any())
+            {
+                if (autoZoom == AutoZoomChrom.both)
+                {
+                    autoZoom = AutoZoomChrom.window;
+                }
+                if (autoZoom == AutoZoomChrom.peak)
+                {
+                    autoZoom = AutoZoomChrom.none;
+                }
+            }
+            var chromGraphItem = GetRetentionTimeGraphItem(chromDisplayState);
+            double? predictedRT = chromGraphItem?.RetentionPrediction;
+            double? windowHalf = chromGraphItem?.RetentionWindow * 2 / 3;
+            if (!predictedRT.HasValue)
+            {
+                if (autoZoom == AutoZoomChrom.both)
+                {
+                    autoZoom = AutoZoomChrom.peak;
+                }
+
+                if (autoZoom == AutoZoomChrom.window)
+                {
+                    autoZoom = AutoZoomChrom.none;
+                }
+            }
+            switch (autoZoom)
             {
                 case AutoZoomChrom.none:
                     foreach (var graphPane in GraphPanes)
@@ -184,51 +212,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     break;
                 case AutoZoomChrom.window:
-                    {
-                        var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
-                        if (chromGraph != null)
-                        {
-                            // Put predicted RT in center with window occupying 2/3 of the graph
-                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
-                            double predictedRT = chromGraph.RetentionPrediction.HasValue
-                                                     ? // ReSharper
-                                                     chromGraph.RetentionPrediction.Value
-                                                     : 0;
-                            ZoomXAxis(predictedRT - windowHalf, predictedRT + windowHalf);
-                        }
-                    }
+                    ZoomXAxis((predictedRT - windowHalf).Value, (predictedRT + windowHalf).Value);
                     break;
                 case AutoZoomChrom.both:
-                    {
-                        double start = double.MaxValue;
-                        double end = 0;
-                        if (bestPeaks.Any())
-                        {
-                            start = bestPeaks.Min(peak => peak.StartRetentionTime);
-                            end = bestPeaks.Max(peak=>peak.EndRetentionTime);
-                        }
-                        var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
-                        if (chromGraph != null)
-                        {
-                            // Put predicted RT in center with window occupying 2/3 of the graph
-                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
-                            double predictedRT = chromGraph.RetentionPrediction.HasValue
-                                                     ? // ReSharper
-                                                     chromGraph.RetentionPrediction.Value
-                                                     : 0;
-                            // Make sure the peak has enough room to display, since it may be
-                            // much narrower than the retention time window.
-                            if (end != 0)
-                            {
-                                start -= windowHalf / 8;
-                                end += windowHalf / 8;
-                            }
-                            start = Math.Min(start, predictedRT - windowHalf);
-                            end = Math.Max(end, predictedRT + windowHalf);
-                        }
-                        if (end > 0)
-                            ZoomXAxis(start, end);
-                    }
+                    double start = bestPeaks.Min(peak => peak.StartRetentionTime);
+                    double end = bestPeaks.Max(peak => peak.EndRetentionTime);
+                    // Make sure the peak has enough room to display, since it may be
+                    // much narrower than the retention time window.
+                    start -= windowHalf.Value / 8;
+                    end += windowHalf.Value / 8;
+                    start = Math.Min(start, (predictedRT - windowHalf).Value);
+                    end = Math.Max(end, (predictedRT + windowHalf).Value);
+                    ZoomXAxis(start, end);
                     break;
             }
             foreach (var graphPane in GraphPanes)

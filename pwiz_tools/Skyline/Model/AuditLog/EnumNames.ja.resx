@@ -372,6 +372,10 @@
   <data name="Workflow_prm" xml:space="preserve">
     <value>PRM</value>
   </data>
+  <data name="Workflow_feature_detection" xml:space="preserve">
+    <value>フィーチャーの検出</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="TransitionLibraryPick_none" xml:space="preserve">
     <value>なし</value>
   </data>
@@ -633,6 +637,9 @@
   <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
   </data>
+  <data name="SearchEngine_Hardklor" xml:space="preserve">
+    <value>Hardklör</value>
+  </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>ペプチドの最も多いタンパク質に割当て</value>
   </data>
@@ -713,5 +720,21 @@
   </data>
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Lightに対する比率</value>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
+    <value>ペプチドの最も多い遺伝子に割り当て</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToFirstProtein" xml:space="preserve">
+    <value>最初の遺伝子に割り当て</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SharedPeptidesGene_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>遺伝子間で重複</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SharedPeptidesGene_Removed" xml:space="preserve">
+    <value>削除済み（ペプチドは1つの遺伝子に固有の必要がある）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>

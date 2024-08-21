@@ -124,4 +124,22 @@
   <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0_" xml:space="preserve">
     <value>Ratio to surrogate {0}</value>
   </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing" xml:space="preserve">
+    <value>Transition '{0}' is missing</value>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Missing_values_for__0___1__transitions" xml:space="preserve">
+    <value>Missing values for {0}/{1} transitions</value>
+    <comment>{0} and {1} are numbers</comment>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated" xml:space="preserve">
+    <value>Transition '{0}' is truncated</value>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated" xml:space="preserve">
+    <value>All {0} peaks are truncated</value>
+    <comment>{0} is a number</comment>
+  </data>
+  <data name="PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions" xml:space="preserve">
+    <value>Truncated peaks for {0}/{1} transitions</value>
+    <comment>{0} and {1} are numbers</comment>
+  </data>
 </root>

@@ -130,4 +130,8 @@
   <data name="FoldChangeForm_BuildContextMenu_Volcano_Plot" xml:space="preserve">
     <value>ボルケーノプロット</value>
   </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
+    <value>相対的存在量のフォーマット</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

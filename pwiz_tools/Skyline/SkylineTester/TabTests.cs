@@ -135,6 +135,9 @@ namespace SkylineTester
                 }
             }
 
+            if (MainWindow.RunCoverage.Checked)
+                args.Append(" coverage=on");
+
             args.Append(GetTestList());
 
             MainWindow.AddTestRunner(args.ToString());
@@ -147,7 +150,7 @@ namespace SkylineTester
             base.Cancel();
 
             if (MainWindow.RunParallel.Checked)
-                RunTests.SendDockerKill();
+                MainWindow.CommandShell.Stop(true);
         }
 
         public override int Find(string text, int position)

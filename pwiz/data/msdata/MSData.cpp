@@ -642,6 +642,7 @@ PWIZ_API_DECL bool Spectrum::empty() const
            precursors.empty() && 
            products.empty() && 
            binaryDataArrayPtrs.empty() &&
+           integerDataArrayPtrs.empty() &&
            ParamContainer::empty();
 }
 
@@ -916,6 +917,7 @@ PWIZ_API_DECL bool Chromatogram::empty() const
            precursor.empty() &&
            product.empty() &&
            binaryDataArrayPtrs.empty() &&
+           integerDataArrayPtrs.empty() &&
            ParamContainer::empty();
 }
 

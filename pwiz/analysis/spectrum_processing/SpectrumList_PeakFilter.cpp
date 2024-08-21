@@ -70,7 +70,21 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakFilter::spectrum(size_t index, Detail
         return innerSpectrum;
     }
 
-    const SpectrumPtr currentSpectrum = inner_->spectrum(index, true);
+    SpectrumPtr currentSpectrum = inner_->spectrum(index, true);
+
+    // make a copy if this is the first filter
+    if (dynamic_cast<SpectrumListWrapper*>(&*inner_) == nullptr)
+    {
+        // copy metadata
+        currentSpectrum = boost::make_shared<Spectrum>(*currentSpectrum);
+
+        // copy binary data
+        for (auto& bda : currentSpectrum->binaryDataArrayPtrs)
+            bda = boost::make_shared<BinaryDataArray>(*bda);
+        for (auto& bda : currentSpectrum->integerDataArrayPtrs)
+            bda = boost::make_shared<IntegerDataArray>(*bda);
+    }
+
     (*filterFunctor_)(currentSpectrum);
     currentSpectrum->dataProcessingPtr = dp_;
     return currentSpectrum;

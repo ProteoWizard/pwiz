@@ -22,8 +22,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
 using JetBrains.Annotations;
@@ -387,12 +387,30 @@ namespace pwiz.Skyline.ToolsUI
                 Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
             };
             byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);
-            string contentDisposition = webClient.ResponseHeaders.Get(@"Content-Disposition");
-            // contentDisposition is filename="ToolBasename.zip"
-            // ReSharper disable LocalizableElement
-            Match match = Regex.Match(contentDisposition, "^filename=\"(.+)\"$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            // ReSharper restore LocalizableElement
-            string downloadedFile = directory + match.Groups[1].Value;
+            string contentDispositionString = webClient.ResponseHeaders.Get(@"Content-Disposition");
+            string downloadedFile = null;
+            ContentDispositionHeaderValue.TryParse(contentDispositionString, out var contentDispositionHeaderValue);
+            try
+            {
+                if (contentDispositionHeaderValue?.FileNameStar != null)
+                {
+                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileNameStar);
+                }
+                else if (contentDispositionHeaderValue?.FileName != null)
+                {
+                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileName);
+                }
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+
+            if (downloadedFile == null)
+            {
+                // Something went wrong trying to decide the filename. Fall back to using a temp file name.
+                downloadedFile = FileStreamManager.Default.GetTempFileName(directory, @"Sky");
+            }
             File.WriteAllBytes(downloadedFile, toolZip);
             return downloadedFile;
         }

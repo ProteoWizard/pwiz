@@ -27,6 +27,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -106,7 +107,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
+            get
+            {
+                var title = GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType);
+                if (PeaksCount == 0)
+                {
+                    title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
+                }
+                return title;
+            }
         }
     }
     

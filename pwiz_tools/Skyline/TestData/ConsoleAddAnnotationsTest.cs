@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestData
                 "--annotation-type=" + INVALID_VALUE // Specify an invalid type value
             );
             CommandLineTest.CheckRunCommandOutputContains(string.Format(
-                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                 INVALID_VALUE,
                 "--annotation-type",
                 string.Join(@", ", ListPropertyType.ListPropertyTypes().Select(c =>

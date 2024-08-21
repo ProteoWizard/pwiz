@@ -79,31 +79,33 @@ namespace pwiz.SkylineTest
                 {"C32:2", "C32:2"}, // Duplicated on purpose
                 {"C30:0", "C30:0"},
                 {"C[30]:0", "C[30]:0"},
-                {"C[400]:0", "C[4…"},
-                {"C12:0 fish breath", "C12…"},
-                {"C15:0 fish breath", "C15(14)"},
-                {"C15:0 doggy breath", "C15(15)"},
-                {"C16:0 fishy breath", "C16…f…"},
-                {"C16:0 doggy breath", "C16…d…"},
+                {"C[400]:0", "C[400]…"},
+                {"C11:0 fish breath (H2O)", "C11:0…(H2O)"},
+                {"C11:0 fish breath (NH3)", "C11:0…(NH3)"},
+                {"C12:0 fish breath", "C12:0…"},
+                {"C15:0 fish breath", "C15:0(14)"},
+                {"C15:0 doggy breath", "C15:0(15)"},
+                {"C16:0 fishy breath", "C16:0…f…"},
+                {"C16:0 doggy breath", "C16:0…d…"},
                 {"C14", "C14"},
                 {"C14:1", "C14:1"},
-                {"C14:1-OH", "C14:1…"},
+                {"C14:1-OH", "C14:1-…"},
                 {"C14:2", "C14:2"},
-                {"C14:2-OH", "C14:2…"}
+                {"C14:2-OH", "C14:2-…"}
             };
 
             for (var loop = 2; loop > 0; loop--)
             {
-                var strings = new List<Tuple<string, bool>>();
+                var strings = new List<UniquePrefixGenerator.TargetLabel>();
                 var commontext = (loop == 1) ? String.Empty : "Delta Niner Foxtrot "; // non-peptides should strip leading common text
 
                 for (int i = 0; i < testSequences.GetLength(0); i++)
                 {
-                    strings.Add(new Tuple<string, bool>(testSequences[i, 0], true));
+                    strings.Add(new UniquePrefixGenerator.TargetLabel(testSequences[i, 0], true));
                 }
                 for (int i = 0; i < testCustomIons.GetLength(0); i++)
                 {
-                    strings.Add(new Tuple<string, bool>(commontext + testCustomIons[i, 0], false));
+                    strings.Add(new UniquePrefixGenerator.TargetLabel(commontext + testCustomIons[i, 0], false));
                 }
                 var prefixGenerator = new UniquePrefixGenerator(strings, 3);
                 for (int i = 0; i < testSequences.GetLength(0); i++)
@@ -140,7 +142,7 @@ namespace pwiz.SkylineTest
                 "LATQSNEITIPVTFESRAqLGGPEAAKSDETAAK",
             };
             var uniquePrefixGenerator = new UniquePrefixGenerator(peptides.Select(
-                sequence => new Tuple<string, bool>(sequence, true)), 3);
+                sequence => new UniquePrefixGenerator.TargetLabel(sequence, true)), 3);
             Dictionary<string, string> peptideAbbreviations = new Dictionary<string, string>();
             foreach (string peptide in peptides)
             {

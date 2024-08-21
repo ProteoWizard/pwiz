@@ -862,6 +862,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to detected features.
+        /// </summary>
+        public static string ImportPeptideSearch_GetLibBuilder_detected_features {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_GetLibBuilder_detected_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Declustering Potential.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential {
@@ -1112,6 +1121,35 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to found more than one UniMod match; add terminus and/or amino acid specificity to choose a single match.
+        /// </summary>
+        public static string ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match {
+            get {
+                return ResourceManager.GetString("ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_a" +
+                        "nd_or_amino_acid_specificity_to_choose_a_single_match", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to found more than one UniMod match but the given specificity ({0}) does not match any of them..
+        /// </summary>
+        public static string ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_ {
+            get {
+                return ResourceManager.GetString("ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_s" +
+                        "pecificity___0___does_not_match_any_of_them_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to no UniMod match.
+        /// </summary>
+        public static string ModificationMatcher_GetStaticMod_no_UniMod_match {
+            get {
+                return ResourceManager.GetString("ModificationMatcher_GetStaticMod_no_UniMod_match", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unrecognized modification placement for Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3})..
         /// </summary>
         public static string ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___ {
@@ -1211,6 +1249,15 @@ namespace pwiz.Skyline.Model {
         public static string PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_ {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Intensity.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Library_Intensity {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Library_Intensity", resourceCulture);
             }
         }
         
@@ -1600,6 +1647,16 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empt" +
                         "y_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chemical Formula.
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_Chemical_Formula", resourceCulture);
             }
         }
         

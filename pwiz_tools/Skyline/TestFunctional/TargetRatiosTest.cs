@@ -100,6 +100,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyNormalizationMethodDisplayed(NormalizationMethod normalizationMethod)
         {
+            WaitForGraphs();
             Assert.AreEqual(normalizationMethod, SkylineWindow.SequenceTree.NormalizeOption?.NormalizationMethod);
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
             int transitionGroupCount = 0;

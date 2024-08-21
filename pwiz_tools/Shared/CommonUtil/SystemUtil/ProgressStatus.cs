@@ -33,6 +33,7 @@ namespace pwiz.Common.SystemUtil
         int PercentComplete { get; }
         int ZoomedPercentComplete { get; }
         int Segment { get; }
+        string SegmentName { get; }
         bool ProgressEqual(IProgressStatus status);
         Exception ErrorException { get; }
         IProgressStatus ChangePercentComplete(int percent);
@@ -43,6 +44,7 @@ namespace pwiz.Common.SystemUtil
         IProgressStatus ChangeErrorException(Exception prop);
         IProgressStatus ChangeSegments(int segment, int segmentCount);
         IProgressStatus NextSegment();
+        IProgressStatus ChangeSegmentName(string prop); // Changes progress bar text for controls that allow it, otherwise just changes message
         IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor, long currentCount,
             long totalCount);
 
@@ -107,6 +109,7 @@ namespace pwiz.Common.SystemUtil
         public int PercentZoomStart { get; private set; }
         public int PercentZoomEnd { get; private set; }
         public int SegmentCount { get; private set; }
+        public string SegmentName { get; private set; }
         public int Segment { get; private set; }
         public Exception ErrorException { get; private set; }
         public object Id { get; private set; }
@@ -226,6 +229,11 @@ namespace pwiz.Common.SystemUtil
                     s.ErrorException = prop;
                     s.State = ProgressState.error;
                 });
+        }
+
+        public IProgressStatus ChangeSegmentName(string prop) // Changes progress bar text for controls that allow it, otherwise just changes message
+        {
+            return ChangeProp(ImClone(this), s => s.SegmentName = s.Message = prop);
         }
 
         public IProgressStatus ChangeMessage(string prop)

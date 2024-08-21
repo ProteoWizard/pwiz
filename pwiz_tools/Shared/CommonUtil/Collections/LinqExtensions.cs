@@ -99,6 +99,11 @@ namespace pwiz.Common.Collections
             return !list.Any();
         }
 
+        public static T[] AppendToNew<T>(this T[] array, T item)
+        {
+            return array.Append(item).ToArray();
+        }
+
         public static ReadOnlyCollection<TSource> AsReadOnly<TSource>(this IList<TSource> list)
         {
             return list == null ? null : new ReadOnlyCollection<TSource>(list);

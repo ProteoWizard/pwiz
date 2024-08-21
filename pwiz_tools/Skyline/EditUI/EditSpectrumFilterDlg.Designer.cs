@@ -29,14 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditSpectrumFilterDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditSpectrumFilterDlg));
-            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
             this.btnReset = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -48,11 +44,93 @@
             this.panelEditor = new System.Windows.Forms.Panel();
             this.panelPages = new System.Windows.Forms.FlowLayoutPanel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
+            this.buttonPanel = new System.Windows.Forms.Panel();
+            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelClauses.SuspendLayout();
             this.toolStripFilter.SuspendLayout();
             this.panelEditor.SuspendLayout();
+            this.buttonPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.SuspendLayout();
+            // 
+            // cbCreateCopy
+            // 
+            resources.ApplyResources(this.cbCreateCopy, "cbCreateCopy");
+            this.cbCreateCopy.Name = "cbCreateCopy";
+            this.cbCreateCopy.UseVisualStyleBackColor = true;
+            // 
+            // btnReset
+            // 
+            resources.ApplyResources(this.btnReset, "btnReset");
+            this.btnReset.Name = "btnReset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // btnOk
+            // 
+            resources.ApplyResources(this.btnOk, "btnOk");
+            this.btnOk.Name = "btnOk";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // panelClauses
+            // 
+            this.panelClauses.Controls.Add(this.dataGridViewEx1);
+            this.panelClauses.Controls.Add(this.toolStripFilter);
+            resources.ApplyResources(this.panelClauses, "panelClauses");
+            this.panelClauses.Name = "panelClauses";
+            // 
+            // toolStripFilter
+            // 
+            resources.ApplyResources(this.toolStripFilter, "toolStripFilter");
+            this.toolStripFilter.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnDeleteFilter});
+            this.toolStripFilter.Name = "toolStripFilter";
+            // 
+            // btnDeleteFilter
+            // 
+            this.btnDeleteFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDeleteFilter, "btnDeleteFilter");
+            this.btnDeleteFilter.Name = "btnDeleteFilter";
+            this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
+            // 
+            // lblDescription
+            // 
+            resources.ApplyResources(this.lblDescription, "lblDescription");
+            this.lblDescription.Name = "lblDescription";
+            // 
+            // panelEditor
+            // 
+            this.panelEditor.Controls.Add(this.panelClauses);
+            this.panelEditor.Controls.Add(this.panelPages);
+            this.panelEditor.Controls.Add(this.lblDescription);
+            resources.ApplyResources(this.panelEditor, "panelEditor");
+            this.panelEditor.Name = "panelEditor";
+            // 
+            // panelPages
+            // 
+            resources.ApplyResources(this.panelPages, "panelPages");
+            this.panelPages.Name = "panelPages";
+            // 
+            // buttonPanel
+            // 
+            this.buttonPanel.Controls.Add(this.btnReset);
+            this.buttonPanel.Controls.Add(this.cbCreateCopy);
+            this.buttonPanel.Controls.Add(this.btnOk);
+            this.buttonPanel.Controls.Add(this.btnCancel);
+            resources.ApplyResources(this.buttonPanel, "buttonPanel");
+            this.buttonPanel.Name = "buttonPanel";
             // 
             // dataGridViewEx1
             // 
@@ -118,100 +196,29 @@
             resources.ApplyResources(this.valueColumn, "valueColumn");
             this.valueColumn.Name = "valueColumn";
             // 
-            // cbCreateCopy
-            // 
-            resources.ApplyResources(this.cbCreateCopy, "cbCreateCopy");
-            this.cbCreateCopy.Name = "cbCreateCopy";
-            this.cbCreateCopy.UseVisualStyleBackColor = true;
-            // 
-            // btnReset
-            // 
-            resources.ApplyResources(this.btnReset, "btnReset");
-            this.btnReset.Name = "btnReset";
-            this.btnReset.UseVisualStyleBackColor = true;
-            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // btnOk
-            // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.Name = "btnOk";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // panelClauses
-            // 
-            this.panelClauses.Controls.Add(this.dataGridViewEx1);
-            this.panelClauses.Controls.Add(this.toolStripFilter);
-            resources.ApplyResources(this.panelClauses, "panelClauses");
-            this.panelClauses.Name = "panelClauses";
-            // 
-            // toolStripFilter
-            // 
-            resources.ApplyResources(this.toolStripFilter, "toolStripFilter");
-            this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnDeleteFilter});
-            this.toolStripFilter.Name = "toolStripFilter";
-            // 
-            // btnDeleteFilter
-            // 
-            this.btnDeleteFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.btnDeleteFilter, "btnDeleteFilter");
-            this.btnDeleteFilter.Name = "btnDeleteFilter";
-            this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
-            // 
-            // lblDescription
-            // 
-            resources.ApplyResources(this.lblDescription, "lblDescription");
-            this.lblDescription.Name = "lblDescription";
-            // 
-            // panelEditor
-            // 
-            this.panelEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelEditor.Controls.Add(this.panelClauses);
-            this.panelEditor.Controls.Add(this.panelPages);
-            this.panelEditor.Controls.Add(this.lblDescription);
-            resources.ApplyResources(this.panelEditor, "panelEditor");
-            this.panelEditor.Name = "panelEditor";
-            // 
-            // panelPages
-            // 
-            resources.ApplyResources(this.panelPages, "panelPages");
-            this.panelPages.Name = "panelPages";
-            // 
             // EditSpectrumFilterDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbCreateCopy);
-            this.Controls.Add(this.btnReset);
-            this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnOk);
             this.Controls.Add(this.panelEditor);
+            this.Controls.Add(this.buttonPanel);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditSpectrumFilterDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             this.panelClauses.ResumeLayout(false);
             this.panelClauses.PerformLayout();
             this.toolStripFilter.ResumeLayout(false);
             this.toolStripFilter.PerformLayout();
             this.panelEditor.ResumeLayout(false);
             this.panelEditor.PerformLayout();
+            this.buttonPanel.ResumeLayout(false);
+            this.buttonPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -232,5 +239,6 @@
         private System.Windows.Forms.Panel panelEditor;
         private System.Windows.Forms.FlowLayoutPanel panelPages;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Panel buttonPanel;
     }
 }

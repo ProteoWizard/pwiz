@@ -182,13 +182,13 @@ namespace pwiz.Skyline.SettingsUI
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;
+
             comboRegressionFit.Items.AddRange(RegressionFit.All.Cast<object>().ToArray());
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
+            UpdateLodOptions(_peptideSettings.Quantification.LodCalculation ?? LodCalculation.NONE);
+
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
-
-            comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
-            comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
@@ -1907,6 +1907,48 @@ namespace pwiz.Skyline.SettingsUI
                 _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
             }
             ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
+        }
+
+        private void comboLodMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            tbxMaxLoqBias.Enabled = comboLodMethod.SelectedItem != LodCalculation.TURNING_POINT_STDERR;
+        }
+
+        private void comboRegressionFit_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateLodOptions(comboLodMethod.SelectedItem as LodCalculation);
+
+            // If the user chooses "Bilinear" for the regression method, then
+            // change the LodCalculation and Max LOQ CV to the recommended values
+            if (comboRegressionFit.SelectedItem == RegressionFit.BILINEAR &&
+                _peptideSettings.Quantification.RegressionFit != RegressionFit.BILINEAR)
+            {
+                if (LodCalculation.NONE.Equals(comboLodMethod.SelectedItem))
+                {
+                    comboLodMethod.SelectedItem = LodCalculation.TURNING_POINT_STDERR;
+                }
+                if (!QuantMaxLoqCv.HasValue)
+                {
+                    QuantMaxLoqCv = 20;
+                }
+            }
+        }
+
+        private void UpdateLodOptions(LodCalculation current)
+        {
+            var  options = new List<object>();
+            options.AddRange(LodCalculation.ForRegressionFit(comboRegressionFit.SelectedItem as RegressionFit));
+            comboLodMethod.Items.Clear();
+            comboLodMethod.Items.AddRange(options.ToArray());
+            if (options.Contains(current))
+            {
+                comboLodMethod.SelectedItem = current;
+            }
+            else
+            {
+                comboLodMethod.SelectedItem = LodCalculation.NONE;
+            }
+            ComboHelper.AutoSizeDropDown(comboLodMethod);
         }
     }
 }

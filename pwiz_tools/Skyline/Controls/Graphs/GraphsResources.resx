@@ -247,6 +247,9 @@
   <data name="AreaReplicateGraphPane_UpdateGraph_Step__0_" xml:space="preserve">
     <value>Step {0}</value>
   </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
+    <value>Total:</value>
+  </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
     <value>Intensity</value>
   </data>
@@ -711,5 +714,29 @@ Here are the last 3 errors:
   </data>
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
     <value>Spectrum information unavailable</value>
+  </data>
+  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
+    <value>Peptide Rank</value>
+  </data>
+  <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
+    <value>Relative Abundance</value>
+  </data>
+  <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
+    <value>Protein Rank</value>
+  </data>
+  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
+    <value>Molecule Rank</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels" xml:space="preserve">
+    <value>Auto Arrange Labels</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout" xml:space="preserve">
+    <value>Suspend Label Layout</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout" xml:space="preserve">
+    <value>Resume Label Layout</value>
+  </data>
+  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
+    <value>Peptides</value>
   </data>
 </root>

@@ -68,6 +68,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyDisplayText(Func<TransitionTreeNode, string> getTextFunc)
         {
+            WaitForGraphs();
             RunUI(() =>
             {
                 foreach (var peptideGroupTreeNode in SkylineWindow.SequenceTree.GetSequenceNodes())

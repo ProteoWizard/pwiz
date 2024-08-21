@@ -22,6 +22,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Util.Helpers;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -171,6 +172,8 @@ namespace pwiz.Skyline.Model.Find
                     nodeType = FindResources.BookmarkEnumerator_GetNodeTypeName_Unknown;
                     break;
             }
+
+            nodeType = PeptideToMoleculeTextMapper.Translate(nodeType, Document?.DocumentType ?? SrmDocument.DOCUMENT_TYPE.none); // Translate "peptide"=>"molecule" etc as needed
 
             if (Bookmark.ReplicateIndex.HasValue)
             {

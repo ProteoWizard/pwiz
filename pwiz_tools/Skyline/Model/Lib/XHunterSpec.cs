@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override LibraryFiles LibraryFiles
         {
-            get { return new LibraryFiles(); }
+            get { return LibraryFiles.EMPTY; }
         }
 
         /// <summary>

@@ -172,4 +172,44 @@
   <data name="MsconvertDdaConverter_Run_Starting_msconvert_conversion_" xml:space="preserve">
     <value>正在启动 msconvert 转换。</value>
   </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
+    <value>保留时间校准：{0} 与 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
+    <value>正在查找在多个重复测定中出现的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
+    <value>参见 Hardklor/Bullseye 日志了解详细信息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_" xml:space="preserve">
+    <value>在 {0} 和 {1} 之间进行校准时出错：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
+    <value>正在准备对“{0}”进行保留时间校准</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_" xml:space="preserve">
+    <value>正在使用 {0} 搜索类似肽段的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_" xml:space="preserve">
+    <value>正在使用 {0} 搜索 Hardklor 结果中的持久特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
+    <value>文件“{0}”正在转换为 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_" xml:space="preserve">
+    <value>最小同位素点积(&amp;D)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
+    <value>Hardklor 使用平均氨基酸模型在 MS1 扫描中搜索类似肽段的特征。Hardklor 所发现的特征在 Skyline 中表示为小分子，Hardklor 使用其化学式来生成与特征相匹配的同位素分布，再加上用来匹配高分辨率峰质量与电荷比的质量偏移。这并非质谱仪中产生 MS1 峰的分子的实际化学式，而是匹配同位素分布的近似值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var yTime = peptideTime.RetentionTime;
                 if (PlotType == PlotTypeRT.residuals)
                     yTime = (double) (alignedFile.Regression.GetRetentionTime(xTime) - yTime);
-                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.Sequence);
+                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.DisplayName);
                 if (alignedFile.OutlierIndexes.Contains(i))
                 {
                     outliers.Add(point);
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem(@"Peptides", points, Color.Black, SymbolType.Diamond) // CONSIDER: localize?
+            var goodPointsLineItem = new LineItem(ModeUIAwareStringFormat(GraphsResources.AlignmentForm_UpdateGraph_Peptides), points, Color.Black, SymbolType.Diamond)
                 {
                     Symbol = {Size = 8f},
                     Line = {IsVisible = false}
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 outlierLineItem.Line.IsVisible = false;
                 outlierLineItem.Symbol.Border.IsVisible = false;
                 outlierLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_OUTLIERS);
-                goodPointsLineItem.Label.Text = Resources.AlignmentForm_UpdateGraph_Peptides_Refined;
+                goodPointsLineItem.Label.Text = ModeUIAwareStringFormat(GraphsResources.GraphData_Graph_Peptides_Refined);
             }
             zedGraphControl.GraphPane.CurveList.Add(goodPointsLineItem);
             if (points.Count > 0 && PlotType == PlotTypeRT.correlation)
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var alignedTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                     dataRow.TargetTimes, dataRow.SourceTimes,
-                    DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
+                    DocumentRetentionTimes.REFINEMENT_THRESHOLD,
                     RegressionMethodRT.linear,
                     cancellationToken);
 

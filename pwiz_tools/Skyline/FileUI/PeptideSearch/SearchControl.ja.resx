@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="lblProgress.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -157,7 +157,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblProgress.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 10</value>
+    <value>9, 6</value>
   </data>
   <data name="lblProgress.Size" type="System.Drawing.Size, System.Drawing">
     <value>87, 13</value>
@@ -178,7 +178,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblProgress.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="progressBar.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -208,7 +208,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;progressBar.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="showTimestampsCheckbox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -241,7 +241,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;showTimestampsCheckbox.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="txtSearchProgress.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -256,7 +256,7 @@
     <value>Vertical</value>
   </data>
   <data name="txtSearchProgress.Size" type="System.Drawing.Size, System.Drawing">
-    <value>324, 347</value>
+    <value>324, 343</value>
   </data>
   <data name="txtSearchProgress.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -273,17 +273,14 @@
   <data name="&gt;&gt;txtSearchProgress.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="panelTextBoxBorder.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="panelTextBoxBorder.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
   </data>
   <data name="panelTextBoxBorder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 26</value>
-  </data>
-  <data name="panelTextBoxBorder.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 0</value>
   </data>
   <data name="panelTextBoxBorder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>334, 357</value>
+    <value>334, 353</value>
   </data>
   <data name="panelTextBoxBorder.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -295,10 +292,64 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelTextBoxBorder.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>progressSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;panelTextBoxBorder.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>0</value>
+  </data>
+  <data name="progressSplitContainer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="progressSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 32</value>
+  </data>
+  <data name="progressSplitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel1.Name" xml:space="preserve">
+    <value>progressSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel1.Parent" xml:space="preserve">
+    <value>progressSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel2.Name" xml:space="preserve">
+    <value>progressSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel2.Parent" xml:space="preserve">
+    <value>progressSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="progressSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>334, 353</value>
+  </data>
+  <data name="progressSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
+    <value>96</value>
+  </data>
+  <data name="progressSplitContainer.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Name" xml:space="preserve">
+    <value>progressSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;progressSplitContainer.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

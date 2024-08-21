@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -85,9 +86,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                 StateImageIndex = peakImageIndex;
 // ReSharper restore RedundantCheckBeforeAssignment
             var nodePep = (PeptideDocNode) Model;
+
             string label = DisplayText(nodePep, SequenceTree.GetDisplaySettings(nodePep));
+            // If the peptide sequence is too long, add some spaces because
+            // tooltip rendering is slow if text cannot be wrapped (Issue 925)
+            label = TextUtil.EnforceMaxWordLength(label, 1000);
             if (!string.Equals(label, Text))
                 Text = label;
+
             // Hard to tell what might cause label formatting to change
             _textSequences = null;
 

@@ -23,7 +23,6 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Themes;
@@ -382,7 +381,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var chromInfoData in chromInfoDatas)
                 {
                     var retentionTimeValues = getRetentionTimeValues(chromInfoData);
-                    RegressionLine regressionFunction = null;
+                    AlignmentFunction regressionFunction = null;
                     if (null != RetentionTimeTransform.RtTransformOp)
                     {
                         RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);

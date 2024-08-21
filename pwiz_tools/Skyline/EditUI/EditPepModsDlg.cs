@@ -419,6 +419,7 @@ namespace pwiz.Skyline.EditUI
             if (!EqualsItems(combo, listItems))
             {
                 combo.Items.Clear();
+                combo.SelectedIndex = -1;   // And reset selection - normal combos would do this
                 listItems.ForEach(item => combo.Items.Add(item));
             }
             if (select)

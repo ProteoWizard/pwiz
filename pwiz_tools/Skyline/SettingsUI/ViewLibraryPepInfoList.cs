@@ -31,7 +31,8 @@ namespace pwiz.Skyline.SettingsUI
 {
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
     {
-        private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
+        private readonly ImmutableList<ViewLibraryPepInfo> _allEntries; // Alpha sorted
+        private readonly ImmutableList<int> _naturalSortIndex; // Natural sort order of the members of _allEntries
         private readonly LibKeyModificationMatcher _matcher;
         public bool _mzCalculated;
         public readonly List<string> _stringSearchFields;
@@ -71,6 +72,13 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, string selectedFilterCategory, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
+            var naturalSort = Enumerable.Range(0, _allEntries.Count).OrderBy(i => _allEntries[i], Comparer<ViewLibraryPepInfo>.Create(ComparePepInfosNatural)).ToArray();
+            var naturalSortMap = new int[_allEntries.Count];
+            for (var order = 0; order < naturalSort.Length; order++)
+            {
+                naturalSortMap[naturalSort[order]] = order;
+            }
+            _naturalSortIndex = ImmutableList.ValueOf(naturalSortMap);
             _selectedFilterCategory = selectedFilterCategory;
             _matcher = matcher; // Used to calculate precursor m/z
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in this library?
@@ -335,8 +343,8 @@ namespace pwiz.Skyline.SettingsUI
             if (string.IsNullOrEmpty(filterText))
             {
                 // Only return entries that have the selected property
-                var ret = _listCache.GetOrCreate(_selectedFilterCategory).OrderBy(info => info);
-                    return ImmutableList.ValueOf(ret);
+                var ret = _listCache.GetOrCreate(_selectedFilterCategory).OrderBy(info => _naturalSortIndex[info]);
+                return ImmutableList.ValueOf(ret);
             }
 
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
@@ -382,12 +390,12 @@ namespace pwiz.Skyline.SettingsUI
                             info.UnmodifiedTargetText.Length,
                             StringComparison.OrdinalIgnoreCase));
                     // Return the elements from the range whose DisplayText actually matches the filter text.
-                    return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
-                        .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
+                    filteredIndices = new RangeList(range).Where(i => _allEntries[i].DisplayText
+                        .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
             }
             // Return the indices of the matches sorted alphabetically by display text
-            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => info));
+            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => _naturalSortIndex[info]));
         }
 
         public int IndexOf(LibraryKey libraryKey)
@@ -401,19 +409,48 @@ namespace pwiz.Skyline.SettingsUI
             return range.Length > 0 ? range.Start : -1;
         }
 
+        // Simple alphanumeric sort
         public static int ComparePepInfos(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
         {
             int result = string.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText,
                 StringComparison.OrdinalIgnoreCase);
             if (result == 0)
             {
+                // Same molecule, sort by adduct
                 result = info1.Adduct.CompareTo(info2.Adduct);
-            }
-            if (result == 0)
-            {
-                result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
+                if (result == 0)
+                {
+                    // Last try, alpha sort on whatever Key.ToString() produced
+                    result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
+                }
             }
             return result;
+        }
+
+        // Natural sort (e.g. "xyz200.5" comes before "xyz1200.5")
+        public static int ComparePepInfosNatural(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
+        {
+            var result = NaturalStringComparer.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText);
+
+            if (result == 0)
+            {
+                // Same molecule, sort by adduct
+                result = info1.Adduct.CompareTo(info2.Adduct);
+                if (result == 0)
+                {
+                    // Last try, natural sort on whatever Key.ToString() produced
+                    result = NaturalStringComparer.Compare(info1.KeyString, info2.KeyString);
+                }
+            }
+            return result;
+        }
+
+        public class ViewLibraryPepInfoNaturalComparer : IComparer<ViewLibraryPepInfo>
+        {
+            public int Compare(ViewLibraryPepInfo x, ViewLibraryPepInfo y)
+            {
+                return ComparePepInfosNatural(x, y);
+            }
         }
     }
 }

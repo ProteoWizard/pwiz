@@ -20,6 +20,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -735,6 +737,18 @@ namespace pwiz.Skyline.SettingsUI
             if (_usageMode == UsageMode.precursor)
             {
                 // Only the adduct should be changing
+                if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))
+                {
+                    try
+                    {
+                        Adduct.ApplyToFormula(_formulaBox.NeutralFormula); // Does adduct make sense with formula?
+                    }
+                    catch (Exception x) when (SmallMoleculeTransitionListReader.IsParserException(x))
+                    {
+                        _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
+                        return;
+                    }
+                }
                 SetResult(_resultCustomMolecule, Adduct);
             }
             else if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))
@@ -875,10 +889,17 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (Adduct.IsEmpty || Adduct.AdductCharge != charge)
             {
-                Adduct =
-                    Adduct
-                        .ChangeCharge(
-                            charge); // Update the adduct with this new charge - eg for new charge 2, [M+Na] -> [M+2Na] 
+                var z = Adduct.AdductCharge;
+                try
+                {
+                    Adduct = Adduct.ChangeCharge(charge); // Update the adduct with this new charge - eg for new charge 2, [M+Na] -> [M+2Na] 
+                }
+                catch (InvalidDataException x)
+                {
+                    helper = new MessageBoxHelper(this, true); // Now we do want to show the message
+                    helper.ShowTextBoxError(textCharge, x.Message);
+                    textCharge.Text = z.ToString(CultureInfo.CurrentUICulture);
+                }
             }
         }
 

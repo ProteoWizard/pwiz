@@ -82,9 +82,9 @@ namespace pwiz.SkylineTestFunctional
                         (Skyline.Model.Databinding.Entities.Peptide) row.Cells[colMolecule.Index].Value;
                     Assert.IsNotNull(molecule);
                     Replicate replicate = (Replicate) row.Cells[colReplicate.Index].Value;
-                    double? normalizedArea = (double?) row.Cells[colNormalizedArea.Index].Value;
-                    double? calculatedConcentration = (double?) row.Cells[colCalculatedConcentration.Index].Value;
-                    normalizedAreas.Add(Tuple.Create(molecule.IdentityPath, replicate.Name), Tuple.Create(normalizedArea, calculatedConcentration));
+                    var normalizedArea = (AnnotatedDouble) row.Cells[colNormalizedArea.Index].Value;
+                    var calculatedConcentration = (AnnotatedDouble) row.Cells[colCalculatedConcentration.Index].Value;
+                    normalizedAreas.Add(Tuple.Create(molecule.IdentityPath, replicate.Name), Tuple.Create(normalizedArea?.Strict, calculatedConcentration?.Strict));
                 }
             });
 

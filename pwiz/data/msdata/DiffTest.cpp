@@ -518,6 +518,37 @@ void testBinaryDataArray()
 }
 
 
+void testIntegerDataArray()
+{
+    if (os_) *os_ << "testIntegerDataArray()\n";
+
+    BinaryData<int64_t> data;
+    for (int i = 0; i < 10; i++) data.push_back(i);
+
+    IntegerDataArray a, b;
+    a.data = data;
+    a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("dp1"));
+    b = a;
+
+    DiffConfig config;
+    config.precision = 1e-4;
+
+    a.data[9] = 10000000000;
+    b.data[9] = 10000000001;
+
+    Diff<IntegerDataArray, DiffConfig> diff(a, b, config);
+    if (diff && os_) *os_ << diff << endl;
+    unit_assert(!diff);
+
+    b.data[9] = 20000000000;
+
+    diff(a, b);
+
+    if (diff && os_) *os_ << diff << endl;
+    unit_assert(diff);
+}
+
+
 void testSpectrum()
 {
     if (os_) *os_ << "testSpectrum()\n";
@@ -1325,6 +1356,7 @@ void test()
     testScan();
     testScanList();
     testBinaryDataArray();
+    testIntegerDataArray();
     testSpectrum();
     testChromatogram();
     testSpectrumList();
