@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Controls.Alignment
             };
         }
 
-        private SimilarityMatrix GetSimilarityMatrix(CalculatedValues calculatedValues, RetentionTimeData dataX,
+        private SimilarityGrid GetSimilarityMatrix(CalculatedValues calculatedValues, RetentionTimeData dataX,
             RetentionTimeData dataY, RegressionOptions regressionOptions)
         {
             dataX = dataX.ChangeSpectra(dataX.Spectra.TruncateSummariesTo(regressionOptions.SpectrumDigestLength));
