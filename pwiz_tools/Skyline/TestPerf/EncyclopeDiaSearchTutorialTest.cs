@@ -187,6 +187,8 @@ namespace TestPerf
             PrepareDocument("EncyclopeDiaSearchTutorialTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath(_analysisValues.FastaPath);
 
+            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
+            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             var searchDlg = ShowDialog<EncyclopeDiaSearchDlg>(SkylineWindow.ShowEncyclopeDiaSearchDlg);
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
 
@@ -205,8 +207,6 @@ namespace TestPerf
 
             RunUI(searchDlg.NextPage); // now on Koina settings
 
-            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
-            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 searchDlg.DefaultCharge = 3;
