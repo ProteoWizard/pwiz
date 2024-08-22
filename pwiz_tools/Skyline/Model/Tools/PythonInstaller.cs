@@ -11,7 +11,6 @@ using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -139,45 +138,45 @@ namespace pwiz.Skyline.Model.Tools
             {
                 case PythonTaskName.download_python_embeddable_package:
                     var task1 = new PythonTask(DownloadPythonEmbeddablePackage);
-                    task1.InProgressMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package;
-                    task1.FailureMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package;
+                    task1.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package;
+                    task1.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package;
                     return task1;
                 case PythonTaskName.unzip_python_embeddable_package:
                     var task2 = new PythonTask(UnzipPythonEmbeddablePackage);
-                    task2.InProgressMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package;
-                    task2.FailureMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package;
+                    task2.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package;
+                    task2.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package;
                     return task2;
                 case PythonTaskName.enable_search_path_in_python_embeddable_package:
                     var task3 = new PythonTask(EnableSearchPathInPythonEmbeddablePackage);
-                    task3.InProgressMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package;
-                    task3.FailureMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package;
+                    task3.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package;
+                    task3.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package;
                     return task3;
                 case PythonTaskName.download_getpip_script:
                     var task4 = new PythonTask(DownloadGetPipScript);
-                    task4.InProgressMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script;
-                    task4.FailureMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script;
+                    task4.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script;
+                    task4.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script;
                     return task4;
                 case PythonTaskName.run_getpip_script:
                     var task5 = new PythonTask(RunGetPipScript);
-                    task5.InProgressMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Running_the_get_pip_py_script;
-                    task5.FailureMessage = ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script;
+                    task5.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Running_the_get_pip_py_script;
+                    task5.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script;
                     return task5;
                 case PythonTaskName.pip_install_virtualenv:
                     var virtualEnvPackage = new PythonPackage { Name = VIRTUALENV, Version = null };
                     var task6 = new PythonTask(() => PipInstall(BasePythonExecutablePath, new[] { virtualEnvPackage }));
-                    task6.InProgressMessage = string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Running_pip_install__0_, VIRTUALENV);
-                    task6.FailureMessage = string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, VIRTUALENV);
+                    task6.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Running_pip_install__0_, VIRTUALENV);
+                    task6.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, VIRTUALENV);
                     return task6;
                 case PythonTaskName.create_virtual_environment:
                     var task7 = new PythonTask(() => RunPythonModule(
                         BasePythonExecutablePath, PythonVersionDir, VIRTUALENV, new[] { VirtualEnvironmentName }));
-                    task7.InProgressMessage = string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, VirtualEnvironmentName);
-                    task7.FailureMessage = string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, VirtualEnvironmentName);
+                    task7.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, VirtualEnvironmentName);
+                    task7.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, VirtualEnvironmentName);
                     return task7;
                 case PythonTaskName.pip_install_packages:
                     var task8 = new PythonTask(() => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages));
-                    task8.InProgressMessage = string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
-                    task8.FailureMessage = string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                    task8.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                    task8.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     return task8;
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
@@ -189,7 +188,7 @@ namespace pwiz.Skyline.Model.Tools
             using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
             if (!webClient.DownloadFileAsync(PythonEmbeddablePackageUri, PythonEmbeddablePackageDownloadPath, out var downloadException))
                 throw new ToolExecutionException(
-                    ToolsUIResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
+                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
         }
 
         private void UnzipPythonEmbeddablePackage(IProgressMonitor progressMonitor)
@@ -201,7 +200,7 @@ namespace pwiz.Skyline.Model.Tools
         private void EnableSearchPathInPythonEmbeddablePackage()
         {
             var files = Directory.GetFiles(PythonEmbeddablePackageExtractDir, "python*._pth");
-            Assume.IsTrue(files.Length == 1, ToolsUIResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
+            Assume.IsTrue(files.Length == 1, ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
             var oldFilePath = files[0];
             var newFilePath = Path.ChangeExtension(oldFilePath, @".pth");
             File.Move(oldFilePath, newFilePath);
@@ -212,7 +211,7 @@ namespace pwiz.Skyline.Model.Tools
             if (!webClient.DownloadFileAsync(GetPipScriptDownloadUri, GetPipScriptDownloadPath, out var downloadException))
             {
                 throw new ToolExecutionException(
-                    ToolsUIResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
+                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
             }
         }
 
@@ -222,11 +221,11 @@ namespace pwiz.Skyline.Model.Tools
             cmdBuilder.Append(BasePythonExecutablePath)
                 .Append(SPACE)
                 .Append(GetPipScriptDownloadPath);
-            var cmd = string.Format(ToolsUIResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
-                throw new ToolExecutionException(string.Format(ToolsUIResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 
         private void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages)
@@ -246,12 +245,12 @@ namespace pwiz.Skyline.Model.Tools
                 cmdBuilder.Append(arg)
                     .Append(TextUtil.SEPARATOR_SPACE);
             }
-            var cmd = string.Format(ToolsUIResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
-            cmd += string.Format(ToolsUIResources.PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__, ECHO, CMD_PROCEEDING_SYMBOL);
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
+            cmd += string.Format(ToolsResources.PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__, ECHO, CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
-                throw new ToolExecutionException(string.Format(ToolsUIResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 
         private void RunPythonModule(string pythonExecutablePath, string changeDir, string moduleName, string[] arguments)
@@ -277,11 +276,11 @@ namespace pwiz.Skyline.Model.Tools
                 cmdBuilder.Append(argument)
                     .Append(SPACE);
             }
-            var cmd = string.Format(ToolsUIResources.PythonInstaller__0__Running_command____1____2__, ECHO, GetEscapedCmdString(cmdBuilder.ToString()), CMD_PROCEEDING_SYMBOL);
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, GetEscapedCmdString(cmdBuilder.ToString()), CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
-                throw new ToolExecutionException(string.Format(ToolsUIResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 
         private string GetEscapedCmdString(string cmdString)
@@ -600,7 +599,7 @@ namespace pwiz.Skyline.Model.Tools
             foreach (var line in lines)
             {
                 var words = line.Split(EQUALS.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                Assume.IsTrue(words.Length.Equals(2), string.Format(ToolsUIResources.PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__, line));
+                Assume.IsTrue(words.Length.Equals(2), string.Format(ToolsResources.PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__, line));
                 packageToVersionMap.Add(words[0], words[1]);
             }
 
@@ -670,13 +669,13 @@ namespace pwiz.Skyline.Model.Tools
     internal class PythonInstallerUnsupportedTaskException : PythonInstallerException
     {
         public PythonInstallerUnsupportedTaskException(PythonTask pythonTask)
-            : base(string.Format(ToolsUIResources.PythonInstallerUnsupportedTaskException_Task_with_action_type__0__is_not_supported_by_PythonInstaller_yet, pythonTask.ActionType)) { }
+            : base(string.Format(ToolsResources.PythonInstallerUnsupportedTaskException_Task_with_action_type__0__is_not_supported_by_PythonInstaller_yet, pythonTask.ActionType)) { }
     }
 
     internal class PythonInstallerUnsupportedTaskNameException : PythonInstallerException
     {
         public PythonInstallerUnsupportedTaskNameException(PythonTaskName pythonTaskName)
-            : base(string.Format(ToolsUIResources.PythonInstallerUnsupportedTaskNameException_Task_with_task_name__0__is_not_supported_by_PythonInstaller_yet, pythonTaskName)) { }
+            : base(string.Format(ToolsResources.PythonInstallerUnsupportedTaskNameException_Task_with_task_name__0__is_not_supported_by_PythonInstaller_yet, pythonTaskName)) { }
     }
 }
 
