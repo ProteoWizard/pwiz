@@ -48,6 +48,12 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.tabMainRegisterComplete = new System.Windows.Forms.TabPage();
+            this.label16 = new System.Windows.Forms.Label();
+            this.btnShowLoginTab = new System.Windows.Forms.Button();
+            this.label15 = new System.Windows.Forms.Label();
+            this.btnViewAccount_2 = new System.Windows.Forms.Button();
+            this.label14 = new System.Windows.Forms.Label();
             this.tabMainLogin = new System.Windows.Forms.TabPage();
             this.wizardPagesLoginPhases = new pwiz.Skyline.Controls.WizardPages();
             this.tabLoginButton = new System.Windows.Forms.TabPage();
@@ -56,12 +62,6 @@
             this.label13 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.tabMainRegisterComplete = new System.Windows.Forms.TabPage();
-            this.label14 = new System.Windows.Forms.Label();
-            this.btnViewAccount_2 = new System.Windows.Forms.Button();
-            this.label15 = new System.Windows.Forms.Label();
-            this.btnShowLoginTab = new System.Windows.Forms.Button();
-            this.label16 = new System.Windows.Forms.Label();
             this.wizardPagesMain.SuspendLayout();
             this.tabTestWebview.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.webView)).BeginInit();
@@ -71,11 +71,11 @@
             this.tabRegisterButton.SuspendLayout();
             this.tabRegisterInProgress.SuspendLayout();
             this.pnlRegisterFailedUserNotAuth.SuspendLayout();
+            this.tabMainRegisterComplete.SuspendLayout();
             this.tabMainLogin.SuspendLayout();
             this.wizardPagesLoginPhases.SuspendLayout();
             this.tabLoginButton.SuspendLayout();
             this.tabLoginInProgress.SuspendLayout();
-            this.tabMainRegisterComplete.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -228,6 +228,46 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
+            // tabMainRegisterComplete
+            // 
+            this.tabMainRegisterComplete.Controls.Add(this.label16);
+            this.tabMainRegisterComplete.Controls.Add(this.btnShowLoginTab);
+            this.tabMainRegisterComplete.Controls.Add(this.label15);
+            this.tabMainRegisterComplete.Controls.Add(this.btnViewAccount_2);
+            this.tabMainRegisterComplete.Controls.Add(this.label14);
+            resources.ApplyResources(this.tabMainRegisterComplete, "tabMainRegisterComplete");
+            this.tabMainRegisterComplete.Name = "tabMainRegisterComplete";
+            this.tabMainRegisterComplete.UseVisualStyleBackColor = true;
+            // 
+            // label16
+            // 
+            resources.ApplyResources(this.label16, "label16");
+            this.label16.Name = "label16";
+            // 
+            // btnShowLoginTab
+            // 
+            resources.ApplyResources(this.btnShowLoginTab, "btnShowLoginTab");
+            this.btnShowLoginTab.Name = "btnShowLoginTab";
+            this.btnShowLoginTab.UseVisualStyleBackColor = true;
+            this.btnShowLoginTab.Click += new System.EventHandler(this.btnShowLoginTab_Click);
+            // 
+            // label15
+            // 
+            resources.ApplyResources(this.label15, "label15");
+            this.label15.Name = "label15";
+            // 
+            // btnViewAccount_2
+            // 
+            resources.ApplyResources(this.btnViewAccount_2, "btnViewAccount_2");
+            this.btnViewAccount_2.Name = "btnViewAccount_2";
+            this.btnViewAccount_2.UseVisualStyleBackColor = true;
+            this.btnViewAccount_2.Click += new System.EventHandler(this.btnViewAccount_2_Click);
+            // 
+            // label14
+            // 
+            resources.ApplyResources(this.label14, "label14");
+            this.label14.Name = "label14";
+            // 
             // tabMainLogin
             // 
             this.tabMainLogin.Controls.Add(this.wizardPagesLoginPhases);
@@ -281,46 +321,6 @@
             resources.ApplyResources(this.label11, "label11");
             this.label11.Name = "label11";
             // 
-            // tabMainRegisterComplete
-            // 
-            this.tabMainRegisterComplete.Controls.Add(this.label16);
-            this.tabMainRegisterComplete.Controls.Add(this.btnShowLoginTab);
-            this.tabMainRegisterComplete.Controls.Add(this.label15);
-            this.tabMainRegisterComplete.Controls.Add(this.btnViewAccount_2);
-            this.tabMainRegisterComplete.Controls.Add(this.label14);
-            resources.ApplyResources(this.tabMainRegisterComplete, "tabMainRegisterComplete");
-            this.tabMainRegisterComplete.Name = "tabMainRegisterComplete";
-            this.tabMainRegisterComplete.UseVisualStyleBackColor = true;
-            // 
-            // label14
-            // 
-            resources.ApplyResources(this.label14, "label14");
-            this.label14.Name = "label14";
-            // 
-            // btnViewAccount_2
-            // 
-            resources.ApplyResources(this.btnViewAccount_2, "btnViewAccount_2");
-            this.btnViewAccount_2.Name = "btnViewAccount_2";
-            this.btnViewAccount_2.UseVisualStyleBackColor = true;
-            this.btnViewAccount_2.Click += new System.EventHandler(this.btnViewAccount_2_Click);
-            // 
-            // label15
-            // 
-            resources.ApplyResources(this.label15, "label15");
-            this.label15.Name = "label15";
-            // 
-            // btnShowLoginTab
-            // 
-            resources.ApplyResources(this.btnShowLoginTab, "btnShowLoginTab");
-            this.btnShowLoginTab.Name = "btnShowLoginTab";
-            this.btnShowLoginTab.UseVisualStyleBackColor = true;
-            this.btnShowLoginTab.Click += new System.EventHandler(this.btnShowLoginTab_Click);
-            // 
-            // label16
-            // 
-            resources.ApplyResources(this.label16, "label16");
-            this.label16.Name = "label16";
-            // 
             // ArdiaLoginDlg
             // 
             resources.ApplyResources(this, "$this");
@@ -341,13 +341,13 @@
             this.tabRegisterInProgress.PerformLayout();
             this.pnlRegisterFailedUserNotAuth.ResumeLayout(false);
             this.pnlRegisterFailedUserNotAuth.PerformLayout();
+            this.tabMainRegisterComplete.ResumeLayout(false);
+            this.tabMainRegisterComplete.PerformLayout();
             this.tabMainLogin.ResumeLayout(false);
             this.wizardPagesLoginPhases.ResumeLayout(false);
             this.tabLoginButton.ResumeLayout(false);
             this.tabLoginInProgress.ResumeLayout(false);
             this.tabLoginInProgress.PerformLayout();
-            this.tabMainRegisterComplete.ResumeLayout(false);
-            this.tabMainRegisterComplete.PerformLayout();
             this.ResumeLayout(false);
 
         }
