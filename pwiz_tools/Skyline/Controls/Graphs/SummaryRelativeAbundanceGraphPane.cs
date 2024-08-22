@@ -219,16 +219,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
             var graphSettings = GraphSettings.FromSettings();
+            var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
 
             // Only create graph data (and recalculate abundances)
             // if settings have changed, the document has changed, or if it
             // is not yet created
+            var dataChanged = false;
             if (_graphData?.GraphPointList == null ||
                 !ReferenceEquals(document, _graphData.Document) ||
-                !Equals(graphSettings, _graphData.GraphSettings))
+                !Equals(graphSettings, _graphData.GraphSettings) ||
+                !Equals(_graphData.AggregateOp, aggregateOp))
             {
                 _graphData = CreateGraphData(document, graphSettings);
+                dataChanged = true;
             }
+
             // Calculate y values and order which can change based on the
             // replicate display option or the show CV option
             _graphData.CalcDataPositions(GraphSummary.ResultsIndex, selectedProtein);
@@ -278,7 +283,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
-            UpdateAxes();
+            if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
+                UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
                 AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
             else
@@ -357,7 +363,14 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.MinAuto = true;
             XAxis.Scale.MaxAuto = true;
             XAxis.Scale.MinAuto = true;
-            if (Settings.Default.AreaLogScale )
+
+            if (CurveList.First() is LineItem curve)
+            {
+                // if markers are overlapping leave a little space between the X axis and the first marker
+                if(curve.Symbol.Size * _graphData.PointPairList.Count > Chart.Rect.Width)
+                    XAxis.Scale.Min = -(_graphData.PointPairList.Last().X - _graphData.PointPairList.First().X) * 0.02;
+            }
+            if (Settings.Default.RelativeAbundanceLogScale )
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
@@ -436,6 +449,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Document = document;
                 GraphSettings = graphSettings;
+                AggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
                 var schema = SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
                 bool anyMolecules = document.HasSmallMolecules;
                 // Build the list of points to show.
@@ -475,6 +489,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public SrmDocument Document { get; }
             public GraphSettings GraphSettings { get; }
+            public GraphValues.AggregateOp AggregateOp { get; }
 
             public void CalcDataPositions(int iResult, PeptideGroupDocNode selectedProtein)
             {
