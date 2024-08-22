@@ -227,7 +227,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             var serverUri = new Uri(_ardiaAccount_CurrentlyLoggedIn.ServerUrl, UriKind.Absolute);
 
-            var baseUrl = _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Replace("https://", "");
+            var baseUrl = _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Replace(@"https://", @"");
 
             ArdiaRegistrationCodeEntry ardiaRegistrationEntry = null;
 
@@ -246,9 +246,9 @@ namespace pwiz.Skyline.ToolsUI
             
             var applicationCode = ardiaRegistrationEntry.ClientApplicationCode;
 
-            var apiBaseUri = new UriBuilder { Scheme = serverUri.Scheme, Host = $"api.{baseUrl}" }.Uri;
+            var apiBaseUri = new UriBuilder { Scheme = serverUri.Scheme, Host = @$"api.{baseUrl}" }.Uri;
             var baseUri = new UriBuilder { Scheme = serverUri.Scheme, Host = baseUrl }.Uri;
-            var userEndpointPath = "session-management/bff/user";
+            var userEndpointPath = @"session-management/bff/user";
             var userEndpointUri = new Uri(apiBaseUri, userEndpointPath);
 
             var cookieContainer = new CookieContainer();
@@ -258,9 +258,9 @@ namespace pwiz.Skyline.ToolsUI
                 // Add the Bff-Host cookie to the cookie container
                 cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", _ardiaAccount_CurrentlyLoggedIn.BffHostCookie_NotPersisted));
                 // Add the required headers to the request
-                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                httpClient.DefaultRequestHeaders.Add("applicationCode", applicationCode);
-                httpClient.DefaultRequestHeaders.Add("x-csrf", "1");
+                httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
+                httpClient.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);
+                httpClient.DefaultRequestHeaders.Add(@"x-csrf", @"1");
 
                 var response = await httpClient.GetAsync(userEndpointUri);
 
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.ToolsUI
                 var responseString = await response.Content.ReadAsStringAsync();
                 var responseJson = JsonConvert.DeserializeObject<IEnumerable<IDictionary<string, string>>>(responseString);
                 // Get the logout URL from the response JSON object
-                var logoutUrl = responseJson.FirstOrDefault(x => x["type"] == "bff:logout_url")["value"];
+                var logoutUrl = responseJson.FirstOrDefault(x => x[@"type"] == @"bff:logout_url")[@"value"];
 
                 if (logoutUrl != null)
                 {
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.ToolsUI
                     var completeLogoutUrl = new UriBuilder(apiBaseUri)
                     {
                         Path = logoutEndpointPath,
-                        Query = $"{queryString}&applicationcode={applicationCode}"
+                        Query = @$"{queryString}&applicationcode={applicationCode}"
                     }.Uri.ToString();
                     return completeLogoutUrl.ToString();
                 }
