@@ -686,6 +686,8 @@ namespace AutoQC
 
         private void UploadToPanorama(string panoramaUploadArgs, string argsToPrint)
         {
+            if (!Config.PanoramaSettings.PublishToPanorama)
+                return;
             _logger.Log("Uploading Skyline document to Panorama.");
             var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
             var status = RunProcess(uploadToPanoramaProc);
