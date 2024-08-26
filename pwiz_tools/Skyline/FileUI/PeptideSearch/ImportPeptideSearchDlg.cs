@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             dda,
             prm,
-            dia, // currently means deconvolution with DIA-Umpire
+            dia,
             feature_detection
         }
 
@@ -552,7 +552,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     _pagesToSkip.Clear();
                     ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
-                    ImportPeptideSearch.IsDIASearch = WorkflowType == Workflow.prm; // DIA-Umpire is more like DDA search
+                    ImportPeptideSearch.IsDIASearch = WorkflowType == Workflow.dia &&
+                                                      BuildPepSearchLibControl.PerformDDASearch &&
+                                                      !BuildPepSearchLibControl.UseDiaUmpire;
+                    ImportPeptideSearch.IsGpfData = BuildPepSearchLibControl.IsGpf;
                     ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     if (!BuildPepSearchLibControl.UseExistingLibrary)
                     {
@@ -649,6 +652,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             _pagesToSkip.Add(Pages.converter_settings_page);
 
                         ImportPeptideSearch.SpectrumSourceFiles.Clear();
+                        SearchSettingsControl.InitializeControls();
 
                         // in PerformDDA mode, set SpectrumSourceFiles and offer to remove prefix
                             var uniqueNames = Helpers.EnsureUniqueNames(BuildPepSearchLibControl.DdaSearchDataSources.Select(s => s.GetFileName()).ToList());
@@ -768,7 +772,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
-                    if (ImportPeptideSearch.IsDDASearch)
+                    if (ImportPeptideSearch.IsDDASearch || ImportPeptideSearch.IsDIASearch)
                     {
                         ImportPeptideSearch.CutoffScore = SearchSettingsControl.CutoffScore;
 
@@ -989,26 +993,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ? AbstractDdaConverter.MsdataFileFormat.mzML // Hardklor reads only mzML
                     : AbstractDdaConverter.MsdataFileFormat.mz5;
             if (ImportPeptideSearch.DdaConverter == null &&
-                BuildPepSearchLibControl.DdaSearchDataSources.Any(f =>
-                    ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
-            {
-                ImportPeptideSearch.DdaConverter = IsFeatureDetectionWorkflow
-                    ? ConverterSettingsControl.GetHardklorConverter()
-                    : ConverterSettingsControl.GetMsconvertConverter();
-                ImportPeptideSearch.DdaConverter.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
-                ImportPeptideSearch.DdaConverter.SetRequiredOutputFormat(requiredFormat);
-            }
-            else if (ImportPeptideSearch.DdaConverter != null &&
-                     ImportPeptideSearch.DdaConverter.ConvertedSpectrumSources.Any(f =>
-                         ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
-            {
-                ImportPeptideSearch.DdaConverter.SetRequiredOutputFormat(requiredFormat);
-            }
-
-            if (ImportPeptideSearch.DdaConverter == null &&
                 BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
             {
-                ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetMsconvertConverter();
+                if (IsFeatureDetectionWorkflow)
+                    ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetHardklorConverter();
+                else if (ImportPeptideSearch.IsDIASearch)
+                    ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetDiaConverter();
+                else
+                    ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetDdaConverter();
                 ImportPeptideSearch.DdaConverter.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                 ImportPeptideSearch.DdaConverter.SetRequiredOutputFormat(requiredFormat);
             }

@@ -28,8 +28,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildPeptideSearchLibraryControl));
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
+            this.cbGpf = new System.Windows.Forms.CheckBox();
+            this.cbDiaUmpire = new System.Windows.Forms.CheckBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
             this.radioPRM = new System.Windows.Forms.RadioButton();
             this.radioDDA = new System.Windows.Forms.RadioButton();
@@ -49,7 +52,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnRemFile = new System.Windows.Forms.Button();
             this.lblFileCaption = new System.Windows.Forms.Label();
             this.btnAddFile = new System.Windows.Forms.Button();
-            this.helpTip = new System.Windows.Forms.ToolTip();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,12 +66,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // grpWorkflow
             // 
+            this.grpWorkflow.Controls.Add(this.cbGpf);
+            this.grpWorkflow.Controls.Add(this.cbDiaUmpire);
             this.grpWorkflow.Controls.Add(this.radioDIA);
             this.grpWorkflow.Controls.Add(this.radioPRM);
             this.grpWorkflow.Controls.Add(this.radioDDA);
             resources.ApplyResources(this.grpWorkflow, "grpWorkflow");
             this.grpWorkflow.Name = "grpWorkflow";
             this.grpWorkflow.TabStop = false;
+            // 
+            // cbGpf
+            // 
+            resources.ApplyResources(this.cbGpf, "cbGpf");
+            this.cbGpf.Name = "cbGpf";
+            this.cbGpf.UseVisualStyleBackColor = true;
+            // 
+            // cbDiaUmpire
+            // 
+            resources.ApplyResources(this.cbDiaUmpire, "cbDiaUmpire");
+            this.cbDiaUmpire.Name = "cbDiaUmpire";
+            this.cbDiaUmpire.UseVisualStyleBackColor = true;
             // 
             // radioDIA
             // 
@@ -255,6 +272,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.panel1);
             this.Name = "BuildPeptideSearchLibraryControl";
             this.grpWorkflow.ResumeLayout(false);
+            this.grpWorkflow.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.panelChooseFile.ResumeLayout(false);
@@ -292,5 +310,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.CheckBox cbDiaUmpire;
+        private System.Windows.Forms.CheckBox cbGpf;
     }
 }

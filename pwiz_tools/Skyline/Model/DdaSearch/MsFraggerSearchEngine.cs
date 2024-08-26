@@ -54,23 +54,30 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private const string KEEP_INTERMEDIATE_FILES = "keep-intermediate-files";
 
+        public enum DataType
+        {
+            dda = 0,
+            dia = 1,
+            dia_gpf = 2
+        }
+
         private bool DataIsDIA { get; }
 
-        public MsFraggerSearchEngine(double percolatorQvalueCutoff, bool dataIsDIA)
+        public MsFraggerSearchEngine(DataType dataType)
         {
-            DataIsDIA = dataIsDIA;
+            DataIsDIA = dataType != DataType.dda;
 
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {CHECK_SPECTRAL_FILES, new Setting(CHECK_SPECTRAL_FILES, 1, 0, 1)},
                 {CALIBRATE_MASS, new Setting(CALIBRATE_MASS, 0, 0, 2)},
-                {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, percolatorQvalueCutoff, 0, 1)},
+                {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, 0.01, 0, 1)},
                 {PERCOLATOR_TRAIN_QVALUE_CUTOFF, new Setting(PERCOLATOR_TRAIN_QVALUE_CUTOFF, 0.01, 0, 1)},
                 {KEEP_INTERMEDIATE_FILES, new Setting(KEEP_INTERMEDIATE_FILES, false)},
             };
 
             // ReSharper disable LocalizableElement
-            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting(@"data_type", DataIsDIA ? 1 : 0, 0, 3)); // Data type (0 for DDA, 1 for DIA, 2 for gas-phase fractionation DIA, 3 for DDA+).
+            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting(@"data_type", (int) dataType, 0, 3)); // Data type (0 for DDA, 1 for DIA, 2 for gas-phase fractionation DIA, 3 for DDA+).
 
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("precursor_true_tolerance", 20.0)); //  True precursor mass tolerance (window is +/- this value).
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("precursor_true_units", 1, 0, 1)); //  True precursor mass tolerance units (0 for Da, 1 for ppm).

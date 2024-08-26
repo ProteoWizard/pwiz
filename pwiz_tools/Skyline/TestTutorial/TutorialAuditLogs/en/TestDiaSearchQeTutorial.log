@@ -12,8 +12,10 @@ Build Spectral Library > Search files : contains { File = "23aug2017_hela_serum_
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
-Build Spectral Library > Workflow is "PRM"
-Build Spectral Library > Input File Type is "DDA raw (search and build library)"
+Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Deconvolute spectra with DIA-Umpire is False
+Build Spectral Library > Gas phase fractionation is False
+Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Extra Info: Search files = 
 [
     {
@@ -25,8 +27,10 @@ Extra Info: Search files =
 iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = False,
-Workflow = "PRM",
-Input File Type = "DDA raw (search and build library)"
+Workflow = "DIA",
+Deconvolute spectra with DIA-Umpire = False,
+Gas phase fractionation = False,
+Input File Type = "DIA raw (search and build library)"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search

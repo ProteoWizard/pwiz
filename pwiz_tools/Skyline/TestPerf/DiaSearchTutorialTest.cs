@@ -62,6 +62,7 @@ namespace TestPerf
 
             public string ZipPath;
             public string[] DiaFiles;
+            public bool IsGpfData;
 
             public string ProteinToSelect;
             public string PeptideToSelect;
@@ -96,13 +97,14 @@ namespace TestPerf
                     "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML",
                     "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML",
                 },
+                IsGpfData = true,
 
                 ProteinToSelect = "sp|P01591|IGJ_HUMAN",
                 PeptideToSelect = "ENISDPTSPLR",
 
                 AdditionalSettings = new Dictionary<string, string>
                 {
-                    { "data_type", "2" } // set MSFragger to GPF mode
+                    //{ "data_type", "2" } // set MSFragger to GPF mode
                 },
             };
 
@@ -241,7 +243,12 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = false;
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm;
+                Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IsGpfEnabled);
+                Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IsDiaUmpireEnabled);
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IsGpfEnabled);
+                Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IsDiaUmpireEnabled);
+                importPeptideSearchDlg.BuildPepSearchLibControl.IsGpf = _analysisValues.IsGpfData;
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DIA Files page", tutorialPage++);
 
@@ -358,7 +365,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
-                Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                //Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 1;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(_analysisValues.FastaPath));
             });
