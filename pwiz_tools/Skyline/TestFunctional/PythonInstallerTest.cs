@@ -3,16 +3,13 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.SkylineTestUtil;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using System.IO;
-using pwiz.Skyline.Util.Extensions;
 using Ionic.Zip;
 
 namespace pwiz.SkylineTestFunctional
@@ -73,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
@@ -108,11 +105,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, dlg2.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, dlg2.Message));
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
@@ -169,7 +166,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
@@ -248,11 +245,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected, dlg2.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected, dlg2.Message));
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
@@ -292,11 +289,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected, dlg2.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected, dlg2.Message));
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
@@ -363,7 +360,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
@@ -400,11 +397,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, dlg2.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, dlg2.Message));
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
@@ -466,7 +463,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script, dlg1.Message));
+            RunUI(() => Assert.AreEqual(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script, dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
@@ -532,7 +529,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, @"virtualenv"), dlg1.Message));
+            RunUI(() => Assert.AreEqual(string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, @"virtualenv"), dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
@@ -599,7 +596,7 @@ namespace pwiz.SkylineTestFunctional
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
             RunUI(() => Assert.AreEqual(
-                string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, @"test"), dlg1.Message));
+                string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, @"test"), dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
@@ -666,7 +663,7 @@ namespace pwiz.SkylineTestFunctional
             // Test
             var dlg1 = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
             RunUI(() => Assert.AreEqual(
-                string.Format(ToolsUIResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, @"test"), dlg1.Message));
+                string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, @"test"), dlg1.Message));
 
             OkDialog(dlg1, dlg1.OkDialog);
             var dlg2 = WaitForOpenForm<MessageDlg>();
