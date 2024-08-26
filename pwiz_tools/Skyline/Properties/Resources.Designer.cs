@@ -1059,6 +1059,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak Area.
+        /// </summary>
+        public static string ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area {
+            get {
+                return ResourceManager.GetString("ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This document contains only negative ion mode transitions, and the imported file contains only positive ion mode data so nothing can be loaded..
         /// </summary>
         public static string ChromCacheBuilder_BuildCache_This_document_contains_only_negative_ion_mode_transitions__and_the_imported_file_contains_only_positive_ion_mode_data_so_nothing_can_be_loaded_ {
@@ -6055,6 +6064,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error converting &apos;{0}&apos; to &apos;{1}&apos;:.
+        /// </summary>
+        public static string MetadataExtractor_ApplyStep_Error_converting___0___to___1___ {
+            get {
+                return ResourceManager.GetString("MetadataExtractor_ApplyStep_Error_converting___0___to___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must choose a file with the &apos;{0}&apos; filename extension..
         /// </summary>
         public static string MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_ {
@@ -10071,6 +10089,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_publishToolStripMenuItem_Click_Skyline_Shared_Documents {
             get {
                 return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_Skyline_Shared_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file was last uploaded to: {0}.
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_", resourceCulture);
             }
         }
         

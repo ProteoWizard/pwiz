@@ -227,6 +227,15 @@ namespace pwiz.Skyline.Model
         [Track]
         public int? MSLevelGroupComparison { get; set; }
         [Track]
+        public double? SCIncludedCutoff { get; set; }
+        [Track]
+        public double? SCQuantitativeCutoff { get; set; }
+        public enum ComparisonType {min, max};
+        [Track] 
+        public ComparisonType SCIncludedComparisonType { get; set;}
+        [Track]
+        public ComparisonType SCQuantitativeComparisonType { get; set; }
+        [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
         public List<string> GroupComparisonNames { get; set; }
 
@@ -770,9 +779,22 @@ namespace pwiz.Skyline.Model
                         if (peakFoundRatio > MaxPeakFoundRatio.Value)
                             continue;
                     }
+
+
                 }
 
-                listTrans.Add(nodeTran);
+                var nodeToKeep = nodeTran;
+                var correlations = nodeTran.ChromInfos.Select(chromInfo => chromInfo.PeakShapeValues?.ShapeCorrelation)
+                    .OfType<float>().ToList();
+                if (!IsShapeCorrelationAboveCutoff(SCIncludedCutoff, SCIncludedComparisonType, correlations))
+                {
+                    continue;
+                }
+                if (!IsShapeCorrelationAboveCutoff(SCQuantitativeCutoff, SCQuantitativeComparisonType, correlations))
+                {
+                    nodeToKeep = nodeToKeep.ChangeQuantitative(false);
+                }
+                listTrans.Add(nodeToKeep);
             }
 
             TransitionGroupDocNode nodeGroupRefined = (TransitionGroupDocNode)
@@ -839,6 +861,26 @@ namespace pwiz.Skyline.Model
             }
 
             return nodeGroupRefined;
+        }
+
+        private bool IsShapeCorrelationAboveCutoff(double? cutoff, ComparisonType comparisonType, IList<float> shapeCorrelationValues)
+        {
+            if (!cutoff.HasValue)
+            {
+                return true;
+            }
+            if (shapeCorrelationValues.Count == 0)
+            {
+                return true;
+            }
+            var comparisonValue = comparisonType == ComparisonType.max ? shapeCorrelationValues.Max() : shapeCorrelationValues.Min();
+            if (float.IsNaN(comparisonValue))
+            {
+                // NaN is considered the worst shape correlation because you can only get it with
+                // a completely flat chromatogram
+                return false;
+            }
+            return comparisonValue >= cutoff;
         }
 
         public enum ConvertToSmallMoleculesMode

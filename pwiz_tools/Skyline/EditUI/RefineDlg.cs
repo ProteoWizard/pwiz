@@ -148,6 +148,29 @@ namespace pwiz.Skyline.EditUI
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
 
+            if (_document.MoleculeTransitions.Any(t =>
+                    t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation != null)))
+            {
+                textShapeCorrIncludedCutoff.Enabled = true;
+                textShapeCorrQuantitativeCutoff.Enabled = true;
+
+
+                comboIncludedComparisonType.Enabled = true;
+                comboIncludedComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Min);
+                comboIncludedComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Max);
+                comboIncludedComparisonType.SelectedIndex = 0;
+                ComboHelper.AutoSizeDropDown(comboIncludedComparisonType);
+
+                comboQuantitativeComparisonType.Enabled = true;
+                comboQuantitativeComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Min);
+                comboQuantitativeComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Max);
+                comboQuantitativeComparisonType.SelectedIndex = 0;
+                ComboHelper.AutoSizeDropDown(comboQuantitativeComparisonType);
+
+            }
+
+
+
             // Group Comparisons
             _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
@@ -223,6 +246,45 @@ namespace pwiz.Skyline.EditUI
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public double? SCIncludedCutoff
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(textShapeCorrIncludedCutoff.Text))
+                {
+                    return null;
+                }
+                return Convert.ToDouble(textShapeCorrIncludedCutoff);
+            }
+            set
+            {
+                textShapeCorrIncludedCutoff.Text = value.HasValue ? value.Value.ToString(@"R") : string.Empty;
+            }
+        }
+
+        public double? SCQuantitativeCutoff
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(textShapeCorrQuantitativeCutoff.Text))
+                {
+                    return null;
+                }
+                return Convert.ToDouble(textShapeCorrQuantitativeCutoff.Text);
+            }
+            set { textShapeCorrQuantitativeCutoff.Text = value.HasValue ? value.Value.ToString(@"R") : string.Empty; }
+        }
+
+        public RefinementSettings.ComparisonType SCIncludedComparisonType
+        {
+            get { return (RefinementSettings.ComparisonType) comboIncludedComparisonType.SelectedIndex;}
+            set { comboIncludedComparisonType.SelectedIndex = (int) value; }
+        }
+        public RefinementSettings.ComparisonType SCQuantitativeComparisonType
+        {
+            get { return (RefinementSettings.ComparisonType) comboQuantitativeComparisonType.SelectedIndex; }
+            set { comboQuantitativeComparisonType.SelectedIndex = (int)value; }
+        }
         public AreaCVTransitions Transition
         {
             get { return GetTransitionFromIdx(comboTransitions.SelectedIndex); }
@@ -543,6 +605,25 @@ namespace pwiz.Skyline.EditUI
                 msLevelGroupComparison = int.Parse(comboMSGroupComparisons.SelectedItem.ToString());
             }
 
+
+            double? scIncludedCutoff = null;
+            if (!string.IsNullOrEmpty(textShapeCorrIncludedCutoff.Text))
+            {
+                double includeVal;
+                if (!helper.ValidateDecimalTextBox(textShapeCorrIncludedCutoff, -1, 1, out includeVal))
+                    return;
+                scIncludedCutoff = includeVal;
+            }
+
+            double? scQuantitativeCutoff = null;
+            if (!string.IsNullOrEmpty(textShapeCorrQuantitativeCutoff.Text))
+            {
+                double quantitativeCutoffVal;
+                if (!helper.ValidateDecimalTextBox(textShapeCorrQuantitativeCutoff, -1, 1, out quantitativeCutoffVal))
+                    return;
+                scQuantitativeCutoff = quantitativeCutoffVal;
+            }
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -576,8 +657,12 @@ namespace pwiz.Skyline.EditUI
                                          AdjustedPValueCutoff = adjustedPValueCutoff,
                                          FoldChangeCutoff = foldChangeCutoff,
                                          MSLevelGroupComparison = msLevelGroupComparison,
-                                         GroupComparisonDefs = groupComparisonDefs
-                                     };
+                                         GroupComparisonDefs = groupComparisonDefs,
+                                         SCIncludedCutoff = scIncludedCutoff,
+                                         SCQuantitativeCutoff = scQuantitativeCutoff,
+                                         SCIncludedComparisonType = SCIncludedComparisonType,
+                                         SCQuantitativeComparisonType = SCQuantitativeComparisonType
+            };
 
             DialogResult = DialogResult.OK;
             Close();
