@@ -18,6 +18,8 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -56,49 +58,7 @@ namespace pwiz.Common.Collections
 
         public static int Compare(string x, string y)
         {
-            if (x == null)
-            {
-                return y == null ? 0 : -1;
-            }
-            else if (y == null)
-            {
-                return 1;
-            }
-
-            // Match decimal parts of both strings
-            var matchesX = REGEX.Matches(x);
-            var matchesY = REGEX.Matches(y);
-
-            // Compare segments iteratively
-            var segmentCount = Math.Min(matchesX.Count, matchesY.Count);
-
-            for (var i = 0; i < segmentCount; i++)
-            {
-                // Compare non-decimal segments
-                var partX = matchesX[i].Groups[1].Value;
-                var partY = matchesY[i].Groups[1].Value;
-                var comparison = string.Compare(partX, partY, StringComparison.OrdinalIgnoreCase);
-                if (comparison != 0)
-                {
-                    // Compare as decimals
-                    var decimalX = ParseLocalizedDecimal(partX);
-                    var decimalY = ParseLocalizedDecimal(partY);
-
-                    if (decimalX == null || decimalY == null)
-                    {
-                        return comparison; // One or both could not be understood as a decimal, return the string comparison
-                    }
-
-                    comparison = decimal.Compare(decimalX.Value, decimalY.Value);
-                    if (comparison != 0)
-                    {
-                        return comparison;
-                    }
-                }
-            }
-
-            // If one string has more segments, it should come after
-            return matchesX.Count.CompareTo(matchesY.Count);
+            return Comparer<object>.Default.Compare(MakeCompareKey(x), MakeCompareKey(y));
         }
 
         private static decimal? ParseLocalizedDecimal(string value)
@@ -114,6 +74,35 @@ namespace pwiz.Common.Collections
                 return result;
             }
             return null; // Didn't parse
+        }
+
+        public static IStructuralComparable MakeCompareKey(string s)
+        {
+            if (s == null)
+            {
+                return null;
+            }
+            var stringParts = new List<string>();
+            var decimalParts = new List<decimal>();
+            foreach (Match segment in REGEX.Matches(s))
+            {
+                var stringPart = segment.Groups[1].Value;
+                decimalParts.Add(ParseLocalizedDecimal(stringPart) ?? decimal.MaxValue);
+                stringParts.Add(stringPart);
+            }
+
+            int segmentCount = stringParts.Count;
+            if (segmentCount == 0)
+            {
+                return Tuple.Create(decimal.MinValue, string.Empty);
+            }
+            IStructuralComparable tuple = Tuple.Create(decimalParts[segmentCount - 1], stringParts[segmentCount - 1]);
+            for (int i = segmentCount - 2; i >= 0; i--)
+            {
+                tuple = Tuple.Create(decimalParts[i], stringParts[i], tuple);
+            }
+
+            return tuple;
         }
     }
 }
