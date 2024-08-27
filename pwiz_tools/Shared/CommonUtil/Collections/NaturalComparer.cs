@@ -91,8 +91,19 @@ namespace pwiz.Common.Collections
             foreach (Match segment in REGEX.Matches(s).Cast<Match>().Reverse())
             {
                 var stringPart = segment.Groups[1].Value;
-                var decimalPart = ParseLocalizedDecimal(stringPart) ?? decimal.MaxValue;
-                compareKey = new CompareKey(decimalPart, stringPart, compareKey);
+                var decimalPart = ParseLocalizedDecimal(stringPart);
+                if (!decimalPart.HasValue)
+                {
+                    if (StringComparer.OrdinalIgnoreCase.Compare(stringPart, "0") >= 0)
+                    {
+                        decimalPart = decimal.MaxValue;
+                    }
+                    else
+                    {
+                        decimalPart = decimal.MinValue;
+                    }
+                }
+                compareKey = new CompareKey(decimalPart.Value, stringPart, compareKey);
             }
 
             return compareKey ?? CompareKey.EMPTY;
