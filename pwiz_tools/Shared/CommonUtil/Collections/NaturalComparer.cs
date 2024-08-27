@@ -56,6 +56,10 @@ namespace pwiz.Common.Collections
         // Regular expression pattern to match decimal parts - note it accepts both . and , decimal separator
         private static readonly Regex REGEX = new Regex(@"(\d+(?:[.,]\d+)?|\D+)", RegexOptions.Compiled);
 
+        /// <summary>
+        /// Compares two strings. Note that when sorting large lists of strings, it is more efficient
+        /// to call <see cref="MakeCompareKey"/> for all of the strings and sort those keys.
+        /// </summary>
         public static int Compare(string x, string y)
         {
             return Comparer<CompareKey>.Default.Compare(MakeCompareKey(x), MakeCompareKey(y));
