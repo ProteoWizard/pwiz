@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                 var filePath = CreateFile(PythonInstallerUtil.PythonRootDir, fileName);
                 CreateZipFile(pythonInstaller.PythonEmbeddablePackageDownloadPath, (fileName, filePath));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 CleanupDir(PythonInstallerUtil.PythonRootDir);
                 throw;
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 CreateDirectory(pythonInstaller.PythonEmbeddablePackageExtractDir);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 CleanupDir(PythonInstallerUtil.PythonRootDir);
                 throw;
@@ -281,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
                 CreateFile(pythonInstaller.PythonEmbeddablePackageExtractDir, @"file1._pth");
                 CreateFile(pythonInstaller.PythonEmbeddablePackageExtractDir, @"file2._pth");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 CleanupDir(PythonInstallerUtil.PythonRootDir);
                 throw;
@@ -323,7 +323,7 @@ namespace pwiz.SkylineTestFunctional
                 CreateDirectory(pythonInstaller.PythonEmbeddablePackageExtractDir);
                 CreateFile(pythonInstaller.PythonEmbeddablePackageExtractDir, @"python312._pth");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 CleanupDir(PythonInstallerUtil.PythonRootDir);
                 throw;
@@ -735,7 +735,7 @@ namespace pwiz.SkylineTestFunctional
                 var filePath = CreateFile(PythonInstallerUtil.PythonRootDir, fileName);
                 CreateZipFile(pythonInstaller.PythonEmbeddablePackageDownloadPath, (fileName, filePath));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 CleanupDir(PythonInstallerUtil.PythonRootDir);
                 throw;
