@@ -14,7 +14,6 @@ Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
-Build Spectral Library > Deconvolute spectra with DIA-Umpire is False
 Build Spectral Library > Gas phase fractionation is True
 Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Extra Info: Search files = 
@@ -34,7 +33,6 @@ iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = False,
 Workflow = "DIA",
-Deconvolute spectra with DIA-Umpire = False,
 Gas phase fractionation = True,
 Input File Type = "DIA raw (search and build library)"
 

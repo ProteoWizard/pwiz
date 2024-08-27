@@ -140,9 +140,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public bool FilterForDocumentPeptides { get; private set; }
             [Track(ignoreDefaultParent: true)]
             public ImportPeptideSearchDlg.Workflow WorkFlow { get; private set; }
-            [Track(ignoreDefaultParent: true)]
+            [Track(defaultValues: typeof(DefaultValuesFalse))]
             public bool UseDiaUmpire { get; private set; }
-            [Track(ignoreDefaultParent: true)]
+            [Track(defaultValues: typeof(DefaultValuesFalse))]
             public bool IsGpf { get; private set; }
             [Track(ignoreDefaultParent: true)]
             public ImportPeptideSearchDlg.InputFile InputFileType { get; private set; }
