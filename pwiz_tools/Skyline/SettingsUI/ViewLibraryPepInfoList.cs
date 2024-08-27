@@ -17,16 +17,17 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
-using Resources = pwiz.Skyline.Properties.Resources;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -429,7 +430,8 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         // Natural sort (e.g. "xyz200.5" comes before "xyz1200.5")
-        public static IStructuralComparable MakeCompareKey(ViewLibraryPepInfo info)
+        public static Tuple<NaturalStringComparer.CompareKey, Adduct, NaturalStringComparer.CompareKey> MakeCompareKey(
+            ViewLibraryPepInfo info)
         {
             return Tuple.Create(NaturalStringComparer.MakeCompareKey(info.UnmodifiedTargetText), info.Adduct,
                 NaturalStringComparer.MakeCompareKey(info.KeyString));

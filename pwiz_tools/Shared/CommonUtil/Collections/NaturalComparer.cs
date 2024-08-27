@@ -18,9 +18,9 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -58,7 +58,7 @@ namespace pwiz.Common.Collections
 
         public static int Compare(string x, string y)
         {
-            return Comparer<object>.Default.Compare(MakeCompareKey(x), MakeCompareKey(y));
+            return Comparer<CompareKey>.Default.Compare(MakeCompareKey(x), MakeCompareKey(y));
         }
 
         private static decimal? ParseLocalizedDecimal(string value)
@@ -76,33 +76,59 @@ namespace pwiz.Common.Collections
             return null; // Didn't parse
         }
 
-        public static IStructuralComparable MakeCompareKey(string s)
+        public static CompareKey MakeCompareKey(string s)
         {
             if (s == null)
             {
                 return null;
             }
-            var stringParts = new List<string>();
-            var decimalParts = new List<decimal>();
-            foreach (Match segment in REGEX.Matches(s))
+
+            CompareKey compareKey = null;
+            foreach (Match segment in REGEX.Matches(s).Cast<Match>().Reverse())
             {
                 var stringPart = segment.Groups[1].Value;
-                decimalParts.Add(ParseLocalizedDecimal(stringPart) ?? decimal.MaxValue);
-                stringParts.Add(stringPart);
+                var decimalPart = ParseLocalizedDecimal(stringPart) ?? decimal.MaxValue;
+                compareKey = new CompareKey(decimalPart, stringPart, compareKey);
             }
 
-            int segmentCount = stringParts.Count;
-            if (segmentCount == 0)
+            return compareKey ?? CompareKey.EMPTY;
+        }
+
+        public sealed class CompareKey : IComparable<CompareKey>
+        {
+            public static readonly CompareKey EMPTY = new CompareKey(decimal.MinValue, string.Empty, null);
+            private readonly decimal _decimal;
+            private readonly string _string;
+            private readonly CompareKey _remainder;
+
+            public CompareKey(decimal d, string s, CompareKey remainder)
             {
-                return Tuple.Create(decimal.MinValue, string.Empty);
-            }
-            IStructuralComparable tuple = Tuple.Create(decimalParts[segmentCount - 1], stringParts[segmentCount - 1]);
-            for (int i = segmentCount - 2; i >= 0; i--)
-            {
-                tuple = Tuple.Create(decimalParts[i], stringParts[i], tuple);
+                _string = s;
+                _decimal = d;
+                _remainder = remainder;
             }
 
-            return tuple;
+            public int CompareTo(CompareKey other)
+            {
+                if (other == null)
+                {
+                    return 1;
+                }
+
+                int result = _decimal.CompareTo(other._decimal);
+                if (result != 0)
+                {
+                    return result;
+                }
+
+                result = StringComparer.OrdinalIgnoreCase.Compare(_string, other._string);
+                if (result != 0)
+                {
+                    return result;
+                }
+
+                return Comparer<CompareKey>.Default.Compare(_remainder, other._remainder);
+            }
         }
     }
 }
