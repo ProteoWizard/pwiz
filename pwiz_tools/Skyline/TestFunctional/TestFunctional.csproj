@@ -172,6 +172,7 @@
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
+    <Compile Include="AutoZoomTest.cs" />
     <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
@@ -195,6 +196,8 @@
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="InternationalFilenamesTest.cs" />
+    <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
@@ -227,6 +230,7 @@
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="SkipZoomScansTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />

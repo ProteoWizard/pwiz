@@ -720,6 +720,12 @@
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Ratio to Light</value>
   </data>
+  <data name="LodCalculation_turning_point_stderr" xml:space="preserve">
+    <value>Bilinear turning point standard error</value>
+  </data>
+  <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
+    <value>Bilinear</value>
+  </data>
   <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
     <value>Assigned to the gene with the most peptides</value>
   </data>

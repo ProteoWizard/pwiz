@@ -48,6 +48,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1088,7 +1089,8 @@ namespace pwiz.Skyline
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
+                    newSettings = newSettings.ChangeSpectrumFilter(new SpectrumClassFilter(
+                        TransitionFullScan.IgnoreSimScansFilter, SpectrumClassFilter.Ms2FilterPage.Discriminant));
                 }
 
                 if (commandArgs.FullScanAcquisitionMethod != FullScanAcquisitionMethod.None)
@@ -2855,9 +2857,10 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var importer = _doc.PreImportMassList(inputs, progressMonitor, false, SrmDocument.DOCUMENT_TYPE.none, false, Document.DocumentType);
+            var tolerateErrors = commandArgs.IsIgnoreTransitionErrors;
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, tolerateErrors, SrmDocument.DOCUMENT_TYPE.none, false, Document.DocumentType);
             var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
-                out _, out irtPeptides, out librarySpectra, out errorList, out _);
+                out _, out irtPeptides, out librarySpectra, out errorList, out _, tolerateErrors);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
             if (ReferenceEquals(docNew, _doc) && !errorList.Any())

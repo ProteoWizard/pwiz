@@ -1962,7 +1962,9 @@ namespace pwiz.Skyline.Model.Lib
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
                         if (hasGeneralIonMobility)
                         {
-                            var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
+                            var ionMobilityType = eIonMobilityUnits.none;
+                            if (iIonMobilityType != -1)
+                                ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
                             if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
                                 var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);
@@ -2174,7 +2176,14 @@ namespace pwiz.Skyline.Model.Lib
                             sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
                             var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
                             var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
-                            sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
+                            if (ScoreType.INVARIANT_NAMES.Contains(scoreType))
+                            {
+                                sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
+                            }
+                            else
+                            {
+                                sheetInfo.ScoreType = scoreType;
+                            }
                         }
                         return sheetInfo;
                     }

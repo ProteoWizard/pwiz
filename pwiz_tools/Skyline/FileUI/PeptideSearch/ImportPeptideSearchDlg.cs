@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             dda,
             prm,
-            dia,
+            dia, // currently means deconvolution with DIA-Umpire
             feature_detection
         }
 
@@ -162,7 +162,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, isFeatureDetection ? this.buildSpectralLibraryTitlePanel.Bottom : 50);
             }
 
-            SearchControl = new DDASearchControl(ImportPeptideSearch);
+            if (isFeatureDetection)
+            {
+                SearchControl = new HardklorSearchControl(ImportPeptideSearch);
+            }
+            else
+            {
+                SearchControl = new DDASearchControl(ImportPeptideSearch);
+            }
             AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
             if (isFeatureDetection)
             {
@@ -453,7 +460,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public MatchModificationsControl MatchModificationsControl { get; private set; }
         public ConverterSettingsControl ConverterSettingsControl { get; private set; }
         public SearchSettingsControl SearchSettingsControl { get; private set; }
-        public DDASearchControl SearchControl { get; private set; }
+        public SearchControl SearchControl { get; private set; }
 
         public ImportResultsControl ImportResultsDDAControl { get; private set; }
         public ImportResultsDIAControl ImportResultsDIAControl { get; private set; }
@@ -545,6 +552,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     _pagesToSkip.Clear();
                     ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
+                    ImportPeptideSearch.IsDIASearch = WorkflowType == Workflow.prm; // DIA-Umpire is more like DDA search
                     ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch && !IsFeatureDetectionWorkflow;
                     if (!BuildPepSearchLibControl.UseExistingLibrary)
                     {

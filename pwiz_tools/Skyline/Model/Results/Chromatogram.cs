@@ -116,6 +116,7 @@ namespace pwiz.Skyline.Model.Results
         public void Dispose()
         {
             _multiFileLoader.DoneAddingFiles();
+            _multiFileLoader.Dispose();
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)

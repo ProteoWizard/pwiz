@@ -3179,9 +3179,6 @@
     <value>在库 '{0}' 中找到无效的条目。
 {2} 个肽段或分子中的 {1} 个无效，包括:：{3}</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
-    <value>库强度</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>删除现有工具目录出错。请关闭使用该目录的所有内容并且稍候再次尝试覆盖导入</value>
   </data>
@@ -3572,9 +3569,6 @@
   </data>
   <data name="EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential" xml:space="preserve">
     <value>去簇电压</value>
-  </data>
-  <data name="HtmlFragment_ClipBoardText_From_Clipboard" xml:space="preserve">
-    <value>从剪切板</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
     <value>选定的文件或模型不向文档中的色谱图分配任何峰值边界。 请选择一个不同的模型或文件。</value>
