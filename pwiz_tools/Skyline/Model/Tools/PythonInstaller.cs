@@ -306,6 +306,8 @@ namespace pwiz.Skyline.Model.Tools
     public static class PythonInstallerUtil
     {
         private const string PYTHON = @"Python";
+        private const string SCRIPTS = @"Scripts";
+        private const string PYTHON_EXECUTABLE = @"python.exe";
 
         /// <summary>
         /// This directory is used to store python executables and virtual environments.
@@ -336,6 +338,36 @@ namespace pwiz.Skyline.Model.Tools
                 { Architecture.X86, @"win32" }
             };
             return map[architecture];
+        }
+
+
+        /// <summary>
+        /// Get python virtual environment directory.
+        /// </summary>
+        /// <param name="pythonVersion"></param>
+        /// <param name="virtualEnvironmentName"></param>
+        /// <returns></returns>
+        public static string GetPythonVirtualEnvironmentDir(string pythonVersion, string virtualEnvironmentName)
+        {
+            return Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), PYTHON, pythonVersion,
+                virtualEnvironmentName);
+        }
+
+        public static string GetPythonVirtualEnvironmentScriptsDir(string pythonVersion, string virtualEnvironmentName)
+        {
+            return Path.Combine(GetPythonVirtualEnvironmentDir(pythonVersion, virtualEnvironmentName), SCRIPTS);
+        }
+
+        /// <summary>
+        /// Get Python executable path.
+        /// </summary>
+        /// <param name="pythonVersion"></param>
+        /// <param name="virtualEnvironmentName"></param>
+        /// <returns></returns>
+        public static string GetPythonExecutablePath(string pythonVersion, string virtualEnvironmentName)
+        {
+            return Path.Combine(GetPythonVirtualEnvironmentScriptsDir(pythonVersion, virtualEnvironmentName),
+                PYTHON_EXECUTABLE);
         }
 
         /// <summary>
