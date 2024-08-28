@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -6,13 +6,9 @@ using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
-    public class AlphapeptdeepLibraryBuilder : IiRTCapableLibraryBuilder, IProgressMonitor
+    public class AlphapeptdeepLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private const string PEPTDEEP_EXECUTABLE = "peptdeep.exe";
-
-        private static string _pythonBinary = @"C:\Users\Jason\AppData\Local\Microsoft\WindowsApps\python.exe";
-        private static string _alphaPeptDeepCli = @"C:\Users\Jason\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\Scripts\peptdeep.exe";
-        private static string _alphaPeptDeepSettings = @"C:\Users\Jason\workspaces\alphapeptdeep_dia\settings.yaml";
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
@@ -21,7 +17,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         { 
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
-            Debug.WriteLine($@"HELLO executable path: {PythonVirtualEnvironmentScriptsDir}");
         }
 
         public string AmbiguousMatchesMessage
@@ -52,25 +47,99 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
-            // RunAlphapeptdeep();
+            IProgressStatus progressStatus = new ProgressStatus();
+            try
+            {
+                var result = RunAlphapeptdeep(progress, ref progressStatus);
+                progress.UpdateProgress(progressStatus = progressStatus.Complete());
+                return result;
+            }
+            catch (Exception exception)
+            {
+                progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
+                return false;
+            }
+        }
+
+        private bool RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progressStatus = progressStatus.ChangeSegments(0, 5);
+
+            var inputFilePath = PrepareInputFile(progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
+
+            var outputFilePath = GetOutputFilePath(progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
+
+            var settingsFilePath = PrepareSettingsFile(inputFilePath, outputFilePath, progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
+
+            if (!ExecutePeptdeep(settingsFilePath, progress, ref progressStatus))
+            {
+                return false;
+            }
+            progressStatus = progressStatus.NextSegment();
+
+            if (!ImportSpectralLibrary(outputFilePath, progress, ref progressStatus))
+            {
+                return false;
+            }
 
             return true;
         }
 
-        private bool RunAlphapeptdeep()
+        private string PrepareInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            // TODO(xgwang): update to execute in a process with progress tracking
-            var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"library {_alphaPeptDeepSettings}")
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = false
-            };
-            IProgressStatus status = new ProgressStatus().ChangeSegments(0, 1);
-            pr.Run(psi, string.Empty, this, ref status, ProcessPriorityClass.BelowNormal, true);
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Preparing input file")
+                .ChangePercentComplete(0));
+            //TODO(xgwang): implement
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+            return "";
+        }
+
+        private string GetOutputFilePath(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Getting output file path")
+                .ChangePercentComplete(0));
+            //TODO(xgwang): implement
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+            return "";
+        }
+
+        private string PrepareSettingsFile(string inputFilePath, string outputFilePath, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Preparing settings file")
+                .ChangePercentComplete(0));
+            //TODO(xgwang): implement
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+            return "";
+        }
+
+        private bool ExecutePeptdeep(string settingsFilePath, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Executing peptdeep")
+                .ChangePercentComplete(0));
+            //TODO(xgwang): implement
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+            return true;
+        }
+
+        private bool ImportSpectralLibrary(string libraryFilePath, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Importing spectral library")
+                .ChangePercentComplete(0));
+            //TODO(xgwang): implement
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
             return true;
         }
 

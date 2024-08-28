@@ -91,7 +91,6 @@ namespace pwiz.Skyline.SettingsUI
         private const string PYTHON = @"Python";
         private const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.12.4";
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
-        private const string BACK_SLASH = @"\";
 
 
         private static readonly IFormView[] TAB_PAGES =
@@ -102,7 +101,7 @@ namespace pwiz.Skyline.SettingsUI
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => false;   // TODO: Implement and enable
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
-            PythonInstallerUtil.GetPythonExecutablePath(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
+            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
 
         public enum DataSourcePages { files, alpha, carafe, koina }
         public enum LearningOptions { none, libraries, document }

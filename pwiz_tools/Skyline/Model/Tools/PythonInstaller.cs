@@ -96,6 +96,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public bool IsPythonVirtualEnvironmentReady()
         {
+            // TODO(xgwang): make sure terminal window does not show when validating
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
             return tasks.Count == 0;
         }
