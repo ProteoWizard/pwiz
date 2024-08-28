@@ -263,8 +263,7 @@ namespace pwiz.Skyline.Model
 
                     float scale = (chromGroupMaxTime - chromGroupMinTime)/(referenceTarget.MaxTime - referenceTarget.MinTime);
                     manualMatch = MakePeakMatchBetween(scale, referenceTarget, prev, next);
-                    if (chromGroupMinTime >= manualMatch.EndTime || manualMatch.StartTime >= chromGroupMaxTime ||
-                        manualMatch.EndTime <= manualMatch.StartTime)
+                    if (chromGroupMinTime >= manualMatch.EndTime || manualMatch.StartTime >= chromGroupMaxTime)
                         manualMatch = null;
 
                     float curMinTime = prev == null ? chromGroupMinTime : prev.AlignedPeak.RetentionTime;
