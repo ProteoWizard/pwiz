@@ -26,7 +26,7 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class ErrorIfPersistentFilesDirModifiedTest : AbstractUnitTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestErrorIfPersistentFilesDirModified()
         {
             TestFilesZip = "https://skyline.ms/tutorials/OptimizeCEMzml.zip";

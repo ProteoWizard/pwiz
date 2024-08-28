@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConverterSettingsControl));
             this.btnAdditionalSettings = new System.Windows.Forms.Button();
-            this.converterTabControl = new System.Windows.Forms.TabControl();
+            this.converterTabControl = new pwiz.Skyline.Controls.WizardPages();
             this.msconvertTabPage = new System.Windows.Forms.TabPage();
             this.diaUmpireTabPage = new System.Windows.Forms.TabPage();
             this.cbEstimateBg = new System.Windows.Forms.CheckBox();
@@ -114,7 +114,7 @@
 
         #endregion
         private System.Windows.Forms.Button btnAdditionalSettings;
-        private System.Windows.Forms.TabControl converterTabControl;
+        private pwiz.Skyline.Controls.WizardPages converterTabControl;
         private System.Windows.Forms.TabPage msconvertTabPage;
         private System.Windows.Forms.TabPage diaUmpireTabPage;
         private System.Windows.Forms.ComboBox cbInstrumentPreset;
