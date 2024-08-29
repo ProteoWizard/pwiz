@@ -167,6 +167,7 @@
     <Compile Include="CalibrationCurveOptionsTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
+    <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
