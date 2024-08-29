@@ -109,7 +109,7 @@ namespace pwiz.Common.Collections
             return compareKey ?? CompareKey.EMPTY;
         }
 
-        public sealed class CompareKey : IComparable<CompareKey>
+        public sealed class CompareKey : IComparable<CompareKey>, IComparable
         {
             public static readonly CompareKey EMPTY = new CompareKey(decimal.MinValue, string.Empty, null);
             private readonly decimal _decimal;
@@ -143,6 +143,11 @@ namespace pwiz.Common.Collections
                 }
 
                 return Comparer<CompareKey>.Default.Compare(_remainder, other._remainder);
+            }
+
+            int IComparable.CompareTo(object obj)
+            {
+                return CompareTo((CompareKey)obj);
             }
         }
     }
