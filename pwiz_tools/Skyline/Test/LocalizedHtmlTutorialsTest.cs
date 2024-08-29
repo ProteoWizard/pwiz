@@ -51,8 +51,11 @@ namespace pwiz.SkylineTest
                 return;
             }
             var failures = new List<Exception>();
+            var summarySuccesses = new StringBuilder();
+            var summaryFailures = new StringBuilder();
             foreach (var folder in Directory.GetDirectories(tutorialRoot))
             {
+                var folderInfo = new DirectoryInfo(folder);
                 foreach (var language in new[] { "ja", "zh-CHS" })
                 {
                     var languageFolder = Path.Combine(folder, language);
@@ -62,15 +65,19 @@ namespace pwiz.SkylineTest
                         try
                         {
                             VerifyInvariantMatchesLocalized(languageFolder);
+                            summarySuccesses.Append($"Tutorial folder {folderInfo.Name}-{language} has matching invariant XPaths\n");
                         }
                         catch (Exception ex)
                         {
                             failures.Add(ex);
+                            summaryFailures.Append($"Tutorial folder {folderInfo.Name}-{language} does not have matching invariant XPaths\n");
                         }
                     }
                 }
             }
 
+            Console.WriteLine(summarySuccesses);
+            Console.Write(summaryFailures);
             if (failures.Count > 0)
             {
                 var exception = new AggregateException(string.Format("{0} failures", failures.Count), failures);
@@ -144,6 +151,7 @@ namespace pwiz.SkylineTest
                 yield return "/html/body/h2";
                 yield return "/html/body/ul/li";
                 yield return "/html/body/ol/li";
+                yield return "/html/body/table/tr/td";
             }
         }
 
