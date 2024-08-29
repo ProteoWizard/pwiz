@@ -37,8 +37,8 @@ namespace pwiz.SkylineTest
             string tutorialRoot = GetHtmlTutorialsRoot();
             if (tutorialRoot != null)
             {
-                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "Skyline PRM\\ja"));
-                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "Skyline PRM\\zh-CHS"));
+                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "PRM\\ja"));
+                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "PRM\\zh-CHS"));
             }
         }
 
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTest
                 return null;
             }
 
-            return Path.Combine(codeBaseRoot, "Documentation", "Html", "Tutorials");
+            return Path.Combine(codeBaseRoot, "Documentation", "Tutorials");
         }
 
         private string GetCodeBaseRoot()
