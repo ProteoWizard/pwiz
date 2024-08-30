@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -3666,6 +3667,7 @@ namespace pwiz.Skyline
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
         private bool SaveSettings(CommandArgs commandArgs)
         {
             return HandleExceptions(commandArgs, () =>
