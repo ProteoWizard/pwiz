@@ -2946,6 +2946,8 @@ namespace pwiz.Skyline.Model
             : this(line, true, settings, sourceFile, irtTargets)
         {
             _modMatcher = modMatcher;
+            if (modMatcher != null)
+                _autoManageChildren = !modMatcher.HasSeenMods;   // Any specified matches turns off auto-manage
         }
 
         /// <summary>
