@@ -196,6 +196,7 @@
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="IrtCalibrationTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
@@ -594,6 +595,7 @@
     <None Include="InvalidPeptideRankIdTest.zip" />
     <None Include="InvalidPeptidesInLibraryTest.zip" />
     <None Include="IonMobilityTest.zip" />
+    <None Include="IrtCalibrationTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />

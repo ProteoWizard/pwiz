@@ -185,9 +185,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 pep.Irt = regression.GetY(pep.Irt);
             }
-            IrtStandard = new IrtStandard(name, null, null, !IsRecalibration
+
+            var irtPeptides = !IsRecalibration
                 ? StandardPeptideList.Select(pep => new DbIrtPeptide(pep.Target, pep.Irt, true, TimeSource.peak))
-                : _standard.Peptides.Select(pep => new DbIrtPeptide(pep.Target, regression.GetY(pep.Irt), true, TimeSource.peak)));
+                : _standard.Peptides.Select(pep =>
+                    new DbIrtPeptide(pep.Target, regression.GetY(pep.Irt), true, TimeSource.peak));
+            var irtPeptideList = irtPeptides.ToList();
+            string docXml = IrtDb.GenerateDocumentXml(irtPeptideList.Select(p => p.Target),
+                Program.ActiveDocumentUI, null);
+            IrtStandard = new IrtStandard(name, null, docXml, irtPeptideList);
+
             DialogResult = DialogResult.OK;
         }
 
@@ -793,8 +800,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     else
                     {
                         msg.AppendLine(string.Format(
-                            IrtResources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_,
-                            _picker.CirtPeptideCount, cirtResult.Count
+                            IrtResources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range__2_0____to__3_0____minutes_,
+                            _picker.CirtPeptideCount, cirtResult.Count, cirtResult.MinRt, cirtResult.MaxRt
                         ));
                         msg.AppendLine();
                         foreach (var pep in cirtResult.Peptides.OrderBy(pep => pep.Time))
