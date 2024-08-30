@@ -136,8 +136,13 @@ namespace pwiz.SkylineTestUtil
             {
                 Helpers.Try<Exception>(() =>
                 {
-                    using (ZipFile zipFile = ZipFile.Read(pathZip))
+                    if (Directory.Exists(pathZip))
                     {
+                        CopyRecursively(pathZip, destDir);
+                    }
+                    else
+                    {
+                        using ZipFile zipFile = ZipFile.Read(pathZip);
                         foreach (ZipEntry zipEntry in zipFile)
                         {
                             if (zipEntry.IsDirectory && !IsPersistentDir(persistentFiles, zipEntry.FileName))
@@ -146,7 +151,7 @@ namespace pwiz.SkylineTestUtil
                                 // so skip that and avoid occasional "file in use" exceptions on directory creation.
                                 // N.B. some tests expect the persisted directory structure to be duplicated locally,
                                 // even if the files are not, so for those do the directory creation.
-                                continue; 
+                                continue;
                             }
                             if (IsPersistent(persistentFiles, zipEntry.FileName))
                                 zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
@@ -299,6 +304,23 @@ namespace pwiz.SkylineTestUtil
 #else
                 return false;
 #endif
+            }
+        }
+
+        private static void CopyRecursively(string sourcePath, string destinationPath)
+        {
+            Directory.CreateDirectory(destinationPath);
+            foreach (string file in Directory.GetFiles(sourcePath))
+            {
+                string destinationFile = Path.Combine(destinationPath, Path.GetFileName(file));
+                File.Copy(file, destinationFile, false);
+            }
+
+            // Copy each subdirectory using recursion.
+            foreach (string directory in Directory.GetDirectories(sourcePath))
+            {
+                string destinationDirectory = Path.Combine(destinationPath, Path.GetFileName(directory));
+                CopyRecursively(directory, destinationDirectory);
             }
         }
     }
