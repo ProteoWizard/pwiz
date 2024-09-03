@@ -271,7 +271,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!SetupPythonEnvironmentForAlpha())
                         return false;
-                    Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir);
+                    Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, _documentUiContainer.DocumentUI);
                 }
                 else if (radioCarafeSource.Checked)
                 {
