@@ -311,6 +311,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                         if(isolationInfo[i].intensity>0)
                             selectedIon.set(MS_peak_intensity, isolationInfo[i].intensity, MS_number_of_detector_counts);
 
+                        if (isolationInfo[i].collisionalCrossSectionalArea > 0)
+                            selectedIon.set(MS_collisional_cross_sectional_area, isolationInfo[i].collisionalCrossSectionalArea, UO_square_angstrom);
+
                         switch (fragModes[i])
                         {
                             case FragmentationMode_CID:
