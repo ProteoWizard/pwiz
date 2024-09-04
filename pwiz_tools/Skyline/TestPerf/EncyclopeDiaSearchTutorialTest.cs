@@ -35,6 +35,7 @@ using pwiz.Skyline.Util;
 using System;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.ToolsUI;
 
 namespace TestPerf
 {
@@ -187,6 +188,13 @@ namespace TestPerf
             PrepareDocument("EncyclopeDiaSearchTutorialTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath(_analysisValues.FastaPath);
 
+            RunDlg<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI, toolOptionsUi =>
+            {
+                toolOptionsUi.SelectedTab = ToolOptionsUI.TABS.Koina;
+                toolOptionsUi.KoinaIntensityModelCombo = KoinaIntensityModel.Models.First();
+                toolOptionsUi.KoinaRetentionTimeModelCombo = KoinaRetentionTimeModel.Models.First();
+                toolOptionsUi.OkDialog();
+            });
             var searchDlg = ShowDialog<EncyclopeDiaSearchDlg>(SkylineWindow.ShowEncyclopeDiaSearchDlg);
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
 
@@ -205,8 +213,6 @@ namespace TestPerf
 
             RunUI(searchDlg.NextPage); // now on Koina settings
 
-            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
-            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 searchDlg.DefaultCharge = 3;
