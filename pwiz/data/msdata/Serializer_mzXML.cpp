@@ -441,13 +441,12 @@ struct PrecursorInfo
     string collisionEnergy;
     string activation;
     double windowWideness;
-    string crossSectionalArea;
-    string inverseReducedIonMobility;
+    
 
     bool empty() const 
     {
         return scanNum.empty() && mz.empty() && intensity.empty() && 
-               charge.empty() && collisionEnergy.empty() && activation.empty() && crossSectionalArea.empty() && inverseReducedIonMobility.empty() && windowWideness == 0;
+               charge.empty() && collisionEnergy.empty() && activation.empty() && windowWideness == 0;
     }
 };
 
@@ -473,8 +472,6 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
             info.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
-            info.inverseReducedIonMobility = it->selectedIons[0].cvParam(MS_inverse_reduced_ion_mobility).value;
-            info.crossSectionalArea = it->selectedIons[0].cvParam(MS_collisional_cross_sectional_area).value;
         }
 
         if (!it->activation.empty())
@@ -518,7 +515,6 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
     return result;
 }
 
-
 void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precursorInfo)
 {
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
@@ -539,10 +535,6 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.add("activationMethod", it->activation);
         if (it->windowWideness != 0)
             attributes.add("windowWideness", it->windowWideness);
-        if (!it->inverseReducedIonMobility.empty())
-            attributes.add("inverseReducedIonMobility", it->inverseReducedIonMobility);
-        if (!it->crossSectionalArea.empty())
-            attributes.add("crossSectionalArea", it->crossSectionalArea);
         
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);

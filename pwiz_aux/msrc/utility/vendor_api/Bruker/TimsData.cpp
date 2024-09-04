@@ -347,23 +347,11 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.isolationMz = row.get<double>(++idx);
                 info.isolationWidth = row.get<double>(++idx);
                 info.collisionEnergy = row.get<double>(++idx);
-                double largestPeakMz = row.get<double>(++idx);
+                largestPeakMz = row.get<double>(++idx);
                 info.monoisotopicMz = row.get<double>(++idx);
                 info.charge = row.get<int>(++idx);
                 info.avgScanNumber = row.get<double>(++idx);
                 info.intensity = row.get<double>(++idx);
-
-                const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
-
-                for (auto it = scanNumberByOneOverK0.begin(); it != scanNumberByOneOverK0.end(); ++it)
-                {
-                    if (it->second == round((info.scanEnd - info.scanBegin) / 2.0 + info.scanBegin))
-                    {
-                        info.inverseReducedIonMobility = it->first;
-                        info.collisionalCrossSectionalArea = tdfStorage_.timesOneOverK0toCCSMz(it->first, info.charge, largestPeakMz);
-                        break;
-                    }
-                }
             }
         }
         else if (isDiaPasef)
@@ -444,15 +432,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     info.numScans = 1 + scanEnd - scanBegin;
                 }
 
-                for (auto it = scanNumberByOneOverK0.begin(); it != scanNumberByOneOverK0.end(); ++it)
-                {
-                    if (it->second == round((scanEnd - scanBegin) / 2.0) + scanBegin)
-                    {
-                        info.inverseReducedIonMobility = it->first;
-                        break;
-                    }
-                }
-
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
             }
@@ -489,17 +468,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.charge = row.get<int>(++idx);
                 info.avgScanNumber = 0;
                 info.intensity = 0;
-
-                const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
-                for (auto it = scanNumberByOneOverK0.begin(); it != scanNumberByOneOverK0.end(); ++it)
-                {
-                    if (it->second == round((info.scanEnd - info.scanBegin) / 2.0) + info.scanBegin)
-                    {
-                        info.inverseReducedIonMobility = it->first;
-                        info.collisionalCrossSectionalArea = tdfStorage_.timesOneOverK0toCCSMz(it->first, info.charge, info.isolationMz);
-                        break;
-                    }
-                }
             }
         }
     }
@@ -634,6 +602,11 @@ bool TimsDataImpl::canConvertOneOverK0AndCCS() const { return true; }
 double TimsDataImpl::oneOverK0ToCCS(double oneOverK0, double mz, int charge) const
 {
     return tims_oneoverk0_to_ccs_for_mz(oneOverK0, charge, mz);
+}
+
+double TimsDataImpl::oneOverK0ToCCS(double oneOverK0, int charge) const
+{
+    return oneOverK0ToCCS(oneOverK0, largestPeakMz, charge);
 }
 
 double TimsDataImpl::ccsToOneOverK0(double ccs, double mz, int charge) const
@@ -891,20 +864,19 @@ void TimsSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) c
         const auto& info = GetPasefPrecursorInfo();
         isolationInfo.resize(1, IsolationInfo{
 	                             info.isolationMz, IsolationMode_On, info.collisionEnergy,
-	                             info.inverseReducedIonMobility, info.collisionalCrossSectionalArea, info.intensity
+	                             info.intensity
                              });
     }
     else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
     {
         const auto& info = getDiaPasefIsolationInfo();
         isolationInfo.resize(1, IsolationInfo{
-	                             info.isolationMz, IsolationMode_On, info.collisionEnergy,
-	                             info.inverseReducedIonMobility, 0, 0
+	                                info.isolationMz, IsolationMode_On, info.collisionEnergy, 0
                              });
     }
     else if (frame_.precursorMz_.is_initialized())
     {
-        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On, 0, 0, 0, 0 });
+        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On,  0 });
     }
 }
 
