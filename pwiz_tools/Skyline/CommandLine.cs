@@ -48,6 +48,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1088,7 +1089,8 @@ namespace pwiz.Skyline
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
+                    newSettings = newSettings.ChangeSpectrumFilter(new SpectrumClassFilter(
+                        TransitionFullScan.IgnoreSimScansFilter, SpectrumClassFilter.Ms2FilterPage.Discriminant));
                 }
 
                 if (commandArgs.FullScanAcquisitionMethod != FullScanAcquisitionMethod.None)
@@ -2814,7 +2816,7 @@ namespace pwiz.Skyline
 
             var matcher = new ModificationMatcher();
             var sequences = new List<string>();
-            foreach (var line in lineList)
+            foreach (var line in lineList.Where(l => !l.StartsWith(@">")))
             {
                 string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
                 sequences.Add(sequence);
