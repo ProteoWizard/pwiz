@@ -2078,6 +2078,21 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            if (documentFormat < DocumentFormat.VERSION_24_11)
+            {
+                if (!result.TransitionSettings.FullScan.SpectrumClassFilter.IsEmpty)
+                {
+                    var fullScan = result.TransitionSettings.FullScan;
+                    if (fullScan.SpectrumClassFilter.Clauses.Contains(TransitionFullScan.IgnoreSimScansFilter))
+                    {
+                        fullScan = fullScan.ChangeIgnoreSimScans(true);
+                    }
+
+                    fullScan = fullScan.ChangeSpectrumFilter(default);
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(fullScan));
+                }
+            }
+
             return result;
         }
 
