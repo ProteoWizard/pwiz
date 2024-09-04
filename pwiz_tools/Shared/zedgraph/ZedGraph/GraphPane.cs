@@ -1533,12 +1533,12 @@ namespace ZedGraph
 		/// </summary>
 		/// <param name="labPoints">List of LabeledPoints objects prepared by the user graph. These should have
 		/// Point and Label components assigned.</param>
-		/// <param name="savedLayoutString">Json string with the list of saved label layout information provided by the
-		/// <see cref="PersistentLabelLayout.GetJsonString"/> method. Json is used to avoid cyclical reference between
-		/// ZedGraph and Skyline projects.</param>
+		/// <param name="existingLayout">the list of saved label layout information. If provided, the points on the list
+		/// will be placed at the specified coordinates and layout optimization will not be performed for them.</param>
 		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, List<LabeledPoint.PointLayout> existingLayout = null)
         {
-            if (!labPoints.Any())
+			// DigitalRune docking panel sometimes is resized with negative chart width, which crashes the layout algorithm.
+            if (!labPoints.Any() || Chart.Rect.Width <= 0 || Chart.Rect.Height <= 0)
                 return;
             // Need this to make sure the coordinate transforms work correctly.
             XAxis.Scale.SetupScaleData(this, XAxis);
@@ -1554,6 +1554,7 @@ namespace ZedGraph
                 {
                     if (_labelLayout.IsPointVisible(labeledPoint.Point))
                     {
+						labeledPoint.Label.IsDraggable = true;
                         visiblePoints.Add(labeledPoint);
                         labeledPoint.Label.IsVisible = true;
                     }
@@ -1592,8 +1593,21 @@ namespace ZedGraph
             }
         }
 
+        public void UpdateConnectors()
+        {
+			if (_labelLayout == null)
+				return;
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
 
-        public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
+                foreach (var labPointPair in _labelLayout.LabeledPoints)
+                { 
+                    _labelLayout.UpdateConnector(labPointPair.Value, g);
+                }
+            }
+
+        }
+			public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
         {
             isOverBoundary = false;
             if (_labelLayout != null)

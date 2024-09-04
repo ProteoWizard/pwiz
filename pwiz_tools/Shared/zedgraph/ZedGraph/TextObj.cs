@@ -20,8 +20,10 @@
 using System;
 using System.Drawing;
 using System.Collections;
+using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using System.Threading;
 
 namespace ZedGraph
 {
@@ -176,6 +178,8 @@ namespace ZedGraph
 				_fontSpec = value;
 			}
 		}
+
+		public bool ShowDragHandle { get; set; }
 
 		public bool IsDraggable { get; set; }
 
@@ -385,8 +389,8 @@ namespace ZedGraph
 				//		this.location.AlignH, this.location.AlignV, scaleFactor );
 				//else
 				this.DrawDraggingHandle(g, pane, scaleFactor);
-					this.FontSpec.Draw( g, pane, _text, pix.X, pix.Y,
-						_location.AlignH, _location.AlignV, scaleFactor, _layoutArea );
+                this.FontSpec.Draw( g, pane, _text, pix.X, pix.Y, 
+                    _location.AlignH, _location.AlignV, scaleFactor, _layoutArea );
 
 			}
 		}
@@ -459,14 +463,79 @@ namespace ZedGraph
 
         public void DrawDraggingHandle(Graphics g, PaneBase pane, float scaleFactor)
         {
-			if (IsDraggable)
+			if (ShowDragHandle)
                 FontSpec.Border = new Border(Color.Black, 1);
 			else 
 				FontSpec.Border = new Border(Color.Transparent, 0);
 
         }
 
-	#endregion
+		/// <summary>
+		/// Calculates the text size in screen coordinates
+		/// </summary>
+		/// <param name="pane">GraphPane this object belongs to.</param>
+		/// <returns></returns>
+        public SizeF GetSize(GraphPane pane)
+        {
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                return FontSpec.MeasureString(g, Text, pane.CalcScaleFactor());
+            }
+        }
+
+
+
+		#endregion
 
 	}
+
+	public class ToolTip : TextObj
+    {
+		Timer _timer;
+		ZedGraphControl _control;
+		object _graphObject; // can be used to attach this tooltip to a certain object in the graph, so that
+		                     // the tooltip is not updated every time the mouse moves inside the object.
+        private static readonly int DELAY = 500;		// tooltip rendering delay in ms.
+
+        public ToolTip(string text, ZedGraphControl control, PointF mousePt, object graphObject)
+        {
+            Text = text;
+            FontSpec.Size = 14;
+            FontSpec.Border = new Border(Color.Black, 2);
+            FontSpec.Fill = new Fill(Color.LightYellow);
+
+            GraphPane pane = control.MasterPane.FindPane(mousePt);
+            var textSize = GetSize(pane);
+            var offsetPoint = new PointF(mousePt.X + textSize.Width / 2, mousePt.Y + textSize.Height/2 + 3);
+
+            pane.ReverseTransform(offsetPoint, out var x, out var y);
+            Location.X = x;
+            Location.Y = y;
+
+            IsVisible = false;
+            _control = control;
+            FontSpec.Border = new Border(Color.Black, 2);
+            _timer = new Timer(Render, this, DELAY, System.Threading.Timeout.Infinite);
+            _graphObject = graphObject;
+        }
+
+		public object GraphObject { get { return _graphObject; } }
+
+        private static void Render(object toolTip)
+        {
+            if (toolTip is ToolTip tip)
+            {
+                tip.IsVisible = true;
+				tip._control.Invalidate();
+            }
+        }
+
+        public void Hide()
+        {
+            IsVisible = false;
+            _timer.Dispose(); 
+            _control.Invalidate();
+        }
+
+    }
 }

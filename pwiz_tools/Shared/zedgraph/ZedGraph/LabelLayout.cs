@@ -394,6 +394,15 @@ namespace ZedGraph
             _graph.GraphObjList.Add(line);
         }
 
+        public void UpdateConnector(LabeledPoint labPoint, Graphics g)
+        {
+            var endSize = CalculateConnectorSize(labPoint, g, _graph);
+            var loc = labPoint.Connector.Location;
+            var newLocation = new Location(loc.X, loc.Y, endSize.Width, endSize.Height, CoordType.AxisXYScale,
+                AlignH.Left, AlignV.Top);
+            labPoint.Connector.Location = newLocation;
+        }
+
         // Used to recalculate label connector attachment point during drag
         public static SizeF CalculateConnectorSize(LabeledPoint labPoint, Graphics g, GraphPane graph)
         {

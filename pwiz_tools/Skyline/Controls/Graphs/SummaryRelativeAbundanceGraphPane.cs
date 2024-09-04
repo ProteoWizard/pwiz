@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -34,11 +35,13 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
+using pwiz.Skyline.Model.Proteome;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -50,6 +53,8 @@ namespace pwiz.Skyline.Controls.Graphs
         // Persisted layout kept between graph refreshes
         private static List<LabeledPoint.PointLayout> _labelsLayout = new List<LabeledPoint.PointLayout>();
         private static RelativeAbundanceFormatting _formattingOverride;
+
+        private NodeTip _toolTip;
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -85,6 +90,8 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChangeEvent -= this_AxisChangeEvent;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
             GraphSummary.GraphControl.LabelDragEvent -= zedGraphControl_LabelDragComplete;
+            _toolTip?.HideTip();
+            _toolTip?.Dispose();
         }
 
         string ILayoutPersistable.GetPersistentString()
@@ -117,7 +124,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         doc =>
                         {
                             if (Equals(_formattingOverride, doc.Settings.DataSettings.RelativeAbundanceFormatting))
-                            {
+                            { 
                                 return doc;
                             }
                             return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
@@ -167,7 +174,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // if Alt button is pressed this is a label drag event, no need to change the selection
             if (Control.ModifierKeys == GraphSummary.GraphControl.EditModifierKeys)
+            {
+                _toolTip?.HideTip();
                 return false;
+            }
 
             var ctrl = Control.ModifierKeys.HasFlag(Keys.Control); //CONSIDER allow override of modifier keys?
             int iNearest;
@@ -188,10 +198,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 return true;
             }
-            
+
+            IdentityPath identityPath = FindIdentityUnderMouse(mouseEventArgs);
+            if (identityPath == null)
+                return false;
+            ChangeSelection(identityPath, ctrl);
+            return true;
+        }
+
+        private IdentityPath FindIdentityUnderMouse(MouseEventArgs eventArgs)
+        {
             IdentityPath identityPath = null;
-            var point = new Point(mouseEventArgs.X, mouseEventArgs.Y);
-            if (FindNearestPoint(point, out var nearestCurve, out iNearest))
+            var point = new Point(eventArgs.X, eventArgs.Y);
+            if (FindNearestPoint(point, out var nearestCurve, out var iNearest))
             {
                 identityPath = GetIdentityPath(nearestCurve, iNearest);
             }
@@ -202,13 +221,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (!isOverBoundary)
                         identityPath = (labPoint.Point.Tag as GraphPointData)?.IdentityPath;
-                    else
-                        return false;
                 }
             }
             else
             {
-                using(var g = Graphics.FromHwnd(IntPtr.Zero))
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
                 {
                     GraphSummary.GraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
                     if (nearestObj is TextObj nearestText)
@@ -219,10 +236,26 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
-            if (identityPath == null)
+
+            return identityPath;
+        }
+
+        public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var identity = FindIdentityUnderMouse(e);
+            if (identity != null)
+            {
+                var goalPoint = _graphData.PointPairList.FirstOrDefault(pp => identity.Equals((pp.Tag as GraphPointData)?.IdentityPath));
+                if (_toolTip == null)
+                    _toolTip = new NodeTip(this) { Parent = GraphSummary.GraphControl };
+                _toolTip.SetTipProvider(new RelativeAbundanceTipProvider(goalPoint), new Rectangle(e.Location, new Size()), e.Location);
+                return true;
+            }
+            else
+            {
+                _toolTip?.HideTip();
                 return false;
-            ChangeSelection(identityPath, ctrl);
-            return true;
+            }
         }
 
         private void ChangeSelection(IdentityPath identityPath, bool ctrl)
@@ -342,6 +375,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     AdjustLabelSpacings(_labeledPoints);
                     _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                }
+                else
+                {
+                    AdjustLabelSpacings(_labeledPoints, _labelsLayout);
+                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                    //UpdateConnectors();
                 }
             }
         }
@@ -718,6 +757,59 @@ namespace pwiz.Skyline.Controls.Graphs
                     hashCode = (hashCode * 397) ^ ExcludeStandards.GetHashCode();
                     return hashCode;
                 }
+            }
+        }
+
+        class RelativeAbundanceTipProvider : ITipProvider
+        {
+            private PointPair _pp;
+            public RelativeAbundanceTipProvider(PointPair pp)
+            {
+                _pp = pp;
+            }
+
+            public bool HasTip
+            {
+                get
+                {
+                    return ((_pp?.Tag is GraphPointData pd) && pd.IdentityPath != null);
+                }
+            }
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                if (HasTip)
+                {
+                    var pd = _pp?.Tag as GraphPointData;
+                    var table = new TableDesc();
+                    using (var rt = new RenderTools())
+                    {
+                        if (pd?.Peptide != null)
+                            table.AddDetailRow(
+                                Helpers.PeptideToMoleculeTextMapper.Translate(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Peptide, pd.Peptide.IsSmallMolecule()),
+                                pd.Peptide.ModifiedSequence == null ? pd.Peptide.ToString() : pd.Peptide.ModifiedSequence.ToString(), rt);
+                        if (pd?.Protein != null)
+                            table.AddDetailRow(
+                                Helpers.PeptideToMoleculeTextMapper.Translate(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein, pd.Protein.IsNonProteomic()),
+                                ProteinMetadataManager.ProteinModalDisplayText(pd.Protein.DocNode), rt);
+                        if (_pp != null )
+                        {
+                            table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_PeakArea,
+                                _pp.Y.ToString(Formats.PEAK_AREA, CultureInfo.CurrentCulture), rt);
+                            table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_LogPeakArea,
+                                Math.Log10(_pp.Y).ToString(Formats.FoldChange, CultureInfo.CurrentCulture), rt);
+                            table.AddDetailRow(GraphsResources.RelativeAbundanceGraph_ToolTip_Rank,
+                                _pp?.X.ToString(@"#", CultureInfo.CurrentCulture), rt);
+                        }
+                        var size = table.CalcDimensions(g);
+
+                        if (draw)
+                            table.Draw(g);
+
+                        return new Size((int)size.Width + 2, (int)size.Height + 2);
+                    }
+                }
+                return Size.Empty;
             }
         }
     }

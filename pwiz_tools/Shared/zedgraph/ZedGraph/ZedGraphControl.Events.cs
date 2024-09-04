@@ -513,13 +513,15 @@ namespace ZedGraph
 					_dragStartPair = _dragCurve[_dragIndex];
 				}
 			}
-            else if (pane != null && label != null && isOverBoundary && e.Button == _selectButtons)
+            else if (pane != null && label != null && (isOverBoundary || Control.ModifierKeys == _editModifierKeys) && e.Button == _selectButtons)
 			{
 				_isTextDragging = true;
 				_dragPane = pane;
 				_dragText = label; 
 				_dragText.UpdatePositions();
 				_dragStartPt = mousePt;
+				DestroyToolTip(pane);
+
 			}
 		}
 
@@ -544,7 +546,7 @@ namespace ZedGraph
 					this.Cursor = Cursors.Hand;
 				else if (pane != null && pane.OverLabel(mousePt, out var isOverBoundary) is LabeledPoint labeledPoint)
 				{
-					if (isOverBoundary)
+					if (isOverBoundary || Control.ModifierKeys == _editModifierKeys)
 						this.Cursor = Cursors.SizeAll;
 					else
 						this.Cursor = Cursors.Hand;
@@ -876,24 +878,56 @@ namespace ZedGraph
 		}
 
         private LabeledPoint _dragLabel;
+		private ToolTip _dragToolTip;
         private void HandleDragHandle(Point mousePt, GraphPane pane)
         {
 			var invalidate = false;
             if (_dragLabel != null)
             {
-                _dragLabel.Label.IsDraggable = false;
+                _dragLabel.Label.ShowDragHandle = false;
                 invalidate = true;
             }
-
-			if (pane.OverLabel(mousePt, out _) is LabeledPoint labPoint)
+            if (pane.OverLabel(mousePt, out var isOverBoundary) is LabeledPoint labPoint)
             { 
-                _dragLabel = labPoint;
-                _dragLabel.Label.IsDraggable = true;
-                invalidate = true;
+                if (labPoint.Label.IsDraggable)
+                {
+                    _dragLabel = labPoint;
+                    _dragLabel.Label.ShowDragHandle = true;
+                    if (isOverBoundary)
+                    {
+                        if (!labPoint.Equals(_dragToolTip?.GraphObject))
+                        {
+                            DestroyToolTip(pane);
+                            var toolTipMsg = _resourceManager.GetString("move_label");
+                            _dragToolTip = new ToolTip(toolTipMsg, this, mousePt, labPoint);
+                            pane.GraphObjList.Insert(0, _dragToolTip);
+                            invalidate = true;
+                        }
+                    }
+                    else
+                        invalidate = DestroyToolTip(pane);
+                }
             }
-			if(invalidate)
-				Invalidate();
-		}
+            else
+                invalidate = DestroyToolTip(pane);
+            if (invalidate) 
+                Invalidate();
+        }
+
+        private bool DestroyToolTip(GraphPane pane)
+        { 
+            if (pane != null)
+            {
+                if (_dragToolTip != null)
+                {
+                    _dragToolTip?.Hide();
+                    pane.GraphObjList.Remove(_dragToolTip);
+                    _dragToolTip = null;
+                    return true;
+                }
+            } 
+            return false;
+        }
 
 		#endregion
 

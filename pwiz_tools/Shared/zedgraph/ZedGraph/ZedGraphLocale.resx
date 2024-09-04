@@ -159,4 +159,7 @@
   <data name="print" xml:space="preserve">
     <value>Print...</value>
   </data>
+  <data name="move_label" xml:space="preserve">
+    <value>Alt-Click to reposition the label.</value>
+  </data>
 </root>

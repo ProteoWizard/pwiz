@@ -724,6 +724,8 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_calibrationForm);
 
             UpdateGraphPanes(listUpdateGraphs);
+            // make sure the Volcano Plot is updated as well
+            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(form => form.QueueUpdateGraph());
         }
 
         private void UpdateGraphPanes(ICollection<IUpdatable> graphPanes)
