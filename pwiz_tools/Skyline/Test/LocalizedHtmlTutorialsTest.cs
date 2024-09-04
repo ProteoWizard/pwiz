@@ -31,16 +31,6 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class LocalizedHtmlTutorialsTest : AbstractUnitTest
     {
-        [TestMethod]
-        public void TestLocalizedSkylinePrmTutorialHtml()
-        {
-            string tutorialRoot = GetHtmlTutorialsRoot();
-            if (tutorialRoot != null)
-            {
-                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "PRM\\ja"));
-                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "PRM\\zh-CHS"));
-            }
-        }
 
         [TestMethod]
         public void TestLocalizedTutorialHtml()
@@ -51,8 +41,6 @@ namespace pwiz.SkylineTest
                 return;
             }
             var failures = new List<Exception>();
-            var summarySuccesses = new StringBuilder();
-            var summaryFailures = new StringBuilder();
             foreach (var folder in Directory.GetDirectories(tutorialRoot))
             {
                 var folderInfo = new DirectoryInfo(folder);
@@ -65,19 +53,15 @@ namespace pwiz.SkylineTest
                         try
                         {
                             VerifyInvariantMatchesLocalized(languageFolder);
-                            summarySuccesses.Append($"Tutorial folder {folderInfo.Name}-{language} has matching invariant XPaths\n");
                         }
                         catch (Exception ex)
                         {
                             failures.Add(ex);
-                            summaryFailures.Append($"Tutorial folder {folderInfo.Name}-{language} does not have matching invariant XPaths\n");
                         }
                     }
                 }
             }
 
-            Console.WriteLine(summarySuccesses);
-            Console.Write(summaryFailures);
             if (failures.Count > 0)
             {
                 var exception = new AggregateException(string.Format("{0} failures", failures.Count), failures);
