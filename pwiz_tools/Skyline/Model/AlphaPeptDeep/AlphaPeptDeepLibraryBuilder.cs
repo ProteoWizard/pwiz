@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using EnvDTE;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -14,27 +15,33 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
     public class AlphapeptdeepLibraryBuilder : IiRTCapableLibraryBuilder
     {
-        private const string PEPTDEEP_EXECUTABLE = "peptdeep.exe";
-        private const string SEMICOLON = TextUtil.SEMICOLON;
-        private const string SPACE = TextUtil.SPACE;
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
-        private const string INPUT = @"input";
-        private const string OUTPUT = @"output";
-        private const string EXT_TSV = TextUtil.EXT_TSV;
-        private const string UNDERSCORE = TextUtil.UNDERSCORE;
-        private const string TAB = "\t";
-        private const string SEQUENCE = @"sequence";
-        private const string MODS = @"mods";
-        private const string MOD_SITES = @"mod_sites";
-        private const string CHARGE = @"charge";
-        private const string SETTINGS_FILE_NAME = @"settings.yaml";
-        private const string OUTPUT_MODELS = @"output_models";
-        private const string OUTPUT_SPECTRAL_LIBS = @"output_spectral_libs";
-        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
-        private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
-        private const string LIBRARY_COMMAND = @"library";
-        private const string CMD_FLOW_COMMAND = @"cmd-flow";
         private const string BLIB_BUILD = "BlibBuild";
+        private const string CHARGE = @"charge";
+        private const string CMD_FLOW_COMMAND = @"cmd-flow";
+        private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
+        private const string EXT_TSV = TextUtil.EXT_TSV;
+        private const string INPUT = @"input";
+        private const string LEFT_PARENTHESIS = TextUtil.LEFT_PARENTHESIS;
+        private const string LEFT_SQUARE_BRACKET = TextUtil.LEFT_SQUARE_BRACKET;
+        private const string LIBRARY_COMMAND = @"library";
+        private const string MOD_SITES = @"mod_sites";
+        private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
+        private const string MODS = @"mods";
+        private const string OUTPUT = @"output";
+        private const string OUTPUT_MODELS = @"output_models";
+        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
+        private const string OUTPUT_SPECTRAL_LIBS = @"output_spectral_libs";
+        private const string PEPTDEEP_EXECUTABLE = "peptdeep.exe";
+        private const string RIGHT_PARENTHESIS = TextUtil.RIGHT_PARENTHESIS;
+        private const string RIGHT_SQUARE_BRACKET = TextUtil.RIGHT_SQUARE_BRACKET;
+        private const string SEMICOLON = TextUtil.SEMICOLON;
+        private const string SEQUENCE = @"sequence";
+        private const string SETTINGS_FILE_NAME = @"settings.yaml";
+        private const string SPACE = TextUtil.SPACE;
+        private const string TAB = "\t";
+        private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
+        private const string UNDERSCORE = TextUtil.UNDERSCORE;
 
         /// <summary>
         /// key: unimod ID, value: modification name supported by Alphapeptdeep
@@ -56,6 +63,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
         private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
+        private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
         private SrmDocument Document { get; }
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
@@ -74,6 +82,16 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 {@"--library--output_tsv--enabled", @"True"},
                 {@"--library--output_tsv--translate_mod_to_unimod_id", @"True"},
                 {@"--library--decoy", @"diann"}
+            };
+
+        private Dictionary<string, string> OpenSwathAssayColName =>
+            new Dictionary<string, string>()
+            {
+                { @"RT", @"NormalizedRetentionTime" },
+                { @"ModifiedPeptide", @"ModifiedPeptideSequence" },
+                { @"FragmentMz", @"ProductMz" },
+                { @"RelativeIntensity", @"LibraryIntensity" },
+                { @"FragmentNumber", @"FragmentSeriesNumber" }
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
@@ -137,7 +155,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            progressStatus = progressStatus.ChangeSegments(0, 4);
+            progressStatus = progressStatus.ChangeSegments(0, 5);
 
             PrepareInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
@@ -146,6 +164,9 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             progressStatus = progressStatus.NextSegment();
 
             ExecutePeptdeep(progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
+
+            TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
 
             ImportSpectralLibrary(progress, ref progressStatus);
@@ -285,6 +306,59 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 // TODO(xgwang): update this exception to an Alphapeptdeep specific one
                 throw new Exception(@"Failed to build library by executing the peptdeep cmd-flow command.", ex);
             }
+
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+        }
+
+        private void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Importing spectral library")
+                .ChangePercentComplete(0));
+
+            var result = new List<string>();
+            var reader = new DsvFileReader(OutputSpectraLibFilepath, TextUtil.SEPARATOR_TSV);
+
+            // transform table header
+            var colNames = reader.FieldNames;
+            var newColNames = new List<string>();
+            foreach(var colName in colNames)
+            {
+                string newColName;
+                if (!OpenSwathAssayColName.TryGetValue(colName, out newColName))
+                {
+                    newColName = colName;
+                }
+                newColNames.Add(newColName);
+            }
+            var header = string.Join(TAB, newColNames);
+            result.Add(header);
+
+            // transform table body line by line
+            while (null != reader.ReadLine())
+            {
+                var line = new List<string>();
+                foreach (var colName in colNames)
+                {
+                    var cell = reader.GetFieldByName(colName);
+                    if (colName == MODIFIED_PEPTIDE)
+                    {
+                        var transformedCell = cell.Replace(UNDERSCORE, String.Empty)
+                            .Replace(LEFT_SQUARE_BRACKET, LEFT_PARENTHESIS)
+                            .Replace(RIGHT_SQUARE_BRACKET, RIGHT_PARENTHESIS);
+                        line.Add(transformedCell);
+                    }
+                    else
+                    {
+                        line.Add(cell);
+                    }
+                }
+                result.Add(string.Join(TAB, line));
+            }
+
+            // write to new file
+            File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
 
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));

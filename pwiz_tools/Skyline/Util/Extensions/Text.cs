@@ -43,6 +43,10 @@ namespace pwiz.Skyline.Util.Extensions
         public const string FORWARD_SLASH = @"/";
         public const string SEMICOLON = @";";
         public const string UNDERSCORE = @"_";
+        public const string LEFT_PARENTHESIS = @"(";
+        public const string RIGHT_PARENTHESIS = @")";
+        public const string LEFT_SQUARE_BRACKET = @"[";
+        public const string RIGHT_SQUARE_BRACKET = @"]";
 
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
