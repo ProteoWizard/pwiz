@@ -369,7 +369,24 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Importing spectral library")
                 .ChangePercentComplete(0));
-            //TODO(xgwang): implement
+            var pr = new ProcessRunner();
+            var psi = new ProcessStartInfo(BLIB_BUILD, $@"-o -i {LibrarySpec.Name} {TransformedOutputSpectraLibFilepath} {LibrarySpec.FilePath}")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = false
+            };
+            try
+            {
+                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+            }
+            catch (Exception ex)
+            {
+                // TODO(xgwang): update this exception to an Alphapeptdeep specific one
+                throw new Exception(@"Failed to import spectral library by executing BlibBuild", ex);
+            }
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
         }
