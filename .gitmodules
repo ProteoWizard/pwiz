@@ -9,4 +9,4 @@
 	url = https://github.com/ProteoWizard/BullseyeSharp
 [submodule "pwiz_tools/Skyline/Executables/DevTools/DocumentConverter"]
 	path = pwiz_tools/Skyline/Executables/DevTools/DocumentConverter
-	url = https://github.com/ProteoWizard/DocumentConverter.git
+	url = https://github.com/ProteoWizard/DocumentConverter
