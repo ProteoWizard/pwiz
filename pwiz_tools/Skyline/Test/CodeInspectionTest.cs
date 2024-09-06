@@ -436,7 +436,7 @@ namespace pwiz.SkylineTest
             }
         }
 
-        private void VerifyInvariantMatchesLocalized(string folder)
+        private static void VerifyInvariantMatchesLocalized(string folder)
         {
             var invariantDoc = new HtmlAgilityPack.HtmlDocument();
             invariantDoc.Load(Path.Combine(folder, "invariant.html"), Encoding.UTF8);
