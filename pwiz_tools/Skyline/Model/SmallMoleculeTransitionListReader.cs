@@ -2631,8 +2631,11 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(transitionNote, Resources.PasteDlg_UpdateMoleculeType_Note), // "Note" is legacy name for transition note
                     Tuple.Create(transitionNote, ColumnCaptions.TransitionNote),
                     Tuple.Create(precursorNote, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote),
+                    Tuple.Create(precursorNote, ColumnCaptions.PrecursorNote),
                     Tuple.Create(moleculeNote, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote),
+                    Tuple.Create(moleculeNote, ColumnCaptions.MoleculeNote),
                     Tuple.Create(moleculeListNote, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote),
+                    Tuple.Create(moleculeListNote, ColumnCaptions.MoleculeListNote),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
                     Tuple.Create(labelType, ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
                     Tuple.Create(idInChiKey, idInChiKey),
