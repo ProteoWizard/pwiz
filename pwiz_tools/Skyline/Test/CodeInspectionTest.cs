@@ -36,6 +36,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using AssortResources;
+using HtmlAgilityPack;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -407,6 +408,119 @@ namespace pwiz.SkylineTest
             }
         }
 
+        /// <summary>
+        /// Look for invariant.html files which do not have matching elements with translated index.html.
+        /// This verifies that translated tutorials are in sync with their pre-translation source. 
+        /// </summary>
+        void InspectMismatchedTutorialInvariants(string root, List<string> errors)
+        {
+            var tutorialsDir = Path.Combine(root, "Documentation", "Tutorials");
+            foreach (var folder in Directory.GetDirectories(tutorialsDir))
+            {
+                foreach (var language in new[] { "ja", "zh-CHS" })
+                {
+                    var languageFolder = Path.Combine(folder, language);
+                    if (File.Exists(Path.Combine(languageFolder, "index.html"))
+                        && File.Exists(Path.Combine(languageFolder, "invariant.html")))
+                    {
+                        try
+                        {
+                            VerifyInvariantMatchesLocalized(languageFolder);
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add($"Found a mismatch in translated tutorial and invariant: {ex.Message}");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void VerifyInvariantMatchesLocalized(string folder)
+        {
+            var invariantDoc = new HtmlAgilityPack.HtmlDocument();
+            invariantDoc.Load(Path.Combine(folder, "invariant.html"), Encoding.UTF8);
+            var localizedDoc = new HtmlAgilityPack.HtmlDocument();
+            localizedDoc.Load(Path.Combine(folder, "index.html"), Encoding.UTF8);
+
+            var invariantNodes = ListLocalizableElements(invariantDoc.DocumentNode).ToList();
+            var localizedNodes = ListLocalizableElements(localizedDoc.DocumentNode).ToList();
+            int minNodeCount = Math.Min(invariantNodes.Count, localizedNodes.Count);
+            for (int i = 0; i < minNodeCount; i++)
+            {
+                var invariantNode = invariantNodes[i];
+                var localizedNode = localizedNodes[i];
+                Assert.AreEqual(invariantNode.XPath, localizedNode.XPath,
+                    "node from invariant.html:{0}\r\ndoes not match node from index.html:{1}\r\nin folder:{2}",
+                    invariantNode.InnerHtml, localizedNode.InnerHtml, folder);
+            }
+
+            if (invariantNodes.Count > minNodeCount)
+            {
+                Assert.AreEqual(minNodeCount, invariantNodes.Count, "invariant.html has extra node XPath:{0}\r\nInnerHTML:{1}\r\nFolder:{2}",
+                    invariantNodes[minNodeCount].XPath, invariantNodes[minNodeCount].InnerHtml, folder);
+            }
+
+            if (localizedNodes.Count > minNodeCount)
+            {
+                Assert.AreEqual(minNodeCount, localizedNodes.Count, "index.html has extra node XPath:{0}\r\nInnerHTML:{1}\r\nFolder:{2}",
+                    localizedNodes[minNodeCount].XPath, localizedNodes[minNodeCount].InnerHtml, folder);
+            }
+        }
+
+        public static IEnumerable<string> LocalizableXPaths
+        {
+            get
+            {
+                yield return "/html/head/title";
+                yield return "/html/body/p";
+                yield return "/html/body/h1";
+                yield return "/html/body/h2";
+                yield return "/html/body/ul/li";
+                yield return "/html/body/ol/li";
+                yield return "/html/body/table/tr/td";
+            }
+        }
+
+        public static string RemoveIndexesFromXPath(string xPath)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            bool inBrackets = false;
+            foreach (var ch in xPath)
+            {
+                if (inBrackets)
+                {
+                    if (ch == ']')
+                    {
+                        inBrackets = false;
+                    }
+                }
+                else
+                {
+                    if (ch == '[')
+                    {
+                        inBrackets = true;
+                    }
+                    else
+                    {
+                        stringBuilder.Append(ch);
+                    }
+                }
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        private static IEnumerable<HtmlNode> ListLocalizableElements(HtmlNode node)
+        {
+            string strippedXPath = RemoveIndexesFromXPath(node.XPath)!;
+            if (LocalizableXPaths.Contains(strippedXPath))
+            {
+                return new[] { node };
+            }
+
+            return node.ChildNodes.SelectMany(ListLocalizableElements);
+        }
 
         // Looking for uses of Form where we should really be using FormEx
         private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
@@ -589,6 +703,8 @@ namespace pwiz.SkylineTest
             InspectTutorialAuditLogs(root, results);
 
             InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
+
+            InspectMismatchedTutorialInvariants(root, results);
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 
