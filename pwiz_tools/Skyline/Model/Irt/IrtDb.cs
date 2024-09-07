@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
@@ -659,8 +660,9 @@ namespace pwiz.Skyline.Model.Irt
 
                     if (transitions.Count > 0)
                     {
-                        peptides.Add((PeptideDocNode) nodePep.ChangeResults(null).ChangeChildren(new[]
-                            { nodeTranGroup.ChangeChildren(transitions) }));
+                        var nodePepNew = (PeptideDocNode)nodePepMinimal.ChangeChildren(new[]
+                            { nodeTranGroup.ChangeResults(null).ChangeChildren(transitions) });
+                        peptides.Add(nodePepNew.ChangeResults(null));
                         addedDocPeptides = true;
                     }
                 }
@@ -685,9 +687,13 @@ namespace pwiz.Skyline.Model.Irt
 
             // Add the peptides after clearing the libraries so they preserve their library ranking
             peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
-            doc = (SrmDocument) doc.ChangeChildren(new [] {nodePepGroup.ChangeChildren(peptides.ToArray())});
+            doc = (SrmDocument) doc.ChangeChildren(new []
+            {
+                new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
+                    Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray(), false)
+            });
 
-            using (var writer = new StringWriter())
+            using (var writer = new XmlStringWriter())
             using (var writer2 = new XmlTextWriter(writer))
             {
                 doc.Serialize(writer2, null, SkylineVersion.CURRENT, null);

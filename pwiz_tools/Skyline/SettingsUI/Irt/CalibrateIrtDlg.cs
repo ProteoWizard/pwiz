@@ -188,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             var irtPeptides = !IsRecalibration
                 ? StandardPeptideList.Select(pep => new DbIrtPeptide(pep.Target, pep.Irt, true, TimeSource.peak))
-                : _standard.Peptides.Select(pep =>
+                : _standard.Peptides.Select(pep => _updatePeptides.Contains(pep) ? pep :    // Avoid double updating
                     new DbIrtPeptide(pep.Target, regression.GetY(pep.Irt), true, TimeSource.peak));
             var irtPeptideList = irtPeptides.ToList();
             string docXml = IrtDb.GenerateDocumentXml(irtPeptideList.Select(p => p.Target),

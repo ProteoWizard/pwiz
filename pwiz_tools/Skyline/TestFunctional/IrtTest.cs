@@ -124,8 +124,8 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MessageDlg>(countDlg.OkDialog, messageDlg => messageDlg.OkDialog());
             RunUI(() => countDlg.StandardCount = peptideCount);
             OkDialog(countDlg, countDlg.OkDialog);
-
-            Assert.AreEqual(peptideCount, calibrateDlg.StandardPeptideCount);
+            TryWaitForConditionUI(() => peptideCount == calibrateDlg.StandardPeptideCount);
+            RunUI(() => Assert.AreEqual(peptideCount, calibrateDlg.StandardPeptideCount));
 
             //Bypass the UI
             foreach (int i in new[]
@@ -220,12 +220,13 @@ namespace pwiz.SkylineTestFunctional
             // Recalibrate
             const int shift = 100;
             const int skew = 10;
-            RunDlg<CalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
+            var recalcDlg1 = ShowDialog<CalibrateIrtDlg>(irtDlg1.Calibrate);
+            RunUI(() =>
             {
-                recalDlg.SetIrtRange(standard[1].RetentionTime + shift, standard[standard.Length - 1].RetentionTime * skew + shift);
-                recalDlg.SetFixedPoints(1, standard.Length - 1);
-                recalDlg.OkDialog();
+                recalcDlg1.SetIrtRange(standard[1].RetentionTime + shift, standard[standard.Length - 1].RetentionTime * skew + shift);
+                recalcDlg1.SetFixedPoints(1, standard.Length - 1);
             });
+            OkDialog(recalcDlg1, recalcDlg1.OkDialog);
             RunUI(() =>
             {
                 for (int i = 0; i < irtDlg1.StandardPeptideCount; i++)
@@ -234,12 +235,13 @@ namespace pwiz.SkylineTestFunctional
                                     irtDlg1.StandardPeptides.Skip(i).First().Irt);
                 }
             });
-            RunDlg<CalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
+            var recalcDlg2 = ShowDialog<CalibrateIrtDlg>(irtDlg1.Calibrate);
+            RunUI(() =>
             {
-                recalDlg.SetIrtRange(standard[2].RetentionTime, standard[standard.Length - 2].RetentionTime);
-                recalDlg.SetFixedPoints(2, standard.Length - 2);
-                recalDlg.OkDialog();
+                recalcDlg2.SetIrtRange(standard[2].RetentionTime, standard[standard.Length - 2].RetentionTime);
+                recalcDlg2.SetFixedPoints(2, standard.Length - 2);
             });
+            OkDialog(recalcDlg2, recalcDlg2.OkDialog);
 
             // Change peptides
             var changePeptides = irtDlg1.LibraryPeptides.Where((p, i) => i%2 == 0).ToArray();
@@ -374,19 +376,19 @@ namespace pwiz.SkylineTestFunctional
                 line = SkylineWindow.RTGraphController.RegressionRefined.Conversion as RegressionLineElement;
             });
             Assert.IsNotNull(stats);
-            Assert.IsTrue(stats.R > 0.999);
+            Assert.AreEqual(1.0, stats.R, 0.001);
             Assert.IsNotNull(line);
             //These values were taken from the graph, which shows values to 2 decimal places, so the real values must
             //be +/- 0.01 from these values
-            Assert.IsTrue(Math.Abs(line.Intercept - 14.17) < 0.01);
-            Assert.IsTrue(Math.Abs(line.Slope - 0.15) < 0.01);
+            Assert.AreEqual(14.17, line.Intercept, 0.01);
+            Assert.AreEqual(0.15, line.Slope, 0.01);
 
             RunUI(() => SkylineWindow.ChooseCalculator(ssrCalc));
             WaitForRegression();
             RunUI(() => stats = SkylineWindow.RTGraphController.RegressionRefined.CalcStatistics(docPeptides, null));
 
             Assert.IsNotNull(stats);
-            Assert.IsTrue(Math.Abs(stats.R - 0.97) < 0.01);
+            Assert.AreEqual(0.97, stats.R, 0.01);
 
             /*
              * Delete all peptides except the standard
