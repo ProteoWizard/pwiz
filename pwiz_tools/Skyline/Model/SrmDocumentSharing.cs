@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -587,7 +588,7 @@ namespace pwiz.Skyline.Model
             public ZipFileShare()
             {
                 // Make sure large files don't cause this to fail.
-                _zip = new ZipFile { UseZip64WhenSaving = Zip64Option.AsNecessary };
+                _zip = new ZipFile (Encoding.UTF8) { UseZip64WhenSaving = Zip64Option.AsNecessary };
 
                 _dictNameToPath = new Dictionary<string, string>();
             }
