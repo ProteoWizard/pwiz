@@ -28,6 +28,7 @@ using MathNet.Numerics.Statistics;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -692,9 +693,24 @@ namespace pwiz.Skyline.Model
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.cePrecursor); }
         }
 
-        private int INDEX_NOTE
+        private int INDEX_TRANSITION_NOTE
         {
-            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.note); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.transitionNote); } // "Note" is legacy name for "Transition Note", we didn't handle other levels before
+        }
+
+        private int INDEX_PRECURSOR_NOTE
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.precursorNote); }
+        }
+
+        private int INDEX_MOLECULE_NOTE
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.moleculeNote); }
+        }
+
+        private int INDEX_MOLECULE_LIST_NOTE
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.moleculeListNote); }
         }
 
         private int INDEX_PRECURSOR_DRIFT_TIME_MSEC
@@ -889,7 +905,10 @@ namespace pwiz.Skyline.Model
         private class ParsedIonInfo : IonInfo
         {
             public MoleculeNameAndAccessions MoleculeID { get; private set; } // Name and InChiKey, CAS etc
-            public string Note { get; private set; }
+            public string TransitionNote { get; private set; }
+            public string PrecursorNote { get; private set; }
+            public string MoleculeNote { get; private set; }
+            public string MoleculeListNote { get; private set; }
             public TypedMass Mz { get; private set; } // Not actually a mass, of course, but useful to know if its based on mono vs avg mass
             public Adduct Adduct { get; private set; }
             public SignedMz SignedMz => new SignedMz(Mz, Adduct.AdductCharge < 0); 
@@ -914,7 +933,10 @@ namespace pwiz.Skyline.Model
                 ExplicitTransitionValues explicitTransitionValues,
                 double? libraryIntensity,
                 double? iRT,
-                string note,
+                string transitionNote,
+                string precursorNote,
+                string moleculeNote,
+                string moleculeListNote,
                 MoleculeAccessionNumbers accessionNumbers) : base(formula)
             {
                 MoleculeID = string.IsNullOrEmpty(name) && MoleculeAccessionNumbers.IsNullOrEmpty(accessionNumbers)
@@ -930,7 +952,10 @@ namespace pwiz.Skyline.Model
                 ExplicitTransitionValues = explicitTransitionValues;
                 LibraryIntensity = libraryIntensity;
                 IRT = iRT;
-                Note = note;
+                TransitionNote = transitionNote; // "Note" is legacy name for "transition note", we didn't handle other kinds
+                PrecursorNote = precursorNote;
+                MoleculeNote = moleculeNote;
+                MoleculeListNote = moleculeListNote;
                 if (Formula.IsMassOnly && !Formula.IsEmpty)
                 {
                     // BioMassCalc parser will accept a mass-only formula, but we don't want to allow that here
@@ -938,11 +963,35 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public ParsedIonInfo ChangeNote(string note)
+            public ParsedIonInfo ChangeTransitionNote(string note)
             {
                 return ChangeProp(ImClone(this), im =>
                 {
-                    im.Note = note;
+                    im.TransitionNote = note;
+                });
+            }
+
+            public ParsedIonInfo ChangePrecursorNote(string note)
+            {
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.PrecursorNote = note;
+                });
+            }
+
+            public ParsedIonInfo ChangeMoleculeNote(string note)
+            {
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.MoleculeNote = note;
+                });
+            }
+
+            public ParsedIonInfo ChangeMoleculeListNote(string note)
+            {
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.MoleculeListNote = note;
                 });
             }
 
@@ -1172,7 +1221,10 @@ namespace pwiz.Skyline.Model
             int indexCharge = getPrecursorColumns ? INDEX_PRECURSOR_CHARGE : INDEX_PRODUCT_CHARGE;
             int indexNeutralLoss = getPrecursorColumns ? -1 : INDEX_PRODUCT_NEUTRAL_LOSS;
             var formula = GetCellTrimmed(row, indexFormula);
-            var note = GetCellTrimmed(row, INDEX_NOTE);
+            var transitionNote = GetCellTrimmed(row, INDEX_TRANSITION_NOTE);
+            var precursorNote = GetCellTrimmed(row, INDEX_PRECURSOR_NOTE);
+            var moleculeNote = GetCellTrimmed(row, INDEX_MOLECULE_NOTE);
+            var moleculeListNote = GetCellTrimmed(row, INDEX_MOLECULE_LIST_NOTE);
             // TODO(bspratt) use CAS or HMDB etc lookup to fill in missing inchikey - and use any to fill in formula
             var moleculeID = (getPrecursorColumns ? ReadMoleculeAccessionNumberColumns(row) : null) ?? MoleculeNameAndAccessions.EMPTY;
             var name = getPrecursorColumns ? moleculeID.Name : GetCellTrimmed(row, INDEX_PRODUCT_NAME);
@@ -1282,7 +1334,8 @@ namespace pwiz.Skyline.Model
                 }
 
                 return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMass, isotopeLabelType,
-                    retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, libraryIntensity, iRT, note,
+                    retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, libraryIntensity, iRT,
+                    transitionNote, precursorNote, moleculeNote, moleculeListNote,
                     moleculeID.AccessionNumbers);
             }
 
@@ -1584,7 +1637,7 @@ namespace pwiz.Skyline.Model
                  Equals(name, @"precursor") || Equals(name, IonTypeExtension.GetLocalizedString(IonType.precursor)))) // Handle local language as well
             {
                 // No product info found in this row, assume that this is a precursor declaration
-                return precursorInfo.ChangeNote(note);
+                return precursorInfo.ChangePrecursorNote(precursorNote ?? transitionNote);
             }
 
             if (countValues == 1 && !getPrecursorColumns && mz > 0 && Math.Abs(precursorInfo.Adduct.AdductCharge) == 2)
@@ -2006,11 +2059,17 @@ namespace pwiz.Skyline.Model
             var pep = GetMoleculePeptide(document, row, pepGroup);
             if (pep == null)
                 return null;
+            var moleculeListNote =  GetCellTrimmed(row, INDEX_MOLECULE_LIST_NOTE);
+
+            var annotations = string.IsNullOrEmpty(moleculeListNote)
+                ? Annotations.EMPTY
+                : new Annotations(moleculeListNote, null, 0);
+
             var name = GetCellTrimmed(row, INDEX_MOLECULE_GROUP);
             if (String.IsNullOrEmpty(name))
                 name = document.GetSmallMoleculeGroupId();
             var metadata = new ProteinMetadata(name, String.Empty).SetWebSearchCompleted();  // FUTURE: some kind of lookup for small molecules
-            return new PeptideGroupDocNode(pepGroup, metadata, new[] { pep }, false);
+            return new PeptideGroupDocNode(pepGroup, annotations, metadata, new[] { pep }, false);
         }
 
         private PeptideDocNode GetMoleculePeptide(SrmDocument document, Row row, PeptideGroup group)
@@ -2052,7 +2111,12 @@ namespace pwiz.Skyline.Model
                 var tranGroup = GetMoleculeTransitionGroup(document, parsedIonInfo, row, pep);
                 if (tranGroup == null)
                     return null;
-                return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, false);
+
+                var annotations = string.IsNullOrEmpty(parsedIonInfo.MoleculeNote)
+                    ? Annotations.EMPTY
+                    : new Annotations(parsedIonInfo.MoleculeNote, null, 0);
+
+                return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, annotations,false);
             }
             catch (Exception e) when (IsParserException(e))
             {
@@ -2103,6 +2167,11 @@ namespace pwiz.Skyline.Model
                     isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.heavy;
                 }
             }
+
+            var annotations = string.IsNullOrEmpty(moleculeInfo.PrecursorNote)
+                ? Annotations.EMPTY
+                : new Annotations(moleculeInfo.PrecursorNote, null, 0);
+
             var group = new TransitionGroup(pep, adduct, isotopeLabelType);
             string errmsg;
             try
@@ -2110,7 +2179,7 @@ namespace pwiz.Skyline.Model
                 var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitTransitionGroupValues);
                 if (tran == null)
                     return null;
-                return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
+                return new TransitionGroupDocNode(group, annotations, document.Settings, null,
                     null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
             }
             catch (Exception x) when (IsParserException(x))
@@ -2172,15 +2241,10 @@ namespace pwiz.Skyline.Model
 
             var adduct = ionType == IonType.precursor ? group.PrecursorAdduct : ion.Adduct;
             var transition = new Transition(group, adduct, null, customMolecule, ionType);
-            var annotations = document.Annotations;
-            if (!String.IsNullOrEmpty(ion.Note))
-            {
-                var note = document.Annotations.Note;
-                // ReSharper disable LocalizableElement
-                note = String.IsNullOrEmpty(note) ? ion.Note : (note + "\r\n" + ion.Note);
-                // ReSharper restore LocalizableElement
-                annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
-            }
+
+            var annotations = string.IsNullOrEmpty(ion.TransitionNote)
+                ? Annotations.EMPTY
+                : new Annotations(ion.TransitionNote, null, 0);
 
             var ionExplicitTransitionValues = ion.ExplicitTransitionValues;
             if (explicitTransitionGroupValues?.CollisionEnergy == ion.ExplicitTransitionValues?.CollisionEnergy)
@@ -2387,7 +2451,10 @@ namespace pwiz.Skyline.Model
         public const string coneVoltage = "ConeVoltage";
         public const string compensationVoltage = "CompensationVoltage";
         public const string declusteringPotential = "DeclusteringPotential";
-        public const string note = "Note";
+        public const string transitionNote = "Note"; // "Note" is legacy name for "Transition Note", we didn't handle other levels before
+        public const string precursorNote = "PrecursorNote";
+        public const string moleculeNote = "MoleculeNote";
+        public const string moleculeListNote = "MoleculeListNote";
         public const string labelType = "LabelType";
         public const string adductPrecursor = "PrecursorAdduct";
         public const string adductProduct = "ProductAdduct";
@@ -2435,7 +2502,10 @@ namespace pwiz.Skyline.Model
                 coneVoltage,
                 compensationVoltage,
                 declusteringPotential,
-                note,
+                transitionNote,
+                precursorNote,
+                moleculeNote,
+                moleculeListNote,
                 labelType,
                 idInChiKey,
                 idCAS,
@@ -2494,6 +2564,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(formulaPrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
                     Tuple.Create(formulaPrecursor, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula),
                     Tuple.Create(formulaPrecursor,ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula),
+                    Tuple.Create(formulaPrecursor, ColumnCaptions.MoleculeFormula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
                     Tuple.Create(mzPrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
                     Tuple.Create(mzPrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z),
@@ -2557,7 +2628,14 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(declusteringPotential, ModelResources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential),
                     Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential),
                     Tuple.Create(declusteringPotential, ModelResources.ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential),
-                    Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
+                    Tuple.Create(transitionNote, Resources.PasteDlg_UpdateMoleculeType_Note), // "Note" is legacy name for transition note
+                    Tuple.Create(transitionNote, ColumnCaptions.TransitionNote),
+                    Tuple.Create(precursorNote, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote),
+                    Tuple.Create(precursorNote, ColumnCaptions.PrecursorNote),
+                    Tuple.Create(moleculeNote, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote),
+                    Tuple.Create(moleculeNote, ColumnCaptions.MoleculeNote),
+                    Tuple.Create(moleculeListNote, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote),
+                    Tuple.Create(moleculeListNote, ColumnCaptions.MoleculeListNote),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
                     Tuple.Create(labelType, ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
                     Tuple.Create(idInChiKey, idInChiKey),

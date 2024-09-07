@@ -46,6 +46,12 @@ namespace pwiz.Skyline.Model
         }
 
         public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey, ExplicitRetentionTimeInfo explicitRetentionTime,
+            TransitionGroupDocNode[] children, Annotations annotations, bool autoManageChildren)
+            : this(id, settings, mods, sourceKey, null, null, explicitRetentionTime, annotations, null, children, autoManageChildren)
+        {
+        }
+
+        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey, ExplicitRetentionTimeInfo explicitRetentionTime,
             TransitionGroupDocNode[] children, bool autoManageChildren)
             : this(id, settings, mods, sourceKey, null, null, explicitRetentionTime, Annotations.EMPTY, null, children, autoManageChildren)
         {
