@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -146,6 +147,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
+            TestNotes();
             TestAutoManage();
             TestErrors();
             TestFormulaWithAtomCountZero();
@@ -814,7 +816,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                SmallMoleculeTransitionListColumnHeaders.note,
+                SmallMoleculeTransitionListColumnHeaders.transitionNote,
                 SmallMoleculeTransitionListColumnHeaders.idCAS,
                 SmallMoleculeTransitionListColumnHeaders.idHMDB,
                 SmallMoleculeTransitionListColumnHeaders.idInChi,
@@ -2439,6 +2441,239 @@ namespace pwiz.SkylineTestFunctional
                 }
                 AssertEx.Serializable(pastedDoc); // Original error report was in terms of not being able to reload the inconsistent document, so check that
             }
+        }
+
+        void TestNotes()
+        {
+
+            var notSeattle = "Not made in Seattle";
+            var notTumwater = "Not made in Tumwater";
+            var notPortland = "Not made in Portland";
+            var notAnywhere = "Not made at all";
+            var rainier = "Vitamin R";
+            var henrys = "Weinhards";
+            var animals = "Schmidt";
+            var oly = "olympia";
+            var funky = "funky";
+            var watery = "watery";
+            var C20H20O12 = "C20H20O12";
+            var C20H18O12 = "C20H18O12";
+            var darkAndLager = "dark and lager molecule formulas are same";
+            var lagerAndDark = "lager and dark molecule formulas are same";
+            var CO2 = "CO2";
+            var C12H19 = "C12H19";
+            var C12H17 = "C12H17";
+
+            var lines = new[]
+            {
+                $"Molecule List Name,Molecule Name,Fragment Name,Precursor m/z,Product m/z,Molecule Formula,Fragment Formula,Precursor Charge,Fragment Charge,Molecule Note,Molecule List Note,Precursor Note,Note", // N.B. using old style "note" instead of "transition note"
+                $"{rainier},lager,bubbles,,,{C20H20O12},{CO2},1,1,dark has different molecule formula,{notSeattle},1,1",
+                $"{rainier},lager,foam,,,{C20H20O12},{C12H19},1,1,,,2,2",
+                $"{rainier},dark,bubbles,,,{C20H18O12},{CO2},1,1,light has different molecule formula,{notSeattle},3,3",
+                $"{rainier},dark,foam,,,{C20H18O12},{C12H19},1,1,,,4,4",
+                $"{rainier},lager,bubbles,,,{C20H20O12},{CO2},2,2,,,5,5",
+                $"{rainier},lager,foam,,,{C20H20O12},{C12H19},2,2,,,6,6",
+                $"{rainier},dark,bubbles,,,{C20H18O12},{CO2},2,2,,,7,7",
+                $"{rainier},dark,foam,,,{C20H18O12},{C12H19},2,2,,,8,8",
+                $"{henrys},lager,bubbles,,,{C20H20O12},{CO2},3,3,{darkAndLager},{notPortland},9,9",
+                $"{henrys},lager,foam,,,{C20H20O12},{C12H17},3,3,,,10,10",
+                $"{henrys},dark,bubbles,,,{C20H20O12},{CO2},3,3,{lagerAndDark},,11,11",
+                $"{henrys},dark,foam,,,{C20H20O12},{C12H17},3,3,,This is not same note,12,12",
+                $"{henrys},lager,bubbles,,,{C20H20O12},{CO2},4,4,,,13,13",
+                $"{henrys},lager,foam,,,{C20H20O12},{C12H17},4,4,,,14,14",
+                $"{henrys},dark,bubbles,,,{C20H20O12},{CO2},4,4,,,15,15",
+                $"{henrys},dark,foam,,,{C20H20O12},{C12H17},4,4,,,16,16",
+                $"{oly},dark,bubbles,451.0871025,44.99710546,,,1,1,{funky},{notTumwater},17,17",
+                $"{oly},dark,foam,451.0871025,164.1559525,,,1,1,,,18,18",
+                $"{oly},lager,bubbles,453.1027525,44.99710546,,,1,1,{watery},,19,19",
+                $"{oly},lager,foam,453.1027525,164.1559525,,,1,1,,,20,20",
+                $"{oly},lager,bubbles,227.0550145,23.00219096,,,2,2,,,21,21", // Heavier precursor before lighter, expect sort
+                $"{oly},lager,foam,227.0550145,82.58161446,,,2,2,,,22,22",
+                $"{oly},dark,foam,226.0471895,82.58161446,,,2,2,,,23,23",
+                $"{oly},dark,bubbles,226.0471895,23.00219096,,,2,2,,,24,24",
+                $"{animals},lager,bubbles,151.7057685,15.67055279,,,3,3,,{notAnywhere},25,25",
+                $"{animals},lager,foam,151.7057685,54.71828512,,,3,3,,,26,26",
+                $"{animals},dark,bubbles,151.7057685,15.67055279,,,3,3,,,27,27",
+                $"{animals},dark,foam,151.7057685,54.71828512,,,3,3,,,28,28",
+                $"{animals},lager,bubbles,114.0311455,12.00473371,,,4,4,,,29,29",
+                $"{animals},lager,foam,114.0311455,41.29053296,,,4,4,,,30,30",
+                $"{animals},dark,bubbles,114.0311455,12.00473371,,,4,4,,,31,31",
+                $"{animals},dark,foam,114.0311455,41.29053296,,,4,4,,,32,32",
+            };
+            var reportFile = TestFilesDir.GetTestPath("notes.csv");
+
+            for (var roundtrip = 0; roundtrip < 2; roundtrip++)
+            {
+                var docOrig = NewDocument();
+                ImportTransitionListColumnSelectDlg testImportDlg;
+                if (roundtrip == 1) // Test report roundtrip
+                {
+                    // Import the file, which should send us to ColumnSelectDlg
+                    testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(reportFile));
+                }
+                else
+                {
+                    // Paste directly into targets area, which should send us to ColumnSelectDlg
+                    SetClipboardText(string.Join("\r\n", lines));
+                    testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+                }
+                OkDialog(testImportDlg, testImportDlg.OkDialog);
+                DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+
+                var pastedDoc = WaitForDocumentChange(docOrig);
+                AssertEx.IsDocumentState(pastedDoc, null, 4, 8, 16, 32);
+
+                foreach (var kvp in new Dictionary<string, string>() { { rainier, notSeattle }, {henrys, notPortland}, {oly, notTumwater}, {animals, notAnywhere} })
+                {
+                    var node = pastedDoc.MoleculeGroups.First(n => n.Name.Equals(kvp.Key));
+                    AssertEx.AreEqual(node.Annotations.Note, kvp.Value);
+                }
+
+
+                var henrysGroup = pastedDoc.MoleculeGroups.First(n => n.Name.Equals(henrys));
+                AssertEx.AreEqual(notPortland, henrysGroup.Annotations.Note);
+                var precursorNotes = new[] { 9, 13, 11, 15 }; // Some sorting and coalescing is expected, but it takes the first-seen precursor name
+                var p = 0;
+                var transitionNotes = new[] { 9 + roundtrip, 10 - roundtrip, 13 + roundtrip, 14 - roundtrip, 11 + roundtrip, 12 - roundtrip, 15 + roundtrip, 16 - roundtrip }; // Some sorting and coalescing is expected
+                var t = 0;
+                foreach (var mol in henrysGroup.Molecules)
+                {
+                    AssertEx.AreEqual(C20H20O12, mol.CustomMolecule.Formula);
+                    foreach (var precursor in mol.TransitionGroups)
+                    {
+                        switch (precursor.CustomMolecule.DisplayName)
+                        {
+                            case "lager":
+                                AssertEx.AreEqual(darkAndLager, mol.Annotations.Note);
+                                break;
+                            case "dark":
+                                AssertEx.AreEqual(lagerAndDark, mol.Annotations.Note);
+                                break;
+                        }
+                        AssertEx.AreEqual(precursorNotes[p++].ToString(), precursor.Annotations.Note, "precursor note");
+
+                        foreach (var transition in precursor.Transitions)
+                        {
+                            AssertEx.AreEqual(transitionNotes[t++].ToString(), transition.Annotations.Note, "transition note");
+                            switch (transition.CustomIon.DisplayName)
+                            {
+                                case "foam":
+                                    AssertEx.AreEqual(C12H17, transition.CustomIon.Formula);
+                                    break;
+                                case "bubbles":
+                                    AssertEx.AreEqual(CO2, transition.CustomIon.Formula);
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                var rainierGroup = pastedDoc.MoleculeGroups.First(n => n.Name.Equals(rainier));
+                AssertEx.AreEqual(notSeattle, rainierGroup.Annotations.Note);
+                precursorNotes = new[] { 1, 5, 3, 7 }; // Some sorting and coalescing is expected, but it takes the first-seen precursor name
+                p = 0;
+                transitionNotes = new[] { 1 + roundtrip, 2 - roundtrip, 5 + roundtrip, 6 - roundtrip, 3 + roundtrip, 4 - roundtrip, 7 + roundtrip, 8 - roundtrip }; // Some sorting and coalescing is expected
+                t = 0;
+                foreach (var mol in rainierGroup.Molecules)
+                {
+                    foreach (var precursor in mol.TransitionGroups)
+                    {
+                        switch (precursor.CustomMolecule.DisplayName)
+                        {
+                            case "dark":
+                                AssertEx.AreEqual(C20H18O12, mol.CustomMolecule.Formula);
+                                break;
+                            case "lager":
+                                AssertEx.AreEqual(C20H20O12, mol.CustomMolecule.Formula);
+                                break;
+                        }
+                        AssertEx.AreEqual(precursorNotes[p++].ToString(), precursor.Annotations.Note);
+
+                        foreach (var transition in precursor.Transitions)
+                        {
+                            AssertEx.AreEqual(transitionNotes[t++].ToString(), transition.Annotations.Note, "transition note");
+                            switch (transition.CustomIon.DisplayName)
+                            {
+                                case "foam":
+                                    AssertEx.AreEqual(C12H19, transition.CustomIon.Formula);
+                                    break;
+                                case "bubbles":
+                                    AssertEx.AreEqual(CO2, transition.CustomIon.Formula);
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+
+                var olyGroup = pastedDoc.MoleculeGroups.First(n => n.Name.Equals(oly));
+                AssertEx.AreEqual(notTumwater, olyGroup.Annotations.Note);
+                precursorNotes = new[] { 17, 23, 19, 21 }; // Some sorting and coalescing is expected, but it takes the first-seen precursor name
+                p = 0;
+                transitionNotes = new[] { 17+roundtrip, 18-roundtrip, 24-roundtrip, 23+roundtrip, 19+roundtrip, 20-roundtrip, 21+roundtrip, 22-roundtrip }; // Some sorting and coalescing is expected
+                t = 0;
+                foreach (var mol in olyGroup.Molecules)
+                {
+                    foreach (var precursor in mol.TransitionGroups)
+                    {
+                        switch (precursor.CustomMolecule.DisplayName)
+                        {
+                            case "dark":
+                                AssertEx.AreEqual(funky, mol.Annotations.Note);
+                                break;
+                            case "lager":
+                                AssertEx.AreEqual(watery, mol.Annotations.Note);
+                                break;
+                        }
+                        AssertEx.AreEqual(precursorNotes[p++].ToString(), precursor.Annotations.Note);
+
+                        foreach (var transition in precursor.Transitions)
+                        {
+                            AssertEx.AreEqual(transitionNotes[t++].ToString(), transition.Annotations.Note);
+                        }
+                    }
+                }
+
+                AssertEx.Serializable(pastedDoc);
+
+                if (roundtrip == 0)
+                {
+                    // Prepare to check report roundtrip
+                    var allNotes = "AllNotes";
+                    var notesReport =
+                        @"<views>" +
+                        @$"  <view name=""{allNotes}"" rowsource=""pwiz.Skyline.Model.Databinding.Entities.Transition"" sublist=""Results!*"" uimode=""small_molecules"">" +
+                        @"    <column name="""" />" +
+                        @"    <column name=""Precursor"" />" +
+                        @"    <column name=""Precursor.Mz"" />" +
+                        @"    <column name=""Precursor.Adduct"" />" +
+                        @"    <column name=""ProductCharge"" />" +
+                        @"    <column name=""ProductMz"" />" +
+                        @"    <column name=""ProductIonFormula"" />" +
+                        @"    <column name=""ProductNeutralFormula"" />" +
+                        @"    <column name=""ProductAdduct"" />" +
+                        @"    <column name=""Quantitative"" />" +
+                        @"    <column name=""Note"" />" +
+                        @"    <column name=""Precursor.Peptide.Protein.Note"" />" +
+                        @"    <column name=""Precursor.Peptide.Note"" />" +
+                        @"    <column name=""Precursor.Note"" />" +
+                        @"    <column name=""Precursor.Peptide.Protein.Name"" />" +
+                        @"    <column name=""Precursor.Peptide.MoleculeName"" />" +
+                        @"    <column name=""Precursor.Peptide.MoleculeFormula"" />" +
+                        @"  </view>" +
+                        @"</views>";
+                    var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
+                    var viewSpecListToAdd = (ViewSpecList)new XmlSerializer(typeof(ViewSpecList)).Deserialize(new StringReader(notesReport));
+                    Settings.Default.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, viewSpecList.AddOrReplaceViews(viewSpecListToAdd.ViewSpecLayouts));
+
+                    var exportReportDlg =
+                        ShowDialog<ExportLiveReportDlg>(() => SkylineWindow.ShowExportReportDialog());
+                    RunUI(() => exportReportDlg.ReportName = allNotes);
+                    OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(reportFile, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture)));
+                    WaitForCondition(() => File.Exists(reportFile));
+                }
+            }
+
         }
 
         void TestImportAllData(bool asFile)
