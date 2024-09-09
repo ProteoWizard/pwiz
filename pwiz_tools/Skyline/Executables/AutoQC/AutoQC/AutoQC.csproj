@@ -123,6 +123,7 @@
   <ItemGroup>
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcConfigManager.cs" />
+    <Compile Include="AnnotationsFileWatcher.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
