@@ -79,8 +79,6 @@ namespace pwiz.Skyline.Alerts
         private int _httpListener_Port;
 
 
-        // private bool _formClosing_Called = false;
-
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private CancellationToken _cancellationToken;
 
@@ -138,8 +136,6 @@ namespace pwiz.Skyline.Alerts
 
             this.FormClosing += (sender, e) =>
             {
-                // _formClosing_Called = true;
-
                 _cancellationTokenSource.Cancel();
 
                 _cancellationTokenSource.Dispose();
@@ -250,8 +246,6 @@ namespace pwiz.Skyline.Alerts
                 _httpListener = null;
             }
         }
-
-        // private bool _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = true;
 
         // private ArdiaRegistrationCodeEntry _ardia_ArdiaRegistrationCodeEntry__TEMP; //  TODO  Only used to hold ArdiaRegistrationCodeEntry until store in Settings
 
@@ -374,28 +368,6 @@ namespace pwiz.Skyline.Alerts
                 {
                     var ardiaRegistrationEntry_BeforeRegister = GetSavedArdiaRegistrationEntry();
 
-
-                    // !!!!!!!!!!!!!!!!
-
-                    //  TODO DJJ  FAKE
-
-                    // if (_firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake)
-                    // {
-                    //     _firstTime_ExecuteClientRegistration_Force_ApplicationCode_To_Fake = false;
-                    //
-                    //     //  Use One of following "applicationCode_BeforeRegister = ..."
-                    //
-                    //     //  TODO  DJJ  FAKE set to null so do Client Registration always
-                    //
-                    //     // applicationCode_BeforeRegister = null;
-                    //
-                    //     //  TODO  DJJ  FAKE set to "FAKE"" so do Client Registration always
-                    //
-                    //     applicationCode_BeforeRegister = "FAKE";
-                    //
-                    //     SetSavedArdiaApplicationCode(applicationCode_BeforeRegister);
-                    // }
-
                     // !!!!!!!!!!!!!!!!
 
                     if (FORCE_DO_REGISTRATION_WITH_ARDIA_STEP)
@@ -458,7 +430,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                MessageDlg.ShowWithException(this, "Error registering this Skyline instance to Ardia", e); //  TODO  DJJ  Maybe need something different
+                MessageDlg.ShowWithException(this, "Error registering this Skyline instance to Ardia", e); //  TODO   Maybe need something different
 
                 DialogResult = DialogResult.OK;
 
@@ -503,7 +475,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                MessageDlg.ShowWithException(this, "Error login to Ardia", e); //  TODO  DJJ  Maybe need something different
+                MessageDlg.ShowWithException(this, "Error login to Ardia", e); //  TODO    Maybe need something different
 
                 DialogResult = DialogResult.OK;
 
@@ -518,8 +490,6 @@ namespace pwiz.Skyline.Alerts
             var clientCode = ardia_ArdiaRegistrationCodeEntry.ClientApplicationCode;
             var clientId = ardia_ArdiaRegistrationCodeEntry.ClientId;
             var clientName = ardia_ArdiaRegistrationCodeEntry.ClientName;
-
-            // clientCode = "FAKE";  //  Testing code to force error
 
             if (string.IsNullOrEmpty(clientCode) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientName))
             {
@@ -1190,7 +1160,7 @@ namespace pwiz.Skyline.Alerts
                 }
                 catch (Exception e)
                 {
-                    MessageDlg.ShowWithException(this, "Error registering this Skyline instance to Ardia", e); //  TODO  DJJ  Maybe need something different
+                    MessageDlg.ShowWithException(this, "Error registering this Skyline instance to Ardia", e); //  TODO    Maybe need something different
 
                     // throw;
 
@@ -1259,7 +1229,7 @@ namespace pwiz.Skyline.Alerts
                     MessageDlg.Show(this, errorMessage);
                 }
 
-                // TODO DJJ Not sure what to do here
+                // TODO  Not sure what to do here
 
                 //  Exception throws does NOT appear to do anything.
 
@@ -1448,7 +1418,7 @@ namespace pwiz.Skyline.Alerts
                 else
                 {
                     MessageDlg.Show(this, "Error Registering Skyline with Ardia");
-                    throw new Exception(response.Error);  //  TODO DJJ   Need something different here
+                    throw new Exception(response.Error);  //  TODO    Need something different here
                 }
             }
         }
@@ -1476,13 +1446,6 @@ namespace pwiz.Skyline.Alerts
             }
             catch (HttpRequestException e)
             {
-                var eToString = e.ToString();
-
-                // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
-                //
-                // var eMessage = e.Message;
-
-
                 if (e.Message.Contains(@"403"))
                 {
                     MessageDlg.Show(this, "RequestDeviceAuthorizationAsync(): Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
@@ -1492,15 +1455,12 @@ namespace pwiz.Skyline.Alerts
                     MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
                 }
 
-
-                //  added throw to code from Thermo
                 throw;
             }
             catch (Exception e)
             {
-                var eToString = e.ToString();
                 MessageDlg.ShowWithException(this, "RequestDeviceAuthorizationAsync: Error Registering Skyline Instance in Ardia as Client", e);
-                //  added throw to code from Thermo
+
                 throw;
             }
         }
@@ -1533,24 +1493,6 @@ namespace pwiz.Skyline.Alerts
             }
             catch (HttpRequestException e)
             {
-                // var eToString = e.ToString();
-                
-                // MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  eToString: " + eToString );
-                //
-                // var eMessage = e.Message;
-
-
-                // if (e.Message.Contains(@"403"))
-                // {
-                //     MessageDlg.Show(this, "Error Registering Skyline Instance in Ardia as Client.  Error message contains '403' so assume it is 403 Forbidden message.  Exception Message: " + e.Message);
-                // }
-                // else
-                // {
-                //     MessageDlg.ShowWithException(this, "Error Registering Skyline Instance in Ardia as Client", e);
-                // }
-
-
-                //  added throw to code from Thermo
                 throw;
             }
             catch (Exception e)
@@ -1617,9 +1559,6 @@ namespace pwiz.Skyline.Alerts
                 }
             }
         }
-
-
-        //   END:  Stuffing in launch Register Device here to see if can get working
 
 
         public class CoreWebView2ExceptionWrapper : Exception
@@ -1700,7 +1639,7 @@ namespace pwiz.Skyline.Alerts
 
             //   Available for debugging for now
 
-            var location = webView.Source.AbsolutePath;
+            // var location = webView.Source.AbsolutePath;
 
             if (!eventArgs.IsSuccess)
             {
@@ -1711,7 +1650,7 @@ namespace pwiz.Skyline.Alerts
 
                     //  404 may result in something different being triggered
 
-                    //  TODO DJJ   Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
+                    //  TODO    Probably want to direct UI to register client if that was NOT just done.  If the Registration Code (ApplicationCode) was just received there is a problem with it.
 
                 }
                 else
@@ -1720,7 +1659,7 @@ namespace pwiz.Skyline.Alerts
                     //     this, "Load Client Registration page failed with HTTP status code " + eventArgs.HttpStatusCode + ".");
                 }
 
-                // TODO DJJ Not sure what to do here
+                // TODO  Not sure what to do here
 
                 //  Add exception here to make sure we report that navigation is invalid
 
