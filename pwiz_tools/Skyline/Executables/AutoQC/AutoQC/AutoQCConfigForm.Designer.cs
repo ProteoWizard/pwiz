@@ -35,9 +35,12 @@ namespace AutoQC
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
+            this.groupBoxMain = new System.Windows.Forms.GroupBox();
+            this.btnAnnotationsFile = new System.Windows.Forms.Button();
+            this.labelAnnotationsFile = new System.Windows.Forms.Label();
+            this.textAnnotationsFilePath = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.labelConfigName = new System.Windows.Forms.Label();
-            this.groupBoxMain = new System.Windows.Forms.GroupBox();
             this.checkBoxRemoveResults = new System.Windows.Forms.CheckBox();
             this.labelQcFilePattern = new System.Windows.Forms.Label();
             this.comboBoxFileFilter = new System.Windows.Forms.ComboBox();
@@ -120,19 +123,12 @@ namespace AutoQC
             this.tabSettings.Name = "tabSettings";
             this.tabSettings.Enter += new System.EventHandler(this.TabEnter);
             // 
-            // textConfigName
-            // 
-            resources.ApplyResources(this.textConfigName, "textConfigName");
-            this.textConfigName.Name = "textConfigName";
-            // 
-            // labelConfigName
-            // 
-            resources.ApplyResources(this.labelConfigName, "labelConfigName");
-            this.labelConfigName.Name = "labelConfigName";
-            // 
             // groupBoxMain
             // 
             resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
+            this.groupBoxMain.Controls.Add(this.btnAnnotationsFile);
+            this.groupBoxMain.Controls.Add(this.labelAnnotationsFile);
+            this.groupBoxMain.Controls.Add(this.textAnnotationsFilePath);
             this.groupBoxMain.Controls.Add(this.textConfigName);
             this.groupBoxMain.Controls.Add(this.labelConfigName);
             this.groupBoxMain.Controls.Add(this.checkBoxRemoveResults);
@@ -157,6 +153,35 @@ namespace AutoQC
             this.groupBoxMain.Controls.Add(this.textSkylinePath);
             this.groupBoxMain.Name = "groupBoxMain";
             this.groupBoxMain.TabStop = false;
+            // 
+            // btnAnnotationsFile
+            // 
+            resources.ApplyResources(this.btnAnnotationsFile, "btnAnnotationsFile");
+            this.btnAnnotationsFile.AutoEllipsis = true;
+            this.btnAnnotationsFile.Name = "btnAnnotationsFile";
+            this.btnAnnotationsFile.UseVisualStyleBackColor = true;
+            this.btnAnnotationsFile.Click += new System.EventHandler(this.btnAnnotationsFilePath_Click);
+            // 
+            // labelAnnotationsFile
+            // 
+            resources.ApplyResources(this.labelAnnotationsFile, "labelAnnotationsFile");
+            this.labelAnnotationsFile.Name = "labelAnnotationsFile";
+            // 
+            // textAnnotationsFilePath
+            // 
+            resources.ApplyResources(this.textAnnotationsFilePath, "textAnnotationsFilePath");
+            this.textAnnotationsFilePath.Name = "textAnnotationsFilePath";
+            this.toolTip1.SetToolTip(this.textAnnotationsFilePath, resources.GetString("textAnnotationsFilePath.ToolTip"));
+            // 
+            // textConfigName
+            // 
+            resources.ApplyResources(this.textConfigName, "textConfigName");
+            this.textConfigName.Name = "textConfigName";
+            // 
+            // labelConfigName
+            // 
+            resources.ApplyResources(this.labelConfigName, "labelConfigName");
+            this.labelConfigName.Name = "labelConfigName";
             // 
             // checkBoxRemoveResults
             // 
@@ -246,7 +271,8 @@ namespace AutoQC
             resources.GetString("comboBoxInstrumentType.Items2"),
             resources.GetString("comboBoxInstrumentType.Items3"),
             resources.GetString("comboBoxInstrumentType.Items4"),
-            resources.GetString("comboBoxInstrumentType.Items5")});
+            resources.GetString("comboBoxInstrumentType.Items5"),
+            resources.GetString("comboBoxInstrumentType.Items6")});
             resources.ApplyResources(this.comboBoxInstrumentType, "comboBoxInstrumentType");
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
             // 
@@ -485,5 +511,8 @@ namespace AutoQC
         private System.Windows.Forms.TextBox textAquisitionTime;
         private System.Windows.Forms.TabPage tabSkylineSettings;
         private System.Windows.Forms.Panel panelSkylineSettings;
+        private System.Windows.Forms.Button btnAnnotationsFile;
+        private System.Windows.Forms.Label labelAnnotationsFile;
+        private System.Windows.Forms.TextBox textAnnotationsFilePath;
     }
 }
