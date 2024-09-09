@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using AutoQC.Properties;
 using SharedBatch;
 
@@ -50,6 +51,7 @@ namespace AutoQC
         private bool _documentImportFailed;
         private bool _errorLogged;
         private bool _fileImportIgnored;
+        private bool _fatalPanoramaError;
 
         public ProcessRunner(Logger logger)
         {
@@ -107,6 +109,11 @@ namespace AutoQC
                     return ProcStatus.Error;
                 }
 
+                if (_fatalPanoramaError)
+                {
+                    return ProcStatus.FatalPanoramaError;
+                }
+
                 if (exitCode != 0)
                 {
                     LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_error_code__1__, _procInfo.ExeName, exitCode));
@@ -156,6 +163,10 @@ namespace AutoQC
             }  
         }
 
+        // Example: File write date 5/10/2024 11:20:12 AM is before --import-on-or-after date 7/2/2024 12:00:00 AM. Ignoring...
+        private static readonly Regex fileIgnoredRegex =
+            new Regex("File write date .* is before --import-on-or-after date .*\\. Ignoring", RegexOptions.Compiled);
+        
         private bool DetectError(string message)
         {
             if (string.IsNullOrEmpty(message))
@@ -164,7 +175,8 @@ namespace AutoQC
             }
 
             if (message.Contains("The file has already been imported. Ignoring...") ||
-                message.Contains("No files left to import"))
+                message.Contains("No files left to import") ||
+                fileIgnoredRegex.IsMatch(message))
             {
                 _fileImportIgnored = true; // SkylineRunner will return an exit code of 2 which will cause the file to be put 
                                            // on the reimport queue. We don't want that.
@@ -181,6 +193,16 @@ namespace AutoQC
             {
                 // This is the message for un-readable RAW files from Thermo instruments.
                 _documentImportFailed = true;
+                return true;
+            }
+
+            if (message.Contains(@"QC folders allow new imports to add or remove peptides, but not completely change the list")
+                || message.Contains(@"QC folders allow new imports to add or remove molecules, but not completely change the list")
+                || message.Contains(@"Invalid audit log")
+                || message.Contains(@"does not have permissions to upload to the Panorama folder")
+                || message.Contains(@"You do not have permission to delete runs "))
+            {
+                _fatalPanoramaError = true;
                 return true;
             }
 
