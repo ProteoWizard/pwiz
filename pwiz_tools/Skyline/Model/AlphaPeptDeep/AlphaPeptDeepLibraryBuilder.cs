@@ -54,6 +54,27 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         };
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
 
+        public string AmbiguousMatchesMessage
+        {
+            //TODO(xgwang): implement
+            get { return null; }
+        }
+        public IrtStandard IrtStandard
+        {
+            //TODO(xgwang): implement
+            get { return null; }
+        }
+        public string BuildCommandArgs
+        {
+            //TODO(xgwang): implement
+            get { return null; }
+        }
+        public string BuildOutput
+        {
+            //TODO(xgwang): implement
+            get { return null; }
+        }
+        public LibrarySpec LibrarySpec { get; private set; }
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
         private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP);
@@ -101,32 +122,14 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             Document = document;
             CreateDirIfNotExist(RootDir);
         }
-
-        public string AmbiguousMatchesMessage
+        private static string CreateDirIfNotExist(string dir)
         {
-            //TODO(xgwang): implement
-            get { return null; }
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            return dir;
         }
-
-        public IrtStandard IrtStandard
-        {
-            //TODO(xgwang): implement
-            get { return null; }
-        }
-
-        public string BuildCommandArgs
-        {
-            //TODO(xgwang): implement
-            get { return null; }
-        }
-
-        public string BuildOutput
-        {
-            //TODO(xgwang): implement
-            get { return null; }
-        }
-
-        public LibrarySpec LibrarySpec { get; private set; }
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
@@ -142,15 +145,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
                 return false;
             }
-        }
-
-        private static string CreateDirIfNotExist(string dir)
-        {
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            return dir;
         }
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)

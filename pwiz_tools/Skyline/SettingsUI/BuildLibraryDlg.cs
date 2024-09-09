@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AlphaPeptDeep;
+using pwiz.Skyline.Model.Carafe;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
@@ -91,20 +92,29 @@ namespace pwiz.Skyline.SettingsUI
         private const string PYTHON = @"Python";
         private const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.12.4";
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
-
+        private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
+        private const string CARAFE_PYTHON_VERSION = @"3.9.2";
+        private const string CARAFE = @"carafe";
+        private const string WORKSPACES = @"workspaces";
+        private const string PEPTDEEP = @"peptdeep";
 
         private static readonly IFormView[] TAB_PAGES =
         {
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
-
-        private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => false;   // TODO: Implement and enable
-        private string AlphapeptdeepPythonVirtualEnvironmentDir =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
-
         public enum DataSourcePages { files, alpha, carafe, koina }
         public enum LearningOptions { none, libraries, document }
+        private bool IsAlphaEnabled => true;
+        private bool IsCarafeEnabled => true;
+        private string AlphapeptdeepPythonVirtualEnvironmentDir =>
+            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
+        private string CarafePythonVirtualEnvironmentDir =>
+            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
+        private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        // TODO(xgwang): update this to the ssh link to the remote repo
+        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
+        // TODO(xgwang): update this to user input value from the dlg
+        private string ProteinDbFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta"); 
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -297,9 +307,12 @@ namespace pwiz.Skyline.SettingsUI
                         // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
                     }
 
-                    // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
-                    if (!CreateKoinaBuilder(name, outputPath))
+                    // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
+                    if (!SetupPythonEnvironmentForCarafe())
+                    {
                         return false;
+                    }
+                    Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, _documentUiContainer.DocumentUI, ProteinDbFilePath);
                 }
                 else
                 {
@@ -410,6 +423,30 @@ namespace pwiz.Skyline.SettingsUI
             }
             return true;
         }
+
+        private bool SetupPythonEnvironmentForCarafe()
+        {
+            var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
+            var packages = new List<PythonPackage>()
+            {
+                // TODO: update to git+ssh after setting up ssh permission to the remote repo
+                new PythonPackage {Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}"},
+            };
+            var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
+                new PythonInstallerTaskValidator(), CARAFE);
+            if (pythonInstaller.IsPythonVirtualEnvironmentReady())
+            {
+                return true;
+            }
+            
+            using var dlg = new PythonInstallerDlg(pythonInstaller);
+            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return false;
+            }
+            return true;
+        }
+
 
         private void textName_TextChanged(object sender, EventArgs e)
         {

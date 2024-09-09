@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Model.Tools
         private const string SCRIPTS = @"Scripts";
         private const string SPACE = TextUtil.SPACE;
         private const string VIRTUALENV = @"virtualenv";
+        private const string GIT = @"git";
 
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
@@ -120,7 +121,7 @@ namespace pwiz.Skyline.Model.Tools
                 var isTaskValid = TaskValidator.Validate(taskNode.PythonTaskName, this);
                 if (hasSeenFailure)
                 {
-                    if (isTaskValid && taskNode.ParentNodes.Equals(null)) { continue; }
+                    if (isTaskValid && null == taskNode.ParentNodes) { continue; }
                 }
                 else
                 {
@@ -208,7 +209,7 @@ namespace pwiz.Skyline.Model.Tools
         }
         private void DownloadGetPipScript(IProgressMonitor progressMonitor)
         {
-            using var webClient = TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 2);
+            using var webClient = TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
             if (!webClient.DownloadFileAsync(GetPipScriptDownloadUri, GetPipScriptDownloadPath, out var downloadException))
             {
                 throw new ToolExecutionException(
@@ -242,9 +243,20 @@ namespace pwiz.Skyline.Model.Tools
                 .Append(SPACE);
             foreach (var package in packages)
             {
-                var arg = package.Version.IsNullOrEmpty() ? package.Name : package.Name + EQUALS + package.Version;
+                string arg;
+                if (package.Version.IsNullOrEmpty())
+                {
+                    arg = package.Name;
+                } else if (package.Version.StartsWith(GIT))
+                {
+                    arg = package.Version;
+                }
+                else
+                {
+                    arg = package.Name + EQUALS + package.Version;
+                }
                 cmdBuilder.Append(arg)
-                    .Append(TextUtil.SEPARATOR_SPACE);
+                    .Append(SPACE);
             }
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
             cmd += string.Format(ToolsResources.PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__, ECHO, CMD_PROCEEDING_SYMBOL);
@@ -309,6 +321,7 @@ namespace pwiz.Skyline.Model.Tools
         private const string PYTHON = @"Python";
         private const string SCRIPTS = @"Scripts";
         private const string PYTHON_EXECUTABLE = @"python.exe";
+        private const string ACTIVATE_SCRIPT_FILE_NAME = @"activate.bat";
 
         /// <summary>
         /// This directory is used to store python executables and virtual environments.
@@ -369,6 +382,18 @@ namespace pwiz.Skyline.Model.Tools
         {
             return Path.Combine(GetPythonVirtualEnvironmentScriptsDir(pythonVersion, virtualEnvironmentName),
                 PYTHON_EXECUTABLE);
+        }
+
+        /// <summary>
+        /// Get Python virtual environment activate.bat script path.
+        /// </summary>
+        /// <param name="pythonVersion"></param>
+        /// <param name="virtualEnvironmentName"></param>
+        /// <returns></returns>
+        public static string GetPythonVirtualEnvironmentActivationScriptPath(string pythonVersion, string virtualEnvironmentName)
+        {
+            return Path.Combine(GetPythonVirtualEnvironmentScriptsDir(pythonVersion, virtualEnvironmentName),
+                ACTIVATE_SCRIPT_FILE_NAME);
         }
 
         /// <summary>
@@ -527,6 +552,8 @@ namespace pwiz.Skyline.Model.Tools
         private const string PIP = @"pip";
         private const string FREEZE = @"freeze";
         private const string EQUALS = TextUtil.EQUAL + TextUtil.EQUAL;
+        private const string AT_SPLITTER = @" @ ";
+        private const string GIT = @"git";
 
         private PythonInstaller PythonInstaller { get; set; }
 
@@ -631,7 +658,11 @@ namespace pwiz.Skyline.Model.Tools
 
             foreach (var line in lines)
             {
-                var words = line.Split(EQUALS.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                var words = line.Split(new [] {EQUALS}, StringSplitOptions.RemoveEmptyEntries);
+                if (words.Length != 2)
+                {
+                    words = line.Split(new [] {AT_SPLITTER}, StringSplitOptions.RemoveEmptyEntries);
+                }
                 Assume.IsTrue(words.Length.Equals(2), string.Format(ToolsResources.PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__, line));
                 packageToVersionMap.Add(words[0], words[1]);
             }
@@ -642,12 +673,25 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     return false;
                 }
-                if (!package.Version.IsNullOrEmpty() && !packageToVersionMap[package.Name].Equals(package.Version))
+                if (!package.Version.IsNullOrEmpty())
                 {
-                    return false;
+                    if (package.Version.StartsWith(GIT))
+                    {
+                        if (!packageToVersionMap[package.Name].StartsWith(package.Version))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (!packageToVersionMap[package.Name].Equals(package.Version))
+                        {
+                            return false;
+                        }
+
+                    }
                 }
             }
-
             return true;
         }
     }
