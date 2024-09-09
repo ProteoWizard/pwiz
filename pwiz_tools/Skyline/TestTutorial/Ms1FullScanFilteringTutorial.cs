@@ -46,6 +46,7 @@ using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using pwiz.Skyline;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -58,6 +59,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod, MinidumpLeakThreshold(15)]
         public void TestMs1Tutorial()
         {
+Program.ReportTutorialTestProgress = true; // Write screenshot info to console, trying to figure out where this hangs
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;

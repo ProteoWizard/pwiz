@@ -1308,6 +1308,12 @@ namespace pwiz.SkylineTestUtil
                 var form = TryWaitForOpenForm(formType);
                 Assert.IsNotNull(form);
             }
+
+            if (Program.ReportTutorialTestProgress)
+            {
+                Console.WriteLine($@"# tutorial test progress: {description}  - p. {pageNum}");
+            }
+
             if (Program.SkylineOffscreen)
                 return;
 
