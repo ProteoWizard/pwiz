@@ -566,6 +566,8 @@ namespace pwiz.Skyline.Util
         }
         public Adduct Unlabeled { get; private set; } // Version of this adduct without any isotope labels
 
+        public ParsedMolecule IsotopeLabels { get; private set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
+
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
 
