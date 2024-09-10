@@ -36,6 +36,7 @@
             this.btnCopyToClipBoard = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnCopyMetafileToClipboard = new System.Windows.Forms.Button();
+            this.btnSaveScreenshot = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnContinue
@@ -96,14 +97,28 @@
             this.btnCopyMetafileToClipboard.Visible = false;
             this.btnCopyMetafileToClipboard.Click += new System.EventHandler(this.btnCopyMetaFileToClipboard_Click);
             // 
+            // btnSaveScreenshot
+            // 
+            this.btnSaveScreenshot.Enabled = false;
+            this.btnSaveScreenshot.Location = new System.Drawing.Point(93, 61);
+            this.btnSaveScreenshot.Name = "btnSaveScreenshot";
+            this.btnSaveScreenshot.Size = new System.Drawing.Size(99, 23);
+            this.btnSaveScreenshot.TabIndex = 5;
+            this.btnSaveScreenshot.Text = "Save Screenshot";
+            this.toolTip1.SetToolTip(this.btnSaveScreenshot, "Saves screenshot to tutorial folder.");
+            this.btnSaveScreenshot.UseVisualStyleBackColor = true;
+            this.btnSaveScreenshot.Visible = false;
+            this.btnSaveScreenshot.Click += new System.EventHandler(this.btnSaveScreenshot_Click);
+            // 
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(174, 128);
+            this.ClientSize = new System.Drawing.Size(203, 130);
             this.ControlBox = false;
+            this.Controls.Add(this.btnSaveScreenshot);
             this.Controls.Add(this.btnCopyMetafileToClipboard);
             this.Controls.Add(this.btnCopyToClipBoard);
             this.Controls.Add(this.lblDescriptionLink);
@@ -130,5 +145,6 @@
         private System.Windows.Forms.Button btnCopyToClipBoard;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnCopyMetafileToClipboard;
+        private System.Windows.Forms.Button btnSaveScreenshot;
     }
 }
