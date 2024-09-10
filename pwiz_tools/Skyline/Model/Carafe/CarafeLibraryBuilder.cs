@@ -60,7 +60,9 @@ namespace pwiz.Skyline.Model.Carafe
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
         private SrmDocument Document { get; }
-        private string ProteinDbFilePath { get;  }
+        private string ProteinDatabaseFilePath { get;  }
+        private string ExperimentDataFilePath { get; }
+        private string ExperimentDataSearchResultFilePath { get; }
 
         private string PythonVirtualEnvironmentActivateScriptPath =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
@@ -90,36 +92,61 @@ namespace pwiz.Skyline.Model.Carafe
             new Dictionary<string, string>()
             {
                 {@"-jar", CarafeJarFilePath},
-                {@"-db", ProteinDbFilePath},
-                {@"-fixMod", @"1"},
-                {@"-varMod", @"2"},
-                {@"-maxVar", @"1"},
+                {@"-db", ProteinDatabaseFilePath},
+                {@"-i", @"C:\Users\Jason\workspaces\test_carafe\report.tsv"},
+                {@"-ms", @"C:\Users\Jason\workspaces\test_carafe\LFQ_Orbitrap_AIF_Human_01.mzML"},
                 {@"-o", CarafeOutputLibraryDir},
-                {@"-min_mz", @"200"},
-                {@"-maxLength", @"35"},
-                {@"-min_pep_mz", @"400"},
-                {@"-max_pep_mz", @"1000"},
+                {@"-c_ion_min", @"2"},
+                {@"-cor", @"0.8"},
+                {@"-device", @"cpu"},
                 {@"-enzyme", @"2"},
+                {@"-ez", string.Empty},
+                {@"-fast", string.Empty},
+                {@"-fixMod", @"1"},
+                {@"-itol", @"20"},
+                {@"-itolu", @"ppm"},
+                {@"-lf_frag_n_min", @"2"},
+                {@"-lf_top_n_frag", @"20"},
+                {@"-lf_type", @"skyline"},
+                {@"-max_pep_mz", @"1000"},
+                {@"-maxLength", @"35"},
+                {@"-maxVar", @"1"},
+                {@"-min_mz", @"200"},
+                {@"-min_pep_mz", @"400"},
+                {@"-minLength", @"7"},
                 {@"-miss_c", @"1"},
                 {@"-mode", @"general"},
-                {@"-minLength", @"7"},
-                {@"-lf_type", @"diann"},
-                {@"-lf_top_n_frag", @"20"},
-                {@"-lf_frag_n_min", @"2"},
-                {@"-nce", @"27"},
-                {@"-ms_instrument", @"QE"},
+                {@"-n_ion_min", @"2"},
+                {@"-na", @"0"},
+                {@"-nf", @"4"},
+                {@"-nm", string.Empty},
+                {@"-rf_rt_win", @"1"},
+                {@"-rf", string.Empty},
+                {@"-se", @"DIA-NN"},
                 {@"-seed", @"2000"},
-                {@"-device", @"cpu"},
-                {@"-fast", string.Empty}
+                {@"-skyline", string.Empty},
+                {@"-tf", @"all"},
+                {@"-valid", string.Empty},
+                {@"-varMod", @"0"}
             };
 
-        public CarafeLibraryBuilder(string libName, string libOutPath, string pythonVersion, string pythonVirtualEnvironmentName, SrmDocument document, string proteinDbFilePath)
+        public CarafeLibraryBuilder(
+            string libName,
+            string libOutPath,
+            string pythonVersion,
+            string pythonVirtualEnvironmentName,
+            string proteinDatabaseFilePath,
+            string experimentDataFilePath,
+            string experimentDataSearchResultFilePath,
+            SrmDocument document)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
+            ProteinDatabaseFilePath = proteinDatabaseFilePath;
+            ExperimentDataFilePath = experimentDataFilePath;
+            ExperimentDataSearchResultFilePath = experimentDataSearchResultFilePath;
             Document = document;
-            ProteinDbFilePath = proteinDbFilePath;
             CreateDirIfNotExist(RootDir);
             CreateDirIfNotExist(JavaDir);
             CreateDirIfNotExist(CarafeDir);

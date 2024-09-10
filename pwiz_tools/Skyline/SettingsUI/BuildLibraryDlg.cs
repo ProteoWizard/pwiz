@@ -103,7 +103,10 @@ namespace pwiz.Skyline.SettingsUI
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
         public enum DataSourcePages { files, alpha, carafe, koina }
-        public enum LearningOptions { none, libraries, document }
+        public enum BuildLibraryTargetOptions { currentSkylineDocument, proteinDatabase }
+        // TODO: After supporting LearningOptions.document, add "Skyline Document" option to the comboLearnFrom dropdown
+        // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
+        public enum LearningOptions { none, files, libraries, document }
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
@@ -114,7 +117,9 @@ namespace pwiz.Skyline.SettingsUI
         // TODO(xgwang): update this to the ssh link to the remote repo
         private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
         // TODO(xgwang): update this to user input value from the dlg
-        private string ProteinDbFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta"); 
+        private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
+        private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
+        private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -147,7 +152,12 @@ namespace pwiz.Skyline.SettingsUI
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
+            comboBuildLibraryTarget.SelectedIndex = 0;
             comboLearnFrom.SelectedIndex = 0;
+
+            toolTipProteinDatabase.SetToolTip(labelProteinDatabase, @"A protein database in FASTA format to build library for, this should be a superset of your experiment data samples.");
+            toolTipTrainingData.SetToolTip(labelTrainingData, @"Peptide detection result from DIA-NN (DIA-NN's main report).");
+            toolTipMsMsData.SetToolTip(labelMsMsData, @"DIA-MS data in mzML format used to generate the training data.");
 
             _helper = new MessageBoxHelper(this);
 
@@ -306,13 +316,19 @@ namespace pwiz.Skyline.SettingsUI
 
                         // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
                     }
-
-                    // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
                     if (!SetupPythonEnvironmentForCarafe())
                     {
                         return false;
                     }
-                    Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, _documentUiContainer.DocumentUI, ProteinDbFilePath);
+                    Builder = new CarafeLibraryBuilder(
+                        name,
+                        outputPath,
+                        CARAFE_PYTHON_VERSION,
+                        CARAFE,
+                        ProteinDatabaseFilePath,
+                        ExperimentDataFilePath,
+                        ExperimentDataSearchResultFilePath,
+                        _documentUiContainer.DocumentUI);
                 }
                 else
                 {
@@ -1015,6 +1031,11 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+        }
+
+        private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            tabControlBuildLibraryTarget.SelectedIndex = comboBuildLibraryTarget.SelectedIndex;
         }
     }
 }
