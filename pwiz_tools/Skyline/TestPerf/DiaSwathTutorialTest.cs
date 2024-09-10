@@ -848,7 +848,7 @@ namespace TestPerf
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             //PauseTest();
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, null,30*1000); // 30 second timeout to avoid getting stuck
+            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, null, 30*1000); // 30 second timeout to avoid getting stuck
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
