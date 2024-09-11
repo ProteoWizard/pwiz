@@ -520,7 +520,7 @@ namespace ZedGraph
 				_dragText = label; 
 				_dragText.UpdatePositions();
 				_dragStartPt = mousePt;
-				DestroyToolTip(pane);
+				_dragToolTip?.Destroy();
 
 			}
 		}
@@ -897,36 +897,22 @@ namespace ZedGraph
                     {
                         if (!labPoint.Equals(_dragToolTip?.GraphObject))
                         {
-                            DestroyToolTip(pane);
+                            _dragToolTip?.Destroy();
                             var toolTipMsg = _resourceManager.GetString("move_label");
+							// Drag the label frame or drag the label while holding the Alt key.
+							// ???????????????? Alt??????????????????????????
                             _dragToolTip = new ToolTip(toolTipMsg, this, mousePt, labPoint);
-                            pane.GraphObjList.Insert(0, _dragToolTip);
                             invalidate = true;
                         }
                     }
                     else
-                        invalidate = DestroyToolTip(pane);
+                        _dragToolTip?.Destroy();
                 }
             }
             else
-                invalidate = DestroyToolTip(pane);
+                _dragToolTip?.Destroy();
             if (invalidate) 
                 Invalidate();
-        }
-
-        private bool DestroyToolTip(GraphPane pane)
-        { 
-            if (pane != null)
-            {
-                if (_dragToolTip != null)
-                {
-                    _dragToolTip?.Hide();
-                    pane.GraphObjList.Remove(_dragToolTip);
-                    _dragToolTip = null;
-                    return true;
-                }
-            } 
-            return false;
         }
 
 		#endregion

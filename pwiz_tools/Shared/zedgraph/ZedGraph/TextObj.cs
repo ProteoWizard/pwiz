@@ -68,6 +68,8 @@ namespace ZedGraph
 		/// </summary>
 		private SizeF _layoutArea;
 
+        private bool _showDragHandle;
+
 
 		#endregion
 
@@ -179,7 +181,18 @@ namespace ZedGraph
 			}
 		}
 
-		public bool ShowDragHandle { get; set; }
+        public bool ShowDragHandle
+        {
+            get => _showDragHandle;
+            set
+            {
+				_showDragHandle = value;
+				if (_showDragHandle )
+                    FontSpec.Border = new Border(Color.Black, 1);
+				else
+                    FontSpec.Border = new Border(Color.Transparent, 1);
+            }
+		}
 
 		public bool IsDraggable { get; set; }
 
@@ -388,7 +401,6 @@ namespace ZedGraph
 				//	this.FontSpec.Draw( g, pane.IsPenWidthScaled, this.text, pix.X, pix.Y,
 				//		this.location.AlignH, this.location.AlignV, scaleFactor );
 				//else
-				this.DrawDraggingHandle(g, pane, scaleFactor);
                 this.FontSpec.Draw( g, pane, _text, pix.X, pix.Y, 
                     _location.AlignH, _location.AlignV, scaleFactor, _layoutArea );
 
@@ -495,13 +507,15 @@ namespace ZedGraph
 		ZedGraphControl _control;
 		object _graphObject; // can be used to attach this tooltip to a certain object in the graph, so that
 		                     // the tooltip is not updated every time the mouse moves inside the object.
-        private static readonly int DELAY = 500;		// tooltip rendering delay in ms.
+		GraphPane _pane;
+                             private static readonly int DELAY = 500;		// tooltip rendering delay in ms.
 
         public ToolTip(string text, ZedGraphControl control, PointF mousePt, object graphObject)
         {
             Text = text;
             FontSpec.Size = 14;
-            FontSpec.Border = new Border(Color.Black, 2);
+            FontSpec.StringAlignment = StringAlignment.Near;
+            FontSpec.Border = new Border(Color.Black, 1);
             FontSpec.Fill = new Fill(Color.LightYellow);
 
             GraphPane pane = control.MasterPane.FindPane(mousePt);
@@ -514,9 +528,10 @@ namespace ZedGraph
 
             IsVisible = false;
             _control = control;
-            FontSpec.Border = new Border(Color.Black, 2);
-            _timer = new Timer(Render, this, DELAY, System.Threading.Timeout.Infinite);
             _graphObject = graphObject;
+            _pane = pane;
+			pane.GraphObjList.Insert(0, this);
+            _timer = new Timer(Render, this, DELAY, System.Threading.Timeout.Infinite);
         }
 
 		public object GraphObject { get { return _graphObject; } }
@@ -536,6 +551,19 @@ namespace ZedGraph
             _timer.Dispose(); 
             _control.Invalidate();
         }
-
-    }
+        public bool Destroy()
+        {
+            IsVisible = false;
+            _timer?.Dispose();
+			_timer = null;
+            _graphObject = null;
+            if (_pane.GraphObjList.Remove(this))
+            {
+                _control.Invalidate();
+                return true;
+            }
+            else
+                return false;
+        }
+	}
 }
