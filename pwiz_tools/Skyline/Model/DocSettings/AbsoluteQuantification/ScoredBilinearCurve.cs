@@ -13,7 +13,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             get
             {
-                return (CalibrationCurve as CalibrationCurve.Bilinear)?.Slope ?? 0;
+                if (CalibrationCurve is CalibrationCurve.Bilinear bilinear)
+                {
+                    return bilinear.Slope;
+                }
+
+                if (CalibrationCurve is CalibrationCurve.Linear linear)
+                {
+                    return linear.Slope;
+                }
+                return 0;
             }
         }
 
@@ -21,7 +30,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             get
             {
-                return (CalibrationCurve as CalibrationCurve.Bilinear)?.Intercept ?? 0;
+                if (CalibrationCurve is CalibrationCurve.Bilinear bilinear)
+                {
+                    return bilinear.Intercept;
+                }
+
+                if (CalibrationCurve is CalibrationCurve.Linear linear)
+                {
+                    return linear.Intercept ?? 0;
+                }
+                return 0;
             }
         }
 

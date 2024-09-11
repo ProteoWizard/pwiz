@@ -1962,7 +1962,9 @@ namespace pwiz.Skyline.Model.Lib
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
                         if (hasGeneralIonMobility)
                         {
-                            var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
+                            var ionMobilityType = eIonMobilityUnits.none;
+                            if (iIonMobilityType != -1)
+                                ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
                             if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
                                 var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);

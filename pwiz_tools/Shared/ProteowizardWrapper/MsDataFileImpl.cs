@@ -841,7 +841,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double[] GetTotalIonCurrent()
         {
-            if (ChromatogramList == null)
+            if (ChromatogramList == null || ChromatogramList.size() == 0)
             {
                 return null;
             }
@@ -1191,7 +1191,16 @@ namespace pwiz.ProteowizardWrapper
                 {
                     if (msPrecursor.IsolationMz.HasValue)
                     {
-                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                        var spectrumPrecursor =
+                            new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor
+                                .PrecursorCollisionEnergy);
+                        if (msPrecursor.IsolationWindowLower.HasValue && msPrecursor.IsolationWindowUpper.HasValue)
+                        {
+                            spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                                msPrecursor.IsolationWindowLower.Value,
+                                msPrecursor.IsolationWindowUpper.Value);
+                        }
+                        spectrumPrecursors.Add(spectrumPrecursor);
                     }
                 }
                 precursorsByMsLevel.Add(spectrumPrecursors);
