@@ -882,7 +882,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     var nodes = new List<PeptideDocNode>();
                     var keyCount = lib.Keys.Count();
-                    var keys = lib.Keys.OrderBy(k => new ViewLibraryPepInfo(k), new ViewLibraryPepInfoList.ViewLibraryPepInfoNaturalComparer()).ToArray();
+                    var keys = lib.Keys.OrderBy(k => ViewLibraryPepInfoList.MakeCompareKey(new ViewLibraryPepInfo(k))).ToArray();
                     for (var k = 0; k < keyCount;)
                     {
                         var key = keys[k];

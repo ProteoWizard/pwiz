@@ -461,6 +461,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
             var lastPsmIdRegex = new Regex(@".* spectrum=""([^""]+?)"" .*",RegexOptions.Compiled);
 
+            // This looks for an ampersand that is NOT followed by:
+            // - "amp;", "lt;", "gt;", "quot;", "apos;" (predefined XML entities)
+            // - "&#" followed by any number of digits and a semicolon (decimal entity)
+            // - "&#x" followed by any number of hexadecimal digits and a semicolon (hexadecimal entity)
+            var unescapedAmpersandRegex = new Regex(@"&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9A-Fa-f]+;)", RegexOptions.Compiled);
+
             using (var pepXmlFile = new StreamReader(cruxOutputFilepath))
             using (var fixedPepXmlFile = new StreamWriter(finalOutputFilepath))
             {
@@ -468,6 +474,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                 string lastPsmId = "";
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
+                    if (line.Contains(@"&"))
+                    {
+                        // Replace unescaped ampersands with the correct &amp;
+                        line = unescapedAmpersandRegex.Replace(line, @"&amp;");
+                    }
                     if (line.Contains(@"<spectrum_query"))
                         lastPsmId = lastPsmIdRegex.Replace(line, "$1");
                     else if (line.Contains(@"<search_score name=""hyperscore"""))
