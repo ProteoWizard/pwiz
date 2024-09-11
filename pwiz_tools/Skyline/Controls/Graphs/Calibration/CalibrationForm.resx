@@ -117,92 +117,35 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="zedGraphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="calibrationGraphControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="zedGraphControl.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="calibrationGraphControl1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="zedGraphControl.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="calibrationGraphControl1.Size" type="System.Drawing.Size, System.Drawing">
     <value>759, 390</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="zedGraphControl.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphControl.Name" xml:space="preserve">
-    <value>zedGraphControl</value>
-  </data>
-  <data name="&gt;&gt;zedGraphControl.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6992.18926, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphControl.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;zedGraphControl.ZOrder" xml:space="preserve">
+  <data name="calibrationGraphControl1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="logXContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
+  <data name="&gt;&gt;calibrationGraphControl1.Name" xml:space="preserve">
+    <value>calibrationGraphControl1</value>
   </data>
-  <data name="logXContextMenuItem.Text" xml:space="preserve">
-    <value>Log X Axis</value>
+  <data name="&gt;&gt;calibrationGraphControl1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Graphs.Calibration.CalibrationGraphControl, Skyline-daily, Version=22.2.1.448, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="logYAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
+  <data name="&gt;&gt;calibrationGraphControl1.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="logYAxisContextMenuItem.Text" xml:space="preserve">
-    <value>Log Y Axis</value>
-  </data>
-  <data name="showToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
-  </data>
-  <data name="showToolStripMenuItem.Text" xml:space="preserve">
-    <value>Show Calibration Curve</value>
-  </data>
-  <data name="showSampleTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
-  </data>
-  <data name="showSampleTypesContextMenuItem.Text" xml:space="preserve">
-    <value>Show Sample Types</value>
-  </data>
-  <data name="singleBatchContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
-  </data>
-  <data name="singleBatchContextMenuItem.Text" xml:space="preserve">
-    <value>Single Batch</value>
-  </data>
-  <data name="showLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
-  </data>
-  <data name="showLegendContextMenuItem.Text" xml:space="preserve">
-    <value>Show Legend</value>
-  </data>
-  <data name="showSelectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
-  </data>
-  <data name="showSelectionContextMenuItem.Text" xml:space="preserve">
-    <value>Show Selection</value>
-  </data>
-  <data name="showFiguresOfMeritContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 22</value>
-  </data>
-  <data name="showFiguresOfMeritContextMenuItem.Text" xml:space="preserve">
-    <value>Show Figures of Merit</value>
-  </data>
-  <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 202</value>
-  </data>
-  <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
-    <value>contextMenuStrip1</value>
-  </data>
-  <data name="&gt;&gt;contextMenuStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;calibrationGraphControl1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -222,58 +165,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Calibration Curve</value>
   </data>
-  <data name="&gt;&gt;logXContextMenuItem.Name" xml:space="preserve">
-    <value>logXContextMenuItem</value>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
   </data>
-  <data name="&gt;&gt;logXContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;logYAxisContextMenuItem.Name" xml:space="preserve">
-    <value>logYAxisContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;logYAxisContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showToolStripMenuItem.Name" xml:space="preserve">
-    <value>showToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showSampleTypesContextMenuItem.Name" xml:space="preserve">
-    <value>showSampleTypesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showSampleTypesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;singleBatchContextMenuItem.Name" xml:space="preserve">
-    <value>singleBatchContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;singleBatchContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showLegendContextMenuItem.Name" xml:space="preserve">
-    <value>showLegendContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showLegendContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showSelectionContextMenuItem.Name" xml:space="preserve">
-    <value>showSelectionContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showSelectionContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showFiguresOfMeritContextMenuItem.Name" xml:space="preserve">
-    <value>showFiguresOfMeritContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showFiguresOfMeritContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.448, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CalibrationForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=22.2.1.448, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

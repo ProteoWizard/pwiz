@@ -66,11 +66,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, peptideDocNode.TransitionGroupCount);
             Assert.AreEqual(1167.5152, peptideDocNode.TransitionGroups.First().PrecursorMz, .001);
             Assert.AreEqual(1232.5547, peptideDocNode.TransitionGroups.Last().PrecursorMz, .001);
+            WaitForDocumentLoaded();
+            var docCurrent = SkylineWindow.Document;
 
             // Insert a molecule group with one molecule in it.
-            RunUI(()=>SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+
             const string moleculeGroupName = "MyMoleculeGroup";
-            var docCurrent = SkylineWindow.Document;
 
             var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             
@@ -90,6 +92,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(colDlg, colDlg.OkDialog);
             DismissAutoManageDialog(); // When asked about automanage, decline it
+            WaitForDocumentChange(docCurrent);
 
             PeptideGroupDocNode myMoleculeGroup = null;
             WaitForConditionUI(() =>

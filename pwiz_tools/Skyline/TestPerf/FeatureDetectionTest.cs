@@ -414,9 +414,9 @@ namespace TestPerf
             PauseForScreenShot("complete");
 
             var doc = SkylineWindow.Document;
-            var expectedFeaturesMolecules = 6600;
-            var expectedFeaturesTransitionGroups = 8521;
-            var expectedFeaturesTransitions = 25563;
+            var expectedFeaturesMolecules = 6583;
+            var expectedFeaturesTransitionGroups = 8522;
+            var expectedFeaturesTransitions = 25566;
             var actualFeaturesMolecules = doc.CustomMolecules.Count();
             var actualFeaturesTransitionGroups = doc.MoleculeTransitionGroupCount - doc.PeptideTransitionGroupCount;
             var actualFeaturesTransitions = doc.MoleculeTransitionCount - doc.PeptideTransitionCount;

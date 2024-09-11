@@ -31,16 +31,6 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class LocalizedHtmlTutorialsTest : AbstractUnitTest
     {
-        [TestMethod]
-        public void TestLocalizedSkylinePrmTutorialHtml()
-        {
-            string tutorialRoot = GetHtmlTutorialsRoot();
-            if (tutorialRoot != null)
-            {
-                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "Skyline PRM\\ja"));
-                VerifyInvariantMatchesLocalized(Path.Combine(tutorialRoot, "Skyline PRM\\zh-CHS"));
-            }
-        }
 
         [TestMethod]
         public void TestLocalizedTutorialHtml()
@@ -50,6 +40,7 @@ namespace pwiz.SkylineTest
             {
                 return;
             }
+
             var failures = new List<Exception>();
             foreach (var folder in Directory.GetDirectories(tutorialRoot))
             {
@@ -88,7 +79,13 @@ namespace pwiz.SkylineTest
                 return null;
             }
 
-            return Path.Combine(codeBaseRoot, "Documentation", "Html", "Tutorials");
+            var path = Path.Combine(codeBaseRoot, "Documentation", "Tutorials");
+            if (!Directory.Exists(path))
+            {
+                // Skip the test if the folder does not exist: the source code is probably not where it needs to be
+                return null;
+            }
+            return path;
         }
 
         private string GetCodeBaseRoot()
@@ -144,6 +141,7 @@ namespace pwiz.SkylineTest
                 yield return "/html/body/h2";
                 yield return "/html/body/ul/li";
                 yield return "/html/body/ol/li";
+                yield return "/html/body/table/tr/td";
             }
         }
 

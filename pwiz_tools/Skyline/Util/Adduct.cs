@@ -70,11 +70,11 @@ namespace pwiz.Skyline.Util
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
         private string Description { get; set; } // The text description (will be empty for protonation, we just use charge)
-        private TypedMass AverageMassAdduct { get; set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
-        private TypedMass MonoMassAdduct { get; set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass AverageMassAdduct { get; private set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass MonoMassAdduct { get; private set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
         private int MassMultiplier { get; set; } // Returns, for example, the 2 in "[2M+Na]", which means the ion is two molecules + the adduct mass. 
-        private TypedMass IsotopesIncrementalAverageMass { get; set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
-        private TypedMass IsotopesIncrementalMonoMass { get; set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
+        public TypedMass IsotopesIncrementalAverageMass { get; private set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
+        public TypedMass IsotopesIncrementalMonoMass { get; private set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
 
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
@@ -1368,43 +1368,41 @@ namespace pwiz.Skyline.Util
 
             var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
-            if (!molecule.IsMassOnly)
+            // Deal with any mass multiplier (the 2 in "[2M+Na]")
+            if (MassMultiplier != 1)
             {
-                // Deal with any mass multiplier (the 2 in "[2M+Na]")
-                if (MassMultiplier != 1)
+                foreach (var element in resultDict.Keys.ToArray())
                 {
-                    foreach (var element in resultDict.Keys.ToArray())
+                    resultDict[element] *= MassMultiplier;
+                }
+            }
+
+            // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
+            foreach (var pair in Composition)
+            {
+                if (resultDict.TryGetValue(pair.Key, out var count))
+                {
+                    count += pair.Value;
+                    if (count == 0)
                     {
-                        resultDict[element] *= MassMultiplier;
+                        resultDict.Remove(pair.Key);
+                    }
+                    else
+                    {
+                        resultDict[pair.Key] = count;
                     }
                 }
-
-                // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
-                foreach (var pair in Composition)
+                else if (pair.Value != 0)
                 {
-                    if (resultDict.TryGetValue(pair.Key, out var count))
-                    {
-                        count += pair.Value;
-                        if (count == 0)
-                        {
-                            resultDict.Remove(pair.Key);
-                        }
-                        else
-                        {
-                            resultDict[pair.Key] = count;
-                        }
-                    }
-                    else if (pair.Value != 0)
-                    {
-                        resultDict.Add(pair.Key, pair.Value);
-                        count = pair.Value;
-                    }
-                    if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
-                    {
-                        throw new InvalidDataException(
-                            string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
-                                this, pair.Key, molecule.ToString()));
-                    }
+                    resultDict.Add(pair.Key, pair.Value);
+                    count = pair.Value;
+                }
+                if (!molecule.IsMassOnly &&
+                    count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                            this, pair.Key, molecule.ToString()));
                 }
             }
 

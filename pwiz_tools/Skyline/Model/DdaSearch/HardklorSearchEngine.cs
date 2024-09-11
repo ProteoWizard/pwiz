@@ -197,7 +197,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             public double parsedMass; // Parsed value of original mono mass text
             public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
             public double summedIntensity; // The value declared in the "Summed Intensity" column
-            public double quality => summedIntensity; // Define relative quality for sorting before attempting sample to sample peak unification
             public double rt; // "Best RTime" column value
             public double rtStart; // "First RTime" column value, plus some tolerance to the left
             public double rtEnd; // "Last RTime" column value, plus some tolerance to the right
@@ -213,7 +212,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             public override string ToString()
             {
-                return $@"f={fileIndex}:{lineIndex} q={quality} m={strMass} z={charge} s={rtStart} t={rt} e={rtEnd} mz={mzObserved} {avergineAndOffset}";
+                    return $@"f={fileIndex}:{lineIndex} i={summedIntensity} m={strMass} z={charge} s={rtStart} t={rt} e={rtEnd} mz={mzObserved} {avergineAndOffset}";
             }
 
             public bool Equals(hkFeatureDetail other)
@@ -397,16 +396,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
             }
 
-            // Now order by Hardklor score
-            _orderedFeaturesByCNOS = featuresByCNOS.ToDictionary(featureByCNOS => featureByCNOS.Key, featureByCNOS => featureByCNOS.Value.OrderByDescending(v => v.quality).ToArray());
+            // Now order by "quality" (relative intensity)
+            _orderedFeaturesByCNOS = featuresByCNOS.ToDictionary(featureByCNOS => featureByCNOS.Key, 
+                featureByCNOS =>  featureByCNOS.Value.OrderByDescending(RelativeIntensity).ToArray());
         }
 
         // Parse all the Bullseye output files
         private void ReadFeatures()
         {
-            _contents = new List<string[]>();
-            _bfiles = _inputsAndOutputs.Keys.Select(GetSearchResultFilepath).ToArray();
-            Array.Sort(_bfiles); // For consistency in uncertain parallel completion order
+            _bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
+            _contents = new List<string[]>(_bfiles.Length);
             _summedIntensityPerFile = new double[_bfiles.Length];
 
             for (var fileIndex = 0; fileIndex < _bfiles.Length; fileIndex++)
@@ -598,12 +597,17 @@ namespace pwiz.Skyline.Model.DdaSearch
             var summedIntensityCutoff = _searchSettings.SettingsHardklor.MinIntensityPPM * 1.0E-6;
             bool BelowIntensityCutoff(hkFeatureDetail hkFeatureDetail)
             {
-                return (hkFeatureDetail.summedIntensity / _summedIntensityPerFile[hkFeatureDetail.fileIndex]) < summedIntensityCutoff;
+                return RelativeIntensity(hkFeatureDetail) < summedIntensityCutoff;
             }
             foreach (var feature in _featuresAll.Where(BelowIntensityCutoff).Where(feature => feature.alignsWith.Count == 0 || feature.alignsWith.All(BelowIntensityCutoff)))
             {
                 feature.discard = true; // All occurrences are poor quality, and if they align with anything it's also low quality
             }
+        }
+
+        private double RelativeIntensity(hkFeatureDetail hkFeatureDetail)
+        {
+            return hkFeatureDetail.summedIntensity / _summedIntensityPerFile[hkFeatureDetail.fileIndex];
         }
 
         // If a feature appears in the same file more than once, eliminate all but the best
@@ -998,7 +1002,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2, IProgressMonitor progressMonitor, int? threadCount)
         {
-            return spectra1.PerformAlignment(progressMonitor, spectra2, threadCount);
+            return spectra1.PerformAlignment(progressMonitor, spectra2, .60, threadCount); // Use just the center 60% of the spectra for alignment - start and end are typically noisy
         }
 
         public static int TotalAlignmentSteps(int count) => count + // Read each mzml
