@@ -118,7 +118,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    proc.StandardInput.Write(stdin);
+                    proc.StandardInput.WriteLine(stdin);
                 }
                 finally
                 {

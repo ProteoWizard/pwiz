@@ -41,6 +41,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.EditUI;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.SettingsUI
         public enum BuildLibraryTargetOptions { currentSkylineDocument, proteinDatabase }
         // TODO: After supporting LearningOptions.document, add "Skyline Document" option to the comboLearnFrom dropdown
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
-        public enum LearningOptions { none, files, libraries, document }
+        public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
@@ -295,40 +296,98 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioCarafeSource.Checked)
                 {
-                    string learningDocPath = string.Empty;
-                    IList<LibrarySpec> learningLibraries = new List<LibrarySpec>();
-                    if (comboLearnFrom.SelectedIndex == (int)LearningOptions.document)
+                    // handle options for comboBuildLibraryTarget dropdown 
+                    string proteinDatabaseFilePath = string.Empty;
+                    if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
                     {
-                        learningDocPath = textLearningDoc.Text;
-                        if (!PathEx.HasExtension(learningDocPath, SrmDocument.EXT) || !File.Exists(learningDocPath))
+                        throw new NotImplementedException(@"Need to implement skyline document support.");
+                    }
+                    else if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.proteinDatabase)
+                    {
+                        proteinDatabaseFilePath = textBoxProteinDatabase.Text;
+                        if (!File.Exists(proteinDatabaseFilePath))
                         {
-                            _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_, learningDocPath);
+                            _helper.ShowTextBoxError(textBoxProteinDatabase, @$"{proteinDatabaseFilePath} does not exist.");
                             return false;
                         }
-                        
-                        // CONSIDER: Could also check for the ChromatogramCache.EXT file as a short-cut for full results checking
-
-                        // TODO: Probably need to load the document int memory with progress UI and validate that it has results
                     }
-                    else if (comboLearnFrom.SelectedIndex == (int)LearningOptions.libraries)
+                    else
                     {
-                        learningLibraries.AddRange(_driverLibrary.GetChosen(null));
-
-                        // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
+                        throw new NotSupportedException(
+                            @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
                     }
+
+                    // handle options for comboLearnFrom dropdown 
+                    string learningDocPath = string.Empty;
+                    IList<LibrarySpec> learningLibraries = new List<LibrarySpec>();
+                    string trainingDataFilePath = string.Empty;
+                    string msMsDataFilePath = string.Empty;
+                    switch (comboLearnFrom.SelectedIndex)
+                    {
+                        case (int)LearningOptions.files:
+                            trainingDataFilePath = textBoxTrainingData.Text;
+                            msMsDataFilePath = textBoxMsMsData.Text;
+                            if (!File.Exists(trainingDataFilePath))
+                            {
+                                _helper.ShowTextBoxError(textBoxTrainingData, @$"{trainingDataFilePath} does not exist.");
+                                return false;
+                            }
+                            if (!File.Exists(msMsDataFilePath))
+                            {
+                                _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
+                                return false;
+                            }
+                            break;
+                    
+                        case (int)LearningOptions.libraries:
+                            learningLibraries.AddRange(_driverLibrary.GetChosen(null));
+                            // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
+                            goto default;
+                    
+                        case (int)LearningOptions.document:
+                            learningDocPath = textLearningDoc.Text;
+                            if (!PathEx.HasExtension(learningDocPath, SrmDocument.EXT) || !File.Exists(learningDocPath))
+                            {
+                                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_, learningDocPath);
+                                return false;
+                            }
+                            // CONSIDER: Could also check for the ChromatogramCache.EXT file as a short-cut for full results checking
+                            // TODO: Probably need to load the document int memory with progress UI and validate that it has results
+                            goto default;
+                    
+                        default:
+                            throw new NotSupportedException(
+                                @$"Index {comboLearnFrom.SelectedIndex} of comboLearnFrom dropdown is not yet supported.");
+                    }
+
                     if (!SetupPythonEnvironmentForCarafe())
                     {
                         return false;
                     }
-                    Builder = new CarafeLibraryBuilder(
-                        name,
-                        outputPath,
-                        CARAFE_PYTHON_VERSION,
-                        CARAFE,
-                        ProteinDatabaseFilePath,
-                        ExperimentDataFilePath,
-                        ExperimentDataSearchResultFilePath,
-                        _documentUiContainer.DocumentUI);
+
+                    if (proteinDatabaseFilePath.IsNullOrEmpty())
+                    {
+                        Builder = new CarafeLibraryBuilder(
+                            name,
+                            outputPath,
+                            CARAFE_PYTHON_VERSION,
+                            CARAFE,
+                            msMsDataFilePath,
+                            trainingDataFilePath,
+                            _documentUiContainer.DocumentUI);
+                    }
+                    else
+                    {
+                        Builder = new CarafeLibraryBuilder(
+                            name,
+                            outputPath,
+                            CARAFE_PYTHON_VERSION,
+                            CARAFE,
+                            proteinDatabaseFilePath,
+                            msMsDataFilePath,
+                            trainingDataFilePath,
+                            _documentUiContainer.DocumentUI);
+                    }
                 }
                 else
                 {
@@ -1036,6 +1095,54 @@ namespace pwiz.Skyline.SettingsUI
         private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
         {
             tabControlBuildLibraryTarget.SelectedIndex = comboBuildLibraryTarget.SelectedIndex;
+        }
+
+        private void buttonProteinDatabase_Click(object sender, EventArgs e)
+        {
+            using var dlg = new OpenFileDialog();
+            dlg.Title = @"Select Protein Database File";
+            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+            dlg.CheckPathExists = true;
+            dlg.Multiselect = false;
+            dlg.SupportMultiDottedExtensions = true;
+            dlg.DefaultExt = DataSourceUtil.EXT_FASTA[0];
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(EditUIResources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA));
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                textBoxProteinDatabase.Text = dlg.FileName;
+            }
+        }
+
+        private void buttonTrainingData_Click(object sender, EventArgs e)
+        {
+            using var dlg = new OpenFileDialog();
+            dlg.Title = @"Select Training Data File";
+            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+            dlg.CheckPathExists = true;
+            dlg.Multiselect = false;
+            dlg.SupportMultiDottedExtensions = true;
+            dlg.DefaultExt = TextUtil.EXT_TSV;
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                textBoxTrainingData.Text = dlg.FileName;
+            }
+        }
+
+        private void buttonMsMsData_Click(object sender, EventArgs e)
+        {
+            using var dlg = new OpenFileDialog();
+            dlg.Title = @"Select Ms/Ms Data File";
+            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+            dlg.CheckPathExists = true;
+            dlg.Multiselect = false;
+            dlg.SupportMultiDottedExtensions = true;
+            dlg.DefaultExt = DataSourceUtil.EXT_MZML;
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(@"mzML files", DataSourceUtil.EXT_MZML));
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                textBoxMsMsData.Text = dlg.FileName;
+            }
         }
     }
 }

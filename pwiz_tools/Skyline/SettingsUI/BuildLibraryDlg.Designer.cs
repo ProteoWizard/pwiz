@@ -70,8 +70,10 @@
             this.tabLearn = new System.Windows.Forms.TabPage();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
             this.tabWithFiles = new System.Windows.Forms.TabPage();
+            this.labelTrainingData = new System.Windows.Forms.Label();
             this.buttonTrainingData = new System.Windows.Forms.Button();
             this.textBoxTrainingData = new System.Windows.Forms.TextBox();
+            this.labelMsMsData = new System.Windows.Forms.Label();
             this.buttonMsMsData = new System.Windows.Forms.Button();
             this.textBoxMsMsData = new System.Windows.Forms.TextBox();
             this.tabPageDocument = new System.Windows.Forms.TabPage();
@@ -92,8 +94,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.comboBuildLibraryTarget = new System.Windows.Forms.ComboBox();
             this.labelBuildLibraryTarget = new System.Windows.Forms.Label();
-            this.labelTrainingData = new System.Windows.Forms.Label();
-            this.labelMsMsData = new System.Windows.Forms.Label();
             this.toolTipProteinDatabase = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipTrainingData = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipMsMsData = new System.Windows.Forms.ToolTip(this.components);
@@ -434,22 +434,34 @@
             resources.ApplyResources(this.tabWithFiles, "tabWithFiles");
             this.tabWithFiles.Name = "tabWithFiles";
             // 
+            // labelTrainingData
+            // 
+            resources.ApplyResources(this.labelTrainingData, "labelTrainingData");
+            this.labelTrainingData.Name = "labelTrainingData";
+            // 
             // buttonTrainingData
             // 
             resources.ApplyResources(this.buttonTrainingData, "buttonTrainingData");
             this.buttonTrainingData.Name = "buttonTrainingData";
             this.buttonTrainingData.UseVisualStyleBackColor = true;
+            this.buttonTrainingData.Click += new System.EventHandler(this.buttonTrainingData_Click);
             // 
             // textBoxTrainingData
             // 
             resources.ApplyResources(this.textBoxTrainingData, "textBoxTrainingData");
             this.textBoxTrainingData.Name = "textBoxTrainingData";
             // 
+            // labelMsMsData
+            // 
+            resources.ApplyResources(this.labelMsMsData, "labelMsMsData");
+            this.labelMsMsData.Name = "labelMsMsData";
+            // 
             // buttonMsMsData
             // 
             resources.ApplyResources(this.buttonMsMsData, "buttonMsMsData");
             this.buttonMsMsData.Name = "buttonMsMsData";
             this.buttonMsMsData.UseVisualStyleBackColor = true;
+            this.buttonMsMsData.Click += new System.EventHandler(this.buttonMsMsData_Click);
             // 
             // textBoxMsMsData
             // 
@@ -551,6 +563,7 @@
             resources.ApplyResources(this.buttonProteinDatabase, "buttonProteinDatabase");
             this.buttonProteinDatabase.Name = "buttonProteinDatabase";
             this.buttonProteinDatabase.UseVisualStyleBackColor = true;
+            this.buttonProteinDatabase.Click += new System.EventHandler(this.buttonProteinDatabase_Click);
             // 
             // textBoxProteinDatabase
             // 
@@ -577,16 +590,6 @@
             // 
             resources.ApplyResources(this.labelBuildLibraryTarget, "labelBuildLibraryTarget");
             this.labelBuildLibraryTarget.Name = "labelBuildLibraryTarget";
-            // 
-            // labelTrainingData
-            // 
-            resources.ApplyResources(this.labelTrainingData, "labelTrainingData");
-            this.labelTrainingData.Name = "labelTrainingData";
-            // 
-            // labelMsMsData
-            // 
-            resources.ApplyResources(this.labelMsMsData, "labelMsMsData");
-            this.labelMsMsData.Name = "labelMsMsData";
             // 
             // BuildLibraryDlg
             // 
