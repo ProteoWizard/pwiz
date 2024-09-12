@@ -225,18 +225,19 @@ namespace pwiz.Skyline.Controls.Graphs
             // if settings have changed, the document has changed, or if it
             // is not yet created
             var dataChanged = false;
+            var oldGraphData = _graphData;
             if (_graphData?.GraphPointList == null ||
                 !ReferenceEquals(document, _graphData.Document) ||
                 !Equals(graphSettings, _graphData.GraphSettings) ||
                 !Equals(_graphData.AggregateOp, aggregateOp))
             {
                 _graphData = CreateGraphData(document, graphSettings);
-                dataChanged = true;
             }
 
             // Calculate y values and order which can change based on the
             // replicate display option or the show CV option
             _graphData.CalcDataPositions(GraphSummary.ResultsIndex, selectedProtein);
+            dataChanged = _graphData.MinY != oldGraphData?.MinY || _graphData.MaxY != oldGraphData?.MaxY;
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
             var selectedPoints = new PointPairList();
@@ -364,7 +365,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MaxAuto = true;
             XAxis.Scale.MinAuto = true;
 
-            if (CurveList.First() is LineItem curve)
+            if (CurveList.FirstOrDefault() is LineItem curve)
             {
                 // if markers are overlapping leave a little space between the X axis and the first marker
                 if(curve.Symbol.Size * _graphData.PointPairList.Count > Chart.Rect.Width)
