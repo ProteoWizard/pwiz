@@ -160,6 +160,7 @@
     <value>印刷...</value>
   </data>
   <data name="move_label" xml:space="preserve">
-    <value>ラベルの枠をドラッグする、または Altキーを押しながらラベルをドラッグすることができます。</value>
+    <value>ラベルの枠をドラッグする、または Altキーを押しながら
+ラベルをドラッグすることができます。</value>
   </data>
 </root>
