@@ -60,3 +60,8 @@ p.subtitle {
 .toc-h6 {
     text-indent: 1.25in;
 }
+.comp-fig {
+    text-align: center;
+    border: 0;
+    width: auto;
+}
