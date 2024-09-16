@@ -1535,8 +1535,11 @@ namespace ZedGraph
             YAxis.Scale.SetupScaleData(this, YAxis);
 
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
-            {
-                var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
+            { 
+                var heights = labPoints.Select(p => GetRectScreen(p.Label, g).Height).ToList();
+                if (!heights.Any(h => h > 0))
+                    return; 
+                var minLabelHeight = heights.FindAll(h => h > 0).Min(); 
                 _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight), parentControl);
 
                 var visiblePoints = new List<LabeledPoint>();
