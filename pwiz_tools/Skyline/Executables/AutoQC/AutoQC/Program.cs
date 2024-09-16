@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
@@ -38,13 +39,19 @@ using Settings = AutoQC.Properties.Settings;
 
 namespace AutoQC
 {
-    class Program
+    public class Program
     {
         private static Version _version;
         private static string _lastInstalledVersion;
 
         public const string AUTO_QC_STARTER = "AutoQCStarter";
         public static readonly string AutoQcStarterExe = $"{AUTO_QC_STARTER}.exe";
+
+        public static MainForm MainWindow { get; private set; }     // Accessed by functional tests
+        public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
+        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static readonly string TEST_VERSION = "1000.0.0.0";
+
 
         [STAThread]
         public static void Main(string[] args)
@@ -56,31 +63,35 @@ namespace AutoQC
 
             AddFileTypesToRegistry();
 
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
-            // Handle exceptions on the non-UI thread.
-            AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
+            if (!FunctionalTest)
             {
-                try
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                // Handle exceptions on the UI thread.
+                Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
+                // Handle exceptions on the non-UI thread.
+                AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
                 {
-                    ProgramLog.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
+                    try
+                    {
+                        ProgramLog.Error("AutoQC Loader encountered an unexpected error. ",
+                            (Exception)e.ExceptionObject);
 
-                    const string logFile = "AutoQCProgram.log";
-                    MessageBox.Show(
-                        string.Format(
-                            Resources
-                                .Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___,
-                            logFile)
-                        + Path.GetDirectoryName(Application.ExecutablePath)
-                    );
-                }
-                finally
-                {
-                    Application.Exit(); 
-                }
-            });
+                        const string logFile = "AutoQCProgram.log";
+                        MessageBox.Show(
+                            string.Format(
+                                Resources
+                                    .Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___,
+                                logFile)
+                            + Path.GetDirectoryName(Application.ExecutablePath)
+                        );
+                    }
+                    finally
+                    {
+                        Application.Exit();
+                    }
+                });
+            }
 
             var doRestart = false;
             using (var mutex = new Mutex(false, $"University of Washington {AppName}"))
@@ -170,7 +181,7 @@ namespace AutoQC
                         ProgramLog.Info($"Reading configurations from file {openFile}");
                     }
 
-                    var form = new MainForm(openFile) {Text = Version()};
+                    MainWindow = new MainForm(openFile) {Text = Version()};
 
                     var worker = new BackgroundWorker
                         {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
@@ -180,7 +191,7 @@ namespace AutoQC
                         if (eventArgs.Error != null)
                         {
                             ProgramLog.Error($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
-                            form.DisplayError(string.Format(
+                            MainWindow.DisplayError(string.Format(
                                 Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
                                 AUTO_QC_STARTER, eventArgs.Error));
                         }
@@ -188,7 +199,7 @@ namespace AutoQC
 
                     worker.RunWorkerAsync();
 
-                    Application.Run(form);
+                    Application.Run(MainWindow);
                 }
 
                 mutex.ReleaseMutex();
@@ -264,8 +275,14 @@ namespace AutoQC
                 return;
             }
 
-            var _currentVerStr = _version != null ? _version.ToString() : string.Empty;
-            ProgramLog.Info($"Current version: '{_currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
+            var currentVerStr = _version != null ? _version.ToString() : string.Empty;
+            if (FunctionalTest)
+            {
+                _version = new Version(TEST_VERSION);
+                _lastInstalledVersion = TEST_VERSION;
+            }
+
+            ProgramLog.Info($"Current version: '{currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
             
         }
 
@@ -439,6 +456,14 @@ namespace AutoQC
         {
             // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
+        }
+
+        public static void AddTestException(Exception exception)
+        {
+            lock (TestExceptions)
+            {
+                TestExceptions.Add(exception);
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AutoQC.Properties;
+using pwiz.PanoramaClient;
 using SharedBatch;
 
 namespace AutoQC
@@ -37,6 +38,8 @@ namespace AutoQC
         private bool _loaded;
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private Timer _outputLog;
+
+        private IPanoramaClient _testPanoramaClient;
 
         public MainForm(string openFile)
         {
@@ -95,6 +98,7 @@ namespace AutoQC
             ProgramLog.Info("Creating a new configuration");
             var initialState = _configManager.AutoQcState;
             var configForm = new AutoQcConfigForm(this, (AutoQcConfig)initialState.BaseState.GetLastModified(), ConfigAction.Add, initialState.Copy());
+            if (Program.FunctionalTest) configForm.SetTestPanoramaClient(_testPanoramaClient);
             if (DialogResult.OK == configForm.ShowDialog())
                 _configManager.SetState(initialState, configForm.State);
         }
@@ -857,6 +861,85 @@ namespace AutoQC
         }
 
         #endregion
+
+        public int ConfigCount()
+        {
+            return _configManager.GetAutoQcState().BaseState.ConfigList.Count;
+        }
+        public void ClickAdd() => btnAdd_Click(new object(), new EventArgs());
+        public void ClickEdit() => HandleEditEvent(new object(), new EventArgs());
+        public void ClickCopy() => btnCopy_Click(new object(), new EventArgs());
+        public void ClickDelete() => btnDelete_Click(new object(), new EventArgs());
+        // public void ClickUp() => btnUpArrow_Click(new object(), new EventArgs());
+        // public void ClickDown() => btnDownArrow_Click(new object(), new EventArgs());
+        public void ClickShare() => btnExport_Click(new object(), new EventArgs());
+
+        public void SetTestPanoramaClient(IPanoramaClient panoramaClient)
+        {
+            _testPanoramaClient = panoramaClient;
+        }
+
+        public void SelectLogTab()
+        {
+            this.tabLog.Select();
+        }
+
+        public void SelectConfigsTab()
+        {
+            this.tabConfigs.Select();
+        }
+
+        public string GetSelectedLogName()
+        {
+            return this.comboConfigs.SelectedItem.ToString();
+        }
+
+        public void ClickConfig(int index) => SelectConfig(index);
+
+        private void SelectConfig(int index)
+        {
+            if (index < 0)
+            {
+                _configManager.DeselectConfig();
+                return;
+            }
+            _configManager.SelectConfig(index);
+        }
+
+        public void SetConfigEnabled(int index, bool newValue) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, newValue ? CheckState.Checked : CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public void StartConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Checked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public void StopConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
+
+        public int GetConfigIndex(string configName)
+        {
+            return _configManager.AutoQcState.BaseState.GetConfigIndex(configName);
+        }
+
+        public AutoQcConfig GetConfig(int configIndex)
+        {
+            return (AutoQcConfig)_configManager.AutoQcState.BaseState.GetConfig(configIndex);
+        }
+
+        public ConfigRunner GetConfigRunner(IConfig config)
+        {
+            return _configManager.AutoQcState.GetConfigRunner(config);
+        }
+
+        public ConfigRunner GetConfigRunner(int configIndex)
+        {
+            var config = GetConfig(configIndex);
+            return config == null ? null : GetConfigRunner(config);
+        }
+
+        public string GetLogFilePath(int configIndex)
+        {
+            var configRunner = GetConfigRunner(configIndex);
+            return configRunner?.GetLogger()?.LogFile;
+        }
     }
 
     // ListView that prevents a double click from toggling checkbox

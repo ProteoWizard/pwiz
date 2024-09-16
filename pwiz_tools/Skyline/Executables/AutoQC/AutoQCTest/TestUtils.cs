@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using AutoQC;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.PanoramaClient;
 using SharedBatch;
 using SharedBatch.Properties;
 using SharedBatchTest;
@@ -28,6 +30,10 @@ namespace AutoQCTest
 {
     public class TestUtils
     {
+        public const string PANORAMAWEB = "https://panoramaweb.org";
+        public const string PANORAMAWEB_USER = "autoqc_tester@proteinms.net";
+        public const string PANORAMAWEB_FOLDER = "SkylineTest/AutoQcTest";
+
         public static string GetTestFilePath(string fileName)
         {
             return Path.Combine(GetTestDataPath(), fileName);
@@ -67,9 +73,9 @@ namespace AutoQCTest
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
             var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
-            var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
-            var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
+            var panoramaUserEmail = publishToPanorama ? "autoqc_tester@proteinms.net" : "";
+            var panoramaPassword = publishToPanorama ? GetPanoramaWebPassword() : "";
+            var panoramaProject = publishToPanorama ? "/SkylineTest/AutoQcTest" : "";
 
             return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
         }
@@ -156,8 +162,58 @@ namespace AutoQCTest
             ConfigList.Importer = AutoQcConfig.ReadXml;
             ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
+
+        public static void HasTextsInThisOrder(string source, params string[] textOrder)
+        {
+            int previousIndex = -1;
+            string previousString = null;
+
+            foreach (var part in textOrder)
+            {
+                var index = source.IndexOf(part, previousIndex == -1 ? 0 : previousIndex, StringComparison.Ordinal);
+
+                if (index == -1)
+                    Assert.Fail("Text '{0}' not found{1} in '{2}'.", part,
+                        previousString == null ? string.Empty : $" after '{previousString}'",
+                        source);
+
+                previousIndex = index;
+                previousString = part;
+            }
+        }
+
+        public static string GetPanoramaWebPassword()
+        {
+            var panoramaWebPassword = Environment.GetEnvironmentVariable("PANORAMAWEB_PASSWORD");
+            if (string.IsNullOrWhiteSpace(panoramaWebPassword))
+            {
+                Assert.Fail("Environment variable with the PanoramaWeb password is not set. Cannot run TestPanoramaWebInteraction.");
+            }
+
+            return panoramaWebPassword;
+        }
+
+        public static string CreatePanoramaWebTestFolder(WebPanoramaClient panoramaClient, string parentFolder, string folderName)
+        {
+            // Create a PanoramaWeb folder for the test
+            var random = new Random();
+            string uniqueFolderName;
+            do
+            {
+                uniqueFolderName = folderName + random.Next(1000, 9999);
+            }
+            while (panoramaClient.FolderExists(parentFolder + @"/" + uniqueFolderName));
+
+            AssertEx.NoExceptionThrown<Exception>(() => panoramaClient.CreateTargetedMsFolder(parentFolder, uniqueFolderName));
+            return $"{parentFolder}/{uniqueFolderName}";
+        }
+
+        public static void DeletePanoramaWebTestFolder(WebPanoramaClient panoramaClient, string folderPath)
+        {
+            AssertEx.NoExceptionThrown<Exception>(() => panoramaClient?.DeleteFolderIfExists(folderPath));
+        }
     }
-    
+
     class TestImportContext : ImportContext
     {
         public DateTime OldestFileDate;

@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -45,14 +46,18 @@ namespace AutoQC
         public string PanoramaServerUrl;
         public Uri PanoramaServerUri;
 
+        private IPanoramaClient _panoramaClient;
+
         public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail,
-            string panoramaPassword, string panoramaFolder)
+            string panoramaPassword, string panoramaFolder, IPanoramaClient panoramaClient = null)
         {
             PublishToPanorama = publishToPanorama;
             PanoramaUserEmail = panoramaUserEmail;
             PanoramaPassword = panoramaPassword;
             PanoramaFolder = panoramaFolder;
             PanoramaServerUrl = panoramaServerUrl;
+
+            _panoramaClient = panoramaClient;
         }
 
         private Uri ValidateAndGetServerUri(string panoramaServerUrl)
@@ -68,7 +73,7 @@ namespace AutoQC
                 throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_, panoramaServerUrl, e.Message));
             }
 
-            var panoramaClient = new WebPanoramaClient(panoramaServer.URI, PanoramaUserEmail, PanoramaPassword);
+            var panoramaClient = _panoramaClient ?? new WebPanoramaClient(panoramaServer.URI, PanoramaUserEmail, PanoramaPassword);
             try
             {
                 // Get the validated server. The server URI may have been fixed during validation - e.g. protocol changed from http to https
@@ -313,8 +318,13 @@ namespace AutoQC
 
         public void PingPanorama()
         {
-           var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
-           _requestHelper.Post(uri, string.Empty, null);
+            var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
+            _requestHelper.Post(uri, string.Empty, null); var postData = new NameValueCollection
+            {
+                [@"softwareVersion"] = Program.Version()
+            };
+
+            _requestHelper.Post(uri, postData, null);
         }
 
         public void Init()
