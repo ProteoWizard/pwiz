@@ -357,8 +357,8 @@
         You should see 51 peptides (counted in the status bar) in the Skyline Targets view.
     </p>
     <ul>
-        <li>Click on the sequence of the first phosphopeptide K.DIDIS<strong>S</strong>PEFK.I and the MS/MS spectrum will appear. (Note that the bold,
-            underlined residue “<strong>S</strong>” in the peptide sequence indicates a serine phosphorylation). </li>
+        <li>Click on the sequence of the first phosphopeptide K.DIDIS<strong><u>S</u></strong>PEFK.I and the MS/MS spectrum will appear. (Note that
+            the bold, underlined residue “<strong><u>S</u></strong>” in the peptide sequence indicates a serine phosphorylation). </li>
         <li>If you do not see the MS/MS spectrum, on the <strong>View</strong> menu, click <strong>Library Match</strong>.</li>
         <li>If you do not see as many annotated peaks as in the image below, on the <strong>View</strong> menu, choose<strong> Ion Types</strong> and
             check <strong>A</strong>, <strong>B</strong>, <strong>Y</strong> and <strong>Precursor</strong>.</li>
@@ -377,7 +377,8 @@
         approximately 10 minutes in length (31 to 41 minutes), due to the <strong>Use only scans within [</strong>5<strong>] minutes of MS/MS
             IDs</strong> setting chosen in the import wizard. Note that when the Skyline document is set up for MS1 Filtering, in the place where you
         would see product ion transitions (e.g. y-ions) for triple quadrupole SRM experiments, you will now see the different precursor isotope peaks,
-        such as for peptide DIDIS<strong>S</strong>PEFK: precursor - 615.7681++, precursor [M+1] - 616.2696++, and precursor [M+2] - 616.7710++.
+        such as for peptide DIDIS<strong><u>S</u></strong>PEFK: precursor - 615.7681++, precursor [M+1] - 616.2696++, and precursor [M+2] -
+        616.7710++.
     </p>
     <p>
         To configure a few other features that will be helpful in general, especially to visualize certain MS1 Filtering data, perform the following
@@ -446,9 +447,9 @@
         ions annotated “-98” (-H<sub>3</sub>PO<sub>4</sub>) in the <strong>Library Match</strong> spectrum graphs.
     </p>
     <p>
-        For the fourth peptide I<strong>S</strong>MSEVDLNVAAPK, you will notice that only the 5b_MCF7_TiTip3 replicate has an ID annotation. The peak
-        in the 1_MCF7_TiB_L replicate was chosen using retention time alignment of the ID in 5b_MCF7_TiTip3. To see the aligned ID, do the following:
-    
+        For the fourth peptide I<strong><u>S</u></strong>MSEVDLNVAAPK, you will notice that only the 5b_MCF7_TiTip3 replicate has an ID annotation. The
+        peak in the 1_MCF7_TiB_L replicate was chosen using retention time alignment of the ID in 5b_MCF7_TiTip3. To see the aligned ID, do the
+        following:
     </p>
     <ul>
         <li>Right-click a chromatogram graph, choose <strong>Peptide ID Times</strong> and click <strong>Aligned</strong> (if it is not checked).</li>
@@ -516,14 +517,14 @@
         <img src="image-18.png" />
     </p>
     <p>
-        After the peptide I<strong>S</strong>MSEVDLNVAAPK, you will see 4 peptides with acceptable peak integration, though
-        VSVGAPDLSLEA<strong>S</strong>EGSIKLPK might be adjusted a little for 5b_MCF7_TiTip3. Some have an ID in both runs and some have an ID in only
-        one run, and Skyline has used alignment to pick the correct peak.
+        After the peptide I<strong><u>S</u></strong>MSEVDLNVAAPK, you will see 4 peptides with acceptable peak integration, though
+        VSVGAPDLSLEA<strong><u>S</u></strong>EGSIKLPK might be adjusted a little for 5b_MCF7_TiTip3. Some have an ID in both runs and some have an ID
+        in only one run, and Skyline has used alignment to pick the correct peak.
     </p>
     <h2>Basic understanding of a chromatographic landscape</h2>
     <p>
-        For the ninth peptide, SSKA<strong>S</strong>LG<strong>S</strong>LEGEAEAEASSPK, the 1_MCF7_TiB_L run lacks an ID of its own, and the
-        integration looks a little off:
+        For the ninth peptide, SSKA<strong><u>S</u></strong>LG<strong><u>S</u></strong>LEGEAEAEASSPK, the 1_MCF7_TiB_L run lacks an ID of its own, and
+        the integration looks a little off:
     </p>
     <table>
         <tr>
@@ -678,7 +679,7 @@
     <p>
         Continuing on, armed with these tools for understanding chromatographic data in Skyline, you do not have to go far to find your first peptide
         with true interference. You will see chromatogram graphs for the doubly-phosphorylated peptide
-        ASLG<strong>S</strong>LEGEAEAEAS<strong>S</strong>PKGK that look like this:
+        ASLG<strong><u>S</u></strong>LEGEAEAEAS<strong><u>S</u></strong>PKGK that look like this:
     </p>
     <table>
         <tr>
@@ -723,8 +724,8 @@
         <li>Click the <strong>Undo</strong> button to revert this change and continue exploring.</li>
     </ul>
     <p>
-        Two peptides further down at AEGEWEDQEALDYF<strong>S</strong>DKESGK, you will find a stronger interference, with signal that is even more
-        difficult to exclude.
+        Two peptides further down at AEGEWEDQEALDYF<strong><u>S</u></strong>DKESGK, you will find a stronger interference, with signal that is even
+        more difficult to exclude.
     </p>
     <table>
         <tr>
@@ -779,13 +780,14 @@
     </p>
     <p>
         Continue reviewing peptides, and you should only need one minor integration adjustment until you reach peptide 22
-        ALVEFESNPEETREPG<strong>S</strong>PPSVQR.
+        ALVEFESNPEETREPG<strong><u>S</u></strong>PPSVQR.
     </p>
     <h2>Differently modified forms of a peptide</h2>
     <p>
-        Here you will find that the document contains ALVEFESNPEETREPG<strong>S</strong>PPSVQR and below it ALVEFESNPEETREPGSPP<strong>S</strong>VQR,
-        both with precursor <em>m/z</em> of 879.0727. The search engine, in this case Protein Pilot, has identified the former in 5b_MCF7_TiTip3 and
-        the latter in 1_MCF7_TiB_L, but the chromatograms make it pretty clear that the same peak is being identified, both at about 32.5 min.
+        Here you will find that the document contains ALVEFESNPEETREPG<strong><u>S</u></strong>PPSVQR and below it
+        ALVEFESNPEETREPGSPP<strong><u>S</u></strong>VQR, both with precursor <em>m/z</em> of 879.0727. The search engine, in this case Protein Pilot,
+        has identified the former in 5b_MCF7_TiTip3 and the latter in 1_MCF7_TiB_L, but the chromatograms make it pretty clear that the same peak is
+        being identified, both at about 32.5 min.
     </p>
     <p>
         Even a little more interesting, you can see that there are actually two peaks very close together with the same <em>m/z</em> and at least very
@@ -821,11 +823,11 @@
     </p>
     <h2>More tools for data analysis</h2>
     <p>
-        Continuing down to peptide 25, you will find YGPADVEDTTGSGATDSKDDDDIDLFG<strong>S</strong>DDEEESEEAKR, the longest and the first quadruply
-        charged peptide precursor in this document. Because it is so large, its isotope distribution is quite different from smaller, doubly charged
-        peptides and even the somewhat larger, triply charged peptides you have been looking at. The monoisotopic peptide, with no 13C atoms, is now
-        expected to occur less frequently than both the M+1 and M+2 forms. You can see this is the case for these chromatograms, which produce idotp
-        values of 1.0 and 0.99 with the expected distribution:
+        Continuing down to peptide 25, you will find YGPADVEDTTGSGATDSKDDDDIDLFG<strong><u>S</u></strong>DDEEESEEAKR, the longest and the first
+        quadruply charged peptide precursor in this document. Because it is so large, its isotope distribution is quite different from smaller, doubly
+        charged peptides and even the somewhat larger, triply charged peptides you have been looking at. The monoisotopic peptide, with no 13C atoms,
+        is now expected to occur less frequently than both the M+1 and M+2 forms. You can see this is the case for these chromatograms, which produce
+        idotp values of 1.0 and 0.99 with the expected distribution:
     </p>
     <p>
         <img src="image-37.png" />
@@ -938,13 +940,14 @@
         understand and resolve, enumerated below for those interested, but feel free to disregard and continue on to the next section:
     </p>
     <ol>
-        <li>ETERA<strong>S</strong>PIK<strong>M</strong>DLAPSK (31 &amp; 32) – Repeated twice in the same protein (delete one)</li>
-        <li>K<strong>T</strong>GSYGALAEITASK &amp; KTG<strong>S</strong>YGALAEITASK (34 &amp; 35) – Peak given two phospho sites</li>
-        <li>TPSPKEEDEEPE<strong>S</strong>PPEKK (41) – Poor chromatography mis-integrated (zoom, adjust integration)</li>
-        <li>KEK<strong>T</strong>PELPEPSVK (46) – Interference on M+1 and M+2</li>
-        <li>EK<strong>T</strong>PELPEPSVK (47) – Interference on M+2</li>
-        <li>VPKPEPIPEPKEP<strong>S</strong>PEKNSK &amp; VPKPEPIPEPKEPSPEKN<strong>S</strong>K (49 &amp; 50) – Peak given two phospho sites</li>
-        <li>KETE<strong>S</strong>EAEDNLDDLEK (51) – Interference on M+1 from singly charged peptide</li>
+        <li>ETERA<strong><u>S</u></strong>PIK<strong><u>M</u></strong>DLAPSK (31 &amp; 32) – Repeated twice in the same protein (delete one)</li>
+        <li>K<strong><u>T</u></strong>GSYGALAEITASK &amp; KTG<strong><u>S</u></strong>YGALAEITASK (34 &amp; 35) – Peak given two phospho sites</li>
+        <li>TPSPKEEDEEPE<strong><u>S</u></strong>PPEKK (41) – Poor chromatography mis-integrated (zoom, adjust integration)</li>
+        <li>KEK<strong><u>T</u></strong>PELPEPSVK (46) – Interference on M+1 and M+2</li>
+        <li>EK<strong><u>T</u></strong>PELPEPSVK (47) – Interference on M+2</li>
+        <li>VPKPEPIPEPKEP<strong><u>S</u></strong>PEKNSK &amp; VPKPEPIPEPKEPSPEKN<strong><u>S</u></strong>K (49 &amp; 50) – Peak given two phospho
+            sites</li>
+        <li>KETE<strong><u>S</u></strong>EAEDNLDDLEK (51) – Interference on M+1 from singly charged peptide</li>
     </ol>
     <h1>Minimizing a Chromatogram Cache File</h1>
     <p>
