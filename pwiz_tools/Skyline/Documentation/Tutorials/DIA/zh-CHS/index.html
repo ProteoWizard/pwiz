@@ -7,7 +7,7 @@
 </head>
 
 <body onload="skylineOnload();">
-    <h1 class="document-title"><a id="_Hlk74743168"></a>Skyline 数据非依赖性采集</h1>
+    <h1 class="document-title">Skyline 数据非依赖性采集</h1>
     <p>
         数据非依赖性采集 (DIA)<sup>1,2</sup> 是一种用于大型靶向蛋白质组学实验的先进技术。在没有采集预定的情况下，选择反应监测 (SRM) 和平行反应监测 (PRM) 等靶向采集方法仅能测量少量肽段；在每次质谱运行进行预定的情况下，这些采集方法可测量数十到数百个肽段。而使用
         DIA 时可以测量更多的肽段（数千个乃至整个蛋白质组），相对于 SRM，采用这种方法时在灵敏度、选择性和再现性方面的牺牲并不大。DIA 的另一个优点是无需预先指定或预定所要测量的肽段，而是可以在运行 DIA 进行采集后，提取广泛的母离子质荷比范围内任何所需肽段的子离子色谱图。
@@ -58,7 +58,7 @@
         C:\Users\damodei\Documents\DIA-20_2
     </p>
     <p>
-        <a id="_Hlk32583422"></a>如果您在开始学习本教程之前就一直在用 Skyline，最好将 Skyline 恢复为默认设置。要恢复默认设置：
+        如果您在开始学习本教程之前就一直在用 Skyline，最好将 Skyline 恢复为默认设置。要恢复默认设置：
     </p>
     <ul>
         <li>启动 Skyline。</li>
@@ -84,7 +84,7 @@
         <img src="../../shared/zh-CHS/proteomics-interface.png" />
     </p>
     <p>
-        <a id="_Hlk32583357"></a>Skyline 将在蛋白质组学模式下运行，Skyline 窗口的右上角 <img src="../../shared/protein-icon.png" />随之显示蛋白质图标。
+        Skyline 将在蛋白质组学模式下运行，Skyline 窗口的右上角 <img src="../../shared/protein-icon.png" />随之显示蛋白质图标。
     </p>
     <p>
         对于 DIA 分析，您需要强制 Skyline 对提取的所有定量离子对的峰面积进行积分。要执行此操作：
@@ -463,7 +463,7 @@
         <li>在<strong>视图</strong>菜单中选择<strong>峰面积</strong>，并单击<strong>重复测定比较</strong> (F7)。</li>
         <li>右键单击其中一个色谱图，然后单击<strong>图例</strong>将其取消选中。</li>
         <li>将<strong>峰面积 - 重复测定比较</strong>图停靠到<strong>库匹配</strong>视图顶部主窗口的右边缘。</li>
-        <li>选择<strong>目标</strong>视图中的第一个肽段 K.YALSQDV<strong>C</strong>TYR.D [64, 74]。</li>
+        <li>选择<strong>目标</strong>视图中的第一个肽段 K.YALSQDV<strong><u>C</u></strong>TYR.D [64, 74]。</li>
     </ul>
     <p class="keep-next">
         Skyline 窗口应显示如下：
@@ -535,7 +535,7 @@
         现在继续下一个肽段：
     </p>
     <ul>
-        <li>单击 K.<strong>C</strong>NTDYSD<strong>C</strong>IHEAIK.T [107, 120]，或者按下箭头键（如果<strong>目标</strong>视图中选择的部分呈蓝色）。</li>
+        <li>单击 K.<strong><u>C</u></strong>NTDYSD<strong><u>C</u></strong>IHEAIK.T [107, 120]，或者按下箭头键（如果<strong>目标</strong>视图中选择的部分呈蓝色）。</li>
     </ul>
     <p>
         您会看到，在有多个价态时，离子对分割视图会根据价态而不是离子类型进行分割，并且从 MS1 扫描中提取的母离子强度通常会使得从串联质谱扫描中提取的子离子强度相形见绌：
@@ -611,7 +611,7 @@
         <li>在<strong>视图</strong>菜单上选择<strong>自动缩放</strong>，然后单击<strong>最佳峰值</strong> (F11)。</li>
     </ul>
     <p>
-        接下来的 5 个母离子看起来相当好，直到到达肽段 K.NYGLLY<strong>C</strong>FR.K [184, 192]。这个肽段的峰宽超过 1 分钟，并且不太呈高斯形状。Skyline 在这两个峰上放错了正确的积分边界，仅捕获 2/3
+        接下来的 5 个母离子看起来相当好，直到到达肽段 K.NYGLLY<strong><u>C</u></strong>FR.K [184, 192]。这个肽段的峰宽超过 1 分钟，并且不太呈高斯形状。Skyline 在这两个峰上放错了正确的积分边界，仅捕获 2/3
         的峰。要纠正这一问题，请执行以下操作：
     </p>
     <ul>
@@ -632,8 +632,8 @@
     </p>
     <h1>了解提取的色谱图</h1>
     <p>
-        接下来的这两个肽段（AVVLSHYIHNLSSEMFSEFDK 和 AINS<strong>C</strong>HTSSLATPEDK）在 DDA 的肽段 ID 时间附近缺乏任何有说服力的信号。您可以使用 shift-F11 来缩小，使用鼠标滚轮进行以鼠标为中心的缩放，使用
-        ctrl-单击并拖动以进行平移，但在其中任何一个肽段的色谱图中都不会发现任何内容。您可以删除它们或直接移至肽段 SWNEPLYHLVTEVR。
+        接下来的这两个肽段（AVVLSHYIHNLSSEMFSEFDK 和 AINS<strong><u>C</u></strong>HTSSLATPEDK）在 DDA 的肽段 ID 时间附近缺乏任何有说服力的信号。您可以使用 shift-F11
+        来缩小，使用鼠标滚轮进行以鼠标为中心的缩放，使用 ctrl-单击并拖动以进行平移，但在其中任何一个肽段的色谱图中都不会发现任何内容。您可以删除它们或直接移至肽段 SWNEPLYHLVTEVR。
     </p>
     <p>
         这个肽段有两个母离子，871.9467 处有双电荷，581.6335 处有三电荷。
@@ -723,7 +723,7 @@
         您可以执行以下操作，使用<strong>全扫描</strong>视图查看实际情况：
     </p>
     <ul>
-        <li>单击 <a id="OLE_LINK1"></a>K.ELVYETVR.V 肽段（<strong>目标</strong>视图中的第 3 个）。</li>
+        <li>单击 K.ELVYETVR.V 肽段（<strong>目标</strong>视图中的第 3 个）。</li>
         <li>将鼠标光标悬停在“Pit02”重复测定中“母离子”峰的顶点上，直到出现浅绿色的圆圈，并且鼠标光标变为指向的手形标记。</li>
         <li>在圆圈中单击。</li>
         <li>使用<strong>“全扫描”</strong>视图工具栏中的右箭头按钮 (<img src="image-34.png" />) 查看 MS1 谱图，直至到达 41.7 分钟处。</li>

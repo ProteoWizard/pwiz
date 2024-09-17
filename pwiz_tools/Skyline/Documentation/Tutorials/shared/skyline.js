@@ -1,4 +1,6 @@
 function skylineOnload (documentRef) {
+    if (self != top)
+      targetTop();
     var documentRef = documentRef || document;
     var titleElement = documentRef.getElementsByClassName("document-title")[0];
     if(titleElement){
@@ -41,4 +43,13 @@ function skylineOnload (documentRef) {
             }
         });
     }
+}
+
+function targetTop()
+{
+  document.querySelectorAll('a[href]').forEach(anchor => {
+    if (anchor.target !== '_blank') {
+        anchor.target = '_top';
+    }
+});
 }
