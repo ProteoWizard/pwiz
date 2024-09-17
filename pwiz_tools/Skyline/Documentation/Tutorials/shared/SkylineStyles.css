@@ -65,3 +65,6 @@ p.subtitle {
     border: 0;
     width: auto;
 }
+.fig-text {
+    font-size: 11px;
+}
