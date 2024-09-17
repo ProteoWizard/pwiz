@@ -3541,5 +3541,16 @@ namespace pwiz.Skyline.Properties {
                 this["GroupComparisonSuspendLabelLayout"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RelativeAbundanceLogScale {
+            get {
+                return ((bool)(this["RelativeAbundanceLogScale"]));
+            }
+            set {
+                this["RelativeAbundanceLogScale"] = value;
+            }
+        }		
     }
 }
