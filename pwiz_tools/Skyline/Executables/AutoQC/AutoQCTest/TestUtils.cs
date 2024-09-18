@@ -29,8 +29,9 @@ using SharedBatchTest;
 namespace AutoQCTest
 {
     public class TestUtils
-    {
+    { 
         public const string PANORAMAWEB = "https://panoramaweb.org";
+        // public const string PANORAMAWEB = "http://localhost:8080";
         public const string PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
         public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
 

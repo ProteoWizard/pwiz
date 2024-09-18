@@ -315,7 +315,7 @@ namespace AutoQC
         public void PingPanorama()
         {
             var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
-            _requestHelper.Post(uri, string.Empty, null); var postData = new NameValueCollection
+            var postData = new NameValueCollection
             {
                 [@"softwareVersion"] = Program.Version()
             };
