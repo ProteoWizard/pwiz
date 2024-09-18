@@ -619,4 +619,10 @@ with:
   <data name="ConfigRunner_ImportAnnotationsFileIfWatching_Importing_annotations_file_" xml:space="preserve">
 	  <value>Importing annotations file.</value>
   </data>
+  <data name="ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_" xml:space="preserve">
+	  <value>Annotations file was imported.</value>
+  </data>
+  <data name="ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_" xml:space="preserve">
+	  <value>Annotations file could not be imported.</value>
+  </data>
 </root>

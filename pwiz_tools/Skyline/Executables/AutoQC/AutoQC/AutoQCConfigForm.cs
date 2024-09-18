@@ -19,7 +19,6 @@
 using System;
 using System.Windows.Forms;
 using AutoQC.Properties;
-using pwiz.PanoramaClient;
 using SharedBatch;
 
 namespace AutoQC
@@ -41,13 +40,10 @@ namespace AutoQC
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
 
-        private IPanoramaClient _testPanoramaClient;
-
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, AutoQcConfigManagerState state, RunnerStatus status = RunnerStatus.Stopped)
         {
             InitializeComponent();
 
-            _testPanoramaClient = new BaseTestPanoramaClient();
             _action = action;
             _initialCreated = config?.Created ?? DateTime.MinValue;
             _mainControl = mainControl;
@@ -80,11 +76,6 @@ namespace AutoQC
             }
 
             ActiveControl = textConfigName;
-        }
-
-        public void SetTestPanoramaClient(IPanoramaClient panoramaClient)
-        {
-            _testPanoramaClient = panoramaClient;
         }
 
         public AutoQcConfigManagerState State { get; private set; }
@@ -369,57 +360,52 @@ namespace AutoQC
 
         public void SetConfigName(string name)
         {
-            this.textConfigName.Text = name;
+            textConfigName.Text = name;
         }
 
         public void SetSkylineDocPath(string skyDocPath)
         {
-            this.textSkylinePath.Text = skyDocPath;
+            textSkylinePath.Text = skyDocPath;
         }
 
         public void SetFolderToWatch(string folderToWatch)
         {
-            this.textFolderToWatchPath.Text = folderToWatch;
+            textFolderToWatchPath.Text = folderToWatch;
         }
 
         public void UncheckRemoveResults()
         {
-            this.checkBoxRemoveResults.Checked = false;
+            checkBoxRemoveResults.Checked = false;
         }
 
         public void CheckRemoveResults()
         {
-            this.checkBoxRemoveResults.Checked = true;
+            checkBoxRemoveResults.Checked = true;
         }
 
         public void SetAnnotationsFilePath(string annotationsFilePath)
         {
-            this.textAnnotationsFilePath.Text = annotationsFilePath;
+            textAnnotationsFilePath.Text = annotationsFilePath;
         }
 
         public void ClickSave()
         {
-            this.btnSaveConfig.PerformClick();
+            btnSaveConfig.PerformClick();
         }
 
         public void ClickCancel()
         {
-            this.btnCancelConfig.PerformClick();
+            btnCancelConfig.PerformClick();
         }
 
         public void ClickOk()
         {
-            this.btnOkConfig.PerformClick();
+            btnOkConfig.PerformClick();
         }
 
         public bool SaveButtonVisible()
         {
             return btnSaveConfig.Visible;
-        }
-
-        public bool OkButtonVisible()
-        {
-            return btnOkConfig.Visible;
         }
 
         public bool ConfigNotEditableLabelVisible()
@@ -429,32 +415,32 @@ namespace AutoQC
 
         public void SelectPanoramaTab()
         {
-            this.tabPanoramaSettings.Select();
+            tabPanoramaSettings.Select();
         }
 
         public void CheckUploadToPanorama()
         {
-            this.cbPublishToPanorama.Checked = true;
+            cbPublishToPanorama.Checked = true;
         }
 
         public void SetPanoramaServer(string serverUri)
         {
-            this.textPanoramaUrl.Text = serverUri;
+            textPanoramaUrl.Text = serverUri;
         }
 
         public void SetPanoramaUser(string username)
         {
-            this.textPanoramaEmail.Text = username;
+            textPanoramaEmail.Text = username;
         }
 
         public void SetPanoramaPassword(string password)
         {
-            this.textPanoramaPasswd.Text = password;
+            textPanoramaPasswd.Text = password;
         }
 
         public void SetPanoramaFolder(string folder)
         {
-            this.textPanoramaFolder.Text = folder;
+            textPanoramaFolder.Text = folder;
         }
     }
 }

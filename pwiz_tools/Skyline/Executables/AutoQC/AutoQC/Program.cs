@@ -47,9 +47,10 @@ namespace AutoQC
         public const string AUTO_QC_STARTER = "AutoQCStarter";
         public static readonly string AutoQcStarterExe = $"{AUTO_QC_STARTER}.exe";
 
-        public static MainForm MainWindow { get; private set; }     // Accessed by functional tests
-        public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
-        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        // For functional tests
+        public static MainForm MainWindow { get; private set; } 
+        public static List<Exception> TestExceptions { get; set; }
+        public static bool FunctionalTest { get; set; } // Set to true by AbstractFunctionalTest
         public static readonly string TEST_VERSION = "1000.0.0.0";
 
 

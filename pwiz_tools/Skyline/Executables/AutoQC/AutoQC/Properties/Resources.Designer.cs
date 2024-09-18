@@ -552,6 +552,24 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotations file could not be imported..
+        /// </summary>
+        internal static string ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations file was imported..
+        /// </summary>
+        internal static string ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing annotations file..
         /// </summary>
         internal static string ConfigRunner_ImportAnnotationsFileIfWatching_Importing_annotations_file_ {

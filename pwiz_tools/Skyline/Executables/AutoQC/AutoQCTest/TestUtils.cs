@@ -31,8 +31,10 @@ namespace AutoQCTest
     public class TestUtils
     {
         public const string PANORAMAWEB = "https://panoramaweb.org";
-        public const string PANORAMAWEB_USER = "autoqc_tester@proteinms.net";
-        public const string PANORAMAWEB_FOLDER = "SkylineTest/AutoQcTest";
+        public const string PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
+        public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
+
+        private const string PASSWORD_ENVT_VAR = "PANORAMAWEB_PASSWORD";
 
         public static string GetTestFilePath(string fileName)
         {
@@ -72,10 +74,10 @@ namespace AutoQCTest
 
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
-            var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
-            var panoramaUserEmail = publishToPanorama ? "autoqc_tester@proteinms.net" : "";
+            var panoramaServerUrl = publishToPanorama ? PANORAMAWEB : "";
+            var panoramaUserEmail = publishToPanorama ? PANORAMAWEB_USER : "";
             var panoramaPassword = publishToPanorama ? GetPanoramaWebPassword() : "";
-            var panoramaProject = publishToPanorama ? "/SkylineTest/AutoQcTest" : "";
+            var panoramaProject = publishToPanorama ? PANORAMAWEB_TEST_FOLDER : "";
 
             return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
         }
@@ -163,12 +165,14 @@ namespace AutoQCTest
             ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
 
-        public static void HasTextsInThisOrder(string source, params string[] textOrder)
+        public static void AssertTextsInThisOrder(string source, params string[] textsInOrder)
         {
-            int previousIndex = -1;
+            var previousIndex = -1;
             string previousString = null;
 
-            foreach (var part in textOrder)
+            Assert.IsFalse(string.IsNullOrWhiteSpace(source), "Source string cannot be blank");
+            Assert.IsNotNull(textsInOrder, "No texts to compare");
+            foreach (var part in textsInOrder)
             {
                 var index = source.IndexOf(part, previousIndex == -1 ? 0 : previousIndex, StringComparison.Ordinal);
 
@@ -184,10 +188,11 @@ namespace AutoQCTest
 
         public static string GetPanoramaWebPassword()
         {
-            var panoramaWebPassword = Environment.GetEnvironmentVariable("PANORAMAWEB_PASSWORD");
+            var panoramaWebPassword = Environment.GetEnvironmentVariable(PASSWORD_ENVT_VAR);
             if (string.IsNullOrWhiteSpace(panoramaWebPassword))
             {
-                Assert.Fail("Environment variable with the PanoramaWeb password is not set. Cannot run TestPanoramaWebInteraction.");
+                Assert.Fail(
+                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {PANORAMAWEB_USER} is not set. Cannot run test.");
             }
 
             return panoramaWebPassword;

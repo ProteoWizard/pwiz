@@ -219,10 +219,6 @@ namespace AutoQC
 
         private void LogError(string message)
         {
-            if (message.StartsWith(@"Error:"))
-            {
-                message = message.Substring(@"Error:".Length - 1).TrimStart();
-            }
             _logger.LogError(message);
         }
 

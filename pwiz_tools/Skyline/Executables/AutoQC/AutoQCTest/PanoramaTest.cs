@@ -15,11 +15,7 @@ namespace AutoQCTest
     [TestClass]
    public class PanoramaTest: AbstractUnitTest
     {
-        //public const string SERVER_URL = "https://panoramaweb.org/";
-        //public const string PANORAMA_PARENT_PATH = "SkylineTest";
         public const string PANORAMA_FOLDER_PREFIX = "AutoQcTest";
-        // public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
-        // public const string PANORAMA_PASSWORD = "lclcmsms";
         private const int WAIT_3SEC = 3000;
         private const int TIMEOUT_80SEC = 80000;
 
@@ -37,17 +33,8 @@ namespace AutoQCTest
             _panoramaClient = new WebPanoramaClient(panoramaServerUri, TestUtils.PANORAMAWEB_USER,
                 TestUtils.GetPanoramaWebPassword());
 
-            //var random = new Random();
-            _testPanoramaFolder = TestUtils.CreatePanoramaWebTestFolder(_panoramaClient, TestUtils.PANORAMAWEB_FOLDER,
+            _testPanoramaFolder = TestUtils.CreatePanoramaWebTestFolder(_panoramaClient, TestUtils.PANORAMAWEB_TEST_FOLDER,
                 PANORAMA_FOLDER_PREFIX);
-            // do
-            // {
-            //     uniqueFolderName = PANORAMA_FOLDER_PREFIX + random.Next(1000, 9999);
-            // }
-            // while (_panoramaClient.FolderExists(uniqueFolderName));
-            //
-            // AssertEx.NoExceptionThrown<Exception>(() => _panoramaClient.CreateTargetedMsFolder(PANORAMA_PARENT_PATH, uniqueFolderName));
-            // _testPanoramaFolder = uniqueFolderName;
         }
 
         /// <summary>
@@ -57,8 +44,6 @@ namespace AutoQCTest
         public void TestCleanup()
         {
             TestUtils.DeletePanoramaWebTestFolder(_panoramaClient, _testPanoramaFolder);
-            // Delete the Panorama test folder
-            // AssertEx.NoExceptionThrown<Exception>(() => _panoramaClient.DeleteFolderIfExists($"{PANORAMA_PARENT_PATH}/{_testPanoramaFolder}/"));
         }
 
         [TestMethod]

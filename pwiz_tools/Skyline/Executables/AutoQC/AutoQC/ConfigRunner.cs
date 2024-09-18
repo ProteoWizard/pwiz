@@ -778,8 +778,8 @@ namespace AutoQC
             _annotationsImportError = status == ProcStatus.Error;
             _annotationsFirstImport = false;
             Log(!_annotationsImportError
-                ? "Annotations file was imported."
-                : "Annotations file could not be imported.");
+                ? Resources.ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_
+                : Resources.ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_);
 
             if (!_annotationsImportError && Config.PanoramaSettings.PublishToPanorama && uploadToPanorama)
             {

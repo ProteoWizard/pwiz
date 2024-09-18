@@ -23,7 +23,6 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AutoQC.Properties;
-using pwiz.PanoramaClient;
 using SharedBatch;
 
 namespace AutoQC
@@ -39,8 +38,7 @@ namespace AutoQC
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private Timer _outputLog;
 
-        private IPanoramaClient _testPanoramaClient;
-
+        
         public MainForm(string openFile)
         {
             InitializeComponent();
@@ -98,7 +96,6 @@ namespace AutoQC
             ProgramLog.Info("Creating a new configuration");
             var initialState = _configManager.AutoQcState;
             var configForm = new AutoQcConfigForm(this, (AutoQcConfig)initialState.BaseState.GetLastModified(), ConfigAction.Add, initialState.Copy());
-            if (Program.FunctionalTest) configForm.SetTestPanoramaClient(_testPanoramaClient);
             if (DialogResult.OK == configForm.ShowDialog())
                 _configManager.SetState(initialState, configForm.State);
         }
@@ -482,11 +479,6 @@ namespace AutoQC
             _outputLog.Tick += OutputLog;
         }
 
-        private void tabLog_Leave(object sender, EventArgs e)
-        {
-            _scrolling = _configManager.SelectedLog == 0;
-        }
-        
         private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboConfigs.SelectedIndex);
@@ -870,28 +862,21 @@ namespace AutoQC
         public void ClickEdit() => HandleEditEvent(new object(), new EventArgs());
         public void ClickCopy() => btnCopy_Click(new object(), new EventArgs());
         public void ClickDelete() => btnDelete_Click(new object(), new EventArgs());
-        // public void ClickUp() => btnUpArrow_Click(new object(), new EventArgs());
-        // public void ClickDown() => btnDownArrow_Click(new object(), new EventArgs());
         public void ClickShare() => btnExport_Click(new object(), new EventArgs());
-
-        public void SetTestPanoramaClient(IPanoramaClient panoramaClient)
-        {
-            _testPanoramaClient = panoramaClient;
-        }
 
         public void SelectLogTab()
         {
-            this.tabLog.Select();
+            tabLog.Select();
         }
 
         public void SelectConfigsTab()
         {
-            this.tabConfigs.Select();
+            tabConfigs.Select();
         }
 
         public string GetSelectedLogName()
         {
-            return this.comboConfigs.SelectedItem.ToString();
+            return comboConfigs.SelectedItem.ToString();
         }
 
         public void ClickConfig(int index) => SelectConfig(index);
@@ -905,8 +890,6 @@ namespace AutoQC
             }
             _configManager.SelectConfig(index);
         }
-
-        public void SetConfigEnabled(int index, bool newValue) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, newValue ? CheckState.Checked : CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
 
         public void StartConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Checked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
 

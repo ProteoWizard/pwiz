@@ -46,18 +46,14 @@ namespace AutoQC
         public string PanoramaServerUrl;
         public Uri PanoramaServerUri;
 
-        private IPanoramaClient _panoramaClient;
-
         public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaUserEmail,
-            string panoramaPassword, string panoramaFolder, IPanoramaClient panoramaClient = null)
+            string panoramaPassword, string panoramaFolder)
         {
             PublishToPanorama = publishToPanorama;
             PanoramaUserEmail = panoramaUserEmail;
             PanoramaPassword = panoramaPassword;
             PanoramaFolder = panoramaFolder;
             PanoramaServerUrl = panoramaServerUrl;
-
-            _panoramaClient = panoramaClient;
         }
 
         private Uri ValidateAndGetServerUri(string panoramaServerUrl)
@@ -73,7 +69,7 @@ namespace AutoQC
                 throw new PanoramaServerException(string.Format(Resources.PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_, panoramaServerUrl, e.Message));
             }
 
-            var panoramaClient = _panoramaClient ?? new WebPanoramaClient(panoramaServer.URI, PanoramaUserEmail, PanoramaPassword);
+            var panoramaClient = new WebPanoramaClient(panoramaServer.URI, PanoramaUserEmail, PanoramaPassword);
             try
             {
                 // Get the validated server. The server URI may have been fixed during validation - e.g. protocol changed from http to https
@@ -324,7 +320,7 @@ namespace AutoQC
                 [@"softwareVersion"] = Program.Version()
             };
 
-            _requestHelper.Post(uri, postData, null);
+            _requestHelper.Post(uri, postData);
         }
 
         public void Init()
