@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             _dotpData = null;
-            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y))) 
+            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y)) && CanShowDotProduct) 
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
 
             if (ExpectedVisible != AreaExpectedValue.none &&
