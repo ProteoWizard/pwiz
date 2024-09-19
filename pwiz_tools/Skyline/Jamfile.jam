@@ -400,16 +400,20 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building TutorialLocalization.exe in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Executables/DevTools/TutorialLocalization/TutorialLocalization/TutorialLocalization.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TutorialLocalization /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Executables/DevTools/TutorialLocalization/TutorialLocalization.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TutorialLocalization /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         exit %status%
+    }
+
+    rule do_merged_tutorials ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
     }
 
     actions do_merged_tutorials
     {
 		echo creating MergedTutorials.zip
-		echo command $(OUTPUT_PATH)/TutorialLocalization.exe $(SKYLINE_PATH)/Documentation/Tutorials
-		$(SKYLINE_PATH)/Executables/DevTools/TutorialLocalization/TutorialLocalization/TutorialLocalization/TutorialLocalization.exe $(SKYLINE_PATH)/Documentation/Tutorials
+		$(OUTPUT_PATH)/TutorialLocalization.exe $(SKYLINE_PATH)/Documentation/Tutorials --output $(OUTPUT_PATH)/MergedTutorials.zip
         set status=%ERRORLEVEL%
         exit %status%
     }
