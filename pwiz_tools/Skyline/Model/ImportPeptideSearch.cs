@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model
         public bool HasDocLib { get { return DocLib != null; } }
         public IrtStandard IrtStandard { get; set; }
         public bool IsDDASearch { get; set; }
+        public bool IsDIASearch { get; set; }
         public bool IsFeatureDetection { get; set; }
         public int RemainingStepsInSearch { get; set; } // In the case of Hardklor+Bullseye there may be several steps
         public HardklorSettings SettingsHardklor { get; set; }

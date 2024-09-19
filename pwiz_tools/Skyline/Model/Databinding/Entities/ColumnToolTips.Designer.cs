@@ -1386,6 +1386,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With of the m/z window in which the precursor was isolated. 
+        ///If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor..
+        /// </summary>
+        public static string IsolationWindowWidth {
+            get {
+                return ResourceManager.GetString("IsolationWindowWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Zero for the monoisotopic peak, 1 for M+1, 2 for M+2, etc. .
         /// </summary>
         public static string IsotopeDistIndex {

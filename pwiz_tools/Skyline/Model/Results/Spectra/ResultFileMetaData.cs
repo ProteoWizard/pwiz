@@ -104,6 +104,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             var spectrumPrecursor =
                 new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz, protoPrecursor.TargetMz < 0));
+            if (protoPrecursor.IsolationWindowLower != 0 || protoPrecursor.IsolationWindowUpper != 0)
+            {
+                spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                    protoPrecursor.IsolationWindowLower, protoPrecursor.IsolationWindowUpper);
+            }
             if (protoPrecursor.CollisionEnergy != 0)
             {
                 spectrumPrecursor = spectrumPrecursor.ChangeCollisionEnergy(protoPrecursor.CollisionEnergy);
@@ -172,6 +177,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 if (spectrumPrecursor.CollisionEnergy.HasValue)
                 {
                     protoPrecursor.CollisionEnergy = spectrumPrecursor.CollisionEnergy.Value;
+                }
+
+                if (spectrumPrecursor.IsolationWindowLowerWidth.HasValue)
+                {
+                    protoPrecursor.IsolationWindowLower = spectrumPrecursor.IsolationWindowLowerWidth.Value;
+                }
+
+                if (spectrumPrecursor.IsolationWindowUpperWidth.HasValue)
+                {
+                    protoPrecursor.IsolationWindowUpper = spectrumPrecursor.IsolationWindowUpperWidth.Value;
                 }
                 proto.Precursors.Add(protoPrecursor);
             }

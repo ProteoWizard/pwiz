@@ -923,20 +923,40 @@ namespace pwiz.SkylineTestUtil
                     continue;
                 }
 
-                try  // Was column a filename?
+                // Did column contain a filename?
+                var partsE = pathE.Trim().Split('"'); // e.g. 'value="c:\foo\bar.baz",' => {'value=', '"c:\foo\bar.baz"', ','}
+                var partsA = pathA.Trim().Split('"'); 
+                if (partsE.Length != partsA.Length)
                 {
-                    var fileE = Path.GetFileName(pathE.Trim().Trim('"')); // Unquote if needed
-                    var fileA = Path.GetFileName(pathA.Trim().Trim('"')); // Unquote if needed
-                    if (string.Equals(fileE, fileA) ||
-                        (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
-                    {
-                        lineExpected = lineExpected.Replace(pathE, string.Empty);
-                        lineActual = lineActual.Replace(pathA, string.Empty);
-                    }
+                    return; // No way we're cleaning this up to make a match
                 }
-                catch
+
+                for (var p = 0; p < partsE.Length; p++)
                 {
-                    // ignored
+                    var partE = partsE[p];
+                    var partA = partsA[p];
+                    if (string.Equals(partE, partA))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var fileE = Path.GetFileName(partE);
+                        var fileA = Path.GetFileName(partA);
+                        var tmpExt = @".tmp";
+                        if (string.Equals(fileE, fileA) || // Same filename, different path
+                            (Path.GetExtension(fileE) == tmpExt) && Path.GetExtension(fileA) == tmpExt) // Tmp file names will always vary
+                        {
+                            var ignoredPath = @"<ignored_path_difference>";
+                            lineExpected = lineExpected.Replace(partE, ignoredPath);
+                            lineActual = lineActual.Replace(partA, ignoredPath);
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
         }
@@ -1744,6 +1764,41 @@ namespace pwiz.SkylineTestUtil
                         AreEqual(transition.Results, convertedTransition.Results, "results mismatch transition as small molecule");
                 }
                 IsFalse(convertedTransitionIterator.MoveNext());
+            }
+        }
+
+        /// <summary>
+        /// Verifies that a Comparer has the reflexive, symmetric and transitive properties when
+        /// applied to all combinations of the elements provided.
+        /// </summary>
+        public static void ComparerWellBehaved<T>(IComparer<T> comparer, IEnumerable<T> items)
+        {
+            var itemList = items.ToList();
+            for (int i = 0; i < itemList.Count; i++)
+            {
+                var itemI = itemList[i];
+                for (int j = 0; j < itemList.Count; j++)
+                {
+                    var itemJ = itemList[j];
+                    var compareIJ = Math.Sign(comparer.Compare(itemI, itemJ));
+                    var compareJI = Math.Sign(comparer.Compare(itemJ, itemI));
+                    Assert.AreEqual(compareIJ, -compareJI, "Compare of {0} with {1} should be opposite of {1} with {0}",
+                        itemI, itemJ);
+                    if (compareIJ <= 0)
+                    {
+                        for (int k = 0; k < itemList.Count; k++)
+                        {
+                            var itemK = itemList[k];
+                            var compareJK = Math.Sign(comparer.Compare(itemJ, itemK));
+                            if (compareJK <= 0)
+                            {
+                                Assert.AreNotEqual(1, Math.Sign(comparer.Compare(itemI, itemK)),
+                                    "Compare of {0} with {2} should not be positive because {0} < {1} and {1} < {2}",
+                                    itemI, itemJ, itemK);
+                            }
+                        }
+                    }
+                }
             }
         }
     }

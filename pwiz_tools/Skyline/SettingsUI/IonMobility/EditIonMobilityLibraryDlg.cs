@@ -94,7 +94,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 gridViewIonMobilities.Columns[COLUMN_ADDUCT].HeaderText = Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct;
             }
 
-            if (library != null)
+            if (library != null && !library.IsNone)
             {
                 textLibraryName.Text = _editingName = library.Name;
                 string databaseStartPath = library.FilePath;

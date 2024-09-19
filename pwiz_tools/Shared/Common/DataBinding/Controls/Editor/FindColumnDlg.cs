@@ -44,6 +44,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 _owner.FormClosed += OwnerFormClosed;
             }
+            tbxFind.Focus(); // Presumably the user invoked the dialog with intent to search, save them a click
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)

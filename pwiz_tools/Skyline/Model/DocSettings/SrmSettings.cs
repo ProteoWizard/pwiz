@@ -1397,7 +1397,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                 }
-                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues && filePath != null)
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
                 {
                     var libraries = PeptideSettings.Libraries;
                     if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)
@@ -2075,6 +2075,21 @@ namespace pwiz.Skyline.Model.DocSettings
                     result = result.ChangeTransitionSettings(transitionSettings =>
                         transitionSettings.ChangeLibraries(
                             transitionSettings.Libraries.ChangeIonMatchMzTolerance(new MzTolerance(newToleranceValue))));
+                }
+            }
+
+            if (documentFormat < DocumentFormat.VERSION_24_11)
+            {
+                if (!result.TransitionSettings.FullScan.SpectrumClassFilter.IsEmpty)
+                {
+                    var fullScan = result.TransitionSettings.FullScan;
+                    if (fullScan.SpectrumClassFilter.Clauses.Contains(TransitionFullScan.IgnoreSimScansFilter))
+                    {
+                        fullScan = fullScan.ChangeIgnoreSimScans(true);
+                    }
+
+                    fullScan = fullScan.ChangeSpectrumFilter(default);
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(fullScan));
                 }
             }
 

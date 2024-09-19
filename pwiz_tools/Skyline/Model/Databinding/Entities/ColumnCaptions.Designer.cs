@@ -1357,6 +1357,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Isolation Window Width.
+        /// </summary>
+        public static string IsolationWindowWidth {
+            get {
+                return ResourceManager.GetString("IsolationWindowWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Isotope Dist Index.
         /// </summary>
         public static string IsotopeDistIndex {

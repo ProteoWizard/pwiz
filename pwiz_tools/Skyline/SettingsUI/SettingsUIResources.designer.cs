@@ -379,6 +379,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify a valid path to a Skyline document to learn from..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_docume" +
+                        "nt_to_learn_from_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify an output file path..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path {
@@ -2715,6 +2725,16 @@ namespace pwiz.Skyline.SettingsUI {
         public static string TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks {
             get {
                 return ResourceManager.GetString("TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature..
+        /// </summary>
+        public static string TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on" +
+                        "_the_Full_Scan_tab_in_order_to_use_this_feature_", resourceCulture);
             }
         }
         

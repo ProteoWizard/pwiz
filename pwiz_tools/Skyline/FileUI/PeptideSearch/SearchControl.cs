@@ -18,14 +18,16 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -57,6 +59,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return showTimestamp ? $"[{Timestamp.ToString("yyyy/MM/dd HH:mm:ss")}]  {Message}" : Message;
                 // ReSharper restore LocalizableElement
             }
+
+            public override string ToString()
+            {
+                return ToString(true); // For debugging convenience
+            }
+
         }
 
         protected List<ProgressEntry> _progressTextItems = new List<ProgressEntry>();
@@ -98,7 +106,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (status.IsError)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
+                MessageDlg.ShowWithException(Program.MainWindow, status.ErrorException.Message, status.ErrorException);
                 return;
             }
 
@@ -231,7 +239,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool IsCanceled => _cancelToken.IsCancellationRequested;
 
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
-        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        public virtual UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             if (IsCanceled)
                 return UpdateProgressResponse.cancel;
@@ -242,6 +250,53 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 UpdateSearchEngineProgress(status.ChangeMessage(status.Message));
 
             return UpdateProgressResponse.normal;
+        }
+
+        public class ParallelRunnerProgressControl : MultiProgressControl, IProgressMonitor
+        {
+            private readonly SearchControl _hostControl;
+
+            public ParallelRunnerProgressControl(SearchControl hostControl)
+            {
+                _hostControl = hostControl;
+                ProgressSplit.Panel2Collapsed = true;
+            }
+
+            // ReSharper disable once InconsistentlySynchronizedField
+            public bool IsCanceled => _hostControl.IsCanceled;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                if (IsCanceled || status.IsCanceled)
+                    return UpdateProgressResponse.cancel;
+
+                var match = Regex.Match(status.Message, @"(.*)\:\:(.*)");
+                Assume.IsTrue(match.Success && match.Groups.Count == 3,
+                    @"ParallelRunnerProgressDlg requires a message like file::message to indicate which file's progress is being updated");
+
+                lock (this)
+                {
+                    // only make the MultiProgressControl visible if it's actually used
+                    if (RowCount == 0)
+                    {
+                        var hostDialog = _hostControl.Parent;
+                        hostDialog.BeginInvoke(new MethodInvoker(() =>
+                        {
+                            _hostControl.progressSplitContainer.Panel1Collapsed = false;
+                            hostDialog.Size = new Size(Math.Min(
+                                Screen.FromControl(hostDialog).Bounds.Width * 90 / 100,
+                                hostDialog.Width * 2), hostDialog.Height);
+                        }));
+                    }
+
+                    string name = match.Groups[1].Value;
+                    string message = match.Groups[2].Value;
+                    Update(name, status.PercentComplete, message, status.ErrorException != null);
+                    return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+                }
+            }
+
+            public bool HasUI => true;
         }
     }
 }

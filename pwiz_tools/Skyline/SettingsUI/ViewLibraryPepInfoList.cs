@@ -25,7 +25,8 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
-using Resources = pwiz.Skyline.Properties.Resources;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, string selectedFilterCategory, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
-            var naturalSort = Enumerable.Range(0, _allEntries.Count).OrderBy(i => _allEntries[i], Comparer<ViewLibraryPepInfo>.Create(ComparePepInfosNatural)).ToArray();
+            var naturalSort = Enumerable.Range(0, _allEntries.Count).OrderBy(i => MakeCompareKey(_allEntries[i])).ToArray();
             var naturalSortMap = new int[_allEntries.Count];
             for (var order = 0; order < naturalSort.Length; order++)
             {
@@ -428,29 +429,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         // Natural sort (e.g. "xyz200.5" comes before "xyz1200.5")
-        public static int ComparePepInfosNatural(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
+        public static Tuple<NaturalStringComparer.CompareKey, Adduct, NaturalStringComparer.CompareKey> MakeCompareKey(
+            ViewLibraryPepInfo info)
         {
-            var result = NaturalStringComparer.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText);
-
-            if (result == 0)
-            {
-                // Same molecule, sort by adduct
-                result = info1.Adduct.CompareTo(info2.Adduct);
-                if (result == 0)
-                {
-                    // Last try, natural sort on whatever Key.ToString() produced
-                    result = NaturalStringComparer.Compare(info1.KeyString, info2.KeyString);
-                }
-            }
-            return result;
-        }
-
-        public class ViewLibraryPepInfoNaturalComparer : IComparer<ViewLibraryPepInfo>
-        {
-            public int Compare(ViewLibraryPepInfo x, ViewLibraryPepInfo y)
-            {
-                return ComparePepInfosNatural(x, y);
-            }
+            return Tuple.Create(NaturalStringComparer.MakeCompareKey(info.UnmodifiedTargetText), info.Adduct,
+                NaturalStringComparer.MakeCompareKey(info.KeyString));
         }
     }
 }

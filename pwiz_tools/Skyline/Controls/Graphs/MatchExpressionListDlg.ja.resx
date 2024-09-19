@@ -163,7 +163,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Enter a list of identifiers on separate lines.</value>
+    <value>別の行で識別子のリストを入力してください。</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
@@ -245,7 +245,7 @@
     <value>456, 450</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Enter List</value>
+    <value>リストの入力</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">

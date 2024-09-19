@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    moleculeMass = nodeTran.GetMoleculeMass();
+                    moleculeMass = nodeTran.GetMoleculeMass(molecule);
                 }
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
                     moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
@@ -246,6 +247,12 @@ namespace pwiz.Skyline.Model
         public SignedMz PrecursorMz { get; private set; }
 
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+
+        [TrackChildren(defaultValues:typeof(DefaultValuesNullOrEmpty))]
+        public IList<FilterClause> SpectrumFilter
+        {
+            get { return SpectrumClassFilter.Clauses; }
+        }
 
         public TransitionGroupDocNode ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
         {

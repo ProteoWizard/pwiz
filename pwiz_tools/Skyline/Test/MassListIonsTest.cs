@@ -92,8 +92,8 @@ namespace pwiz.SkylineTest
             var inputs = new MassListInputs(text, true);
             var progressMonitor = new SilentProgressMonitor();
             inputs.ReadLines(progressMonitor);
-            var importer = new MassListImporter(doc, inputs);
-            Assert.IsTrue(importer.PreImport(progressMonitor, null, false));
+            var importer = new MassListImporter(doc, inputs, false);
+            Assert.IsTrue(importer.PreImport(progressMonitor, null));
             var indices = importer.RowReader.Indices;
             Assert.AreEqual(13, indices.LibraryColumn); // Could be fixed to be -1
             indices.LibraryColumn = -1; // Because it is all #N/A

@@ -3,6 +3,7 @@ Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
 Extra Info: 36 个离子对已添加
+列标识为 '分子列表名称','分子名称','标记类型','母离子质荷比','母离子电荷','子离子质荷比','子离子电荷','锥孔电压','明确碰撞能量','明确保留时间'
 Molecule List Name,Precursor Name,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Cone Voltage,Explicit Collision Energy,Explicit Retention Time
 Central Metabolism,Acetyl-CoA,light,808,-1,408,-1,25,37,
 Central Metabolism,Acetyl-CoA,heavy,831,-1,418,-1,25,37,
@@ -40,6 +41,7 @@ Nucleotide metabolism,Orotate,light,155,-1,111,-1,25,9,
 Nucleotide metabolism,Orotate,heavy,160,-1,115,-1,25,9,
 Nucleotide metabolism,UDP,light,403,-1,79,-1,25,69,
 Nucleotide metabolism,UDP,heavy,412,-1,79,-1,25,69,
+
 
 Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改

@@ -125,25 +125,25 @@
     <value>与替代的比例 {0}</value>
   </data>
   <data name="PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing" xml:space="preserve">
-    <value>Transition '{0}' is missing</value>
+    <value>缺失离子对“{0}”</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideQuantifier_SumTransitionQuantities_Missing_values_for__0___1__transitions" xml:space="preserve">
-    <value>Missing values for {0}/{1} transitions</value>
+    <value>缺失 {0}/{1} 离子对值</value>
     <comment>{0} and {1} are numbers
 Needs Review:New resource</comment>
   </data>
   <data name="PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated" xml:space="preserve">
-    <value>Transition '{0}' is truncated</value>
+    <value>离子对“{0}”被截短</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated" xml:space="preserve">
-    <value>All {0} peaks are truncated</value>
+    <value>所有 {0} 峰均被截短</value>
     <comment>{0} is a number
 Needs Review:New resource</comment>
   </data>
   <data name="PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions" xml:space="preserve">
-    <value>Truncated peaks for {0}/{1} transitions</value>
+    <value>{0}/{1} 离子对的峰被截短</value>
     <comment>{0} and {1} are numbers
 Needs Review:New resource</comment>
   </data>

@@ -644,7 +644,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
-    <value>Ignore features whose intensity relative to the sum of all detected feature intensities in a sample is less than this</value>
+    <value>試料内で検出されたすべてのフィーチャーの強度の合計に対して強度がこれより低いフィーチャーを無視</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
@@ -672,7 +672,7 @@
     <value>4</value>
   </data>
   <data name="labelMinIntensityPPM.Text" xml:space="preserve">
-    <value>Min &amp;intensity proportion:</value>
+    <value>最小強度比(&amp;I)：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
@@ -724,7 +724,7 @@
     <value>0</value>
   </data>
   <data name="labelHardklorMinIdotP.Text" xml:space="preserve">
-    <value>Min isotope &amp;dot product:</value>
+    <value>最小同位体ドット積(&amp;D)：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelHardklorMinIdotP.Name" xml:space="preserve">
@@ -749,8 +749,7 @@
     <value>3</value>
   </data>
   <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
-    <value>Sets Hardklor configuration's signal-to-noise threshold, i.e. the relative abundance a peak must exceed in the spectrum window to be considered in the scoring algorithm.
-Note that this is a local noise threshold for the area of the spectrum that the peptide was identified in.</value>
+    <value>Hardklor設定の信号対ノイズ比の閾値を設定します。つまり、スコア算出アルゴリズムで考慮されるにはスペクトルウィンドウでピークが超える必要のある相対的存在量です。これは、ペプチドが同定されたスペクトル領域のローカルノイズ閾値であることに留意してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
@@ -781,7 +780,7 @@ Note that this is a local noise threshold for the area of the spectrum that the 
     <value>2</value>
   </data>
   <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
-    <value>Min &amp;signal to noise:</value>
+    <value>最小信号対ノイズ比(&amp;S)：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
@@ -806,7 +805,7 @@ Note that this is a local noise threshold for the area of the spectrum that the 
     <value>18</value>
   </data>
   <data name="groupBoxHardklor.Text" xml:space="preserve">
-    <value>Search parameters</value>
+    <value>検索パラメータ</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
@@ -831,13 +830,8 @@ Note that this is a local noise threshold for the area of the spectrum that the 
     <value>17</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>A score from 1.0 - 0, with 1.0 most likely to be correct,
-used to provide a cut-off for spectra in the results that will
-be included in the library.
-
-For TPP pepXML this is the minimum PeptideProphet probability.
-For Mascot this is 1 - the maximum expectation value.
-For SEQUEST SQT this is 1 - the maximum FDR.</value>
+    <value>ライブラリに含める結果のスペクトルに対するカットオフに使用される1.0から 0までのスコア（1.0が最も高確率と考えられる）。
+TPP pepXMLでは、この値は最小PeptideProphet確率です。Mascotでは、この値は1 - 最大期待値です。SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
@@ -868,7 +862,7 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>16</value>
   </data>
   <data name="labelCutoff.Text" xml:space="preserve">
-    <value>Q値のカットオフ：</value>
+    <value>カットオフスコア(&amp;C)：</value>
     <comment>Needs Review:English text changed
 Old English:Q value cutoff:
 Current English:&amp;Cut-off score:

@@ -165,7 +165,10 @@ namespace pwiz.Common.SystemUtil
                     {
                         if (progress.IsCanceled)
                         {
-                            proc.Kill();
+                            if (!proc.HasExited)
+                            {
+                                proc.Kill();
+                            }
                             progress.UpdateProgress(status = status.Cancel());
                             CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;

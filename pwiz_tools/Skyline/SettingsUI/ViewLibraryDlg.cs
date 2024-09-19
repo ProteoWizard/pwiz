@@ -426,7 +426,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var message = TextUtil.LineSeparate(string.Format(Resources.ViewLibraryDlg_LoadLibrary_An_error_occurred_attempting_to_import_the__0__library, selectedLibrarySpec.Name),
                                         x.Message);
-                        MessageDlg.Show(this, message);
+                        MessageDlg.ShowWithException(this, message, x);
                     }
                 }
             }

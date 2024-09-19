@@ -172,6 +172,7 @@ namespace TestPerf
                 }
             }
 
+            var testingForCancelability = pass == 1;
             var expectedPeptideGroups = 1490;
             var expectedPeptides = 11510;
             var expectedPeptideTransitionGroups = 13456;
@@ -222,18 +223,21 @@ namespace TestPerf
             PauseForScreenShot<ImportResultsNameDlg>("Common prefix form");
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
-            // Test back/next buttons
-            PauseForScreenShot("Testing back button");
-            RunUI(() =>
+            if (testingForCancelability)
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-            });
-            PauseForScreenShot("and forward again");
-            importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            RunUI(() => importResultsNameDlg.Suffix = string.Empty);
-            PauseForScreenShot<ImportResultsNameDlg>("Common prefix form again");
-            OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
+                // Test back/next buttons
+                PauseForScreenShot("Testing back button");
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                });
+                PauseForScreenShot("and forward again");
+                importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                RunUI(() => importResultsNameDlg.Suffix = string.Empty);
+                PauseForScreenShot<ImportResultsNameDlg>("Common prefix form again");
+                OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
+            }
 
             RunUI(() =>
             {
@@ -242,6 +246,7 @@ namespace TestPerf
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
+                importPeptideSearchDlg.FullScanSettingsControl.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, testingForCancelability ? 3 : 5);
             });
             PauseForScreenShot(" MS1 full scan settings page - next we'll tweak the search settings");
             RunUI(() =>
@@ -252,91 +257,101 @@ namespace TestPerf
                 importPeptideSearchDlg.SearchSettingsControl.HardklorMinIntensityPPM = 12.37; // Just a random value
                 // The instrument values should be settable since we set "centroided" in Full Scan.
                 AssertEx.IsTrue(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
-                importPeptideSearchDlg.SearchSettingsControl.HardklorInstrument = FullScanMassAnalyzerType.orbitrap;
-                importPeptideSearchDlg.SearchSettingsControl.HardklorResolution = 60000;
+                importPeptideSearchDlg.SearchSettingsControl.HardklorInstrument = FullScanMassAnalyzerType.tof;
+                importPeptideSearchDlg.SearchSettingsControl.HardklorResolution = testingForCancelability ? 60000 : 10000; // 10000 per MS1 filtering tutorial
             });
-            PauseForScreenShot(" Search settings page - next we'll start the mzML conversion if needed then cancel the search");
-            RunUI(() =>
+            if (!testingForCancelability)
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-            bool? searchSucceeded = null;
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
-
-            // Wait for the mzML conversion to complete before canceling
-            foreach (var searchFile in SearchFiles)
-            {
-                var converted = Path.Combine(Path.GetDirectoryName(searchFile) ?? string.Empty,
-                    @"converted",
-                    Path.ChangeExtension(Path.GetFileName(searchFile), @"mzML"));
-                WaitForCondition(() => File.Exists(converted));
+                PauseForScreenShot(" Search settings page");
             }
-
+            bool? searchSucceeded = null;
             RunUI(() =>
             {
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-
-                // Cancel search
-                importPeptideSearchDlg.SearchControl.Cancel();
             });
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-            Assert.IsFalse(searchSucceeded.Value);
-            searchSucceeded = null;
-            PauseForScreenShot("search cancelled, now go back and  test 2 input files with the same name in different directories");
-            TidyBetweenPasses(0); // For consistent audit log, remove any previous artifacts
 
-            // Go back and test 2 input files with the same name in different directories
-            RunUI(() =>
+            if (testingForCancelability)
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                PauseForScreenShot(" Search settings page - next we'll start the mzML conversion if needed then cancel the search");
+                RunUI(() =>
+                {
+                    // Run the search
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+                TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
 
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
-            });
-            PauseForScreenShot("same name, different directories");
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            RunUI(() => removeSuffix.Suffix = string.Empty);
-            PauseForScreenShot("expected dialog for name reduction - we'll cancel and go back to try unique names");
-            OkDialog(removeSuffix, removeSuffix.CancelDialog);
+                // Wait for the mzML conversion to complete before canceling
+                foreach (var searchFile in SearchFiles)
+                {
+                    var converted = Path.Combine(Path.GetDirectoryName(searchFile) ?? string.Empty,
+                        @"converted",
+                        Path.ChangeExtension(Path.GetFileName(searchFile), @"mzML"));
+                    WaitForCondition(() => File.Exists(converted));
+                }
 
-            // Test with 2 files
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
-            });
+                RunUI(() =>
+                {
+                    // Cancel search
+                    importPeptideSearchDlg.SearchControl.Cancel();
+                });
+                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                Assert.IsFalse(searchSucceeded.Value);
+                searchSucceeded = null;
+                PauseForScreenShot("search cancelled, now go back and  test 2 input files with the same name in different directories");
 
-            // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
-            var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            RunUI(() => removeSuffix2.Suffix = string.Empty);
-            PauseForScreenShot("expected dialog for name reduction ");
-            OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
+                // Go back and test 2 input files with the same name in different directories
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+
+                    importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
+                });
+                PauseForScreenShot("same name, different directories");
+                var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                RunUI(() => removeSuffix.Suffix = string.Empty);
+                PauseForScreenShot("expected dialog for name reduction - we'll cancel and go back to try unique names");
+                OkDialog(removeSuffix, removeSuffix.CancelDialog);
             
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;  // Per MS1 filtering tutorial
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
-                importPeptideSearchDlg.FullScanSettingsControl.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 5);
-            });
-            PauseForScreenShot("Full scan settings - not set Centroided, so instrument settings on next page should not be operable");
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsFalse(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
-            });
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-            PauseForScreenShot("Full scan settings - set Centroided, so instrument setting should be operable");
+                // Test with 2 files
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
+                });
+
+                // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
+                var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                RunUI(() => removeSuffix2.Suffix = string.Empty);
+                PauseForScreenShot("expected dialog for name reduction ");
+                OkDialog(removeSuffix2, () => removeSuffix2.YesDialog());
+                
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;  // Per MS1 filtering tutorial
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
+                    importPeptideSearchDlg.FullScanSettingsControl.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 5);
+                });
+                PauseForScreenShot("Full scan settings - not set Centroided, so instrument settings on next page should not be operable");
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                    AssertEx.IsFalse(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                });
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+            } // End if testing cancelability
+
+            PauseForScreenShot("Search Settings page -Full scan settings are set Centroided, so instrument setting should be operable");
             RunUI(() =>
             {
                 // We're on the "Search Settings" page. These values should be settable since we set "Centroided" in Full Scan.
@@ -399,9 +414,9 @@ namespace TestPerf
             PauseForScreenShot("complete");
 
             var doc = SkylineWindow.Document;
-            var expectedFeaturesMolecules = 6600;
-            var expectedFeaturesTransitionGroups = 8521;
-            var expectedFeaturesTransitions = 25563;
+            var expectedFeaturesMolecules = 6583;
+            var expectedFeaturesTransitionGroups = 8522;
+            var expectedFeaturesTransitions = 25566;
             var actualFeaturesMolecules = doc.CustomMolecules.Count();
             var actualFeaturesTransitionGroups = doc.MoleculeTransitionGroupCount - doc.PeptideTransitionGroupCount;
             var actualFeaturesTransitions = doc.MoleculeTransitionCount - doc.PeptideTransitionCount;
@@ -438,6 +453,7 @@ namespace TestPerf
                 AssertEx.IsDocumentState(doc, null, expectedPeptideGroups + 1, expectedPeptides + expectedFeaturesMolecules, 
                     expectedPeptideTransitionGroups + expectedFeaturesTransitionGroups, expectedPeptideTransitions + expectedFeaturesTransitions);
 
+                /* TODO update this for current test data set
                 // Verify that we found every known peptide
                 var colName = FindDocumentGridColumn(documentGrid, "Precursor.Peptide").Index;
                 var colReplicate = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate").Index;
@@ -514,12 +530,9 @@ namespace TestPerf
                 var threshold = hits.Select(h => h.area).Max() * .1;
                 var missedHits = hits.Where(h =>
                     !expectedMisses.Any(miss => Equals(h.name, miss.Item1) && Equals(h.z, miss.Item2) && h.area >= threshold)).ToArray();
-                /* TODO update this for current test data set
                 AssertEx.IsFalse(missedHits.Any(),
                 $"Hardklor did not find features for fairly strong peptides\n{string.Join("\n", misses.Select(u => u.ToString()))}");
-                */
 
-                /* TODO update this for current test data set
                 var unexpectedMisses = unmatched.Where(um => !expectedMisses.Contains((um.name, um.z))).ToArray();
                 var unexpectedMatches = matched.Where(um => expectedMisses.Contains((um.name, um.z))).ToArray();
                  AssertEx.IsFalse(unexpectedMisses.Any(),
@@ -531,6 +544,7 @@ namespace TestPerf
 
         }
 
+        /* TODO uncomment for hit check
         private HashSet<Hit> ReduceToBestHits(List<Hit> hitSet)
         {
             var bestHits = new HashSet<Hit>();
@@ -597,6 +611,7 @@ namespace TestPerf
                 }
             }
         }
+        */
 
         private void TidyBetweenPasses(int pass)
         {

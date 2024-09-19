@@ -1187,4 +1187,10 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
     <value>Train Model</value>
   </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
+      <value>You must specify a valid path to a Skyline document to learn from.</value>
+  </data>
+  <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
+    <value>MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature.</value>
+  </data>
 </root>

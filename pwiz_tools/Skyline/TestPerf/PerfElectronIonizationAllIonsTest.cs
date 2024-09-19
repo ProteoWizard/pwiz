@@ -49,10 +49,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             var skyfile = TestFilesDir.GetTestPath("test.sky"); // Has Full Scan settings good to go
             OpenDocument(skyfile);
-            
-            SetCsvFileClipboardText(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));
-            PasteSmallMoleculeListNoAutoManage();  // Paste into targets window, say no to the offer to set new nodes to automanage
-            var doc0 = WaitForDocumentLoaded();
+            var doc0 = PasteSmallMoleculeListNoAutoManage(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));  // Paste into targets window, say no to the offer to set new nodes to automanage
 
             // Enable automanage children so settings change will act on doc structure
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>

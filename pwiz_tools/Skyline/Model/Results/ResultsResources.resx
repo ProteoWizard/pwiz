@@ -344,4 +344,7 @@ It is recommended that you delete this file so that Skyline can create a new fil
   <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
     <value>Vendor-supplied library is unable to determine ion mobility for {0} with CCS={1:0.###}, mz={2:0.####}, and charge={3}.</value>
   </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
+    <value>Discarding empty chromatograms for {0}</value>
+  </data>
 </root>

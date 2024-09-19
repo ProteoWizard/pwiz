@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
             var spectrumSummaries2 = LoadSpectrumSummaryList(TestFilesDir.GetTestPath("8fmol.mzML"));
             var similarityMatrix = spectrumSummaries1.GetSimilarityGrid(spectrumSummaries2);
             Assert.IsNotNull(similarityMatrix);
-            var pointsToAlign = SimilarityGrid.FilterBestPoints(similarityMatrix.GetBestPointCandidates(null, null)).ToList();
+            var pointsToAlign = SimilarityGrid.FilterBestPoints(similarityMatrix.GetBestPointCandidates(null, null));
             Assert.AreNotEqual(0, pointsToAlign.Count);
             var kdeAligner = new KdeAligner();
             kdeAligner.Train(pointsToAlign.Select(pt=>pt.XRetentionTime).ToArray(), pointsToAlign.Select(pt=>pt.YRetentionTime).ToArray(), CancellationToken.None);

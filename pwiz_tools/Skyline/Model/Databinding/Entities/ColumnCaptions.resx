@@ -549,6 +549,9 @@
   <data name="IsDecoy">
     <value>Is Decoy</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>Isolation Window Width</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>Isotope Dist Index</value>
   </data>

@@ -58,6 +58,7 @@ namespace AutoQC
 
         private const string THERMO_EXT = ".raw";
         private const string SCIEX_EXT = ".wiff";
+        private const string SCIEX_WIFF2_EXT = ".wiff2";
         private const string WATERS_EXT = ".raw";
         private const string AGILENT_EXT = ".d";
         private const string BRUKER_EXT = ".D";
@@ -152,6 +153,8 @@ namespace AutoQC
                     return THERMO_EXT;
                 case MainSettings.SCIEX:
                     return SCIEX_EXT;
+                case MainSettings.SCIEX_WIFF2:
+                    return SCIEX_WIFF2_EXT;
                 case MainSettings.WATERS:
                     return WATERS_EXT; // Waters: .raw directory
                 case MainSettings.AGILENT:
@@ -306,7 +309,6 @@ namespace AutoQC
         public string GetFile()
         {
             CheckDrive();
-
 
             if (_dataFiles.IsEmpty)
             {
@@ -561,6 +563,11 @@ namespace AutoQC
         private long GetReimportDelay()
         {
             return (long) (_acquisitionTimeSetting * 0.1 * 60 * 1000);
+        }
+
+        public int GetQueueCount()
+        {
+            return _dataFiles.Count;
         }
 
         public int GetReimportQueueCount()

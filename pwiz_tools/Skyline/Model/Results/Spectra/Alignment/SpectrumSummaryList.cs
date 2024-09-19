@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         private static DigestKey GetSpectrumDigestKey(
             SpectrumSummary spectrumSummary)
         {
-            if (spectrumSummary.SummaryValueLength == 0 || spectrumSummary.SummaryValue.All(v=>0 == v))
+            if (spectrumSummary.SummaryValueLength == 0 || spectrumSummary.SummaryValueArray.All(v=>0 == v))
             {
                 return null;
             }
@@ -190,17 +190,21 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             return new SimilarityGrid(thisByDigestKey[bestDigestKey], thatByDigestKey[bestDigestKey]);
         }
 
-        public KdeAligner PerformAlignment(IProgressMonitor progressMonitor, IProgressStatus status, SpectrumSummaryList spectra2)
+        public KdeAligner PerformAlignment(IProgressMonitor progressMonitor, SpectrumSummaryList spectra2, double? startingWindowSizeProportion, int? threadCount)
         {
             var similarityGrid = GetSimilarityGrid(spectra2);
-            var candidatePoints = similarityGrid.GetBestPointCandidates(progressMonitor, status);
+            var candidatePoints = similarityGrid.GetBestPointCandidates(progressMonitor, threadCount);
             if (candidatePoints == null)
             {
                 return null;
             }
 
-            var bestPoints = SimilarityGrid.FilterBestPoints(candidatePoints).ToList();
+            var bestPoints = SimilarityGrid.FilterBestPoints(candidatePoints);
             var kdeAligner = new KdeAligner();
+            if (startingWindowSizeProportion.HasValue)
+            {
+                kdeAligner.StartingWindowSizeProportion = startingWindowSizeProportion.Value;
+            }
             kdeAligner.Train(bestPoints.Select(pt => pt.XRetentionTime).ToArray(), bestPoints.Select(pt=>pt.YRetentionTime).ToArray(), CancellationToken.None);
             return kdeAligner;
         }

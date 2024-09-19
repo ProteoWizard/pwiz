@@ -47,9 +47,31 @@ namespace pwiz.SkylineTest
             TestAssayImportGeneral();
         }
 
-        protected void TestAssayImportGeneral()
+        [TestMethod]
+        public void ConsoleAssayLibraryImportTestAsSmallMolecules()
         {
-            var documentExisting = TestFilesDir.GetTestPath("AQUA4_Human_Existing_Calc.sky");
+            if (SkipSmallMoleculeTestVersions())
+            {
+                return;
+            }
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            AsSmallMoleculeTestUtil.TranslateFilesToSmallMolecules(TestFilesDir.FullPath, true);
+            TestAssayImportGeneral(true);
+        }
+
+        private string GetTemplateDoc(string docname, bool asSmallMolecules)
+        {
+            var path = TestFilesDir.GetTestPath(docname);
+            if (asSmallMolecules)
+            {
+                AsSmallMoleculeTestUtil.TranslateSkylineDocumentToSmallMolecules(path);
+            }
+            return path;
+        }
+
+        protected void TestAssayImportGeneral(bool asSmallMolecules = false)
+        {
+            var documentExisting = GetTemplateDoc("AQUA4_Human_Existing_Calc.sky", asSmallMolecules);
             var documentUpdatedNoPath = "AQUA4_Human_Existing_Calc2.sky";
             var documentUpdated = TestFilesDir.GetTestPath(documentUpdatedNoPath);
             // 1. Import mass list with iRT's into document, then cancel
@@ -78,8 +100,9 @@ namespace pwiz.SkylineTest
                 "--import-assay-library=" + textConflict,
                 "--out=" + documentUpdated);
 
+            var smDecorate = asSmallMolecules ? RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator : string.Empty;
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_,
-                        "YVPIHTIDDGYSVIK", 76, 49.8));
+                smDecorate+"YVPIHTIDDGYSVIK", 76, 49.8));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____, Path.GetFileName(textConflict)));
             Assert.IsTrue(File.Exists(documentUpdated));
 
@@ -91,12 +114,12 @@ namespace pwiz.SkylineTest
                 "--out=" + documentUpdated);
 
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_,
-                        "YVPIHTIDDGYSVIK", 76, 49.8));
+                smDecorate + "YVPIHTIDDGYSVIK", 76, 49.8));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_,
-                        "GTFIIDPGGVIR", 71.3819, -10));
+                smDecorate + "GTFIIDPGGVIR", 71.3819, -10));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, textStandard,
                 string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
-                                                    "GTFIIDPGGVIR")));
+                    smDecorate + "GTFIIDPGGVIR")));
             Assert.IsFalse(File.Exists(documentUpdated));
 
             // 5. Mass list contains different iRT times on same peptide
@@ -105,7 +128,7 @@ namespace pwiz.SkylineTest
                 "--import-assay-library=" + textIrtConflict,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output, string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                    "YVPIHTIDDGYSVIK", 864.458, 49.8, 50.2));
+                smDecorate + "YVPIHTIDDGYSVIK", asSmallMolecules ? 860.4512 : 864.458, 49.8, 50.2));
             Assert.IsFalse(File.Exists(documentUpdated));
 
             // 6. Mass list contains different iRT values on two non-contiguous lines of the same transition group
@@ -115,7 +138,7 @@ namespace pwiz.SkylineTest
                 "--out=" + documentUpdated);
 
             string expectedErrors = "{0}";
-            for (int i = 0; i < 59; i++)
+            for (int i = 0; i < (asSmallMolecules ? 2 : 59); i++) // Peptide version has modifications trouble, small mol does not
             {
                 expectedErrors += Resources.CommandLine_ImportTransitionList_Error___line__0___column__1____2_;
             }
@@ -143,13 +166,13 @@ namespace pwiz.SkylineTest
             string expectedWarnings = "{0}";
             for (int i = 0; i < 2; i++)
             {
-                expectedWarnings += Resources.CommandLine_ImportTransitionList_Warning___line__0___column__1____2_;
+                expectedWarnings += Resources.CommandLine_ImportTransitionList_Warning___line__0___column__1____2_; // Two transitions of the same precursor have different iRT
             }
-            expectedWarnings += "{3}";
+            expectedWarnings += "{3}"; // Various success messages
             AssertEx.AreComparableStrings(expectedWarnings, output);
             var docIgnore = ResultsUtil.DeserializeDocument(documentUpdated);
-            Assert.AreEqual(docIgnore.PeptideTransitionCount, 109);
-            Assert.AreEqual(docIgnore.PeptideTransitionGroupCount, 22);
+            Assert.AreEqual(docIgnore.MoleculeTransitionCount, 109);
+            Assert.AreEqual(docIgnore.MoleculeTransitionGroupCount, 22);
             ValidateIrtAndLibrary(docIgnore);
 
             // 9. Argument requirements warnings
@@ -168,7 +191,7 @@ namespace pwiz.SkylineTest
             string irtDatabasePath = Path.ChangeExtension(documentUpdated, IrtDb.EXT) ?? IrtDb.EXT; // Not null for ReSharper
             string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             File.WriteAllText(irtDatabasePath, irtDatabasePath); // Dummy file containing its own path
-            string allIonsArgument = "--tran-product-ion-types=" + string.Join(",", Transition.PEPTIDE_ION_TYPES);  // For when more than y- and b-ions are used (a2 in OpenSWATH_SM4_iRT.csv)
+            string allIonsArgument = asSmallMolecules ? string.Empty : "--tran-product-ion-types=" + string.Join(",", Transition.PEPTIDE_ION_TYPES);  // For when more than y- and b-ions are used (a2 in OpenSWATH_SM4_iRT.csv)
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
                 allIonsArgument,
@@ -233,8 +256,8 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(File.Exists(documentUpdated));
             Assert.IsTrue(File.Exists(newIrtDatabasePath));
             var docSuccess = ResultsUtil.DeserializeDocument(documentUpdated);
-            Assert.AreEqual(expectedCount, docSuccess.PeptideTransitionGroupCount);
-            Assert.AreEqual(1170, docSuccess.PeptideTransitionCount);
+            Assert.AreEqual(expectedCount, docSuccess.MoleculeTransitionGroupCount);
+            Assert.AreEqual(1170, docSuccess.MoleculeTransitionCount);
             ValidateIrtAndLibrary(docSuccess);
 
             // 14. Successful import and succesful load of existing database, with keeping of iRT's, plus successful library import with ion mobility values
@@ -247,16 +270,17 @@ namespace pwiz.SkylineTest
             expectedCount = 284;
             ValidateIrtAndLibraryOutput(output, documentUpdated, expectedCount);
             var docSuccess2 = ResultsUtil.DeserializeDocument(documentUpdated);
-            Assert.AreEqual(expectedCount, docSuccess2.PeptideTransitionGroupCount);
-            Assert.AreEqual(1119, docSuccess2.PeptideTransitionCount);
+            Assert.AreEqual(expectedCount, docSuccess2.MoleculeTransitionGroupCount);
+            Assert.AreEqual(1119, docSuccess2.MoleculeTransitionCount);
             // Can't validate, because the document does not contain the iRT standard peptides
             AssertEx.Contains(output, Resources.CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards);
             // The data has fake ion mobility values set as 1+(mz/2), this should appear in document and in library
             var mobilities = new HashSet<double>();
+            var imTolerance = asSmallMolecules ? (10.1/4) : 0.001; // Original peptide calculation considered modification to arrive at mz
             foreach (var tg in docSuccess2.MoleculeTransitionGroups.Where(n => n.ExplicitValues.IonMobility.HasValue))
             {
                 var imExpected = 1 + (0.5 * tg.PrecursorMz);
-                AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < 0.001);
+                AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < imTolerance);
                 mobilities.Add(tg.ExplicitValues.IonMobility.Value);
             }
 
@@ -278,7 +302,7 @@ namespace pwiz.SkylineTest
         private static void ValidateIrtAndLibrary(SrmDocument docAfter)
         {
             int irtStandardCount = 0;
-            foreach (var nodePep in docAfter.Peptides) // We don't expect this to work for non-peptide molecules
+            foreach (var nodePep in docAfter.Molecules)
             {
                 if (nodePep.GlobalStandardType == PeptideDocNode.STANDARD_TYPE_IRT)
                     irtStandardCount++;

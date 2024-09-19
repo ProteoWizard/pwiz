@@ -191,7 +191,7 @@
     <value>MS 级别</value>
   </data>
   <data name="Description_MSLevel" xml:space="preserve">
-    <value>质谱级: MS1、MS2 等...</value>
+    <value>质谱级: MS1、MS2 等…</value>
   </data>
   <data name="Instrument" xml:space="preserve">
     <value>仪器</value>

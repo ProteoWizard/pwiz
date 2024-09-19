@@ -2123,9 +2123,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 lookupChromGroupInfoIndex[_nodeGroups[i].Id.GlobalIndex] = i;
 
             // Generate a unique short identifier for each peptide.
-            var peptideNames = new Tuple<string,bool>[peptideDocNodes.Count];
+            var peptideNames = new UniquePrefixGenerator.TargetLabel[peptideDocNodes.Count];
             for (int i = 0; i < peptideDocNodes.Count; i++)
-                peptideNames[i] = new Tuple<string,bool>(peptideDocNodes[i].ModifiedTarget.DisplayName, peptideDocNodes[i].IsProteomic);
+                peptideNames[i] = new UniquePrefixGenerator.TargetLabel(peptideDocNodes[i].ModifiedTarget.DisplayName, peptideDocNodes[i].IsProteomic);
             var uniqueNames = new UniquePrefixGenerator(peptideNames, 3);
 
             var displayPeptides = new List<DisplayPeptide>();

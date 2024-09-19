@@ -117,59 +117,20 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="propertyColumn.HeaderText" xml:space="preserve">
-    <value>Property</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="propertyColumn.Width" type="System.Int32, mscorlib">
-    <value>150</value>
-  </data>
-  <data name="operationColumn.HeaderText" xml:space="preserve">
-    <value>Operation</value>
-  </data>
-  <data name="operationColumn.Width" type="System.Int32, mscorlib">
-    <value>150</value>
-  </data>
-  <data name="valueColumn.HeaderText" xml:space="preserve">
-    <value>Value</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="dataGridViewEx1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>682, 181</value>
-  </data>
-  <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewEx1.Name" xml:space="preserve">
-    <value>dataGridViewEx1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
-    <value>panelClauses</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewEx1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="cbCreateCopy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbCreateCopy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbCreateCopy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cbCreateCopy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>714, 84</value>
+    <value>0, 67</value>
   </data>
   <data name="cbCreateCopy.Size" type="System.Drawing.Size, System.Drawing">
     <value>83, 17</value>
@@ -187,10 +148,10 @@
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbCreateCopy.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>buttonPanel</value>
   </data>
   <data name="&gt;&gt;cbCreateCopy.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnReset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -199,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnReset.Location" type="System.Drawing.Point, System.Drawing">
-    <value>714, 200</value>
+    <value>6, 203</value>
   </data>
   <data name="btnReset.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -217,10 +178,10 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnReset.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>buttonPanel</value>
   </data>
   <data name="&gt;&gt;btnReset.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -229,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>713, 41</value>
+    <value>6, 38</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -247,10 +208,10 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>buttonPanel</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -259,7 +220,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>713, 12</value>
+    <value>6, 9</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -277,10 +238,49 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>buttonPanel</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
+  </data>
+  <data name="propertyColumn.HeaderText" xml:space="preserve">
+    <value>Property</value>
+  </data>
+  <data name="propertyColumn.Width" type="System.Int32, mscorlib">
+    <value>150</value>
+  </data>
+  <data name="operationColumn.HeaderText" xml:space="preserve">
+    <value>Operation</value>
+  </data>
+  <data name="operationColumn.Width" type="System.Int32, mscorlib">
+    <value>150</value>
+  </data>
+  <data name="valueColumn.HeaderText" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="dataGridViewEx1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>671, 168</value>
+  </data>
+  <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.Name" xml:space="preserve">
+    <value>dataGridViewEx1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
+    <value>panelClauses</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="toolStripFilter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
@@ -310,10 +310,10 @@
     <value>Delete</value>
   </data>
   <data name="toolStripFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>682, 0</value>
+    <value>671, 0</value>
   </data>
   <data name="toolStripFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 181</value>
+    <value>24, 168</value>
   </data>
   <data name="toolStripFilter.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -337,10 +337,10 @@
     <value>Fill</value>
   </data>
   <data name="panelClauses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 55</value>
+    <value>9, 58</value>
   </data>
   <data name="panelClauses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>706, 181</value>
+    <value>695, 168</value>
   </data>
   <data name="panelClauses.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -363,14 +363,17 @@
   <data name="lblDescription.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="lblDescription.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="lblDescription.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="lblDescription.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="lblDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 9</value>
+  </data>
+  <data name="lblDescription.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="lblDescription.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 19</value>
+    <value>60, 13</value>
   </data>
   <data name="lblDescription.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -397,10 +400,10 @@
     <value>Top</value>
   </data>
   <data name="panelPages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 19</value>
+    <value>9, 22</value>
   </data>
   <data name="panelPages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>706, 36</value>
+    <value>695, 36</value>
   </data>
   <data name="panelPages.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -417,11 +420,17 @@
   <data name="&gt;&gt;panelPages.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="panelEditor.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
   <data name="panelEditor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>1, -1</value>
+    <value>0, 0</value>
+  </data>
+  <data name="panelEditor.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>9, 9, 9, 9</value>
   </data>
   <data name="panelEditor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>706, 236</value>
+    <value>713, 235</value>
   </data>
   <data name="panelEditor.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -436,11 +445,38 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelEditor.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>0</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>280, 17</value>
   </metadata>
+  <data name="buttonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Right</value>
+  </data>
+  <data name="buttonPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>713, 0</value>
+  </data>
+  <data name="buttonPanel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>9, 9, 9, 9</value>
+  </data>
+  <data name="buttonPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>87, 235</value>
+  </data>
+  <data name="buttonPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Name" xml:space="preserve">
+    <value>buttonPanel</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -450,11 +486,26 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>800, 235</value>
   </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Spectrum Filter</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
+    <value>btnDeleteFilter</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;propertyColumn.Name" xml:space="preserve">
     <value>propertyColumn</value>
@@ -473,18 +524,6 @@
   </data>
   <data name="&gt;&gt;valueColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
-    <value>btnDeleteFilter</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditSpectrumFilterDlg</value>

@@ -35,7 +35,8 @@ namespace AutoQC
         private readonly DateTime _initialCreated;
 
         private SkylineTypeControl _skylineTypeControl;
-        private string _lastEnteredPath;
+        private string _lastEnteredPath; // last entered path to Skyline .sky file
+        private string _lastEnteredAnnotationsFilePath;
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
 
@@ -130,6 +131,10 @@ namespace AutoQC
             textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
             comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
             comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
+            if (mainSettings.HasAnnotationsFile())
+            {
+                textAnnotationsFilePath.Text = mainSettings.AnnotationsFilePath;
+            }
         }
 
         private void SetDefaultMainSettings()
@@ -153,7 +158,8 @@ namespace AutoQC
             var resultsWindow = textResultsTimeWindow.Text;
             var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             var acquisitionTime = textAquisitionTime.Text;
-            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
+            var annotationsFilePath = textAnnotationsFilePath.Text;
+            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, annotationsFilePath);
             return mainSettings;
         }
 
@@ -179,6 +185,20 @@ namespace AutoQC
             {
                 textFolderToWatchPath.Text = dialog.SelectedPath;
                 _lastEnteredPath = dialog.SelectedPath;
+            }
+        }
+
+        private void btnAnnotationsFilePath_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = TextUtil.FileDialogFilter("CSV (Comma delimited)", TextUtil.EXT_CSV),
+                InitialDirectory = FileUtil.GetInitialDirectory(_lastEnteredAnnotationsFilePath, textSkylinePath.Text)
+            };
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                textAnnotationsFilePath.Text = dialog.FileName;
+                _lastEnteredAnnotationsFilePath = dialog.FileName;
             }
         }
 
@@ -317,7 +337,7 @@ namespace AutoQC
                 State.BaseState.AssertUniqueName(newConfig.Name, _action == ConfigAction.Edit);
                 newConfig.Validate(true);
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
                 AlertDlg.ShowError(this, e.Message);
                 return;

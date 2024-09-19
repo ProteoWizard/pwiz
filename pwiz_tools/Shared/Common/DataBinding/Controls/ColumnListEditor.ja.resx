@@ -178,7 +178,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-    <value>Down</value>
+    <value>下へ</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">

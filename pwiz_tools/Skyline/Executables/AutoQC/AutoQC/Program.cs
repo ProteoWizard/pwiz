@@ -302,8 +302,23 @@ namespace AutoQC
 
         private static bool InitSkylineSettings()
         {
+            ProgramLog.Info("Initializing Skyline settings.");
             if (SkylineInstallations.FindSkyline())
+            {
+                if (SkylineInstallations.HasSkyline)
+                {
+                    ProgramLog.Info(string.Format("Found SkylineRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineRunnerPath));
+                }
+                if (SkylineInstallations.HasSkylineDaily)
+                {
+                    ProgramLog.Info(string.Format("Found SkylineDailyRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineDailyRunnerPath));
+                }
+                // Save the Skyline settings otherwise, in a new installation of AutoQC Loader, "Skyline" and "Skyline Daily" options
+                // are disabled in the "Skyline" tab.
+                SharedBatch.Properties.Settings.Default.Save();
                 return true;
+            }
+
             var skylineForm = new FindSkylineForm(AppName, Icon());
             Application.Run(skylineForm);
 

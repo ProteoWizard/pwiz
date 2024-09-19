@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
     public class SpectrumSummary
     {
         private float[] _summaryValue;
+        private int _length;
         /// <summary>
         /// The length of the vector which will represent the spectrum intensity data.
         /// A longer vector would be more accurate, but shorter vectors take up less
@@ -55,6 +56,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         {
             SpectrumMetadata = spectrumMetadata;
             _summaryValue = summaryValue?.ToArray() ?? Array.Empty<float>();
+            _length = _summaryValue.Length;
         }
 
         public static SpectrumSummary FromSpectrum(MsDataSpectrum spectrum)
@@ -115,17 +117,13 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             }
         }
 
+        public float[] SummaryValueArray => _summaryValue;
+
         public IEnumerable<float> SummaryValueFloats
         {
             get { return _summaryValue.AsEnumerable(); }
         }
-        public int SummaryValueLength
-        {
-            get
-            {
-                return _summaryValue.Length;
-            }
-        }
+        public int SummaryValueLength => _length;
 
         public double? SimilarityScore(SpectrumSummary other)
         {
@@ -134,20 +132,22 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 return null;
             }
 
-            return CalculateSimilarityScore(SummaryValue, other.SummaryValue);
+            return CalculateSimilarityScore(SummaryValueArray, other.SummaryValueArray);
         }
 
-        public static double? CalculateSimilarityScore(IEnumerable<double> values1, IEnumerable<double> values2)
+        public static double? CalculateSimilarityScore(float[] values1, float[] values2)
         {
             double sumXX = 0;
             double sumXY = 0;
             double sumYY = 0;
 
-            foreach (var pair in values1.Zip(values2, Tuple.Create))
+            var i = 0;
+            foreach (var value1 in values1)
             {
-                sumXX += pair.Item1 * pair.Item1;
-                sumXY += pair.Item1 * pair.Item2;
-                sumYY += pair.Item2 * pair.Item2;
+                var value2 = values2[i++];
+                sumXX += value1 * value1;
+                sumXY += value1 * value2;
+                sumYY += value2 * value2;
             }
             if (sumXX <= 0 || sumYY <= 0)
             {

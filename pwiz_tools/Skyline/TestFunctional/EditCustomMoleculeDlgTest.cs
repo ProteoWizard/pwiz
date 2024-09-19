@@ -61,6 +61,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestEditBogusMolecule();
+            TestEditMassWithPrecursorTransitions();
             TestEditWithIsotopeDistribution();
             AsMasses();
             AsFormulas();
@@ -1009,18 +1010,13 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument(true);
             });
             var docCurrent = SkylineWindow.Document;
-            RunUI(() =>
-            {
-                var transitionList =
-                    "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
-                SetClipboardText(transitionList);
-                SkylineWindow.Paste();
-            });
-            var doc = WaitForDocumentLoaded();
+            var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
+            var doc =    PasteSmallMoleculeList(transitionList); // Paste the text
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
 
             // Now turn on auto manage children, so settings change has an effect on doc structure
@@ -1048,6 +1044,7 @@ namespace pwiz.SkylineTestFunctional
                 fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
             });
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor));
             using (new CheckDocumentState(1, 1, 2, 10))
@@ -1079,6 +1076,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(400.6623, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
             });
             OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
 
             // Verify that this updated all the precursor isotope mz values
             VerifyPrecursorTransitionMz(399.37179364, 0); // M
@@ -1106,6 +1104,8 @@ namespace pwiz.SkylineTestFunctional
 
             });
             OkDialog(editTransitionGroupDlg, editTransitionGroupDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+
             // Verify that this updated all the precursor isotope mz values
             VerifyPrecursorTransitionMz(199.182259, 5); // M
             VerifyPrecursorTransitionMz(199.683934336183, 6); // M+1
@@ -1120,5 +1120,51 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+
+        /// <summary>
+        /// Test the fix for updating non-auto-managed precursor transitions
+        /// </summary>
+        private void TestEditMassWithPrecursorTransitions()
+        {
+            // Clear out the document
+            RunUI(() => { SkylineWindow.NewDocument(true); });
+            var docCurrent = SkylineWindow.Document;
+            var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                "Cer,Cer 12:0;2/12:0,,[M-H]1-,398.3639681499,,,,,,\n" + // Precursor transition
+                "Cer,Cer 12:0;2/12:0,,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,,,,,,\n" + // Precursor transition
+                "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,-1,V',,[M-H]1-,186.1863380499,-1,";
+            var doc = PasteSmallMoleculeListNoAutoManage(transitionList); // Paste the text
+            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 6);
+
+            // Position ourselves on the molecule, then edit its mass
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(
+                () => SkylineWindow.ModifyPeptide());
+            RunUI(() =>
+            {
+                var massPrecisionTolerance = 0.0001;
+                Assert.AreEqual(399.371245, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(399.371245, double.Parse(editMoleculeDlg.FormulaBox.AverageText),
+                    massPrecisionTolerance);
+                editMoleculeDlg.FormulaBox.MonoMass = 499.371245; // Change mass
+                editMoleculeDlg.FormulaBox.AverageMass = 499.65436; // Change mass
+                Assert.AreEqual(499.371245, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(499.65436, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            
+            // Verify that this updated all the precursor mz values
+            VerifyPrecursorTransitionMz(498.363969, 0); // M
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 2); // fragment should not change
+
+            VerifyPrecursorTransitionMz(500.370679, 3); // M heavy
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 5); // fragment should not change
+
+        }
     }
 }

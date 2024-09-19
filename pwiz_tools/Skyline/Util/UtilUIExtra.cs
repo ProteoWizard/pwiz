@@ -217,7 +217,11 @@ namespace pwiz.Skyline.Util
         public static string ClipBoardText(string htmlFragment, string title, Uri sourceUrl)
         {
             if (title == null)
-                title = @"From Clipboard"; // CONSIDER: localize? This is a title for an HTML page. I think the encodings different.
+            {
+                // Use a blank title if none was specified.
+                // The title shows up when pasting into GMail.
+                title = string.Empty;
+            }
 
             StringBuilder sb = new StringBuilder();
 

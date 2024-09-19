@@ -131,6 +131,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_Eclipse:          return MS_Orbitrap_Eclipse;
         case InstrumentModelType_Orbitrap_GC:               return MS_Orbitrap_Exploris_480;
         case InstrumentModelType_Orbitrap_Astral:           return MS_Orbitrap_Astral;
+        case InstrumentModelType_Stellar:                   return MS_Stellar;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -208,9 +209,9 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
                 analyzerType = MS_magnetic_sector;
                 detectorType = MS_electron_multiplier;
                 break;
-	        case MassAnalyzerType_Astral:
-	            analyzerType = MS_asymmetric_track_lossless_time_of_flight_analyzer;
-	            detectorType = MS_electron_multiplier;
+            case MassAnalyzerType_Astral:
+                analyzerType = MS_asymmetric_track_lossless_time_of_flight_analyzer;
+                detectorType = MS_electron_multiplier;
             break;
         }
 
@@ -240,7 +241,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
-		case InstrumentModelType_Orbitrap_GC:
+        case InstrumentModelType_Orbitrap_GC:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -345,6 +346,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));

@@ -255,7 +255,7 @@
   <data name="LodCalculation_NONE_None" xml:space="preserve">
     <value>无</value>
   </data>
-  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point" xml:space="preserve">
+  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy" xml:space="preserve">
     <value>双线性转折点</value>
   </data>
   <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">

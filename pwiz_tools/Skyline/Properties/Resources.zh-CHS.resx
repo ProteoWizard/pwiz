@@ -519,7 +519,7 @@
     <value>错误：您试图添加的库与文件中已经存在的库发生冲突。</value>
   </data>
   <data name="CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___" xml:space="preserve">
-    <value>警告：导入结果文件{0}失败。 忽视...</value>
+    <value>警告：导入结果文件{0}失败。 忽视…</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>下载工具出错</value>
@@ -1203,11 +1203,11 @@
     <value>肽段RT 结果</value>
   </data>
   <data name="ReportSpecList_GetDefaults_Molecule_RT_Results" xml:space="preserve">
-    <value>Molecule RT Results</value>
+    <value>分子保留时间结果</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="ReportSpecList_GetDefaults_Molecule_Transition_Results" xml:space="preserve">
-    <value>Molecule Transition Results</value>
+    <value>分子离子对结果</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
@@ -1251,7 +1251,7 @@
     <value>匹配的谱图</value>
   </data>
   <data name="PeptidesPerProteinDlg_UpdateRemaining_Calculating___" xml:space="preserve">
-    <value>正在计算...</value>
+    <value>正在计算…</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
     <value>正在处理保留时间</value>
@@ -1614,7 +1614,7 @@
     <value>模型在用于峰值边界比较前必须被训练。</value>
   </data>
   <data name="CommandLine_ImportTool_The_tool_was_not_imported___" xml:space="preserve">
-    <value>工具未导入...</value>
+    <value>工具未导入…</value>
   </data>
   <data name="SkylineDoc" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\skylinedoc.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -1988,7 +1988,7 @@
     <value>未能在文件{1}中找到扫描ID{0}。</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">
-    <value>正在导入离子对列表{0}...</value>
+    <value>正在导入离子对列表{0}…</value>
   </data>
   <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
     <value>蛋白质</value>
@@ -2396,7 +2396,7 @@
     <value>成功更新下列工具</value>
   </data>
   <data name="SkylineWindow_SaveDocument_Saving___" xml:space="preserve">
-    <value>保存...</value>
+    <value>保存…</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>片段名称</value>
@@ -2405,7 +2405,7 @@
     <value>下载失败。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
-    <value>错误：如要导入工具，则必须含有名称和命令。 使用“--工具-添加”来指定一个名称，并且使用“--工具-命令”来指定一个命令。 工具未导入...</value>
+    <value>错误：如要导入工具，则必须含有名称和命令。 使用“--工具-添加”来指定一个名称，并且使用“--工具-命令”来指定一个命令。 工具未导入…</value>
   </data>
   <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
     <value>肽段序列</value>
@@ -2615,7 +2615,7 @@
     <value>..\resources\comment.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportFasta_Importing_FASTA_file__0____" xml:space="preserve">
-    <value>FASTA 文件{0}导入中...</value>
+    <value>FASTA 文件{0}导入中…</value>
   </data>
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_" xml:space="preserve">
     <value>一些背景蛋白质组蛋白没有基因信息，此选择可疑。</value>
@@ -2627,7 +2627,7 @@
     <value>异常值</value>
   </data>
   <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
-    <value>正在计算...</value>
+    <value>正在计算…</value>
   </data>
   <data name="SkylineWindow_ImportFasta_Unexpected_document_change_during_operation" xml:space="preserve">
     <value>操作过程中的意外文档修改。</value>
@@ -2681,7 +2681,7 @@
     <value>{0}必须至少包含一个氨基酸。</value>
   </data>
   <data name="CommandLine_RefineDocument_Refining_document___" xml:space="preserve">
-    <value>正在细化文档...</value>
+    <value>正在细化文档…</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_File_Name" xml:space="preserve">
     <value>文件名称</value>
@@ -3152,7 +3152,7 @@
     <value>无效的 S-Lens 值 {0}</value>
   </data>
   <data name="CommandLine_OpenSkyFile_Opening_file___" xml:space="preserve">
-    <value>文件打开中...</value>
+    <value>文件打开中…</value>
   </data>
   <data name="PasteDlg_AddFasta_An_unexpected_error_occurred" xml:space="preserve">
     <value>发生意外错误：</value>
@@ -3178,9 +3178,6 @@
   <data name="CachedLibrary_WarnInvalidEntries_" xml:space="preserve">
     <value>在库 '{0}' 中找到无效的条目。
 {2} 个肽段或分子中的 {1} 个无效，包括:：{3}</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
-    <value>库强度</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>删除现有工具目录出错。请关闭使用该目录的所有内容并且稍候再次尝试覆盖导入</value>
@@ -3231,7 +3228,7 @@
     <value>截尾计数</value>
   </data>
   <data name="CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
-    <value>{0} -&gt; {1} 注释：文件已导入。忽视...</value>
+    <value>{0} -&gt; {1} 注释：文件已导入。忽视…</value>
   </data>
   <data name="IIrtRegression_DisplayEquation_Measured_RT" xml:space="preserve">
     <value>测量的 RT</value>
@@ -3573,9 +3570,6 @@
   <data name="EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential" xml:space="preserve">
     <value>去簇电压</value>
   </data>
-  <data name="HtmlFragment_ClipBoardText_From_Clipboard" xml:space="preserve">
-    <value>从剪切板</value>
-  </data>
   <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
     <value>选定的文件或模型不向文档中的色谱图分配任何峰值边界。 请选择一个不同的模型或文件。</value>
   </data>
@@ -3633,7 +3627,7 @@
     <value>软件包安装已完成。</value>
   </data>
   <data name="CommandLine_ExportReport_Exporting_report__0____" xml:space="preserve">
-    <value>报告{0}导出中...</value>
+    <value>报告{0}导出中…</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>出现命名冲突。您已经从压缩文件夹内使用名称{0}安装一个工具。您是否想要覆盖或并行安装？</value>
@@ -3896,130 +3890,130 @@
     <value>正在运行命令:{0} {1}</value>
   </data>
   <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
-    <value>File does not exist. It may have been deleted on the server.</value>
+    <value>文件不存在。可能已在服务器上删除。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_" xml:space="preserve">
-    <value>There are no Panorama servers with a user account. To upload documents to a server a user account is required.</value>
+    <value>没有包含用户帐户的 Panorama 服务器。要将文档上传到服务器，必须要有用户帐户。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
-    <value>Unmapped Peptides</value>
+    <value>未映射的肽段</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_" xml:space="preserve">
-    <value>Spectral library file {0} exported successfully.</value>
+    <value>成功导出谱图库文件 {0}。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_" xml:space="preserve">
-    <value>Error: The document must contain at least one precursor to export a spectral library.</value>
+    <value>错误：文档必须至少包含一个母离子，才能导出谱图库。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
-    <value>Error: The document must contain results to export a spectral library.</value>
+    <value>错误：文档必须包含结果才能导出谱图库。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_" xml:space="preserve">
-    <value>mProphet features file {0} exported successfully.</value>
+    <value>成功导出 mProphet 特征文件 {0}。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
-    <value>Error: The document must contain targets for which to export mProphet features.</value>
+    <value>错误：文档必须包含要导出 mProphet 特征的目标。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
-    <value>Error: The document must contain results to export mProphet features.</value>
+    <value>错误：文档必须包含 mProphet 特征导出结果。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
-    <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
+    <value>错误：试图排除未知注释类型“{0}”。尝试其中一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
-    <value>Annotations successfully defined from file {0}.</value>
+    <value>从文件 {0} 成功定义注释。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
-    <value>Protein Expression</value>
+    <value>蛋白质表达</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
-    <value>Annotations file {0} exported successfully.</value>
+    <value>成功导出注释文件 {0}。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__" xml:space="preserve">
-    <value>Error: Unable to read annotations from file {0}.</value>
+    <value>错误：无法读取文件 {0} 中的注释。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
-    <value>Error: Attempting to specify an unknown annotation type '{0}'. Try one of the following:</value>
+    <value>错误：试图指定未知注释类型“{0}”。尝试其中一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
-    <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
+    <value>错误：试图指定未知注释目标“{0}”。尝试其中一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
-    <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
+    <value>警告：由于名称与现有注释冲突，将跳过注释“{0}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
-    <value>Warning: Overwriting existing annotation '{0}' due to a name conflict.</value>
+    <value>警告：由于名称冲突，将覆盖现有注释“{0}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
-    <value>Error: Cannot add a {0} type annotation without providing a list of values through {1}.</value>
+    <value>错误：如果未通过 {1} 提供值列表，则无法添加 {0} 类型注释。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
-    <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>
+    <value>错误：在未通过 {1} 至少提供一个目标的情况下，无法添加新注释“{0}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
-    <value>Try one of the following:</value>
+    <value>尝试以下一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_" xml:space="preserve">
-    <value>Error: The document must contain annotations in order to export annotations.</value>
+    <value>错误：要导出注释，文档中必须包含注释。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
-    <value>Error: Could not find background proteome file {0}</value>
+    <value>错误：无法找到背景蛋白质组文件 {0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
-    <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
+    <value>必须先添加肽段修饰，然后再为之赋予末端或氨基酸特异性。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="koina_logo_fdf731d5" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
-    <value>Importing peptide list {0} from file {1}...</value>
+    <value>正在导入文件 {1} 中的肽段列表 {0}…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
-    <value>Importing peptide lists from file {0}...</value>
+    <value>正在导入文件 {0} 中的肽段列表…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
-    <value>Warning: peptide list file contains lines with &gt;&gt;. Ignoring provided list name.</value>
+    <value>警告：肽段列表文件中含有 &gt;&gt; 行。忽略所提供的列表名称。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_" xml:space="preserve">
-    <value>Associating peptides with proteins from FASTA file {0}</value>
+    <value>正在关联肽段与 FASTA 文件 {0} 中的蛋白质</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_" xml:space="preserve">
-    <value>Add peptide precursors to the document to build a library from Koina predictions.</value>
+    <value>向文档中添加肽段母离子，根据 Koina 预测建立库。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_" xml:space="preserve">
-    <value>Using the Unimod definitions for the following modifications:</value>
+    <value>针对下列修饰使用 Unimod 定义：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
-    <value>A peptide modification must be added before assigning its variable status.</value>
+    <value>必须先添加肽段修饰，然后再指定其可变状态。</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

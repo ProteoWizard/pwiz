@@ -238,6 +238,51 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Align replicates.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Align_replicates {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Align_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing {0} for RT alignment.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0}.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Reading__0_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Reading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for common features across replicates.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for Hardklor/Bullseye completion.
+        /// </summary>
+        public static string HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error performing alignment between {0} and {1}: {2}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_ {
@@ -248,7 +293,7 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retention time alignment: {0} vs {1}.
+        ///   Looks up a localized string similar to RT alignment: {0} vs {1}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_ {
             get {
@@ -268,21 +313,29 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for peptide-like features with {0}.
+        ///   Looks up a localized string similar to Waiting for next file.
         /// </summary>
-        public static string HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_ {
+        public static string HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file {
             get {
-                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_", resourceCulture);
+                return ResourceManager.GetString("HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for persistent features in Hardklor results with {0}.
+        ///   Looks up a localized string similar to Searching for peptide-like features.
         /// </summary>
-        public static string HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_ {
+        public static string HardklorSearchEngine_Run_Searching_for_peptide_like_features {
             get {
-                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_wi" +
-                        "th__0_", resourceCulture);
+                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_peptide_like_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for persistent features in Hardklor results.
+        /// </summary>
+        public static string HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results", resourceCulture);
             }
         }
         

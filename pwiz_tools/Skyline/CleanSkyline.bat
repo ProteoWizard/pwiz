@@ -49,4 +49,11 @@ IF EXIST TestSettings_x86.testsettings del /q TestSettings_x86.testsettings
 IF EXIST Executables\Installer\FileList64.txt del /q Executables\Installer\FileList64.txt
 IF EXIST Executables\Hardklor\obj rmdir /s /q Executables\Hardklor\obj
 IF EXIST Executables\Hardklor\x64 rmdir /s /q Executables\Hardklor\x64
+IF EXIST Executables\SkylineBatch\SkylineBatch\Properties\AssemblyInfo.cs del /q Executables\SkylineBatch\SkylineBatch\Properties\AssemblyInfo.cs
+IF EXIST Properties\AssemblyInfo.cs del /q Properties\AssemblyInfo.cs
+IF EXIST SkylineCmd\Properties\AssemblyInfo.cs del /q SkylineCmd\Properties\AssemblyInfo.cs
+IF EXIST SkylineNightly\Properties\AssemblyInfo.cs del /q SkylineNightly\Properties\AssemblyInfo.cs
+IF EXIST SkylineNightlyShim\Properties\AssemblyInfo.cs del /q SkylineNightlyShim\Properties\AssemblyInfo.cs
+IF EXIST SkylineTester\Properties\AssemblyInfo.cs del /q SkylineTester\Properties\AssemblyInfo.cs
+IF EXIST TestRunner\Properties\AssemblyInfo.cs del /q TestRunner\Properties\AssemblyInfo.cs
 popd

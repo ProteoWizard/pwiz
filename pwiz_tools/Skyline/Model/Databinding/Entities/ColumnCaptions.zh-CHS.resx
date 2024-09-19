@@ -220,15 +220,15 @@
     <value>计算的浓度</value>
   </data>
   <data name="CalculatedConcentrationMessage">
-    <value>Calculated Concentration Message</value>
+    <value>计算的浓度消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationRaw">
-    <value>Calculated Concentration Raw</value>
+    <value>计算的浓度原始值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationStrict">
-    <value>Calculated Concentration Strict</value>
+    <value>计算的浓度精确值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalibrationCurve">
@@ -784,19 +784,19 @@
     <value>分子列表丰度</value>
   </data>
   <data name="MoleculeListAbundanceMessage">
-    <value>Molecule List Abundance Message</value>
+    <value>分子列表丰度消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceStrict">
-    <value>Molecule List Abundance Strict</value>
+    <value>分子列表丰度精确值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>Molecule List Abundance Transition Averaged</value>
+    <value>分子列表丰度离子对平均值 </value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>Molecule List Abundance Transition Summed</value>
+    <value>分子列表丰度离子对总和</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListLocator">
@@ -869,15 +869,15 @@
     <value>校准后面积</value>
   </data>
   <data name="NormalizedAreaMessage">
-    <value>Normalized Area Message</value>
+    <value>归一化面积消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaRaw">
-    <value>Normalized Area Raw</value>
+    <value>归一化面积原始值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaStrict">
-    <value>Normalized Area Strict</value>
+    <value>归一化面积精确值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
@@ -977,7 +977,7 @@
     <value>肽段序列长度</value>
   </data>
   <data name="PeptideSpectrumMatchCount">
-    <value>Peptide Spectrum Match Count</value>
+    <value>肽段谱图匹配计数</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PointCount">
@@ -999,15 +999,15 @@
     <value>母离子计算的浓度</value>
   </data>
   <data name="PrecursorCalculatedConcentrationMessage">
-    <value>Precursor Calculated Concentration Message</value>
+    <value>母离子计算的浓度消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationRaw">
-    <value>Precursor Calculated Concentration Raw</value>
+    <value>母离子计算的浓度原始值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationStrict">
-    <value>Precursor Calculated Concentration Strict</value>
+    <value>母离子计算的浓度精确值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCharge">
@@ -1041,15 +1041,15 @@
     <value>母离子校准后面积</value>
   </data>
   <data name="PrecursorNormalizedAreaMessage">
-    <value>Precursor Normalized Area Message</value>
+    <value>母离子归一化面积消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaRaw">
-    <value>Precursor Normalized Area Raw</value>
+    <value>母离子归一化面积原始值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaStrict">
-    <value>Precursor Normalized Area Strict</value>
+    <value>母离子归一化面积精确值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
@@ -1119,19 +1119,19 @@
     <value>蛋白质丰度</value>
   </data>
   <data name="ProteinAbundanceMessage">
-    <value>Protein Abundance Message</value>
+    <value>蛋白质丰度消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceStrict">
-    <value>Protein Abundance Strict</value>
+    <value>蛋白质丰度精确值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>Protein Abundance Transition Averaged</value>
+    <value>蛋白质丰度离子对平均值 </value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>Protein Abundance Transition Summed</value>
+    <value>蛋白质丰度离子对总和</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
@@ -1207,7 +1207,7 @@
     <value>相对于标准品比率</value>
   </data>
   <data name="Raw">
-    <value>Raw</value>
+    <value>原始</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
@@ -1391,14 +1391,14 @@
     <value>总面积比标准偏差</value>
   </data>
   <data name="Strict">
-    <value>Strict</value>
+    <value>精确</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SummaryMessage">
     <value>总结消息</value>
   </data>
   <data name="SurrogateExternalStandard">
-    <value>Surrogate External Standard</value>
+    <value>替代外部标准</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">

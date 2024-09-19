@@ -217,7 +217,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case SearchEngine.MSFragger:
                     if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
                         SelectedSearchEngine = SearchEngine.MSAmanda;
-                    return new MsFraggerSearchEngine(CutoffScore);
+                    return new MsFraggerSearchEngine(CutoffScore, ImportPeptideSearch.IsDIASearch);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:

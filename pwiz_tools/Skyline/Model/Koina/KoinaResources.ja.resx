@@ -155,7 +155,7 @@
     <value>サーバーを選択</value>
   </data>
   <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
-    <value>両方のモデルを選択</value>
+    <value>接続する両方のモデルを選択</value>
     <comment>Needs Review:English text changed
 Old English:Select both models
 Current English:Select both models to connect

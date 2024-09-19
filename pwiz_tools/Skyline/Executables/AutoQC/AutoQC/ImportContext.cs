@@ -26,23 +26,27 @@ namespace AutoQC
     {
         private int _currentIndex = -1;
         private readonly List<string> _resultsFileList;
-        public bool ImportExisting { get; }
+        
+        public bool InitialImport { get; }
+        public bool ImportingMultiple { get; }
+
         internal int ImportCount { get; private set; }
         public string WorkingDir { get; }
 
-        public ImportContext(string resultsFile, bool importExisting = false) 
+        public ImportContext(string resultsFile) 
         {
             if (resultsFile == null)
             {
                 throw new ArgumentException("Cannot initialize ImportContext with a null resultsFile");
             }
             _resultsFileList = new List<string> {resultsFile};
-            ImportExisting = importExisting;
+            InitialImport = false;
+            ImportingMultiple = false;
             WorkingDir = Path.GetDirectoryName(resultsFile);
             ImportCount = 0;
         }
 
-        public ImportContext(List<string> resultsFiles, bool importExisting = true)
+        public ImportContext(List<string> resultsFiles, bool initialImport = false)
         {
             if (resultsFiles == null || resultsFiles.Count == 0)
             {
@@ -50,8 +54,10 @@ namespace AutoQC
             }
             _resultsFileList = resultsFiles.OrderBy(f => new FileInfo(f).LastWriteTime).ToList();
 
-            ImportExisting = importExisting;
+            InitialImport = initialImport;
+            ImportingMultiple = true;
             WorkingDir = Path.GetDirectoryName(_resultsFileList[0]);
+            ImportCount = 0;
         }
 
         public string GetNextFile()
@@ -74,6 +80,8 @@ namespace AutoQC
 
         public virtual DateTime GetOldestImportedFileDate(DateTime lastAcqDate)
         {
+            if (_resultsFileList.Count == 0) return lastAcqDate;
+
             // Results files are sorted by LastWriteTime;
             if (DateTime.MinValue.Equals(lastAcqDate))
             {

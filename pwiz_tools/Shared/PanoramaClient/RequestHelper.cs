@@ -75,9 +75,7 @@ namespace pwiz.PanoramaClient
         private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
         {
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, requestMethod);
-            return new PanoramaServerException(
-                new ErrorMessageBuilder(messageOnError).Uri(uri).ExceptionMessage(e.Message)
-                    .LabKeyError(GetErrorFromException(e)).ToString(), e);
+            return PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, GetErrorFromException, e);
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -164,10 +162,8 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw new PanoramaServerException(
-                    new ErrorMessageBuilder(Resources
-                            .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
-                        .ExceptionMessage(e.Message).LabKeyError(GetErrorFromException(e)).Uri(address).ToString(), e);
+                throw PanoramaServerException.CreateWithResponseDisposal(
+                    Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_, address, GetErrorFromException, e);
             }
         }
 
@@ -179,9 +175,8 @@ namespace pwiz.PanoramaClient
             }
             catch (JsonReaderException e)
             {
-                throw new PanoramaServerException(
-                    new ErrorMessageBuilder(Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
-                        .ExceptionMessage(e.Message).Uri(uri).Response(response).ToString(), e);
+                throw PanoramaServerException.Create(
+                    Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_, uri, response, e);
             }
         }
 
@@ -246,10 +241,27 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw new PanoramaServerException(new ErrorMessageBuilder(Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_)
-                    .Uri(uri).ExceptionMessage(e.Message).LabKeyError(GetErrorFromException(e)).ToString(), e);
+                throw PanoramaServerException.CreateWithResponseDisposal(
+                    Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_,
+                    uri,
+                    GetErrorFromException,
+                    e);
             }
-            return base.Post(uri, postData, postDataString, messageOnError);
+
+            try
+            {
+                return base.Post(uri, postData, postDataString, messageOnError);
+            }
+            catch (PanoramaServerException e)
+            {
+                if (e.HttpStatus == HttpStatusCode.Unauthorized)
+                {
+                    // Clear the CSRF token if there is an authentication error. We may need to just get a new token and try the request again.
+                    // An example is the PanoramaPinger class in the AutoQC project that sends a POST request to the Panorama server every few minutes.
+                    _client.ClearCsrfToken();
+                }
+                throw;
+            }
         }
 
         public override string GetResponse(HttpWebRequest request)

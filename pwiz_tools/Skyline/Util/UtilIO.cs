@@ -1079,6 +1079,38 @@ namespace pwiz.Skyline.Util
             }
             return true;
         }
+
+        /// <summary>
+        /// Returns true if a new file can be created in directoryPath.
+        /// </summary>
+        public static bool IsWritable(string directoryPath)
+        {
+            if (!Directory.Exists(directoryPath))
+                throw new DirectoryNotFoundException(directoryPath);
+
+            try
+            {
+                // generate random filenames until the path doesn't exist (technically has a race condition, but extremely unlikely)
+                string randomFilepath;
+                do
+                {
+                    randomFilepath = Path.Combine(directoryPath, Path.GetRandomFileName());
+                } while (File.Exists(randomFilepath));
+
+                // create the file with write permission
+                using (new FileStream(randomFilepath, FileMode.Create, FileAccess.ReadWrite))
+                {
+                }
+
+                // cleanup the file
+                File.Delete(randomFilepath);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 
     /// <summary>

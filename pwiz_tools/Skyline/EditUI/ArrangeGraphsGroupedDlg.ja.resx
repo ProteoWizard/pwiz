@@ -423,7 +423,7 @@
     <value>4</value>
   </data>
   <data name="labelDisplay.Text" xml:space="preserve">
-    <value>表示(&amp;S):</value>
+    <value>表示(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;labelDisplay.Name" xml:space="preserve">
     <value>labelDisplay</value>

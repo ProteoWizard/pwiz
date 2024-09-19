@@ -186,7 +186,7 @@ struct SpectrumImpl : public Spectrum
     virtual int getMSLevel() const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const;
 
     virtual bool getHasPrecursorInfo() const;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
@@ -763,7 +763,7 @@ bool SpectrumImpl::getHasIsolationInfo() const
            experiment->msExperiment->Details->MassRangeInfo->Length > 0;
 }
 
-void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const
+void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const
 {
     if (!getHasIsolationInfo())
         return;
@@ -789,6 +789,8 @@ void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double
         }
         else
             collisionEnergy = 0;
+        
+        fragmentationMode = FragmentationMode_CID;        
     }
     CATCH_AND_FORWARD
 }

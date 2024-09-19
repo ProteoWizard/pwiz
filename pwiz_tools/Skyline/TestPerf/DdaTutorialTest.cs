@@ -401,6 +401,8 @@ namespace TestPerf
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
+
+            DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
         }
 
         private void RefreshGraphs()

@@ -1046,21 +1046,21 @@ namespace pwiz.Skyline.Model.Results
             }
             var intensities = timeIntensities.Intensities;
             var massErrors = timeIntensities.MassErrors;
+
+            _retentionTime = times[peak.TimeIndex];
+            _startTime = times[peak.StartIndex];
+            _endTime = times[peak.EndIndex];
             // Get the interval being used to convert from Crawdad index based numbers
             // to numbers that are normalized with respect to time.
             double interval;
-            if (peak.StartIndex + 1 < timeIntensities.NumPoints)
+            if (peak.EndIndex > peak.StartIndex)
             {
-                interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
+                interval = (_endTime - _startTime) / (peak.EndIndex - peak.StartIndex);
             }
             else
             {
                 interval = 0;
             }
-
-            _retentionTime = times[peak.TimeIndex];
-            _startTime = times[peak.StartIndex];
-            _endTime = times[peak.EndIndex];
 
             if ((flags & FlagValues.time_normalized) == 0 || finder.IsHeightAsArea)
             {

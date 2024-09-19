@@ -347,12 +347,22 @@ namespace pwiz.SkylineTest
         private void TestMassOnly(IEnumerable<string>[] adductLists)
         {
             var formula = @"[456.78]"; // Mass-only molecule description
+            var molecule = ParsedMolecule.Create(formula);
+            var massMolecule = molecule.MonoMassOffset;
+            AssertEx.AreEqual(456.78,massMolecule);
             foreach (var adductList in adductLists)
             {
                 foreach (var adductStr in adductList)
                 {
                     var adduct = Adduct.FromString(adductStr, Adduct.ADDUCT_TYPE.proteomic, null);
-                    IonInfo.ApplyAdductToFormula(formula, adduct);
+                    var ion = IonInfo.ApplyAdductToFormula(formula, adduct);
+                    var massAdduct = adduct.MonoMassAdduct + adduct.IsotopesIncrementalMonoMass + massMolecule * (adduct.GetMassMultiplier()-1);
+                    var massIon = BioMassCalc.MONOISOTOPIC.CalculateMass(ion);
+                    if (!adduct.IsChargeOnly)
+                    {
+                        AssertEx.AreNotEqual(massIon, massMolecule, "adduct has no effect?");
+                    }
+                    AssertEx.AreEqual(massIon, massMolecule + massAdduct, .0001, $"ion {ion} mass {massIon} vs mol {molecule} mass + adduct {adduct} mass ({massMolecule}+{massAdduct}");
                 }
             }
         }

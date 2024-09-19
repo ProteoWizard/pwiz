@@ -134,8 +134,8 @@ namespace AutoQCTest
             }
 
             foreach (var config in configs)
-                testConfigManager.SetState(testConfigManager.State,
-                    testConfigManager.State.UserAddConfig(config, null));
+                testConfigManager.SetState(testConfigManager.AutoQcState,
+                    testConfigManager.AutoQcState.UserAddConfig(config, null));
             
             return testConfigManager;
         }

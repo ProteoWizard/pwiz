@@ -121,6 +121,12 @@ int main(int argc, char* argv[])
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("swath.api.wiff2"), subsetConfig);
         }
 
+        {
+            auto subsetConfig = config;
+            subsetConfig.indexRange = make_pair(0, 20);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("7600ZenoTOFMSMS_EAD_TestData.wiff2"), subsetConfig);
+        }
+
         result.check();
     }
     catch (exception& e)

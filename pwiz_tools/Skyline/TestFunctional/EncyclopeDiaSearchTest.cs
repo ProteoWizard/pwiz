@@ -57,6 +57,8 @@ namespace pwiz.SkylineTestFunctional
             PrepareDocument("EncyclopeDiaSearchTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
 
+            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
+            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             var searchDlg = ShowDialog<EncyclopeDiaSearchDlg>(SkylineWindow.ShowEncyclopeDiaSearchDlg);
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
             //PauseTest();
@@ -68,8 +70,6 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(searchDlg.NextPage); // now on Koina settings
 
-            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
-            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 searchDlg.DefaultCharge = 3;

@@ -232,7 +232,7 @@ using SharedBatch.Properties;
                         {
                             var line = streamReader.ReadLine();
                             if (line == null) continue;
-                            if (startBlockRegex.IsMatch(line)) // add check for 0 len
+                            if (startBlockRegex.IsMatch(line) || _uiBuffer.Count == 0) // add check for 0 len
                                 _uiBuffer.Add(line);
                             else
                                 _uiBuffer[_uiBuffer.Count - 1] += Environment.NewLine + line;

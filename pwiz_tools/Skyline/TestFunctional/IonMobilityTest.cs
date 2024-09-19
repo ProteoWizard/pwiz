@@ -78,6 +78,9 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
+            // Check fix for user choosing Edit when there is no current imsdb
+            TestEditEmptyLibrary();
+
             // Verify fix for handling vendor files with bad CCS calibrations
             TestBadCalibrationCCS();
 
@@ -483,6 +486,17 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
             ImportResultsFile(testFilesDir.GetTestPath(@"2024-04-18 14.12.29-Tune Mix _1000 ms drift_.d")); // This will throw due to bad CCS calibration in .d file, if bug isn't fixed
             LoadNewDocument(true); // Clean up
+        }
+
+        // Verify fix for issue where user tries to Edit when there is no library
+        private static void TestEditEmptyLibrary()
+        {
+            var doc = SkylineWindow.Document;
+            AssertEx.IsTrue(doc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone);
+            var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            var ionMobilityLibDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.EditIonMobilityLibrary); // Without the fix this hangs
+            OkDialog(ionMobilityLibDlg, ionMobilityLibDlg.CancelDialog);
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.CancelDialog);
         }
 
         // Verify fix for issue where we would not preserve a simple change to IM window width

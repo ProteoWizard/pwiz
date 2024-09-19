@@ -1052,7 +1052,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>调整转换设置</value>
+    <value>转换设置</value>
     <comment>Needs Review:English text changed
 Old English:Adjust Conversion Settings
 Current English:Conversion Settings
@@ -1140,7 +1140,7 @@ Old Localized:调整转换设置</comment>
     <value>0</value>
   </data>
   <data name="lblSearchSettings.Text" xml:space="preserve">
-    <value>调整搜索设置</value>
+    <value>搜索设置</value>
     <comment>Needs Review:English text changed
 Old English:Adjust Search Settings
 Current English:Search Settings

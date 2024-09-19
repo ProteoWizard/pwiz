@@ -50,10 +50,10 @@ namespace pwiz.Skyline.Model.Lib
 {
     public sealed class LibraryManager : BackgroundLoader
     {
-        private readonly Dictionary<string, Library> _loadedLibraries =
-            new Dictionary<string, Library>();
-        private readonly Dictionary<string, LibraryLoadLock> _loadingLibraries =
-            new Dictionary<string, LibraryLoadLock>();
+        private readonly Dictionary<LibrarySpecKey, Library> _loadedLibraries =
+            new Dictionary<LibrarySpecKey, Library>();
+        private readonly Dictionary<LibrarySpecKey, LibraryLoadLock> _loadingLibraries =
+            new Dictionary<LibrarySpecKey, LibraryLoadLock>();
 
         private class LibraryLoadLock
         {
@@ -300,11 +300,11 @@ namespace pwiz.Skyline.Model.Lib
         public Library LoadLibrary(LibrarySpec spec, Func<ILoadMonitor> getMonitor)
         {
             LibraryLoadLock loadLock;
-
+            var specKey = GetKey(spec);
             lock (_loadedLibraries)
             {
                 Library library;
-                if (_loadedLibraries.TryGetValue(spec.Name, out library))
+                if (_loadedLibraries.TryGetValue(specKey, out library))
                 {
                     if (Equals(spec, library.CreateSpec(library.FileNameHint)))
                     {
@@ -312,15 +312,15 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     else
                     {
-                        _loadedLibraries.Remove(spec.Name);
+                        _loadedLibraries.Remove(specKey);
                     }
                 }
                 // If the library has not yet been loaded, then create a new lock
                 // for everyone to wait on until the library has been loaded.
-                if (!_loadingLibraries.TryGetValue(spec.Name, out loadLock))
+                if (!_loadingLibraries.TryGetValue(specKey, out loadLock))
                 {
                     loadLock = new LibraryLoadLock();
-                    _loadingLibraries.Add(spec.Name, loadLock);
+                    _loadingLibraries.Add(specKey, loadLock);
                 }
             }
 
@@ -335,12 +335,12 @@ namespace pwiz.Skyline.Model.Lib
 
             lock (_loadedLibraries)
             {
-                _loadingLibraries.Remove(spec.Name);
+                _loadingLibraries.Remove(specKey);
                 if (loadLock.Library != null)
                 {
                     // Update the newly loaded library in the dictionary, regardless of whether
                     // we were the thread that actually did the loading.
-                    _loadedLibraries[spec.Name] = loadLock.Library;
+                    _loadedLibraries[specKey] = loadLock.Library;
                 }
                 return loadLock.Library;
             }
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(spec.Name);
+                    _loadedLibraries.Remove(GetKey(spec));
                 }
 
                 ForDocumentLibraryReload(container, specs.Select(spec => spec.Name).ToArray());
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(spec.Name);
+                    _loadedLibraries.Remove(GetKey(spec));
                 }
             }
         }
@@ -382,12 +382,12 @@ namespace pwiz.Skyline.Model.Lib
                 foreach (var spec in specs)
                 {
                     Library library;
-                    if (_loadedLibraries.TryGetValue(spec.Name, out library))
+                    if (_loadedLibraries.TryGetValue(GetKey(spec), out library))
                     {
                         var specCompare = library.CreateSpec(library.FileNameHint);
                         if (!Equals(spec, specCompare))
                         {
-                            _loadedLibraries.Remove(spec.Name);
+                            _loadedLibraries.Remove(GetKey(spec));
                         }
                     }
                 }
@@ -399,7 +399,7 @@ namespace pwiz.Skyline.Model.Lib
             lock (_loadedLibraries)
             {
                 Library library;
-                _loadedLibraries.TryGetValue(spec.Name, out library);
+                _loadedLibraries.TryGetValue(GetKey(spec), out library);
                 return library;
             }
         }
@@ -438,13 +438,13 @@ namespace pwiz.Skyline.Model.Lib
             // Avoid building a library that is loading or allowing the library to be loaded
             // while it is building
             LibraryLoadLock loadLock;
-
+            var specKey = GetKey(builder.LibrarySpec);
             lock (_loadedLibraries)
             {
-                if (!_loadingLibraries.TryGetValue(builder.LibrarySpec.Name, out loadLock))
+                if (!_loadingLibraries.TryGetValue(specKey, out loadLock))
                 {
                     loadLock = new LibraryLoadLock();
-                    _loadingLibraries.Add(builder.LibrarySpec.Name, loadLock);
+                    _loadingLibraries.Add(specKey, loadLock);
                 }
             }
 
@@ -471,13 +471,13 @@ namespace pwiz.Skyline.Model.Lib
 
             lock (_loadedLibraries)
             {
-                _loadingLibraries.Remove(builder.LibrarySpec.Name);
+                _loadingLibraries.Remove(specKey);
                 if (success)
                 {
                     // If the library was already loaded, make sure the new copy
                     // replaces the load in the library load cache.
                     string name = builder.LibrarySpec.Name;
-                    _loadedLibraries.Remove(name);
+                    _loadedLibraries.Remove(specKey);
 
                     // If the current document contains the newly built library,
                     // make sure it is reloaded into the document, by resetting all
@@ -546,6 +546,44 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             public bool HasUI { get { return false; } }
+        }
+
+        private class LibrarySpecKey
+        {
+            public LibrarySpecKey(string name, string path)
+            {
+                Name = name;
+                Path = path;
+            }
+
+            public string Name { get; }
+            public string Path { get; }
+
+            protected bool Equals(LibrarySpecKey other)
+            {
+                return Name == other.Name && Path == other.Path;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((LibrarySpecKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Path != null ? Path.GetHashCode() : 0);
+                }
+            }
+        }
+
+        private static LibrarySpecKey GetKey(LibrarySpec librarySpec)
+        {
+            return new LibrarySpecKey(librarySpec.Name, librarySpec.IsDocumentLocal ? librarySpec.FilePath : null);
         }
     }
 
@@ -2525,7 +2563,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
         public double? RetentionTime { get; set; }
-        public IonMobilityAndCCS IonMobilityInfo { get; private set; }
+        public IonMobilityAndCCS IonMobilityInfo { get; set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
 
         public bool Equals(SpectrumInfoLibrary other)

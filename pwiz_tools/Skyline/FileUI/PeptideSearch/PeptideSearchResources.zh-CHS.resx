@@ -215,7 +215,7 @@
     <value>搜索失败。</value>
   </data>
   <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
-    <value>正在启动搜索...</value>
+    <value>正在启动搜索…</value>
   </data>
   <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
     <value>再次使用来自 {0} 的 Koina 预测</value>
@@ -287,7 +287,7 @@
     <value>部分结果文件仍然缺失。您确定想要继续？</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
-    <value>Feature Detection</value>
+    <value>特征检测</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
@@ -300,7 +300,7 @@
     <value>导入肽段搜索</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
-    <value>Select Files to Search</value>
+    <value>选择要搜索的文件</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
@@ -359,11 +359,11 @@
     <value>添加谱图库</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
-    <value>Building detected features library</value>
+    <value>正在建立检测的特征库</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
-    <value>Adding detected features to document</value>
+    <value>正在向文档中添加检测到的特征</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

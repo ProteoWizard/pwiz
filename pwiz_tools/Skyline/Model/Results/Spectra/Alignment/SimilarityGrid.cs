@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -152,16 +153,19 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 // return quadrants.Where(q => q.MaxScore >= minMedian).Take(3);
             }
 
-            public IEnumerable<Point> EnumeratePoints()
+            public List<Point> EnumeratePoints()
             {
+                var result = new List<Point>(XCount * YCount);
                 for (int x = 0; x < XCount; x++)
                 {
                     for (int y = 0; y < YCount; y++)
                     {
                         var score = CalcScore(XStart + x, YStart + y);
-                        yield return new Point(Grid, x + XStart, y + YStart, score);
+                        result.Add( new Point(Grid, x + XStart, y + YStart, score));
                     }
                 }
+
+                return result;
             }
         }
 
@@ -189,33 +193,33 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// These points should further be filtered by <see cref="FilterBestPoints"/> to get the real list
         /// that should be given to KdeAligner.Train.
         /// </summary>
-        public IEnumerable<Point> GetBestPointCandidates(IProgressMonitor progressMonitor, IProgressStatus status)
+        public List<Point> GetBestPointCandidates(IProgressMonitor progressMonitor, int ?threadCount)
         {
-            var parallelProcessor = new ParallelProcessor(progressMonitor, status);
-            var results = parallelProcessor.FindBestPoints(ToQuadrants(3));
+            var parallelProcessor = new ParallelProcessor(progressMonitor);
+            var results = parallelProcessor.FindBestPoints(ToQuadrants(3), threadCount);
             return results;
         }
 
         class ParallelProcessor
         {
             private IProgressMonitor _progressMonitor;
-            private List<Point> _results = new List<Point>();
+            private ConcurrentBag<Point> _results = new ConcurrentBag<Point>();
             private int _totalItemCount;
             private int _completedItemCount;
             private QueueWorker<Quadrant> _queue;
             private List<Exception> _exceptions = new List<Exception>();
 
-            public ParallelProcessor(IProgressMonitor progressMonitor, IProgressStatus status)
+            public ParallelProcessor(IProgressMonitor progressMonitor)
             {
                 _progressMonitor = progressMonitor;
             }
 
-            public List<Point> FindBestPoints(IEnumerable<Quadrant> startingQuadrants)
+            public List<Point> FindBestPoints(IEnumerable<Quadrant> startingQuadrants, int ? threadCount)
             {
                 _queue = new QueueWorker<Quadrant>(null, Consume);
                 try
                 {
-                    _queue.RunAsync(ParallelEx.GetThreadCount(), @"SimilarityGrid");
+                    _queue.RunAsync(threadCount ?? ParallelEx.GetThreadCount(), @"SimilarityGrid");
                     foreach (var q in startingQuadrants)
                     {
                         Enqueue(q);
@@ -231,7 +235,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 
                             if (_completedItemCount == _totalItemCount)
                             {
-                                return _results;
+                                return _results.ToList();
                             }
 
                             if (true == _progressMonitor?.IsCanceled)
@@ -280,10 +284,10 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             {
                 if (quadrant.XCount <= 4 || quadrant.YCount <= 4)
                 {
-                    var pointsToAdd = quadrant.EnumeratePoints().ToList();
-                    lock (this)
+                    var pointsToAdd = quadrant.EnumeratePoints();
+                    foreach (var p in pointsToAdd)
                     {
-                        _results.AddRange(pointsToAdd);
+                        _results.Add(p);
                     }
 
                     return;
@@ -324,25 +328,51 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             public double Score { get; }
         }
 
+        private class BestPointIndex
+        {
+            private Point[] _valuesX;
+            private Point[] _valuesY;
+
+            public BestPointIndex(int capacityX, int capacityY)
+            {
+                _valuesX = new Point[capacityX];
+                _valuesY = new Point[capacityY];
+            }
+
+            public void Consider(Point p)
+            {
+                if (p.Score > ((_valuesX[p.X]?.Score)??0.0))
+                {
+                    _valuesX[p.X] = p;
+                }
+
+                if (p.Score > ((_valuesY[p.Y]?.Score) ?? 0.0))
+                {
+                    _valuesY[p.Y] = p;
+                }
+            }
+
+            public bool Contains(Point p) => ReferenceEquals(p, _valuesX[p.X]) || ReferenceEquals(p, _valuesY[p.Y]);
+        }
+
+
         /// <summary>
         /// Returns a subset such that each point has the highest score in either its row
         /// or column.
         /// </summary>
-        public static IEnumerable<Point> FilterBestPoints(IEnumerable<Point> allPoints)
+        public static List<Point> FilterBestPoints(List<Point> allPoints)
         {
-            HashSet<int> xIndexes = new HashSet<int>();
-            HashSet<int> yIndexes = new HashSet<int>();
+            var bestPointPerXY = new BestPointIndex(allPoints.Max(p=> p.X) + 1, allPoints.Max(p => p.Y) + 1);
+            var result = new List<Point>(allPoints.Count); // Almost certainly way more capacity than needed, but it's not retained for long
 
-            foreach (Point point in allPoints.OrderByDescending(pt=>pt.Score))
+            foreach (var p in allPoints)
             {
-                if (xIndexes.Contains(point.X) && yIndexes.Contains(point.Y))
-                {
-                    continue;
-                }
-                xIndexes.Add(point.X);
-                yIndexes.Add(point.Y);
-                yield return point;
+                bestPointPerXY.Consider(p);
             }
+
+            result.AddRange(allPoints.Where(p => bestPointPerXY.Contains(p)));
+
+            return result;
         }
     }
 }

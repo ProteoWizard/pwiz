@@ -18,7 +18,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -54,51 +56,13 @@ namespace pwiz.Common.Collections
         // Regular expression pattern to match decimal parts - note it accepts both . and , decimal separator
         private static readonly Regex REGEX = new Regex(@"(\d+(?:[.,]\d+)?|\D+)", RegexOptions.Compiled);
 
+        /// <summary>
+        /// Compares two strings. Note that when sorting large lists of strings, it is more efficient
+        /// to call <see cref="MakeCompareKey"/> for all of the strings and sort those keys.
+        /// </summary>
         public static int Compare(string x, string y)
         {
-            if (x == null)
-            {
-                return y == null ? 0 : -1;
-            }
-            else if (y == null)
-            {
-                return 1;
-            }
-
-            // Match decimal parts of both strings
-            var matchesX = REGEX.Matches(x);
-            var matchesY = REGEX.Matches(y);
-
-            // Compare segments iteratively
-            var segmentCount = Math.Min(matchesX.Count, matchesY.Count);
-
-            for (var i = 0; i < segmentCount; i++)
-            {
-                // Compare non-decimal segments
-                var partX = matchesX[i].Groups[1].Value;
-                var partY = matchesY[i].Groups[1].Value;
-                var comparison = string.Compare(partX, partY, StringComparison.OrdinalIgnoreCase);
-                if (comparison != 0)
-                {
-                    // Compare as decimals
-                    var decimalX = ParseLocalizedDecimal(partX);
-                    var decimalY = ParseLocalizedDecimal(partY);
-
-                    if (decimalX == null || decimalY == null)
-                    {
-                        return comparison; // One or both could not be understood as a decimal, return the string comparison
-                    }
-
-                    comparison = decimal.Compare(decimalX.Value, decimalY.Value);
-                    if (comparison != 0)
-                    {
-                        return comparison;
-                    }
-                }
-            }
-
-            // If one string has more segments, it should come after
-            return matchesX.Count.CompareTo(matchesY.Count);
+            return Comparer<CompareKey>.Default.Compare(MakeCompareKey(x), MakeCompareKey(y));
         }
 
         private static decimal? ParseLocalizedDecimal(string value)
@@ -114,6 +78,77 @@ namespace pwiz.Common.Collections
                 return result;
             }
             return null; // Didn't parse
+        }
+
+        public static CompareKey MakeCompareKey(string s)
+        {
+            if (s == null)
+            {
+                return null;
+            }
+
+            CompareKey compareKey = null;
+            foreach (Match segment in REGEX.Matches(s).Cast<Match>().Reverse())
+            {
+                var stringPart = segment.Groups[1].Value;
+                var decimalPart = ParseLocalizedDecimal(stringPart);
+                if (!decimalPart.HasValue)
+                {
+                    if (StringComparer.OrdinalIgnoreCase.Compare(stringPart, "0") >= 0)
+                    {
+                        decimalPart = decimal.MaxValue;
+                    }
+                    else
+                    {
+                        decimalPart = decimal.MinValue;
+                    }
+                }
+                compareKey = new CompareKey(decimalPart.Value, stringPart, compareKey);
+            }
+
+            return compareKey ?? CompareKey.EMPTY;
+        }
+
+        public sealed class CompareKey : IComparable<CompareKey>, IComparable
+        {
+            public static readonly CompareKey EMPTY = new CompareKey(decimal.MinValue, string.Empty, null);
+            private readonly decimal _decimal;
+            private readonly string _string;
+            private readonly CompareKey _remainder;
+
+            public CompareKey(decimal d, string s, CompareKey remainder)
+            {
+                _string = s;
+                _decimal = d;
+                _remainder = remainder;
+            }
+
+            public int CompareTo(CompareKey other)
+            {
+                if (other == null)
+                {
+                    return 1;
+                }
+
+                int result = _decimal.CompareTo(other._decimal);
+                if (result != 0)
+                {
+                    return result;
+                }
+
+                result = StringComparer.OrdinalIgnoreCase.Compare(_string, other._string);
+                if (result != 0)
+                {
+                    return result;
+                }
+
+                return Comparer<CompareKey>.Default.Compare(_remainder, other._remainder);
+            }
+
+            int IComparable.CompareTo(object obj)
+            {
+                return CompareTo((CompareKey)obj);
+            }
         }
     }
 }

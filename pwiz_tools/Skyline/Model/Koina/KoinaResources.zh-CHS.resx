@@ -155,7 +155,7 @@
     <value>选择一个服务器</value>
   </data>
   <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
-    <value>选择两个模型</value>
+    <value>选择连接这两个模型</value>
     <comment>Needs Review:English text changed
 Old English:Select both models
 Current English:Select both models to connect

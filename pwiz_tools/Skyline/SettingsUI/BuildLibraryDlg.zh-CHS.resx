@@ -460,7 +460,7 @@
     <value>包含不明确匹配项(&amp;M)</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
-    <value>Check to keep spectra that match multiple peptides.</value>
+    <value>选中将保留与多个肽段匹配的谱图。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
@@ -528,7 +528,7 @@
     <value>文档肽筛选器(&amp;D)</value>
   </data>
   <data name="cbFilter.ToolTip" xml:space="preserve">
-    <value>Check to filter matches for only the peptides in the document.</value>
+    <value>选中将仅过滤文档中的肽段。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">

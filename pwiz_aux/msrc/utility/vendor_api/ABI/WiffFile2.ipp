@@ -183,7 +183,7 @@ struct Spectrum2Impl : public Spectrum
     virtual int getMSLevel() const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const;
 
     virtual bool getHasPrecursorInfo() const;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
@@ -727,7 +727,7 @@ int Spectrum2Impl::getMSLevel() const
 
 bool Spectrum2Impl::getHasIsolationInfo() const { return experiment->experimentType == Product; }
 
-void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const
+void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const
 {
     try
     {
@@ -750,6 +750,15 @@ void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, doubl
             collisionEnergy = collisionEnergyRamp->CollisionEnergyRampStart;
         else
             collisionEnergy = (collisionEnergyRamp->CollisionEnergyRampEnd + collisionEnergyRamp->CollisionEnergyRampStart) / 2;
+            
+        fragmentationMode = FragmentationMode_CID;
+        IExperiment^ msExperiment = experiment->msExperiment;
+        if(msExperiment->FragmentationMode.HasValue && (msExperiment->FragmentationMode.Value == SCIEX::Apis::Data::v1::Types::FragmentationMode::EAD || msExperiment->FragmentationMode.Value == Types::FragmentationMode::EAD_Conventional_Trapping))
+        {
+            fragmentationMode = FragmentationMode_EAD;
+            if(msExperiment->ElectronKe.HasValue)
+                electronKineticEnergy = msExperiment->ElectronKe.Value;            
+        }
     }
     CATCH_AND_FORWARD
 }
@@ -831,8 +840,7 @@ void WiffFile2Impl::setSample(int sample) const
             IList<ISample^>^ unwrappedAllSamples = allSamples;
             this->msSample = (ISample^)unwrappedAllSamples[sample - 1];
 
-            auto experimentRequest = DataReader()->RequestFactory->CreateExperimentsReadRequest();
-            experimentRequest->SampleId = msSample->Id;
+            auto experimentRequest = DataReader()->RequestFactory->CreateExperimentsReadRequest(msSample->Id, true);
 
             currentSampleExperiments = gcnew List<IExperiment^>();
 

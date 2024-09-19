@@ -1107,7 +1107,7 @@
     <value>电荷</value>
   </data>
   <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
-    <value>Min intensity PPM</value>
+    <value>最小强度 PPM</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="HardklorSettings_MinIdotP" xml:space="preserve">
@@ -1150,7 +1150,7 @@
     <value>配置全扫描设置</value>
   </data>
   <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
-    <value>Hardklor Search Settings</value>
+    <value>Hardklor 搜索设置</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
@@ -1787,18 +1787,18 @@
     <value>最小质荷比</value>
   </data>
   <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
-    <value>Group at gene level</value>
+    <value>按基因水平分组</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
-    <value>Relative Abundance Formatting</value>
+    <value>相对丰度格式</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
     <value>格式化行</value>
   </data>
   <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
-    <value>Max q-value</value>
+    <value>最大 Q 值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">

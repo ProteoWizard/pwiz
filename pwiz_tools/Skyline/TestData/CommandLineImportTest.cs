@@ -393,6 +393,46 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(expectedVarModPepCount, docListMods.Peptides.Count(HasVarMod));
             ValidateMultiList(docListMods, docFastaMods, false);
 
+            // Add a single protein with a bare sequence and verify that it does not pick up modified variants
+            // The modifications in the other proteins should tell Skyline that sequences are specified
+            // without need of modification expansion.
+            File.AppendAllLines(listsPath, new[]
+            {
+                ">>Unmodified",
+                "MVNNGHSFNVEYDDSQDR"
+            });
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+                CommandArgs.ARG_OVERWRITE.ArgumentText,
+                CommandArgs.ARG_SAVE.ArgumentText,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + oxMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + oxMod.AAs,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + phosMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + phosMod.AAs.Remove(1, 2),  // Remove ", " from "S, T"
+                CommandArgs.ARG_IMPORT_PEP_LIST + listsPath);
+            docListMods = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(3, docListMods.Settings.PeptideSettings.Modifications.StaticModifications.Count);
+            Assert.AreEqual(expectedProtCount + 1, docListMods.PeptideGroupCount);
+            Assert.AreEqual(expectedPepCount + expectedVarModPepCount + 1, docListMods.PeptideCount);
+            Assert.AreEqual(expectedVarModPepCount, docListMods.Peptides.Count(HasVarMod));
+            Assert.IsFalse(docListMods.PeptideGroups.Any(g => g.AutoManageChildren),
+                TextUtil.LineSeparate("The following lists have auto-manage children:",
+                    TextUtil.LineSeparate(docListMods.PeptideGroups.Where(g => g.AutoManageChildren).Select(g => g.Name))));
+
+            // And verify that a bare peptide sequence with no modified peptides gets expanded appropriately
+            // CONSIDER: Adding a command-line argument to prevent this expansion might be desirable
+            File.WriteAllLines(listPath, new []{ @"MVNNGHSFNVEYDDSQDR" });
+            outPath = TestFilesDir.GetTestPath("import-list-expand-mods.sky");
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+                CommandArgs.ARG_SAVE.ArgumentText,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + oxMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + oxMod.AAs,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + phosMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + phosMod.AAs.Remove(1, 2),  // Remove ", " from "S, T"
+                CommandArgs.ARG_IMPORT_PEP_LIST + listPath);
+            var docListExpanded = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, docListExpanded.PeptideGroupCount);
+            Assert.AreEqual(8, docListExpanded.PeptideCount);
+
             // Test correct error reporting for unrecognized modifications
             var listPathBadMod = TestFilesDir.GetTestPath("peplist-bad-mod.txt");
             outPath = TestFilesDir.GetTestPath("import-bad-mod.sky");

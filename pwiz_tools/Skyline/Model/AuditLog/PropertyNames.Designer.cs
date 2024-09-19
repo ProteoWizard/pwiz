@@ -4624,6 +4624,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string TransitionFullScan_SpectrumFilter {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_SpectrumFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use high-selectivity extraction.
         /// </summary>
         public static string TransitionFullScan_UseSelectiveExtraction {
@@ -4665,6 +4674,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionGroupDocNode_PrecursorConcentration {
             get {
                 return ResourceManager.GetString("TransitionGroupDocNode_PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string TransitionGroupDocNode_SpectrumFilter {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_SpectrumFilter", resourceCulture);
             }
         }
         
