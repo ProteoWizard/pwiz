@@ -144,7 +144,7 @@
         Some of the listed peptides show a peptide icon to the left of the sequence, while others do not. The icon indicates that the current document
         modification settings match the modified state of the peptide in the library. None of the peptides where the entire sequence is bold and
         underlined show the icon. This means that the current document settings do not explain 15N isotope modification of all amino acid residues.
-        The modified peptide <strong>C</strong>PLPRPWALTFSYGR+++ does show an icon, however, because the current document specifies the
+        The modified peptide <strong><u>C</u></strong>PLPRPWALTFSYGR+++ does show an icon, however, because the current document specifies the
         ‘Carbamidomethyl (C)’ modification. If you hover over the peptide, you can see that the modification on the Cysteine is listed C[+57.0] as
         expected.
     </p>
@@ -163,9 +163,9 @@
         <img src="image-3.png" />
     </p>
     <p>
-        Hover the cursor over the one displayed as <strong>Q</strong>VLFSADDR++, and you will see that the glutamine modification is displayed in the
-        tip as Q[+17.0] for a Gln-&gt;pyro-Glu modification. To understand why Skyline displays both <strong>QVLFSADDR</strong>++ and
-        <strong>QVLFSADDRVK</strong>+++ twice, you can hover the cursor over these peptides as well. You will find that they represent all 15N
+        Hover the cursor over the one displayed as <strong><u>Q</u></strong>VLFSADDR++, and you will see that the glutamine modification is displayed
+        in the tip as Q[+17.0] for a Gln-&gt;pyro-Glu modification. To understand why Skyline displays both <strong><u>QVLFSADDR</u></strong>++ and
+        <strong><u>QVLFSADDRVK</u></strong>+++ twice, you can hover the cursor over these peptides as well. You will find that they represent all 15N
         modified peptides with and without the Gln-&gt;pyro-Glu modification.
     </p>
     <p>
@@ -274,7 +274,8 @@
         All of the peptides now display icons to the left, indicating your document modifications match those found in the library, and modifications
         are now visually displayed on the peptide sequence text just as they would be in the document peptide view. Isotope modifications are
         highlighted in blue, and it is now possible to distinguish visually between the 15N labeled <strong><span
-                class="blue">QVLFSADDR</span></strong> and its pyro-Glu modified form <strong><span class="blue">QVLFSADDR</span></strong>.
+                class="blue">QVLFSADDR</span></strong> and its pyro-Glu modified form <strong><u><span class="blue">Q</span></u><span
+                class="blue">VLFSADDR</span></strong>.
     </p>
     <h1>Adding Library Peptides to the Document</h1>
     <p>
@@ -475,12 +476,13 @@
         having one.
     </p>
     <p>
-        You may notice that the AI<strong>S</strong>SANLLVR spectrum has two large peaks which remain unassigned to product ions of the peptide. This
-        should give you pause in using it further in your targeted experiments. More experience with spectral libraries will likely show you that
+        You may notice that the AI<strong><u>S</u></strong>SANLLVR spectrum has two large peaks which remain unassigned to product ions of the peptide.
+        This should give you pause in using it further in your targeted experiments. More experience with spectral libraries will likely show you that
         almost regardless of your peptide search settings and score cut-off in building your library, there will be questionable spectra. In this
         case, to gain more confidence in the spectra, you could consult Swissprot, where you would find that both of the peptides
-        AI<strong>S</strong>SANLLVR and AI<strong>S</strong>SDMFFGR are listed as being phosphorylated exactly as assigned by this search engine.
-        Clearly, the rich access Skyline provides to the contents of your spectral libraries is a great advantage in working with them.
+        AI<strong><u>S</u></strong>SANLLVR and AI<strong><u>S</u></strong>SDMFFGR are listed as being phosphorylated exactly as assigned by this
+        search engine. Clearly, the rich access Skyline provides to the contents of your spectral libraries is a great advantage in working with them.
+    
     </p>
     <h1>Matching Library Peptides to Proteins</h1>
     <p>
