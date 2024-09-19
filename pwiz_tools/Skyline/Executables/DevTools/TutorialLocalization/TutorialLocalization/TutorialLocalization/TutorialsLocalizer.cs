@@ -79,7 +79,7 @@ namespace TutorialLocalization
             }
 
             var htmlDocument = new HtmlDocument();
-            htmlDocument.Load(path);
+            htmlDocument.Load(path, Encoding.UTF8);
             return htmlDocument;
         }
 
