@@ -391,6 +391,30 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         return [ install-vendor-api-dependencies-to-locations $(SKYLINE_PATH)/bin/x64/Debug $(SKYLINE_PATH)/bin/x64/Release : $(properties) ] ;
     }
 
+    rule do_tutorial_localization ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_tutorial_localization
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building TutorialLocalization.exe in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Executables/DevTools/TutorialLocalization/TutorialLocalization/TutorialLocalization.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TutorialLocalization /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    actions do_merged_tutorials
+    {
+		echo creating MergedTutorials.zip
+		echo command $(OUTPUT_PATH)/TutorialLocalization.exe $(SKYLINE_PATH)/Documentation/Tutorials
+		$(SKYLINE_PATH)/Executables/DevTools/TutorialLocalization/TutorialLocalization/TutorialLocalization/TutorialLocalization.exe $(SKYLINE_PATH)/Documentation/Tutorials
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+
     notfile NugetRestore : @do_nuget_restore ;
 
     # this is really the main action for building Skyline and leaving Skyline.exe intact, but it is explicit 
@@ -587,6 +611,31 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
+
+    make TutorialLocalization.exe
+	    : # sources
+	    : # actions
+	        @do_tutorial_localization
+	    : # requirements
+	        <link>shared:<build>no
+	        <conditional>@no-express-requirement
+	        <conditional>@msvc-dotnet-requirement
+	        <conditional>@build-location
+		;
+
+	make MergedTutorials.zip
+	    : # sources
+	    : # actions
+	        @do_merged_tutorials
+	    : # requirements
+	        <link>shared:<build>no
+	        <conditional>@no-express-requirement
+	        <conditional>@msvc-dotnet-requirement
+	        <conditional>@build-location
+	        <dependency>TutorialLocalization.exe
+		;
+
+    
     explicit SkylineTesterWithTestData.zip ;
 
     explicit InspectCode ;

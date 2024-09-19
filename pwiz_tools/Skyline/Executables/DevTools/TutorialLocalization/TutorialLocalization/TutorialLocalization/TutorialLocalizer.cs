@@ -239,7 +239,7 @@ namespace TutorialLocalization
         private Tuple<int, string> FindBestMatch(string target, IEnumerable<string> candidates)
         {
             int bestDistance = int.MaxValue;
-            string? bestMatch = null;
+            string bestMatch = null;
             foreach (var candidate in candidates)
             {
                 var distance = (int)_levenshtein.Distance(target, candidate, bestDistance);
