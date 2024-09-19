@@ -3918,8 +3918,16 @@ namespace pwiz.Skyline
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
                 }
 
-                menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
-                peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+                if (graphType != GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
+                    peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+                }
+                else
+                {
+                    menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
+                    relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
+                }
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
                 if (graphType == GraphTypeSummary.abundance)
@@ -4636,6 +4644,17 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
+        private void relativeAbundanceLogScaleContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRelativeAbundanceLogScale(relativeAbundanceLogScaleContextMenuItem.Checked);
+        }
+
+        public void ShowRelativeAbundanceLogScale(bool isChecked)
+        {
+            Settings.Default.RelativeAbundanceLogScale = isChecked ;
+            UpdateRelativeAbundanceGraphs();
+        }
+
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowCVValues(peptideCvsContextMenuItem.Checked);
@@ -4764,6 +4783,10 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.UpdateUI());
         }
 
+        public void UpdateRelativeAbundanceGraphs()
+        {
+            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance).ForEach(g => g.UpdateUI());
+        }
         private void UpdateSummaryGraphs()
         {
             UpdateRetentionTimeGraph();

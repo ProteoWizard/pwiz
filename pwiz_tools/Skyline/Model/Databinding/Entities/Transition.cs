@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsCustomTransition())
                 {
-                    return DocNode.Transition.CustomIon.Formula;
+                    return DocNode.Transition.CustomIon.HasChemicalFormula ? DocNode.Transition.CustomIon.Formula : String.Empty;
                 }
 
                 var neutralFormula = GetNeutralProductFormula();
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsCustomTransition())
                 {
-                    return DocNode.Transition.CustomIon.NeutralFormula;
+                    return DocNode.Transition.CustomIon.HasChemicalFormula ? DocNode.Transition.CustomIon.Formula : String.Empty;
                 }
 
                 return GetNeutralProductFormula().Molecule.ToString();
