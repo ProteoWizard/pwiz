@@ -1224,6 +1224,21 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private static bool _isAutoScreenShotMode;
+
+        public bool IsAutoScreenShotMode
+        {
+            get { return _isAutoScreenShotMode || Program.PauseSeconds == -3; } // -3 is the magic number SkylineTester uses to indicate cover shot mode
+            set
+            {
+                _isAutoScreenShotMode = value;
+                if (_isAutoScreenShotMode)
+                {
+                    Program.PauseSeconds = -3; // -3 is the magic number SkylineTester uses to indicate cover shot mode
+                }
+            }
+        }
+
         public string CoverShotName { get; set; }
 
         private string GetCoverShotPath(string folderPath = null, string suffix = null)
@@ -1323,7 +1338,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
+            else if ((IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue)) || IsAutoScreenShotMode)
             {
                 if (screenshotForm == null)
                 {
@@ -1341,9 +1356,21 @@ namespace pwiz.SkylineTestUtil
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
+                
                 var fileToSave = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, fileName)}.png" : null;
-                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), fileToSave, LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
+
+                if (IsAutoScreenShotMode)
+                {
+                    Thread.Sleep(1000);
+                    screenshotForm.Focus();
+                    _shotManager.TakeNextShot(screenshotForm, fileToSave);
+                }
+                else
+                {
+                    bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
+                    PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), fileToSave, LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
+                }
+
             }
             else
             {
