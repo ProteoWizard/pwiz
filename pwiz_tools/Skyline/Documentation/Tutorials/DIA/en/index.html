@@ -7,9 +7,9 @@
 </head>
 
 <body onload="skylineOnload();">
-    <h1 class="document-title"><a id="_Hlk74743168"></a>Skyline Data Independent Acquisition</h1>
+    <h1 class="document-title">Skyline Data Independent Acquisition</h1>
     <p>
-        Data-independent acquisition (DIA)1,2 is an advanced technique for performing large scale targeted proteomics experiments. Targeted acquisition
+        Data-independent acquisition (DIA)<sup>1,2</sup> is an advanced technique for performing large scale targeted proteomics experiments. Targeted acquisition
         approaches such as selected reaction monitoring (SRM) and parallel reaction monitoring (PRM) are limited to only a handful of peptides without
         acquisition scheduling or tens to hundreds of peptides per mass spec run with scheduling. DIA allows the measurement of much larger numbers of
         peptides (thousands or even whole proteomes) with only modest sacrifices in sensitivity, selectivity and reproducibility relative to SRM. DIA
@@ -35,7 +35,7 @@
     <p>
         Although many methods exist for converting DDA search results to a library suitable for this library DIA analysis approach (described as the
         “Prior Knowledge Workflow” in <a
-            href="https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/events/2014%20Webinars/Webinar%202/begin.view">Skyline
+            href="https://skyline.ms/webinar02.url">Skyline
             Tutorial Webinar #2</a> and has since been documented more thoroughly in webinars <a href="https://skyline.ms/webinar14.url">#14</a>, <a
             href="https://skyline.ms/webinar15.url">#15</a>, and <a href="https://skyline.ms/webinar18.url">#18</a> as well as the tutorial <a
             href="https://skyline.ms/tutorial_dia_swath.url">Analysis of DIA/SWATH Data</a>), a straightforward and accessible way to start DIA
@@ -76,8 +76,7 @@
         C:\Users\damodei\Documents\DIA-20_2
     </p>
     <p>
-        <a id="_Hlk32583422"></a>If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default
-        settings. To do so: 
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
     </p>
     <ul>
         <li>Start Skyline.</li>
@@ -104,8 +103,8 @@
         <img src="../../shared/en/proteomics-interface.png" />
     </p>
     <p>
-        <a id="_Hlk32583357"></a>Skyline is operating in proteomics mode which is displayed by the protein icon <img
-            src="../../shared/protein-icon.png" /> in the upper right-hand corner of the Skyline window.
+        Skyline is operating in proteomics mode which is displayed by the protein icon <img src="../../shared/protein-icon.png" /> in the upper
+        right-hand corner of the Skyline window.
     </p>
     <p>
         For DIA analysis, you will want to force Skyline to integrate peak areas for all extracted quantitative transitions. To do that:
@@ -217,7 +216,7 @@
     <p>
         <img src="image-2.png" />
     </p>
-    <p>
+    <p class="fig-text">
         <strong>Figure:</strong> Histograms calculated from peptide precursors with charges 1-4 found in common libraries of observed peptides. The
         tallest peaks represent charge 1-4 precursors, the second tallest peaks represent charge 2 and 4 precursors, and the smaller peaks represent
         charge 3 only precursors, with charge 4 only precursors visible only as small shoulders on the charge 3 only peaks. Vertical lines marked
@@ -226,7 +225,7 @@
     <p>
         <img src="image-3.png" />
     </p>
-    <p>
+    <p class="fig-text">
         Supplemental Figure S1 from Gillet, et al. MCP 2012: c) shows perfect rectangular isolation of the defined range, d) shows less ideal signal
         drop-off over 0.5 m/z at the edge of a defined quadrupole isolation range, e &amp; f) show how a full isotope distribution gets split between
         windows without and with overlapping margins. It is important to remember that entire isotope distributions are being isolated though only the
@@ -557,7 +556,7 @@
         <li>Right-click one of the chromatogram graphs, and click <strong>Legend</strong> to uncheck it.</li>
         <li>Dock the <strong>Peak Areas – Replicate Comparison</strong> graph to the right edge of the main window on top of the <strong>Library
                 Match</strong> view.</li>
-        <li>Select the first peptide K.YALSQDV<strong>C</strong>TYR.D [64, 74] in the <strong>Targets</strong> view.</li>
+        <li>Select the first peptide K.YALSQDV<strong><u>C</u></strong>TYR.D [64, 74] in the <strong>Targets</strong> view.</li>
     </ul>
     <p class="keep-next">
         The Skyline window should look something like this:
@@ -644,8 +643,8 @@
         Now it is time to continue to the next peptide:
     </p>
     <ul>
-        <li>Either click K.<strong>C</strong>NTDYSD<strong>C</strong>IHEAIK.T [107, 120] or press the down-arrow key (if the selection in the
-            <strong>Targets</strong> view is blue).</li>
+        <li>Either click K.<strong><u>C</u></strong>NTDYSD<strong><u>C</u></strong>IHEAIK.T [107, 120] or press the down-arrow key (if the selection
+            in the <strong>Targets</strong> view is blue).</li>
     </ul>
     <p>
         You will see that when there are multiple charge states, the transition split view splits on charge state, but not ion type, and that the
@@ -734,9 +733,9 @@
         <li>On the <strong>View </strong>menu, choose <strong>Auto-Zoom</strong> and click <strong>Best Peak</strong> (F11).</li>
     </ul>
     <p>
-        The next 5 precursors look quite good until you reach the peptide K.NYGLLY<strong>C</strong>FR.K [184, 192]. The peaks for this peptide are
-        over 1 minute wide and not very Gaussian shaped. Skyline has misplaced the right integration boundary on both peaks, capturing only 2/3 of the
-        peaks. To correct this, you can do the following:
+        The next 5 precursors look quite good until you reach the peptide K.NYGLLY<strong><u>C</u></strong>FR.K [184, 192]. The peaks for this peptide
+        are over 1 minute wide and not very Gaussian shaped. Skyline has misplaced the right integration boundary on both peaks, capturing only 2/3 of
+        the peaks. To correct this, you can do the following:
     </p>
     <ul>
         <li>Hover the mouse cursor over any of the black dashed lines indicating the right integration boundary until the cursor changes to a splitter
@@ -759,9 +758,9 @@
     </p>
     <h1>Understanding Extracted Chromatograms</h1>
     <p>
-        The next two peptides, AVVLSHYIHNLSSEMFSEFDK and AINS<strong>C</strong>HTSSLATPEDK, lack any convincing signal around peptide ID times from
-        DDA. You can use shift-F11 to zoom out, the mouse scroll wheel for mouse-centered zooming and ctrl-click-and-drag to pan, but you will not
-        find anything in the chromatograms for either peptide. You can delete them or simply move on to the peptide SWNEPLYHLVTEVR.
+        The next two peptides, AVVLSHYIHNLSSEMFSEFDK and AINS<strong><u>C</u></strong>HTSSLATPEDK, lack any convincing signal around peptide ID times
+        from DDA. You can use shift-F11 to zoom out, the mouse scroll wheel for mouse-centered zooming and ctrl-click-and-drag to pan, but you will
+        not find anything in the chromatograms for either peptide. You can delete them or simply move on to the peptide SWNEPLYHLVTEVR.
     </p>
     <p>
         This peptide has two precurors, doubly charged at 871.9467 and triply charged at 581.6335.
@@ -868,7 +867,7 @@
         You can use the <strong>Full Scan</strong> view to see this in action by doing the following:
     </p>
     <ul>
-        <li>Click the <a id="OLE_LINK1"></a>K.ELVYETVR.V peptide. (3<sup>rd</sup> in the <strong>Targets</strong> view)</li>
+        <li>Click the K.ELVYETVR.V peptide. (3<sup>rd</sup> in the <strong>Targets</strong> view)</li>
         <li>Hover the mouse cursor over the apex of the “precursor” peak in the “Pit02” replicate until you see a blue circle appear, and the mouse
             cursor change to a pointing hand.</li>
         <li>Click in the circle.</li>

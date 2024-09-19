@@ -409,8 +409,8 @@
         1.0。您还将看到在轻和重标准峰的峰面积之间计算出的点积比 (rdotp)，其中大多数值显示为 1 或非常接近它，表明轻和重离子对峰面积之间的相对强度非常相似。 
     </p>
     <p>
-        最后，在转向本教程的第二个文档之前，您可能会注意到 2 个肽段 (<a id="_Hlk26964787"></a>K.YVDPNVLPETESLALVID<strong><span class="blue">R</span></strong>.L 和
-        K.FPEPGYLEGV<strong><span class="blue">K</span></strong>.T) 的离子对为空白，而其它都具有绿色或红色圆圈。这就意味着之前导入的 mzXML 文件未包含这些离子对的数据。您可以在文本编辑器中打开 mzXML
+        最后，在转向本教程的第二个文档之前，您可能会注意到 2 个肽段 (K.YVDPNVLPETESLALVID<strong><span class="blue">R</span></strong>.L 和 K.FPEPGYLEGV<strong><span
+                class="blue">K</span></strong>.T) 的离子对为空白，而其它都具有绿色或红色圆圈。这就意味着之前导入的 mzXML 文件未包含这些离子对的数据。您可以在文本编辑器中打开 mzXML
         文件，查找母离子质荷比，亲自确认母离子缺少原始离子对列表中选定的离子对。对于处理手动创建的离子对列表，或由那些比 Skyline 接受的测试与使用较少的工具创建出的离子对列表，这些异常现象是非常典型的。
     </p>
     <h1>为 CPTAC Study 7 准备文档</h1>
@@ -560,7 +560,7 @@
         如要指定第一个肽段中 V 上的同位素修饰，请执行下列步骤：
     </p>
     <ul>
-        <li>选择 “AGL<strong>C</strong>QTFVYGG<strong>C</strong>R” 肽段。</li>
+        <li>选择 “AGL<strong><u>C</u></strong>QTFVYGG<strong><u>C</u></strong>R” 肽段。</li>
         <li>在<strong>编辑</strong>菜单上，单击<strong>修饰肽段</strong>。</li>
         <li>从 “Label: 13C(6)N15(4) C-term R” 的<strong>重同位素</strong>下拉列表中选择空白条目，从该 C-末端精氨酸中移除稳定同位素标记。</li>
         <li>在该肽段中 V 残基的<strong>重同位素</strong>下拉列表中选择<strong>&lt;添加…&gt;</strong>。</li>
@@ -611,7 +611,7 @@
         如要对剩下两个肽段创建标记的母离子，请执行下列步骤：
     </p>
     <ul>
-        <li>右键单击肽段 “IVGGWE<strong>C</strong>EK”，然后单击<strong>修饰</strong>。</li>
+        <li>右键单击肽段 “IVGGWE<strong><u>C</u></strong>EK”，然后单击<strong>修饰</strong>。</li>
         <li>从 "Label: 13C96)15N(2)(C-term K)" <strong>重同位素</strong>下拉列表中选择空白条目，以从该 C- 末端赖氨酸中移除稳定同位素标记。</li>
         <li>在该肽段中 V 残基的<strong>重同位素</strong>下拉列表中选择 “Label:13C” 修饰。</li>
         <li>单击<strong>确定</strong>按钮。</li>
@@ -697,7 +697,7 @@
         您将看到 Skyline 对此文档中其它肽段做了更好的色谱峰积分。但对于仅包含 10 个肽段的数据集，我们强烈建议您仔细检查每个肽段，并对明显有误之处做出手动调整。
     </p>
     <p>
-        首先，在上图中，您可以看到肽段 “I<strong><span class="blue">V</span></strong>GGWE<strong>C</strong>EK”
+        首先，在上图中，您可以看到肽段 “I<strong><span class="blue">V</span></strong>GGWE<strong><u>C</u></strong>EK”
         的母离子“541.7637++（重）”似乎缺失数据。这是因为提供给质谱仪的离子对列表仅精确到母离子质荷比的一位小数点，将其错误地四舍五入为 “541.7”。您可以在 Excel 电子表格中的 “Raw” 选项卡检查这项内容。
     </p>
     <p>
@@ -783,8 +783,7 @@
         <li>选择每一个肽段的轻母离子。</li>
     </ul>
     <p class="keep-next">
-        对于 6 个行为正常的肽段，您会看到如下所示的图表（选取了 <a id="OLE_LINK1"></a><a id="OLE_LINK7"></a><a id="OLE_LINK2"></a>ESDTSYVSL<strong><span
-                class="blue">K</span></strong> 肽段轻母离子 <a id="OLE_LINK3"></a><a id="OLE_LINK4"></a>564.7746++）：
+        对于 6 个行为正常的肽段，您会看到如下所示的图表（选取了 ESDTSYVSL<strong><span class="blue">K</span></strong> 肽段轻母离子 564.7746++）：
     </p>
     <p>
         <img src="image-28.png" />
@@ -794,8 +793,7 @@
                 class="blue">K</span></strong>）的图表并不是非常干净，但离子对比值中没什么问题。 
     </p>
     <ul>
-        <li>选择第四个肽段 (<a id="OLE_LINK9"></a><a id="OLE_LINK8"></a>HGFLP<strong><span class="blue">R</span></strong>) 的轻<a id="OLE_LINK6"></a><a
-                id="OLE_LINK5"></a>母离子 363.7059++。</li>
+        <li>选择第四个肽段 (HGFLP<strong><span class="blue">R</span></strong>) 的轻母离子 363.7059++。</li>
     </ul>
     <p class="keep-next">
         峰面积图表将显示如下：
