@@ -17,6 +17,9 @@ namespace AutoQCTest
         public string TestFolder;  // Where the test runs
         public MainForm MainForm;
 
+        [DeploymentItem(@"..\AutoQC\FileAcquisitionTime.skyr")]
+        [DeploymentItem(@"..\AutoQC\SkylineRunner.exe")]
+        [DeploymentItem(@"..\AutoQC\SkylineDailyRunner.exe")]
         protected override void DoTest()
         {
             TestFolder = TestFilesDirs[0].FullPath;

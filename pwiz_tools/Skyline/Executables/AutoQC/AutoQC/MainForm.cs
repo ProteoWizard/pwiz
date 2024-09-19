@@ -38,7 +38,6 @@ namespace AutoQC
         private readonly ColumnWidthCalculator _listViewColumnWidths;
         private Timer _outputLog;
 
-        
         public MainForm(string openFile)
         {
             InitializeComponent();
@@ -854,15 +853,13 @@ namespace AutoQC
 
         #endregion
 
+        #region Methods used for tests
         public int ConfigCount()
         {
             return _configManager.GetAutoQcState().BaseState.ConfigList.Count;
         }
         public void ClickAdd() => btnAdd_Click(new object(), new EventArgs());
         public void ClickEdit() => HandleEditEvent(new object(), new EventArgs());
-        public void ClickCopy() => btnCopy_Click(new object(), new EventArgs());
-        public void ClickDelete() => btnDelete_Click(new object(), new EventArgs());
-        public void ClickShare() => btnExport_Click(new object(), new EventArgs());
 
         public void SelectLogTab()
         {
@@ -923,6 +920,8 @@ namespace AutoQC
             var configRunner = GetConfigRunner(configIndex);
             return configRunner?.GetLogger()?.LogFile;
         }
+
+        #endregion
     }
 
     // ListView that prevents a double click from toggling checkbox

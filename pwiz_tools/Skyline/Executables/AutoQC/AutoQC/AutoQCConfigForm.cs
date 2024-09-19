@@ -43,7 +43,7 @@ namespace AutoQC
         public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, AutoQcConfigManagerState state, RunnerStatus status = RunnerStatus.Stopped)
         {
             InitializeComponent();
-
+            
             _action = action;
             _initialCreated = config?.Created ?? DateTime.MinValue;
             _mainControl = mainControl;
@@ -358,6 +358,7 @@ namespace AutoQC
 
         #endregion
 
+        #region Methods used for tests
         public void SetConfigName(string name)
         {
             textConfigName.Text = name;
@@ -442,5 +443,7 @@ namespace AutoQC
         {
             textPanoramaFolder.Text = folder;
         }
+
+        #endregion
     }
 }

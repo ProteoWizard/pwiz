@@ -50,9 +50,6 @@ namespace AutoQCTest
         private string _panoramaWebPassword;
 
         [TestMethod]
-        [DeploymentItem(@"..\AutoQC\FileAcquisitionTime.skyr")]
-        [DeploymentItem(@"..\AutoQC\SkylineRunner.exe")]
-        [DeploymentItem(@"..\AutoQC\SkylineDailyRunner.exe")]
         public void TestPanoramaWebInteraction()
         {
             TestFilesZipPaths = new[] { @"Executables\AutoQC\AutoQCTest\AutoQCTest.zip" };

@@ -64,7 +64,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AutoQcBaseFunctionalTest.cs" />
-    <Compile Include="AutoQCFunctionalTest.cs" />
+    <Compile Include="AutoQcFunctionalTest.cs" />
     <Compile Include="ConfigManagerTest.cs" />
     <Compile Include="PanoramaWebFunctionalTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

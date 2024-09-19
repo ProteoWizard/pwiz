@@ -8,14 +8,11 @@ using pwiz.Common.GUI;
 namespace AutoQCTest
 {
     [TestClass]
-    public class AutoQCFunctionalTest : AutoQcBaseFunctionalTest
+    public class AutoQcFunctionalTest : AutoQcBaseFunctionalTest
     {
         
         [TestMethod]
-        [DeploymentItem(@"..\AutoQC\FileAcquisitionTime.skyr")]
-        [DeploymentItem(@"..\AutoQC\SkylineRunner.exe")]
-        [DeploymentItem(@"..\AutoQC\SkylineDailyRunner.exe")]
-        public void TestAutoQCInterface()
+        public void TestAutoQcInterface()
         {
             TestFilesZipPaths = new[] { @"Executables\AutoQC\AutoQCTest\AutoQCTest.zip" };
             RunFunctionalTest();
@@ -25,11 +22,11 @@ namespace AutoQCTest
         {
             base.DoTest();
             // Test the following:
-            // 1. Create two configurations with valid values for the Skyline document path
+            // 1. Skyline document path entered in AutoQcConfigForm should be valid
             // 2. Configuration names should be unique
             // 3. Start configurations successfully
             // 4. Select a configuration, switch to the log lab and verify that the correct log is selected
-            // 5. A running configuration should not be editable
+            // 5. A running configuration cannot be edited
             BasicTest(MainForm);
         }
 
