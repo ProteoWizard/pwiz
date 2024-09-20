@@ -60,6 +60,10 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             WaitForDocumentLoaded();
             Assert.AreEqual(1, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count);
+
+            var libraryOriginal = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.First();
+            var originalDataFiles = libraryOriginal.LibraryDetails.DataFiles;
+
             string minimizedZipFile = TestFilesDir.GetTestPath("MinimizedDocument.sky.zip");
             RunUI(() =>
             {
@@ -77,6 +81,18 @@ namespace pwiz.SkylineTestFunctional
             {
                 var spectra = library.GetSpectra(key, null, LibraryRedundancy.all).ToArray();
                 Assert.AreNotEqual(0, spectra.Length);
+            }
+
+            var originalDataFilesEnumerable = originalDataFiles.ToList();
+            var minimizedDataFilesEnumerable = library.LibraryDetails.DataFiles.ToList();
+            Assert.AreEqual(originalDataFilesEnumerable.Count, minimizedDataFilesEnumerable.Count);
+            foreach (SpectrumSourceFileDetails sourceFile in library.LibraryDetails.DataFiles)
+            {
+                var originalSourceFile =
+                    originalDataFilesEnumerable.FirstOrDefault(s => s.FilePath.Equals(sourceFile.FilePath));
+
+                Assert.IsNotNull(originalSourceFile);
+                Assert.AreEqual(originalSourceFile, sourceFile);
             }
         }
     }

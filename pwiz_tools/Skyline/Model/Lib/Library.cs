@@ -2548,6 +2548,45 @@ namespace pwiz.Skyline.Model.Lib
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
 
+        public SpectrumSourceFileDetails GetSourceFileDetails()
+        {
+            return _library.LibraryDetails.DataFiles.FirstOrDefault(d => d.FilePath.Equals(FilePath));
+        }
+
+        public ScoreType GetScoreType(string scoreTypeName)
+        {
+            var sourceFileDetails = GetSourceFileDetails();
+            if (sourceFileDetails != null)
+            {
+                if (sourceFileDetails.ScoreThresholds.Any(s => s.Key.NameInvariant.Equals(scoreTypeName)))
+                {
+                    var scoreTypeKvp =
+                        sourceFileDetails.ScoreThresholds.First(s =>
+                            s.Key.NameInvariant.Equals(scoreTypeName));
+                    return scoreTypeKvp.Key;
+                }
+            }
+
+            return null;
+        }
+
+        public double? GetScoreTypeCutoff(string scoreTypeName)
+        {
+            double? cutoff = null;
+            var sourceFileDetails = GetSourceFileDetails();
+            if (sourceFileDetails != null && !string.IsNullOrWhiteSpace(scoreTypeName))
+            {
+                if (sourceFileDetails.ScoreThresholds.Any(s => s.Key.NameInvariant.Equals(scoreTypeName)))
+                {
+                    var scoreTypeKvp = sourceFileDetails.ScoreThresholds.First(
+                        s => s.Key.NameInvariant.Equals(scoreTypeName));
+                    cutoff = scoreTypeKvp.Value;
+                }
+            }
+
+            return cutoff;
+        }
+
         public string FilePath { get; private set; }
 
         public string FileName
@@ -3100,6 +3139,52 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(FilePath))
                 result.Add($@"FilePath: {FilePath}");
             return TextUtil.LineSeparate(result);
+        }
+
+        protected bool Equals(SpectrumSourceFileDetails other)
+        {
+            var equal = ScoreThresholdsEqual(ScoreThresholds, other.ScoreThresholds);
+            return string.Equals(FilePath, other.FilePath) &&
+                   string.Equals(IdFilePath, other.IdFilePath) &&
+                   // BestSpectrum == other.BestSpectrum &&
+                   // MatchedSpectrum == other.MatchedSpectrum &&
+                   equal;
+        }
+
+        private static bool ScoreThresholdsEqual(Dictionary<ScoreType, double?> scoreThresholds1, Dictionary<ScoreType, double?> scoreThresholds2)
+        {
+            if (scoreThresholds1.Count != scoreThresholds2.Count)
+                return false;
+
+            foreach (var kvp in scoreThresholds1)
+            {
+                if (!scoreThresholds2.TryGetValue(kvp.Key, out var value2) || !Nullable.Equals(kvp.Value, value2))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == this.GetType() && Equals((SpectrumSourceFileDetails)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (FilePath != null ? FilePath.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (IdFilePath != null ? IdFilePath.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ScoreThresholds != null ? ScoreThresholds.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ BestSpectrum;
+                hashCode = (hashCode * 397) ^ MatchedSpectrum;
+                return hashCode;
+            }
         }
     }
 }

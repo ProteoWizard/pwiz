@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database;
@@ -783,7 +784,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var dictFiles = new Dictionary<string, long>();
             var dictFilesRedundant = new Dictionary<string, long>();
 
-            // Hash table to score the score types in the library
+            // Hash table to store the score types in the library
             var dictScoreTypes = new Dictionary<string, ushort>();
 
             ISession redundantSession = null;
@@ -1137,7 +1138,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles);
+                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum);
 
                 // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
                 // or object of type SpectrumLiteKey for redundant spectra
@@ -1236,12 +1237,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
-            refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles) : null;
+
+            
+            refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum) : null;
             refSpectra.SpecIdInFile = null;
             refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
-            refSpectra.ScoreType = !string.IsNullOrEmpty(spectrum.SpectrumHeaderInfo?.ScoreType)
-                ? GetScoreTypeId(session, spectrum.SpectrumHeaderInfo.ScoreType, dictScoreTypes)
-                : (ushort) 0;
+            // var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
+            // refSpectra.ScoreType = !string.IsNullOrEmpty(scoreTypeName)
+            //     ? GetScoreTypeId(session, spectrum.GetScoreType(scoreTypeName), dictScoreTypes)
+            //     : (ushort) 0;
+            refSpectra.ScoreType = GetScoreTypeId(session, spectrum, dictScoreTypes);
             if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
             {
                 refSpectra.PeptideSeq = string.Empty;
@@ -1254,9 +1259,30 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles)
         {
+            return GetSpectrumSourceId(session, filePath, dictFiles, null);
+        }
+
+        private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles, SpectrumInfoLibrary spectrum)
+        {
             if (!dictFiles.TryGetValue(filePath, out var spectrumSourceId))
             {
-                spectrumSourceId = SaveSourceFile(session, filePath);
+                SpectrumSourceFileDetails sourceFileDetails = null;
+                double? cutoffScore = null;
+
+                if (spectrum != null)
+                {
+                    sourceFileDetails = spectrum.GetSourceFileDetails();
+                    cutoffScore = spectrum.GetScoreTypeCutoff(spectrum.SpectrumHeaderInfo?.ScoreType);
+                }
+
+                // double? cutoffScore = null;
+                // var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
+                // if (sourceFileDetails != null && !string.IsNullOrWhiteSpace(scoreTypeName))
+                // {
+                //     var scoreTypeKvp = sourceFileDetails.ScoreThresholds.FirstOrDefault(s => s.Key.NameInvariant.Equals(scoreTypeName));
+                //     cutoffScore = scoreTypeKvp.Value.Value;
+                // }
+                spectrumSourceId = SaveSourceFile(session, filePath, sourceFileDetails?.IdFilePath, cutoffScore);
                 if (spectrumSourceId == 0)
                 {
                     throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
@@ -1266,32 +1292,40 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return spectrumSourceId;
         }
 
-        private static ushort GetScoreTypeId(ISession session, string scoreName, IDictionary<string, ushort> dictScoreTypes)
+        private static ushort GetScoreTypeId(ISession session, SpectrumInfoLibrary spectrum, IDictionary<string, ushort> dictScoreTypes)
         {
-            if (!dictScoreTypes.TryGetValue(scoreName, out var scoreTypeId))
+            var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
+            if (string.IsNullOrEmpty(scoreTypeName)) return (ushort)0;
+
+            if (!dictScoreTypes.TryGetValue(scoreTypeName, out var scoreTypeId))
             {
-                scoreTypeId = SaveScoreType(session, scoreName);
+                var scoreType = spectrum.GetScoreType(scoreTypeName) ?? new ScoreType(scoreTypeName, null);
+                scoreTypeId = SaveScoreType(session, scoreType);
                 if (scoreTypeId == 0)
                 {
-                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreName));
+                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreType.NameInvariant));
                 }
-                dictScoreTypes.Add(scoreName, scoreTypeId);
+                dictScoreTypes.Add(scoreType.NameInvariant, scoreTypeId);
             }
             return scoreTypeId;
         }
 
-        private static long SaveSourceFile(ISession session, string filePath)
+        private static long SaveSourceFile(ISession session, string filePath, string idFileName, double? cutoffScore)
         {
-            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = null, CutoffScore = null};
+            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = idFileName, CutoffScore = cutoffScore};
             session.Save(sourceFile);
             return sourceFile.Id.GetValueOrDefault();
         }
 
-        private static ushort SaveScoreType(ISession session, string scoreName)
+        private static ushort SaveScoreType(ISession session, ScoreType scoreType)
         {
-            var scoreType = new DbScoreTypes {ScoreType = scoreName};
-            session.Save(scoreType);
-            return (ushort) scoreType.Id.GetValueOrDefault();
+            var scoreTypeDb = new DbScoreTypes
+            {
+                ScoreType = scoreType.NameInvariant, 
+                ProbabilityType = scoreType.ProbabilityTypeDescription
+            };
+            session.Save(scoreTypeDb);
+            return (ushort) scoreTypeDb.Id.GetValueOrDefault();
         }
 
         /// <summary>
