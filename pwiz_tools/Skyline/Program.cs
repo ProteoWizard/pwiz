@@ -364,7 +364,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceInformation(@"Exception sending analytics hit {0}", ex);
+                        Trace.TraceInformation(@"Exception sending analytics hit {0}", ex); // N.B. see TraceWarningListener for output details
                     }
                 });
             }

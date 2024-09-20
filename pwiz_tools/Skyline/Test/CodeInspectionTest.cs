@@ -95,6 +95,26 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"This appears to be temporary debugging code that should not be checked in. Or perhaps you meant to use PauseForManualTutorialStep()?"); // Explanation for prohibition, appears in report
 
+            // Looking for forgotten SourceLevel.Information use that writes debug messages to console/ImmediateWindow
+            AddTextInspection(@"TraceWarningListener.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"SourceLevels.Information", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. Normally we don't want users to see this level of Trace messages."); // Explanation for prohibition, appears in report
+
+            // Looking for bare use of TraceWarning calls that should be UserMessage calls
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories().Append(@"UserMessage.cs").ToArray(), // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"Trace.TraceWarning", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"Trace.TraceWarning should not be used directly. The UserMessage class is the proper way to produce user-facing non-blocking messages."); // Explanation for prohibition, appears in report
+
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files

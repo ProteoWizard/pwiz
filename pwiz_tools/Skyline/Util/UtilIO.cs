@@ -1365,7 +1365,7 @@ namespace pwiz.Skyline.Util
                 }
                 catch (Exception e)
                 {
-                    Trace.TraceWarning(@"Exception in FileSaver.Dispose: {0}", e);
+                    Trace.TraceInformation(@"Exception in FileSaver.Dispose: {0}", e); // N.B. see TraceWarningListener for output details
                 }
                 _stream = null;
             }
@@ -1381,7 +1381,7 @@ namespace pwiz.Skyline.Util
                 }
                 catch (Exception e)
                 {
-                    Trace.TraceWarning(@"Exception in FileSaver.Dispose: {0}", e);
+                    Trace.TraceInformation(@"Exception in FileSaver.Dispose: {0}", e); // N.B. see TraceWarningListener for output details
                 }
                 // Make sure any further calls to Dispose() do nothing.
                 SafeName = null;

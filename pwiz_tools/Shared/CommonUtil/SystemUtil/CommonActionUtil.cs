@@ -53,7 +53,7 @@ namespace pwiz.Common.SystemUtil
             {
                 return;
             }
-            Trace.TraceWarning(@"Unhandled Exception: {0}", exception);
+            Trace.TraceInformation(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
         }
 
         public static bool SafeBeginInvoke(Control control, Action action)

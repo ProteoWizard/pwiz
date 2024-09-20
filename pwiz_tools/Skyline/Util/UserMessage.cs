@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Util
     {
         public static void AsyncWrite(string message, params object[] args)
         {
-            Trace.TraceWarning(message, args);
+            Trace.TraceWarning(message, args); // Results in message written to console (cmdline version) or Immediate window (GUI version)
         }
     }
 }

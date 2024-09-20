@@ -135,7 +135,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 _workOrder = null;
                 if (OwnerControl != null)
                 {
-                    Trace.TraceInformation("CalculatedValueListener destroyed: {0}", Producer.ValueType);
+                    Trace.TraceInformation("CalculatedValueListener destroyed: {0}", Producer.ValueType); // N.B. see TraceWarningListener for output details
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;
                     OwnerControl = null;
                 }
