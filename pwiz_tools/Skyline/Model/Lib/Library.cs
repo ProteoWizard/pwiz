@@ -2548,45 +2548,6 @@ namespace pwiz.Skyline.Model.Lib
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
 
-        public SpectrumSourceFileDetails GetSourceFileDetails()
-        {
-            return _library.LibraryDetails.DataFiles.FirstOrDefault(d => d.FilePath.Equals(FilePath));
-        }
-
-        public ScoreType GetScoreType(string scoreTypeName)
-        {
-            var sourceFileDetails = GetSourceFileDetails();
-            if (sourceFileDetails != null)
-            {
-                if (sourceFileDetails.ScoreThresholds.Any(s => s.Key.NameInvariant.Equals(scoreTypeName)))
-                {
-                    var scoreTypeKvp =
-                        sourceFileDetails.ScoreThresholds.First(s =>
-                            s.Key.NameInvariant.Equals(scoreTypeName));
-                    return scoreTypeKvp.Key;
-                }
-            }
-
-            return null;
-        }
-
-        public double? GetScoreTypeCutoff(string scoreTypeName)
-        {
-            double? cutoff = null;
-            var sourceFileDetails = GetSourceFileDetails();
-            if (sourceFileDetails != null && !string.IsNullOrWhiteSpace(scoreTypeName))
-            {
-                if (sourceFileDetails.ScoreThresholds.Any(s => s.Key.NameInvariant.Equals(scoreTypeName)))
-                {
-                    var scoreTypeKvp = sourceFileDetails.ScoreThresholds.First(
-                        s => s.Key.NameInvariant.Equals(scoreTypeName));
-                    cutoff = scoreTypeKvp.Value;
-                }
-            }
-
-            return cutoff;
-        }
-
         public string FilePath { get; private set; }
 
         public string FileName
@@ -3139,6 +3100,27 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(FilePath))
                 result.Add($@"FilePath: {FilePath}");
             return TextUtil.LineSeparate(result);
+        }
+
+        public double? GetScoreTypeCutoff(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Value;
+        }
+
+        public ScoreType GetScoreType(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Key;
+        }
+
+        private KeyValuePair<ScoreType, double?> GetScoreTypeKvp(string scoreTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(scoreTypeName) || ScoreThresholds == null)
+                return default(KeyValuePair<ScoreType, double?>);
+
+            return ScoreThresholds.FirstOrDefault(
+                s => s.Key.NameInvariant.Equals(scoreTypeName, StringComparison.Ordinal));
         }
 
         protected bool Equals(SpectrumSourceFileDetails other)

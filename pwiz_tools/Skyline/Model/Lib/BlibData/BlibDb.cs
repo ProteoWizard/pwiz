@@ -791,6 +791,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             ITransaction redundantTransaction = null;
             int redundantSpectraCount = 0;
 
+            var dataFiles = library.LibraryDetails.DataFiles.ToArray();
+
             try
             {
                 using (ISession session = OpenWriteSession())
@@ -868,7 +870,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             precursorAdduct,
                                             smallMoleculeAttributes,
                                             dictFiles,
-                                            dictScoreTypes);
+                                            dictScoreTypes,
+                                            GetSpectrumSourceFile(spectrumInfo.FilePath, dataFiles));
 
                                         session.Save(refSpectra);
 
@@ -914,7 +917,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     // Ids of spectra in the redundant library, where available, are also returned.
                                     var redundantSpectraKeys = new List<SpectrumKeyTime>();
                                     BuildRefSpectra(document, session, convertingToSmallMolecules, refSpectra, spectra,
-                                        dictFiles, dictScoreTypes, redundantSpectraKeys);
+                                        dictFiles, dictScoreTypes, redundantSpectraKeys, dataFiles);
 
                                     session.Save(refSpectra);
                                     session.Flush();
@@ -1105,12 +1108,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             SpectrumInfo[] spectra, // Yes, this could be IEnumerable, but then Resharper throws bogus warnings about possible multiple enumeration
             IDictionary<string, long> dictFiles,
             IDictionary<string, ushort> dictScoreTypes,
-            ICollection<SpectrumKeyTime> redundantSpectraKeys)
+            ICollection<SpectrumKeyTime> redundantSpectraKeys,
+            SpectrumSourceFileDetails[] dataFiles)
         {
             bool foundBestSpectrum = false;
 
             foreach(SpectrumInfoLibrary spectrum in spectra)
             {
+                var spectrumSourceFile = GetSpectrumSourceFile(spectrum.FilePath, dataFiles);
                 if(spectrum.IsBest)
                 {
                     if(foundBestSpectrum)
@@ -1122,7 +1127,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     
                     foundBestSpectrum = true;
 
-                    MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes);
+                    MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes, spectrumSourceFile);
                 }
 
                 // Determine if this spectrum is from a file that is in the document.
@@ -1138,7 +1143,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum);
+                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum, spectrumSourceFile);
 
                 // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
                 // or object of type SpectrumLiteKey for redundant spectra
@@ -1176,6 +1181,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
         }
 
+        private static SpectrumSourceFileDetails GetSpectrumSourceFile(string filePath, SpectrumSourceFileDetails[] dataFiles)
+        {
+            return string.IsNullOrEmpty(filePath) || dataFiles == null || dataFiles.Length == 0
+                ? null
+                : dataFiles.FirstOrDefault(df => string.Equals(filePath, df.FilePath));
+        }
+
         private class SpectrumKeyTime
         {
             public SpectrumKeyTime(SpectrumLiteKey key, DbRetentionTimes time, string filePath)
@@ -1192,7 +1204,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum,
             Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes,
-            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes)
+            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
             var refSpectra = new DbRefSpectra
             {
@@ -1206,12 +1218,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
                 OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty
             };
-            MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes);
+            MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes, spectrumSourceFile);
             return refSpectra;
         }
 
         private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, DbRefSpectra refSpectra,
-            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes)
+            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
@@ -1238,15 +1250,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
 
-            
-            refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum) : null;
+            refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum, spectrumSourceFile) : null;
             refSpectra.SpecIdInFile = null;
             refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
-            // var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
-            // refSpectra.ScoreType = !string.IsNullOrEmpty(scoreTypeName)
-            //     ? GetScoreTypeId(session, spectrum.GetScoreType(scoreTypeName), dictScoreTypes)
-            //     : (ushort) 0;
-            refSpectra.ScoreType = GetScoreTypeId(session, spectrum, dictScoreTypes);
+            refSpectra.ScoreType = GetScoreTypeId(session, spectrum, dictScoreTypes, spectrumSourceFile);
             if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
             {
                 refSpectra.PeptideSeq = string.Empty;
@@ -1259,30 +1266,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles)
         {
-            return GetSpectrumSourceId(session, filePath, dictFiles, null);
+            return GetSpectrumSourceId(session, filePath, dictFiles, null, null);
         }
 
-        private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles, SpectrumInfoLibrary spectrum)
+        private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles, 
+            SpectrumInfoLibrary spectrum, SpectrumSourceFileDetails spectrumSourceFile)
         {
             if (!dictFiles.TryGetValue(filePath, out var spectrumSourceId))
             {
-                SpectrumSourceFileDetails sourceFileDetails = null;
-                double? cutoffScore = null;
-
-                if (spectrum != null)
-                {
-                    sourceFileDetails = spectrum.GetSourceFileDetails();
-                    cutoffScore = spectrum.GetScoreTypeCutoff(spectrum.SpectrumHeaderInfo?.ScoreType);
-                }
-
-                // double? cutoffScore = null;
-                // var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
-                // if (sourceFileDetails != null && !string.IsNullOrWhiteSpace(scoreTypeName))
-                // {
-                //     var scoreTypeKvp = sourceFileDetails.ScoreThresholds.FirstOrDefault(s => s.Key.NameInvariant.Equals(scoreTypeName));
-                //     cutoffScore = scoreTypeKvp.Value.Value;
-                // }
-                spectrumSourceId = SaveSourceFile(session, filePath, sourceFileDetails?.IdFilePath, cutoffScore);
+                spectrumSourceId = SaveSourceFile(session, filePath, spectrumSourceFile?.IdFilePath,
+                    spectrumSourceFile?.GetScoreTypeCutoff(spectrum.SpectrumHeaderInfo?.ScoreType));
                 if (spectrumSourceId == 0)
                 {
                     throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
@@ -1292,21 +1285,20 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return spectrumSourceId;
         }
 
-        private static ushort GetScoreTypeId(ISession session, SpectrumInfoLibrary spectrum, IDictionary<string, ushort> dictScoreTypes)
+        private static ushort GetScoreTypeId(ISession session, SpectrumInfoLibrary spectrum, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
             var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
             if (string.IsNullOrEmpty(scoreTypeName)) return (ushort)0;
+            if (dictScoreTypes.TryGetValue(scoreTypeName, out var savedScoreTypeId)) return savedScoreTypeId;
 
-            if (!dictScoreTypes.TryGetValue(scoreTypeName, out var scoreTypeId))
+            var scoreType = spectrumSourceFile.GetScoreType(scoreTypeName) ?? new ScoreType(scoreTypeName, null);
+            var scoreTypeId = SaveScoreType(session, scoreType);
+            if (scoreTypeId == 0)
             {
-                var scoreType = spectrum.GetScoreType(scoreTypeName) ?? new ScoreType(scoreTypeName, null);
-                scoreTypeId = SaveScoreType(session, scoreType);
-                if (scoreTypeId == 0)
-                {
-                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreType.NameInvariant));
-                }
-                dictScoreTypes.Add(scoreType.NameInvariant, scoreTypeId);
+                throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreType.NameInvariant));
             }
+            dictScoreTypes.Add(scoreType.NameInvariant, scoreTypeId);
+
             return scoreTypeId;
         }
 
