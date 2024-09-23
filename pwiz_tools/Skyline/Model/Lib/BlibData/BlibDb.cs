@@ -1183,7 +1183,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private static SpectrumSourceFileDetails GetSpectrumSourceFile(string filePath, SpectrumSourceFileDetails[] dataFiles)
         {
-            return string.IsNullOrEmpty(filePath) || dataFiles == null || dataFiles.Length == 0
+            return string.IsNullOrEmpty(filePath) || dataFiles.IsNullOrEmpty()
                 ? null
                 : dataFiles.FirstOrDefault(df => string.Equals(filePath, df.FilePath));
         }
@@ -1288,7 +1288,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private static ushort GetScoreTypeId(ISession session, SpectrumInfoLibrary spectrum, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
             var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
-            if (string.IsNullOrEmpty(scoreTypeName)) return (ushort)0;
+            if (string.IsNullOrEmpty(scoreTypeName)) return 0;
             if (dictScoreTypes.TryGetValue(scoreTypeName, out var savedScoreTypeId)) return savedScoreTypeId;
 
             var scoreType = spectrumSourceFile.GetScoreType(scoreTypeName) ?? new ScoreType(scoreTypeName, null);

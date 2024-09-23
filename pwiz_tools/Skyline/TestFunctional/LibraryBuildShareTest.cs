@@ -66,8 +66,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             Assert.AreEqual(1, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count);
 
-            var libraryOriginal = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.First();
-            var originalDataFiles = libraryOriginal.LibraryDetails.DataFiles;
             var originalLibPath = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.First().FilePath;
 
             string minimizedZipFile = TestFilesDir.GetTestPath("MinimizedDocument.sky.zip");
@@ -90,68 +88,59 @@ namespace pwiz.SkylineTestFunctional
             }
             var minimizedLibPath = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.First().FilePath;
 
-            // var originalDataFilesEnumerable = originalDataFiles.ToList();
-            // var minimizedDataFilesEnumerable = library.LibraryDetails.DataFiles.ToList();
-            // Assert.AreEqual(originalDataFilesEnumerable.Count, minimizedDataFilesEnumerable.Count);
-            // foreach (SpectrumSourceFileDetails sourceFile in library.LibraryDetails.DataFiles)
-            // {
-            //     var originalSourceFile =
-            //         originalDataFilesEnumerable.FirstOrDefault(s => s.FilePath.Equals(sourceFile.FilePath));
-            //
-            //     Assert.IsNotNull(originalSourceFile);
-            //     Assert.AreEqual(originalSourceFile, sourceFile);
-            // }
-
 
             var originalLibConnectionStr = new SQLiteConnectionStringBuilder { DataSource = originalLibPath }.ToString();
             var minimizedLibConnectionStr = new SQLiteConnectionStringBuilder { DataSource = minimizedLibPath }.ToString();
 
-            CompareTable(originalLibConnectionStr, minimizedLibConnectionStr, "SpectrumSourceFiles");
-            CompareTable(originalLibConnectionStr, minimizedLibConnectionStr, "ScoreTypes");
+            // Test for Issue 1022: idFileName column values are not set in minimized libraries
+            CompareTable("SpectrumSourceFiles", originalLibConnectionStr, minimizedLibConnectionStr);
+            CompareTable("ScoreTypes", originalLibConnectionStr, minimizedLibConnectionStr);
         }
 
-        private static void CompareTable(string originalLibConnectionStr, string minimizedLibConnectionStr, string tableName)
+        private static void CompareTable(string tableName, string originalLibConnectionStr, string minimizedLibConnectionStr)
         {
+            var excludedCols = new[] { @"rowid", @"id" };
+
             List<string> originalLibColNames;
             List<string> originalLibRows;
-            List<string> minimizedLibColNames;
-            List<string> minimizedLibRows;
-            var excludedCols = new[] { @"rowid", @"id" };
+            
             using (var connection = new SQLiteConnection(originalLibConnectionStr))
             {
                 connection.Open();
                 Assert.IsTrue(SqliteOperations.TableExists(connection, tableName));
                 originalLibColNames = SqliteOperations.GetColumnNamesFromTable(connection, tableName);
-                originalLibRows = SqliteOperations.DumpTable(connection, tableName, null, null, excludedCols).ToList();
+                originalLibRows = SqliteOperations.DumpTable(connection, tableName, ", ", null, excludedCols).ToList();
             }
+            originalLibColNames.Sort();
+            originalLibRows.Sort();
 
+            List<string> minimizedLibColNames;
+            List<string> minimizedLibRows;
             using (var connection = new SQLiteConnection(minimizedLibConnectionStr))
             {
                 connection.Open();
                 Assert.IsTrue(SqliteOperations.TableExists(connection, tableName));
                 minimizedLibColNames = SqliteOperations.GetColumnNamesFromTable(connection, tableName);
-                minimizedLibRows = SqliteOperations.DumpTable(connection, tableName, null, null, excludedCols).ToList();
+                minimizedLibRows = SqliteOperations.DumpTable(connection, tableName, ", ", null, excludedCols).ToList();
             }
+            minimizedLibColNames.Sort();
+            minimizedLibRows.Sort();
 
-            CollectionAssert.AreEqual(originalLibColNames, minimizedLibColNames, 
-                $"Column names are no the same in the original and minimized library for table {tableName}." +
-                $"\nOriginal library columns: {TextUtil.LineSeparate(originalLibColNames)}" +
-                $"\nMinimized library columns: {TextUtil.LineSeparate(minimizedLibColNames)}");
-            if (originalLibRows.Count == minimizedLibRows.Count)
+            // Compare column names
+            CollectionAssert.AreEqual(originalLibColNames, minimizedLibColNames,
+                TextUtil.LineSeparate(
+                    $"Column names for table {tableName} are not the same in the original and minimized libraries.",
+                    "Original library columns:", TextUtil.LineSeparate(originalLibColNames),
+                    "Minimized library columns:", TextUtil.LineSeparate(minimizedLibColNames)));
+
+            // Compare row values. Minimized library can have fewer rows than the original library (e.g. ScoreTypes table)
+            foreach (var minimizedLibRow in minimizedLibRows)
             {
-                CollectionAssert.AreEqual(originalLibRows.ToList(), minimizedLibRows.ToList(),
-                    $"Rows are no the same in the original and minimized library for table {tableName}." +
-                    $"\nOriginal library rows: {TextUtil.LineSeparate(originalLibRows)}" +
-                    $"\nMinimized library rows: {TextUtil.LineSeparate(minimizedLibRows)}");
-            }
-            else
-            {
-                foreach (var minimizedLibRow in minimizedLibRows)
-                {
-                    Assert.IsTrue(originalLibRows.Contains(minimizedLibRow), 
-                        $"Original library does not contain a row in table {tableName} with the following values: {minimizedLibRow}" +
-                        $"\n Original library rows: {TextUtil.LineSeparate(originalLibRows)}");
-                }
+                Assert.IsTrue(originalLibRows.Contains(minimizedLibRow), 
+                    TextUtil.LineSeparate(
+                        $"Original library does not contain a row in table {tableName} with the following values:", minimizedLibRow,
+                        "Original library rows:" , TextUtil.LineSeparate(originalLibRows),
+                        "Minimized library rows:", TextUtil.LineSeparate(minimizedLibRows)));
             }
         }
     }
