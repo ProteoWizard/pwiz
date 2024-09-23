@@ -1257,7 +1257,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 : null;
             refSpectra.SpecIdInFile = null;
             refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
-            refSpectra.ScoreType = GetScoreTypeId(session, spectrum, dictScoreTypes, spectrumSourceFile);
+            refSpectra.ScoreType = GetScoreTypeId(session, spectrum.SpectrumHeaderInfo?.ScoreType, dictScoreTypes, spectrumSourceFile);
             if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
             {
                 refSpectra.PeptideSeq = string.Empty;
@@ -1289,13 +1289,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return spectrumSourceId;
         }
 
-        private static ushort GetScoreTypeId(ISession session, SpectrumInfoLibrary spectrum, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
+        private static ushort GetScoreTypeId(ISession session, string scoreName, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
-            var scoreTypeName = spectrum.SpectrumHeaderInfo?.ScoreType;
-            if (string.IsNullOrEmpty(scoreTypeName)) return 0;
-            if (dictScoreTypes.TryGetValue(scoreTypeName, out var savedScoreTypeId)) return savedScoreTypeId;
+            if (string.IsNullOrEmpty(scoreName)) return 0;
+            if (dictScoreTypes.TryGetValue(scoreName, out var savedScoreTypeId)) return savedScoreTypeId;
 
-            var scoreType = spectrumSourceFile.GetScoreType(scoreTypeName) ?? new ScoreType(scoreTypeName, null);
+            var scoreType = spectrumSourceFile.GetScoreType(scoreName) ?? new ScoreType(scoreName, null);
             var scoreTypeId = SaveScoreType(session, scoreType);
             if (scoreTypeId == 0)
             {
