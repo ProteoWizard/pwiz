@@ -1766,5 +1766,40 @@ namespace pwiz.SkylineTestUtil
                 IsFalse(convertedTransitionIterator.MoveNext());
             }
         }
+
+        /// <summary>
+        /// Verifies that a Comparer has the reflexive, symmetric and transitive properties when
+        /// applied to all combinations of the elements provided.
+        /// </summary>
+        public static void ComparerWellBehaved<T>(IComparer<T> comparer, IEnumerable<T> items)
+        {
+            var itemList = items.ToList();
+            for (int i = 0; i < itemList.Count; i++)
+            {
+                var itemI = itemList[i];
+                for (int j = 0; j < itemList.Count; j++)
+                {
+                    var itemJ = itemList[j];
+                    var compareIJ = Math.Sign(comparer.Compare(itemI, itemJ));
+                    var compareJI = Math.Sign(comparer.Compare(itemJ, itemI));
+                    Assert.AreEqual(compareIJ, -compareJI, "Compare of {0} with {1} should be opposite of {1} with {0}",
+                        itemI, itemJ);
+                    if (compareIJ <= 0)
+                    {
+                        for (int k = 0; k < itemList.Count; k++)
+                        {
+                            var itemK = itemList[k];
+                            var compareJK = Math.Sign(comparer.Compare(itemJ, itemK));
+                            if (compareJK <= 0)
+                            {
+                                Assert.AreNotEqual(1, Math.Sign(comparer.Compare(itemI, itemK)),
+                                    "Compare of {0} with {2} should not be positive because {0} < {1} and {1} < {2}",
+                                    itemI, itemJ, itemK);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
