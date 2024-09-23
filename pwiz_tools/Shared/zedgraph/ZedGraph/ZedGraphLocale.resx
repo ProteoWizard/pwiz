@@ -160,7 +160,7 @@
     <value>Print...</value>
   </data>
   <data name="move_label" xml:space="preserve">
-    <value>Drag the label frame or drag 
-the label while holding the Alt key.  </value>
+    <value>To move: click-and-drag or
+Alt+click-and-drag the label</value>
   </data>
 </root>
