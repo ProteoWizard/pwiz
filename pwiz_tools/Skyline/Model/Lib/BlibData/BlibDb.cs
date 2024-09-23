@@ -1143,7 +1143,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum, spectrumSourceFile);
+                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+                    spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile);
 
                 // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
                 // or object of type SpectrumLiteKey for redundant spectra
@@ -1250,7 +1251,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
 
-            refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles, spectrum, spectrumSourceFile) : null;
+            refSpectra.FileId = spectrum.FilePath != null
+                ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+                    spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile)
+                : null;
             refSpectra.SpecIdInFile = null;
             refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
             refSpectra.ScoreType = GetScoreTypeId(session, spectrum, dictScoreTypes, spectrumSourceFile);
@@ -1270,12 +1274,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         }
 
         private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles, 
-            SpectrumInfoLibrary spectrum, SpectrumSourceFileDetails spectrumSourceFile)
+           string scoreName, SpectrumSourceFileDetails spectrumSourceFile)
         {
             if (!dictFiles.TryGetValue(filePath, out var spectrumSourceId))
             {
                 spectrumSourceId = SaveSourceFile(session, filePath, spectrumSourceFile?.IdFilePath,
-                    spectrumSourceFile?.GetScoreTypeCutoff(spectrum.SpectrumHeaderInfo?.ScoreType));
+                    spectrumSourceFile?.GetScoreTypeCutoff(scoreName));
                 if (spectrumSourceId == 0)
                 {
                     throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
