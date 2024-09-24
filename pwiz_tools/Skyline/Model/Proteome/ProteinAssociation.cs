@@ -168,28 +168,30 @@ namespace pwiz.Skyline.Model.Proteome
                         continue;
 
                     // check whether peptide is in the digest of the protein (if the result is non-empty)
-                    digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).Select(p => p.Sequence).ToHashSet();
+                    digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).Select(p => p.Sequence)
+                        .ToHashSet();
                     bool matchesDigestSettings = digestedPeptides.Contains(peptideSequence);
                     proteinPeptideMatches.AddPeptideSequence(peptideSequence, matchesDigestSettings);
-                    lock (localResults)
+                }
+
+                lock (localResults)
+                {
+                    if (broker.IsCanceled)
+                        return;
+
+                    if (progressValue > maxProgressValue && progressValue <= 100)
                     {
-                        if (broker.IsCanceled)
-                            return;
+                        broker.ProgressValue = progressValue;
+                        maxProgressValue = Math.Max(maxProgressValue, progressValue);
+                    }
 
-                        if (progressValue > maxProgressValue && progressValue <= 100)
-                        {
-                            broker.ProgressValue = progressValue;
-                            maxProgressValue = Math.Max(maxProgressValue, progressValue);
-                        }
-
-                        if (proteinPeptideMatches.PeptideSequenceCount > 0)
-                        {
-                            proteinPeptideMatchesList.Add(proteinPeptideMatches);
-                        }
-                        else
-                        {
-                            localResults.ProteinsUnmapped++;
-                        }
+                    if (proteinPeptideMatches.PeptideSequenceCount > 0)
+                    {
+                        proteinPeptideMatchesList.Add(proteinPeptideMatches);
+                    }
+                    else
+                    {
+                        localResults.ProteinsUnmapped++;
                     }
                 }
             });
