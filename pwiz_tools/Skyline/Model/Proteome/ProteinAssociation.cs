@@ -21,9 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -33,12 +31,9 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using static pwiz.Skyline.Model.Databinding.Entities.Chromatogram;
-using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -148,7 +143,7 @@ namespace pwiz.Skyline.Model.Proteome
             broker.Message = ProteomeResources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
             var proteinPeptideMatchesList = new List<ProteinPeptideMatches>();
 
-            Parallel.ForEach(proteinSource.Proteins, fastaRecord =>
+            ParallelEx.ForEach(proteinSource.Proteins, fastaRecord =>
             {
                 int progressValue = fastaRecord.Progress;
                 var proteinPeptideMatches = new ProteinPeptideMatches(fastaRecord);
@@ -200,7 +195,7 @@ namespace pwiz.Skyline.Model.Proteome
             var peptidesThatMatchDigestSettingsForAnyProtein = proteinPeptideMatchesList
                 .SelectMany(matches => matches.PeptidesMatchingDigestSettings).ToHashSet();
 
-            Parallel.ForEach(proteinPeptideMatchesList, proteinPeptideMatches =>
+            ParallelEx.ForEach(proteinPeptideMatchesList, proteinPeptideMatches =>
             {
                 var fastaRecord = proteinPeptideMatches.ProteinRecord;
                 var matches = new List<PeptideDocNode>();
