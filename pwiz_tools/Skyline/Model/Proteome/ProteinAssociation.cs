@@ -21,7 +21,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -31,9 +33,12 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.Databinding.Entities.Chromatogram;
+using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -141,34 +146,76 @@ namespace pwiz.Skyline.Model.Proteome
             var proteinAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
             int maxProgressValue = 0;
             broker.Message = ProteomeResources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
+            var proteinPeptideMatchesList = new List<ProteinPeptideMatches>();
 
-            ParallelEx.ForEach(proteinSource.Proteins, fastaRecord =>
+            Parallel.ForEach(proteinSource.Proteins, fastaRecord =>
             {
                 int progressValue = fastaRecord.Progress;
+                var proteinPeptideMatches = new ProteinPeptideMatches(fastaRecord);
+                var peptideHashSet = new HashSet<string>();
+                HashSet<string> digestedPeptides = null;
                 var fasta = fastaRecord.Sequence;
                 var trieResults = _peptideTrie.FindAll(fasta.Sequence);
-                var matches = new List<PeptideDocNode>();
-
-                // don't count the same peptide twice in a protein
-                var peptidesMatched = new HashSet<string>();
-
-                IList<Peptide> digestedPeptides = null;
-
                 foreach (var result in trieResults)
                 {
                     if (broker.IsCanceled)
                     {
                         break;
                     }
-                    if (!peptidesMatched.Add(result.Keyword))
+
+                    var peptideSequence = result.Keyword;
+                    if (!peptideHashSet.Add(peptideSequence))
                         continue;
 
-                    // check that peptide is in the digest of the protein (if the result is non-empty)
-                    digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).ToList();
-                    if (!digestedPeptides.Contains(p => p.Sequence == result.Keyword))
-                        continue;
+                    // check whether peptide is in the digest of the protein (if the result is non-empty)
+                    digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).Select(p => p.Sequence).ToHashSet();
+                    bool matchesDigestSettings = digestedPeptides.Contains(peptideSequence);
+                    proteinPeptideMatches.AddPeptideSequence(peptideSequence, matchesDigestSettings);
+                    lock (localResults)
+                    {
+                        if (broker.IsCanceled)
+                            return;
 
-                    matches.AddRange(_peptideToPath[result.Keyword]);
+                        if (progressValue > maxProgressValue && progressValue <= 100)
+                        {
+                            broker.ProgressValue = progressValue;
+                            maxProgressValue = Math.Max(maxProgressValue, progressValue);
+                        }
+
+                        if (proteinPeptideMatches.PeptideSequenceCount > 0)
+                        {
+                            proteinPeptideMatchesList.Add(proteinPeptideMatches);
+                        }
+                        else
+                        {
+                            localResults.ProteinsUnmapped++;
+                        }
+                    }
+                }
+            });
+            
+            // Make a HashSet of all peptide sequences which match the digest settings in any protein sequence
+            var peptidesThatMatchDigestSettingsForAnyProtein = proteinPeptideMatchesList
+                .SelectMany(matches => matches.PeptidesMatchingDigestSettings).ToHashSet();
+
+            Parallel.ForEach(proteinPeptideMatchesList, proteinPeptideMatches =>
+            {
+                var fastaRecord = proteinPeptideMatches.ProteinRecord;
+                var matches = new List<PeptideDocNode>();
+
+                for (int iPeptide = 0; iPeptide < proteinPeptideMatches.PeptideSequenceCount; iPeptide++)
+                {
+                    var peptideSequence = proteinPeptideMatches.GetPeptideSequence(iPeptide);
+                    if (!proteinPeptideMatches.MatchesDigestSettings(iPeptide))
+                    {
+                        // The peptide could not have been digested by the enzyme from this protein sequence
+                        // Only skip it if there is at least one protein that could produce the digested peptide
+                        if (peptidesThatMatchDigestSettingsForAnyProtein.Contains(peptideSequence))
+                        {
+                            continue;
+                        }
+                    } 
+                    matches.AddRange(_peptideToPath[peptideSequence]);
                 }
 
                 var peptideAssociationGroup = new PeptideAssociationGroup(matches);
@@ -177,12 +224,6 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     if (broker.IsCanceled)
                         return;
-
-                    if (progressValue > maxProgressValue && progressValue <= 100)
-                    {
-                        broker.ProgressValue = progressValue;
-                        maxProgressValue = Math.Max(maxProgressValue, progressValue);
-                    }
 
                     if (matches.Count > 0)
                     {
@@ -221,6 +262,47 @@ namespace pwiz.Skyline.Model.Proteome
                 _proteinToMetadata[kvp.Key.Sequence.Name] = kvp.Key.Metadata;
 
             return proteinAssociations;
+        }
+
+        private class ProteinPeptideMatches
+        {
+            private List<string> _peptideSequences = new List<string>();
+            private List<bool> _matchesDigestSettingsList = new List<bool>();
+            public ProteinPeptideMatches(IProteinRecord proteinRecord)
+            {
+                ProteinRecord = proteinRecord;
+            }
+
+            public IProteinRecord ProteinRecord { get; }
+            public int PeptideSequenceCount
+            {
+                get { return _peptideSequences.Count; }
+            }
+
+            public string GetPeptideSequence(int i)
+            {
+                return _peptideSequences[i];
+            }
+
+            public bool MatchesDigestSettings(int i)
+            {
+                return _matchesDigestSettingsList[i];
+            }
+
+            public void AddPeptideSequence(string sequence, bool matchesDigestSettings)
+            {
+                _peptideSequences.Add(sequence);
+                _matchesDigestSettingsList.Add(matchesDigestSettings);
+            }
+
+            public IEnumerable<string> PeptidesMatchingDigestSettings
+            {
+                get
+                {
+                    return Enumerable.Range(0, PeptideSequenceCount).Where(i => _matchesDigestSettingsList[i])
+                        .Select(i => _peptideSequences[i]);
+                }
+            }
         }
 
         [XmlRoot("protein_association")]
@@ -1277,3 +1359,4 @@ namespace pwiz.Skyline.Model.Proteome
         }
     }
 }
+
