@@ -102,7 +102,9 @@ namespace pwiz.Skyline.Model
             {
                 if (others != null)
                 {
-                    allTargets = allTargets.Concat(others);
+                    var existing = allTargets as Target[] ?? allTargets.ToArray();
+                    var distinct = others.Where(t => existing.All(a => a.CompareTo(t) != 0));
+                    allTargets = existing.Concat(distinct);
                 }
             }
             return new TargetResolver(allTargets);
