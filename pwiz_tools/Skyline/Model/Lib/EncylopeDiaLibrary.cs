@@ -466,7 +466,7 @@ on one.SourceFile = two.SourceFile";
             }
             catch (Exception exception)
             {
-                Trace.TraceInformation(@"Exception loading cache: {0}", exception); // N.B. see TraceWarningListener for output details
+                DebugMessage.AsyncWrite(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }

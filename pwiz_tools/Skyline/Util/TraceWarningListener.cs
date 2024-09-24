@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Util
         private TextWriter _textWriter;
         public TraceWarningListener(TextWriter textWriter)
         {
-            // N.B. if you want to see Trace.TraceInformation messages too, add .Information to the flags here 
+            // N.B. if you want to see DebugMessage.AsynchWrite messages too, add .Information to the flags here 
             Filter = new EventTypeFilter(SourceLevels.Warning); 
             _textWriter = textWriter;
         }
