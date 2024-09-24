@@ -301,7 +301,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void dataGridViewFilter_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            DebugMessage.AsyncWrite(@"DataGridViewFilterOnDataError:{0}", e.Exception);
+            Messages.WriteAsyncDebugMessage(@"DataGridViewFilterOnDataError:{0}", e.Exception);
         }
 
         protected override void OnLoad(EventArgs e)

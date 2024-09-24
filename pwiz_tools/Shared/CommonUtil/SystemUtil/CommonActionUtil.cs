@@ -52,7 +52,7 @@ namespace pwiz.Common.SystemUtil
             {
                 return;
             }
-            DebugMessage.AsyncWrite(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
+            Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
         }
 
         public static bool SafeBeginInvoke(Control control, Action action)

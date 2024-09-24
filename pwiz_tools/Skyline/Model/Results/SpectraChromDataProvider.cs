@@ -1596,7 +1596,7 @@ namespace pwiz.Skyline.Model.Results
             var im = _dataFile.IonMobilityFromCCS(ccs, mz, charge);
             if (!im.HasValue)
             {
-                UserMessage.AsyncWrite(ResultsResources.DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion, obj, ccs, mz, charge);
+                Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion, obj, ccs, mz, charge);
             }
             return im;
         }
@@ -1605,7 +1605,7 @@ namespace pwiz.Skyline.Model.Results
             var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
             if (double.IsNaN(ccs))
             {
-                UserMessage.AsyncWrite(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
+                Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
             }
             return ccs;
         }

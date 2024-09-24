@@ -22,17 +22,24 @@ using System.Diagnostics;
 namespace pwiz.Common.SystemUtil
 {
     /// <summary>
-    /// Provides a mechanism for showing developers a non-blocking message.
+    /// Provides a mechanism for showing non-blocking messages.
     ///
-    /// Really just a wrapper for TraceInformation, which we don't want to call
+    /// Really just a wrapper for Trace, which we don't want to call
     /// directly as it looks too much like leftover debug code.
     ///
     /// </summary>
-    public static class DebugMessage
+    public static class Messages
     {
-        public static void AsyncWrite(string message, params object[] args)
+        public static void WriteAsyncDebugMessage(string message, params object[] args)
         {
             Trace.TraceInformation(message, args);
+        }
+
+        public static void WriteAsyncUserMessage(string message, params object[] args)
+        {
+            // For Skyline UI, the TraceWarningListener class causes these messages to appear in the
+            // Immediate Window, for commandline they appear in the console.
+            Trace.TraceWarning(message, args);  
         }
     }
 }

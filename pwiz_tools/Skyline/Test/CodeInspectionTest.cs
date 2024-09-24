@@ -109,11 +109,11 @@ namespace pwiz.SkylineTest
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
                 Level.Error, // Any failure is treated as an error, and overall test fails
-                NonSkylineDirectories().Append(@"UserMessage.cs").Append(@"DebugMessage.cs").ToArray(), // Only these files should contain this
+                NonSkylineDirectories().Append(@"Messages.cs").ToArray(), // Only these files should contain this
                 string.Empty, // No file content required for inspection
                 @"Trace.Trace", // Forbidden pattern
                 false, // Pattern is not a regular expression
-                @"Trace should not be used directly. The UserMessage class is the proper way to produce user-facing non-blocking messages. For non-user-facing messages use DebugMessage."); // Explanation for prohibition, appears in report
+                @"Trace should not be used directly. The Messages class is the proper way to produce non-blocking user-facing messages, and permanent dev-facing messages."); // Explanation for prohibition, appears in report
 
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask

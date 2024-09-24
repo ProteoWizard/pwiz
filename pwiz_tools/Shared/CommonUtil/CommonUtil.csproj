@@ -170,7 +170,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
-    <Compile Include="SystemUtil\DebugMessage.cs" />
+    <Compile Include="SystemUtil\Messages.cs" />
     <Compile Include="SystemUtil\FileSize.cs" />
     <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
     <Compile Include="SystemUtil\IFormView.cs" />

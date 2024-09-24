@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Alerts
 
             if (!forced)
             {
-                DebugMessage.AsyncWrite(exceptionInfo);
+                Messages.WriteAsyncDebugMessage(exceptionInfo);
                 Console.WriteLine(exceptionInfo);
             }
 

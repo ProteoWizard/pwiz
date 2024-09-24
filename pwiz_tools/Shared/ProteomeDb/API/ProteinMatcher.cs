@@ -253,7 +253,7 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     return;
                 }
-                DebugMessage.AsyncWrite(@"Unhandled exception: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Unhandled exception: {0}", exception);
             }
         }
 

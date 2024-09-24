@@ -261,7 +261,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     else
                     {
-                        DebugMessage.AsyncWrite(@"Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath); // N.B. see TraceWarningListener for output details
+                        Messages.WriteAsyncDebugMessage(@"Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath); // N.B. see TraceWarningListener for output details
                     }
                 }
                 var pivotOnKey = PivotKey.GetPivotKey(allPivotKeys, pivotOnKeyValues);

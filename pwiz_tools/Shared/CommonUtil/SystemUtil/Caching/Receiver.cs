@@ -134,7 +134,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 _workOrder = null;
                 if (OwnerControl != null)
                 {
-                    DebugMessage.AsyncWrite("CalculatedValueListener destroyed: {0}", Producer.ValueType); // N.B. see TraceWarningListener for output details
+                    Messages.WriteAsyncDebugMessage("CalculatedValueListener destroyed: {0}", Producer.ValueType); // N.B. see TraceWarningListener for output details
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;
                     OwnerControl = null;
                 }

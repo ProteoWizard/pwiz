@@ -232,7 +232,7 @@ namespace pwiz.Common.Graph
             {
                 return point => point.Y;
             }
-            DebugMessage.AsyncWrite(@"Could not determine type of axis {0}", axis);
+            Messages.WriteAsyncDebugMessage(@"Could not determine type of axis {0}", axis);
             return null;
         }
 

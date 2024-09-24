@@ -534,7 +534,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public void OnUnhandledException(Exception exception)
         {
-            DebugMessage.AsyncWrite(@"BindingListView unhandled exception {0}", exception);
+            Messages.WriteAsyncDebugMessage(@"BindingListView unhandled exception {0}", exception);
             var unhandledExceptionEvent = UnhandledExceptionEvent;
             if (null != unhandledExceptionEvent)
             {

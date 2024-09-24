@@ -465,7 +465,7 @@ on one.SourceFile = two.SourceFile";
             }
             catch (Exception exception)
             {
-                DebugMessage.AsyncWrite(@"Exception loading cache: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }

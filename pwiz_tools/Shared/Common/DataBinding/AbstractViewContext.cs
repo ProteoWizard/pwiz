@@ -498,7 +498,7 @@ namespace pwiz.Common.DataBinding
             }
             catch (Exception exception)
             {
-                DebugMessage.AsyncWrite(@"Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
+                Messages.WriteAsyncDebugMessage(@"Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
                 return null;
             }
         }

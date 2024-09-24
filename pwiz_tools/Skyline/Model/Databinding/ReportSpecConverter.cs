@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Databinding
                     oldCaption = null;
                     if (null == propertyPath)
                     {
-                        DebugMessage.AsyncWrite(@"Unable to parse ratio property {0}", part);
+                        Messages.WriteAsyncDebugMessage(@"Unable to parse ratio property {0}", part);
                         propertyPath = PropertyPath.Root.Property(part);
                     }
                 }
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.Databinding
                     PropertyInfo property = component.GetProperty(part);
                     if (null == property)
                     {
-                        DebugMessage.AsyncWrite(@"Could not find property {0}", part);
+                        Messages.WriteAsyncDebugMessage(@"Could not find property {0}", part);
                         continue;
                     }
                     propertyPath = PropertyPath.Root.Property(part);

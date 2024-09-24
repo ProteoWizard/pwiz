@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception e)
             {
-                UserMessage.AsyncWrite(ChromLibResources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
+                Messages.WriteAsyncUserMessage(ChromLibResources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
                 return false;
             }
         }
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception exception)
             {
-                UserMessage.AsyncWrite(ChromLibResources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
+                Messages.WriteAsyncUserMessage(ChromLibResources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
                 return false;
             }
         }

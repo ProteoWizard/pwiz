@@ -364,7 +364,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        DebugMessage.AsyncWrite(@"Exception sending analytics hit {0}", ex);
+                        Messages.WriteAsyncDebugMessage(@"Exception sending analytics hit {0}", ex);
                     }
                 });
             }
@@ -616,7 +616,7 @@ namespace pwiz.Skyline
             }
             catch (Exception exception2)
             {
-                DebugMessage.AsyncWrite(@"Exception in ReportException: {0}", exception2);
+                Messages.WriteAsyncDebugMessage(@"Exception in ReportException: {0}", exception2);
             }
         }
 
@@ -628,7 +628,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            DebugMessage.AsyncWrite(@"Unhandled exception on UI thread: {0}", e.Exception);
+            Messages.WriteAsyncDebugMessage(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
         }
