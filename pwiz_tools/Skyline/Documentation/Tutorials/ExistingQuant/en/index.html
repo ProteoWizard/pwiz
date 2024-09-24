@@ -485,13 +485,12 @@
         highly similar relative intensities between light and heavy transition peak areas.
     </p>
     <p>
-        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (<a
-            id="_Hlk26964787"></a>K.YVDPNVLPETESLALVID<strong><span class="blue">R</span></strong>.L and K.FPEPGYLEGV<strong><span
-                class="blue">K</span></strong>.T) have transitions with only blank space where the others have green or red circles. This means the
-        mzXML file you imported contained no data for these transitions. You can open the mzXML file in a text editor and search for the precursor
-        <em>m/z</em> values to verify yourself that the precursors lack the transitions indicated by the original transition list. These types of
-        anomalies are fairly typical of working with transition lists created either manually or by tools receiving less use and testing than Skyline.
-    
+        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (K.YVDPNVLPETESLALVID<strong><span
+                class="blue">R</span></strong>.L and K.FPEPGYLEGV<strong><span class="blue">K</span></strong>.T) have transitions with only blank
+        space where the others have green or red circles. This means the mzXML file you imported contained no data for these transitions. You can open
+        the mzXML file in a text editor and search for the precursor <em>m/z</em> values to verify yourself that the precursors lack the transitions
+        indicated by the original transition list. These types of anomalies are fairly typical of working with transition lists created either
+        manually or by tools receiving less use and testing than Skyline.
     </p>
     <h1>Preparing a Document for CPTAC Study 7</h1>
     <p>
@@ -620,7 +619,7 @@
     <p>
         Messages like this are not uncommon when working with transition lists created outside Skyline. Others are presented in the Skyline
         instructional video on this subject (<a
-            href="https://skyline.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=video_0-5b">Video 3: Existing Experiments</a>). Some
+            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=video_0-5b">Video 3: Existing Experiments</a>). Some
         of the most common reasons for seeing an error of this type are:
     </p>
     <ol>
@@ -660,7 +659,7 @@
         To specify an isotope modification on the V in the first peptide, perform the following steps:
     </p>
     <ul>
-        <li>Select the “AGL<strong>C</strong>QTFVYGG<strong>C</strong>R” peptide.</li>
+        <li>Select the “AGL<strong><u>C</u></strong>QTFVYGG<strong><u>C</u></strong>R” peptide.</li>
         <li>On the <strong>Edit</strong> menu, click <strong>Modify Peptide</strong>.</li>
         <li>Select the blank entry from the <strong>Isotope heavy </strong>dropdown list for the “Label: 13C(6)N15(4) C-term R” to remove the stable
             isotope label from this C-terminal Arginine.</li>
@@ -715,7 +714,7 @@
         To create labeled precursors for the two remaining peptides, perform the following steps:
     </p>
     <ul>
-        <li>Right-click on the peptide “IVGGWE<strong>C</strong>EK”, and click <strong>Modifiy</strong>.</li>
+        <li>Right-click on the peptide “IVGGWE<strong><u>C</u></strong>EK”, and click <strong>Modifiy</strong>.</li>
         <li>Select the blank entry from the <strong>Isotope heavy </strong>dropdown list for the “Label: 13C96)15N(2)(C-term K)” to remove the stable
             isotope label from this C-terminal Lysine.</li>
         <li>Select the “Label:13C” modification from the <strong>Isotope heavy </strong>dropdown list for the V residue in this peptide.</li>
@@ -816,9 +815,9 @@
     </p>
     <p>
         First, in the image above, you can see that the precursor “541.7637++ (heavy)” for the peptide “I<strong><span
-                class="blue">V</span></strong>GGWE<strong>C</strong>EK” appears to be missing data. This is because the transition list supplied to
-        the mass spectrometer only specified one decimal place for precursor <em>m/z</em>, and it was rounded incorrectly to “541.7”. You can check
-        this on the “Raw” tab in the Excel spreadsheet.
+                class="blue">V</span></strong>GGWE<strong><u>C</u></strong>EK” appears to be missing data. This is because the transition list
+        supplied to the mass spectrometer only specified one decimal place for precursor <em>m/z</em>, and it was rounded incorrectly to “541.7”. You
+        can check this on the “Raw” tab in the Excel spreadsheet.
     </p>
     <p>
         To get the correctly calculated precursor in this document to match up with the measured data, do the following:
@@ -915,9 +914,8 @@
         <li>Select the light precursor for each peptide.</li>
     </ul>
     <p class="keep-next">
-        For the 6 well behaved peptides, you should see a chart like the one below, with the <a id="OLE_LINK1"></a><a
-            id="OLE_LINK2"></a><a id="OLE_LINK7"></a>ESDTSYVSL<strong><span class="blue">K</span></strong> peptide light precursor <a
-            id="OLE_LINK3"></a><a id="OLE_LINK4"></a>564.7746++ selected:
+        For the 6 well behaved peptides, you should see a chart like the one below, with the ESDTSYVSL<strong><span
+                class="blue">K</span></strong> peptide light precursor 564.7746++ selected:
     </p>
     <p>
         <img src="image-28.png" />
@@ -927,8 +925,7 @@
         LFTGHPETLE<strong><span class="blue">K</span></strong>) are not quite as clean, but no real problems in transition ratios stick out. 
     </p>
     <ul>
-        <li>Select the fourth peptide (<a id="OLE_LINK8"></a><a id="OLE_LINK9"></a>HGFLP<strong><span class="blue">R</span></strong>) light <a
-                id="OLE_LINK5"></a><a id="OLE_LINK6"></a>precursor 363.7059++.</li>
+        <li>Select the fourth peptide (HGFLP<strong><span class="blue">R</span></strong>) light precursor 363.7059++.</li>
     </ul>
     <p class="keep-next">
         This should cause the peak area graph to look like:
@@ -995,7 +992,7 @@
     <p>
         With just a few simple operations in Skyline, you have learned things about this data set that required weeks and the involvement of
         statisticians and programmers for the Verification Working Group to learn in the original study. If you have done the <a
-            href="https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine.url">Targeted Method
             Refinement</a> tutorial, you may now be imagining why you would want to run a refinement cycle involving a scheduled multi-replicate data
         set to better understand how your targeted peptides respond in this setting before measuring them on high value samples.
     </p>
@@ -1148,8 +1145,8 @@
         <li>Right-click on the <strong>Peak Areas</strong> graph, choose <strong>Normalize To</strong> and click <strong>Heavy</strong>.</li>
     </ul>
     <p>
-        You will find that the charts for all peptides, even <a id="OLE_LINK10"></a><a id="OLE_LINK11"></a>INDISHTQSVSA<strong><span
-                class="blue">K</span></strong> look quite nice in this data set.
+        You will find that the charts for all peptides, even INDISHTQSVSA<strong><span class="blue">K</span></strong> look quite nice in this data set.
+    
     </p>
     <ul>
         <li>Click the “INDISHTQSVSA<strong><span class="blue">K</span></strong>” peptide.</li>
