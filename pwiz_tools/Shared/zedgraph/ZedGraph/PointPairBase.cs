@@ -213,6 +213,16 @@ namespace ZedGraph
 
 	#region Methods
 
+        public PointF ToPointF()
+        {
+            return new PointF((float)X, (float)Y);
+        }
+
+        public bool Equals(PointF pt)
+        {
+			return pt.X == (float)X && pt.Y == (float)Y;
+        }
+
 		/// <summary>
 		/// Compare two <see cref="PointPairBase"/> objects for equality.  To be equal, X and Y
 		/// must be exactly the same between the two objects.

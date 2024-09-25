@@ -1581,6 +1581,33 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Log Peak Area.
+        /// </summary>
+        public static string RelativeAbundanceGraph_ToolTip_LogPeakArea {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceGraph_ToolTip_LogPeakArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Area.
+        /// </summary>
+        public static string RelativeAbundanceGraph_ToolTip_PeakArea {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceGraph_ToolTip_PeakArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rank.
+        /// </summary>
+        public static string RelativeAbundanceGraph_ToolTip_Rank {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceGraph_ToolTip_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string ReplicateGroupOp_ReplicateAxisTitle {
