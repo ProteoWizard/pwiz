@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
+using NHibernate.SqlCommand;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.SeqNode;
@@ -1200,27 +1201,29 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                TransitionGroupDocNode transitionDocNode = null;
-                if (_docNode is PeptideDocNode pepNode)
+                if (_expectedVisible != AreaExpectedValue.none)
                 {
-                    transitionDocNode = pepNode.Children.OfType<TransitionGroupDocNode>()
-                        .FirstOrDefault(CanGetDotProductResults);
-                }
-                else if (_docNode is TransitionGroupDocNode n)
-                    transitionDocNode = n;
-                if (_expectedVisible != AreaExpectedValue.none && transitionDocNode != null)
+                    _dotpData = new PointPairList();
+                    if(_expectedVisible.IsVisible())
+                        _dotpData.Insert(0, 0, double.NaN);
+                    for (var replicateGroupIndex = 0;
+                        replicateGroupIndex < ReplicateGroups.Count;
+                        replicateGroupIndex++)
                     {
-                        _dotpData = new PointPairList();
-                        if(_expectedVisible.IsVisible())
-                            _dotpData.Insert(0, 0, double.NaN);
-                        for (var replicateGroupIndex = 0;
-                            replicateGroupIndex < ReplicateGroups.Count;
-                            replicateGroupIndex++)
+                        var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
+
+                        if (_docNode is TransitionGroupDocNode transitionGroupDocNode)
+                            _dotpData.Insert(xValue, xValue, GetDotProductResults(transitionGroupDocNode, replicateGroupIndex));
+                        else if (_docNode is PeptideDocNode pepDocNode)
                         {
-                            var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
-                            _dotpData.Insert(xValue, xValue, GetDotProductResults(transitionDocNode, replicateGroupIndex));
+                            var replicate = replicateGroupIndex;
+                            var dotps = new Statistics(pepDocNode.TransitionGroups.Select(tg =>
+                                (double)GetDotProductResults(tg, replicate)).Where(dp => !double.IsNaN(dp)));
+                            _dotpData.Insert(xValue, xValue, dotps.Mean());
+                            
                         }
                     }
+                }
 
                 switch (_dataScalingOption)
                 {
@@ -1265,17 +1268,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    if (ReplicateGroups.Any())
-                        return false;
-                    var replicateIndices = ReplicateGroups[0].ReplicateIndexes;
-                    if (replicateIndices.IsEmpty)
-                        replicateIndices = ReplicateIndexSet.OfValues(new[] { -1 });
                     // if this is a library dot product we see if it can be calculated for the first replicate (or if it has average)
                     if (_expectedVisible == AreaExpectedValue.library &&
-                        nodeGroup.GetLibraryDotProduct(replicateIndices.FirstOrDefault()).HasValue)
+                        nodeGroup.GetLibraryDotProduct(-1).HasValue)
                         return true;
                     if (_expectedVisible == AreaExpectedValue.isotope_dist &&
-                        nodeGroup.GetIsotopeDotProduct(replicateIndices.FirstOrDefault()).HasValue)
+                        nodeGroup.GetIsotopeDotProduct(-1).HasValue)
                         return true;
                 }
                 return false;
