@@ -217,6 +217,7 @@
     <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
+    <Compile Include="PythonInstallerTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
     <Compile Include="QcTraceNameTest.cs" />
     <Compile Include="RedundantComboBoxTest.cs" />
@@ -402,7 +403,7 @@
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
-    <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="PythonInstallerLegacyDlgTest.cs" />
     <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,6 +29,7 @@ using pwiz.MSGraph;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -57,7 +59,18 @@ namespace pwiz.SkylineTestData
                          typeof(BiblioSpec.BlibBuild).Assembly // BiblioSpec
                      })
             {
-                foreach (var type in assembly.GetTypes())
+                Type[] assemblyTypes;
+                try
+                {
+                    assemblyTypes = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException reflectionTypeLoadException)
+                {
+                    // Write out the "LoaderExceptions" property because it is not included in this exception's ToString()
+                    Console.Out.WriteLine("Exception getting types for assembly {0}:\r\n{1}\r\nLoaderExceptions property:{2}", assembly.FullName, reflectionTypeLoadException, TextUtil.LineSeparate(reflectionTypeLoadException.LoaderExceptions?.Select(e=>e.ToString())) ?? "null");
+                    throw;
+                }
+                foreach (var type in assemblyTypes)
                 {
                     if (!IsResourceType(type))
                     {

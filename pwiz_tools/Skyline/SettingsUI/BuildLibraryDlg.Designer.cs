@@ -63,6 +63,7 @@
             this.tabProperties = new System.Windows.Forms.TabPage();
             this.tabControlDataSource = new pwiz.Skyline.Controls.WizardPages();
             this.tabFilesSource = new System.Windows.Forms.TabPage();
+            this.tabAlphaSource = new System.Windows.Forms.TabPage();
             this.tabCarafeSource = new System.Windows.Forms.TabPage();
             this.tabKoinaSource = new System.Windows.Forms.TabPage();
             this.tabFiles = new System.Windows.Forms.TabPage();
@@ -77,7 +78,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.comboLearnFrom = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.tabAlphaSource = new System.Windows.Forms.TabPage();
             this.dataSourceGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
             this.tabControlMain.SuspendLayout();
@@ -158,9 +158,7 @@
             this.comboAction.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             resources.ApplyResources(this.comboAction, "comboAction");
             this.comboAction.FormattingEnabled = true;
-            this.comboAction.Items.AddRange(new object[] {
-            resources.GetString("comboAction.Items"),
-            resources.GetString("comboAction.Items1")});
+            this.comboAction.Items.AddRange(new object[] { resources.GetString("comboAction.Items"), resources.GetString("comboAction.Items1") });
             this.comboAction.Name = "comboAction";
             this.helpTip.SetToolTip(this.comboAction, resources.GetString("comboAction.ToolTip"));
             // 
@@ -347,6 +345,12 @@
             resources.ApplyResources(this.tabFilesSource, "tabFilesSource");
             this.tabFilesSource.Name = "tabFilesSource";
             // 
+            // tabAlphaSource
+            // 
+            this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
+            resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
+            this.tabAlphaSource.Name = "tabAlphaSource";
+            // 
             // tabCarafeSource
             // 
             this.tabCarafeSource.BackColor = System.Drawing.SystemColors.Control;
@@ -439,9 +443,7 @@
             // 
             this.comboLearnFrom.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLearnFrom.FormattingEnabled = true;
-            this.comboLearnFrom.Items.AddRange(new object[] {
-            resources.GetString("comboLearnFrom.Items"),
-            resources.GetString("comboLearnFrom.Items1")});
+            this.comboLearnFrom.Items.AddRange(new object[] { resources.GetString("comboLearnFrom.Items"), resources.GetString("comboLearnFrom.Items1") });
             resources.ApplyResources(this.comboLearnFrom, "comboLearnFrom");
             this.comboLearnFrom.Name = "comboLearnFrom";
             this.comboLearnFrom.SelectedIndexChanged += new System.EventHandler(this.comboLearnFrom_SelectedIndexChanged);
@@ -450,12 +452,6 @@
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            // 
-            // tabAlphaSource
-            // 
-            this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
-            resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
-            this.tabAlphaSource.Name = "tabAlphaSource";
             // 
             // BuildLibraryDlg
             // 
@@ -493,7 +489,6 @@
             this.tabPageLibraries.ResumeLayout(false);
             this.tabPageLibraries.PerformLayout();
             this.ResumeLayout(false);
-
         }
 
         #endregion
