@@ -334,7 +334,8 @@ namespace pwiz.Skyline.Model.Results
                 if (!ChromKey.IsKeyId(id))
                     continue;
 
-                var chromKey = ChromKey.FromId(id, fixCEOptForShimadzu);
+                dataFile.GetChromatogramMetadata(index, out id, out bool? isNegativePolarity, out double precursorMz, out double productMz);
+                var chromKey = ChromKey.FromId(id, fixCEOptForShimadzu, isNegativePolarity, precursorMz, productMz);
                 if (_optimizableRegression?.OptType == OptimizationType.collision_energy
                     && chromKey.CollisionEnergy == 0)
                 {

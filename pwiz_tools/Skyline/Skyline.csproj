@@ -593,6 +593,17 @@
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectUrl.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -3738,6 +3749,11 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
     </EmbeddedResource>

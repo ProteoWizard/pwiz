@@ -407,6 +407,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Testing remote account connection.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Login was canceled.
         /// </summary>
         public static string EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled {

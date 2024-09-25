@@ -22,6 +22,7 @@ using System.Net.Http;
 using System.Threading;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -171,16 +172,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public static RemoteSession CreateSession(RemoteAccount remoteAccount)
         {
-            if (remoteAccount as UnifiAccount is { } unifiAccount)
-                return new UnifiSession(unifiAccount);
-
-            if (remoteAccount as ArdiaAccount is { } ardiaAccount)
-                return new ArdiaSession(ardiaAccount);
-
-            if (remoteAccount == null)
-                throw new ArgumentNullException(nameof(remoteAccount));
-
-            throw new ArgumentException();
+            return remoteAccount switch
+            {
+                UnifiAccount unifiAccount => new UnifiSession(unifiAccount),
+                WatersConnectAccount wcAccount => new WatersConnectSession(wcAccount),
+                ArdiaAccount ardiaAccount => new ArdiaSession(ardiaAccount),
+                _ => throw new ArgumentException(nameof(remoteAccount))
+            };
         }
 
         public abstract void RetryFetchContents(RemoteUrl remoteUrl);

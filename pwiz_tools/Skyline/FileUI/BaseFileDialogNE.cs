@@ -39,7 +39,6 @@ namespace pwiz.Skyline.FileUI
     {
         private readonly ListViewColumnSorter _listViewColumnSorter = new ListViewColumnSorter();
         private readonly Stack<MsDataFileUri> _previousDirectories = new Stack<MsDataFileUri>();
-        private readonly int _specialFolderCount;
         private readonly int _myComputerIndex;
         private readonly int _remoteIndex;
         private RemoteSession _remoteSession;
@@ -94,8 +93,6 @@ namespace pwiz.Skyline.FileUI
             myComputerNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer));
             
             lookInComboBox.Items.Add( myComputerNode );
-            _specialFolderCount = lookInComboBox.Items.Count;
-            
 
             lookInComboBox.SelectedIndex = 1;
             lookInComboBox.IntegralHeight = false;
@@ -636,36 +633,73 @@ namespace pwiz.Skyline.FileUI
         {
             lookInComboBox.SuspendLayout();
 
-            // remove old drive entries
-            while( lookInComboBox.Items.Count > _specialFolderCount )
-                lookInComboBox.Items.RemoveAt( _specialFolderCount );
+            // remove old items except My Documents, Desktop, My Computer, and the Remote root
+            for (int i = lookInComboBox.Items.Count - 1; i >= 0; i--)
+            {
+                if (lookInComboBox.Items[i] is TreeNode node)
+                {
+                    if (node.Tag is RemoteUrl remoteUrl && !ReferenceEquals(remoteUrl, RemoteUrl.EMPTY))
+                    {
+                        lookInComboBox.Items.RemoveAt(i);
+                    }
+                    else if (node.Tag is MsDataFilePath path)
+                    {
+                        if (node.ImageIndex == (int)ImageIndex.MyDocuments ||
+                            node.ImageIndex == (int)ImageIndex.Desktop ||
+                            node.ImageIndex == (int)ImageIndex.MyComputer)
+                            continue;
+                        lookInComboBox.Items.RemoveAt(i);
+                    }
+                }
+            }
 
-            TreeNode myComputerNode = (TreeNode) lookInComboBox.Items[_myComputerIndex];
             DirectoryInfo dirInfo = null;
+            int driveCount = 0;
 
             if (directory is MsDataFilePath)
             {
-                MsDataFilePath msDataFilePath = (MsDataFilePath) directory;
+                MsDataFilePath msDataFilePath = (MsDataFilePath)directory;
                 if (!string.IsNullOrEmpty(msDataFilePath.FilePath))
                 {
                     dirInfo = new DirectoryInfo(msDataFilePath.FilePath);
-                }
-            } 
-
-            if (dirInfo == null)
-            {
-                if (directory is RemoteUrl)
-                {
-                    lookInComboBox.SelectedIndex = _remoteIndex;
                 }
                 else
                 {
                     lookInComboBox.SelectedIndex = _myComputerIndex;
                 }
             }
+            else if (directory is RemoteUrl remoteUrl)
+            {
+                if (string.IsNullOrEmpty(remoteUrl.EncodedPath))
+                {
+                    lookInComboBox.SelectedIndex = _remoteIndex;
+                }
 
-            int driveCount = 0;
-            foreach( DriveInfo driveInfo in DriveInfo.GetDrives() )
+                TreeNode remoteNode = (TreeNode)lookInComboBox.Items[_remoteIndex];
+
+                ++driveCount;
+                TreeNode serverNode = remoteNode.Nodes.Add(remoteUrl.ServerUrl,
+                                                           remoteUrl.ServerUrl,
+                                                           (int)ImageIndex.MyNetworkPlaces,
+                                                           (int)ImageIndex.MyNetworkPlaces);
+                serverNode.Tag = remoteUrl.ChangePathParts(null);
+                lookInComboBox.Items.Insert(_remoteIndex + driveCount, serverNode);
+
+                var branches = remoteUrl.GetPathParts().ToList();
+                TreeNode pathNode = serverNode;
+                for (int i = 0; i < branches.Count; ++i)
+                {
+                    ++driveCount;
+                    pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
+                    pathNode.Tag = remoteUrl.ChangePathParts(branches.GetRange(0, i + 1));
+                    lookInComboBox.Items.Insert(_remoteIndex + driveCount, pathNode);
+                }
+                lookInComboBox.SelectedIndex = _remoteIndex + driveCount;
+            }
+
+            TreeNode myComputerNode = (TreeNode)lookInComboBox.Items[_myComputerIndex];
+
+            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
             {
                 string label = string.Empty;
                 string sublabel = driveInfo.Name;
@@ -708,27 +742,27 @@ namespace pwiz.Skyline.FileUI
                                                               label.Length > 0
                                                                   ? String.Format(@"{0} ({1})", label, sublabel)
                                                                   : sublabel,
-                                                              (int) imageIndex,
-                                                              (int) imageIndex);
+                                                              (int)imageIndex,
+                                                              (int)imageIndex);
                 driveNode.Tag = new MsDataFilePath(sublabel);
-                lookInComboBox.Items.Insert( _specialFolderCount + driveCount - 1, driveNode );
+                lookInComboBox.Items.Insert(_myComputerIndex + driveCount, driveNode);
 
-                if( dirInfo != null && sublabel == dirInfo.Root.Name )
+                if (dirInfo != null && sublabel == dirInfo.Root.Name)
                 {
-                    List<string> branches = new List<string>( ((MsDataFilePath) directory).FilePath.Split( new[] {
+                    List<string> branches = new List<string>(((MsDataFilePath)directory).FilePath.Split(new[] {
                                                  Path.DirectorySeparatorChar,
                                                  Path.AltDirectorySeparatorChar },
-                                                 StringSplitOptions.RemoveEmptyEntries ) );
+                                                 StringSplitOptions.RemoveEmptyEntries));
                     TreeNode pathNode = driveNode;
-                    for( int i = 1; i < branches.Count; ++i )
+                    for (int i = 1; i < branches.Count; ++i)
                     {
                         ++driveCount;
-                        pathNode = pathNode.Nodes.Add( branches[i], branches[i], 8, 8 );
+                        pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
                         pathNode.Tag = new MsDataFilePath(String.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture),
-                                                    branches.GetRange( 0, i + 1 ).ToArray() ));
-                        lookInComboBox.Items.Insert(_specialFolderCount + driveCount - 1, pathNode);
+                                                    branches.GetRange(0, i + 1).ToArray()));
+                        lookInComboBox.Items.Insert(_myComputerIndex + driveCount, pathNode);
                     }
-                    lookInComboBox.SelectedIndex = _specialFolderCount + driveCount - 1;
+                    lookInComboBox.SelectedIndex = _myComputerIndex + driveCount;
                 }
             }
             //desktopNode.Nodes.Add( "My Network Places", "My Network Places", 4, 4 ).Tag = "My Network Places";

@@ -734,6 +734,20 @@ namespace pwiz.ProteowizardWrapper
             using var chrom = ChromatogramList.chromatogram(chromIndex, DetailLevel.FullMetadata);
             return chrom.precursor?.activation?.cvParam(CVID.MS_collision_energy)?.value;
         }
+        
+        public void GetChromatogramMetadata(int chromIndex, out string id, out bool? isNegativePolarity, out double precursorMz, out double productMz)
+        {
+            using Chromatogram chrom = ChromatogramList.chromatogram(chromIndex, DetailLevel.FullMetadata);
+            id = chrom.id;
+            isNegativePolarity = chrom.cvParamChild(CVID.MS_scan_polarity).cvid switch
+            {
+                CVID.MS_positive_scan => false,
+                CVID.MS_negative_scan => true,
+                _ => null
+            };
+            precursorMz = chrom.precursor.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value;
+            productMz = chrom.product.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value;
+        }
 
         public void GetChromatogram(int chromIndex, out string id,
             out float[] timeArray, out float[] intensityArray, bool onlyMs1OrFunction1 = false)
