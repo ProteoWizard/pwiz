@@ -85,7 +85,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Scale.Min = FixedYMin.Value;
                 AxisChange(GraphSummary.GraphControl.CreateGraphics());
-            }            
+            }  
+            else if (EnableLabelLayout)
+                AxisChange();
         }
 
         /// <summary>

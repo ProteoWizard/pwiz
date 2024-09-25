@@ -20,8 +20,10 @@
 using System;
 using System.Drawing;
 using System.Collections;
+using System.Drawing.Drawing2D;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using System.Threading;
 
 namespace ZedGraph
 {
@@ -65,6 +67,8 @@ namespace ZedGraph
 		/// to access this value.
 		/// </summary>
 		private SizeF _layoutArea;
+
+        private bool _showDragHandle;
 
 
 		#endregion
@@ -176,6 +180,22 @@ namespace ZedGraph
 				_fontSpec = value;
 			}
 		}
+
+        public bool ShowDragHandle
+        {
+            get => _showDragHandle;
+            set
+            {
+				_showDragHandle = value;
+				if (_showDragHandle )
+                    FontSpec.Border = new Border(Color.Black, 1);
+				else
+                    FontSpec.Border = new Border(Color.Transparent, 1);
+            }
+		}
+
+		public bool IsDraggable { get; set; }
+
 	#endregion
 	
 	#region Constructors
@@ -381,8 +401,8 @@ namespace ZedGraph
 				//	this.FontSpec.Draw( g, pane.IsPenWidthScaled, this.text, pix.X, pix.Y,
 				//		this.location.AlignH, this.location.AlignV, scaleFactor );
 				//else
-					this.FontSpec.Draw( g, pane, _text, pix.X, pix.Y,
-						_location.AlignH, _location.AlignV, scaleFactor, _layoutArea );
+                this.FontSpec.Draw( g, pane, _text, pix.X, pix.Y, 
+                    _location.AlignH, _location.AlignV, scaleFactor, _layoutArea );
 
 			}
 		}
@@ -421,6 +441,19 @@ namespace ZedGraph
 								_location.AlignH, _location.AlignV, scaleFactor, this.LayoutArea );
 		}
 
+        public bool PointOnBoxBoundary(PointF pt, PaneBase pane, Graphics g, float scaleFactor)
+        {
+            if (!base.PointInBox(pt, pane, g, scaleFactor))
+                return false;
+
+            // transform the x,y location from the user-defined
+            // coordinate frame to the screen pixel location
+            PointF pix = _location.Transform(pane);
+
+            return _fontSpec.PointOnBoxBoundary(pt, g, _text, pix.X, pix.Y,
+                _location.AlignH, _location.AlignV, scaleFactor, this.LayoutArea);
+        }
+
 		/// <summary>
 		/// Determines the shape type and Coords values for this GraphObj
 		/// </summary>
@@ -440,8 +473,97 @@ namespace ZedGraph
 						pts[2].X, pts[2].Y, pts[3].X, pts[3].Y );
 		}
 
-		
-	#endregion
-	
+        public void DrawDraggingHandle(Graphics g, PaneBase pane, float scaleFactor)
+        {
+			if (ShowDragHandle)
+                FontSpec.Border = new Border(Color.Black, 1);
+			else 
+				FontSpec.Border = new Border(Color.Transparent, 0);
+
+        }
+
+		/// <summary>
+		/// Calculates the text size in screen coordinates
+		/// </summary>
+		/// <param name="pane">GraphPane this object belongs to.</param>
+		/// <returns></returns>
+        public SizeF GetSize(GraphPane pane)
+        {
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                return FontSpec.MeasureString(g, Text, pane.CalcScaleFactor());
+            }
+        }
+
+
+
+		#endregion
+
+	}
+
+	public class ToolTip : TextObj
+    {
+		Timer _timer;
+		ZedGraphControl _control;
+		object _graphObject; // can be used to attach this tooltip to a certain object in the graph, so that
+		                     // the tooltip is not updated every time the mouse moves inside the object.
+		GraphPane _pane;
+                             private static readonly int DELAY = 500;		// tooltip rendering delay in ms.
+
+        public ToolTip(string text, ZedGraphControl control, PointF mousePt, object graphObject)
+        {
+            Text = text;
+            FontSpec.Size = 14;
+            FontSpec.StringAlignment = StringAlignment.Near;
+            FontSpec.Border = new Border(Color.Black, 1);
+            FontSpec.Fill = new Fill(Color.LightYellow);
+
+            GraphPane pane = control.MasterPane.FindPane(mousePt);
+            var textSize = GetSize(pane);
+            var offsetPoint = new PointF(mousePt.X + textSize.Width / 2, mousePt.Y + textSize.Height/2 + 3);
+
+            pane.ReverseTransform(offsetPoint, out var x, out var y);
+            Location.X = x;
+            Location.Y = y;
+
+            IsVisible = false;
+            _control = control;
+            _graphObject = graphObject;
+            _pane = pane;
+			pane.GraphObjList.Insert(0, this);
+            _timer = new Timer(Render, this, DELAY, System.Threading.Timeout.Infinite);
+        }
+
+		public object GraphObject { get { return _graphObject; } }
+
+        private static void Render(object toolTip)
+        {
+            if (toolTip is ToolTip tip)
+            {
+                tip.IsVisible = true;
+				tip._control.Invalidate();
+            }
+        }
+
+        public void Hide()
+        {
+            IsVisible = false;
+            _timer.Dispose(); 
+            _control.Invalidate();
+        }
+        public bool Destroy()
+        {
+            IsVisible = false;
+            _timer?.Dispose();
+			_timer = null;
+            _graphObject = null;
+            if (_pane.GraphObjList.Remove(this))
+            {
+                _control.Invalidate();
+                return true;
+            }
+            else
+                return false;
+        }
 	}
 }

@@ -168,6 +168,15 @@ namespace pwiz.Skyline.Util
         void UpdateUI(bool selectionChanged = true);
     }
 
+    /// <summary>
+    /// Implement if you need a graph to persist some information
+    /// into the .view file
+    /// </summary>
+    public interface ILayoutPersistable
+    {
+        string GetPersistentString();
+    }
+
     public sealed class MoveThreshold
     {
         public MoveThreshold(int width, int height)

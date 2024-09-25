@@ -739,4 +739,13 @@ Here are the last 3 errors:
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
     <value>Peptides</value>
   </data>
+  <data name="RelativeAbundanceGraph_ToolTip_PeakArea" xml:space="preserve">
+    <value>Peak Area</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_LogPeakArea" xml:space="preserve">
+    <value>Log Peak Area</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
 </root>

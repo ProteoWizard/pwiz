@@ -159,4 +159,8 @@
   <data name="print" xml:space="preserve">
     <value>印刷...</value>
   </data>
+  <data name="move_label" xml:space="preserve">
+    <value>枠をクリックかAlt＋クリックで
+ラベルをドラッグできます。</value>
+  </data>
 </root>

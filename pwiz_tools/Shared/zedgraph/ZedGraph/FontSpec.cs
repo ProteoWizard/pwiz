@@ -18,9 +18,11 @@
 //=============================================================================
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
@@ -171,6 +173,8 @@ namespace ZedGraph
 		/// </summary>
 		/// <value>The size of the font, measured in points (1/72 inch).</value>
 		private float _scaledSize;
+
+        private int _boxExpansion;
 	#endregion
 
 	#region Defaults
@@ -474,7 +478,14 @@ namespace ZedGraph
 			get { return _dropShadowOffset; }
 			set { _dropShadowOffset = value; }
 		}
-
+		/// <summary>
+		/// Specifies number of pixels to expand the text bounding box for hit detection purposes
+		/// </summary>
+        public int BoxExpansion
+        {
+            get { return _boxExpansion; }
+			set { _boxExpansion = value; }
+        }
 	#endregion
 
 	#region Constructors
@@ -1352,8 +1363,8 @@ namespace ZedGraph
 				sizeF = g.MeasureString( text, _font, layoutArea );
 
 			// Create a bounding box rectangle for the text
-			RectangleF rect = new RectangleF( new PointF( -sizeF.Width / 2.0F, 0.0F ), sizeF );
 
+			RectangleF rect = new RectangleF( new PointF( -sizeF.Width / 2.0F, 0.0F ), sizeF );
 			// Build a transform matrix that inverts that drawing transform
 			// in this manner, the point is brought back to the box, rather
 			// than vice-versa.  This allows the container check to be a simple
@@ -1366,6 +1377,59 @@ namespace ZedGraph
 
 			return rect.Contains( pts[0] );
 		}
+
+        public static IEnumerable<Tuple<PointF, PointF>> RectangleVertices(RectangleF rect)
+        {
+            var a = rect.Location;
+            var b = new PointF(rect.Right, rect.Top);
+            var c = new PointF(rect.Right, rect.Bottom);
+            var d = new PointF(rect.Left, rect.Bottom);
+
+			return new[]
+            {
+             new Tuple<PointF, PointF>(a, b), new Tuple<PointF, PointF>(b, c), new Tuple<PointF, PointF>(d, c), new Tuple<PointF, PointF>(a, d)   
+            };
+        }
+
+        public static RectangleF MakeRectangle(PointF a, PointF b)
+        {
+            return new RectangleF(a.X, a.Y, b.X - a.X, b.Y - a.Y);
+        }
+
+        public bool PointOnBoxBoundary(PointF pt, Graphics g, string text, float x,
+            float y, AlignH alignH, AlignV alignV,
+            float scaleFactor, SizeF layoutArea)
+        {
+            // make sure the font size is properly scaled
+            Remake(scaleFactor, this.Size, ref _scaledSize, ref _font);
+
+            // Get the width and height of the text
+            SizeF sizeF;
+            if (layoutArea.IsEmpty)
+                sizeF = g.MeasureString(text, _font);
+            else
+                sizeF = g.MeasureString(text, _font, layoutArea);
+
+            var boxLocation = new PointF(-sizeF.Width / 2.0F, 0.0F);
+            var boxSize = new SizeF(sizeF.Width, sizeF.Height);
+            RectangleF baseRectF = new RectangleF(boxLocation, boxSize);
+            var expandSizeF = new SizeF(_boxExpansion, _boxExpansion);
+
+            var boundaryRects = RectangleVertices(baseRectF)
+                .Select(side => MakeRectangle(side.Item1 - expandSizeF, side.Item2 + expandSizeF)).ToList();
+
+            // Build a transform matrix that inverts that drawing transform
+            // in this manner, the point is brought back to the box, rather
+            // than vice-versa.  This allows the container check to be a simple
+            // RectangleF.Contains, since the rectangle won't be rotated.
+            Matrix matrix = GetMatrix(x, y, sizeF, alignH, alignV, _angle);
+
+            PointF[] pts = new PointF[1];
+            pts[0] = pt;
+            matrix.TransformPoints(pts);
+
+            return boundaryRects.Any(rect => rect.Contains(pts[0]));
+        }
 
 		private Matrix SetupMatrix( Matrix matrix, float x, float y, SizeF sizeF, AlignH alignH,
 				AlignV alignV, float angle )

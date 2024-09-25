@@ -49,6 +49,7 @@
             this.zedGraphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseDownEvent);
             this.zedGraphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseMoveEvent);
             this.zedGraphControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.zedGraphControl_KeyDown);
+            this.zedGraphControl.LabelDragEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(zedGraphControl_LabelDragComplete); 
             // 
             // FoldChangeVolcanoPlot
             // 
