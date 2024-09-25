@@ -51,8 +51,6 @@
     </p>
     <ul>
         <li>Start Skyline.</li>
-    </ul>
-    <ul class="keep-next">
         <li>On the <strong>Start Page, </strong>click <strong>Blank Document </strong>which looks like this: </li>
     </ul>
     <p>
@@ -68,7 +66,7 @@
     <p>
         Since this tutorial covers a proteomics topic, you can choose the proteomics interface by doing the following:
     </p>
-    <ul>
+    <ul class="keep-next">
         <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <strong>Proteomics interface
             </strong>which looks like this: </li>
     </ul>
@@ -204,7 +202,6 @@
     </ul>
     <p>
         You should see an empty spectrum chart appear on the right side of the Skyline Window. You are now ready to insert the MRMer transition list.
-    
     </p>
     <h1>Inserting a Transition List with Associated Proteins</h1>
     <p>
@@ -235,33 +232,48 @@
         <li>Copy the cells (Ctrl-C).</li>
         <li>Switch back to Skyline.</li>
         <li>On the <strong>Edit</strong> menu, choose <strong>Insert</strong>, and click <strong>Transition List</strong>.</li>
-        <li>Press Ctrl-V on your keyboard to paste the copied cells into the <strong>Transition</strong> list grid.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Insert</strong> form should now look something like this:
+        The <strong>Insert Transition List</strong> form appears:
     </p>
     <p>
         <img src="image-4.png" />
     </p>
+    <ul>
+        <li>Press Ctrl-V to paste the copied cells into the<strong> Insert Transition List </strong>form.</li>
+    </ul>
+    <p class="keep-next">
+        This will bring up the <strong>Import Transition List: Identify Columns</strong> form, which should look like this:
+    </p>
     <p>
-        The copied cells have been added along with associated protein names and descriptions. Skyline added the protein information automatically by
-        matching the peptide sequences to the proteins in the background proteome file. 
+        <img src="image-5.png" />
+    </p>
+    <ul>
+        <li>Make sure the <strong>Associate Proteins</strong> checkbox is ticked.</li>
+    </ul>
+    <p>
+        This tells Skyline to create the Protein Name column by matching the peptide sequences to proteins found in the background proteome file.
+    </p>
+    <p>
+        Note that even though the data you copied did not have column headers, Skyline was able to infer the identities of the peptide sequence,
+        precursor <em>m/z</em> and product <em>m/z</em> columns. If you wanted to change those column identifications for some reason, each column has
+        a drop-down list provided for that purpose.
     </p>
     <p>
         To insert these peptides into the Skyline document:
     </p>
     <ul>
-        <li>Click the <strong>Insert</strong> button.</li>
+        <li>Click the <strong>OK</strong> button.</li>
         <li>Press the Home key to scroll to the top of the new list of targets.</li>
     </ul>
     <p>
         The main Skyline window should show a number of peptides grouped within their proteins. The peptide icons should contain 3 vertical lines and a
-        baseline (<img src="image-5.png" />), like a very small MS/MS spectrum, in the lower right corner (<img src="image-6.png" />). The presence of
+        baseline (<img src="image-6.png" />), like a very small MS/MS spectrum, in the lower right corner (<img src="image-7.png" />). The presence of
         this image indicates the peptide has an associated MS/MS library spectrum. The peptide label should highlight in blue the C-terminal Lysine or
         Arginine, indicating the stable isotope labeled amino acid in the heavy, labeled form:
     </p>
     <p>
-        <img src="image-7.png" />
+        <img src="image-8.png" />
     </p>
     <p>
         You can also see at the bottom right corner of the window, in the status bar, the indicator “1/296 tran”, confirming that all 296 transitions
@@ -286,7 +298,7 @@
         show the spectrum that matches the current peptide, and the peak matching the selected transition will be highlighted in red:
     </p>
     <p>
-        <img src="image-8.png" />
+        <img src="image-9.png" />
     </p>
     <p>
         You will notice that not all of the peptides have the most abundant product ions chosen for transitions, like the one shown in the image above,
@@ -305,7 +317,6 @@
         spectra for the light precursor, but even if the library contains matches for both light and heavy, Skyline will use only one (by default the
         standard) to avoid having to worry about different intensity rankings between two MS/MS spectra. If the library contains only the spectrum
         matching the heavy, labeled form of the peptide, then Skyline will use that spectrum to rank transitions for both light and heavy precursors.
-    
     </p>
     <h1>Importing Data</h1>
     <p>
@@ -336,7 +347,6 @@
     <p>
         Skyline begins importing the file into its high-performance data file, where it will require much less disk space, and from which Skyline can
         retrieve the information it needs very quickly. Progress is displayed in a graph and in the status bar at the bottom of the Skyline window.
-    
     </p>
     <p>
         Once the import completes, transitions that have measured signal between the integration boundaries, displayed as dashed black lines, will have
@@ -356,7 +366,7 @@
         This should leave Skyline looking something like:
     </p>
     <p>
-        <img src="image-9.png" />
+        <img src="image-10.png" />
     </p>
     <p>
         You can also change the proportions allocated to the various panes by clicking and dragging the light gray splitter bars between them.
@@ -377,7 +387,7 @@
         This should change Skyline to look like:
     </p>
     <p>
-        <img src="image-10.png" />
+        <img src="image-11.png" />
     </p>
     <p>
         If you do not see chromatograms for all three transitions, as shown above, do the following:
@@ -404,7 +414,7 @@
         the following before starting the next section:
     </p>
     <ul>
-        <li>Click the pushpin <img src="image-11.png" /> to the left of the X in the upper right corner of the <strong>Library Match </strong>title
+        <li>Click the pushpin <img src="image-12.png" /> to the left of the X in the upper right corner of the <strong>Library Match </strong>title
             bar.</li>
     </ul>
     <h2>Removing a Transition Peak with Interference</h2>
@@ -427,17 +437,15 @@
         The precursor total area ratio is a weighted mean, using the internal standard peak area as the weights, which simplifies algebraically to:
     </p>
     <p>
-        <img src="image-12.png" />
+        <img src="image-13.png" />
     </p>
     <p>
         Removing either a light or heavy peak removes the peak for its matching transition. Hence, when only one pair of transitions remain, as with y7
         in this case, the ratio between the light and heavy peaks of that transition (here 0.24) will also be the total area ratio for the precursor.
-    
     </p>
     <h2>Adjusting Peak Boundaries to Exclude Interference</h2>
     <p>
         To adjust the peak integration boundaries in an attempt to remove interference from the quantitative measurements, perform the following steps:
-    
     </p>
     <ul>
         <li>On the <strong>Edit</strong> menu, click <strong>Undo</strong> (Ctrl-Z), to undo the quantitative property change you just made.</li>
@@ -450,11 +458,10 @@
         This should leave Skyline showing something like:
     </p>
     <p>
-        <img src="image-13.png" />
+        <img src="image-14.png" />
     </p>
     <p>
         In this case, y4 and y3 show ratios of 0.31 and 0.35 respectively and y7 shows 0.23, yielding a weighted mean, precursor total ratio of 0.27.
-    
     </p>
     <p>
         The two total ratio values 0.24 and 0.27 produced by the two different techniques of dealing with interference are both very close to the true
@@ -470,12 +477,11 @@
         highly similar relative intensities between light and heavy transition peak areas.
     </p>
     <p>
-        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (K.YVDPNVLPETESLALVID<strong><span
-                class="blue">R</span></strong>.L and K.FPEPGYLEGV<strong><span class="blue">K</span></strong>.T) have transitions with only blank
-        space where the others have green or red circles. This means the mzXML file you imported contained no data for these transitions. You can open
-        the mzXML file in a text editor and search for the precursor <em>m/z</em> values to verify yourself that the precursors lack the transitions
-        indicated by the original transition list. These types of anomalies are fairly typical of working with transition lists created either
-        manually or by tools receiving less use and testing than Skyline.
+        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (K.YVDPNVLPETESLALVID<strong><span class="blue">R</span></strong>.L and K.FPEPGYLEGV<strong><span
+                class="blue">K</span></strong>.T) have transitions with only blank space where the others have green or red circles. This means the
+        mzXML file you imported contained no data for these transitions. You can open the mzXML file in a text editor and search for the precursor
+        <em>m/z</em> values to verify yourself that the precursors lack the transitions indicated by the original transition list. These types of
+        anomalies are fairly typical of working with transition lists created either manually or by tools receiving less use and testing than Skyline.
     </p>
     <h1>Preparing a Document for CPTAC Study 7</h1>
     <p>
@@ -497,7 +503,7 @@
         You should be presented with a spreadsheet that looks something like this:
     </p>
     <p>
-        <img src="image-14.png" />
+        <img src="image-15.png" />
     </p>
     <p>
         You can tell that this is a spreadsheet created manually by someone who put significant effort, using borders, merged cells and highlighting,
@@ -540,7 +546,7 @@
         The <strong>Edit Isotope Modification</strong> form should now look like this:
     </p>
     <p>
-        <img src="image-15.png" />
+        <img src="image-16.png" />
     </p>
     <p>
         To finish preparing the document for the Study 7 transition list, do the following:
@@ -587,10 +593,19 @@
         <li>On the <strong>Edit</strong> menu, click <strong>Paste</strong> (Ctrl-V).</li>
     </ul>
     <p class="keep-next">
+        This will bring up the <strong>Import Transition List: Identify Columns</strong> form, which should look like this:
+    </p>
+    <p>
+        <img src="image-17.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p class="keep-next">
         Skyline should present the following error message:
     </p>
     <p>
-        <img src="image-16.png" /> 
+        <img src="image-18.png" /> 
     </p>
     <p>
         Messages like this are not uncommon when working with transition lists created outside Skyline. Others are presented in the Skyline
@@ -623,13 +638,12 @@
         This should leave the Skyline peptide view looking like:
     </p>
     <p>
-        <img src="image-17.png" />
+        <img src="image-19.png" />
     </p>
     <h2>Adjusting Modifications Manually</h2>
     <p>
         Eight peptides display bold, blue C-terminal K or R, but the other 3 lack a labeled amino acid. Those are the ones that need V or L explicitly
         labeled, because these modifications cannot be achieved through the <strong>Peptide Settings</strong> - <strong>Modifications</strong> tab.
-    
     </p>
     <p>
         To specify an isotope modification on the V in the first peptide, perform the following steps:
@@ -648,7 +662,7 @@
         The <strong>Edit Isotope Modification</strong> form should look like:
     </p>
     <p>
-        <img src="image-18.png" />
+        <img src="image-20.png" />
     </p>
     <p>
         This modification will apply a varying mass shift to any amino acid, depending on how many Carbon atoms it contains.
@@ -657,7 +671,7 @@
         <li>Click the <strong>OK</strong> button to return to the <strong>Edit Modifications</strong> form, which should now look like:</li>
     </ul>
     <p>
-        <img src="image-19.png" />
+        <img src="image-21.png" />
     </p>
     <ul>
         <li>Click the <strong>OK</strong> button on the <strong>Edit Modifications</strong> form to return to the document.</li>
@@ -675,7 +689,7 @@
         The peptide view should now look like this:
     </p>
     <p>
-        <img src="image-20.png" />
+        <img src="image-22.png" />
     </p>
     <p>
         Now expand both the “744.8398++” precursor and the <strong>“</strong>747.3481++ (heavy)” precursor: 
@@ -728,7 +742,7 @@
         present you with a form that looks like this:
     </p>
     <p>
-        <img src="image-21.png" />
+        <img src="image-23.png" />
     </p>
     <p>
         For this tutorial, to reduce the time that will be required to complete the import:
@@ -743,7 +757,7 @@
         use to display information about these replicates:
     </p>
     <p>
-        <img src="image-22.png" />
+        <img src="image-24.png" />
     </p>
     <ul>
         <li>Click the <strong>Remove</strong> button to accept this operation.</li>
@@ -764,12 +778,10 @@
         <li>Click and drag the window to the bottom edge of the Skyline window to dock it there.</li>
         <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong> (F7).</li>
         <li>Click and drag the window to the right edge of the Skyline window to dock it there.</li>
-    </ul>
-    <ul class="keep-next">
         <li>Adjust the view proportions to look something like the image below.</li>
     </ul>
     <p>
-        <img src="image-23.png" />
+        <img src="image-25.png" />
     </p>
     <p>
         The currently selected peptide “YEVQGEVFTKPQ<strong><span class="blue">L</span></strong>WP”, which was the peptide at the C-terminal end of CRP
@@ -829,7 +841,7 @@
         Skyline should now look something like:
     </p>
     <p>
-        <img src="image-24.png" />
+        <img src="image-26.png" />
     </p>
     <h2>Data Inspection with Peak Areas View</h2>
     <p>
@@ -873,7 +885,7 @@
                 class="blue">K</span></strong> selected:
     </p>
     <p>
-        <img src="image-25.png" />
+        <img src="image-27.png" />
     </p>
     <p>
         You will see that, indeed, precision among the replicates for each concentration appears to have improved.
@@ -890,11 +902,10 @@
         <li>Select the light precursor for each peptide.</li>
     </ul>
     <p class="keep-next">
-        For the 6 well behaved peptides, you should see a chart like the one below, with the ESDTSYVSL<strong><span
-                class="blue">K</span></strong> peptide light precursor 564.7746++ selected:
+        For the 6 well behaved peptides, you should see a chart like the one below, with the ESDTSYVSL<strong><span class="blue">K</span></strong> peptide light precursor 564.7746++ selected:
     </p>
     <p>
-        <img src="image-26.png" />
+        <img src="image-28.png" />
     </p>
     <p>
         As expected, the ratios are quite similar. The second and third peptides (INDISHTQSVSA<strong><span class="blue">K</span></strong> and
@@ -907,7 +918,7 @@
         This should cause the peak area graph to look like:
     </p>
     <p>
-        <img src="image-27.png" />
+        <img src="image-29.png" />
     </p>
     <p>
         This seems to indicate some interference in the transition for y3, since its ratio, at low concentrations, is so different from the others for
@@ -924,22 +935,20 @@
         The chart should change to something like:
     </p>
     <p>
-        <img src="image-28.png" />
+        <img src="image-30.png" />
     </p>
     <p>
         Again, this chart clearly indicates interference on the transition for y3 (brown) that becomes less of a factor as the concentration of the
         endogenous peptide increases, beyond the E replicates. If you move the peak area view to a location where you can also see the chromatogram
         charts, you can click on the individual bars to see the interfering peak, which, in this case, is pretty clear, as in replicate E_03 below:
-    
     </p>
     <p>
-        <img src="image-29.png" />
+        <img src="image-31.png" />
     </p>
     <p>
         As with the case in the MRMer document, you might attempt to adjust the integration boundaries to exclude the interfering peak, but it is
         probably a better idea to just delete the y3 transition altogether or make it non-quantitative, especially since it never provides a very
         large contribution to the total peak area for the peptide. To gain some insight into the precision of these measurements, do the following:
-    
     </p>
     <ul>
         <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Peptide Comparison</strong> (Ctrl-F7).</li>
@@ -950,7 +959,7 @@
         The <strong>Peak Areas</strong> chart should have changed to look something like:
     </p>
     <p>
-        <img src="image-30.png" />
+        <img src="image-32.png" />
     </p>
     <p>
         If the peptides do not appear in this order, do the following:
@@ -981,7 +990,6 @@
         Skyline has extensive built-in support for calibration curves which you can learn more about in the <a
             href="https://skyline.ms/tutorial_absolute_quant.url">Absolute Quantification</a> tutorial. For now, you will simply use the built-in
         <strong>Analyte Concentration</strong> annotation to give Skyline more information about the spiked in concentrations in these replicate runs.
-    
     </p>
     <p>
         The <strong>Document Grid </strong>can be used for this purpose. To show the <strong>Analyte Concentration</strong> report field do the
@@ -1039,7 +1047,7 @@
         When you are done entering these values, the <strong>Document Grid</strong> should look like this:
     </p>
     <p>
-        <img src="image-31.png" />
+        <img src="image-33.png" />
     </p>
     <p>
         You can now use the newly entered concentrations in the <strong>Peak Areas: Replicate Comparison</strong> graph by doing the following:
@@ -1055,7 +1063,7 @@
         The <strong>Peak Areas</strong> graph should now look like:
     </p>
     <p>
-        <img src="image-32.png" />
+        <img src="image-34.png" />
     </p>
     <p>
         This graph shows that the CVs are quite low until the very lowest concentrations. You can easily switch to a graph showing the mean ratios with
@@ -1068,7 +1076,7 @@
         This should change the graph to look like:
     </p>
     <p>
-        <img src="image-33.png" />
+        <img src="image-35.png" />
     </p>
     <ul>
         <li>On the <strong>File </strong>menu, click <strong>Save, </strong>to end this section. </li>
@@ -1093,7 +1101,7 @@
         appearing as in the chart below:
     </p>
     <p>
-        <img src="image-34.png" />
+        <img src="image-36.png" />
     </p>
     <p>
         The peptide INDISHTQSVSA<strong><span class="blue">K</span></strong> is the only one of the 4 from the first data set that still has a CV
@@ -1107,7 +1115,7 @@
         for 3 of the “Blank” replicates (though this issue was fixed a long time ago – but after the document data was imported and saved):
     </p>
     <p>
-        <img src="image-35.png" />
+        <img src="image-37.png" />
     </p>
     <p>
         If you correct these by clicking and dragging beneath the x-axis, the CV for the heavy precursor of LSEPAELTDAV<strong><span
@@ -1121,14 +1129,14 @@
         <li>Right-click on the <strong>Peak Areas</strong> graph, choose <strong>Normalize To</strong> and click <strong>Heavy</strong>.</li>
     </ul>
     <p>
-        You will find that the charts for all peptides, even INDISHTQSVSA<strong><span class="blue">K</span></strong> look quite nice in this data set.
-    
+        You will find that the charts for all peptides, even INDISHTQSVSA<strong><span
+                class="blue">K</span></strong> look quite nice in this data set.
     </p>
-    <ul>
+    <ul class="keep-next">
         <li>Click the “INDISHTQSVSA<strong><span class="blue">K</span></strong>” peptide.</li>
     </ul>
     <p>
-        <img src="image-36.png" />
+        <img src="image-38.png" />
     </p>
     <p>
         This seems to indicate that the internal standard is doing its job of compensating for variance in measurements of this peptide. To review the
@@ -1141,7 +1149,7 @@
         It would be hard to guess from this chart that the normalization would be so effective:
     </p>
     <p>
-        <img src="image-37.png" />
+        <img src="image-39.png" />
     </p>
     <p>
         Finally, returning to the peptide in which we detected interference in the first data set:
@@ -1155,7 +1163,7 @@
         Here also, you will see clear evidence of interference on the y3 transition:
     </p>
     <p>
-        <img src="image-38.png" />
+        <img src="image-40.png" />
     </p>
     <p>
         Unlike the first data set, however, it is much harder to see the interference by inspecting the individual chromatograms. In this case, due to
@@ -1163,7 +1171,7 @@
         replicate E_03 shown below:
     </p>
     <p>
-        <img src="image-39.png" />
+        <img src="image-41.png" />
     </p>
     <p>
         The NCI CPTAC Study 7 provided quite a lot more data, all of which is now public. Skyline can help you learn a lot about this data quickly,

@@ -83,13 +83,6 @@
         The easiest way to get a molecule transition list into a Skyline document is to start with an empty document and use the <strong>Edit &gt;
             Insert &gt; Transition List </strong>menu item. 
     </p>
-    <table>
-        <tr>
-            <td>Note: The <strong>File &gt; Import &gt;Transition List</strong> menu item also works, so long as your data has column headers which
-                are recognized by Skyline. For a list of recognized column names, press the “Help” button in the <strong>Edit &gt; Insert &gt;
-                    Transition List</strong> window.</td>
-        </tr>
-    </table>
     <p>
         At a minimum, Skyline needs to know the charge state and either the ion formula or <em>m/z</em> for each precursor and product. If no product
         ion information is present in a transition list, it is assumed to be a list of precursor targets. Repeated precursor information with
@@ -123,16 +116,9 @@
     </p>
     <ul>
         <li>Locate the “SMTutorial_TransitionList.csv” file in the tutorial folder and open it in Excel. </li>
-        <li>On the Skyline <strong>Edit</strong> menu, choose <strong>Insert </strong>and click <strong>Transition List</strong>.</li>
     </ul>
-    <p>
-        Skyline will show the <strong>Insert</strong> form which should look like this:
-    </p>
-    <p>
-        <img src="image-0.png" />
-    </p>
     <p class="keep-next">
-        In the transition list spreadsheet you downloaded, you should find the following values:
+        You should find the following values:
     </p>
     <div style="margin-left : 5px;">
         <table>
@@ -402,73 +388,56 @@
             </tr>
         </table>
     </div>
-    <h3>Further notes on ion formulas and adduct descriptions</h3>
+    <ul>
+        <li>Select the transition list rows and columns in Excel, including the header row, and <strong>Copy</strong> (Ctrl-C).</li>
+        <li>On the Skyline <strong>Edit</strong> menu, choose <strong>Insert </strong>and click <strong>Transition List</strong>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will show the <strong>Insert Transition List</strong> form which should look like this:
+    </p>
+    <p>
+        <img src="image-0.png" />
+    </p>
+    <ul>
+        <li>Press <strong>Ctrl-V</strong> to paste the information you placed on the clipboard into Skyline.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will show <strong>the Import Transition List: Identify Columns</strong> form:
+    </p>
+    <p>
+        <img src="image-1.png" />
+    </p>
+    <ul>
+        <li>Make sure the <strong>Molecules</strong> button is pressed.</li>
+    </ul>
+    <p>
+        Note that each column has a drop-down control where you can specify the type of column. In this case, Skyline successfully identifies all the
+        necessary columns.
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <h2>Further notes on ion formulas and adduct descriptions</h2>
     <p>
         In this example, there are some light-heavy isotope label pairs, e.g. Methionine and d3-Methionine. In the transition list they are described
         as <strong>C5H11NO2S [M+H]</strong> and<strong> C5H8H'3NO2S [M+H]</strong>, but using the language of adduct descriptions they could also have
         been described as <strong>C5H11NO2S [M+H]</strong> and<strong> C5H11NO2S [M3H2+H]. </strong>You can see an example of this in the
         Phenylalanine heavy-light pair: the formulas are the same but the heavy adduct description specifies that 6 carbons are replaced with C13.
         Note that the Adduct column is optional: as in the example of Spermidine, the adduct can be given as part of the ion formula. Note also that
-        the Precursor Charge column is not actually needed: the charge states can be inferred from the adduct descriptions. The label column is also
+        the Precursor Charge column is not actually needed: the charge states can be inferred from the adduct descriptions. The Label column is also
         not strictly needed: the heavy label can be inferred from the precursor ion formula and/or adduct.
     </p>
-    <p>
-        You can see that there are some extra column headers in the <strong>Insert</strong> form, and the column order is not the same in the form as
-        in the spreadsheet. Both issues are easy to correct by following these steps:
-    </p>
-    <ul>
-        <li>Click the <strong>Columns </strong>button.</li>
-    </ul>
-    <p class="keep-next">
-        This should present a column picking menu like the one shown below:
-    </p>
-    <p>
-        <img src="image-1.png" />
-    </p>
-    <ul>
-        <li>Uncheck the columns that do not appear in the spreadsheet.</li>
-    </ul>
-    <p>
-        Next do the following to reorder the columns in the <strong>Insert </strong>form:
-    </p>
-    <ul>
-        <li>Click and drag each column header you want to move to the order matching the spreadsheet.</li>
-    </ul>
-    <p class="keep-next">
-        Once you have selected and arranged your columns, the <strong>Insert</strong> form should look like this:
-    </p>
-    <p>
-        <img src="image-2.png" />
-    </p>
-    <p>
-        To add the transitions specified in the spreadsheet, do the following:
-    </p>
-    <ul>
-        <li>Select the contents of the spreadsheet, excluding the first row containing the headers.</li>
-        <li>Click the <strong>Copy</strong> button on the toolbar (or press Ctrl-C on your keyboard).</li>
-        <li>Switch back to Skyline.</li>
-        <li>With the first cell in the form highlighted blue, press Ctrl-V on your keyboard to paste.</li>
-        <li>Click the <strong>Check for Errors</strong> button.</li>
-    </ul>
     <table>
         <tr>
-            <td>Note: If you accidentally copied the header row or got the column order wrong, then you will see an error at this point.</td>
+            <td>Note: You could also have used the <strong>File &gt; Import &gt;Transition List</strong> menu item to import the file directly,
+                without the need for opening it and copying and pasting its contents. </td>
         </tr>
     </table>
-    <p class="keep-next">
-        The <strong>Insert</strong> form should look like this:
-    </p>
-    <p>
-        <img src="image-3.png" />
-    </p>
-    <ul>
-        <li>Click the <strong>Insert</strong> button.</li>
-    </ul>
     <p class="keep-next">
         Your Skyline window should now look like this: 
     </p>
     <p>
-        <img src="image-4.png" />
+        <img src="image-2.png" />
     </p>
     <p>
         At this point, either a native instrument method, precursor isolation list (for PRM) or transition list (for SRM) can be exported. For more
@@ -496,7 +465,7 @@
         The <strong>Import Results Files</strong> form should look like this:
     </p>
     <p>
-         <img src="image-5.png" />
+         <img src="image-3.png" />
     </p>
     <ul>
         <li>Click the <strong>Open</strong> button.</li>
@@ -569,7 +538,7 @@
         The files should import within a matter of seconds, leaving your Skyline window looking like this:
     </p>
     <p>
-        <img src="image-6.png" />
+        <img src="image-4.png" />
     </p>
     <p>
         To take advantage of the Skyline summary graphs for viewing individual targets, do the following:
@@ -584,7 +553,7 @@
         The Skyline window should now look like this:
     </p>
     <p>
-        <img src="image-7.png" />
+        <img src="image-5.png" />
     </p>
     <h1>Conclusion</h1>
     <p>
