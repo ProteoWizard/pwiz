@@ -32,6 +32,9 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class UnifiFunctionalTest : AbstractFunctionalTestEx
     {
+        private RemoteAccount _testAccount;
+        private string[] _dataPath;
+
         [TestMethod]
         public void TestUnifi()
         {
@@ -40,26 +43,38 @@ namespace pwiz.SkylineTestConnected
                 return;
             }
             TestFilesZip = @"TestConnected\UnifiFunctionalTest.zip";
+            _testAccount = UnifiTestUtil.GetTestAccount();
+            _dataPath = new[] { "Company", "Demo Department", "Peptides", "Hi3_ClpB_MSe_01" };
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestWatersConnect()
+        {
+            if (!WatersConnectTestUtil.EnableWatersConnectTests)
+            {
+                return;
+            }
+            TestFilesZip = @"TestConnected\UnifiFunctionalTest.zip";
+            _testAccount = WatersConnectTestUtil.GetTestAccount();
+            _dataPath = new[] { "Company", "Skyline", "MRM Optimization SL", "Sample 1" };
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("test.sky")));
-            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            //var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
-            RunUI(()=>editAccountDlg.SetRemoteAccount(UnifiTestUtil.GetTestAccount()));
+            RunUI(()=>editAccountDlg.SetRemoteAccount(_testAccount));
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
-            OpenFile(openDataSourceDialog, "Company");
-            OpenFile(openDataSourceDialog, "Demo Department");
-            OpenFile(openDataSourceDialog, "Peptides");
-            OpenFile(openDataSourceDialog, "Hi3_ClpB_MSe_01");
-            var lockMassDlg = WaitForOpenForm<ImportResultsLockMassDlg>();
-            OkDialog(lockMassDlg, lockMassDlg.OkDialog);
+            foreach(var pathSegment in _dataPath)
+                OpenFile(openDataSourceDialog, pathSegment);
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse("Molecule:/sp|P0A6A8|ACP_ECOLI/ITTVQAAIDYINGHQA"))));
+            //PauseTest();
             ClickChromatogram(4.0, 3.25);
             GraphFullScan graphFullScan = FindOpenForm<GraphFullScan>();
             Assert.IsNotNull(graphFullScan);

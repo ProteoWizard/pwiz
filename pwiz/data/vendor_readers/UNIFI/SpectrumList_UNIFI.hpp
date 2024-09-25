@@ -56,6 +56,8 @@ class PWIZ_API_DECL SpectrumList_UNIFI : public SpectrumListBase
     SpectrumList_UNIFI(const MSData& msd, UnifiDataPtr unifiData,
                        const Reader::Config& config);
 
+    bool isWatersConnect() const;
+
     private:
 
     const MSData& msd_;
@@ -70,6 +72,7 @@ class PWIZ_API_DECL SpectrumList_UNIFI : public SpectrumListBase
     struct IndexEntry : public SpectrumIdentity
     {
         int scan;
+        int channelIndex;
     };
 
     mutable std::vector<IndexEntry> index_;

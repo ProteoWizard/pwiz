@@ -592,6 +592,8 @@
     <ClCompile Include="libraries\SQLite\sqlite3pp.cpp" />
     <ClCompile Include="pwiz\data\msdata\mzmlb\Connection_mzMLb.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\MzShiftFilter.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectData.ipp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -1067,6 +1069,8 @@
     <ClInclude Include="libraries\SQLite\sqlite3pp.h" />
     <ClInclude Include="pwiz\data\msdata\mzmlb\Connection_mzMLb.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MzShiftFilter.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectProtobuf.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />

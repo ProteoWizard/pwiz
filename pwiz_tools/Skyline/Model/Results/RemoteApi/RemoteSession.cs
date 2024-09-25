@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -158,12 +159,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public static RemoteSession CreateSession(RemoteAccount remoteAccount)
         {
-            var unifiAccount = remoteAccount as UnifiAccount;
-            if (unifiAccount != null)
+            return remoteAccount switch
             {
-                return new UnifiSession(unifiAccount);
-            }
-            throw new ArgumentException();
+                UnifiAccount unifiAccount => new UnifiSession(unifiAccount),
+                WatersConnectAccount wcAccount => new WatersConnectSession(wcAccount),
+                _ => throw new ArgumentException()
+            };
         }
 
         public abstract void RetryFetchContents(RemoteUrl remoteUrl);

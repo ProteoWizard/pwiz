@@ -558,6 +558,17 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectUrl.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -3682,6 +3693,19 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\UnifiResources.ja.resx">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\UnifiResources.zh-CHS.resx">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">

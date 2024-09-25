@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -52,12 +53,17 @@ namespace pwiz.Skyline.ToolsUI
             textUsername.Text = remoteAccount.Username;
             textPassword.Text = remoteAccount.Password;
             textServerURL.Text = remoteAccount.ServerUrl;
-            var unifiAccount = remoteAccount as UnifiAccount;
-            if (unifiAccount != null)
+            if (remoteAccount is UnifiAccount unifiAccount)
             {
                 tbxIdentityServer.Text = unifiAccount.IdentityServer;
                 tbxClientScope.Text = unifiAccount.ClientScope;
                 tbxClientSecret.Text = unifiAccount.ClientSecret;
+            }
+            else if (remoteAccount is WatersConnectAccount wcAccount)
+            {
+                tbxIdentityServer.Text = wcAccount.IdentityServer;
+                tbxClientScope.Text = wcAccount.ClientScope;
+                tbxClientSecret.Text = wcAccount.ClientSecret;
             }
         }
 
@@ -73,6 +79,14 @@ namespace pwiz.Skyline.ToolsUI
                     .ChangeClientScope(tbxClientScope.Text)
                     .ChangeClientSecret(tbxClientSecret.Text);
                 remoteAccount = unifiAccount;
+            }
+            else if (accountType == RemoteAccountType.WATERS_CONNECT)
+            {
+                var wcAccount = (WatersConnectAccount) remoteAccount;
+                wcAccount = wcAccount.ChangeIdentityServer(tbxIdentityServer.Text)
+                    .ChangeClientScope(tbxClientScope.Text)
+                    .ChangeClientSecret(tbxClientSecret.Text);
+                remoteAccount = wcAccount;
             }
             return remoteAccount;
         }
