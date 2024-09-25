@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public RemoteUrl ChangePathParts(IEnumerable<string> parts)
         {
             return ChangeProp(ImClone(this),
-                im => im.EncodedPath = string.Join(@"/", parts.Select(Uri.EscapeDataString)));
+                im => im.EncodedPath = parts == null ? null : string.Join(@"/", parts.Select(Uri.EscapeDataString)));
         }
 
         public IEnumerable<string> GetPathParts()

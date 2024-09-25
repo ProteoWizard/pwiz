@@ -46,7 +46,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         private ImmutableList<UnifiFolderObject> GetFolders(Uri requestUri)
         {
             var httpClient = UnifiAccount.GetAuthenticatedHttpClient();
-            string responseBody = httpClient.GetAsync(requestUri).Result.Content.ReadAsStringAsync().Result;
+            var response = httpClient.GetAsync(requestUri).Result;
+            response.EnsureSuccessStatusCode();
+            string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
             var foldersValue = jsonObject[@"value"] as JArray;
@@ -61,6 +63,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         {
             var httpClient = UnifiAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
             var itemsValue = jsonObject[@"value"] as JArray;
@@ -79,26 +82,28 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             ImmutableList<UnifiFolderObject> folders;
             if (TryGetData(GetRootContentsUrl(), out folders))
             {
-                foreach (var folderObject in folders)
-                {
-                    if (folderObject.ParentId == unifiUrl.Id)
+                if (folders != null)
+                    foreach (var folderObject in folders)
                     {
-                        var childUrl = unifiUrl.ChangeId(folderObject.Id)
-                            .ChangePathParts(unifiUrl.GetPathParts().Concat(new[] {folderObject.Name}));
-                        yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                        if (folderObject.ParentId == unifiUrl.Id)
+                        {
+                            var childUrl = unifiUrl.ChangeId(folderObject.Id)
+                                .ChangePathParts(unifiUrl.GetPathParts().Concat(new[] {folderObject.Name}));
+                            yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                        }
                     }
-                }
             }
             ImmutableList<UnifiFileObject> files;
             if (TryGetData(GetFileContentsUrl(unifiUrl), out files))
             {
-                foreach (var fileObject in files)
-                {
-                    var childUrl = unifiUrl.ChangeId(fileObject.Id)
-                        .ChangePathParts(unifiUrl.GetPathParts().Concat(new[] {fileObject.Name}))
-                        .ChangeModifiedTime(fileObject.ModifiedAt);
-                    yield return new RemoteItem(childUrl, fileObject.Name, DataSourceUtil.TYPE_WATERS_RAW, fileObject.ModifiedAt, 0);
-                }
+                if (files != null)
+                    foreach (var fileObject in files)
+                    {
+                        var childUrl = unifiUrl.ChangeId(fileObject.Id)
+                            .ChangePathParts(unifiUrl.GetPathParts().Concat(new[] {fileObject.Name}))
+                            .ChangeModifiedTime(fileObject.ModifiedAt);
+                        yield return new RemoteItem(childUrl, fileObject.Name, DataSourceUtil.TYPE_WATERS_RAW, fileObject.ModifiedAt, 0);
+                    }
             }
         }
 

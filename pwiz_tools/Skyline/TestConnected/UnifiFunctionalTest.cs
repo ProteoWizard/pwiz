@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
+using System.Drawing;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.ElementLocators;
@@ -32,6 +32,13 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class UnifiFunctionalTest : AbstractFunctionalTestEx
     {
+        private RemoteAccount _testAccount;
+        private string _skyFilepath;
+        private string[] _dataPath;
+        private string[] _filenames;
+        private string _selectItem;
+        private PointF? _chromatogramPoint;
+
         [TestMethod]
         public void TestUnifi()
         {
@@ -40,38 +47,82 @@ namespace pwiz.SkylineTestConnected
                 return;
             }
             TestFilesZip = @"TestConnected\UnifiFunctionalTest.zip";
+            _testAccount = UnifiTestUtil.GetTestAccount();
+            _skyFilepath = "test.sky";
+            _dataPath = new[] { "Company", "Demo Department", "Peptides",  };
+            _filenames = new[] { "Hi3_ClpB_MSe_01" };
+            _selectItem = "Molecule:/sp|P0A6A8|ACP_ECOLI/ITTVQAAIDYINGHQA";
+            _chromatogramPoint = new PointF(4.0f, 3.25f);
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestWatersConnect()
+        {
+            if (!WatersConnectTestUtil.EnableWatersConnectTests)
+            {
+                return;
+            }
+            TestFilesZip = @"TestConnected\RemoteApiFunctionalTest.data";
+            _testAccount = WatersConnectTestUtil.GetTestAccount();
+            _skyFilepath = "SmallMolOptimization.sky";
+            _dataPath = new[] { "Company", "Skyline", "SmallMolOptimization", "Scheduled",  };
+            _filenames = new[] { "ID33140_03a_WAA253_4814_092017", "ID33141_03a_WAA253_4814_092017" };
+            _selectItem = "Molecule:/Nucleotide metabolism/UDP";
+            _chromatogramPoint = null;
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("test.sky")));
-            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath(_skyFilepath)));
+            //var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
-            RunUI(()=>editAccountDlg.SetRemoteAccount(UnifiTestUtil.GetTestAccount()));
+            RunUI(()=>editAccountDlg.SetRemoteAccount(_testAccount));
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
-            OpenFile(openDataSourceDialog, "Company");
-            OpenFile(openDataSourceDialog, "Demo Department");
-            OpenFile(openDataSourceDialog, "Peptides");
-            OpenFile(openDataSourceDialog, "Hi3_ClpB_MSe_01");
-            var lockMassDlg = WaitForOpenForm<ImportResultsLockMassDlg>();
-            OkDialog(lockMassDlg, lockMassDlg.OkDialog);
+            //WaitForConditionUI(() => openDataSourceDialog.ListItemNames.Contains(_dataPath[0]));
+            //foreach(var pathSegment in _dataPath)
+                //OpenFile(openDataSourceDialog, pathSegment);
+            RunUI(() =>
+            {
+                openDataSourceDialog.CurrentDirectory = (openDataSourceDialog.CurrentDirectory as RemoteUrl)!.ChangePathParts(_dataPath);
+            });
+            foreach (var filename in _filenames)
+                OpenFile(openDataSourceDialog, filename, false);
+            RunUI(openDataSourceDialog.Open);
+
+            if (_filenames.Length > 1)
+            {
+                // Remove prefix/suffix dialog pops up; accept default behavior
+                var removeSuffix = WaitForOpenForm<ImportResultsNameDlg>();
+                OkDialog(removeSuffix, () => removeSuffix.YesDialog());
+            }
             WaitForDocumentLoaded();
-            RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse("Molecule:/sp|P0A6A8|ACP_ECOLI/ITTVQAAIDYINGHQA"))));
-            ClickChromatogram(4.0, 3.25);
-            GraphFullScan graphFullScan = FindOpenForm<GraphFullScan>();
-            Assert.IsNotNull(graphFullScan);
+
+            RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse(_selectItem))));
+
+            var chromGraph = FindOpenForm<GraphChromatogram>();
+            WaitForConditionUI(5000, () => chromGraph.CurveCount == _filenames.Length);
+            Assert.AreEqual(_filenames.Length, chromGraph.CurveCount);
+
+            if (_chromatogramPoint != null)
+            {
+                ClickChromatogram(_chromatogramPoint.Value.X, _chromatogramPoint.Value.Y);
+                GraphFullScan graphFullScan = FindOpenForm<GraphFullScan>();
+                Assert.IsNotNull(graphFullScan);
+            }
         }
 
-        private void OpenFile(OpenDataSourceDialog openDataSourceDialog, string name)
+        private void OpenFile(OpenDataSourceDialog openDataSourceDialog, string name, bool open = true)
         {
             WaitForConditionUI(() => openDataSourceDialog.ListItemNames.Contains(name));
             RunUI(()=>
             {
                 openDataSourceDialog.SelectFile(name);
-                openDataSourceDialog.Open();
+                if (open)
+                    openDataSourceDialog.Open();
             });
             
         }

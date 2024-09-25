@@ -144,22 +144,14 @@ enum class PWIZ_API_DECL EnergyLevel
     High = 2
 };
 
-enum class PWIZ_API_DECL DetectorType
-{
-    Unknown = 0,
-    MS = 1,
-    UV = 2,
-    FLR = 3,
-    IR = 4,
-    NMR = 5
-};
-
 struct PWIZ_API_DECL UnifiSpectrum
 {
+    int msLevel;
     double retentionTime;
     Polarity scanPolarity;
     EnergyLevel energyLevel;
     double driftTime;
+    bool dataIsContinuous;
     std::pair<double, double> scanRange;
 
     size_t arrayLength;
@@ -170,9 +162,17 @@ struct PWIZ_API_DECL UnifiSpectrum
 
 struct PWIZ_API_DECL UnifiChromatogramInfo
 {
+    enum Type { Unknown, TIC, BPI, UV, FLR, IR, NMR, MRM, SIM };
+
+    Type type;
+    double Q1;
+    double Q3;
+    std::pair<double, double> acquiredTimeRange;
+    Polarity polarity;
+
     size_t index;
-    std::string id;
-    DetectorType detectorType;
+    std::string name;
+    std::string altId;
 };
 
 struct PWIZ_API_DECL UnifiChromatogram : public UnifiChromatogramInfo
@@ -189,7 +189,9 @@ class PWIZ_API_DECL UnifiData
     ~UnifiData();
 
     size_t numberOfSpectra() const;
-    void getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData) const;
+    void getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData, bool doCentroid) const;
+    int getMsLevel(size_t index) const;
+    void getChannelAndScanIndex(size_t index, int& channelIndex, int& scanIndexInChannel) const;
 
     const std::vector<UnifiChromatogramInfo>& chromatogramInfo() const;
     void getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData) const;
@@ -210,7 +212,15 @@ class PWIZ_API_DECL UnifiData
     double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const;
     double ccsToDriftTime(double ccs, double mz, int charge) const;
 
-    private:
+    enum class RemoteApi
+    {
+        Unifi,
+        Waters_Connect
+    };
+
+    RemoteApi getRemoteApiType() const;
+
+    public:
     class Impl;
     std::unique_ptr<Impl> _impl;
 };

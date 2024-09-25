@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.Skyline.Model.Results.RemoteApi {
+namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect {
     using System;
     
     
@@ -22,14 +22,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class RemoteApiResources {
+    public class WatersConnectResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal RemoteApiResources() {
+        internal WatersConnectResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Results.RemoteApi.RemoteApiResources", typeof(RemoteApiResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Results.RemoteApi.WatersConnect.WatersConnectResources", typeof(WatersConnectResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,29 +61,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ardia.
+        ///   Looks up a localized string similar to Cannot find account for username {0} and server {1}..
         /// </summary>
-        public static string Ardia_Label_Ardia {
+        public static string WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__ {
             get {
-                return ResourceManager.GetString("Ardia_Label_Ardia", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to UNIFI.
-        /// </summary>
-        public static string Unifi_Label_Unifi {
-            get {
-                return ResourceManager.GetString("Unifi_Label_Unifi", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to waters_connect.
-        /// </summary>
-        public static string WatersConnect_Label_Waters_Connect {
-            get {
-                return ResourceManager.GetString("WatersConnect_Label_Waters_Connect", resourceCulture);
+                return ResourceManager.GetString("WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__" +
+                        "1__", resourceCulture);
             }
         }
     }

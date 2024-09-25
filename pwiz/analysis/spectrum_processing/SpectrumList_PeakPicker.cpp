@@ -41,6 +41,8 @@
 #include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 #include "pwiz/data/vendor_readers/Waters/Reader_Waters.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
+#include "pwiz/data/vendor_readers/UNIFI/Reader_UNIFI.hpp"
+#include "pwiz/data/vendor_readers/UNIFI/SpectrumList_UNIFI.hpp"
 #include "SpectrumList_LockmassRefiner.hpp"
 
 
@@ -113,6 +115,12 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         {
             mode_ = 8;
         }
+
+        detail::SpectrumList_UNIFI* waters_connect = dynamic_cast<detail::SpectrumList_UNIFI*>(&*inner);
+        if (waters_connect && waters_connect->isWatersConnect())
+        {
+            mode_ = 9;
+        }
     }
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -137,6 +145,8 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("Waters/MassLynx peak picking"));
     else if (mode_ == 7)
         method.userParams.push_back(UserParam("Shimadzu peak picking"));
+    else if (mode_ == 9)
+        method.userParams.push_back(UserParam("waters_connect peak picking"));
     else if (algorithm != NULL)
         method.userParams.emplace_back(algorithm->name());
 
@@ -161,7 +171,8 @@ PWIZ_API_DECL bool SpectrumList_PeakPicker::supportsVendorPeakPicking(const std:
                                                + ReaderPtr(new Reader_Bruker_TSF)
                                                + ReaderPtr(new Reader_Shimadzu)
                                                + ReaderPtr(new Reader_Thermo)
-                                               + ReaderPtr(new Reader_Waters);
+                                               + ReaderPtr(new Reader_Waters)
+                                               + ReaderPtr(new Reader_UNIFI);
     return !peakPickingVendorReaders.identify(rawpath).empty();
 }
 
@@ -216,6 +227,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, Detail
 
         case 8:
             s = dynamic_cast<SpectrumList_LockmassRefiner*>(&*inner_)->spectrum(index, detailLevel, msLevelsToPeakPick_);
+            break;
+
+        case 9:
+            s = dynamic_cast<detail::SpectrumList_UNIFI*>(&*inner_)->spectrum(index, detailLevel, msLevelsToPeakPick_);
             break;
 
         case 0:
