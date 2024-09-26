@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
                 new XmlElementHelperSuper<ListData, IXmlSerializable>(),
                 new XmlElementHelperSuper<MetadataRuleSet, IXmlSerializable>(),
-                new XmlElementHelperSuper<RelativeAbundanceFormatting, IXmlSerializable>(),
+                new XmlElementHelperSuper<RelativeAbundanceFormatting, IXmlSerializable>()
             };
         }
         #endregion
