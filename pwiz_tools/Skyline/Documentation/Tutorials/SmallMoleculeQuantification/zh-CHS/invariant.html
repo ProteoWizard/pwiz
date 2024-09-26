@@ -148,36 +148,14 @@
         <li>On the Skyline <strong>Edit</strong> menu, choose <strong>Insert </strong>and click <strong>Transition List</strong>.</li>
     </ul>
     <p class="keep-next">
-        Skyline will show the <strong>Insert</strong> form: 
+        Skyline will show the <strong>Insert Transition List</strong> form:
     </p>
     <p>
         <img src="image-2.png" />
     </p>
     <p>
         Normally, you would copy and paste a transition list from Excel or some other external source, but in this case, the transition list is small
-        enough it can entered by hand.
-    </p>
-    <p>
-        You can see that there are currently a lot of columns in the <strong>Insert</strong> form, and this tutorial will also benefit from a different
-        column order. Both issues are easy to correct:
-    </p>
-    <ul class="keep-next">
-        <li>Click the <strong>Columns</strong> button and click the check boxes in the popup list to achieve the state below.</li>
-    </ul>
-    <p>
-        <img src="image-3.png" />
-    </p>
-    <p class="keep-next">
-        Next do the following to reorder the columns in the <strong>Insert </strong>form:
-    </p>
-    <ul class="keep-next">
-        <li>Click and drag each column header you want to move to the order shown below.</li>
-    </ul>
-    <p>
-        <img src="image-4.png" /> 
-    </p>
-    <p class="keep-next">
-        Enter the following values in the <strong>Insert</strong> form (or better yet, copy and paste from this PDF):
+        enough that we can just show it here:
     </p>
     <ul class="keep-next">
         <li>Select the two rows below by dragging over them and then <strong>Copy </strong>(Ctrl-C).</li>
@@ -186,18 +164,35 @@
         DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7<br />DrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7
     </p>
     <ul>
-        <li>Make sure the selected cell in the <strong>Insert </strong>form appears the same as above (all blue and not with a blinking cursor) and
-            <strong>Paste</strong> (Ctrl-V).</li>
+        <li>In Skyline, click on the blank area of the <strong>Insert Transition List</strong> form.</li>
+        <li>Press <strong>Ctrl-V</strong> to paste.</li>
     </ul>
     <p class="keep-next">
-        If you accidentally got the column order wrong, then you will see an error at this point. Otherwise, the
-        <strong>Insert</strong> form should look like this:
+        Skyline shows the <strong>Import Transition List: Idenfity Columns</strong> form, where you can tell Skyline what each column
+        means.
     </p>
     <p>
-        <img src="image-5.png" /> 
+        <img src="image-3.png" />
     </p>
     <ul>
-        <li>Click the <strong>Insert</strong> button.</li>
+        <li>Make sure that the <strong>Molecules</strong> radio button is selected.</li>
+    </ul>
+    <p>
+        The data we copied did not have column headers, so initially each column is set as “Ignore Column”.
+    </p>
+    <ul>
+        <li>Use the <strong>drop-down control in each column</strong> to set the column type. </li>
+        <li>The column order from left to right is: Molecule List Name, Molecule Name, Label Type, Precursor m/z, Precursor Charge, Product m/z,
+            Product Charge, Cone Voltage, Explicit Collision Energy, Explicit Retention Time.</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Import Transition List: Identify Columns</strong> form should now look like this:
+    </p>
+    <p>
+        <img src="image-4.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
     </ul>
     <table>
         <tr>
@@ -217,7 +212,7 @@
         Your Skyline window should now look like this:
     </p>
     <p>
-        <img src="image-6.png" /> 
+        <img src="image-5.png" /> 
     </p>
     <h1>Transition Settings</h1>
     <p>
@@ -234,7 +229,7 @@
         The <strong>Transition Settings</strong> form should now look like this:
     </p>
     <p>
-        <img src="image-7.png" />
+        <img src="image-6.png" />
     </p>
     <ul>
         <li>Click the <strong>Filter </strong>tab.</li>
@@ -245,7 +240,7 @@
         The <strong>Transition Settings </strong>form should now look like this: 
     </p>
     <p>
-        <img src="image-8.png" />
+        <img src="image-7.png" />
     </p>
     <p>
         In the <strong>Ion types</strong> field, the value “f” indicates only fragment ion transitions will be measured. If you wanted to measure
@@ -255,6 +250,9 @@
         In the <strong>Instrument </strong>tab, the default values will work for this experiment. In your own work, however, make sure that the minimum
         and maximum <em>m/z</em> values make sense for your actual instrument. The purpose of these settings is to keep you from adding target
         transitions that your mass spectrometer is not actually able to measure.
+    </p>
+    <p>
+        <img src="image-8.png" />
     </p>
     <p>
         The <strong>Method match tolerance</strong> is another important setting in the <strong>Instrument</strong> tab. It determines how closely the
@@ -367,7 +365,6 @@
     </ul>
     <p class="keep-next">
         The peak boundaries will change to these new values, and the original range will be marked by a shaded area, as shown below:
-    
     </p>
     <p>
         <img src="image-15.png" />
@@ -450,7 +447,6 @@
     </ul>
     <p>
         Recall that the “SPCQC_” replicates are quality control in a different sense (a pooling of all study samples), so those are left as “Unknown”.
-    
     </p>
     <p>
         Analyte concentrations can be entered by hand, but it is much easier to copy and paste them into the grid. 
@@ -661,8 +657,8 @@
         <li>Click on the search button <img src="image-20.png" /> and enter “accuracy” into the <strong>Find what </strong>field.</li>
         <li>Click the <strong>Find Next</strong> button.</li>
         <li>Click the <strong>Close</strong> button on the <strong>Find Column</strong> form. </li>
-        <li>In the <strong>Customize Report</strong> form, <strong>Accuracy</strong> should be highlighted under the <strong>Quantification</strong>
-            subcategory.</li>
+        <li>In the <strong>Customize Report</strong> form, <strong>Accuracy</strong> should be highlighted under the
+            <strong>Quantification</strong> subcategory.</li>
         <li>Check the <strong>Accuracy</strong> checkbox<strong>.</strong></li>
         <li>In <strong>Molecule Results </strong>(which is just above <strong>Quantification</strong>), check <strong>Exclude From
                 Calibration</strong>.</li>
