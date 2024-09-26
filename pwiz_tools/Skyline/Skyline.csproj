@@ -564,8 +564,8 @@
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectObject.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
       <DependentUpon>WatersConnectResources.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
     </Compile>
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSession.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectUrl.cs" />
@@ -3695,16 +3695,16 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\UnifiResources.ja.resx">
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.ja.resx">
       <DependentUpon>WatersConnectResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\UnifiResources.zh-CHS.resx">
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.zh-CHS.resx">
       <DependentUpon>WatersConnectResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

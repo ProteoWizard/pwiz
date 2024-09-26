@@ -51,12 +51,12 @@ class PWIZ_API_DECL SpectrumList_UNIFI : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
-    
+
+    bool isWatersConnect() const;
+
 #ifdef PWIZ_READER_UNIFI
     SpectrumList_UNIFI(const MSData& msd, UnifiDataPtr unifiData,
                        const Reader::Config& config);
-
-    bool isWatersConnect() const;
 
     private:
 

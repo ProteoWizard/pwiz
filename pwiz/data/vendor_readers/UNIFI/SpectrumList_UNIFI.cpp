@@ -293,6 +293,7 @@ SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, bool getBinaryData) const
 SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+bool SpectrumList_UNIFI::isWatersConnect() const {return false;}
 
 } // detail
 } // msdata
