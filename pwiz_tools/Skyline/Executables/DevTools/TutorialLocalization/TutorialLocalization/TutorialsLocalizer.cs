@@ -74,7 +74,7 @@ namespace TutorialLocalization
             AddFilesInFolder(folderPath, relativePath);
             foreach (var subFolder in Directory.GetDirectories(folderPath))
             {
-                AddFilesInFolder(subFolder, Path.Combine(relativePath, Path.GetDirectoryName(subFolder) ?? string.Empty));
+                AddFilesInFolder(subFolder, Path.Combine(relativePath, Path.GetFileName(subFolder)));
             }
         }
 
