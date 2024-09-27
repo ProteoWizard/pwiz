@@ -60,8 +60,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public abstract IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl);
 
+        /// <summary>
+        /// Fetches contents for the URL using RunAsync. Returns true iff the fetch operation has completed (possibly with an error, which will set remoteException).
+        /// </summary>
         public abstract bool AsyncFetchContents(RemoteUrl remoteUrl, out RemoteServerException remoteException);
 
+        /// <summary>
+        /// Fetches content for the URL using RunAsync and passes the contents to the fetcher.
+        /// Returns true iff the fetch operation has completed (possibly with an error, which will set remoteException).
+        /// </summary>
         protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException)
         {
             if (null == requestUri)

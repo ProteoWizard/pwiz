@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
@@ -84,6 +85,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
@@ -99,6 +101,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)

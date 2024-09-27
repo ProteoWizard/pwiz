@@ -16,14 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
-using Newtonsoft.Json.Linq;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 

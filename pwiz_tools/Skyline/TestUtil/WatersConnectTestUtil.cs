@@ -22,14 +22,14 @@ using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// Helper methods for testing the Unifi server.
-    /// In order for Unifi tests to be enabled, you must have an environment variable "UNIFI_PASSWORD".
+    /// Helper methods for testing the waters_connect server.
+    /// In order for waters_connect tests to be enabled, you must have an environment variable "WC_PASSWORD".
     /// </summary>
     public static class WatersConnectTestUtil
     {
         public static WatersConnectAccount GetTestAccount()
         {
-            var password = "CCB5BAEF"; //Environment.GetEnvironmentVariable("UNIFI_PASSWORD");
+            var password = Environment.GetEnvironmentVariable("WC_PASSWORD");
             if (string.IsNullOrWhiteSpace(password))
             {
                 return null;
