@@ -57,13 +57,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return figuresOfMerit;
         }
 
-        public static double ComputeLod(IList<WeightedPoint> points)
+        private static double ComputeLod(IList<WeightedPoint> points, out ScoredBilinearCurve fit)
         {
+            fit = null;
             if (points.Count == 0)
             {
                 return double.MaxValue;
             }
-            ScoredBilinearCurve fit = ScoredBilinearCurve.FromPoints(points);
+            fit = ScoredBilinearCurve.FromPoints(points);
             if (fit == null || double.IsNaN(fit.StdDevBaseline))
             {
                 return double.MaxValue;
@@ -85,15 +86,25 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return lodConc;
         }
 
+        public static double ComputeLod(IList<WeightedPoint> points)
+        {
+            return ComputeLod(points, out _);
+        }
+
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points, List<ImmutableList<PointPair>> bootstrapCurves)
         {
             var random = new Random(RandomSeed);
-            var lod = ComputeLod(points);
-            if (points.Count == 0 || lod >= double.MaxValue)
+            var lod = ComputeLod(points, out var bilinearCurve);
+            var linearPoints = points.Where(pt => pt.X >= lod).ToList();
+            if (linearPoints.Count < 2)
             {
                 return double.MaxValue;
             }
-            var maxConcentration = points.Max(pt => pt.X);
+
+            var intercept = bilinearCurve.Intercept;
+            var compensationFactor = Math.Sqrt((linearPoints.Count - 1.0) / 2);
+            var adjustedCvThreshold = CvThreshold / compensationFactor;
+            var maxConcentration = linearPoints.Max(pt => pt.X);
             var concentrationValues = Enumerable.Range(0, GridSize)
                 .Select(i => lod + (maxConcentration - lod) * i / (GridSize - 1)).ToList();
             var areaGrid = Enumerable.Range(0, GridSize).Select(i => new RunningStatistics()).ToList();
@@ -110,7 +121,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
                 {
                     var area = p.CalibrationCurve.GetY(concentrationValues[iConcentration]);
-                    areaGrid[iConcentration].Push(area);
+                    areaGrid[iConcentration].Push(area - intercept);
                     areaValues?.Add(area);
                 }
 
@@ -121,7 +132,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     var loqCheck = maxConcentration;
                     for (int iConcentration = concentrationValues.Count - 1; iConcentration >= 0; iConcentration--)
                     {
-                        if (GetCv(areaGrid[iConcentration]) > CvThreshold)
+                        if (GetCv(areaGrid[iConcentration]) > adjustedCvThreshold)
                         {
                             break;
                         }
@@ -152,7 +163,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             for (int iConcentration = concentrationValues.Count - 1; iConcentration >= 0; iConcentration--)
             {
                 var cv = GetCv(areaGrid[iConcentration]);
-                if (cv > CvThreshold)
+                if (cv > adjustedCvThreshold)
                 {
                     break;
                 }
