@@ -77,7 +77,7 @@ namespace pwiz.Common.Database
             foreach(string s in DumpTable(connection, tableName, columnSeparator, sortColumns, excludeColumns))
                 yield return s;
         }
-        private static List<string> GetColumnNamesFromTable(IDbConnection connection, string tableName)
+        public static List<string> GetColumnNamesFromTable(IDbConnection connection, string tableName)
         {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT * FROM " + tableName + " LIMIT 0";
@@ -101,7 +101,6 @@ namespace pwiz.Common.Database
                 cmd.CommandText += @" ORDER BY " + string.Join(@",", sortColumns);
             using var reader = cmd.ExecuteReader();
             using var sha1 = SHA1.Create();
-            excludeColumns ??= Array.Empty<string>();
             yield return string.Join(columnSeparator,
                 Enumerable.Range(0, reader.FieldCount).Select(i => reader.GetName(i)));
             object[] row = new object[reader.FieldCount];
