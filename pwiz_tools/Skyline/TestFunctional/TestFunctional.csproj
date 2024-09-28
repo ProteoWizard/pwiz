@@ -697,6 +697,7 @@
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
+    <None Include="VolcanoPlotLayoutTest.zip" />
     <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>

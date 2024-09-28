@@ -113,9 +113,13 @@ namespace pwiz.SkylineTest
             {
                 var invariantNode = invariantNodes[i];
                 var localizedNode = localizedNodes[i];
-                Assert.AreEqual(invariantNode.XPath, localizedNode.XPath,
-                    "node from invariant.html:{0}\r\ndoes not match node from index.html:{1}\r\nin folder:{2}",
-                    invariantNode.InnerHtml, localizedNode.InnerHtml, folder);
+                if (!Equals(invariantNode.XPath, localizedNode.XPath))
+                {
+                    // Set a breakpoint below to stop where the comparison fails
+                    Assert.AreEqual(invariantNode.XPath, localizedNode.XPath,
+                        "node from invariant.html:{0}\r\ndoes not match node from index.html:{1}\r\nin folder:{2}",
+                        invariantNode.InnerHtml, localizedNode.InnerHtml, folder);
+                }
             }
 
             if (invariantNodes.Count > minNodeCount)
@@ -142,6 +146,7 @@ namespace pwiz.SkylineTest
                 yield return "/html/body/ul/li";
                 yield return "/html/body/ol/li";
                 yield return "/html/body/table/tr/td";
+                yield return "/html/body/div/table/tr/td";
             }
         }
 
