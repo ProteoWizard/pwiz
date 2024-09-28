@@ -731,7 +731,8 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!transition.IsCustom())
                 {
                     writer.WriteAttribute(ATTR.cleavage_aa, transition.AA.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
+                    if (nodeTransition.HasLoss)
+                        writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
                 }
             }
 

@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public Target Target { get; set; }
         public double RetentionTime { get; set; }
-        public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
+        public string Sequence => Target?.ToSerializableString() ?? string.Empty;
 
         public static string ValidateSequence(Target sequence)
         {
@@ -63,8 +63,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static string ValidateRetentionTime(string rtText, bool allowNegative)
         {
-            double rtValue;
-            if (rtText == null || !double.TryParse(rtText, out rtValue))
+            if (rtText == null || !double.TryParse(rtText, out var rtValue))
                 return IrtResources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
             if (!allowNegative && rtValue <= 0)
                 return IrtResources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
@@ -87,19 +86,25 @@ namespace pwiz.Skyline.Model.Irt
         }
 
         public bool HasScoredPeptides => _scoredPeptides != null && _scoredPeptides.Length > 0;
-        public int CirtPeptideCount => _cirtPeptides != null ? _cirtPeptides.Length : 0;
+        public int CirtPeptideCount => _cirtPeptides?.Length ?? 0;
         private double MinRt => _scoredPeptides.First().Peptide.RetentionTime;
         private double MaxRt => _scoredPeptides.Last().Peptide.RetentionTime;
         private double RtRange => MaxRt - MinRt;
-        private IEnumerable<double> BucketBoundaries => new[]
+        private IEnumerable<double> BucketBoundaries => GetBucketBoundaries(MinRt, MaxRt);
+
+        private static IEnumerable<double> GetBucketBoundaries(double minRt, double maxRt)
         {
-            MinRt + RtRange * 1 / 8,
-            MinRt + RtRange * 2 / 8,
-            MinRt + RtRange * 4 / 8,
-            MinRt + RtRange * 6 / 8,
-            MinRt + RtRange * 7 / 8,
-            double.MaxValue
-        };
+            double rtRange = maxRt - minRt;
+            return new[]
+            {
+                minRt + rtRange * 1 / 8,
+                minRt + rtRange * 2 / 8,
+                minRt + rtRange * 4 / 8,
+                minRt + rtRange * 6 / 8,
+                minRt + rtRange * 7 / 8,
+                double.MaxValue
+            };
+        }
 
         public double? CirtIrt(Target target)
         {
@@ -138,36 +143,38 @@ namespace pwiz.Skyline.Model.Irt
             _cirtPeptides = _scoredPeptides.Where(pep => _cirtAll.ContainsKey(pep.Peptide.Target)).ToArray();
         }
 
-        public bool TryGetCirtRegression(int count, out RegressionLine regression, out IEnumerable<Tuple<DbIrtPeptide, PeptideDocNode>> matchedPeptides)
+        public CirtRegressionResult GetCirtRegressionResult(int count)
         {
-            matchedPeptides = null;
-            var success = TryGetCirtRegression(count, out regression, out List<ScoredPeptide> peptides);
-            if (success)
-            {
-                matchedPeptides = peptides.Select(pep => Tuple.Create(
-                    new DbIrtPeptide(pep.Peptide.Target, _cirtAll[pep.Peptide.Target], true, TimeSource.peak),
-                    pep.NodePep));
-            }
-            return success;
-        }
-
-        private bool TryGetCirtRegression(int count, out RegressionLine regression, out List<ScoredPeptide> peptides)
-        {
-            peptides = new List<ScoredPeptide>(_cirtPeptides);
             var rts = _cirtPeptides.Select(pep => pep.Peptide.RetentionTime).ToList();
             var irts = _cirtPeptides.Select(pep => _cirtAll[pep.Peptide.Target]).ToList();
             var removedValues = new List<Tuple<double, double>>();
-            var success = IrtRegression.TryGet<RegressionLine>(rts, irts, count, out var line, removedValues);
-            regression = (RegressionLine) line;
-            if (!success)
-                return false;
 
+            if (!IrtRegression.TryGet<RegressionLine>(rts, irts, count, out var line, removedValues))
+                return CirtRegressionResult.EMPTY;
+
+            var peptides = new List<ScoredPeptide>(_cirtPeptides);
             for (var i = peptides.Count - 1; i >= 0; i--)
             {
                 if (removedValues.Contains(Tuple.Create(rts[i], irts[i])))
                     peptides.RemoveAt(i);
             }
-            return peptides.Count >= count;
+
+            var buckets = PeptideBucket<ScoredPeptide>.BucketPeptides(peptides, BucketBoundaries);
+            int bucketCountWithPeptides = buckets.Count(bucket => !bucket.Empty);
+            bool coversRtRange = buckets.Length - bucketCountWithPeptides < 3;  // Allow two buckets to be empty
+            if (!coversRtRange)
+            {
+                // Or if the total range in iRT-C18 space is greater than or equal to
+                // the original Biognosys 10 standards (narrower range to omit the first
+                // high-variance early-eluting peptide of Biognosys 11)
+                double minOrig = IrtStandard.BIOGNOSYS_10.Peptides.Min(pep => pep.Irt);
+                double maxOrig = IrtStandard.BIOGNOSYS_10.Peptides.Max(pep => pep.Irt);
+                var pepIrts = peptides.Select(pep => _cirtAll[pep.Peptide.Target]).ToList();
+                double minIrt = pepIrts.Min();
+                double maxIrt = pepIrts.Max();
+                coversRtRange =  (maxIrt - minIrt) / (maxOrig - minOrig) >= 0.85;
+            }
+            return new CirtRegressionResult((RegressionLine)line, peptides, _cirtAll, coversRtRange, MinRt, MaxRt);
         }
 
         /// <summary>
@@ -180,31 +187,32 @@ namespace pwiz.Skyline.Model.Irt
         /// <param name="count">The number of peptides to be picked</param>
         /// <param name="exclude">Peptides that cannot be picked</param>
         /// <param name="cirt">Use CiRT peptides, if possible</param>
-        public List<MeasuredPeptide> Pick(int count, ICollection<Target> exclude, bool cirt)
+        public List<MeasuredPeptide> Pick(int count, ICollection<Target> exclude, CirtRegressionResult cirt)
         {
-            PeptideBucket<ScoredPeptide>[] buckets = null;
-            if (cirt && TryGetCirtRegression(count, out _, out List<ScoredPeptide> scoredCirtPeptides))
+            var bucketPeps = _scoredPeptides.AsEnumerable();
+            var bucketBoundaries = BucketBoundaries;
+            if (cirt != null && cirt.Valid && cirt.Peptides != null)
             {
-                // If each bucket contains at least one, prompt to use CiRT peptides
-                var cirtBuckets = PeptideBucket<ScoredPeptide>.BucketPeptides(scoredCirtPeptides, BucketBoundaries);
-                if (cirtBuckets.All(bucket => !bucket.Empty))
-                    buckets = cirtBuckets;
+                bucketPeps = cirt.Peptides.AsEnumerable();
+                var cirtTimes = cirt.Peptides.Select(p => p.Time).ToArray();
+                bucketBoundaries = GetBucketBoundaries(cirtTimes.Min(), cirtTimes.Max());
             }
+            if (exclude != null && exclude.Count > 0)
+                bucketPeps = bucketPeps.Where(pep => !exclude.Contains(pep.Peptide.Target));
 
-            if (buckets == null)
-                buckets = exclude == null || exclude.Count == 0
-                    ? PeptideBucket<ScoredPeptide>.BucketPeptides(_scoredPeptides, BucketBoundaries)
-                    : PeptideBucket<ScoredPeptide>.BucketPeptides(_scoredPeptides.Where(pep => !exclude.Contains(pep.Peptide.Target)), BucketBoundaries);
+            var buckets = PeptideBucket<ScoredPeptide>.BucketPeptides(bucketPeps, bucketBoundaries);
             var endBuckets = new[] { buckets.First(), buckets.Last() };
             var midBuckets = buckets.Skip(1).Take(buckets.Length - 2).ToArray();
 
             var bestPeptides = new List<MeasuredPeptide>();
             while (bestPeptides.Count < count && buckets.Any(bucket => !bucket.Empty))
             {
-                bestPeptides.AddRange(PeptideBucket<ScoredPeptide>.Pop(endBuckets, endBuckets.Length, true)
-                    .Take(Math.Min(endBuckets.Length, count - bestPeptides.Count)).Select(pep => pep.Peptide));
-                bestPeptides.AddRange(PeptideBucket<ScoredPeptide>.Pop(midBuckets, midBuckets.Length, false)
-                    .Take(Math.Min(midBuckets.Length, count - bestPeptides.Count)).Select(pep => pep.Peptide));
+                var bestEndPeptides = PeptideBucket<ScoredPeptide>.Pop(endBuckets, endBuckets.Length, true)
+                    .Take(Math.Min(endBuckets.Length, count - bestPeptides.Count));
+                bestPeptides.AddRange(bestEndPeptides.Select(pep => pep.Peptide));
+                var bestMidPeptides = PeptideBucket<ScoredPeptide>.Pop(midBuckets, midBuckets.Length, false)
+                    .Take(Math.Min(midBuckets.Length, count - bestPeptides.Count));
+                bestPeptides.AddRange(bestMidPeptides.Select(pep => pep.Peptide));
             }
             bestPeptides.Sort((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
             return bestPeptides.Select(pep => new MeasuredPeptide(pep)).ToList();
@@ -276,13 +284,42 @@ namespace pwiz.Skyline.Model.Irt
             SetStandards(peptides, standard.Peptides.Select(pep => pep.ModifiedTarget));
         }
 
+        public class CirtRegressionResult
+        {
+            public RegressionLine Regression { get; }
+            public ImmutableList<ScoredPeptide> Peptides { get; }
+            private TargetMap<double> Irts { get; }
+            public bool CoversRTRange { get; }
+
+            public double MinRt { get; }
+            public double MaxRt { get; }
+
+            public bool Valid => Regression != null && CoversRTRange;
+            public int Count => Peptides?.Count ?? 0;
+            public IEnumerable<DbIrtPeptide> DbIrtPeptides => Peptides.Select(pep =>
+                new DbIrtPeptide(pep.Peptide.Target, Irts[pep.Peptide.Target], true, TimeSource.peak));
+            public IEnumerable<PeptideDocNode> NodePeps => Peptides.Select(pep => pep.NodePep);
+
+            public static readonly CirtRegressionResult EMPTY = new CirtRegressionResult(null, null, null, false, 0, 0);
+
+            public CirtRegressionResult(RegressionLine regression, IEnumerable<ScoredPeptide> peptides, TargetMap<double> irts, bool coversRtRange, double minRt, double maxRt)
+            {
+                Regression = regression;
+                Peptides = ImmutableList<ScoredPeptide>.ValueOf(peptides);
+                Irts = irts;
+                CoversRTRange = coversRtRange;
+                MinRt = minRt;
+                MaxRt = maxRt;
+            }
+        }
+
         private interface IBucketable
         {
             double Time { get; }
             float Score { get; } // lower scores get picked first
         }
 
-        private class ScoredPeptide : IBucketable
+        public class ScoredPeptide : IBucketable
         {
             public MeasuredPeptide Peptide { get; }
             public PeptideDocNode NodePep { get; }
@@ -319,7 +356,7 @@ namespace pwiz.Skyline.Model.Irt
             private T Pop()
             {
                 if (Empty)
-                    return default(T);
+                    return default;
                 var pep = _peptides.First();
                 _peptides.RemoveAt(0);
                 return pep;
@@ -327,15 +364,13 @@ namespace pwiz.Skyline.Model.Irt
 
             public static PeptideBucket<T>[] BucketPeptides(IEnumerable<T> peptides, IEnumerable<double> rtBoundaries)
             {
-                // peptides must be sorted by retention time (low to high)
                 var buckets = rtBoundaries.OrderBy(x => x).Select(boundary => new PeptideBucket<T>(boundary)).ToArray();
-                var curBucketIdx = 0;
-                var curBucket = buckets[0];
-                foreach (var pep in peptides)
+                var curBucket = 0;
+                foreach (var pep in peptides.OrderBy(pep => pep.Time))
                 {
-                    if (pep.Time > curBucket._maxTime)
-                        curBucket = buckets[++curBucketIdx];
-                    curBucket._peptides.Add(pep);
+                    if (pep.Time > buckets[curBucket]._maxTime)
+                        curBucket++;
+                    buckets[curBucket]._peptides.Add(pep);
                 }
                 buckets.ForEach(bucket => bucket._peptides.Sort((x, y) => x.Score.CompareTo(y.Score)));
                 return buckets;
