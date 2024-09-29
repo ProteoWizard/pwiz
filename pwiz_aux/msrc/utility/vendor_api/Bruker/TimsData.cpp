@@ -916,20 +916,18 @@ int TimsSpectrum::getChargeState() const
 {
     if (HasPasefPrecursorInfo())
         return GetPasefPrecursorInfo().charge;
-    else
-        return frame_.chargeState_.get_value_or(0);
+    return frame_.chargeState_.get_value_or(0);
 }
 
 double TimsSpectrum::getIsolationWidth() const
 {
     if (HasPasefPrecursorInfo())
         return GetPasefPrecursorInfo().isolationWidth;
-    else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
-    {
+
+    if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
         return getDiaPasefIsolationInfo().isolationWidth;
-    }
-    else
-        return frame_.isolationWidth_.get_value_or(0);
+
+    return frame_.isolationWidth_.get_value_or(0);
 }
 
 int TimsSpectrum::getWindowGroup() const
