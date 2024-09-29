@@ -83,6 +83,8 @@
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="148.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="10513.0"/>
         <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="142.809669140573" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="2970.80472309142" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <userParam name="ion mobility lower limit" value="1.4602232906378299" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
         <userParam name="ion mobility upper limit" value="1.555768150531077" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
         <scanList count="1">
@@ -143,6 +145,8 @@
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3657.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.68258e07"/>
         <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="95.597846640774" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="2923.861769048383" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <userParam name="ion mobility lower limit" value="1.4602232906378299" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
         <userParam name="ion mobility upper limit" value="1.555768150531077" type="xsd:double" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
         <scanList count="1">
