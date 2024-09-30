@@ -1867,7 +1867,7 @@ namespace pwiz.Skyline.Model.Lib
             var nonEmptyIonMobilitiesDict = ionMobilitiesDict
                 .Where(kvp => kvp.Value.Length > 0)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            ionMobilities = nonEmptyIonMobilitiesDict.Any() ? new LibraryIonMobilityInfo(filePath.GetFilePath(), false, nonEmptyIonMobilitiesDict) : null;
+            ionMobilities = nonEmptyIonMobilitiesDict.Any() ? new LibraryIonMobilityInfo(filePath?.GetFilePath(), false, nonEmptyIonMobilitiesDict) : null;
             return true;  // return value false means "that's not a proper file index"'
         }
 

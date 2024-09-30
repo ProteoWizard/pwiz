@@ -196,6 +196,8 @@
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="InternationalFilenamesTest.cs" />
+    <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
@@ -228,6 +230,7 @@
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="SkipZoomScansTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
@@ -692,6 +695,7 @@
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
+    <None Include="VolcanoPlotLayoutTest.zip" />
     <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>
