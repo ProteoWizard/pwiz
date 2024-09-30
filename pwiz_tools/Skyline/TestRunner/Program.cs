@@ -1442,6 +1442,20 @@ namespace TestRunner
                     }
 
                     runTests.Log("\r\n");
+
+                    try
+                    {
+                        // Run procdump if installed
+                        var process = new Process();
+                        process.StartInfo.FileName = "procdump.exe";
+                        process.StartInfo.Arguments = $@"-accepteula -ma -mk -h TestRunner {dmpDir}"; 
+                        process.Start();
+                        runTests.Log("# launched ProcDump to try to catch hangs in TestRunner");
+                    }
+                    catch (Exception)
+                    {
+                        // ignored, presumably ProcDump is not installed    
+                    }
                 }
 
                 if (commandLineArgs.ArgAsBool("clipboardcheck"))
