@@ -623,20 +623,22 @@ namespace pwiz.Skyline
                 return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
             }
 
-            if (splitLength == 3 && graphSummaryTypeName == typeof(GraphSummary).ToString())
+            if (splitLength >= 3 && graphSummaryTypeName == typeof(GraphSummary).ToString())
             {
                 var type = Helpers.ParseEnum(graphTypeName, GraphTypeSummary.invalid);
 
+                GraphSummary graphSummary = null;
                 if (controllerTypeName == typeof(RTGraphController).Name)
-                    return _listGraphRetentionTime.FirstOrDefault(g => g.Type == type) ?? CreateGraphRetentionTime(type);
+                    graphSummary = _listGraphRetentionTime.FirstOrDefault(g => g.Type == type) ?? CreateGraphRetentionTime(type);
                 else if (controllerTypeName == typeof(AreaGraphController).Name)
-                    return _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
+                    graphSummary = _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
                 else if (controllerTypeName == typeof(MassErrorGraphController).Name)
-                    return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
+                    graphSummary = _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
                 else if (controllerTypeName == typeof(DetectionsGraphController).Name)
-                    return _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
-                else
-                    return null;
+                    graphSummary = _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
+                if (graphSummary != null && splitLength > 3)
+                    graphSummary.LabelLayoutString = Uri.UnescapeDataString(split[3]);
+                return graphSummary;
             }
 
             if (Equals(persistentString, typeof(ResultsGridForm).ToString()) || Equals(persistentString, typeof (LiveResultsGrid).ToString()))
@@ -722,6 +724,8 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_calibrationForm);
 
             UpdateGraphPanes(listUpdateGraphs);
+            // make sure the Volcano Plot is updated as well
+            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(form => form.QueueUpdateGraph());
         }
 
         private void UpdateGraphPanes(ICollection<IUpdatable> graphPanes)
@@ -3918,8 +3922,16 @@ namespace pwiz.Skyline
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
                 }
 
-                menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
-                peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+                if (graphType != GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
+                    peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+                }
+                else
+                {
+                    menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
+                    relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
+                }
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
                 if (graphType == GraphTypeSummary.abundance)
@@ -4636,6 +4648,17 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
+        private void relativeAbundanceLogScaleContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRelativeAbundanceLogScale(relativeAbundanceLogScaleContextMenuItem.Checked);
+        }
+
+        public void ShowRelativeAbundanceLogScale(bool isChecked)
+        {
+            Settings.Default.RelativeAbundanceLogScale = isChecked ;
+            UpdateRelativeAbundanceGraphs();
+        }
+
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowCVValues(peptideCvsContextMenuItem.Checked);
@@ -4764,6 +4787,10 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.UpdateUI());
         }
 
+        public void UpdateRelativeAbundanceGraphs()
+        {
+            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance).ForEach(g => g.UpdateUI());
+        }
         private void UpdateSummaryGraphs()
         {
             UpdateRetentionTimeGraph();
