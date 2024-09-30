@@ -129,19 +129,16 @@ namespace pwiz.SkylineTestUtil
             return GetProjectDirectory(relativePath);
         }
 
-        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
+        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir,
+            string[] persistentFiles, string persistentFilesDir)
         {
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
-            try
+            Helpers.Try<Exception>(() =>
             {
-                Helpers.Try<Exception>(() =>
+                bool zipFileExists = File.Exists(pathZip);
+                if (zipFileExists)
                 {
-                    var dataFolderName = Path.ChangeExtension(pathZip, ".data");
-                    if (Directory.Exists(dataFolderName))
-                    {
-                        CopyRecursively(dataFolderName, destDir);
-                    }
-                    else
+                    try
                     {
                         using ZipFile zipFile = ZipFile.Read(pathZip);
                         foreach (ZipEntry zipEntry in zipFile)
@@ -154,18 +151,34 @@ namespace pwiz.SkylineTestUtil
                                 // even if the files are not, so for those do the directory creation.
                                 continue;
                             }
+
                             if (IsPersistent(persistentFiles, zipEntry.FileName))
-                                zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
+                                zipEntry.Extract(persistentFilesDir,
+                                    ExtractExistingFileAction
+                                        .DoNotOverwrite); // leave persistent files alone                        
                             else
                                 zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                         }
                     }
-                });
-            }
-            catch (Exception ex)
-            {
-                throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
-            }
+                    catch (Exception ex)
+                    {
+                        throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
+                    }
+                }
+
+                var dataFolderName = Path.ChangeExtension(pathZip, ".data");
+                if (Directory.Exists(dataFolderName))
+                {
+                    CopyRecursively(dataFolderName, destDir, zipFileExists);
+                }
+                else
+                {
+                    if (!zipFileExists)
+                    {
+                        throw new ApplicationException(string.Format("Test zip file {0} and test folder {1} do not exist", pathZip, dataFolderName));
+                    }
+                }
+            });
         }
 
         private static bool IsPersistent(string[] persistentFiles, string zipEntryFileName)
@@ -308,20 +321,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static void CopyRecursively(string sourcePath, string destinationPath)
+        private static void CopyRecursively(string sourcePath, string destinationPath, bool overwrite)
         {
             Directory.CreateDirectory(destinationPath);
             foreach (string file in Directory.GetFiles(sourcePath))
             {
                 string destinationFile = Path.Combine(destinationPath, Path.GetFileName(file));
-                File.Copy(file, destinationFile, false);
+                File.Copy(file, destinationFile, overwrite);
             }
 
             // Copy each subdirectory using recursion.
             foreach (string directory in Directory.GetDirectories(sourcePath))
             {
                 string destinationDirectory = Path.Combine(destinationPath, Path.GetFileName(directory));
-                CopyRecursively(directory, destinationDirectory);
+                CopyRecursively(directory, destinationDirectory, overwrite);
             }
         }
     }
