@@ -7,3 +7,6 @@
 [submodule "pwiz_tools/Skyline/Executables/BullseyeSharp"]
 	path = pwiz_tools/Skyline/Executables/BullseyeSharp
 	url = https://github.com/ProteoWizard/BullseyeSharp
+[submodule "pwiz_tools/Skyline/Executables/DevTools/DocumentConverter"]
+	path = pwiz_tools/Skyline/Executables/DevTools/DocumentConverter
+	url = https://github.com/ProteoWizard/DocumentConverter

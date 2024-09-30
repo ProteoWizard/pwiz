@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineBatch
@@ -57,8 +58,8 @@ namespace SkylineBatch
                     var panoramaServerUri = new Uri(Uri.UnescapeDataString(_server.URI.GetLeftPart(UriPartial.Authority)));
                     var downloadUri = new Uri(_panoramaFile.DownloadUrl);
                     var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri,
-                        new WebPanoramaClient(panoramaServerUri), _server.FileSource.Username,
-                        _server.FileSource.Password,
+                        new WebPanoramaClient(panoramaServerUri, _server.FileSource.Username,
+                        _server.FileSource.Password),
                         new CancellationToken());
 
                     _source.Token.Register(wc.CancelAsync);

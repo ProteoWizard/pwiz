@@ -682,6 +682,16 @@ namespace pwiz.SkylineTestUtil
             return  (millis * waitMultiplier) / SLEEP_INTERVAL; // Return the wait cycle count
         }
 
+        /// <summary>
+        /// Convenience function for getting a value on the UI thread
+        /// </summary>
+        public static T GetUIValue<T>(Func<T> act)
+        {
+            T result = default;
+            RunUI(() => result = act() );
+            return result;
+        }
+
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
             int waitCycles = GetWaitCycles(millis);
@@ -696,7 +706,7 @@ namespace pwiz.SkylineTestUtil
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formType += "." + multipleViewProvider.ShowingFormView.GetType().Name;
+                        formType += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
                         var formName = "(" + typeof (TDlg).Name + ")";
                         RunUI(() =>
                         {
@@ -742,7 +752,7 @@ namespace pwiz.SkylineTestUtil
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formTypeName += "." + multipleViewProvider.ShowingFormView.GetType().Name;
+                        formTypeName += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
                         var formName = "(" + formType.Name + ")";
                         RunUI(() =>
                         {
@@ -1403,6 +1413,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form, Action cancelAction)
+        {
+            RunUI(cancelAction);
+            WaitForClosedForm(form);
+        }
+
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
@@ -1795,6 +1811,9 @@ namespace pwiz.SkylineTestUtil
             return result.ToString();
         }
 
+        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
         private void WaitForSkyline()
         {
             try
@@ -1820,6 +1839,27 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
+                // if it's a file locking issue, wrap the exception to report the locking process
+                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
+                {
+                    var match = Regex.Match(ioException.Message, "'(.*)'");
+                    if (match.Success)
+                    {
+                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                        if (!File.Exists(lockedFilepath))
+                        {
+                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+                        }
+                        else
+                        {
+                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
+                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+                        }
+                    }
+                }
                 // Save exception for reporting from main thread.
                 Program.AddTestException(x);
             }
@@ -2177,12 +2217,36 @@ namespace pwiz.SkylineTestUtil
             ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
+        private static SrmDocument DoSmallMoleculeListPaste(string text)
+        {
+            var docOrig = SkylineWindow.Document;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (!text.Contains(Environment.NewLine) && File.Exists(text))
+                {
+                    text = File.ReadAllText(text); // That was a filename rather than a transition list
+                }
+                SetClipboardText(text);
+            }
+            var confirmColumnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            OkDialog(confirmColumnsDlg, confirmColumnsDlg.OkDialog);
+            return docOrig;
+        }
+
+        // Paste a small molecule transition list with no expectation of an offer to automanage
+        public static SrmDocument PasteSmallMoleculeList(string text = null)
+        {
+            var docOrig = DoSmallMoleculeListPaste(text);
+            return WaitForDocumentChangeLoaded(docOrig);
+        }
+
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static void PasteSmallMoleculeListNoAutoManage()
+        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
         {
-            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Paste);
-            OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
+            var docOrig = DoSmallMoleculeListPaste(text);
+            DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+            return WaitForDocumentChangeLoaded(docOrig);
         }
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
@@ -2205,7 +2269,6 @@ namespace pwiz.SkylineTestUtil
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
             var currentDoc = SkylineWindow.Document;
-
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);

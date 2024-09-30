@@ -146,7 +146,7 @@ namespace TestPerf
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DDA Files page", tutorialPage++);
 
-            if (IsFullData)
+            if (SearchFiles.Count() > 1)
             {
                 // Remove prefix/suffix dialog pops up; accept default behavior
                 var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -248,7 +248,10 @@ namespace TestPerf
                 // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
                 // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 if (useMsFragger)
+                {
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
+                    //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
+                }
 
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
             });
@@ -338,10 +341,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(2802, proteinCount);
-                        Assert.AreEqual(5774, peptideCount);
-                        Assert.AreEqual(11409, precursorCount);
-                        Assert.AreEqual(34227, transitionCount);
+                        Assert.AreEqual(2637, proteinCount);
+                        Assert.AreEqual(5299, peptideCount);
+                        Assert.AreEqual(10461, precursorCount);
+                        Assert.AreEqual(31383, transitionCount);
                     }
                 }
             });
@@ -398,6 +401,8 @@ namespace TestPerf
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
+
+            DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
         }
 
         private void RefreshGraphs()

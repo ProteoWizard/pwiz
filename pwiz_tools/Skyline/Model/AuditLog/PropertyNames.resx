@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1801,5 +1801,11 @@
   </data>
   <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
     <value>Score type</value>
+  </data>
+  <data name="TransitionGroupDocNode_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
+  <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
   </data>
 </root>

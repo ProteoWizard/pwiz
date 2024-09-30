@@ -186,7 +186,7 @@ struct SpectrumImpl : public Spectrum
     virtual int getMSLevel() const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const;
 
     virtual bool getHasPrecursorInfo() const;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
@@ -637,6 +637,7 @@ double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& time
 
         ToBinaryData(xic->GetActualXValues(), times);
         ToBinaryData(xic->GetActualYValues(), intensities);
+        return xic->MaxYValue;
     }
     CATCH_AND_FORWARD
 }
@@ -762,7 +763,7 @@ bool SpectrumImpl::getHasIsolationInfo() const
            experiment->msExperiment->Details->MassRangeInfo->Length > 0;
 }
 
-void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const
+void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const
 {
     if (!getHasIsolationInfo())
         return;
@@ -773,7 +774,23 @@ void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double
         centerMz = getHasPrecursorInfo() ? selectedMz : (double)((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
         lowerLimit = centerMz - isolationWidth / 2;
         upperLimit = centerMz + isolationWidth / 2;
-        collisionEnergy = 0;
+
+        auto parameters = experiment->msExperiment->Details->Parameters;
+        if (parameters->ContainsKey("CE"))
+        {
+            auto ceRamp = parameters["CE"];
+            if (ceRamp->Start == 0)
+                collisionEnergy = fabs(ceRamp->Stop);
+            else if (ceRamp->Stop == 0)
+                collisionEnergy = ceRamp->Start;
+            else
+                collisionEnergy = (ceRamp->Stop + ceRamp->Start) / 2;
+            collisionEnergy = fabs(collisionEnergy);
+        }
+        else
+            collisionEnergy = 0;
+        
+        fragmentationMode = FragmentationMode_CID;        
     }
     CATCH_AND_FORWARD
 }

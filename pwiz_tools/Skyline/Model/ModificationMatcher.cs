@@ -40,6 +40,8 @@ namespace pwiz.Skyline.Model
         private IProgressStatus _status;
         private const int DEFAULT_ROUNDING_DIGITS = 6;
 
+        public bool HasSeenMods { get; private set; }
+
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
             MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, 
             IProgressMonitor progressMonitor = null, IProgressStatus status = null)
@@ -75,13 +77,20 @@ namespace pwiz.Skyline.Model
                 return false;
             // Skip sequences that can be created from the current settings.
             // Check first if the sequence has any modifications, because creating doc nodes is expensive
-            while (!HasMods(_sequences.Current) ||
+            while (!HasModsChecked(_sequences.Current) ||
                    CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out _) != null)
             {
                 if (!MoveNextSingleSequence())
                     return false;
             }
             return true;
+        }
+
+        private bool HasModsChecked(string sequence)
+        {
+            bool hasMods = HasMods(sequence);
+            HasSeenMods = HasSeenMods || hasMods;
+            return hasMods;
         }
 
         private bool MoveNextSingleSequence()

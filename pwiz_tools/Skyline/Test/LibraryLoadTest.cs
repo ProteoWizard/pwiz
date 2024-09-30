@@ -131,6 +131,21 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(lib2.TryGetLibInfo(key, out info));
             AssertEx.AreEqual(61.389, ((NistSpectrumHeaderInfo)info).RT, .001);
             AssertEx.AreEqual(28, peaksInfo.Peaks.Length);
+
+            // Check use of ion mobility
+            var ccsDict = new Dictionary<string, double>()
+            {
+                {"Withanone; PlaSMA ID-2558", 220.9656493},
+                {"ACar 4:0", 23.145},
+                {"C6:OH b", 123.45}
+            };
+            foreach (var kvp in ccsDict)
+            {
+                var libEntry = lib2Keys.First(l => l.Target.DisplayName.Equals(kvp.Key));
+                AssertEx.IsTrue(lib2.TryGetIonMobilityInfos(new LibKey(libEntry.LibraryKey), null, out var ionMobilities));
+                AssertEx.AreEqual(kvp.Value,ionMobilities.First().CollisionalCrossSectionSqA??-1);
+            }
+
         }
 
         [TestMethod]
@@ -920,6 +935,7 @@ namespace pwiz.SkylineTest
             "CASNo: \n" +
             "Smiles: \n" +
             "CompoundClass: OH\n" +
+            "CCS: 123.45\n" + // N.B. completely invented value for test purposes
             "Comment: \n" +
             "Num peaks: 5\n" +
             "55.0546 8078.07\n" +
@@ -935,6 +951,7 @@ namespace pwiz.SkylineTest
             "Synon: $:00in-source\n" +
             "DB#: LipidBlast000001\n" +
             "InChIKey: QWYFHHGCZUCMBN-UHFFFAOYSA-O\n" +
+            "CCS_sqa: 23.145\n" + // N.B. completely invented value for test purposes
             "Precursor_type: [M]+\n" +
             "Spectrum_type: MS2\n" +
             "PrecursorMZ: 232.15433\n" +

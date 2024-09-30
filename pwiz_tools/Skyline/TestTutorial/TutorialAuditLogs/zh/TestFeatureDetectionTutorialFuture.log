@@ -1,13 +1,13 @@
-Undo Redo : 已添加谱图库“Pass0 detected features”
-Summary   : 已添加谱图库“Pass0 detected features”
+Undo Redo : 已添加谱图库“Pass0 检测到的特征”
+Summary   : 已添加谱图库“Pass0 检测到的特征”
 All Info  :
-已添加谱图库“Pass0 detected features”
+已添加谱图库“Pass0 检测到的特征”
 建立谱图库 > 搜索文件 : 包含 { 文件 = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", 得分类型 = "Hardklor idotp", 得分阈值 = "0.9" }
 建立谱图库 > 搜索文件 : 包含 { 文件 = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", 得分类型 = "Hardklor idotp", 得分阈值 = "0.9" }
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 真
 建立谱图库 > 文档肽段筛选器 是 假
-建立谱图库 > 工作流程 是 "Feature Detection"
+建立谱图库 > 工作流程 是 "特征检测"
 建立谱图库 > 输入文件类型 是 "DDA 原始（搜索和构建库）"
 Extra Info: 搜索文件 = 
 [
@@ -25,7 +25,7 @@ Extra Info: 搜索文件 =
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 真,
 文档肽段筛选器 = 假,
-工作流程 = "Feature Detection",
+工作流程 = "特征检测",
 输入文件类型 = "DDA 原始（搜索和构建库）"
 
 Undo Redo : 已导入分子搜索
@@ -38,13 +38,13 @@ All Info  :
 导入分子搜索 > 提取色谱图 > 已删除前缀 是 "Orbi3_SA_IP_"
 导入分子搜索 > 提取色谱图 > 已删除后缀 是 "_01"
 导入分子搜索 > 配置全扫描设置 > 同位素标记富集 是 "Default"
-导入分子搜索 > Hardklor Search Settings > Min idotp 是 "0.9"
-导入分子搜索 > Hardklor Search Settings > Signal to noise 是 "3.01"
-导入分子搜索 > Hardklor Search Settings > Instrument 是 "TOF（飞行时间）"
-导入分子搜索 > Hardklor Search Settings > Resolution 是 "10000"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "2"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "3"
-导入分子搜索 > Hardklor Search Settings > Min intensity PPM 是 "5"
+导入分子搜索 > Hardklor 搜索设置 > 最小同位素点积 是 "0.9"
+导入分子搜索 > Hardklor 搜索设置 > 噪声信号 是 "3.01"
+导入分子搜索 > Hardklor 搜索设置 > 仪器 是 "TOF（飞行时间）"
+导入分子搜索 > Hardklor 搜索设置 > 分辨率 是 "10000"
+导入分子搜索 > Hardklor 搜索设置 > 电荷 : 包含 "2"
+导入分子搜索 > Hardklor 搜索设置 > 电荷 : 包含 "3"
+导入分子搜索 > Hardklor 搜索设置 > 最小强度 PPM 是 "5"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -60,30 +60,30 @@ Extra Info: 提取色谱图 =
 {
     同位素标记富集 = "Default"
 },
-Hardklor Search Settings = 
+Hardklor 搜索设置 = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF（飞行时间）",
-    Resolution = "10000",
-    Charges = 
+    最小同位素点积 = "0.9",
+    噪声信号 = "3.01",
+    仪器 = "TOF（飞行时间）",
+    分辨率 = "10000",
+    电荷 = 
     [
         "2",
         "3"
     ],
-    Min intensity PPM = "5"
+    最小强度 PPM = "5"
 }
 
-Undo Redo : 已添加谱图库“Pass1 detected features”
-Summary   : 已添加谱图库“Pass1 detected features”
+Undo Redo : 已添加谱图库“Pass1 检测到的特征”
+Summary   : 已添加谱图库“Pass1 检测到的特征”
 All Info  :
-已添加谱图库“Pass1 detected features”
+已添加谱图库“Pass1 检测到的特征”
 建立谱图库 > 搜索文件 : 包含 { 文件 = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", 得分类型 = "Hardklor idotp", 得分阈值 = "0.9" }
 建立谱图库 > 搜索文件 : 包含 { 文件 = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", 得分类型 = "Hardklor idotp", 得分阈值 = "0.9" }
 建立谱图库 > iRT 标准分子 是 无
 建立谱图库 > 包含不明确匹配项 是 真
 建立谱图库 > 文档分子筛选器 是 假
-建立谱图库 > 工作流程 是 "Feature Detection"
+建立谱图库 > 工作流程 是 "特征检测"
 建立谱图库 > 输入文件类型 是 "DDA 原始（搜索和构建库）"
 Extra Info: 搜索文件 = 
 [
@@ -101,7 +101,7 @@ Extra Info: 搜索文件 =
 iRT 标准分子 = 无,
 包含不明确匹配项 = 真,
 文档分子筛选器 = 假,
-工作流程 = "Feature Detection",
+工作流程 = "特征检测",
 输入文件类型 = "DDA 原始（搜索和构建库）"
 
 Undo Redo : 已导入分子搜索
@@ -114,13 +114,13 @@ All Info  :
 导入分子搜索 > 提取色谱图 > 已删除前缀 是 "Orbi3_SA_IP_"
 导入分子搜索 > 提取色谱图 > 已删除后缀 是 "_01"
 导入分子搜索 > 配置全扫描设置 > 同位素标记富集 是 "Default"
-导入分子搜索 > Hardklor Search Settings > Min idotp 是 "0.9"
-导入分子搜索 > Hardklor Search Settings > Signal to noise 是 "3.01"
-导入分子搜索 > Hardklor Search Settings > Instrument 是 "TOF（飞行时间）"
-导入分子搜索 > Hardklor Search Settings > Resolution 是 "10000"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "2"
-导入分子搜索 > Hardklor Search Settings > Charges : 包含 "3"
-导入分子搜索 > Hardklor Search Settings > Min intensity PPM 是 "5"
+导入分子搜索 > Hardklor 搜索设置 > 最小同位素点积 是 "0.9"
+导入分子搜索 > Hardklor 搜索设置 > 噪声信号 是 "3.01"
+导入分子搜索 > Hardklor 搜索设置 > 仪器 是 "TOF（飞行时间）"
+导入分子搜索 > Hardklor 搜索设置 > 分辨率 是 "10000"
+导入分子搜索 > Hardklor 搜索设置 > 电荷 : 包含 "2"
+导入分子搜索 > Hardklor 搜索设置 > 电荷 : 包含 "3"
+导入分子搜索 > Hardklor 搜索设置 > 最小强度 PPM 是 "5"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -136,17 +136,17 @@ Extra Info: 提取色谱图 =
 {
     同位素标记富集 = "Default"
 },
-Hardklor Search Settings = 
+Hardklor 搜索设置 = 
 {
-    Min idotp = "0.9",
-    Signal to noise = "3.01",
-    Instrument = "TOF（飞行时间）",
-    Resolution = "10000",
-    Charges = 
+    最小同位素点积 = "0.9",
+    噪声信号 = "3.01",
+    仪器 = "TOF（飞行时间）",
+    分辨率 = "10000",
+    电荷 = 
     [
         "2",
         "3"
     ],
-    Min intensity PPM = "5"
+    最小强度 PPM = "5"
 }
 

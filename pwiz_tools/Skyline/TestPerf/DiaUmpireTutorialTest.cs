@@ -129,7 +129,7 @@ namespace TestPerf
                 IrtIntercept = -67.652,
 
                 FinalTargetCounts = new[] { 11, 215, 279, 1673 },
-                ScoringModelCoefficients = "-0.1511|-0.5825|5.5995|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
+                ScoringModelCoefficients = "-0.1511|-0.5825|5.5994|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
                 MassErrorStats = new[]
                 {
                     new[] {3.3, 3.7},
@@ -309,7 +309,7 @@ namespace TestPerf
                 string.Format(@"TestPerf\DiaSwath{0}Views.zip", InstrumentTypeName)
             };
 
-            TestFilesPersistent = new[] { Path.Combine(RootName, "DDA_search"), Path.Combine(RootName, "DIA") };
+            TestFilesPersistent = new[] { Path.Combine(RootName, "DDA_search"), Path.Combine(RootName, "DIA") + '\\' };
         }
 
         private void RunTest()
@@ -365,17 +365,18 @@ namespace TestPerf
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            string diaDir = GetTestPath("DIA");
+            string diaDir = GetTestPath("DIA\\");
 
             // when in regular test mode, delete -diaumpire files so they get regenerated instead of reused
             // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+            /* TODO: how can this code work if we aren't running DiaUmpire in the persistent directory?
             if (!IsRecordMode)
             {
                 var diaumpireFiles = Directory.GetFiles(diaDir, "*-diaumpire.*");
                 var filesToRegenerate = diaumpireFiles.Skip(1); // regenerate all but 1 file in order to test file reusability
                 foreach (var file in filesToRegenerate)
                     FileEx.SafeDelete(file);
-            }
+            }*/
 
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)

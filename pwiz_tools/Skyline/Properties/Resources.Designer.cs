@@ -4503,6 +4503,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string FormulaBox_FormulaBox_Help {
+            get {
+                return ResourceManager.GetString("FormulaBox_FormulaBox_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Fragment {
@@ -4849,15 +4858,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("HomeIcon1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to From Clipboard.
-        /// </summary>
-        public static string HtmlFragment_ClipBoardText_From_Clipboard {
-            get {
-                return ResourceManager.GetString("HtmlFragment_ClipBoardText_From_Clipboard", resourceCulture);
             }
         }
         
@@ -6982,11 +6982,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library Intensity.
+        ///   Looks up a localized string similar to Molecule List Note.
         /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Library_Intensity {
+        public static string PasteDlg_UpdateMoleculeType_MoleculeListNote {
             get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Library_Intensity", resourceCulture);
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_MoleculeListNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Note.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_MoleculeNote {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_MoleculeNote", resourceCulture);
             }
         }
         
@@ -7033,6 +7042,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Precursor_Name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Note.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_PrecursorNote {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_PrecursorNote", resourceCulture);
             }
         }
         

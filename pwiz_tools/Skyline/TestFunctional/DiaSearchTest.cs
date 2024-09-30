@@ -146,10 +146,11 @@ namespace pwiz.SkylineTestFunctional
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 104, PeptideCount = 109, PrecursorCount = 128, TransitionCount = 1152 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 110, PeptideCount = 118, PrecursorCount = 137, TransitionCount = 1233 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("check_spectral_files", "0")
+                new KeyValuePair<string, string>("check_spectral_files", "0"),
+                new KeyValuePair<string, string>("remove_precursor_peak", "0")
             };
 
             RunFunctionalTest();
@@ -432,6 +433,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = testDetails.PrecursorMzTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = testDetails.FragmentMzTolerance;
+                if (_testDetails.AdditionalSettings != null)
+                    foreach(var additionalSetting in  testDetails.AdditionalSettings)
+                        importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(additionalSetting.Key, additionalSetting.Value);
                 //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
             });
 

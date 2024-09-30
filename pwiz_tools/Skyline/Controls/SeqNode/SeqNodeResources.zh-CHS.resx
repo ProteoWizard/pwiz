@@ -118,6 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_" xml:space="preserve">
+    <value>显示工具提示时出错。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PeptideGroupTreeNode_ChildHeading__0__" xml:space="preserve">
     <value>{0} 个肽段</value>
   </data>

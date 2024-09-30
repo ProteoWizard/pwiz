@@ -50,6 +50,7 @@ using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -2041,6 +2042,47 @@ namespace pwiz.Skyline
             }
         }
 
+        private SrmDocument HandleSmallMoleculeAutomanage(MassListImporter massListImporter, SrmDocument doc, SrmDocument srmDocument)
+        {
+            if (massListImporter.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
+                // Try applying auto-pick refinement to see if that changes anything 
+                var refine = new RefinementSettings
+                { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
+                var docManaged = refine.Refine(doc);
+                if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
+                    !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
+                {
+                    var existingPrecursorCount = srmDocument.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var existingFragmentCount = srmDocument.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var prompt = string.Format(
+                        Resources
+                            .SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                        managedPrecursorCount - existingPrecursorCount,
+                        managedFragmentCount - existingFragmentCount,
+                        docPrecursorCount - existingPrecursorCount,
+                        docFragmentCount - existingFragmentCount);
+                    var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable,
+                        SkylineResources.SkylineWindow_ImportMassList_Disable, true);
+                    if (result == DialogResult.Cancel)
+                    {
+                        doc = srmDocument;
+                    }
+                    else if (result != DialogResult.No)
+                    {
+                        doc = docManaged;
+                    }
+                }
+            }
+
+            return doc;
+        }
+
         /// <summary>
         /// Process and then add the mass list to the document
         /// </summary>
@@ -2048,15 +2090,12 @@ namespace pwiz.Skyline
         /// <param name="description">Description of action</param>
         /// <param name="assayLibrary">True if input is an assay library</param>
         /// <param name="inputType">"None" means "don't know if it's peptides or small molecules, go figure it out".</param>
-        /// <param name="forceDlg">True if we want to display a column select form, even if we think we know all the columns we need</param>
         public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
-            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none, bool forceDlg = false)
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
             IdentityPath selectPath = null;
-            bool isSmallMoleculeList = true;
-            bool useColSelectDlg = true;
             bool hasHeaders = true;
             bool isAssociateProteins = false;
             List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
@@ -2084,80 +2123,41 @@ namespace pwiz.Skyline
                 }
             }
             hasHeaders = importer.RowReader.Indices.Headers != null;
-            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules 
-                && !forceDlg) // We can skip this check if we will use the dialog regardless
-            {
-                List<TransitionImportErrorInfo> testErrorList = new List<TransitionImportErrorInfo>();
-                var input = new MassListInputs(inputs.Lines.Take(100).ToArray());
-                // Try importing that list to check for errors
-                docCurrent.ImportMassList(input, importer, null,
-                    insertPath, out selectPath, out irtPeptides,
-                    out librarySpectra, out testErrorList, out peptideGroups, null, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
-                if (!testErrorList.Any())
-                {
-                    useColSelectDlg = false; // We should be able to import without consulting the user for column identities
-                }
-            }
-
-            useColSelectDlg |= forceDlg;
             string gridValues = null;
-            if (useColSelectDlg)
+            // Allow the user to confirm/assign column types
+            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath, assayLibrary))
             {
-                // Allow the user to assign column types
-                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath, assayLibrary))
+                if (columnDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                var insParams = columnDlg.InsertionParams;
+                docNew = insParams.Document;
+                proteinAssociations = insParams.ProteinAssociations;
+                selectPath = insParams.SelectPath;
+                irtPeptides = insParams.IrtPeptides;
+                librarySpectra = insParams.LibrarySpectra;
+                peptideGroups = insParams.PeptideGroups;
+                colSelections = insParams.ColSelections;
+                isAssociateProteins = columnDlg.checkBoxAssociateProteins.Checked;
+                docNew = HandleSmallMoleculeAutomanage(importer, docNew, docCurrent); // Offer to automanage new nodes, if appropriate
+
+                // Store the text for the audit log if it didn't come from a file
+                if (string.IsNullOrEmpty(inputs.InputFilename))
                 {
-                    if (columnDlg.ShowDialog(this) != DialogResult.OK)
-                        return;
-
-                    var insParams = columnDlg.InsertionParams;
-                    docNew = insParams.Document;
-                    proteinAssociations = insParams.ProteinAssociations;
-                    selectPath = insParams.SelectPath;
-                    irtPeptides = insParams.IrtPeptides;
-                    librarySpectra = insParams.LibrarySpectra;
-                    peptideGroups = insParams.PeptideGroups;
-                    colSelections = insParams.ColSelections;
-                    isSmallMoleculeList = insParams.IsSmallMoleculeList;
-                    isAssociateProteins = columnDlg.checkBoxAssociateProteins.Checked;
-
-                    // Store the text for the audit log if it didn't come from a file
-                    if (string.IsNullOrEmpty(inputs.InputFilename))
+                    // Grab the final grid contents (may have been altered by Associate Proteins, or user additions/deletions
+                    var sb = new StringBuilder();
+                    if (columnDlg.Importer.RowReader.Indices.Headers != null &&
+                        columnDlg.Importer.RowReader.Indices.Headers.Any())
                     {
-                        // Grab the final grid contents (may have been altered by Associate Proteins, or user additions/deletions
-                        var sb = new StringBuilder();
-                        if (columnDlg.Importer.RowReader.Indices.Headers != null &&
-                            columnDlg.Importer.RowReader.Indices.Headers.Any())
-                        {
-                            // Show the headers as the user sees them
-                            sb.AppendLine(string.Join(columnDlg.Importer.RowReader.Separator.ToString(), columnDlg.Importer.RowReader.Indices.Headers));
-                        }
-                        foreach (var line in columnDlg.Importer.RowReader.Lines.Where(l => !string.IsNullOrEmpty(l)))
-                        {
-                            // Show the input lines as the user sees them
-                            sb.AppendLine(line);
-                        }
-                        gridValues = sb.ToString();
+                        // Show the headers as the user sees them
+                        sb.AppendLine(string.Join(columnDlg.Importer.RowReader.Separator.ToString(), columnDlg.Importer.RowReader.Indices.Headers));
                     }
-                }
-            }
-
-            if (isSmallMoleculeList && useColSelectDlg || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && !useColSelectDlg)
-            {
-                // We should have all the column header info we need, proceed with the import
-                docCurrent = docCurrent.ImportMassList(inputs, importer, null,
-                    insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
-                    out peptideGroups, colSelections, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
-            }
-            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-            {
-                if (errorList.Any())
-                {
-                    // Currently small molecules show just one error with no ability to continue.
-                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
+                    foreach (var line in columnDlg.Importer.RowReader.Lines.Where(l => !string.IsNullOrEmpty(l)))
                     {
-                        errorDlg.ShowDialog(this);
-                        return;
+                        // Show the input lines as the user sees them
+                        sb.AppendLine(line);
                     }
+                    gridValues = sb.ToString();
                 }
             }
 
@@ -2217,42 +2217,6 @@ namespace pwiz.Skyline
                     return;
             }
 
-            RefinementSettings refineAutoPick = null;
-            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-            {
-                // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
-                // Try applying auto-pick refinement to see if that changes anything 
-                var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
-                var docUnrefined = docNew ?? docCurrent;
-                var docRefined = refine.Refine(docUnrefined);
-                if (docRefined.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
-                    !Equals(docRefined.MoleculeTransitionCount, docUnrefined.MoleculeTransitionCount))
-                {
-                    var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                    var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                    var managedPrecursorCount = docRefined.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                    var managedFragmentCount = docRefined.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                    var docPrecursorCount = docUnrefined.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                    var docFragmentCount = docUnrefined.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                    var prompt = string.Format(
-                        Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
-                        managedPrecursorCount - existingPrecursorCount,
-                        managedFragmentCount - existingFragmentCount,
-                        docPrecursorCount - existingPrecursorCount,
-                        docFragmentCount - existingFragmentCount);
-                    var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable, SkylineResources.SkylineWindow_ImportMassList_Disable, true);
-                    if (result == DialogResult.Cancel)
-                    {
-                        return;
-                    }
-                    else if (result != DialogResult.No)
-                    {
-                        docNew = docRefined;
-                        refineAutoPick = refine;
-                    }
-                }
-            }
-
             ModifyDocument(description, doc =>
             {
                 if (ReferenceEquals(doc, docCurrent))
@@ -2263,11 +2227,11 @@ namespace pwiz.Skyline
                     // using the information given by the user.
                     docCurrent = DocumentUI;
                     doc = doc.ImportMassList(inputs, importer, null, insertPath, out selectPath, out _, out _, out _,
-                        out _, colSelections, SrmDocument.DOCUMENT_TYPE.none, hasHeaders, proteinAssociations);
+                        out _, true, colSelections, SrmDocument.DOCUMENT_TYPE.none, hasHeaders, proteinAssociations);
                     if (irtInputs != null)
                     {
                         var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
-                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath, colSelections, hasHeaders);
+                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath, false, colSelections, hasHeaders);
                     }
                     var newSettings = doc.Settings;
                     if (retentionTimeRegressionStore != null)
@@ -2282,8 +2246,8 @@ namespace pwiz.Skyline
                     }
                     if (!ReferenceEquals(doc.Settings, newSettings))
                         doc = doc.ChangeSettings(newSettings);
-                    if (refineAutoPick != null)
-                        doc = refineAutoPick.Refine(doc);
+
+                    doc = HandleSmallMoleculeAutomanage(importer, doc, docCurrent); // Offer to automanage new nodes, if appropriate
                 }
                 catch (Exception x)
                 {
@@ -2991,6 +2955,10 @@ namespace pwiz.Skyline
                                                          prediction.RetentionTime.IsAutoCalculated);
             if (null == prediction.RetentionTime)
             {
+                // If there are any explicit retention times assume this filtering will be meaningful
+                if (document.Molecules.Any(m => m.ExplicitRetentionTime != null))
+                    return true;
+
                 if (!prediction.UseMeasuredRTs || !anyImportedResults)
                 {
                     MessageDlg.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm);
@@ -3402,7 +3370,11 @@ namespace pwiz.Skyline
 
         public void ShowEncyclopeDiaSearchDlg()
         {
-
+            KoinaUIHelpers.CheckKoinaSettings(this, this);
+            if (!KoinaHelpers.KoinaSettingsValid)
+            {
+                return;
+            }
             if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;

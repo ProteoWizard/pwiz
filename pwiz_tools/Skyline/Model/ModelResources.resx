@@ -797,6 +797,9 @@
   <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
     <value>The name '{0}' is already in use from the path {1}</value>
   </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula" xml:space="preserve">
+    <value>Chemical Formula</value>
+  </data>
   <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
     <value>found more than one UniMod match; add terminus and/or amino acid specificity to choose a single match</value>
     <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
@@ -811,5 +814,8 @@
   </data>
   <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
     <value>detected features</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
   </data>
 </root>

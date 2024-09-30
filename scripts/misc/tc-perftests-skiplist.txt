@@ -19,6 +19,7 @@ TestDiaUmpireWiffFile
 TestDiaQeDiaUmpireTutorial
 TestDiaQeDiaUmpireTutorialFullFileset
 TestDiaQeFullSearchTutorial
+TestDiaSearchQeTutorial
 TestEncyclopeDiaSearchTutorialFullFileset
 TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates
