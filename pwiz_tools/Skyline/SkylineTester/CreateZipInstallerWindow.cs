@@ -299,7 +299,7 @@ namespace SkylineTester
 
             // Get all zip files in the current directory.
             zipFilesList.AddRange(Directory.GetFiles(directory, "*.zip"));
-            zipFilesList.AddRange(Directory.GetDirectories(directory, "*.zip"));
+            zipFilesList.AddRange(Directory.GetDirectories(directory, "*.data"));
 
             // Get all sub-directories in current directory:
             var subDirectories = Directory.GetDirectories(directory);

@@ -136,9 +136,10 @@ namespace pwiz.SkylineTestUtil
             {
                 Helpers.Try<Exception>(() =>
                 {
-                    if (Directory.Exists(pathZip))
+                    var dataFolderName = Path.ChangeExtension(pathZip, ".data");
+                    if (Directory.Exists(dataFolderName))
                     {
-                        CopyRecursively(pathZip, destDir);
+                        CopyRecursively(dataFolderName, destDir);
                     }
                     else
                     {
