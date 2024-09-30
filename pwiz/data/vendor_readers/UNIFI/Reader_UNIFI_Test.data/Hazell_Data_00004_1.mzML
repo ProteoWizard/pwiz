@@ -37,7 +37,7 @@
   </dataProcessingList>
   <run id="Hazell_Data_00004_1" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2019-01-28T07:53:14Z" defaultSourceFileRef="waters_connect">
     <chromatogramList count="8" defaultDataProcessingRef="pwiz_Reader_UNIFI_conversion">
-      <chromatogram index="0" id="1: QUAD MRM 287.1&gt;287.1498 6eV ESI+" defaultArrayLength="722">
+      <chromatogram index="0" id="SRM SIC 1: QUAD MRM 287.1&gt;287.1498 6eV ESI+" defaultArrayLength="722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -67,7 +67,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="1" id="2: QUAD MRM 387.2&gt;387.2084 6eV ESI+" defaultArrayLength="722">
+      <chromatogram index="1" id="SRM SIC 2: QUAD MRM 387.2&gt;387.2084 6eV ESI+" defaultArrayLength="722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -97,7 +97,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="2" id="3: QUAD MRM 429.6&gt;429.575 6eV ESI+" defaultArrayLength="722">
+      <chromatogram index="2" id="SRM SIC 3: QUAD MRM 429.6&gt;429.575 6eV ESI+" defaultArrayLength="722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -127,7 +127,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="3" id="4: QUAD MRM 430.2&gt;430.2211 6eV ESI+" defaultArrayLength="722">
+      <chromatogram index="3" id="SRM SIC 4: QUAD MRM 430.2&gt;430.2211 6eV ESI+" defaultArrayLength="722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -157,7 +157,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="4" id="5: QUAD MRM 430.2&gt;430.2418 6eV ESI+" defaultArrayLength="722">
+      <chromatogram index="4" id="SRM SIC 5: QUAD MRM 430.2&gt;430.2418 6eV ESI+" defaultArrayLength="722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -187,7 +187,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="5" id="6: QUAD MRM 580.3&gt;580.309 6eV ESI+" defaultArrayLength="722">
+      <chromatogram index="5" id="SRM SIC 6: QUAD MRM 580.3&gt;580.309 6eV ESI+" defaultArrayLength="722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -217,7 +217,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="6" id="7: QUAD MRM 643.9&gt;643.8588 6eV ESI+" defaultArrayLength="721">
+      <chromatogram index="6" id="SRM SIC 7: QUAD MRM 643.9&gt;643.8588 6eV ESI+" defaultArrayLength="721">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
@@ -247,7 +247,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="7" id="8: QUAD MRM 644.9&gt;644.859 6eV ESI+" defaultArrayLength="721">
+      <chromatogram index="7" id="SRM SIC 8: QUAD MRM 644.9&gt;644.859 6eV ESI+" defaultArrayLength="721">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>

@@ -2011,7 +2011,7 @@ namespace pwiz.Skyline.Model.Results
             return MsDataFileImpl.IsSingleIonCurrentId(id); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
         }
 
-        public static ChromKey FromId(string idIn, bool parseCE)
+        public static ChromKey FromId(string idIn, bool parseCE, double? precursorMz = null, double? productMz = null)
         {
             try
             {
@@ -2039,41 +2039,53 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_PRECURSOR))
                 {
-                    var str = id.Substring(MsDataFileImpl.PREFIX_PRECURSOR.Length);
-                    if (str.StartsWith(@"Q1="))
+                    if (precursorMz == null)
                     {
-                        // Agilent format e.g. "SIM SIC Q1=215.15 start=5.087066667 end=14.497416667"
-                        str = str.Substring(3).Split(' ')[0];
+                        var str = id.Substring(MsDataFileImpl.PREFIX_PRECURSOR.Length);
+                        if (str.StartsWith(@"Q1="))
+                        {
+                            // Agilent format e.g. "SIM SIC Q1=215.15 start=5.087066667 end=14.497416667"
+                            str = str.Substring(3).Split(' ')[0];
+                        }
+
+                        precursorMz = double.Parse(str, CultureInfo.InvariantCulture);
                     }
-                    precursor = double.Parse(str, CultureInfo.InvariantCulture);
+
+                    precursor = precursorMz.Value;
                     product = precursor;
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_SINGLE))
                 {
-                    // Remove the prefix
-                    string mzPart = id.Substring(MsDataFileImpl.PREFIX_SINGLE.Length);
+                    if (precursorMz == null || productMz == null)
+                    {
+                        // Remove the prefix
+                        string mzPart = id.Substring(MsDataFileImpl.PREFIX_SINGLE.Length);
 
-                    // Check of ABI id format match
-                    string[] mzs;
-                    Match match = REGEX_ABI.Match(mzPart);
-                    if (match.Success)
-                    {
-                        mzs = new[] {match.Groups[1].Value, match.Groups[2].Value};
-                    }
-                    // Try simpler comma separated format (Thermo)
-                    else
-                    {
-                        mzs = mzPart.Split(new[] { ',' });
-                        if (mzs.Length != 2)
+                        // Check of ABI id format match
+                        string[] mzs;
+                        Match match = REGEX_ABI.Match(mzPart);
+                        if (match.Success)
                         {
-                            throw new InvalidDataException(
-                                string.Format(ResultsResources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values,
-                                              id));
+                            mzs = new[] {match.Groups[1].Value, match.Groups[2].Value};
                         }
+                        // Try simpler comma separated format (Thermo)
+                        else
+                        {
+                            mzs = mzPart.Split(new[] { ',' });
+                            if (mzs.Length != 2)
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(ResultsResources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values,
+                                                  id));
+                            }
+                        }
+
+                        precursorMz = double.Parse(mzs[0], CultureInfo.InvariantCulture);
+                        productMz = double.Parse(mzs[1], CultureInfo.InvariantCulture);
                     }
 
-                    precursor = double.Parse(mzs[0], CultureInfo.InvariantCulture);
-                    product = double.Parse(mzs[1], CultureInfo.InvariantCulture);
+                    precursor = precursorMz.Value;
+                    product = productMz.Value;
                 }
                 else
                 {

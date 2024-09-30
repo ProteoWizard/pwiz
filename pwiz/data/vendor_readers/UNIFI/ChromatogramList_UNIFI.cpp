@@ -276,7 +276,7 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::createIndex() const
             {
             index_.push_back(IndexEntry());
             IndexEntry& ie = index_.back();
-            ie.id = chromatogramInfo.name;
+            ie.id = "SRM SIC " + chromatogramInfo.name;
             ie.chromatogramInfoIndex = i;
             ie.chromatogramType = MS_SRM_chromatogram;
             }

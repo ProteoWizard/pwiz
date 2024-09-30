@@ -49,20 +49,17 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             return AsyncFetch(GetInjectionsUrl(wcUrl), GetFiles, out remoteException);
         }
 
-        private IEnumerable<WatersConnectFolderObject> EnumerateChildFolderHierarchy(JArray folderArray, string parentId)
+        private IEnumerable<WatersConnectFolderObject> EnumerateChildFolderHierarchy(JObject currentFolder, string parentId)
         {
-            var currentFolder = folderArray.OfType<JObject>().First();
+            var folderArray = currentFolder[@"children"] as JArray;
+            if (folderArray != null)
+                foreach (JObject folder in folderArray)
+                {
+                    foreach(var childFolder in EnumerateChildFolderHierarchy(folder, currentFolder[@"id"].Value<string>()))
+                        yield return childFolder;
+                }
 
-            foreach (JObject folder in folderArray)
-            {
-                var childFolders = folder[@"children"] as JArray;
-                if (childFolders == null || childFolders.Count == 0)
-                    continue;
-                foreach(var childFolder in EnumerateChildFolderHierarchy(childFolders, currentFolder[@"id"].Value<string>()))
-                    yield return childFolder;
-            }
-
-            yield return new WatersConnectFolderObject(folderArray.OfType<JObject>().First(), parentId, false);
+            yield return new WatersConnectFolderObject(currentFolder, parentId, false);
         }
 
         private ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
@@ -78,7 +75,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             {
                 return ImmutableList<WatersConnectFolderObject>.EMPTY;
             }
-            return ImmutableList.ValueOf(EnumerateChildFolderHierarchy(foldersValue, null));
+            return ImmutableList.ValueOf(EnumerateChildFolderHierarchy(foldersValue.First() as JObject, null));
         }
 
         private ImmutableList<WatersConnectFolderObject> GetInjections(Uri requestUri)
