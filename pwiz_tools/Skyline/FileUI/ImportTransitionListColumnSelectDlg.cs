@@ -138,6 +138,9 @@ namespace pwiz.Skyline.FileUI
                 CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
                 CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Note, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_PrecursorNote, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_MoleculeNote, SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote, SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"InChiKey", SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"CAS", SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"HMDB", SrmDocument.DOCUMENT_TYPE.small_molecules),
@@ -579,6 +582,9 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.InChiKeyColumn, @"InChiKey");
             SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
+            SetComboBoxText(columns.PrecursorNoteColumn, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote);
+            SetComboBoxText(columns.MoleculeNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote);
+            SetComboBoxText(columns.MoleculeListNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
             // because if they are then we want to prioritize user headers
@@ -984,6 +990,9 @@ namespace pwiz.Skyline.FileUI
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, nameof(columns.ExplicitRetentionTimeWindowColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, nameof(columns.ExplicitCollisionEnergyColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Note, nameof(columns.NoteColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_PrecursorNote, nameof(columns.PrecursorNoteColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_MoleculeNote, nameof(columns.MoleculeNoteColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote, nameof(columns.MoleculeListNoteColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_S_Lens, nameof(columns.SLensColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, nameof(columns.ConeVoltageColumn))) {}
             else if (SetIonMobilityColumns()) {} // Ion mobility column interactions are somewhat complex
@@ -1205,6 +1214,9 @@ namespace pwiz.Skyline.FileUI
             SetBoxesForMode(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
             SetBoxesForMode(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
             SetBoxesForMode(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
+            SetBoxesForMode(columns.PrecursorNoteColumn, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote);
+            SetBoxesForMode(columns.MoleculeNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote);
+            SetBoxesForMode(columns.MoleculeListNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote);
             SetBoxesForMode(columns.SLensColumn, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
             SetBoxesForMode(columns.ConeVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
             SetBoxesForMode(columns.ExplicitIonMobilityColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);

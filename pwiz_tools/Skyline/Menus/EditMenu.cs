@@ -358,7 +358,13 @@ namespace pwiz.Skyline.Menus
             char separator;
 
             // Check for a FASTA header
-            if (text.StartsWith(@">"))
+            if (text.StartsWith(@">>"))
+            {
+                // This is multi-peptide-list text. Let the text be what it is and
+                // let the importer try to import it.
+                peptideList = true;
+            }
+            else if (text.StartsWith(@">"))
             {
                 // Make sure there is sequence information
                 string[] lines = text.Split('\n');
