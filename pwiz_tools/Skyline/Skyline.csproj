@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>196</ApplicationRevision>
-    <ApplicationVersion>24.1.1.196</ApplicationVersion>
+    <ApplicationRevision>237</ApplicationRevision>
+    <ApplicationVersion>24.1.1.237</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -669,9 +669,7 @@
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\GroupComparison\MsLevelOption.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ScoredBilinearCurve.cs" />
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearTransitionOptimizer.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearRegressionFit.cs" />
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeTransitionDetails.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeType.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\TransitionsQuantLimit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />

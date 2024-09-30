@@ -19,12 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -102,6 +104,11 @@ namespace pwiz.Skyline.EditUI
             {
                 Value = value?.ToString() ?? string.Empty;
             }
+
+            public void SetProperty(SpectrumClassColumn spectrumClassColumn)
+            {
+                Property = spectrumClassColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -171,6 +178,18 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 cbCreateCopy.Enabled = value;
+            }
+        }
+
+        public bool CreateCopyVisible
+        {
+            get
+            {
+                return cbCreateCopy.Visible;
+            }
+            set
+            {
+                cbCreateCopy.Visible = value;
             }
         }
 

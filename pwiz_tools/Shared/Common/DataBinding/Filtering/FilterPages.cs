@@ -32,7 +32,7 @@ namespace pwiz.Common.DataBinding.Filtering
         public FilterPages(IEnumerable<FilterPage> pages, IEnumerable<FilterClause> clauses)
         {
             Pages = ImmutableList.ValueOf(pages);
-            Clauses= ImmutableList.ValueOf(clauses);
+            Clauses = ImmutableList.ValueOf(clauses);
             if (Clauses.Count != Pages.Count)
             {
                 throw new ArgumentException();

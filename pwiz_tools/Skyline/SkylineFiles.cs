@@ -50,6 +50,7 @@ using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -3437,7 +3438,11 @@ namespace pwiz.Skyline
 
         public void ShowEncyclopeDiaSearchDlg()
         {
-
+            KoinaUIHelpers.CheckKoinaSettings(this, this);
+            if (!KoinaHelpers.KoinaSettingsValid)
+            {
+                return;
+            }
             if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;
