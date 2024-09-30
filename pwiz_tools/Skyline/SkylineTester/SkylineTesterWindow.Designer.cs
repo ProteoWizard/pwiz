@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
+using ToolTip = System.Windows.Forms.ToolTip;
 
 namespace SkylineTester
 {
