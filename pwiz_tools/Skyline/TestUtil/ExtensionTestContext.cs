@@ -129,16 +129,15 @@ namespace pwiz.SkylineTestUtil
             return GetProjectDirectory(relativePath);
         }
 
-        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir,
-            string[] persistentFiles, string persistentFilesDir)
+        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
         {
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
-            Helpers.Try<Exception>(() =>
+            bool zipFileExists = File.Exists(pathZip);
+            if (zipFileExists)
             {
-                bool zipFileExists = File.Exists(pathZip);
-                if (zipFileExists)
+                try
                 {
-                    try
+                    Helpers.Try<Exception>(() =>
                     {
                         using ZipFile zipFile = ZipFile.Read(pathZip);
                         foreach (ZipEntry zipEntry in zipFile)
@@ -149,36 +148,34 @@ namespace pwiz.SkylineTestUtil
                                 // so skip that and avoid occasional "file in use" exceptions on directory creation.
                                 // N.B. some tests expect the persisted directory structure to be duplicated locally,
                                 // even if the files are not, so for those do the directory creation.
-                                continue;
+                                continue; 
                             }
-
                             if (IsPersistent(persistentFiles, zipEntry.FileName))
-                                zipEntry.Extract(persistentFilesDir,
-                                    ExtractExistingFileAction
-                                        .DoNotOverwrite); // leave persistent files alone                        
+                                zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
                             else
                                 zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
-                    }
+                    });
                 }
+                catch (Exception ex)
+                {
+                    throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
+                }
+            }
 
-                var dataFolderName = Path.ChangeExtension(pathZip, ".data");
-                if (Directory.Exists(dataFolderName))
-                {
-                    CopyRecursively(dataFolderName, destDir, zipFileExists);
-                }
-                else
-                {
-                    if (!zipFileExists)
-                    {
-                        throw new ApplicationException(string.Format("Test zip file {0} and test folder {1} do not exist", pathZip, dataFolderName));
-                    }
-                }
-            });
+            // If there exists a ".data" folder with the same base name as the .zip, copy all files from this.
+            // This allows overriding some of the files from the .zip, or checking the entire .zip in as an exploded
+            // .data folder
+            var dataFolderName = Path.ChangeExtension(pathZip, ".data");
+            if (Directory.Exists(dataFolderName))
+            {
+                CopyRecursively(dataFolderName, destDir, zipFileExists);
+            }
+            else if (!zipFileExists)
+            {
+                throw new ApplicationException(string.Format(
+                    "Test zip file {0} and test folder {1} do not exist", pathZip, dataFolderName));
+            }
         }
 
         private static bool IsPersistent(string[] persistentFiles, string zipEntryFileName)
