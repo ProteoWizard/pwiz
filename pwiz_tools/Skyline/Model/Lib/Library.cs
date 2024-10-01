@@ -3101,5 +3101,26 @@ namespace pwiz.Skyline.Model.Lib
                 result.Add($@"FilePath: {FilePath}");
             return TextUtil.LineSeparate(result);
         }
+
+        public double? GetScoreTypeCutoff(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Value;
+        }
+
+        public ScoreType GetScoreType(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Key;
+        }
+
+        private KeyValuePair<ScoreType, double?> GetScoreTypeKvp(string scoreTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(scoreTypeName) || ScoreThresholds == null)
+                return default(KeyValuePair<ScoreType, double?>);
+
+            return ScoreThresholds.FirstOrDefault(
+                s => s.Key.NameInvariant.Equals(scoreTypeName, StringComparison.Ordinal));
+        }
     }
 }

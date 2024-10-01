@@ -35,7 +35,9 @@ namespace pwiz.Skyline.Model
 
         public TargetResolver(IEnumerable<Target> targetsEnum)
         {
-            var targets = targetsEnum.ToArray();
+            var targets = targetsEnum.Select(t => t.ToSerializableString())
+                .Distinct()
+                .Select(Target.FromSerializableString).ToArray(); // Normalizes masses (e.g. "344.300548579909" vs "344.300548580")
 
             // For molecules allow lookup by formula, InChIKey etc in addition to display name
             var accessions = new HashSet<Tuple<string, Target>>();
@@ -82,9 +84,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                _targetsByName = targets.Select(t => t.ToSerializableString())
-                    .Distinct()
-                    .Select(Target.FromSerializableString).ToLookup(GetTargetDisplayName);
+                _targetsByName = targets.ToLookup(GetTargetDisplayName);
             }
 
         }
