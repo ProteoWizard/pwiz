@@ -195,6 +195,7 @@
     <Compile Include="FullScanPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
+    <Compile Include="ImportPromptToSaveTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />
