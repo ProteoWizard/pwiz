@@ -196,17 +196,17 @@ namespace SkylineTester
 
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
-                commandShell.Add("# Setting git's http postBuffer size to 500MB, should help with clone on unstable networks");
-                commandShell.Add("{0} config --global http.postBuffer 524288000", git.Quote());
+
                 // Add the --progress flag for richer logging - git leaves out most progress info when it isn't writing to an actual terminal
+                // Add the "-c http.postBuffer=524288000" argument to help with clone on unstable networks
                 if (branchName.Contains("master"))
                 {
-                    commandShell.AddWithRetry("{0} clone {1} --recurse-submodules --progress {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} -c http.postBuffer=524288000 clone {1} --recurse-submodules --progress {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
                 }
                 else
                 {
                     var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
-                    commandShell.AddWithRetry("{0} clone {1} --recurse-submodules --progress -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} -c http.postBuffer=524288000 clone {1} --recurse-submodules --progress -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
                 }
             }
 
