@@ -35,6 +35,11 @@ namespace AutoQCTest
         public const string PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
         public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
 
+        /// <summary>
+        /// Set this environment variable on your system to the password for
+        /// the PANORAMAWEB_USER above. Ask Vagisha or someone else with access
+        /// to share this password with you.
+        /// </summary>
         private const string PASSWORD_ENVT_VAR = "PANORAMAWEB_PASSWORD";
 
         public static string GetTestFilePath(string fileName)
