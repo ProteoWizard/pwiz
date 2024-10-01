@@ -79,12 +79,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.cbGpf, "cbGpf");
             this.cbGpf.Name = "cbGpf";
+            this.helpTip.SetToolTip(this.cbGpf, resources.GetString("cbGpf.ToolTip"));
             this.cbGpf.UseVisualStyleBackColor = true;
             // 
             // cbDiaUmpire
             // 
             resources.ApplyResources(this.cbDiaUmpire, "cbDiaUmpire");
             this.cbDiaUmpire.Name = "cbDiaUmpire";
+            this.helpTip.SetToolTip(this.cbDiaUmpire, resources.GetString("cbDiaUmpire.ToolTip"));
             this.cbDiaUmpire.UseVisualStyleBackColor = true;
             // 
             // radioDIA

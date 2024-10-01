@@ -61,12 +61,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             dia_gpf = 2
         }
 
-        private bool DataIsDIA { get; }
+        private bool DataIsDIA => (DataType) AdditionalSettings[@"data_type"].Value != DataType.dda;
+        private string PepXmlSuffix => DataIsDIA ? @"_rank1.pepXML" : @".pepXML";
 
         public MsFraggerSearchEngine(DataType dataType)
         {
-            DataIsDIA = dataType != DataType.dda;
-
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {CHECK_SPECTRAL_FILES, new Setting(CHECK_SPECTRAL_FILES, 1, 0, 1)},
@@ -293,7 +292,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var spectrumFilename in SpectrumFileNames)
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                            spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                         string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
                         _intermediateFiles.Add(cruxInputFilepath);
@@ -325,7 +324,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var spectrumFilename in SpectrumFileNames)
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                            spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
                         _intermediateFiles.Add(msfraggerPepXmlFilepath);
                         FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId, this);
