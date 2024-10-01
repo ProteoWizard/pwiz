@@ -196,6 +196,8 @@ namespace SkylineTester
 
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
+                commandShell.Add("# Setting git's http postBuffer size to 500MB, should help with clone on unstable networks");
+                commandShell.Add("{0} config --global http.postBuffer 524288000", git.Quote());
                 // Add the --progress flag for richer logging - git leaves out most progress info when it isn't writing to an actual terminal
                 if (branchName.Contains("master"))
                 {
