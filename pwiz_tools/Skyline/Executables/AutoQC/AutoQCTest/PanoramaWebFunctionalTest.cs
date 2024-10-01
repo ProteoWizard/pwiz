@@ -15,9 +15,9 @@ namespace AutoQCTest
     public class PanoramaWebFunctionalTest : AutoQcBaseFunctionalTest
     {
         /// <summary>
-        /// This test uploads the QC document to a test folder on PanoramaWeb. The test user (skyline_tester@proteinms.net)
+        /// This test uploads the QC document to a test folder on PanoramaWeb. The test user (skyline_tester_admin@proteinms.net)
         /// must have access to the folder https://panoramaweb.org/SkylineTest/AutoQcTest/project-begin.view
-        /// for this test to run successfully.
+        /// for this test to run successfully. The test user's password must be saved in the environment variable PANORAMAWEB_PASSWORD
         /// This test does the following:
         /// 1. Create a test subfolder under SkylineTest/AutoQCTest folder on PanoramaWeb.  Set the folder type to "QC".
         /// 2. Create a new AutoQC Loader configuration
