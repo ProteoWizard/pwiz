@@ -37,7 +37,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestCmdLineAssociateProteins()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"Test\CmdLineAssociateProteinsTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"Test\CmdLineAssociateProteinsTest.data");
             var skylineExeFolder = Path.GetDirectoryName(typeof(SkylineWindow).Assembly.Location);
             Assert.IsNotNull(skylineExeFolder);
             var skylineCmdExePath = Path.Combine(skylineExeFolder, "SkylineCmd.exe");
