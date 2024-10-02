@@ -19,45 +19,40 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Threading;
-using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
-using static pwiz.Skyline.Model.AuditLog.Databinding.AuditLogColumn;
 
 namespace pwiz.SkylineTestConnected.Results.RemoteApi
 {
     [TestClass]
     public class RemoteApiTest : AbstractUnitTest
     {
-        private static RemoteAccount GetUnifiAccount(bool assumeEnabled = false)
+        private static RemoteAccount GetUnifiAccount(bool dummyAccount = false)
         {
-            if (!assumeEnabled && !UnifiTestUtil.EnableUnifiTests)
-                return null;
+            if (dummyAccount)
+                return UnifiAccount.DEFAULT.ChangeUsername("myusername").ChangePassword("mysecretpassword");
             return UnifiTestUtil.GetTestAccount();
         }
 
-        private static RemoteAccount GetWatersConnectAccount(bool assumeEnabled = false)
+        private static RemoteAccount GetWatersConnectAccount(bool dummyAccount = false)
         {
-            if (!assumeEnabled && !WatersConnectTestUtil.EnableWatersConnectTests)
-                return null;
+            if (dummyAccount)
+                return WatersConnectAccount.DEFAULT.ChangeUsername("myusername").ChangePassword("mysecretpassword");
             return WatersConnectTestUtil.GetTestAccount();
         }
 
         private void TestRemoteSessionListContents(RemoteAccount remoteAccount)
         {
+            if (remoteAccount == null)
+                return;
 
             using var session = RemoteSession.CreateSession(remoteAccount);
             var contents = new List<RemoteItem>();
