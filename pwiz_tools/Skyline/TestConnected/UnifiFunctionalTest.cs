@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.Drawing;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
@@ -101,6 +99,7 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse(_selectItem))));
 
             var chromGraph = FindOpenForm<GraphChromatogram>();
+            WaitForConditionUI(5000, () => chromGraph.CurveCount == _filenames.Length);
             Assert.AreEqual(_filenames.Length, chromGraph.CurveCount);
 
             if (_chromatogramPoint != null)
