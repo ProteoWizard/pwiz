@@ -16,11 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -60,6 +65,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             WaitForDocumentLoaded();
             Assert.AreEqual(1, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count);
+
+            var originalLibPath = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.First().FilePath;
+
             string minimizedZipFile = TestFilesDir.GetTestPath("MinimizedDocument.sky.zip");
             RunUI(() =>
             {
@@ -77,6 +85,62 @@ namespace pwiz.SkylineTestFunctional
             {
                 var spectra = library.GetSpectra(key, null, LibraryRedundancy.all).ToArray();
                 Assert.AreNotEqual(0, spectra.Length);
+            }
+            var minimizedLibPath = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.First().FilePath;
+
+
+            var originalLibConnectionStr = new SQLiteConnectionStringBuilder { DataSource = originalLibPath }.ToString();
+            var minimizedLibConnectionStr = new SQLiteConnectionStringBuilder { DataSource = minimizedLibPath }.ToString();
+
+            // Test for Issue 1022: idFileName column values are not set in minimized libraries
+            CompareTable("SpectrumSourceFiles", originalLibConnectionStr, minimizedLibConnectionStr);
+            CompareTable("ScoreTypes", originalLibConnectionStr, minimizedLibConnectionStr);
+        }
+
+        private static void CompareTable(string tableName, string originalLibConnectionStr, string minimizedLibConnectionStr)
+        {
+            var excludedCols = new[] { @"rowid", @"id" };
+
+            List<string> originalLibColNames;
+            List<string> originalLibRows;
+            
+            using (var connection = new SQLiteConnection(originalLibConnectionStr))
+            {
+                connection.Open();
+                Assert.IsTrue(SqliteOperations.TableExists(connection, tableName));
+                originalLibColNames = SqliteOperations.GetColumnNamesFromTable(connection, tableName);
+                originalLibRows = SqliteOperations.DumpTable(connection, tableName, ", ", null, excludedCols).ToList();
+            }
+            originalLibColNames.Sort();
+            originalLibRows.Sort();
+
+            List<string> minimizedLibColNames;
+            List<string> minimizedLibRows;
+            using (var connection = new SQLiteConnection(minimizedLibConnectionStr))
+            {
+                connection.Open();
+                Assert.IsTrue(SqliteOperations.TableExists(connection, tableName));
+                minimizedLibColNames = SqliteOperations.GetColumnNamesFromTable(connection, tableName);
+                minimizedLibRows = SqliteOperations.DumpTable(connection, tableName, ", ", null, excludedCols).ToList();
+            }
+            minimizedLibColNames.Sort();
+            minimizedLibRows.Sort();
+
+            // Compare column names
+            CollectionAssert.AreEqual(originalLibColNames, minimizedLibColNames,
+                TextUtil.LineSeparate(
+                    $"Column names for table {tableName} are not the same in the original and minimized libraries.",
+                    "Original library columns:", TextUtil.LineSeparate(originalLibColNames),
+                    "Minimized library columns:", TextUtil.LineSeparate(minimizedLibColNames)));
+
+            // Compare row values. Minimized library can have fewer rows than the original library (e.g. ScoreTypes table)
+            foreach (var minimizedLibRow in minimizedLibRows)
+            {
+                Assert.IsTrue(originalLibRows.Contains(minimizedLibRow), 
+                    TextUtil.LineSeparate(
+                        $"Original library does not contain a row in table {tableName} with the following values:", minimizedLibRow,
+                        "Original library rows:" , TextUtil.LineSeparate(originalLibRows),
+                        "Minimized library rows:", TextUtil.LineSeparate(minimizedLibRows)));
             }
         }
     }

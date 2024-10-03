@@ -430,6 +430,8 @@ namespace pwiz.SkylineTestTutorial
                     OkDialog(scheduleDlg, scheduleDlg.OkDialog);
                 }
 
+                RunUI(() => SkylineWindow.SaveDocument());
+
                 // Import CE optimization runs
                 using (new WaitDocumentChange(1, true))
                 {

@@ -21,7 +21,7 @@
         you feel the need. The default method in Skyline for calculating CE values is to use a linear equation of the form:
     </p>
     <p>
-        CE = slope * (precursor <em>m/z</em>) + intercept
+        CE = slope * (precursor <i>m/z</i>) + intercept
     </p>
     <p>
         Each charge state is allowed to have a separate equation.
@@ -57,7 +57,7 @@
     </p>
     <p>
         It will contain all the files necessary for this tutorial. Open the file CE_Vantage_15mTorr.sky in this folder, either by double-clicking on it
-        in Windows Explorer, or by clicking <strong>Open</strong> in the <strong>File</strong> menu in Skyline.
+        in Windows Explorer, or by clicking <b>Open</b> in the <b>File</b> menu in Skyline.
     </p>
     <h1>Deriving a New Linear Equation</h1>
     <p>
@@ -80,11 +80,11 @@
         To look at the linear equation settings used in this experiment do the following:
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
-        <li>Click the <strong>Prediction</strong> tab.</li>
-        <li>From the <strong>Collision energy</strong> drop-list, Choose <strong>&lt;Edit list…&gt;</strong>.</li>
-        <li>In the <strong>Collision Energy Regression</strong> list, select “Thermo”.</li>
-        <li>Click the <strong>Edit</strong> button.</li>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>From the <b>Collision energy</b> drop-list, Choose <b>&lt;Edit list…&gt;</b>.</li>
+        <li>In the <b>Collision Energy Regression</b> list, select “Thermo”.</li>
+        <li>Click the <b>Edit</b> button.</li>
     </ul>
     <p class="keep-next">
         You should be presented with a form that looks like this:
@@ -94,8 +94,8 @@
     </p>
     <p>
         In it you can see the slope and y-intercept values used for both charge 2 and charge 3 precursors. Any precursor charges that are not covered
-        will use the linear equation for the closest charge. At the bottom of the form, you can also see the fields <strong>Step count</strong> and
-        <strong>Step size</strong>. These tell Skyline how many transitions to measure for each product ion, at what voltage interval.
+        will use the linear equation for the closest charge. At the bottom of the form, you can also see the fields <b>Step count</b> and
+        <b>Step size</b>. These tell Skyline how many transitions to measure for each product ion, at what voltage interval.
     </p>
     <p>
         For this experiment, we used 5 steps on either side of the equation predicted value, for a total of 11 transitions per product ion, each 1 volt
@@ -117,7 +117,7 @@
         optimization. To create an unscheduled transition list do the following:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong>, and then click <strong>Transition List</strong>.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and then click <b>Transition List</b>.</li>
     </ul>
     <p class="keep-next">
         Make sure the form looks like this:
@@ -126,10 +126,10 @@
         <img src="image-1.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Specify your OptimizeCE folder as the location to save.</li>
         <li>Name the file CE_Vantage_15mTorr_unscheduled.csv</li>
-        <li>Click the <strong>Save</strong> button.</li>
+        <li>Click the <b>Save</b> button.</li>
     </ul>
     <p>
         When you open the resulting CSV file in Excel, you will find it is an unscheduled Skyline transition list for a Thermo Scientific SRM
@@ -217,12 +217,12 @@
         file by doing the following:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Import</strong>, and then click <strong>Results</strong>.</li>
-        <li>Select <strong>Add one new replicate</strong>.</li>
-        <li>In the <strong>Name</strong> field, enter ‘Unscheduled’.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b>, and then click <b>Results</b>.</li>
+        <li>Select <b>Add one new replicate</b>.</li>
+        <li>In the <b>Name</b> field, enter ‘Unscheduled’.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Select the file CE_Vantage_15mTorr_unscheduled.raw</li>
-        <li>Click the <strong>Open</strong> button.</li>
+        <li>Click the <b>Open</b> button.</li>
     </ul>
     <p class="keep-next">
         After the import is completed, Skyline should look like this:
@@ -236,26 +236,25 @@
     <h2>Creating Optimization Methods</h2>
     <p>
         Skyline now has the information it needs to create scheduled optimization methods for the 1320 transitions required. To create these methods:
-    
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong>, and then click <strong>Transition List</strong>.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and then click <b>Transition List</b>.</li>
         <li>Edit the form to look like this:</li>
     </ul>
     <p>
         <img src="image-3.png" />
     </p>
     <p>
-        NOTE: We eventually realized that 132 was a better value for <strong>Max concurrent transitions</strong>, because it allows 3 precursors * 4
+        NOTE: We eventually realized that 132 was a better value for <b>Max concurrent transitions</b>, because it allows 3 precursors * 4
         transitions * 11 CE values to be measured concurrently. The number 110 used in this tutorial is a vestige of initial measurements made with 5
         transitions. We encourage you to consider your transitions per precursor * CE values carefully in choosing this value to maximize your
         measurements per method.
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Specify your OptimizeCE folder as the location to save.</li>
         <li>Name the file CE_Vantage_15mTorr.csv</li>
-        <li>Click the <strong>Save</strong> button.</li>
+        <li>Click the <b>Save</b> button.</li>
     </ul>
     <p class="keep-next">
         These actions should cause Skyline to create 5 new transition lists of similar size, and Windows Explorer should show
@@ -462,7 +461,6 @@
     <p>
         There are 11 CE values for each product ion. The product m/z value is incremented slightly for each value as first described by Sherwood et
         al., 2009<sup>3</sup>. This provides a platform independent means for Skyline to recognize the CE values when the measured data is imported.
-    
     </p>
     <h2>Analyzing Optimization Data</h2>
     <p>
@@ -470,23 +468,23 @@
         import the instrument output files we have supplied by doing the following:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Import</strong>, and then click <strong>Results</strong>.</li>
-        <li>Select <strong>Add one new replicate</strong>.</li>
-        <li>In the <strong>Name</strong> field, enter “Optimize CE”.</li>
-        <li>From the <strong>Optimizing</strong> drop-list, choose “Collision Energy”.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b>, and then click <b>Results</b>.</li>
+        <li>Select <b>Add one new replicate</b>.</li>
+        <li>In the <b>Name</b> field, enter “Optimize CE”.</li>
+        <li>From the <b>Optimizing</b> drop-list, choose “Collision Energy”.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>In the Import Results Files dialog use shift-click to select the 5 raw files<br />CE_Vantage_15mTorr_0001 – 0005.raw</li>
-        <li>Click the <strong>Open</strong> button.</li>
+        <li>Click the <b>Open</b> button.</li>
     </ul>
     <p>
         While the files are importing, do the following to prepare for viewing the collected data:
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, choose <strong>Transitions</strong>, and then click <strong>Single</strong> (F10).</li>
-        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong>, and then click <strong>Replicate Comparison</strong> (F7).</li>
-        <li>On the <strong>View</strong> menu, choose <strong>Auto-Zoom</strong>, and then click <strong>Best Peak</strong> (F11).</li>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b>, and then click <b>Single</b> (F10).</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b>, and then click <b>Replicate Comparison</b> (F7).</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b>, and then click <b>Best Peak</b> (F11).</li>
         <li>Arrange the graph windows for side-by-side viewing.</li>
-        <li>Select a peptide or precursor in the <strong>Targets</strong> view.</li>
+        <li>Select a peptide or precursor in the <b>Targets</b> view.</li>
     </ul>
     <p>
         Once the data is loaded, Skyline should look something like this:
@@ -495,7 +493,7 @@
         <img src="image-5.png" />
     </p>
     <p>
-        The red bar in the middle of the <strong>Peak Areas</strong> view and the red curve among the chromatograms is the measurement for the
+        The red bar in the middle of the <b>Peak Areas</b> view and the red curve among the chromatograms is the measurement for the
         transition with the CE calculated by the starting linear equation. In the image above, the maximum peak area was achieved at a CE value 4
         volts lower (labeled Step -4 in the legend) than the calculated default CE.
     </p>
@@ -510,8 +508,8 @@
         retention time of 9.8 minutes to 11.0 minutes. But it is worth looking at from another perspective:
     </p>
     <ul>
-        <li>Select IDALNENK in the <strong>Targets</strong> view.</li>
-        <li>Right-click in the peak area chart, choose <strong>Normalize To</strong> and click <strong>Total.</strong> </li>
+        <li>Select IDALNENK in the <b>Targets</b> view.</li>
+        <li>Right-click in the peak area chart, choose <b>Normalize To</b> and click <b>Total</b>. </li>
     </ul>
     <p>
         In this view all peak areas are normalized to the area of the calculated CE value in red. The area of the peak with the calculated CE is given
@@ -529,10 +527,10 @@
         To create a newly optimized linear equation for CE using this data, perform the following steps:
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, choose <strong>Transition Settings</strong>.</li>
-        <li>From the <strong>Collision energy</strong> drop-list, choose <strong>&lt;Add…&gt;</strong>.</li>
-        <li>In the <strong>Name</strong> field, enter ‘Thermo Vantage Tutorial’.</li>
-        <li>Click the <strong>Use Results</strong> button.</li>
+        <li>On the <b>Settings</b> menu, choose <b>Transition Settings</b>.</li>
+        <li>From the <b>Collision energy</b> drop-list, choose <b>&lt;Add…&gt;</b>.</li>
+        <li>In the <b>Name</b> field, enter ‘Thermo Vantage Tutorial’.</li>
+        <li>Click the <b>Use Results</b> button.</li>
     </ul>
     <p>
         If you deleted the two suggested peptides, Skyline should calculate the equation coefficients as:
@@ -558,7 +556,7 @@
         You may wonder how close they are to the original values.
     </p>
     <ul>
-        <li>Click the <strong>Show Graph</strong> button to find out.</li>
+        <li>Click the <b>Show Graph</b> button to find out.</li>
     </ul>
     <p>
         Skyline will present the following graphs:
@@ -571,7 +569,7 @@
         equations.
     </p>
     <ul>
-        <li>To return to the document, click the <strong>Close</strong> button and two <strong>OK</strong> buttons.</li>
+        <li>To return to the document, click the <b>Close</b> button and two <b>OK</b> buttons.</li>
     </ul>
     <h1>Optimizing Each Transition</h1>
     <p>
@@ -583,20 +581,20 @@
         To cause Skyline to use optimal measured values in exported methods:
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
-        <li>Check the <strong>Use optimization values when present</strong> checkbox.</li>
-        <li>From the <strong>Optimize by</strong> drop-list, choose <strong>Transition</strong>.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Check the <b>Use optimization values when present</b> checkbox.</li>
+        <li>From the <b>Optimize by</b> drop-list, choose <b>Transition</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         And, to export a method with each transition optimized separately:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong>, and click <strong>Transition List</strong>.</li>
-        <li>Select <strong>Single method</strong>.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and click <b>Transition List</b>.</li>
+        <li>Select <b>Single method</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Name the file CE_Vantage_15mTorr_optimized.csv</li>
-        <li>Click the <strong>Save</strong> button.</li>
+        <li>Click the <b>Save</b> button.</li>
     </ul>
     <p>
         If you open the exported transition list in Excel, you will see the same 9 columns, because this is still a scheduled method. Even when you
@@ -750,7 +748,7 @@
     <h1>Conclusion</h1>
     <p>
         There is certainly more to learn about CE optimization. For instance, you can look into storing your optimized transition CE values in an
-        optimization library, also on the <strong>Transition Settings – Prediction</strong> tab. Hopefully this tutorial will be enough to get you
+        optimization library, also on the <b>Transition Settings – Prediction</b> tab. Hopefully this tutorial will be enough to get you
         started on using Skyline for your CE optimization needs. If your instrument is not now explicitly covered by name in the Transition Settings
         list of linear equations for CE calculation, you may want to run your own tests to ensure you are using a linear equation that calculates the
         best CE values as accurately as possible. If you are performing SRM experiments with many peptides in charge states not covered by an existing
@@ -759,16 +757,16 @@
     </p>
     <h1>Bibliography</h1>
     <p class="bibliography">
-        1. MacLean, B. <em>et al.</em> Effect of Collision Energy Optimization on the Measurement of Peptides by Selected Reaction
-        Monitoring (SRM) Mass Spectrometry. <em>Anal. Chem.</em> <strong>82</strong>, 10116–10124 (2010).
+        1. MacLean, B. <i>et al</i>. Effect of Collision Energy Optimization on the Measurement of Peptides by Selected Reaction
+        Monitoring (SRM) Mass Spectrometry. <i>Anal. Chem</i>. <b>82</b>, 10116–10124 (2010).
     </p>
     <p class="bibliography">
-        2. Schmidlin, T. <em>et al.</em> Diet-induced neuropeptide expression: feasibility of quantifying extended and highly
-        charged endogenous peptide sequences by selected reaction monitoring. <em>Anal. Chem.</em> <strong>87</strong>, 9966–9973 (2015).
+        2. Schmidlin, T. <i>et al</i>. Diet-induced neuropeptide expression: feasibility of quantifying extended and highly
+        charged endogenous peptide sequences by selected reaction monitoring. <i>Anal. Chem</i>. <b>87</b>, 9966–9973 (2015).
     </p>
     <p class="bibliography">
-        3. Sherwood, C. A. <em>et al.</em> Rapid Optimization of MRM-MS Instrument Parameters by Subtle Alteration of Precursor
-        and Product m/z Targets. <em>J. Proteome Res.</em> <strong>8</strong>, 3746–3751 (2009).
+        3. Sherwood, C. A. <i>et al</i>. Rapid Optimization of MRM-MS Instrument Parameters by Subtle Alteration of Precursor
+        and Product m/z Targets. <i>J. Proteome Res</i>. <b>8</b>, 3746–3751 (2009).
     </p>
 </body>
 

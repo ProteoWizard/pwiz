@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -467,7 +468,7 @@ namespace pwiz.SkylineTestFunctional
                 // Set the match option to "Protein Gene"
                 createExprDlg.matchComboBox.SelectedIndex = 4;
             });
-            var proteinList = "Aldoc" + '\n' + "Serpinc1";
+            var proteinList = TextUtil.LineSeparate("Aldoc", "Serpinc1");
             RunUI(() =>
             {
                 // Verify that typing into the list is parsed to a REGEX
@@ -476,11 +477,16 @@ namespace pwiz.SkylineTestFunctional
             });
             // Two proteins should match
             WaitForCreateRowsChange(createExprDlg, 2);
+
+            // Test empty text; expect matches everything
+            RunUI(()=>matchExprListDlg.proteinsTextBox.Text = string.Empty);
+            WaitForCreateRowsChange(createExprDlg, 48);
+
             RunUI(() =>
             {
                 // Test case insensitivity
                 matchExprListDlg.proteinsTextBox.Clear();
-                matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpperInvariant();
+                matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpper();
             });
             // Two proteins should match
             WaitForCreateRowsChange(createExprDlg, 2);

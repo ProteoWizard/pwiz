@@ -1,0 +1,63 @@
+import modules path feature ;
+
+rule build-properties ( targets + : sources * : properties * )
+{
+    local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
+
+	path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
+	path-constant CURRENT_DIR : $(SKYLINE_PATH)/Executables/DevTools/TutorialLocalization ;
+	path-constant OUTPUT_DIR : $(CURRENT_DIR)/TutorialLocalization/bin/Release ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
+}
+
+rule do_tutorial_localization ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_tutorial_localization
+{
+    $(MSVC_CURRENT_SETUP_SCRIPT)
+    echo Building $(current-dir) TutorialLocalization.exe
+    msbuild $(CURRENT_DIR)\TutorialLocalization\TutorialLocalization.csproj /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+make TutorialLocalization.exe
+    : # sources
+    : # actions
+        @do_tutorial_localization
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+;
+
+rule do_merged_tutorials ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_merged_tutorials
+{
+	echo creating MergedTutorials.zip
+	$(OUTPUT_DIR)\TutorialLocalization.exe $(SKYLINE_PATH)/Documentation/Tutorials --output $(OUTPUT_DIR)/MergedTutorials.zip
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make MergedTutorials.zip
+    : # sources
+    : # actions
+        @do_merged_tutorials
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>TutorialLocalization.exe
+	;
+
+    

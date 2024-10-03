@@ -132,12 +132,14 @@ namespace pwiz.SkylineTestUtil
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
         {
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
-            try
+            bool zipFileExists = File.Exists(pathZip);
+            if (zipFileExists)
             {
-                Helpers.Try<Exception>(() =>
+                try
                 {
-                    using (ZipFile zipFile = ZipFile.Read(pathZip))
+                    Helpers.Try<Exception>(() =>
                     {
+                        using ZipFile zipFile = ZipFile.Read(pathZip);
                         foreach (ZipEntry zipEntry in zipFile)
                         {
                             if (zipEntry.IsDirectory && !IsPersistentDir(persistentFiles, zipEntry.FileName))
@@ -153,12 +155,26 @@ namespace pwiz.SkylineTestUtil
                             else
                                 zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                         }
-                    }
-                });
+                    });
+                }
+                catch (Exception ex)
+                {
+                    throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
+                }
             }
-            catch (Exception ex)
+
+            // If there exists a ".data" folder with the same base name as the .zip, copy all files from this.
+            // This allows overriding some of the files from the .zip, or checking the entire .zip in as an exploded
+            // .data folder
+            var dataFolderName = Path.ChangeExtension(pathZip, ".data");
+            if (Directory.Exists(dataFolderName))
             {
-                throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
+                CopyRecursively(dataFolderName, destDir, zipFileExists);
+            }
+            else if (!zipFileExists)
+            {
+                throw new ApplicationException(string.Format(
+                    "Test zip file {0} and test folder {1} do not exist", pathZip, dataFolderName));
             }
         }
 
@@ -299,6 +315,23 @@ namespace pwiz.SkylineTestUtil
 #else
                 return false;
 #endif
+            }
+        }
+
+        private static void CopyRecursively(string sourcePath, string destinationPath, bool overwrite)
+        {
+            Directory.CreateDirectory(destinationPath);
+            foreach (string file in Directory.GetFiles(sourcePath))
+            {
+                string destinationFile = Path.Combine(destinationPath, Path.GetFileName(file));
+                File.Copy(file, destinationFile, overwrite);
+            }
+
+            // Copy each subdirectory using recursion.
+            foreach (string directory in Directory.GetDirectories(sourcePath))
+            {
+                string destinationDirectory = Path.Combine(destinationPath, Path.GetFileName(directory));
+                CopyRecursively(directory, destinationDirectory, overwrite);
             }
         }
     }

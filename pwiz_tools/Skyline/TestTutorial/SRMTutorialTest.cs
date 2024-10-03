@@ -427,7 +427,7 @@ namespace pwiz.SkylineTestTutorial
                 GetTestPath(string.Format("Tutorial-4_Parameters\\unscheduled_dwell{0}ms.wiff", 60)),
                 GetTestPath(string.Format("Tutorial-4_Parameters\\unscheduled_dwell{0}ms.wiff", 100))
             };
-
+            RunUI(() => SkylineWindow.SaveDocument());
             ImportResults("", paths2, null, false);
             RestoreViewOnScreen(48);
             RunUI(() => SkylineWindow.AutoZoomBestPeak());

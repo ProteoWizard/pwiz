@@ -129,6 +129,7 @@ namespace pwiz.BiblioSpec
 
         public const string PROBABILITY_CORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
         public const string PROBABILITY_INCORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
+        public const string NOT_PROBABILITY = "NOT_A_PROBABILITY_VALUE";
 
         public enum EnumProbabilityType { probability_correct, probability_incorrect, not_a_probability }
 
@@ -245,6 +246,22 @@ namespace pwiz.BiblioSpec
                         return Resources.ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_;
                     default:
                         return null;
+                }
+            }
+        }
+
+        public string ProbabilityTypeDescription
+        {
+            get
+            {
+                switch (ProbabilityType)
+                {
+                    case EnumProbabilityType.probability_correct:
+                        return PROBABILITY_CORRECT;
+                    case EnumProbabilityType.probability_incorrect:
+                        return PROBABILITY_INCORRECT;
+                    default:
+                        return NOT_PROBABILITY;
                 }
             }
         }

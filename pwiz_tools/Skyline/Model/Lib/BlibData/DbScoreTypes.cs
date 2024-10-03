@@ -9,5 +9,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             get { return typeof(DbScoreTypes); }
         }
         public virtual string ScoreType { get; set; }
+        public virtual string ProbabilityType { get; set; }
     }
 }
