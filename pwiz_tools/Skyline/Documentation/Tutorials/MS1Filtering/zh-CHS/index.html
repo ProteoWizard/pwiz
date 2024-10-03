@@ -106,7 +106,7 @@
     </p>
     <p>
         接下来，您就可以使用本向导从Skyline可支持的诸多肽段搜索引擎的输出结果来创建一个谱图库。关于受支持的搜索管道的完整列表，请参考<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">靶向方法编辑</a>教程。请注意，为尽可能快速地下载
+            href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>教程。请注意，为尽可能快速地下载
         ZIP 文件，您在本教程中将使用的文件已缩减至完成本教程所需的最小信息量。
     </p>
     <p>
@@ -414,7 +414,7 @@
     </p>
     <p>
         此窗口显示运行之间用于校准时间的线性回归点。Skyline 会计算谱图库中两两谱图源文件间这样的线性回归。当出现 2 个以上的运行时，会看到<b>针对以下目标校准重复测定</b>下拉列表中选定的运行以外的运行各占据一行。当某个运行中缺少对应 ID
-        时，就可以如上图所示，使用这种线性回归方程来对各运行之间的串联质谱ID 时间进行映射，从而改善峰的挑选过程。关于使用线性回归映射保留时间范围的更多详情，请参见 <a href="https://skyline.ms/tutorial_irt.url"><b>iRT
+        时，就可以如上图所示，使用这种线性回归方程来对各运行之间的串联质谱ID 时间进行映射，从而改善峰的挑选过程。关于使用线性回归映射保留时间范围的更多详情，请参见 <a href="https://skyline.ms/tutorial_irt_zh.url"><b>iRT
                 保留时间预测</b></a>教程。
     </p>
     <p>
@@ -446,23 +446,15 @@
     <p>
         对于第 9 个肽段 SSKA<b><u>S</u></b>LG<b><u>S</u></b>LEGEAEAEASSPK，它在1_MCF7_TiB_L 中缺少对应的 ID，且峰整合看起来有点偏：
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-20.png" />
-                </p>
+            <td  class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-20.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-21.png" />
-                </p>
+            <td  class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-21.png" />
             </td>
         </tr>
     </table>
@@ -580,23 +572,15 @@
     <p>
         接下来，有了Skyline中这些能解读色谱数据的工具，您不必花费太大力气就可以找到被真正干扰的第一个肽段。您会看到双磷酸酸化肽段 ASLG<b><u>S</u></b>LEGEAEAEAS<b><u>S</u></b>PKGK 的色谱图如下所示：
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-29.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-29.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-30.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-30.png" />
             </td>
         </tr>
     </table>
@@ -619,46 +603,30 @@
     <p>
         在 AEGEWEDQEALDYF<b><u>S</u></b>DKESGK 处还有两个肽段，您会发现一处更强的干扰，其信号甚至更难排除。
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-32.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-32.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-33.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-33.png" />
             </td>
         </tr>
     </table>
     <p>
         为此肽段添加 M+3、M+4 和 M+5 色谱图，可以看到在母离子空间内的这处特定质量和保留时间的组合非常拥挤：
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-34.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-34.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-35.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-35.png" />
             </td>
         </tr>
     </table>
@@ -677,23 +645,15 @@
     <p>
         更为有趣的是，可以看到两个峰实际上非常接近，有相同的<i>质荷比</i>，至少同位素分布非常相似。
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-36.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-36.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-37.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-37.png" />
             </td>
         </tr>
     </table>
@@ -776,23 +736,15 @@
     <p>
         DQVANSAFVER 肽段有另外一种有趣的干扰：
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-44.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-44.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-45.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-45.png" />
             </td>
         </tr>
     </table>

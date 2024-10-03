@@ -10,12 +10,12 @@
     <h1 class="document-title">Skyline Spectral Library Explorer</h1>
     <p>
         Skyline has had the ability to build BiblioSpec spectral libraries<sup>1</sup> from experimental peptide search results for a long time.
-        Skyline also allows you to use any of the major publicly available spectral libraries in from the <a
-            href="ftp://ftp.thegpm.org/projects/xhunter/libs/">Global Proteome Machine</a> (GPM), <a href="http://peptide.nist.gov/">National
-            Institute of Standards</a> (NIST), and the <a href="http://www.peptideatlas.org/speclib/">Institute for Systems Biology</a> (ISB). These
+        Skyline also allows you to use any of the major publicly available spectral libraries in from the <a target="_blank"
+            href="ftp://ftp.thegpm.org/projects/xhunter/libs/">Global Proteome Machine</a> (GPM), <a target="_blank" href="http://peptide.nist.gov/">National
+            Institute of Standards</a> (NIST), and the <a target="_blank" href="http://www.peptideatlas.org/speclib/">Institute for Systems Biology</a> (ISB). These
         features have been available since version 0.2, and are well documented in the <a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">Skyline Targeted Method
-            Editing</a> tutorial and <a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=video_0-2">Skyline
+            href="https://skyline.ms/tutorial_method_edit.url">Skyline Targeted Method
+            Editing</a> tutorial and <a href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=video_0-2">Skyline
             Video 1: Method Building</a>.
     </p>
     <p>
@@ -423,9 +423,16 @@
         This will narrow the list of peptides to just two with spectrum charts containing several large unidentified MS/MS peaks, as
         shown below.
     </p>
-    <p>
-        <img src="image-14.png" /><img src="image-15.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-14.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-15.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         You can improve this situation by doing the following, without closing the library explorer:
     </p>
@@ -465,9 +472,16 @@
         The two filtered peptides should both now have peptide icons to the right of their peptide sequences, and their spectrum
         charts should look like:
     </p>
-    <p>
-        <img src="image-17.png" /><img src="image-18.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-17.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-18.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         Note the ions which have been added with “-98” losses specified, including both “precursor -98” ions. In order to correctly identify loss ions,
         Skyline must have a matching modification in its settings with a neutral loss specified. You can click the <b>Undo</b> and
@@ -486,7 +500,7 @@
     <p>
         You can use the Spectral Library Explorer to match library peptides to protein sequences in a background proteome, and add peptides to a
         document with the correct protein associations. To learn more about background proteome files and how to create them yourself, consult the <a
-            href="https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">Targeted Method
+            href="https://skyline.ms/tutorial_method_edit.url">Targeted Method
             Editing</a> tutorial.
     </p>
     <p>
