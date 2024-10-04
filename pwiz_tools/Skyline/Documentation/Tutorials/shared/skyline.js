@@ -1,6 +1,8 @@
 function skylineOnload (documentRef) {
     if (self != top)
       targetTop();
+    
+    addFigureAltText()
     var documentRef = documentRef || document;
     var titleElement = documentRef.getElementsByClassName("document-title")[0];
     if(titleElement){
@@ -52,4 +54,15 @@ function targetTop()
         anchor.target = '_top';
     }
 });
+}
+
+function addFigureAltText()
+{
+    const images = document.querySelectorAll('img');
+    var figureCounter = 1;
+    images.forEach((img) => {
+        if (img.src.includes("s-")) {
+            img.alt = `Figure ${figureCounter++}`;
+        }
+    });
 }
