@@ -16,13 +16,13 @@
         在本教程中，您将学习如何使用 Skyline 来分析一种叫做平行反应监测 (PRM)的靶向质谱方法（这种方法亦称伪 SRM 或 MRM-HR™）采集的数据。顾名思义，PRM 是一种与基于三重四级杆质谱仪的 SRM 非常相似的一种扫描方法：
     </p>
     <p>
-        <img src="image-0.png" />
+        <img style="width: 500px;" src="image-0.png" />
     </p>
     <p>
         在 SRM 扫描成对的母离子和子离子时， 将随时间的推移收集每一对的单个强度测量值；PRM 扫描不依赖数据的母离子列表，从而收集每一个母离子在每个周期的完整 MS/MS 谱图。
     </p>
     <p>
-        <img src="image-1.png" />
+        <img style="width: 500px;" src="image-1.png" />
     </p>
     <p>
         Skyline 可以对以这种方式采集的完整MS/MS谱图进行提取，来获得时间-强度色谱图。
@@ -339,7 +339,7 @@
         <li>单击<b>确定</b>按钮。</li>
     </ul>
     <p>
-        Skyline 将显示几个您已经调整的离子对设置。在 <a href="https://skyline.ms/tutorial_ms1_filtering.url">MS1 全扫描筛选教程</a>中介绍过，这些设置在一开始时非常有用，您不需要在这里进行任何进一步的更改。
+        Skyline 将显示几个您已经调整的离子对设置。在 <a href="https://skyline.ms/tutorial_ms1_filtering_zh.url">MS1 全扫描筛选教程</a>中介绍过，这些设置在一开始时非常有用，您不需要在这里进行任何进一步的更改。
     </p>
     <ul>
         <li>单击向导表单中的<b>下一步</b>按钮。</li>
@@ -479,18 +479,18 @@
     <p>
         在此模式中，您可以查看文档中的所有肽段，会看到重复测定之间碎片离子的相对丰度非常相近，并且与谱图库中碎片离子的强度也极为接近。
     </p>
-    <p>
-        R.IKNLQ<b><u>S</u></b>LDPSH.- [80, 90]
-    </p>
-    <p>
-        <b><img src="image-28.png" /></b>
-    </p>
-    <p class="keep-next">
-        K.HLVDEPQNLIK.Q [401, 411]
-    </p>
-    <p>
-         <b><img src="image-29.png" /></b>
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td  class="comp-fig">
+                R.IKNLQ<strong><u>S</u></strong>LDPSH.- [80, 90]<br />
+                <img src="image-28.png" />
+            </td>
+            <td class="comp-fig">
+                K.HLVDEPQNLIK.Q [401, 411]<br />
+                <img src="image-29.png" />
+            </td>
+        </tr>
+    </table>
     <h1>处理高分辨率质谱数据</h1>
     <p>
         本教程所涉及的另一个数据集是将 BSA 酶解肽段进行一系列稀释并由 Agilent 6500 Q-TOF 检测所得的数据集。虽然 Skyline 全扫描筛选适用于轮廓质谱图，但为了保证为本教程下载的数据足够小，因而高分辨率谱图中的所有谱峰均采用了棒图格式。我们发现 Skyline
@@ -659,12 +659,14 @@
     <p>
         此时，色谱图将显示如下：
     </p>
-    <p>
-        K.LVNELTEFAK.T (500 fmol)
-    </p>
-    <p>
-        <img src="image-37.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td  class="comp-fig">
+                K.LVNELTEFAK.T (500 fmol)<br />
+                <img src="image-37.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         与以前一样，您可以查看最强的子离子 (y8)，它达到了单一同位素母离子强度的 1/5 (1.4 x 10<sup>5</sup> v. 7.2 x 10<sup>5</sup>)，不过 M+2 峰值仍比 y8 峰值更强。
     </p>

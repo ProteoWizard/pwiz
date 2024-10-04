@@ -10,9 +10,9 @@
     <h1 class="document-title">Skyline iRT 保留时间预测</h1>
     <p>
         很久以来，肽段保留时间的预测一直是靶向蛋白质组学感兴趣的研究内容。早在 0.2 版中，Skyline 就整合了基于未修饰肽段序列计算疏水性的 SSRCal 计算器<sup>1</sup>，来作为一种预测肽保留时间的方法，“<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">靶向方法优化</a>”教程中对此进行了描述。到了
+            href="https://skyline.ms/tutorial_method_refine_zh.url">靶向方法优化</a>”教程中对此进行了描述。到了
         0.5 版，Skyline 开始支持靶向实验的预定保留时间采集方法。“<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">靶向方法优化</a>”教程中对这种技术进行了介绍：首先在准备开展重复测定实验的液质系统上以非预定模式采集所有靶向肽段，获得肽段的保留时间的信息。只要不更改色谱条件，就可以使用非预定模式下的保留时间来进行后续的预定模式采集。
+            href="https://skyline.ms/tutorial_method_refine_zh.url">靶向方法优化</a>”教程中对这种技术进行了介绍：首先在准备开展重复测定实验的液质系统上以非预定模式采集所有靶向肽段，获得肽段的保留时间的信息。只要不更改色谱条件，就可以使用非预定模式下的保留时间来进行后续的预定模式采集。
     </p>
     <p>
         非预定模式实验方法有一个缺点：每次色谱条件变化时，都可能需要进行许多质谱实验来确定预定方法，无论这样的色谱条件变化是来源于不同实验室之间的方法共享还是实验室内部的不同仪器，又或者是实验过程中同一台仪器上仅仅是色谱分离柱的变化。比如在 MacCoss
@@ -372,9 +372,16 @@
     <p class="keep-next">
         您将看到若干存在干扰的离子对，其信号强度低于最强离子对的 1%（按区域面积计算）。
     </p>
-    <p>
-        <img src="image-14.png" /> <img src="image-15.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-14.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-15.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         Skyline 将排除这类离子对，从而帮助您决定保留哪些离子对用于最终定量方法。但是，如果您已经做出了决定，则可以执行以下操作隐藏此信息：
     </p>
@@ -661,7 +668,7 @@
     <p>
         如果您收集的是数据依赖模式采集 (DDA) 的数据，其中也掺入了足够高浓度的用于创建 iRT 计算器的标准肽段（因而这些标准肽段采样密度足够高并且能在其串联质谱谱图中可靠地确认），则可以采用与处理 SRM 数据相同的方法计算 iRT 值。一般来说，这些 iRT
         值精度较低，因为是基于肽段色谱洗脱峰上随机采样获得的扫描时间。然而，如果直接对 DDA 探索性实验中的离子对使用基于扫描的 iRT 值来指导创建 SRM 预定实验，可以节省大量的仪器时间。这也已成为校准 iRT 值用于查询非数据依赖采集 (DIA) 数据中色谱峰的最常用方法，<a
-            href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH 数据分析</a>教程中对此进行了说明。
+            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程中对此进行了说明。
     </p>
     <p>
         在本教程的 iRT 文件夹中，您将发现包含谱图库“Yeast_iRT_C18_0_00001.blib”的子文件夹“Yeast+Standard”。此谱图库是根据酵母裂解物两次 DDA 运行的 SEQUEST 肽段搜索结果创建的，并添加了 Biognosys RT
@@ -717,7 +724,7 @@
     <h1>将串联质谱扫描时间转换为色谱峰时间</h1>
     <p>
         您可以使用刚刚根据串联质谱扫描时间计算得出的 iRT 值来预定这些肽段的 SRM 采集，然后使用 SRM 数据根据色谱峰时间获取更加精确的 iRT 值。但是，您也可以使用 Skyline MS1 筛选，直接从原始 DDA 数据提取色谱峰时间。在 <a
-            href="https://skyline.ms/tutorial_ms1_filtering.url">MS1 筛选</a>教程中可以查看如何设置并将数据导入 MS1 筛选文档的详细信息。在本教程中，您可以执行下列操作快速浏览已创建并导入数据的文档，包括用于创建谱图库的两个
+            href="https://skyline.ms/tutorial_ms1_filtering_zh.url">MS1 筛选</a>教程中可以查看如何设置并将数据导入 MS1 筛选文档的详细信息。在本教程中，您可以执行下列操作快速浏览已创建并导入数据的文档，包括用于创建谱图库的两个
         DDA 数据：
     </p>
     <ul>
@@ -738,7 +745,7 @@
     </p>
     <p>
         您在此文件中看到的色谱图提取自创建该谱图库所使用的 DDA 运行的 MS1 扫描。您还可以查看所鉴定的串联质谱图的扫描时间，这些串联质谱在色谱图中用“ID”进行注释。此外，还可以在 <a
-            href="https://skyline.ms/tutorial_ms1_filtering.url">MS1 全扫描筛选</a>教程中学习如何使用这种十分有用的数据处理方法。
+            href="https://skyline.ms/tutorial_ms1_filtering_zh.url">MS1 全扫描筛选</a>教程中学习如何使用这种十分有用的数据处理方法。
     </p>
     <p>
         要将使用串联质谱扫描时间计算得出的 iRT 值转化为使用本文档中色谱峰的值，请执行下列步骤：

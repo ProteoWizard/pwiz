@@ -107,7 +107,7 @@
     </p>
     <p>
         このウィザードを使用して複数のペプチド検索エンジンの<br />1つからスペクトルライブラリを作成します。サポートされている検索パイプラインの詳細については「<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">ターゲットメソッドの編集</a>」チュートリアルをご覧ください。なお本チュートリアルで使用するファイルは最低限の情報のみを含む縮小版となります。ご注意ください。
+            href="https://skyline.ms/tutorial_method_edit_ja.url">ターゲットメソッドの編集</a>」チュートリアルをご覧ください。なお本チュートリアルで使用するファイルは最低限の情報のみを含む縮小版となります。ご注意ください。
     </p>
     <p>
         以下の操作を行い、検索結果をライブラリに追加します。
@@ -425,7 +425,7 @@
     <p>
         このウィンドウに保持時間のアライメントに使用した線形回帰の（各測定間での）各ポイントが<br />表示されます。スペクトルライブラリ内の各スペクトルのソースファイルやその他すべてのスペクトルソースファイルからこのような線形回帰が計算されます。測定結果が2つ以上存在する場合ですが[
         <b>繰り返し測定</b>] ドロップダウンリストで選択されているもの以外のすべての結果が1行ずつ表示されます。上図のようにある測定でIDが存在しない場合でもピーク選択改善のため、計算された一次方程式を用いて、各測定間でのMS/MS
-        ID時間マッピングができます。保持時間スケール間マッピングに線形回帰を利用する場合は<a href="https://skyline.ms/tutorial_irt.url"><b>iRT保持時間予測</b></a>チュートリアルをご覧ください。
+        ID時間マッピングができます。保持時間スケール間マッピングに線形回帰を利用する場合は<a href="https://skyline.ms/tutorial_irt_ja.url"><b>iRT保持時間予測</b></a>チュートリアルをご覧ください。
     </p>
     <p>
         2回の測定における保持時間の再現性は、傾き1.005、切片-0.3972、相関係数（R）0.9998のためかなり良好であることがわかります。当該フォーム上部にあるパラグラフで述べられているように、Rが0.99未満の場合、SkylineはRが0.99より大きい一連のペプチドが見つかるまで自動的に異常値を破棄し、その後一次方程式が表示されます。
@@ -457,23 +457,15 @@
     <p>
         9番目のペプチド、SSKA<b><u>S</u></b>LG<b><u>S</u></b>LEGEAEAEASSPKについては、測定1_MCF7_TiB_LではペプチドIDがつかず、ピーク面積積分も多少ずれています。
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-20.png" />
-                </p>
+            <td  class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-20.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-21.png" />
-                </p>
+            <td  class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-21.png" />
             </td>
         </tr>
     </table>
@@ -589,23 +581,15 @@
     <p>
         Skylineを利用することで容易に共溶出するペプチドの影響も検出することができます。例えば、二重リン酸化ペプチド（リン酸化部位が2か所）ASLG<b><u>S</u></b>LEGEAEAEAS<b><u>S</u></b>PKGKのクロマトグラムの場合、
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-29.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-29.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-30.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-30.png" />
             </td>
         </tr>
     </table>
@@ -628,46 +612,30 @@
     <p>
         さらに2つのペプチドの下にあるAEGEWEDQEALDYF<b><u>S</u></b>DKESGKではより強い干渉が見られ、そのシグナルの排除はさらに難しくなっています。
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-32.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-32.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-33.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-33.png" />
             </td>
         </tr>
     </table>
     <p>
         M+3、M+4、M+5の各クロマトグラムを追加することで、この質量と保持時間の組み合わせがプリカーサーイオンのクロマトグラム上でどれだけ複雑かがはっきりわかります。
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-34.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-34.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-35.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-35.png" />
             </td>
         </tr>
     </table>
@@ -685,23 +653,15 @@
     <p>
         興味深いことに、2つのピークは同じ<i>m/z</i>値（Isobaric）でかつ保持時間が非常に近接しています。さらに良く似た同位体分布をもっていることがわかります。 
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-36.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-36.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-37.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-37.png" />
             </td>
         </tr>
     </table>
@@ -784,23 +744,15 @@
     <p>
         ペプチドDQVANSAFVERのピーク近傍には別の興味深い干渉があります。
     </p>
-    <table>
+    <table class="comp-fig">
         <tr>
-            <td>
-                <p>
-                    <b>5b_MCF7_TiTip3</b>
-                </p>
-                <p>
-                    <img src="image-44.png" />
-                </p>
+            <td class="comp-fig">
+                <b>5b_MCF7_TiTip3</b><br />
+                <img src="image-44.png" />
             </td>
-            <td>
-                <p>
-                    <b>1_MCF7_TiB_L</b>
-                </p>
-                <p>
-                    <img src="image-45.png" />
-                </p>
+            <td class="comp-fig">
+                <b>1_MCF7_TiB_L</b><br />
+                <img src="image-45.png" />
             </td>
         </tr>
     </table>
