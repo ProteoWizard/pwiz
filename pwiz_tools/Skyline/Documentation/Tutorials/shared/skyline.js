@@ -62,7 +62,15 @@ function addFigureAltText()
     var figureCounter = 1;
     images.forEach((img) => {
         if (img.src.includes("/s-")) {
-            img.alt = `Figure ${figureCounter++}`;
+            img.alt = `Figure ${figureCounter}`;
+
+            var anchor = document.createElement('a');
+            const anchorId = `figure${figureCounter}`
+            anchor.setAttribute('name', anchorId);
+            anchor.setAttribute('id', anchorId);
+            img.parentNode.insertBefore(anchor, img);
+
+            figureCounter++
         }
     });
 }
