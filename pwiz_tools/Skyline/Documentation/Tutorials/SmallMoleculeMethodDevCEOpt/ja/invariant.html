@@ -36,7 +36,7 @@
         it has been for years in the field of proteomics.
     </p>
     <p>
-        If you have not already looked at the “<a href="https://skyline.ms/tutorial_small_molecule.url">Skyline Small Molecule Targets</a>” tutorial
+        If you have not already looked at the “<a href="https://skyline.ms/tutorial_small_molecule_ja.url">Skyline Small Molecule Targets</a>” tutorial
         you should do so now, in order to pick up a few basics about how Skyline works with small molecule descriptions including chemical formulas
         and adducts.
     </p>
@@ -47,7 +47,6 @@
     <p>
         <a
             href="https://skyline.ms/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip">https://skyline.ms/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip</a>
-    
     </p>
     <p>
         Extract the files in it to a folder on your computer, like:
@@ -69,14 +68,14 @@
     </p>
     <ul>
         <li>Start Skyline.</li>
-        <li>On the <strong>Start Page, </strong>click <strong>Blank Document </strong>which looks like this: </li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
     </ul>
     <p>
         <img src="../../shared/en/skyline-blank-document.png" />
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Default. </strong></li>
-        <li>Click <strong>No </strong>on the form asking if you want to save the current settings.</li>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
     </ul>
     <p>
         The document settings in this instance of Skyline have now been reset to the default.
@@ -85,7 +84,7 @@
         Since this tutorial covers a small molecule topic, you can choose the molecule interface by doing the following:
     </p>
     <ul>
-        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <strong>Molecule interface </strong>which
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Molecule interface</b> which
             looks like this: </li>
     </ul>
     <p>
@@ -98,7 +97,7 @@
     </p>
     <h1>Importing a Small Molecule Transition List into a Skyline Document</h1>
     <p>
-        The transition lists in this tutorial are from a high speed HILIC method, based on <a href="https://www.ncbi.nlm.nih.gov/pubmed/28050903">Guder
+        The transition lists in this tutorial are from a high speed HILIC method, based on <a target="_blank" href="https://www.ncbi.nlm.nih.gov/pubmed/28050903">Guder
             et al. Anal Chem. 2017 Feb 7;89(3):1624-1631</a>. The raw data for the tutorial itself was then collected on an Acquity UPLC coupled to a
         Waters Xevo TQ-S triple quad.
     </p>
@@ -109,7 +108,7 @@
         <img src="image-0.png" />
     </p>
     <p>
-        It provides information about light (12C) and heavy (13C) precursor and fragment <em>m/z</em> and charge for each molecule. For the purposes of
+        It provides information about light (12C) and heavy (13C) precursor and fragment <i>m/z</i> and charge for each molecule. For the purposes of
         this tutorial, you will work only with the negative mode entries. The collision energy (CE) values are from an Agilent 6495 triple quadrupole
         mass spectrometer. You will use these as a starting point even though you will develop a new method for Waters Xevo TQ-S as we did to collect
         the data files you will use.
@@ -120,15 +119,15 @@
         reformatting can be found in the “Energy_TransitionList.csv” file provided in the folder you created at the start of this tutorial.
     </p>
     <p>
-        Because the “Energy_TransitionList.csv” file is formatted with column headers that Skyline recognizes, you can bypass the <strong>Insert
-            Transition List</strong> form reached through the menu option <strong>Edit</strong> &gt; <strong>Insert</strong> &gt; <strong>Transition
-            List</strong> and simply paste everything (include the header row) into the Skyline <strong>Targets</strong> view. To do this, perform the
+        Because the “Energy_TransitionList.csv” file is formatted with column headers that Skyline recognizes, you can bypass the <b>Insert
+            Transition List</b> form reached through the menu option <b>Edit</b> &gt; <b>Insert</b> &gt; <b>Transition
+            List</b> and simply paste everything (include the header row) into the Skyline <b>Targets</b> view. To do this, perform the
         following steps:
     </p>
     <ul>
         <li>In Excel or any text editor, open “Energy_TransitionList.csv” from the folder you created at the start of this tutorial.</li>
-        <li><strong>Select All</strong> (Ctrl-A), then <strong>Copy</strong> (Ctrl-C). Make sure you have included the header row.</li>
-        <li>Switch back to Skyline and on the <strong>Edit</strong> menu, click <strong>Paste</strong> (Ctrl-V).</li>
+        <li><b>Select All</b> (Ctrl-A), then <b>Copy</b> (Ctrl-C). Make sure you have included the header row.</li>
+        <li>Switch back to Skyline and on the <b>Edit</b> menu, click <b>Paste</b> (Ctrl-V).</li>
     </ul>
     <p class="keep-next">
         Your Skyline window should now look something like this:
@@ -138,20 +137,20 @@
     </p>
     <table>
         <tr>
-            <td>NOTE: In this tutorial, you have provided only <em>m/z</em> and charge values for these targets. Skyline can accept higher level
+            <td>NOTE: In this tutorial, you have provided only <i>m/z</i> and charge values for these targets. Skyline can accept higher level
                 descriptions including chemical formulas and heavy isotope labels etc. Having the chemical formula is especially useful when working
                 with full scan, high resolution data as it allows Skyline to calculate isotopic distributions, but for SRM data such as this, using
-                <em>m/z</em> and charge is adequate.</td>
+                <i>m/z</i> and charge is adequate.</td>
         </tr>
     </table>
     <h1>Transition Settings</h1>
     <p>
-        Next you will update the <strong>Transition Settings</strong> to match the instrument method and experimental mass spectrometer results for
+        Next you will update the <b>Transition Settings</b> to match the instrument method and experimental mass spectrometer results for
         this tutorial by performing the following steps:
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
-        <li>On the <strong>Prediction</strong> tab, in the <strong>Collision energy</strong> dropdown list, choose “Waters Xevo”.</li>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>On the <b>Prediction</b> tab, in the <b>Collision energy</b> dropdown list, choose “Waters Xevo”.</li>
     </ul>
     <p>
         <img src="image-2.png" />
@@ -161,8 +160,8 @@
         starting collision energies you pasted from the paper were originally used on an Agilent instrument.
     </p>
     <ul>
-        <li>Click the <strong>Filter</strong> tab.</li>
-        <li>In the <strong>Precursor adducts</strong> and <strong>Fragment adducts</strong> fields, change the text to “[M-]”.</li>
+        <li>Click the <b>Filter</b> tab.</li>
+        <li>In the <b>Precursor adducts</b> and <b>Fragment adducts</b> fields, change the text to “[M-]”.</li>
     </ul>
     <p>
         <img src="image-3.png" />
@@ -173,24 +172,24 @@
     <p>
         Skyline adduct
         descriptions support any kind of ionization description (“[M-H]”, “[M+Na]” etc.), including unknown ionization modes (the “[M-]” used here to
-        indicate “negative mode, charge 1, without any known chemical composition to explain it”). In the <strong>Ion types</strong> field, the value
+        indicate “negative mode, charge 1, without any known chemical composition to explain it”). In the <b>Ion types</b> field, the value
         “f” indicates only fragment ion transitions will be measured. If you wanted to measure precursor ions as well, you would use “f, p”.
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
-        The remaining three tabs either do not apply (<strong>Library</strong> and <strong>Full-Scan</strong>) or have acceptable defaults
-        (<strong>Instrument</strong>).
+        The remaining three tabs either do not apply (<b>Library</b> and <b>Full-Scan</b>) or have acceptable defaults
+        (<b>Instrument</b>).
     </p>
     <p>
         Now, save the current Skyline document as follows:
     </p>
     <ul>
-        <li>On the <strong>Files</strong> menu, click on <strong>Save</strong> (Ctrl-S).</li>
+        <li>On the <b>Files</b> menu, click on <b>Save</b> (Ctrl-S).</li>
         <li>Navigate to the SmallMolMethodCE folder you created.</li>
-        <li>In the <strong>File name</strong> field, enter “EnergyMet”.</li>
-        <li>Click the <strong>Save</strong> button.</li>
+        <li>In the <b>File name</b> field, enter “EnergyMet”.</li>
+        <li>Click the <b>Save</b> button.</li>
     </ul>
     <h1>Exporting an Unscheduled Method</h1>
     <p>
@@ -205,19 +204,19 @@
         Otherwise, export two methods, one for 2 minutes and one for 5 minutes duration, as follows:
     </p>
     <ul>
-        <li>On the <strong>Files</strong> menu, choose on <strong>Export</strong> and click <strong>Method</strong>.</li>
-        <li>In the <strong>Instrument type</strong> dropdown list, choose “Waters Xevo TQ”.</li>
-        <li>In the <strong>Run duration</strong> field, enter “2”.</li>
-        <li>Click the <strong>Browse</strong> button and select the VerifyETemplate.exp in the tutorial folder.</li>
+        <li>On the <b>Files</b> menu, choose on <b>Export</b> and click <b>Method</b>.</li>
+        <li>In the <b>Instrument type</b> dropdown list, choose “Waters Xevo TQ”.</li>
+        <li>In the <b>Run duration</b> field, enter “2”.</li>
+        <li>Click the <b>Browse</b> button and select the VerifyETemplate.exp in the tutorial folder.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Export Method</strong> form should now look like this:
+        The <b>Export Method</b> form should now look like this:
     </p>
     <p>
         <img src="image-4.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Save the method as “EnergyMet_2minutes”.</li>
         <li>Repeat the steps above, changing Run duration to 5 and saving as “EnergyMet_5minutes”.</li>
     </ul>
@@ -228,19 +227,19 @@
         transition list are very similar to that for exporting an unscheduled method, except that there is no template file:
     </p>
     <ul>
-        <li>On the <strong>Files</strong> menu, choose on <strong>Export</strong> and click <strong>Transition List</strong>.</li>
-        <li>In the <strong>Instrument type</strong> dropdown list, Skyline should automatically choose “Waters” based on the <strong>Collision
-                energy</strong> value you set earlier in the <strong>Transition Settings</strong> – <strong>Prediction</strong> tab.</li>
-        <li>In the <strong>Run duration</strong> field, enter “2”.</li>
+        <li>On the <b>Files</b> menu, choose on <b>Export</b> and click <b>Transition List</b>.</li>
+        <li>In the <b>Instrument type</b> dropdown list, Skyline should automatically choose “Waters” based on the <b>Collision
+                energy</b> value you set earlier in the <b>Transition Settings</b> – <b>Prediction</b> tab.</li>
+        <li>In the <b>Run duration</b> field, enter “2”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Export Method</strong> form should now look like this:
+        The <b>Export Method</b> form should now look like this:
     </p>
     <p>
         <img src="image-5.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Save the transition list as “EnergyMet_2minutes.csv”.</li>
         <li>Repeat the steps above, changing Run duration to 5 and saving as “EnergyMet_5minutescsv”.</li>
     </ul>
@@ -259,20 +258,20 @@
         Perform the following steps to import these files into the document you have created:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, select <strong>Import</strong> and click on <strong>Results</strong>.</li>
-        <li>In the <strong>Import Results</strong> form, you can use the default <strong>Import single-injection replicates</strong> option. In the
-            <strong>Files to import simultaneously</strong> dropdown list, ensure “Many” is chosen to import both files in parallel.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <b>File</b> menu, select <b>Import</b> and click on <b>Results</b>.</li>
+        <li>In the <b>Import Results</b> form, you can use the default <b>Import single-injection replicates</b> option. In the
+            <b>Files to import simultaneously</b> dropdown list, ensure “Many” is chosen to import both files in parallel.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Navigate to the “Unscheduled” subfolder and select both files.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Import Results Files</strong> form should look like this:
+        The <b>Import Results Files</b> form should look like this:
     </p>
     <p>
         <img src="image-6.png" />
     </p>
     <ul>
-        <li>Click the <strong>Open</strong> button.</li>
+        <li>Click the <b>Open</b> button.</li>
     </ul>
     <p class="keep-next">
         Skyline will notice that these file names share a common prefix and suffix and present the following form:
@@ -281,7 +280,7 @@
         <img src="image-7.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button to accept the shortened replicate names “1” and “2”.</li>
+        <li>Click the <b>OK</b> button to accept the shortened replicate names “1” and “2”.</li>
     </ul>
     <p class="keep-next">
         The files should import relatively quickly, leaving your Skyline main window looking something like this:
@@ -293,17 +292,17 @@
         The replicate names “1” and “2” are not very meaningful, but you can change them to something more descriptive by doing the following:
     </p>
     <ul>
-        <li>On the <strong>Edit</strong> menu, choose <strong>Manage Results</strong>.</li>
-        <li>Double-click the first replicate “1” (or select and click the <strong>Rename</strong> button).</li>
-        <li>In the <strong>Name</strong> field of the <strong>Rename Replicate</strong> form, enter “2 min”.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Manage Results</b>.</li>
+        <li>Double-click the first replicate “1” (or select and click the <b>Rename</b> button).</li>
+        <li>In the <b>Name</b> field of the <b>Rename Replicate</b> form, enter “2 min”.</li>
     </ul>
     <p>
         <img src="image-9.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK </strong>button.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Repeat the steps above, changing the replicate name “2” to “5 min”.</li>
-        <li>Click the <strong>OK</strong> button in the <strong>Manage Results</strong> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Manage Results</b> form.</li>
     </ul>
     <p class="keep-next">
         This should leave the main Skyline window looking like this:
@@ -315,11 +314,11 @@
         To take advantage of the Skyline summary graphs for viewing statistics for multiple replicates on a single screen, do the following:
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong> (F7).</li>
-        <li>On the <strong>View </strong>menu, choose <strong>Retention Times</strong> and click <strong>Replicate Comparison</strong> (F8).</li>
-        <li>Click on the title bars of the <strong>Replicate Comparison</strong> graphs and drag them to the right edge of the main Skyline window.
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
+        <li>Click on the title bars of the <b>Replicate Comparison</b> graphs and drag them to the right edge of the main Skyline window.
         </li>
-        <li>On the <strong>View</strong> menu, choose <strong>Arrange Graphs</strong> and click <strong>Tiled</strong> (Ctrl-T).</li>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Tiled</b> (Ctrl-T).</li>
     </ul>
     <p class="keep-next">
         The Skyline window should now look something like this:
@@ -329,7 +328,7 @@
     </p>
     <h1>Comparing Peak Areas and Resolution</h1>
     <p>
-        Looking at the <strong>Peak Areas – Replicate Comparison</strong> view you can see that the 5 minute gradient has generally greater peak areas
+        Looking at the <b>Peak Areas – Replicate Comparison</b> view you can see that the 5 minute gradient has generally greater peak areas
         than the 2 minute gradient. You could choose to perform technical replicates to be sure this is not random variance. In this case, the 5
         minute method seems to show higher peak areas for many analytes but not all, likely based on the better separation of the analytes and
         decreased ion suppression (also called “matrix effect”). Based on this, the 5 minute gradient is probably the better chromatography choice for
@@ -339,7 +338,7 @@
         A closer examination of the chromatographic peaks is also useful:
     </p>
     <ul>
-        <li>Right-click on either chromatogram graph and make sure that <strong>Synchronize Zooming</strong> is checked.</li>
+        <li>Right-click on either chromatogram graph and make sure that <b>Synchronize Zooming</b> is checked.</li>
         <li>Click and drag within either chromatogram to zoom into the time range from 0.8 to 1.8 minutes.</li>
     </ul>
     <p class="keep-next">
@@ -359,52 +358,52 @@
         First, you want to set a retention time window that will be exported to your transition list.
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Molecule Settings</strong>.</li>
-        <li>Click the <strong>Predictions</strong> tab.</li>
-        <li>Make sure <strong>Use measured prediction times when present</strong> is checked.</li>
-        <li>In the <strong>Time window</strong> field, enter “1” for a 1 minute scheduling window.</li>
+        <li>On the <b>Settings</b> menu, click <b>Molecule Settings</b>.</li>
+        <li>Click the <b>Predictions</b> tab.</li>
+        <li>Make sure <b>Use measured prediction times when present</b> is checked.</li>
+        <li>In the <b>Time window</b> field, enter “1” for a 1 minute scheduling window.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Molecule Settings</strong> form should now look like this:
+        The <b>Molecule Settings</b> form should now look like this:
     </p>
     <p>
         <img src="image-13.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         Now you can export a transition list file as follows:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Transition List</strong>.</li>
-        <li>In the <strong>Instrument type</strong> dropdown list, Skyline should automatically choose “Waters”.</li>
-        <li>In the <strong>Method type</strong> dropdown list, choose “Scheduled”.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Transition List</b>.</li>
+        <li>In the <b>Instrument type</b> dropdown list, Skyline should automatically choose “Waters”.</li>
+        <li>In the <b>Method type</b> dropdown list, choose “Scheduled”.</li>
     </ul>
     <p class="keep-next">
-        Which should leave the <strong>Export Transition List</strong> form looking like this:
+        Which should leave the <b>Export Transition List</b> form looking like this:
     </p>
     <p>
         <img src="image-14.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         You will be asked which replicate to use for elution times.
     </p>
     <ul>
-        <li>Click <strong>Use values from a single data set</strong>.</li>
-        <li>In the <strong>Replicate</strong> dropdown list, choose “5 min” to schedule for the 5-minute gradient.</li>
+        <li>Click <b>Use values from a single data set</b>.</li>
+        <li>In the <b>Replicate</b> dropdown list, choose “5 min” to schedule for the 5-minute gradient.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Scheduling Data</strong> form should look like this:
+        The <b>Scheduling Data</b> form should look like this:
     </p>
     <p>
         <img src="image-15.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         You will be prompted for a transition list file name.
@@ -419,34 +418,34 @@
         document do the following:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
-        <li>Click the <strong>OK</strong> button to accept the default settings.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button to accept the default settings.</li>
         <li>Navigate to the “Scheduled” subfolder of the tutorial folder and select all three files.</li>
-        <li>Click the <strong>OK</strong> button.</li>
-        <li>This time when Skyline offers to simplify the replicate names, choose <strong>Do not remove</strong>.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>This time when Skyline offers to simplify the replicate names, choose <b>Do not remove</b>.</li>
     </ul>
     <p class="keep-next">
-        This will cause the <strong>Import Results</strong> form to show the full file names (with extensions removed) as what
+        This will cause the <b>Import Results</b> form to show the full file names (with extensions removed) as what
         Skyline will use for the replicate names, as shown below:
     </p>
     <p>
         <img src="image-16.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         As you are done with the data from the two minute gradient, you may remove it from the document as follows:
     </p>
     <ul>
-        <li>On the <strong>Edit</strong> menu, click <strong>Manage Results</strong> (Ctrl-R).</li>
+        <li>On the <b>Edit</b> menu, click <b>Manage Results</b> (Ctrl-R).</li>
         <li>Select the “2 min” replicate.</li>
     </ul>
     <p>
         <img src="image-17.png" />
     </p>
     <ul>
-        <li>Click the <strong>Remove</strong> button.</li>
+        <li>Click the <b>Remove</b> button.</li>
     </ul>
     <p>
         Now rename the remaining 4 replicates as follows:
@@ -461,34 +460,33 @@
     <div style="margin-left : 40px;">
         <table>
             <tr>
-                <td>Note: This renaming can be done in the <strong>Document Grid</strong> as well, using a custom report template that includes the
-                    <strong>Replicates</strong> &gt; <strong>Replicate Name</strong> field.</td>
+                <td>Note: This renaming can be done in the <b>Document Grid</b> as well, using a custom report template that includes the
+                    <b>Replicates</b> &gt; <b>Replicate Name</b> field.</td>
             </tr>
         </table>
     </div>
     <p class="keep-next">
-        When you are done, the <strong>Manage Results</strong> form should look like this:
+        When you are done, the <b>Manage Results</b> form should look like this:
     </p>
     <p>
         <img src="image-18.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
-        <li>On the <strong>View</strong> menu, choose <strong>Arrange Graphs</strong> and click Tabbed (Ctrl-Shift-T).</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click Tabbed (Ctrl-Shift-T).</li>
     </ul>
     <h1>Evaluating Imported Runs</h1>
     <p>
-        You can get visual confirmation of the known ratios of the samples by looking at the <strong>Peak Areas – Replicate Comparison </strong>view.
-    
+        You can get visual confirmation of the known ratios of the samples by looking at the <b>Peak Areas – Replicate Comparison</b> view.
     </p>
     <ul>
-        <li>In the <strong>Targets</strong> view, select “Acetyl-CoA”.</li>
+        <li>In the <b>Targets</b> view, select “Acetyl-CoA”.</li>
         <li>Click the plus (+) to the left of “Acetyl-Coa” and both its sub-items (808 and 831) to expand them and see the individual light and heavy
             transitions under them.</li>
     </ul>
     <p>
-        You can see that the peak areas have the expected ratios based on the known mixture ratios. In the <strong>Retention Times – Replicate
-            Comparison</strong> view you can also see that the chromatography is stable with Acetyl-CoA eluting at around 1.55 minutes in every run,
+        You can see that the peak areas have the expected ratios based on the known mixture ratios. In the <b>Retention Times – Replicate
+            Comparison</b> view you can also see that the chromatography is stable with Acetyl-CoA eluting at around 1.55 minutes in every run,
         especially consistent among the scheduled runs.
     </p>
     <p>
@@ -500,14 +498,14 @@
         calibration function.
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, click <strong>Document Grid</strong> (Alt-3).</li>
-        <li>In the <strong>Document Grid</strong>, click the <strong>Reports</strong> menu, and then click <strong>Replicates</strong>.</li>
-        <li>Set the <strong>Sample Type</strong> to in each row to <strong>Standard</strong></li>
-        <li>Set the <strong>Analyte Concentration</strong> as the appropriate decimal number for the ratio preceding the underscore in the replicate
-            name, or <strong>1, 1, 2, 0.5</strong> respectively.</li>
+        <li>On the <b>View</b> menu, click <b>Document Grid</b> (Alt-3).</li>
+        <li>In the <b>Document Grid</b>, click the <b>Reports</b> menu, and then click <b>Replicates</b>.</li>
+        <li>Set the <b>Sample Type</b> to in each row to <b>Standard</b></li>
+        <li>Set the <b>Analyte Concentration</b> as the appropriate decimal number for the ratio preceding the underscore in the replicate
+            name, or <b>1, 1, 2, 0.5</b> respectively.</li>
     </ul>
     <p class="keep-next">
-        When you are don the <strong>Document Grid</strong> should look like this:
+        When you are don the <b>Document Grid</b> should look like this:
     </p>
     <p>
         <img src="image-20.png" />
@@ -516,27 +514,27 @@
         You also need to specify some quantification settings before inspecting a calibration curve for these runs by doing the following:
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Peptide Settings</strong>.</li>
-        <li>Click the <strong>Quantification</strong> tab.</li>
-        <li>In the <strong>Regression fit</strong> dropdown list, choose “Linear”.</li>
-        <li>In the <strong>Normalization method</strong> dropdown list, choose “Ratio to Heavy”.</li>
-        <li>In the <strong>Units</strong> field, enter “ratio to heavy”.</li>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Quantification</b> tab.</li>
+        <li>In the <b>Regression fit</b> dropdown list, choose “Linear”.</li>
+        <li>In the <b>Normalization method</b> dropdown list, choose “Ratio to Heavy”.</li>
+        <li>In the <b>Units</b> field, enter “ratio to heavy”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Molecule Settings</strong> form should now look like this:
+        The <b>Molecule Settings</b> form should now look like this:
     </p>
     <p>
         <img src="image-21.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         To examine the calibration curve graph, do the following:
     </p>
     <ul>
-        <li>Close the <strong>Document Grid</strong> view.</li>
-        <li>On the <strong>View</strong> menu, click <strong>Calibration Curve</strong>.</li>
+        <li>Close the <b>Document Grid</b> view.</li>
+        <li>On the <b>View</b> menu, click <b>Calibration Curve</b>.</li>
     </ul>
     <p class="keep-next">
         You should see a graph like this:
@@ -561,47 +559,47 @@
         Begin by checking the collision energy settings as follows:
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
-        <li>Click the <strong>Prediction</strong> tab.</li>
-        <li>In the <strong>Collision Energy</strong> dropdown list, which should already be set to “Waters Xevo”, click <strong>&lt;Edit
-                Current…&gt;</strong></li>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>In the <b>Collision Energy</b> dropdown list, which should already be set to “Waters Xevo”, click <b>&lt;Edit
+                Current…&gt;</b></li>
     </ul>
     <p>
-        This opens the <strong>Edit Collision Energy Equation</strong> form where you should ensure the following settings in the
-        <strong>Optimization</strong> section:
+        This opens the <b>Edit Collision Energy Equation</b> form where you should ensure the following settings in the
+        <b>Optimization</b> section:
     </p>
     <ul>
-        <li>In the <strong>Step size</strong> field, enter “2”.</li>
-        <li>In the <strong>Step count</strong> field, enter “5” (which should already be set)<strong>.</strong></li>
+        <li>In the <b>Step size</b> field, enter “2”.</li>
+        <li>In the <b>Step count</b> field, enter “5” (which should already be set).</li>
     </ul>
     <p>
         <img src="image-23.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         This will cause Skyline to produce 11 measurements per transition where the collision energy is varied up and down in 2-volt increments, for 5
         steps in each direction around the original specified value, or 11 total. A general recommendation is to start with relatively large
-        <strong>Step size</strong> (2 or 3 volts) and then optionally repeat the optimization with a smaller <strong>Step size</strong> (1 volt) in
+        <b>Step size</b> (2 or 3 volts) and then optionally repeat the optimization with a smaller <b>Step size</b> (1 volt) in
         order to fine tune the optimization if the change in signal between steps looks large enough to warrant this extra work.
     </p>
     <p>
-        Make these final adjustments in the <strong>Transition Settings</strong> – <strong>Prediction</strong> tab before exporting transition lists
+        Make these final adjustments in the <b>Transition Settings</b> – <b>Prediction</b> tab before exporting transition lists
         for performing the optimization:
     </p>
     <ul>
-        <li>Check <strong>Use optimization values when present</strong>.</li>
-        <li>In the <strong>Optimize by</strong> dropdown list which appears when you do this, choose <strong>Transitions</strong>.</li>
+        <li>Check <b>Use optimization values when present</b>.</li>
+        <li>In the <b>Optimize by</b> dropdown list which appears when you do this, choose <b>Transitions</b>.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Transition Settings</strong> form should now look like this:
+        The <b>Transition Settings</b> form should now look like this:
     </p>
     <p>
         <img src="image-24.png" />
     </p>
     <ul>
-        <li>Click the<strong> OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         Now you can export scheduled transition lists which will allow Skyline to determine optimal CE values for the targets in this experiment.
@@ -609,52 +607,52 @@
         but for the purposes of this tutorial you will continue to export transition lists.
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Transition List</strong>.</li>
-        <li>In the <strong>Instrument type</strong> dropdown list, Skyline should automatically choose “Waters”.</li>
-        <li>Click the <strong>Multiple methods</strong> option.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Transition List</b>.</li>
+        <li>In the <b>Instrument type</b> dropdown list, Skyline should automatically choose “Waters”.</li>
+        <li>Click the <b>Multiple methods</b> option.</li>
     </ul>
     <p>
-        Remember that optimization will multiply the 36 transitions in the <strong>Targets</strong> list by 11 to give you 396 total transitions the
+        Remember that optimization will multiply the 36 transitions in the <b>Targets</b> list by 11 to give you 396 total transitions the
         instrument must measure.
     </p>
     <ul>
-        <li>Check <strong>Ignore molecule lists</strong>.</li>
-        <li>In the <strong>Max transitions per sample injection</strong> field, enter “100”.</li>
-        <li>In the <strong>Optimizing</strong> dropdown list, choose “Collision Energy”.</li>
-        <li>In the <strong>Method type</strong> dropdown list, choose “Scheduled”.</li>
+        <li>Check <b>Ignore molecule lists</b>.</li>
+        <li>In the <b>Max transitions per sample injection</b> field, enter “100”.</li>
+        <li>In the <b>Optimizing</b> dropdown list, choose “Collision Energy”.</li>
+        <li>In the <b>Method type</b> dropdown list, choose “Scheduled”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Export Transition List</strong> form should now look like this:
+        The <b>Export Transition List</b> form should now look like this:
     </p>
     <p>
         <img src="image-25.png" />
     </p>
     <p>
-        Note that the <strong>Max transitions per sample injection </strong>field name changed to <strong>Max concurrent transitions </strong>when you
+        Note that the <b>Max transitions per sample injection</b> field name changed to <b>Max concurrent transitions</b> when you
         chose to make this scheduled acquisition. Consider how scheduling may allow not all transitions in a run to be measured in every cycle.
         Skyline automatically performs this calculation to ensure the instrument will never measure more than 100 in any cycle to ensure a desired
-        dwell time and points across chromatographic peaks are achievable. In spite of this, the <strong>Methods: 5</strong> label in the form is
+        dwell time and points across chromatographic peaks are achievable. In spite of this, the <b>Methods: 5</b> label in the form is
         telling you it will take 5 separate transition lists and 5 runs in the mass spectrometer to measure 396 transitions required to perform the
         optimization, while keeping all of the transitions for each analyte in the same run.
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         You will be asked which replicate to use for elution times.
     </p>
     <ul>
-        <li>Click <strong>Use values from a single data set</strong>.</li>
-        <li>In the <strong>Replicate</strong> dropdown list, choose “1:2_2”.</li>
+        <li>Click <b>Use values from a single data set</b>.</li>
+        <li>In the <b>Replicate</b> dropdown list, choose “1:2_2”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Scheduling Data</strong> form should look like this:
+        The <b>Scheduling Data</b> form should look like this:
     </p>
     <p>
         <img src="image-26.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         You will be prompted for a transition list file name.
@@ -677,17 +675,17 @@
         resulting data files as follows:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
     </ul>
     <p>
         Where in each of the prior imports, you wanted to treat each data file as a complete set of measurements for all of the transitions you were
         targeting, in this case, you want to combine the five CE optimization runs into a single logical set of measurements of the targets. To do
-        this make the following adjustments to the <strong>Import Results</strong> form:
+        this make the following adjustments to the <b>Import Results</b> form:
     </p>
     <ul>
-        <li>Click the <strong>Add one new replicate</strong> option.</li>
-        <li>In the <strong>Name</strong> field below, enter “CE Optimization”<strong>.</strong></li>
-        <li>In the <strong>Optimizing</strong> dropdown list, choose “Collision Energy”.</li>
+        <li>Click the <b>Add one new replicate</b> option.</li>
+        <li>In the <b>Name</b> field below, enter “CE Optimization”.</li>
+        <li>In the <b>Optimizing</b> dropdown list, choose “Collision Energy”.</li>
     </ul>
     <p class="keep-next">
         The form should now look like this:
@@ -696,21 +694,21 @@
         <img src="image-27.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Navigate to the “CE Optimization” subfolder and select all 5 files.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Import Results Files</strong> form should look like this:
+        The <b>Import Results Files</b> form should look like this:
     </p>
     <p>
         <img src="image-28.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
-        The files load as a single replicate named “CE Optimization”, which should appear in the <strong>Replicates</strong> dropdown list in the
-        <strong>Targets</strong> view, as the right-most value in the <strong>Replicate Comparison</strong> plots, and as the right-most tab among the
+        The files load as a single replicate named “CE Optimization”, which should appear in the <b>Replicates</b> dropdown list in the
+        <b>Targets</b> view, as the right-most value in the <b>Replicate Comparison</b> plots, and as the right-most tab among the
         chromatogram plots, as shown below:
     </p>
     <p>
@@ -718,13 +716,13 @@
     </p>
     <p>
         But you still need to do the following to be able to visualize the 11 different measurements made at 11 different CE voltages for each
-        transition in the <strong>Targets</strong> view:
+        transition in the <b>Targets</b> view:
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, choose <strong>Transitions</strong> and click <strong>Single</strong>.</li>
-        <li>On the <strong>View</strong> menu, choose <strong>Auto-Zoom</strong> and click <strong>Best Peak</strong> (F11).</li>
-        <li>Hide the <strong>Retention Times</strong> – <strong>Replicate Comparison</strong> plot by clicking on the X in its title bar.</li>
-        <li>In the chromatogram plot right click, choose <strong>Transitions</strong>, and click <strong>Split Graph</strong>.</li>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Single</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+        <li>Hide the <b>Retention Times</b> – <b>Replicate Comparison</b> plot by clicking on the X in its title bar.</li>
+        <li>In the chromatogram plot right click, choose <b>Transitions</b>, and click <b>Split Graph</b>.</li>
     </ul>
     <p class="keep-next">
         The main Skyline window should look like this:
@@ -733,14 +731,14 @@
         <img src="image-30.png" />
     </p>
     <p>
-        The <strong>Peak Areas – Replicate Comparison</strong> view now shows the heavy and light transitions in separate panes with the light above
+        The <b>Peak Areas – Replicate Comparison</b> view now shows the heavy and light transitions in separate panes with the light above
         the heavy. Within the CE Optimization replicate, the individual bars represent the effects of stepping the collision energy. Red represents
         the original CE value (as used with the Agilent 6495 instrument in the literature), the other bars show the effect of 2eV steps away from
         that. You can see that for Acetyl-CoA, at least, the original value or the -2eV step achieve the highest peak area. This is easier to see if
         you free up room in the graph by switching off the legend:
     </p>
     <ul>
-        <li>In the <strong>Peak Areas – Replicate Comparison</strong> window, right-click and click <strong>Legend</strong> to uncheck it.</li>
+        <li>In the <b>Peak Areas – Replicate Comparison</b> window, right-click and click <b>Legend</b> to uncheck it.</li>
     </ul>
     <p class="keep-next">
         Skyline should look like this:
@@ -753,9 +751,9 @@
         this:
     </p>
     <ul>
-        <li>Click on any molecule in the <strong>Targets</strong> view, or use the up and down arrow keys after the first click to advance the
+        <li>Click on any molecule in the <b>Targets</b> view, or use the up and down arrow keys after the first click to advance the
             selection through the list.</li>
-        <li>Then, in the <strong>Targets</strong> window, click on “Pentose-P”.</li>
+        <li>Then, in the <b>Targets</b> window, click on “Pentose-P”.</li>
     </ul>
     <p>
         Looking at the chromatograms for the various CE step values for Pentose-P it is clear that the CE value from the literature is not optimal for
@@ -773,31 +771,31 @@
         You can proceed to creating a new scheduled transition list that uses the most effective observed CE values as follows:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Transition List</strong>.</li>
-        <li>In the <strong>Instrument type</strong> dropdown list, Skyline should automatically choose “Waters”.</li>
-        <li>Click the <strong>Single methods</strong> option.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Transition List</b>.</li>
+        <li>In the <b>Instrument type</b> dropdown list, Skyline should automatically choose “Waters”.</li>
+        <li>Click the <b>Single methods</b> option.</li>
     </ul>
     <p>
         This time you only need a single method again, because you will only use the one optimal CE value for each transition.
     </p>
     <ul>
-        <li>In the <strong>Method type</strong> dropdown list, choose “Scheduled”.</li>
+        <li>In the <b>Method type</b> dropdown list, choose “Scheduled”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Export Transition List</strong> form should now look like this:
+        The <b>Export Transition List</b> form should now look like this:
     </p>
     <p>
         <img src="image-33.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         You will be asked which replicate to use for elution times.
     </p>
     <ul>
-        <li>Click <strong>Use values from a single data set</strong>.</li>
-        <li>In the <strong>Replicate</strong> dropdown list, choose “CE Optimization”.</li>
+        <li>Click <b>Use values from a single data set</b>.</li>
+        <li>In the <b>Replicate</b> dropdown list, choose “CE Optimization”.</li>
     </ul>
     <p>
         You can use whichever run you feel has the most representative retention times, which will often be the most recent run, as retention times can
@@ -806,13 +804,13 @@
         only replicate with CE optimization data.
     </p>
     <p class="keep-next">
-        The <strong>Scheduling Data</strong> form should look like this:
+        The <b>Scheduling Data</b> form should look like this:
     </p>
     <p>
         <img src="image-34.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         You will be prompted for a transition list file name.
@@ -843,16 +841,16 @@
     </p>
     <p>
         As mentioned previously, when performing iterative optimization, it is a good idea to start with large step values to test a broad range of CE
-        values, and then move to smaller steps in later iterations to narrow in on the final values. When performing CE optimization, if <strong>Use
-            optimization values</strong>” button is checked under <strong>Settings</strong> menu, <strong>Transition Settings</strong>,
-        <strong>Prediction</strong>, you can expect that the new exported method or transtion list will automatically incorporate the optimimum
+        values, and then move to smaller steps in later iterations to narrow in on the final values. When performing CE optimization, if <b>Use
+            optimization values</b>” button is checked under <b>Settings</b> menu, <b>Transition Settings</b>,
+        <b>Prediction</b>, you can expect that the new exported method or transtion list will automatically incorporate the optimimum
         collision energy into the method. No manual curation of the CE optimization data is required, other than examination to see if a wider CE
         optimization range needs to be explored.
     </p>
     <h1>Conclusion</h1>
     <p>
         In this tutorial, you have learned how to create a Skyline document that targets stable isotope labeled small molecules specified as only
-        precursor <em>m/z</em>, product ion <em>m/z</em>, and collision energy values, from published experiment. You performed retention time
+        precursor <i>m/z</i>, product ion <i>m/z</i>, and collision energy values, from published experiment. You performed retention time
         scheduling and collision energy optimization for small molecules by importing a multiple replicate data set from a Waters Xevo TQ-S using
         initial CE values from an Agilent 6495 triple quadrupole mass spectrometer. You learned how many existing Skyline features created initially
         for targeted proteomics use can now be applied to generalized molecule data. Non-proteomic molecule support is still a relatively new feature

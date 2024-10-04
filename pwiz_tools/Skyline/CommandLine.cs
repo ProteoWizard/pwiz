@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -2284,7 +2285,6 @@ namespace pwiz.Skyline
                     commandArgs.AssociateProteinsMinPeptidesPerProtein.GetValueOrDefault(),
                     progressMonitor);
                 Settings.Default.LastProteinAssociationFastaFilepath = fastaPath;
-                Settings.Default.Save();
                 ModifyDocument(doc => proteinAssociation.CreateDocTree(doc, progressMonitor), AuditLogEntry.SettingsLogFunction);
                 
             }, Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
@@ -3667,6 +3667,7 @@ namespace pwiz.Skyline
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
         private bool SaveSettings(CommandArgs commandArgs)
         {
             return HandleExceptions(commandArgs, () =>
@@ -3901,8 +3902,6 @@ namespace pwiz.Skyline
                 Assume.IsNotNull(imported);
                 if ((bool)imported)
                 {
-                    if (!SaveSettings(commandArgs))
-                        return false;
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(commandArgs.SkyrPath));
                 }
                 else
