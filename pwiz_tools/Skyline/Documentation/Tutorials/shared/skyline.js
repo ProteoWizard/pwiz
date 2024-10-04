@@ -61,7 +61,7 @@ function addFigureAltText()
     const images = document.querySelectorAll('img');
     var figureCounter = 1;
     images.forEach((img) => {
-        if (img.src.includes("s-")) {
+        if (img.src.includes("/s-")) {
             img.alt = `Figure ${figureCounter++}`;
         }
     });
