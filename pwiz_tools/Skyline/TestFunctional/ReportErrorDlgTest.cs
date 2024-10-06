@@ -21,10 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -84,9 +86,18 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(reportErrorDlg2);
 
             // Add 50,000 peptides to the document so that its size will exceed ReportErrorDlg.MAX_ATTACHMENT_SIZE
+            var random = new Random(0); // Pseudo random but consistent sequence because of the fixed seed
+            // They have to be unique to avoid getting collapsed by PeptideGroupDocNode.Merge() during the paste
+            var setPepsUnique = new HashSet<string>(50_000);
+            // Use all AAs except K and R to avoid missed cleavages
+            var allAas = AminoAcid.All.Where(aa => aa != 'K' && aa != 'R').ToArray();
+            for (int i = 0; i < 50_000; i++)
+            {
+                setPepsUnique.Add(GetUniquePep(setPepsUnique, random, allAas));
+            }
             RunUI(() =>
             {
-                SkylineWindow.Paste(TextUtil.LineSeparate(Enumerable.Repeat("ELVISLIVES", 50000)));
+                SkylineWindow.Paste(TextUtil.LineSeparate(setPepsUnique));
             });
 
             // Verify that the "Report Error" menu item on the Help menu is hidden unless the user holds down the shift key
@@ -166,6 +177,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(ReportErrorDlg.MAX_ATTACHMENT_SIZE, detailedDlg.SkylineFileBytes.Length);
             });
             WaitForClosedForm(reportErrorDlg3);
+        }
+
+        private string GetUniquePep(HashSet<string> setPeps, Random random, char[] allAas)
+        {
+            for (;;)
+            {
+                var sb = new StringBuilder(10);
+                for (int aaIndex = 0; aaIndex < 10; aaIndex++)
+                {
+                    sb.Append(allAas[random.Next(allAas.Length - 1)]);
+                }
+                var nextPep = sb.ToString();
+                if (!setPeps.Contains(nextPep))
+                    return nextPep;
+            }
         }
 
         [DllImport("user32.dll")]
