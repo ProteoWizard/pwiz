@@ -22,13 +22,13 @@ function addFigureAltText()
     var figureCounter = 1;
     images.forEach((img) => {
         if (img.src.includes("/s-")) {
-            img.alt = `Figure ${figureCounter}`;
+            img.title = `Figure ${figureCounter}`;
 
             var anchor = document.createElement('a');
             const anchorId = `figure${figureCounter}`
             anchor.setAttribute('name', anchorId);
             anchor.setAttribute('id', anchorId);
-            img.parentNode.insertBefore(anchor, img);
+            img.parentNode.parentNode.insertBefore(anchor, img.parentNode);
 
             figureCounter++
         }
