@@ -1722,9 +1722,10 @@ namespace pwiz.Skyline
             try
             {
                 long lineCount = Helpers.CountLinesInFile(fastaFile);
+                bool peptideList = IsPeptideList(fastaFile);
                 using (var readerFasta = new StreamReader(fastaFile))
                 {
-                    ImportFasta(readerFasta, lineCount, false, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
+                    ImportFasta(readerFasta, lineCount, peptideList, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
                 }
             }
             catch (Exception x)
@@ -1734,6 +1735,12 @@ namespace pwiz.Skyline
             }
         }
 
+        private bool IsPeptideList(string fastaFile)
+        {
+            using var reader = new StreamReader(fastaFile);
+            var line = reader.ReadLine();
+            return line != null && line.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX);
+        }
 
         public class ImportFastaInfo
         {
@@ -1756,28 +1763,40 @@ namespace pwiz.Skyline
             var docCurrent = DocumentUI;
 
             ModificationMatcher matcher = null;
-            if(peptideList)
+            if (peptideList)
             {
                 matcher = new ModificationMatcher();
-                List<string> sequences = new List<string>();
+                var sequences = new List<string>();
+                var lines = new List<string>();
                 string line;
                 var header = reader.ReadLine(); // Read past header
+                lines.Add(header);
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (line.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX))
+                    {
+                        lines.Add(line);
+                        continue;
+                    }
                     string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
+                    lines.Add(sequence);
+
+                    sequence = Transition.StripChargeIndicators(sequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
                     sequences.Add(sequence);
                 }
+
                 try
                 {
                     matcher.CreateMatches(docCurrent.Settings, sequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
                     var strNameMatches = matcher.FoundMatches;
                     if (!string.IsNullOrEmpty(strNameMatches))
                     {
-                        var message = TextUtil.LineSeparate(SkylineResources.SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
-                                                            string.Empty, strNameMatches);
+                        var message = TextUtil.LineSeparate(
+                            SkylineResources.SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
+                            string.Empty, strNameMatches);
                         if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
-                            this,
-                            message, SkylineResources.SkylineWindow_ImportFasta_OK))
+                                this,
+                                message, SkylineResources.SkylineWindow_ImportFasta_OK))
                         {
                             return;
                         }
@@ -1788,7 +1807,7 @@ namespace pwiz.Skyline
                     MessageDlg.ShowException(this, x);
                     return;
                 }
-                reader = new StringReader(TextUtil.LineSeparate(header, TextUtil.LineSeparate(sequences.ToArray())));
+                reader = new StringListReader(lines);
             }
 
             SrmDocument docNew = null;
