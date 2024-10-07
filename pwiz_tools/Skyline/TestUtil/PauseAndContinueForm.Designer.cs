@@ -41,9 +41,10 @@
             // 
             // btnContinue
             // 
-            this.btnContinue.Location = new System.Drawing.Point(12, 32);
+            this.btnContinue.Location = new System.Drawing.Point(18, 49);
+            this.btnContinue.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnContinue.Name = "btnContinue";
-            this.btnContinue.Size = new System.Drawing.Size(75, 23);
+            this.btnContinue.Size = new System.Drawing.Size(112, 35);
             this.btnContinue.TabIndex = 0;
             this.btnContinue.Text = "Continue";
             this.btnContinue.UseVisualStyleBackColor = true;
@@ -53,18 +54,20 @@
             // 
             this.lblDescription.AutoEllipsis = true;
             this.lblDescription.AutoSize = true;
-            this.lblDescription.Location = new System.Drawing.Point(13, 13);
+            this.lblDescription.Location = new System.Drawing.Point(20, 20);
+            this.lblDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDescription.Name = "lblDescription";
-            this.lblDescription.Size = new System.Drawing.Size(60, 13);
+            this.lblDescription.Size = new System.Drawing.Size(89, 20);
             this.lblDescription.TabIndex = 1;
             this.lblDescription.Text = "Description";
             // 
             // lblDescriptionLink
             // 
             this.lblDescriptionLink.AutoSize = true;
-            this.lblDescriptionLink.Location = new System.Drawing.Point(32, 13);
+            this.lblDescriptionLink.Location = new System.Drawing.Point(48, 20);
+            this.lblDescriptionLink.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDescriptionLink.Name = "lblDescriptionLink";
-            this.lblDescriptionLink.Size = new System.Drawing.Size(60, 13);
+            this.lblDescriptionLink.Size = new System.Drawing.Size(89, 20);
             this.lblDescriptionLink.TabIndex = 2;
             this.lblDescriptionLink.TabStop = true;
             this.lblDescriptionLink.Text = "Description";
@@ -74,9 +77,10 @@
             // btnCopyToClipBoard
             // 
             this.btnCopyToClipBoard.Enabled = false;
-            this.btnCopyToClipBoard.Location = new System.Drawing.Point(12, 61);
+            this.btnCopyToClipBoard.Location = new System.Drawing.Point(18, 94);
+            this.btnCopyToClipBoard.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCopyToClipBoard.Name = "btnCopyToClipBoard";
-            this.btnCopyToClipBoard.Size = new System.Drawing.Size(75, 23);
+            this.btnCopyToClipBoard.Size = new System.Drawing.Size(112, 35);
             this.btnCopyToClipBoard.TabIndex = 3;
             this.btnCopyToClipBoard.Text = "Copy Form";
             this.toolTip1.SetToolTip(this.btnCopyToClipBoard, resources.GetString("btnCopyToClipBoard.ToolTip"));
@@ -87,9 +91,10 @@
             // btnCopyMetafileToClipboard
             // 
             this.btnCopyMetafileToClipboard.Enabled = false;
-            this.btnCopyMetafileToClipboard.Location = new System.Drawing.Point(12, 90);
+            this.btnCopyMetafileToClipboard.Location = new System.Drawing.Point(18, 138);
+            this.btnCopyMetafileToClipboard.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCopyMetafileToClipboard.Name = "btnCopyMetafileToClipboard";
-            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(75, 23);
+            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(112, 35);
             this.btnCopyMetafileToClipboard.TabIndex = 4;
             this.btnCopyMetafileToClipboard.Text = "Copy Graph";
             this.toolTip1.SetToolTip(this.btnCopyMetafileToClipboard, "Copies metafile to clipboard");
@@ -100,7 +105,8 @@
             // saveScreenshotCheckbox
             // 
             this.saveScreenshotCheckbox.AutoSize = true;
-            this.saveScreenshotCheckbox.Location = new System.Drawing.Point(139, 99);
+            this.saveScreenshotCheckbox.Location = new System.Drawing.Point(139, 100);
+            this.saveScreenshotCheckbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.saveScreenshotCheckbox.Name = "saveScreenshotCheckbox";
             this.saveScreenshotCheckbox.Size = new System.Drawing.Size(157, 24);
             this.saveScreenshotCheckbox.TabIndex = 6;
@@ -111,10 +117,10 @@
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(203, 130);
+            this.ClientSize = new System.Drawing.Size(304, 200);
             this.ControlBox = false;
             this.Controls.Add(this.saveScreenshotCheckbox);
             this.Controls.Add(this.btnCopyMetafileToClipboard);
@@ -124,6 +130,7 @@
             this.Controls.Add(this.btnContinue);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PauseAndContinueForm";
