@@ -1446,19 +1446,21 @@ namespace TestRunner
 
                 if (asNightly) 
                 {
+                    // Run procdump if installed
+                    var process = new Process();
+                    process.StartInfo.FileName = "procdump.exe";
+                    var dmpDirQuote = string.IsNullOrEmpty(dmpDir) ? string.Empty : $@" ""{dmpDir}""";
+                    process.StartInfo.Arguments = $@"-accepteula -ma -mk -h -64 TestRunner{dmpDirQuote}";
+                    runTests.Log($@"# Attempting to launch 'procdump.exe {process.StartInfo.Arguments}', to try to diagnose hangs in TestRunner\r\n");
                     try
                     {
-                        // Run procdump if installed
-                        var process = new Process();
-                        process.StartInfo.FileName = "procdump.exe";
-                        process.StartInfo.Arguments = $@"-accepteula -ma -mk -h TestRunner {dmpDir??string.Empty}"; 
+
                         process.Start();
-                        runTests.Log("# SysInternals ProcDump has been launched, to try to diagnose hangs in TestRunner");
                     }
                     catch (Exception)
                     {
                         // ignored, presumably ProcDump is not installed    
-                        runTests.Log("# You may wish to install SysInternals ProcDump to try to diagnose hangs in TestRunner. It will be launched automatically if available.");
+                        runTests.Log("# ProcDump did not launch. You may wish to install SysInternals ProcDump to try to diagnose hangs in TestRunner. It will be launched automatically if available.\r\n");
                     }
                 }
 
