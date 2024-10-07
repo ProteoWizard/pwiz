@@ -1277,6 +1277,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private int ScreenShotCounter;
+
         public virtual bool AuditLogCompareLogs
         {
             get { return IsTutorial && !IsFullData; }   // Logs were recorded with partial data and not in Pass0
@@ -1309,22 +1311,22 @@ namespace pwiz.SkylineTestUtil
 
         private static FormLookup _formLookup;
 
-        public void PauseForScreenShot(string description = null, int? pageNum = null, string fileName = null, int? timeout = null)
+        public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null, null, fileName, timeout);
+            PauseForScreenShot(description, pageNum, null, null, timeout);
         }
-        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null, string fileName = null, int ? timeout = null)
+        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null, int ? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null, screenshotForm, fileName, timeout);
+            PauseForScreenShot(description, pageNum, null, screenshotForm, timeout);
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null, string fileName = null, int ? timeout = null)
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null)
             where TView : IFormView
         {
-            PauseForScreenShot(description, pageNum, typeof(TView), null, fileName, timeout);
+            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout);
         }
 
-        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, string fileName = null, int ? timeout = null)
+        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, int ? timeout = null)
         {
             if (formType != null)
             {
@@ -1338,7 +1340,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if ((IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue)) || IsAutoScreenShotMode)
+            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
             {
                 if (screenshotForm == null)
                 {
@@ -1356,12 +1358,11 @@ namespace pwiz.SkylineTestUtil
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                
-                var fileToSave = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, fileName)}.png" : null;
+                var fileToSave = !String.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, "s-" +ScreenShotCounter++)}.png" : null;
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(3000);
                     screenshotForm.Focus();
                     _shotManager.TakeNextShot(screenshotForm, fileToSave);
                 }
@@ -2464,7 +2465,7 @@ namespace pwiz.SkylineTestUtil
             RunUI(() => addStaticModDlg.Modification = mod);
 
             if (pauseText != null || pausePage.HasValue)
-                PauseForScreenShot(pauseText, pausePage, viewType);
+                PauseForScreenShot(pauseText, pausePage, viewType, null);
 
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
             OkDialog(editModsDlg, editModsDlg.OkDialog);

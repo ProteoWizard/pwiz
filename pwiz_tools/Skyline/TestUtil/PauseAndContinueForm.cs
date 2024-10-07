@@ -23,7 +23,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
@@ -36,6 +35,7 @@ namespace pwiz.SkylineTestUtil
 {
     public partial class PauseAndContinueForm : Form
     {
+        private static bool _saveScreenShotChecked = false;
         private readonly string _linkUrl;
         private readonly bool _showMatchingPage;
         private readonly string _fileToSave;
@@ -62,15 +62,14 @@ namespace pwiz.SkylineTestUtil
                 }
                 // Show the copy buttons
                 btnCopyToClipBoard.Visible = btnCopyToClipBoard.Enabled = true;
-                if (!String.IsNullOrEmpty(fileToSave))
-                {
-                    btnSaveScreenshot.Visible = btnSaveScreenshot.Enabled = true;
-                }
                 if ((_screenshotForm is GraphSummary zgControl) && zgControl.GraphControl != null)
                 {
                     btnCopyMetafileToClipboard.Visible = btnCopyMetafileToClipboard.Enabled = true; // Control is a metafile provider
                 }
             }
+
+            saveScreenshotCheckbox.Checked = _saveScreenShotChecked;
+
             _linkUrl = link;
             if (!string.IsNullOrEmpty(link))
             {
@@ -230,6 +229,11 @@ namespace pwiz.SkylineTestUtil
             // Copy current window image to clipboard, with clean edges
             _screenshotForm.Focus();
             _screenshotManager.TakeNextShot(_screenshotForm);
+            if (saveScreenshotCheckbox.Checked)
+            {
+                _screenshotManager.TakeNextShot(_screenshotForm, _fileToSave);
+            }
+
         }
 
         private void btnCopyMetaFileToClipboard_Click(object sender, EventArgs e)
@@ -239,15 +243,14 @@ namespace pwiz.SkylineTestUtil
             {
                 CopyEmfToolStripMenuItem.CopyEmf(zgControl.GraphControl);
             }
-        }
-
-        private void btnSaveScreenshot_Click(object sender, EventArgs e)
-        {
-            if (!String.IsNullOrEmpty(_fileToSave))
+            if (saveScreenshotCheckbox.Checked)
             {
-                _screenshotForm.Focus();
                 _screenshotManager.TakeNextShot(_screenshotForm, _fileToSave);
             }
+        }
+        private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            _saveScreenShotChecked = saveScreenshotCheckbox.Checked;
         }
     }
 }

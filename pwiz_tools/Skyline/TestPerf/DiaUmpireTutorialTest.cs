@@ -656,7 +656,7 @@ namespace TestPerf
             PauseForScreenShot("Import FASTA summary form", 16);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 13, null, 30*1000); // 30 second timeout to avoid getting stuck
+            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 13, 30*1000); // 30 second timeout to avoid getting stuck
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
