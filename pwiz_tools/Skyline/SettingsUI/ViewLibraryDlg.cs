@@ -2679,6 +2679,7 @@ namespace pwiz.Skyline.SettingsUI
                     _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
                 }
 
+                _mzRangePartsToDraw = new List<TextColor>();
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
@@ -2690,12 +2691,13 @@ namespace pwiz.Skyline.SettingsUI
                     catch (InvalidChemicalModificationException e)
                     {
                         _mz = double.NaN;
-                        _mzRangePartsToDraw = new List<TextColor>() { new TextColor(e.Message) };
+                        // Show the error at the top of the tip
+                        _seqPartsToDraw.Insert(0,new TextColor(e.Message, Brushes.Red));
+                        _seqPartsToDraw.Insert(1, new TextColor(Environment.NewLine));
                     }
                 }
                 else
                 {
-                    _mzRangePartsToDraw = new List<TextColor>();
                     var precursorKey = _pepInfo.Key.LibraryKey as PrecursorLibraryKey;
                     if (precursorKey != null)
                     {
@@ -2938,13 +2940,23 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var size = new SizeF(startX, startY);
                 float height = 0;
+                float lineWidth = 0;
+                float width = 0;
+                float nLines = 1;
                 foreach (var part in parts)
                 {
-                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(size.Width, size.Height));
-                    size.Width += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
-                    height = g.MeasureString(part.Text, rt.FontNormal).Height;
+                    if (part.Text.StartsWith(Environment.NewLine))
+                    {
+                        lineWidth = 0;
+                        nLines++;
+                    }
+                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(startX + lineWidth, startY + height));
+                    lineWidth += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
+                    width = Math.Max(lineWidth, width);
+                    height = Math.Max(height, g.MeasureString(part.Text, rt.FontNormal).Height);
                 }
-                size.Height = height;
+                size.Height = nLines * height;
+                size.Width = width;
                 return size;
             }
 
