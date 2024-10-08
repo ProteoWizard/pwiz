@@ -19,11 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
@@ -959,11 +959,11 @@ namespace pwiz.Skyline.Model.Results
                         string precursorText = GetTextForNode(NodePep, dataSet.NodeGroup, null);
                         if (dataSet.MinRawTime > dataSet.MaxRawTime)
                         {
-                            Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, precursorText);
+                            Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, precursorText);
                         }
                         else
                         {
-                            Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                            Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
                                 precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
                         }
                         DataSets.RemoveAt(i);
@@ -978,11 +978,11 @@ namespace pwiz.Skyline.Model.Results
                                 string transitionText = GetTextForNode(NodePep, dataSet.NodeGroup, chrom.DocNode);
                                 if (!chrom.Times.Any())
                                 {
-                                    Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, transitionText);
+                                    Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, transitionText);
                                 }
                                 else
                                 {
-                                    Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                                    Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
                                         transitionText, explicitRT, chrom.Times.First(), chrom.Times.Last());
                                 }
                                 dataSet.Chromatograms.RemoveAt(j);
