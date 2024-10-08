@@ -23,9 +23,9 @@
     </p>
     <p>
         尽管有多种方法可将 DDA 搜索结果转换为适合该库 DIA 分析方法的库（在 <a
-            href="https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/events/2014%20Webinars/Webinar%202/begin.view">第 2 场 Skyline
+            href="https://skyline.ms/webinar02.url">第 2 场 Skyline
             教程网络研讨会</a>中描述为“先验知识工作流程”，此后在<a href="https://skyline.ms/webinar14.url">第 14</a>、<a href="https://skyline.ms/webinar15.url">15</a> 和 <a
-            href="https://skyline.ms/webinar18.url">18 场</a>网络研讨会以及 <a href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH
+            href="https://skyline.ms/webinar18.url">18 场</a>网络研讨会以及 <a href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH
             数据分析</a>教程中都有更详尽的记录），但开始 DIA 分析的一种简单易行的方法是在同一仪器上穿插 DDA 运行和 DIA 运行，将 DDA 结果的谱图和保留时间作为对 DIA 运行的预测。
     </p>
     <p>
@@ -62,14 +62,14 @@
     </p>
     <ul>
         <li>启动 Skyline。</li>
-        <li>在<strong>起始页上</strong>单击<strong>空白文档</strong>，显示如下：</li>
+        <li>在<b>起始页上</b>单击<b>空白文档</b>，显示如下：</li>
     </ul>
     <p>
         <img src="../../shared/zh-CHS/skyline-blank-document.png" />
     </p>
     <ul>
-        <li>在<strong>设置</strong>菜单中单击<strong>默认值。</strong></li>
-        <li>在询问您是否保存当前设置时，单击表单上的<strong>否</strong>。</li>
+        <li>在<b>设置</b>菜单中单击<b>默认值。</b></li>
+        <li>在询问您是否保存当前设置时，单击表单上的<b>否</b>。</li>
     </ul>
     <p>
         该 Skyline 实例中的文档设置现已重置为默认值。
@@ -78,7 +78,7 @@
         由于本教程涵盖蛋白质组学主题，因此您可以执行以下操作来选择蛋白质组学界面：
     </p>
     <ul class="keep-next">
-        <li>单击 Skyline 窗口右上角的用户界面控件，然后单击类似如下的<strong>蛋白质组学界面</strong>：</li>
+        <li>单击 Skyline 窗口右上角的用户界面控件，然后单击类似如下的<b>蛋白质组学界面</b>：</li>
     </ul>
     <p>
         <img src="../../shared/zh-CHS/proteomics-interface.png" />
@@ -90,7 +90,7 @@
         对于 DIA 分析，您需要强制 Skyline 对提取的所有定量离子对的峰面积进行积分。要执行此操作：
     </p>
     <ul>
-        <li>在<strong>设置</strong>菜单上，单击<strong>全部积分</strong>。</li>
+        <li>在<b>设置</b>菜单上，单击<b>全部积分</b>。</li>
     </ul>
     <h1>为 DIA 设置分离方案</h1>
     <p>
@@ -101,70 +101,70 @@
         允许您定义“分离方案”（串联质谱片段的母离子分离窗口模式）来设置 DIA 方法。即便您已收集 DIA 数据，也要定义所用的分离方案，以便 Skyline 处理 DIA 运行。要为本教程实验定义分离方案，请执行以下步骤：
     </p>
     <ul>
-        <li>在<strong>设置</strong>菜单中单击<strong>离子对设置</strong> 。</li>
-        <li>单击<strong>全扫描</strong>选项卡。</li>
-        <li>在 <strong>MS1 筛选</strong>部分，选择<strong>同位素峰值包含</strong>下拉列表中的“计数”。</li>
-        <li>在<strong>峰</strong>字段中输入“3”。</li>
-        <li>在<strong>串联质谱筛选</strong>部分， 选择<strong>采集方法</strong>下拉菜单中的“DIA”，告知 Skyline 您将导入 DIA 数据。</li>
+        <li>在<b>设置</b>菜单中单击<b>离子对设置</b> 。</li>
+        <li>单击<b>全扫描</b>选项卡。</li>
+        <li>在 <b>MS1 筛选</b>部分，选择<b>同位素峰值包含</b>下拉列表中的“计数”。</li>
+        <li>在<b>峰</b>字段中输入“3”。</li>
+        <li>在<b>串联质谱筛选</b>部分， 选择<b>采集方法</b>下拉菜单中的“DIA”，告知 Skyline 您将导入 DIA 数据。</li>
     </ul>
     <p>
         对于大多数胰蛋白酶肽段，前 3 个同位素峰强度最高。您还可以使用基于基本（最强）同位素峰百分比的强度阈值，但这些设置对于胰蛋白酶肽段而言应是合理的默认值。
     </p>
     <ul>
-        <li>将<strong>母离子质量分析仪</strong>和<strong>子离子质量分析仪</strong>设置为“Centroided”。</li>
+        <li>将<b>母离子质量分析仪</b>和<b>子离子质量分析仪</b>设置为“Centroided”。</li>
     </ul>
     <table>
         <tr>
-            <td><strong>备注：</strong>这些数据在 Q-Exactive 上收集而来，其中 MS1 和 MS2 扫描均使用 Orbitrap 进行。不过，我们发现在质量分析仪指定为“Orbitrap”时，从质心谱图中提取色谱图比使用原始轮廓谱图产生的结果更好。
+            <td><b>备注：</b>这些数据在 Q-Exactive 上收集而来，其中 MS1 和 MS2 扫描均使用 Orbitrap 进行。不过，我们发现在质量分析仪指定为“Orbitrap”时，从质心谱图中提取色谱图比使用原始轮廓谱图产生的结果更好。
             </td>
         </tr>
     </table>
     <ul>
-        <li>在 <strong>MS1 筛选</strong>和<strong>串联质谱筛选</strong>的<strong>质量准确度</strong>字段中输入“20”ppm。</li>
+        <li>在 <b>MS1 筛选</b>和<b>串联质谱筛选</b>的<b>质量准确度</b>字段中输入“20”ppm。</li>
     </ul>
     <p class="keep-next">
-        <strong>“离子对设置”</strong>表单将显示如下：
+        <b>“离子对设置”</b>表单将显示如下：
     </p>
     <p>
         <img src="image-0.png" />
     </p>
     <table>
         <tr>
-            <td><strong>备注：</strong>您将<strong>保留时间筛选</strong>选项保留为<strong>仅使用 MS/MS ID </strong>[5]<strong> 分钟之内的扫描</strong>。Skyline
+            <td><b>备注：</b>您将<b>保留时间筛选</b>选项保留为<b>仅使用 MS/MS ID</b> [5] <b>分钟之内的扫描</b>。Skyline
                 就会明白，它应当只从您库中找到的肽段谱图匹配 5 分钟内采集的 DIA 谱图提取强度。对于单个肽段谱图匹配，总提取窗口将为 10 分钟。如果给定的肽段有多个 ID，Skyline 将从最短 ID 时间减去 5 分钟和最长 ID 时间加上 5
-                分钟的范围内采集的谱图中进行提取。（所有 ID 保留时间存储在您建的非冗余库中，稍后会看到。）第二个选项是<strong>仅使用预测保留 </strong> [5] <strong>分钟之内的扫描</strong>，其中使用保留时间预测器（例如 SSRCalc
+                分钟的范围内采集的谱图中进行提取。（所有 ID 保留时间存储在您建的非冗余库中，稍后会看到。）第二个选项是<b>仅使用预测保留</b>  [5] <b>分钟之内的扫描</b>，其中使用保留时间预测器（例如 SSRCalc
                 或更常见的 iRT 库）来确定提取时间范围。本教程中虽不会使用 RT 预测器，但它们在前文提到的其它教程和网络研讨会以及<a
                     href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>提示（在
                 Skyline 网页上的<a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tips">提示</a> &gt; <a
-                    href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">使用其它定量工具</a>）中讨论过<strong>。</strong>
+                    href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">使用其它定量工具</a>）中讨论过<b>。</b>
             </td>
         </tr>
     </table>
     <p>
-        您已设置全扫描仪器的基本参数。接下来将指定 DIA 分离方案，或仪器在执行 DIA 时循环使用的母离子<em>质荷比</em>范围模式。例如在本教程的数据集中，Q Exactive 仪器使用循环的母离子<em>质荷比</em>范围从 500 至 520 <em>质荷比</em>
-        开始，然后是 520 至 540 <em>质荷比</em>，一直到 880 至 900 <em>质荷比</em>（或连续的 20 质荷比窗口，从 500 至 900 <em>质荷比</em>），然后重复这一循环。要在 Skyline 中指定分离方案，请执行以下步骤：
+        您已设置全扫描仪器的基本参数。接下来将指定 DIA 分离方案，或仪器在执行 DIA 时循环使用的母离子<i>质荷比</i>范围模式。例如在本教程的数据集中，Q Exactive 仪器使用循环的母离子<i>质荷比</i>范围从 500 至 520 <i>质荷比</i>
+        开始，然后是 520 至 540 <i>质荷比</i>，一直到 880 至 900 <i>质荷比</i>（或连续的 20 质荷比窗口，从 500 至 900 <i>质荷比</i>），然后重复这一循环。要在 Skyline 中指定分离方案，请执行以下步骤：
     </p>
     <ul>
-        <li>从<strong>分离方案</strong>下拉列表菜单中选择<strong>&lt;添加...&gt;</strong>。</li>
+        <li>从<b>分离方案</b>下拉列表菜单中选择<b>&lt;添加...&gt;</b>。</li>
     </ul>
     <p class="keep-next">
-        <strong>编辑分离方案</strong>表单应显示如下：
+        <b>编辑分离方案</b>表单应显示如下：
     </p>
     <p>
         <img src="image-1.png" />
     </p>
     <ul>
-        <li>选择<strong>预指定分离窗口</strong>。</li>
+        <li>选择<b>预指定分离窗口</b>。</li>
     </ul>
     <p>
-        这将启用从中指定分离窗口的网格。您可以在网格中手动输入窗口边界，但由于本例中窗口边界的循环非常规律（从 500 到 900 <em>质荷比</em>，以 20 <em>质荷比</em>为增量），因此可采取一种更快捷的方法来指定边界：
+        这将启用从中指定分离窗口的网格。您可以在网格中手动输入窗口边界，但由于本例中窗口边界的循环非常规律（从 500 到 900 <i>质荷比</i>，以 20 <i>质荷比</i>为增量），因此可采取一种更快捷的方法来指定边界：
     </p>
     <ul>
-        <li>单击<strong>计算</strong>按钮以显示<strong>计算分离方案</strong>表单。</li>
-        <li>在<strong>起始质荷比</strong>字段中输入“500”。</li>
-        <li>在<strong>终止质荷比</strong>字段中输入“900”。</li>
-        <li>在<strong>窗口宽度</strong>字段中输入“20”。</li>
-        <li>选中<strong>优化窗口布局</strong>复选框。</li>
+        <li>单击<b>计算</b>按钮以显示<b>计算分离方案</b>表单。</li>
+        <li>在<b>起始质荷比</b>字段中输入“500”。</li>
+        <li>在<b>终止质荷比</b>字段中输入“900”。</li>
+        <li>在<b>窗口宽度</b>字段中输入“20”。</li>
+        <li>选中<b>优化窗口布局</b>复选框。</li>
     </ul>
     <p>
         这样一来，窗口边界将优化到大约 0.25 质荷比，这里可能出现电荷 1 和 2 的肽段母离子。电荷 3 和 4 的一些母离子可能更接近这些边界，但在使用 20 质荷比窗口时，如果 Q1 分离在边界<sup>3</sup> 处合理有效时，这些窗口应当仍然很少发生，从而减轻了对
@@ -173,67 +173,67 @@
     <p>
         <img src="image-2.png" />
     </p>
-    <p>
-        <strong>图：</strong>从观察到的肽段常见库中发现的带 1-4 个电荷的肽段母离子计算得出的直方图。最高的峰代表电荷 1-4 的母离子，第二高的峰代表电荷 2 和 4 的母离子，较小的峰只代表电荷 3 的母离子，电荷 4 的母离子作为小肩部仅在电荷 3
+    <p class="fig-text">
+        <b>图：</b>从观察到的肽段常见库中发现的带 1-4 个电荷的肽段母离子计算得出的直方图。最高的峰代表电荷 1-4 的母离子，第二高的峰代表电荷 2 和 4 的母离子，较小的峰只代表电荷 3 的母离子，电荷 4 的母离子作为小肩部仅在电荷 3
         的峰上可见。标有“Optimal” Boundary的垂直线表示此范围内的优化窗口布局边界。（由 Brian Searle 提供）
     </p>
     <p>
         <img src="image-3.png" />
     </p>
-    <p>
+    <p class="fig-text">
         来自 Gillet 等人的补充图 S1。MCP 2012：c) 显示所定义范围的完美矩形分离，d) 显示在定义的四极分离范围边缘超过 0.5 质荷比的信号衰减不太理想，e 和 f)
         显示完整的同位素分布如何在带有和没有重叠边缘的窗口之间分割。务必记住，虽只针对单同位素质荷比，但整个同位素分布均被分离，因此即便单同位素母离子质荷比看似很接近分离窗口的边缘，但也可以获得很强的碎片离子信号。
     </p>
     <p>
-        如果您在使用的 DIA 数据已经被采集，此时定义的分离方案就必须反映采集时使用的仪器设置。在这种情况下，完全可以单击<strong>导入</strong>按钮，将某个现有数据文件导入 Skyline。
+        如果您在使用的 DIA 数据已经被采集，此时定义的分离方案就必须反映采集时使用的仪器设置。在这种情况下，完全可以单击<b>导入</b>按钮，将某个现有数据文件导入 Skyline。
     </p>
     <p class="keep-next">
-        <strong>计算分离方案</strong>表单应显示如下：
+        <b>计算分离方案</b>表单应显示如下：
     </p>
     <p>
         <img src="image-4.png" />
     </p>
     <ul>
-        <li>单击<strong>确定</strong>按钮。</li>
+        <li>单击<b>确定</b>按钮。</li>
     </ul>
     <p>
-        Skyline 将自动填充覆盖 500 至 900 <em>质荷比</em>（间隔为 20 <em>质荷比</em>）所需要的 20 个窗口的边界。
+        Skyline 将自动填充覆盖 500 至 900 <i>质荷比</i>（间隔为 20 <i>质荷比</i>）所需要的 20 个窗口的边界。
     </p>
     <p class="keep-next">
-        <strong>编辑分离方案</strong>表单应显示如下：
+        <b>编辑分离方案</b>表单应显示如下：
     </p>
     <p>
         <img src="image-5.png" />
     </p>
     <p>
-        在 Skyline 中还可以直观地看到母离子<em>质荷比</em>范围内随时间变化的分离情况，用于检查您所输入的信息是否正确。
+        在 Skyline 中还可以直观地看到母离子<i>质荷比</i>范围内随时间变化的分离情况，用于检查您所输入的信息是否正确。
     </p>
     <ul>
-        <li>单击您刚刚单击的<strong>计算</strong>按钮右侧的<strong>图形</strong>按钮。</li>
+        <li>单击您刚刚单击的<b>计算</b>按钮右侧的<b>图形</b>按钮。</li>
     </ul>
     <p class="keep-next">
-        您应当看到分离窗口的周期随时间推移而变化的图形，其中 Y 轴表示周期/时间，X 轴表示<em>质荷比</em>：
+        您应当看到分离窗口的周期随时间推移而变化的图形，其中 Y 轴表示周期/时间，X 轴表示<i>质荷比</i>：
     </p>
     <p>
         <img src="image-6.png" />
     </p>
     <ul>
-        <li>单击<strong>关闭</strong>按钮。</li>
-        <li>在<strong>名称</strong>字段中输入该分离方案的名称“500 to 900 by 20”。</li>
-        <li>单击<strong>编辑分离方案</strong>表单中的<strong>确定</strong>按钮。</li>
-        <li>单击<strong>离子对设置</strong>表单中的<strong>确定</strong>按钮。</li>
+        <li>单击<b>关闭</b>按钮。</li>
+        <li>在<b>名称</b>字段中输入该分离方案的名称“500 to 900 by 20”。</li>
+        <li>单击<b>编辑分离方案</b>表单中的<b>确定</b>按钮。</li>
+        <li>单击<b>离子对设置</b>表单中的<b>确定</b>按钮。</li>
     </ul>
     <p>
-        请注意，在 DIA 中，仪器<em>不</em>需要一组特定的离子对 (SRM) 或母离子 (PRM) 来进行测量，因此即便目标仍然为空，但您的文件现在已具备设置 DIA 运行所需的一切信息。DIA 分离方案可按以下方式导出到仪器。
+        请注意，在 DIA 中，仪器<i>不</i>需要一组特定的离子对 (SRM) 或母离子 (PRM) 来进行测量，因此即便目标仍然为空，但您的文件现在已具备设置 DIA 运行所需的一切信息。DIA 分离方案可按以下方式导出到仪器。
     </p>
     <ul>
-        <li>在<strong>文件</strong>菜单中选择<strong>导出</strong>，然后单击<strong>分离列表</strong>。</li>
+        <li>在<b>文件</b>菜单中选择<b>导出</b>，然后单击<b>分离列表</b>。</li>
     </ul>
     <p>
-        随即出现<strong>导出分离列表</strong>，从中可以选择分离列表的导出格式。
+        随即出现<b>导出分离列表</b>，从中可以选择分离列表的导出格式。
     </p>
     <ul>
-        <li>从<strong>仪器类型</strong>下拉菜单中选择<strong> Thermo Q Exactive</strong>。</li>
+        <li>从<b>仪器类型</b>下拉菜单中选择 <b>Thermo Q Exactive</b>。</li>
     </ul>
     <p class="keep-next">
         该表单应显示如下：
@@ -242,10 +242,10 @@
         <img src="image-7.png" />
     </p>
     <ul>
-        <li>单击<strong>确定</strong>按钮。</li>
+        <li>单击<b>确定</b>按钮。</li>
         <li>在出现的保存表单中，导航到您为本教程创建的文件夹。</li>
-        <li>在<strong>文件名</strong>字段中输入名称“DIA_tutorial_isolation_list.csv”。</li>
-        <li>单击<strong>保存</strong>按钮。</li>
+        <li>在<b>文件名</b>字段中输入名称“DIA_tutorial_isolation_list.csv”。</li>
+        <li>单击<b>保存</b>按钮。</li>
     </ul>
     <p class="keep-next">
         打开您保存的文件。该文件显示如下：
@@ -266,30 +266,30 @@
         文件转换 (804 MB)。在配置 Skyline 文档来分析相关 DIA 运行时，第一步就是将这些搜索结果导入 Skyline，创建包含串联质谱谱图和数据采集保留时间的谱图库。要导入 DDA 搜索结果，请执行以下操作：
     </p>
     <ul>
-        <li>在<strong>文件</strong>菜单中选择<strong>导入</strong>，然后单击<strong>肽段搜索</strong>。</li>
+        <li>在<b>文件</b>菜单中选择<b>导入</b>，然后单击<b>肽段搜索</b>。</li>
     </ul>
     <p>
         Skyline 会指示您需要保存当前文档，这样它便能获知要在电脑磁盘中执行分析的位置。
     </p>
     <ul>
-        <li>单击<strong>确定</strong>按钮。</li>
+        <li>单击<b>确定</b>按钮。</li>
         <li>导航到您为本教程创建的文件夹。</li>
-        <li>在<strong>文件名</strong>字段中键入“DIA-tutorial”。</li>
-        <li>单击<strong>保存</strong>按钮。</li>
+        <li>在<b>文件名</b>字段中键入“DIA-tutorial”。</li>
+        <li>单击<b>保存</b>按钮。</li>
     </ul>
     <p class="keep-next">
-        <strong>导入肽段搜索</strong>向导应显示如下：
+        <b>导入肽段搜索</b>向导应显示如下：
     </p>
     <p>
         <img src="image-9.png" />
     </p>
     <p>
-        对于该数据集，<strong>截止得分</strong>字段设置为“0.95”表明 PeptideProphet 得分为 0.95 或更高的肽段谱图匹配项将包括在内，因为 DDA 数据采用 TPP 处理（在使用 SEQUEST 进行肽段谱图匹配之后）。对于使用 q
+        对于该数据集，<b>截止得分</b>字段设置为“0.95”表明 PeptideProphet 得分为 0.95 或更高的肽段谱图匹配项将包括在内，因为 DDA 数据采用 TPP 处理（在使用 SEQUEST 进行肽段谱图匹配之后）。对于使用 q
         值或预期得分的其它谱图匹配管道，其中 0 表示最好，1 表示最差，截止得分使用 1 – 得分。因此，0.95 意味着 ≤0.05。对于可重用的库，可能要使用更严格的截止得分，如 0.99（即 ≤0.01 或 q 值错误发现率为 1%）。
     </p>
     <ul>
-        <li>单击<strong>添加文件</strong>按钮。</li>
-        <li>在出现的<strong>添加输入文件</strong>表单中，从教程所在的目录中选择以下文件：<ul>
+        <li>单击<b>添加文件</b>按钮。</li>
+        <li>在出现的<b>添加输入文件</b>表单中，从教程所在的目录中选择以下文件：<ul>
                 <li>interact-20130311_DDA_Pit01.pep.xml</li>
             </ul>
         </li>
@@ -301,67 +301,67 @@
             href="https://skyline.ms/build-blib.url">支持的工具和文件格式的完整列表</a>。
     </p>
     <ul>
-        <li>单击<strong>打开</strong>将此文件添加到所建的库中。</li>
-        <li>在<strong>工作流程</strong>框中，单击 <strong>DIA</strong> 选项。</li>
+        <li>单击<b>打开</b>将此文件添加到所建的库中。</li>
+        <li>在<b>工作流程</b>框中，单击 <b>DIA</b> 选项。</li>
     </ul>
     <p class="keep-next">
-        向导中的<strong>谱图库</strong>页面现在应显示如下：
+        向导中的<b>谱图库</b>页面现在应显示如下：
     </p>
     <p>
         <img src="image-10.png" />
     </p>
     <ul>
-        <li>单击<strong>下一步</strong>，根据搜索结果建立谱图库。</li>
+        <li>单击<b>下一步</b>，根据搜索结果建立谱图库。</li>
     </ul>
     <p>
-        Skyline 建完谱图库后，所有与串联质谱谱图匹配的肽段及其 DDA 运行的保留时间都可以包含在您的 Skyline 文档中。但首先会显示<strong>提取色谱图</strong>页面，从中可以告知 Skyline 在哪里找到将用于色谱图提取、峰检测和峰面积计算的 DIA
+        Skyline 建完谱图库后，所有与串联质谱谱图匹配的肽段及其 DDA 运行的保留时间都可以包含在您的 Skyline 文档中。但首先会显示<b>提取色谱图</b>页面，从中可以告知 Skyline 在哪里找到将用于色谱图提取、峰检测和峰面积计算的 DIA
         数据文件。
     </p>
     <ul>
-        <li>单击<strong>浏览</strong>按钮。</li>
+        <li>单击<b>浏览</b>按钮。</li>
         <li>在 DIA 文件夹中，选择本教程中包含的两个 .raw 文件。</li>
     </ul>
     <p class="keep-next">
-        <strong>浏览结果文件</strong>表单应显示如下：
+        <b>浏览结果文件</b>表单应显示如下：
     </p>
     <p>
         <img src="image-11.png" />
     </p>
     <ul>
-        <li>单击<strong>打开</strong>按钮。</li>
+        <li>单击<b>打开</b>按钮。</li>
     </ul>
     <p class="keep-next">
-        <strong>导入肽段搜索</strong>表单应显示如下：
+        <b>导入肽段搜索</b>表单应显示如下：
     </p>
     <p>
         <img src="image-12.png" />
     </p>
     <ul>
-        <li>单击<strong>下一步</strong>按钮。</li>
+        <li>单击<b>下一步</b>按钮。</li>
     </ul>
     <p>
         Skyline 会显示一个表单，询问您是否移除相同前缀“20130311_DIA_Pit0”，这样 Skyline 界面中显示的重复测定名称将更短，并且通常更易于使用。但在本例中，名称将缩短为“1”和“2”。
     </p>
     <ul>
-        <li>在<strong>相同前缀</strong>字段中，删除后缀“Pit0”。</li>
+        <li>在<b>相同前缀</b>字段中，删除后缀“Pit0”。</li>
     </ul>
     <p class="keep-next">
-        <strong>导入结果</strong>表单现在应显示如下：
+        <b>导入结果</b>表单现在应显示如下：
     </p>
     <p>
         <img src="image-13.png" />
     </p>
     <ul>
-        <li>单击<strong>确定</strong>按钮。</li>
+        <li>单击<b>确定</b>按钮。</li>
     </ul>
     <p>
-        此时将出现<strong>添加修饰</strong>页面，其中显示谱图库包含 M[+16] 肽段序列，这与 Unimod 的修饰“Oxidation (M)”相匹配。如果想在目标列表中允许这类修饰，可以选中修饰名称旁边的复选框，但在本教程中不要这样做。
+        此时将出现<b>添加修饰</b>页面，其中显示谱图库包含 M[+16] 肽段序列，这与 Unimod 的修饰“Oxidation (M)”相匹配。如果想在目标列表中允许这类修饰，可以选中修饰名称旁边的复选框，但在本教程中不要这样做。
     </p>
     <ul>
-        <li>单击<strong>下一步</strong>按钮。</li>
+        <li>单击<b>下一步</b>按钮。</li>
     </ul>
     <p class="keep-next">
-        随即将前往<strong>配置离子对设置</strong>页面，如下所示：
+        随即将前往<b>配置离子对设置</b>页面，如下所示：
     </p>
     <p>
         <img src="image-14.png" />
@@ -374,32 +374,32 @@
         <li>离子电荷指示为 1 和 2，离子类型指示为 y 和 b 离子，并且是从 MS1 谱图提取<br />母离子。</li>
         <li>子离子范围指示除 y1、y2、b1、b2 之外的所有离子，它们的选择性较低，因此通常排除在外。</li>
         <li>最小质荷比和最大质荷比范围仅指示串联质谱谱图，因为可接受的母离子质荷比范围由 DIA 分离方案定义。</li>
-        <li>用于排除 DIA 母离子窗口范围的选项可以告知 Skyline 不要包含 DIA 分离窗口内的离子对（例如，如果母离子位于 500 到 520 <em>质荷比</em> DIA 窗口内，则不包含 513
-            <em>质荷比</em>处的子离子）。在某些情况下，这可能是一种理想的排除方式，因为逃离分段的母离子在原始分离范围内会导致串联质谱谱图中的噪声增大，并造成潜在干扰，基于该范围内碎片离子的定量结果也就不太可靠。</li>
-        <li>离子匹配耐受性 0.05，是指将 DDA 库谱图与碎片离子匹配并分配库强度时使用该耐受性。这大约是 50 ppm（在 1000 <em>质荷比</em>处），对于 Orbitrap 串联质谱谱图可能仍有点宽。</li>
+        <li>用于排除 DIA 母离子窗口范围的选项可以告知 Skyline 不要包含 DIA 分离窗口内的离子对（例如，如果母离子位于 500 到 520 <i>质荷比</i> DIA 窗口内，则不包含 513
+            <i>质荷比</i>处的子离子）。在某些情况下，这可能是一种理想的排除方式，因为逃离分段的母离子在原始分离范围内会导致串联质谱谱图中的噪声增大，并造成潜在干扰，基于该范围内碎片离子的定量结果也就不太可靠。</li>
+        <li>离子匹配耐受性 0.05，是指将 DDA 库谱图与碎片离子匹配并分配库强度时使用该耐受性。这大约是 50 ppm（在 1000 <i>质荷比</i>处），对于 Orbitrap 串联质谱谱图可能仍有点宽。</li>
         <li>选择 6 个碎片离子和需要 6 个碎片离子的选项表明所有目标都恰好有 6 个离子对，并且谱图与至少 6 个离子不匹配的肽段将被排除。</li>
     </ul>
     <p>
         要移至下一页，请执行以下操作：
     </p>
     <ul>
-        <li>单击<strong>下一步</strong>按钮。</li>
+        <li>单击<b>下一步</b>按钮。</li>
     </ul>
     <p class="keep-next">
-        此时将前往<strong>配置全扫描设置</strong>页面，其中应显示您早先配置的相同设置，但务必要显示如下：
+        此时将前往<b>配置全扫描设置</b>页面，其中应显示您早先配置的相同设置，但务必要显示如下：
     </p>
     <p>
         <img src="image-15.png" />
     </p>
     <ul>
-        <li>单击<strong>下一步</strong>按钮。</li>
+        <li>单击<b>下一步</b>按钮。</li>
     </ul>
     <p>
-        随即进入<strong>导入 Fasta</strong>页面，其中要求您以 FASTA 格式指定所要针对的蛋白质以及用于将它们消化成肽段的蛋白酶，您可以将其保留为默认胰蛋白酶，且不允许任何遗漏的酶解位点数。
+        随即进入<b>导入 Fasta</b>页面，其中要求您以 FASTA 格式指定所要针对的蛋白质以及用于将它们消化成肽段的蛋白酶，您可以将其保留为默认胰蛋白酶，且不允许任何遗漏的酶解位点数。
     </p>
     <ul>
-        <li>单击<strong>浏览</strong>按钮。</li>
-        <li>在<strong>打开 FASTA</strong> 表单中，导航到您一直在使用的教程文件夹，双击名称为“pituitary_database.fasta”的文件。</li>
+        <li>单击<b>浏览</b>按钮。</li>
+        <li>在<b>打开 FASTA</b> 表单中，导航到您一直在使用的教程文件夹，双击名称为“pituitary_database.fasta”的文件。</li>
     </ul>
     <p class="keep-next">
         该表单现在应显示如下：
@@ -409,10 +409,10 @@
     </p>
     <p>
         在这个简单的介绍中，您刚刚提供的 FASTA 文本中只有 6 个目标蛋白质，您将不使用诱饵或通过 mProphet 算法生成的动态峰选择模型。有关这些选项的详细信息，请查阅 <a
-            href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH 数据分析</a>教程。
+            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。
     </p>
     <ul>
-        <li>单击<strong>完成</strong>按钮。</li>
+        <li>单击<b>完成</b>按钮。</li>
     </ul>
     <p class="keep-next">
         Skyline 将显示一个表单，告知您它将添加 6 个蛋白质和 21 个肽段，涵盖 25 个母离子和 225 个离子对。对于每个蛋白质，此列表仅包含谱图库中存在的肽段。
@@ -421,34 +421,33 @@
         <img src="image-17.png" />
     </p>
     <ul>
-        <li>单击<strong>确定</strong>按钮。</li>
+        <li>单击<b>确定</b>按钮。</li>
     </ul>
     <p>
-        这些蛋白质和肽段应出现在<strong>目标</strong>窗格中，并且应从您选择的原始数据文件自动开始提取色谱图。您可以移动或关闭进度窗口并继续以下操作：
+        这些蛋白质和肽段应出现在<b>目标</b>窗格中，并且应从您选择的原始数据文件自动开始提取色谱图。您可以移动或关闭进度窗口并继续以下操作：
     </p>
     <ul>
-        <li>在<strong>编辑</strong>菜单上选择<strong>全部展开</strong>，然后单击<strong>母离子</strong>。</li>
+        <li>在<b>编辑</b>菜单上选择<b>全部展开</b>，然后单击<b>母离子</b>。</li>
     </ul>
     <p>
         此时将显示 Skyline 包含的全套离子对。请注意，每个肽段都包含 500 到 900 质荷比之间的所有合格母离子，并且每个母离子都包含 6 个 b 和 y 离子对以及 3
         个母离子（M、M+1、M+2）。另请注意，每个母离子都有相应的库谱图。每个离子对的文本都以“排名”或“同位素排名”数字结尾，这些数字表明它在碎片离子库质谱图或母离子同位素离子的同位素分布中的强度排名。
     </p>
     <p class="keep-next">
-        <strong>目标</strong>视图应显示如下：
+        <b>目标</b>视图应显示如下：
     </p>
     <p>
         <img src="image-18.png" />
     </p>
     <p>
         在 DIA 中可以提取任意一组子离子，因为该仪器涵盖 500-900
-        <em>质荷比</em>范围内所有可能的母离子-子离子组合（至少包含测量的串联质谱谱图范围内的那些组合）。但在实践中通常不必提取每个可能的子离子，而且添加有噪声的子离子和所需肽段信号很低的色谱图其实会妨碍肽段检测。您设置的需要 6 个最强离子对（不包括
+        <i>质荷比</i>范围内所有可能的母离子-子离子组合（至少包含测量的串联质谱谱图范围内的那些组合）。但在实践中通常不必提取每个可能的子离子，而且添加有噪声的子离子和所需肽段信号很低的色谱图其实会妨碍肽段检测。您设置的需要 6 个最强离子对（不包括
         y1、y2、b1、b2）的子离子选择规则已在蛋白质组学界得到广泛接受。
     </p>
     <p>
         在大型 DIA 实验中，使用诱饵肽段<sup>6</sup>来训练高级峰选择（肽段检测）模型可能会有用，此举可以改进 Skyline 自动选择峰的结果并允许 Skyline 生成检测概率得分（q 值）。诱饵肽段对于 DIA
         工作流程并无绝对必要，只有在您选择应用自定义峰得分方法时才需要。在许多情况下，Skyline 默认峰选择表现非常好，无需自定义峰得分，即便使用自定义峰得分，也存在诱饵的替代方案（请参阅<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_peak_picking">高级峰选择模型</a>教程）。在本教程中，不会向文档中添加诱饵。
-    
+            href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>教程）。在本教程中，不会向文档中添加诱饵。
     </p>
     <h1>探索 DIA 结果</h1>
     <p>
@@ -456,14 +455,14 @@
     </p>
     <ul>
         <li>确保色谱图窗格中选择了标有“Pit01”的选项卡。</li>
-        <li>在<strong>编辑</strong>菜单中选择<strong>全部折叠</strong>，然后单击<strong>肽段</strong>。</li>
-        <li>在<strong>视图</strong>菜单中选择<strong>离子对</strong>，然后单击<strong>分割图</strong>。</li>
-        <li>在<strong>视图</strong>菜单中选择<strong>自动缩放</strong>，然后单击<strong>最佳峰值</strong> (F11)。</li>
-        <li>在<strong>视图</strong>菜单中选择<strong>排列图形</strong>，然后单击<strong>行</strong>。</li>
-        <li>在<strong>视图</strong>菜单中选择<strong>峰面积</strong>，并单击<strong>重复测定比较</strong> (F7)。</li>
-        <li>右键单击其中一个色谱图，然后单击<strong>图例</strong>将其取消选中。</li>
-        <li>将<strong>峰面积 - 重复测定比较</strong>图停靠到<strong>库匹配</strong>视图顶部主窗口的右边缘。</li>
-        <li>选择<strong>目标</strong>视图中的第一个肽段 K.YALSQDV<strong><u>C</u></strong>TYR.D [64, 74]。</li>
+        <li>在<b>编辑</b>菜单中选择<b>全部折叠</b>，然后单击<b>肽段</b>。</li>
+        <li>在<b>视图</b>菜单中选择<b>离子对</b>，然后单击<b>分割图</b>。</li>
+        <li>在<b>视图</b>菜单中选择<b>自动缩放</b>，然后单击<b>最佳峰值</b> (F11)。</li>
+        <li>在<b>视图</b>菜单中选择<b>排列图形</b>，然后单击<b>行</b>。</li>
+        <li>在<b>视图</b>菜单中选择<b>峰面积</b>，并单击<b>重复测定比较</b> (F7)。</li>
+        <li>右键单击其中一个色谱图，然后单击<b>图例</b>将其取消选中。</li>
+        <li>将<b>峰面积 - 重复测定比较</b>图停靠到<b>库匹配</b>视图顶部主窗口的右边缘。</li>
+        <li>选择<b>目标</b>视图中的第一个肽段 K.YALSQDV<b><u>C</u></b>TYR.D [64, 74]。</li>
     </ul>
     <p class="keep-next">
         Skyline 窗口应显示如下：
@@ -479,8 +478,8 @@
         看到这种信号衰落的证据，您就会质疑提取设置是否太窄。在 Skyline 中，检查这个问题的最好方法就是执行以下操作。
     </p>
     <ul>
-        <li>在<strong>视图</strong>菜单中选择<strong>质量误差</strong>，然后单击<strong>直方图</strong>。</li>
-        <li>在出现的图形中单击鼠标右键，选择<strong>离子对</strong>并单击<strong>全部</strong>（以选中）。</li>
+        <li>在<b>视图</b>菜单中选择<b>质量误差</b>，然后单击<b>直方图</b>。</li>
+        <li>在出现的图形中单击鼠标右键，选择<b>离子对</b>并单击<b>全部</b>（以选中）。</li>
     </ul>
     <p>
         在包含更多目标的文档中，可能不必执行第二步来了解质量误差分布，仅使用每个肽段母离子的最强离子对。但在本例中，为了让您更准确地判断分布，现在应当显示如下：
@@ -499,7 +498,7 @@
         根据这些规则，为导入文件中的质谱图选择 15 ppm 或许是个不错的选择。
     </p>
     <ul>
-        <li>右键单击此图，选择<strong>离子对</strong>，然后单击<strong>母离子</strong>。</li>
+        <li>右键单击此图，选择<b>离子对</b>，然后单击<b>母离子</b>。</li>
     </ul>
     <p>
         您会看到均值 (2.9) 和标准偏差 (2.1) 似乎表明 9.2 ppm 已足够。这应当足以让您确信，在所提取色谱图中看到的任何信号衰落均不是由于 20 ppm 质量误差耐受性太窄所致。稍后我们将介绍可能导致出现该异常的原因。
@@ -508,9 +507,9 @@
         现在先执行以下操作：
     </p>
     <ul>
-        <li>单击右上角的 X 关闭<strong>质量误差 - 直方图</strong>窗口。</li>
+        <li>单击右上角的 X 关闭<b>质量误差 - 直方图</b>窗口。</li>
         <li>单击并拖动母离子或片段的任一 x 轴下方，从峰的一侧开始，并在另一侧释放，将这两个文件中的积分范围调整为覆盖整个峰。（请注意，在调整积分边界之前，可以使用鼠标滚轮调整缩放比例。）</li>
-        <li>右键单击色谱图，单击<strong>肽段 ID 次数</strong>，然后选择<strong>来自其它运行</strong>。</li>
+        <li>右键单击色谱图，单击<b>肽段 ID 次数</b>，然后选择<b>来自其它运行</b>。</li>
     </ul>
     <p>
         最后一步是在谱图库中肽段谱图匹配项的保留时间处添加青色垂直线。这些是您选择提取 +/- 5 分钟色谱图的时间。如果您的 DIA 和 DDA 运行的色谱图高度相似，应当会在所选峰附近看到这些线。
@@ -528,14 +527,14 @@
         <li>色谱图仍以紫色突出显示原始积分范围。</li>
         <li>色谱图标注了您在 45.7 分钟处看到的所有 4 个峰的顶点。</li>
         <li>这些峰也标注了质量误差值，范围为 2.3 到 6.4 ppm。由于您知道碎片离子的平均质量误差值为 2.7，母离子的平均质量误差值为 2.9，因此可以看出它们的平均值都小于 4 ppm。</li>
-        <li>在母离子的<strong>峰面积</strong>图中，可以看到“idotp 0.97”的注释。这是对预期同位素分布相似性的度量，显示在最左侧的条形图中，0.97 相当不错。</li>
-        <li>在片段的<strong>峰面积</strong>图中，可以看到“dotp 0.88”和“dotp 0.95”的注释。这是对库谱图相似性的度量，显示在最左侧的条形图中，0.88 可以接受，而 0.95 则相当不错。</li>
+        <li>在母离子的<b>峰面积</b>图中，可以看到“idotp 0.97”的注释。这是对预期同位素分布相似性的度量，显示在最左侧的条形图中，0.97 相当不错。</li>
+        <li>在片段的<b>峰面积</b>图中，可以看到“dotp 0.88”和“dotp 0.95”的注释。这是对库谱图相似性的度量，显示在最左侧的条形图中，0.88 可以接受，而 0.95 则相当不错。</li>
     </ol>
     <p>
         现在继续下一个肽段：
     </p>
     <ul>
-        <li>单击 K.<strong><u>C</u></strong>NTDYSD<strong><u>C</u></strong>IHEAIK.T [107, 120]，或者按下箭头键（如果<strong>目标</strong>视图中选择的部分呈蓝色）。</li>
+        <li>单击 K.<b><u>C</u></b>NTDYSD<b><u>C</u></b>IHEAIK.T [107, 120]，或者按下箭头键（如果<b>目标</b>视图中选择的部分呈蓝色）。</li>
     </ul>
     <p>
         您会看到，在有多个价态时，离子对分割视图会根据价态而不是离子类型进行分割，并且从 MS1 扫描中提取的母离子强度通常会使得从串联质谱扫描中提取的子离子强度相形见绌：
@@ -545,7 +544,7 @@
     </p>
     <table>
         <tr>
-            <td><strong>注</strong>：为清楚起见，对图例进行了还原，并且针对上图调整了此图的大小。</td>
+            <td><b>注</b>：为清楚起见，对图例进行了还原，并且针对上图调整了此图的大小。</td>
         </tr>
     </table>
     <ul>
@@ -575,9 +574,16 @@
     <p class="keep-next">
         色谱图现在应显示如下：
     </p>
-    <p>
-        <img src="image-24.png" /> <img src="image-25.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-24.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-25.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         y5 色谱图突出显示红色，积分边界之间的点用 x 轴正上方的红色虚线突出显示，其计数（17 和 20）标注在右侧。右边还有第二高的峰，位于 Pit01 的 45分钟处和 Pit02 的 44.6 分钟处。这两个峰似乎对 44.1
         分钟处的目标峰的贡献都不大，但在您打算进行大量测量的严格定量检测中，可能还是会删除这个离子对，以避免此峰与目标峰在强度可能更高的位置出现共洗脱的可能性。
@@ -598,7 +604,7 @@
         要查看提取的所有色谱图，请执行以下操作：
     </p>
     <ul>
-        <li>在<strong>视图</strong>菜单中选择<strong>自动缩放</strong>，然后单击<strong>无</strong> (Shift-F11)。</li>
+        <li>在<b>视图</b>菜单中选择<b>自动缩放</b>，然后单击<b>无</b> (Shift-F11)。</li>
     </ul>
     <p>
         您会看到，Skyline 只提取了 DDA ID 时间附近 +/-5 分钟窗口内的色谱图——ID 发生在 53.5 分钟附近，因此 Skyline 提取了 48.5 到 58.5 分钟的色谱图。
@@ -608,10 +614,10 @@
         仍选择了最佳可用峰。您现在可以离开，并在执行以下操作后继续恢复峰缩放。
     </p>
     <ul>
-        <li>在<strong>视图</strong>菜单上选择<strong>自动缩放</strong>，然后单击<strong>最佳峰值</strong> (F11)。</li>
+        <li>在<b>视图</b>菜单上选择<b>自动缩放</b>，然后单击<b>最佳峰值</b> (F11)。</li>
     </ul>
     <p>
-        接下来的 5 个母离子看起来相当好，直到到达肽段 K.NYGLLY<strong><u>C</u></strong>FR.K [184, 192]。这个肽段的峰宽超过 1 分钟，并且不太呈高斯形状。Skyline 在这两个峰上放错了正确的积分边界，仅捕获 2/3
+        接下来的 5 个母离子看起来相当好，直到到达肽段 K.NYGLLY<b><u>C</u></b>FR.K [184, 192]。这个肽段的峰宽超过 1 分钟，并且不太呈高斯形状。Skyline 在这两个峰上放错了正确的积分边界，仅捕获 2/3
         的峰。要纠正这一问题，请执行以下操作：
     </p>
     <ul>
@@ -632,7 +638,7 @@
     </p>
     <h1>了解提取的色谱图</h1>
     <p>
-        接下来的这两个肽段（AVVLSHYIHNLSSEMFSEFDK 和 AINS<strong><u>C</u></strong>HTSSLATPEDK）在 DDA 的肽段 ID 时间附近缺乏任何有说服力的信号。您可以使用 shift-F11
+        接下来的这两个肽段（AVVLSHYIHNLSSEMFSEFDK 和 AINS<b><u>C</u></b>HTSSLATPEDK）在 DDA 的肽段 ID 时间附近缺乏任何有说服力的信号。您可以使用 shift-F11
         来缩小，使用鼠标滚轮进行以鼠标为中心的缩放，使用 ctrl-单击并拖动以进行平移，但在其中任何一个肽段的色谱图中都不会发现任何内容。您可以删除它们或直接移至肽段 SWNEPLYHLVTEVR。
     </p>
     <p>
@@ -648,12 +654,12 @@
         <img src="image-28.png" />
     </p>
     <p>
-        您可以查看<strong>峰面积</strong>图来了解强度大小（每秒的离子数），其中母离子 (MS1) 总数接近 100 万，子离子（串联质谱）总数为 20 到 25,000 或 40 到 50 倍的差异。前面看到过，MS1
+        您可以查看<b>峰面积</b>图来了解强度大小（每秒的离子数），其中母离子 (MS1) 总数接近 100 万，子离子（串联质谱）总数为 20 到 25,000 或 40 到 50 倍的差异。前面看到过，MS1
         信号使得串联质谱相形见绌，但它也更容易受到噪声和干扰的影响。
     </p>
     <table>
         <tr>
-            <td><strong>备注</strong>：只有下载了完整的教程数据集，才能使用下面的<strong>全扫描</strong>视图。否则 Skyline 将显示原始数据文件缺失的消息。</td>
+            <td><b>备注</b>：只有下载了完整的教程数据集，才能使用下面的<b>全扫描</b>视图。否则 Skyline 将显示原始数据文件缺失的消息。</td>
         </tr>
     </table>
     <p>
@@ -664,13 +670,13 @@
         <li>在圆圈中单击。</li>
     </ul>
     <p>
-        Skyline 将显示<strong>全扫描</strong>视图，其中显示从中提取母离子色谱图点的 MS1 扫描范围。您可以单击带有放大镜的按钮和视图右上角的加号 (<img src="image-29.png" />) 来查看整个 MS1 扫描。执行以下操作：
+        Skyline 将显示<b>全扫描</b>视图，其中显示从中提取母离子色谱图点的 MS1 扫描范围。您可以单击带有放大镜的按钮和视图右上角的加号 (<img src="image-29.png" />) 来查看整个 MS1 扫描。执行以下操作：
     </p>
     <ul>
         <li>确保您查看的是在 70.19 分钟（如标题所示）处采集的谱图，否则使用右上角的箭头按钮导航到此谱图。</li>
     </ul>
     <p class="keep-next">
-        <strong>全扫描</strong>图现在应如下所示：
+        <b>全扫描</b>图现在应如下所示：
     </p>
     <p>
         <img src="image-30.png" />
@@ -680,7 +686,7 @@
         道尔顿的双电荷母离子的完整同位素分布。它的单同位素峰非常接近目标的 M+1。
     </p>
     <ul>
-        <li>现在使用<strong>“全扫描”</strong>视图工具栏中的箭头按钮 (<img src="image-31.png" />) 来查看这个扫描和产生积分峰顶点的扫描之间的其它扫描。</li>
+        <li>现在使用<b>“全扫描”</b>视图工具栏中的箭头按钮 (<img src="image-31.png" />) 来查看这个扫描和产生积分峰顶点的扫描之间的其它扫描。</li>
     </ul>
     <p>
         在 70.56 分钟处，应看到第一个包含目标单同位素过滤范围内峰的 MS1 谱图，该谱图突出显示为蓝色。直到 70.67 分钟处，您才会看到第一个包含最强单同位素峰的 MS1 谱图。
@@ -693,7 +699,7 @@
         <li>在圆圈中单击。</li>
     </ul>
     <p>
-        在<strong>全扫描</strong>视图中应当看到类似这样的图。
+        在<b>全扫描</b>视图中应当看到类似这样的图。
     </p>
     <p>
         <img src="image-32.png" />
@@ -711,22 +717,22 @@
         <img src="image-33.png" />
     </p>
     <p>
-        同样，可以看到对一系列峰中最高的峰进行了突出显示和注释，该系列峰中的后续峰相距 0.5 <em>质荷比</em>，表明是双电荷离子的同位素分布。您应当可以更加确信在子离子色谱图中提取的信号与您的目标相匹配。
+        同样，可以看到对一系列峰中最高的峰进行了突出显示和注释，该系列峰中的后续峰相距 0.5 <i>质荷比</i>，表明是双电荷离子的同位素分布。您应当可以更加确信在子离子色谱图中提取的信号与您的目标相匹配。
     </p>
     <h2>了解干扰如何产生信号衰落</h2>
     <p>
         在上面看到的 MS1 谱图中，虽然干扰离子和目标离子的中性质量相差 1
-        道尔顿，但其质荷比高度相似。不太相似的离子<em>质荷比</em>值仍足以接近到在质谱仪中产生单独一个未解析轮廓峰的程度。在本例中，单一峰最终的质心可能是某个<em>质荷比</em>值，甚至比您的目标<em>质荷比</em>值还大 20
+        道尔顿，但其质荷比高度相似。不太相似的离子<i>质荷比</i>值仍足以接近到在质谱仪中产生单独一个未解析轮廓峰的程度。在本例中，单一峰最终的质心可能是某个<i>质荷比</i>值，甚至比您的目标<i>质荷比</i>值还大 20
         ppm。这是您在本教程中所看到的信号衰落的最常见原因。
     </p>
     <p>
-        您可以执行以下操作，使用<strong>全扫描</strong>视图查看实际情况：
+        您可以执行以下操作，使用<b>全扫描</b>视图查看实际情况：
     </p>
     <ul>
-        <li>单击 K.ELVYETVR.V 肽段（<strong>目标</strong>视图中的第 3 个）。</li>
+        <li>单击 K.ELVYETVR.V 肽段（<b>目标</b>视图中的第 3 个）。</li>
         <li>将鼠标光标悬停在“Pit02”重复测定中“母离子”峰的顶点上，直到出现浅绿色的圆圈，并且鼠标光标变为指向的手形标记。</li>
         <li>在圆圈中单击。</li>
-        <li>使用<strong>“全扫描”</strong>视图工具栏中的右箭头按钮 (<img src="image-34.png" />) 查看 MS1 谱图，直至到达 41.7 分钟处。</li>
+        <li>使用<b>“全扫描”</b>视图工具栏中的右箭头按钮 (<img src="image-34.png" />) 查看 MS1 谱图，直至到达 41.7 分钟处。</li>
     </ul>
     <p>
         您会看到 M-1（单同位素母离子的左侧）处的峰随时间推移而增长。
@@ -756,41 +762,41 @@
     <p>
         在本教程中，您定义了用于生成 DIA 仪器方法或本教程中所述简单数据分析的 DIA 采集方案。您运用 DDA 搜索结果建立了谱图库，根据库中测得的 RT 设置了保留时间限制，定义了一组基于目标蛋白质和 DDA 运行的匹配谱图进行测量的离子对，导入了 DIA
         运行，并分析了获取的数据质量。和所有 Skyline 文档中一样，您最终可以生成目标肽段的峰面积和统计信息。本教程中还提到了其它几部用于进行更高级研究的教程（<a
-            href="https://skyline.ms/tutorial_method_edit.url">靶向方法编辑</a>、<a href="https://skyline.ms/tutorial_existing_quant.url">现有定量实验</a>、<a
-            href="https://skyline.ms/tutorial_irt.url">iRT 保留时间预测</a>、<a href="https://skyline.ms/tutorial_peak_picking.url">高级峰选择模型</a>、<a
+            href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>、<a href="https://skyline.ms/tutorial_existing_quant_zh.url">现有定量实验</a>、<a
+            href="https://skyline.ms/tutorial_irt_zh.url">iRT 保留时间预测</a>、<a href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>、<a
             href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>以及
         <a href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">Panorama 色谱图库</a>）。
     </p>
     <p>
         通过这个工作流程，您应当能够分析 Skyline 中的任何 DIA 数据集，前提是它伴随 DIA 运行之前、之后或之中采集的 DDA 运行。这是开始 DIA 数据分析的一种简单方法。但是，强烈建议您继续学习 <a
-            href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH 数据分析</a>教程。从中您将使用校准的 iRT 值建立谱图库，并使用这些归一化保留时间和 mProphet
+            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。从中您将使用校准的 iRT 值建立谱图库，并使用这些归一化保留时间和 mProphet
         统计模型进行色谱峰的评分和选择。您还将根据调整后的 p 值，使用 Skyline 中的群组比较来估计每个肽段或蛋白质条件之间的倍数变化。
     </p>
     <h1>参考书目</h1>
     <p class="bibliography">
         1. Venable, J. D., Dong, M.-Q., Wohlschlegel, J., Dillin, A. &amp; Yates, J. R. Automated approach for quantitative
-        analysis of complex peptide mixtures from tandem mass spectra. <em>Nat. Methods</em> <strong>1,</strong> 39–45 (2004).
+        analysis of complex peptide mixtures from tandem mass spectra. <i>Nat. Methods</i> <b>1</b>, 39–45 (2004).
     </p>
     <p class="bibliography">
-        2. Gillet, L. C. <em>et al.</em> Targeted data extraction of the MS/MS spectra generated by data-independent acquisition:
-        a new concept for consistent and accurate proteome analysis. <em>Mol. Cell. Proteomics MCP</em> <strong>11,</strong> O111.016717 (2012).
+        2. Gillet, L. C. <i>et al</i>. Targeted data extraction of the MS/MS spectra generated by data-independent acquisition:
+        a new concept for consistent and accurate proteome analysis. <i>Mol. Cell. Proteomics MCP</i> <b>11</b>, O111.016717 (2012).
     </p>
     <p class="bibliography">
-        3. Egertson, J. D. <em>et al.</em> Multiplexed MS/MS for improved data-independent acquisition. <em>Nat. Methods</em>
-        <strong>10,</strong> 744–746 (2013).
+        3. Egertson, J. D. <i>et al</i>. Multiplexed MS/MS for improved data-independent acquisition. <i>Nat. Methods</i>
+        <b>10</b>, 744–746 (2013).
     </p>
     <p class="bibliography">
-        4. Krokhin, O. V. <em>et al.</em> An improved model for prediction of retention times of tryptic peptides in ion pair
-        reversed-phase HPLC: its application to protein peptide mapping by off-line HPLC-MALDI MS. <em>Mol. Cell. Proteomics MCP</em>
-        <strong>3,</strong> 908–919 (2004).
+        4. Krokhin, O. V. <i>et al</i>. An improved model for prediction of retention times of tryptic peptides in ion pair
+        reversed-phase HPLC: its application to protein peptide mapping by off-line HPLC-MALDI MS. <i>Mol. Cell. Proteomics MCP</i>
+        <b>3</b>, 908–919 (2004).
     </p>
     <p class="bibliography">
-        5. Escher, C. <em>et al.</em> Using iRT, a normalized retention time for more targeted measurement of peptides.
-        <em>Proteomics Accept.</em> (2012).
+        5. Escher, C. <i>et al</i>. Using iRT, a normalized retention time for more targeted measurement of peptides.
+        <i>Proteomics Accept</i>. (2012).
     </p>
     <p class="bibliography">
-        6. Reiter, L. <em>et al.</em> mProphet: automated data processing and statistical validation for large-scale SRM
-        experiments. <em>Nat. Methods</em> <strong>8,</strong> 430–435 (2011).
+        6. Reiter, L. <i>et al</i>. mProphet: automated data processing and statistical validation for large-scale SRM
+        experiments. <i>Nat. Methods</i> <b>8</b>, 430–435 (2011).
     </p>
 </body>
 

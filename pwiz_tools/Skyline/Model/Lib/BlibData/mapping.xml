@@ -94,6 +94,7 @@
       <generator class="native" />
     </id>
     <property name="ScoreType" column="scoreType"/>
+    <property name="ProbabilityType" column="probabilityType"/>
   </class>
   <class name="DbSpectrumSourceFiles" table="SpectrumSourceFiles">
     <id name="Id">
