@@ -1203,25 +1203,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (_expectedVisible != AreaExpectedValue.none)
                 {
-                    _dotpData = new PointPairList();
-                    if(_expectedVisible.IsVisible())
-                        _dotpData.Insert(0, 0, double.NaN);
+                    var dotpData = new PointPairList();
                     for (var replicateGroupIndex = 0;
-                        replicateGroupIndex < ReplicateGroups.Count;
-                        replicateGroupIndex++)
+                         replicateGroupIndex < ReplicateGroups.Count;
+                         replicateGroupIndex++)
                     {
                         var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
-
                         if (_docNode is TransitionGroupDocNode transitionGroupDocNode)
-                            _dotpData.Insert(xValue, xValue, GetDotProductResults(transitionGroupDocNode, replicateGroupIndex));
-                        else if (_docNode is PeptideDocNode pepDocNode)
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(transitionGroupDocNode, replicateGroupIndex)));
+                        // Show dotp for a selected peptide only if it has only one precursor for which dotp can be calculated.
+                        else if (_docNode is PeptideDocNode pepDocNode && pepDocNode.TransitionGroups.Count(CanGetDotProductResults) == 1)
                         {
                             var replicate = replicateGroupIndex;
-                            var dotps = new Statistics(pepDocNode.TransitionGroups.Select(tg =>
-                                (double)GetDotProductResults(tg, replicate)).Where(dp => !double.IsNaN(dp)));
-                            _dotpData.Insert(xValue, xValue, dotps.Mean());
-                            
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(pepDocNode.TransitionGroups.First(CanGetDotProductResults), replicate)));
                         }
+                    }
+
+                    if (dotpData.Count(pp => !double.IsNaN(pp.Y)) > 0)
+                    {
+                        _dotpData = new PointPairList();
+                        if (_expectedVisible.IsVisible())
+                            _dotpData.Insert(0, 0, double.NaN);
+                        _dotpData.Add(dotpData);
                     }
                 }
 
