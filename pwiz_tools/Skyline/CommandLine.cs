@@ -2800,11 +2800,11 @@ namespace pwiz.Skyline
         public void ImportPeptideList(string name, string path)
         {
             var lineList = new List<string>(File.ReadAllLines(PathEx.SafePath(path)));
-            if (!lineList.Any(l => l.StartsWith(@">>")))
+            if (!lineList.Any(l => l.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX)))
             {
                 if (string.IsNullOrEmpty(name))
                     name = _doc.GetPeptideGroupId(true);
-                lineList.Insert(0, @">>" + name);
+                lineList.Insert(0, PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + name);
                 _out.WriteLine(Resources.CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____, name, Path.GetFileName(path));
             }
             else
@@ -2816,9 +2816,10 @@ namespace pwiz.Skyline
 
             var matcher = new ModificationMatcher();
             var sequences = new List<string>();
-            foreach (var line in lineList.Where(l => !l.StartsWith(@">")))
+            foreach (var line in lineList.Where(l => !l.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX)))
             {
                 string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
+                sequence = Transition.StripChargeIndicators(sequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
                 sequences.Add(sequence);
             }
             matcher.CreateMatches(_doc.Settings, sequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);

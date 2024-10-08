@@ -398,7 +398,7 @@ namespace pwiz.SkylineTestData
             // without need of modification expansion.
             File.AppendAllLines(listsPath, new[]
             {
-                ">>Unmodified",
+                PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + "Unmodified",
                 "MVNNGHSFNVEYDDSQDR"
             });
             output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
@@ -491,7 +491,7 @@ namespace pwiz.SkylineTestData
 
             foreach (var protein in doc.PeptideGroups)
             {
-                writerList.WriteLine(">>" + protein.Name);
+                writerList.WriteLine(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + protein.Name);
                 foreach (var nodePep in protein.Peptides)
                 {
                     var modifiedSeq =
