@@ -115,7 +115,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(spectrumGrid, spectrumGrid.Close);
 
             // Make sure that the document can be reopened
-            RunUI(()=>SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+            RunUI(()=>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
+            });
             WaitForDocumentLoaded();
         }
 
