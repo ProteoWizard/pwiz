@@ -192,7 +192,7 @@
     <value>警告：仪器类型{0}无效。请从下方选项中选择：</value>
   </data>
   <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
-    <value>错误：试图排除未知对象名称“{0}”。尝试其中一种方法：</value>
+    <value>错误：试图排除未知对象名称“{0}”。尝试下面的一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">

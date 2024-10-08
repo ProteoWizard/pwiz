@@ -562,7 +562,7 @@
     <value>1</value>
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
-    <value>服务器(&amp;S)：</value>
+    <value>服务器(&amp;S):</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
