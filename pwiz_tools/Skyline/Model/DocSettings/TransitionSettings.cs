@@ -1180,6 +1180,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    ArrayUtil.EqualsDeep(obj._peptideProductCharges, _peptideProductCharges) &&
                    ArrayUtil.EqualsDeep(obj._peptideIonTypes, _peptideIonTypes) &&
                    ArrayUtil.EqualsDeep(obj._smallMoleculePrecursorAdducts, _smallMoleculePrecursorAdducts) &&
+                   ArrayUtil.EqualsDeep(obj._smallMoleculeFragmentAdducts, _smallMoleculeFragmentAdducts) &&
                    ArrayUtil.EqualsDeep(obj._smallMoleculeIonTypes, _smallMoleculeIonTypes) &&
                    Equals(obj.FragmentRangeFirst, FragmentRangeFirst) &&
                    Equals(obj.FragmentRangeLast, FragmentRangeLast) &&
@@ -1205,6 +1206,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ _peptideProductCharges.GetHashCodeDeep();
                 result = (result * 397) ^ _peptideIonTypes.GetHashCodeDeep();
                 result = (result * 397) ^ _smallMoleculePrecursorAdducts.GetHashCodeDeep();
+                result = (result * 397) ^ _smallMoleculeFragmentAdducts.GetHashCodeDeep();
                 result = (result * 397) ^ _smallMoleculeIonTypes.GetHashCodeDeep();
                 result = (result * 397) ^ FragmentRangeFirst.GetHashCode();
                 result = (result*397) ^ FragmentRangeLast.GetHashCode();
