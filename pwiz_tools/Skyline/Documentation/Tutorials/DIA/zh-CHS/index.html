@@ -23,9 +23,9 @@
     </p>
     <p>
         尽管有多种方法可将 DDA 搜索结果转换为适合该库 DIA 分析方法的库（在 <a
-            href="https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/events/2014%20Webinars/Webinar%202/begin.view">第 2 场 Skyline
+            href="https://skyline.ms/webinar02.url">第 2 场 Skyline
             教程网络研讨会</a>中描述为“先验知识工作流程”，此后在<a href="https://skyline.ms/webinar14.url">第 14</a>、<a href="https://skyline.ms/webinar15.url">15</a> 和 <a
-            href="https://skyline.ms/webinar18.url">18 场</a>网络研讨会以及 <a href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH
+            href="https://skyline.ms/webinar18.url">18 场</a>网络研讨会以及 <a href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH
             数据分析</a>教程中都有更详尽的记录），但开始 DIA 分析的一种简单易行的方法是在同一仪器上穿插 DDA 运行和 DIA 运行，将 DDA 结果的谱图和保留时间作为对 DIA 运行的预测。
     </p>
     <p>
@@ -173,14 +173,14 @@
     <p>
         <img src="image-2.png" />
     </p>
-    <p>
+    <p class="fig-text">
         <b>图：</b>从观察到的肽段常见库中发现的带 1-4 个电荷的肽段母离子计算得出的直方图。最高的峰代表电荷 1-4 的母离子，第二高的峰代表电荷 2 和 4 的母离子，较小的峰只代表电荷 3 的母离子，电荷 4 的母离子作为小肩部仅在电荷 3
         的峰上可见。标有“Optimal” Boundary的垂直线表示此范围内的优化窗口布局边界。（由 Brian Searle 提供）
     </p>
     <p>
         <img src="image-3.png" />
     </p>
-    <p>
+    <p class="fig-text">
         来自 Gillet 等人的补充图 S1。MCP 2012：c) 显示所定义范围的完美矩形分离，d) 显示在定义的四极分离范围边缘超过 0.5 质荷比的信号衰减不太理想，e 和 f)
         显示完整的同位素分布如何在带有和没有重叠边缘的窗口之间分割。务必记住，虽只针对单同位素质荷比，但整个同位素分布均被分离，因此即便单同位素母离子质荷比看似很接近分离窗口的边缘，但也可以获得很强的碎片离子信号。
     </p>
@@ -409,7 +409,7 @@
     </p>
     <p>
         在这个简单的介绍中，您刚刚提供的 FASTA 文本中只有 6 个目标蛋白质，您将不使用诱饵或通过 mProphet 算法生成的动态峰选择模型。有关这些选项的详细信息，请查阅 <a
-            href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH 数据分析</a>教程。
+            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。
     </p>
     <ul>
         <li>单击<b>完成</b>按钮。</li>
@@ -447,7 +447,7 @@
     <p>
         在大型 DIA 实验中，使用诱饵肽段<sup>6</sup>来训练高级峰选择（肽段检测）模型可能会有用，此举可以改进 Skyline 自动选择峰的结果并允许 Skyline 生成检测概率得分（q 值）。诱饵肽段对于 DIA
         工作流程并无绝对必要，只有在您选择应用自定义峰得分方法时才需要。在许多情况下，Skyline 默认峰选择表现非常好，无需自定义峰得分，即便使用自定义峰得分，也存在诱饵的替代方案（请参阅<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_peak_picking">高级峰选择模型</a>教程）。在本教程中，不会向文档中添加诱饵。
+            href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>教程）。在本教程中，不会向文档中添加诱饵。
     </p>
     <h1>探索 DIA 结果</h1>
     <p>
@@ -574,9 +574,16 @@
     <p class="keep-next">
         色谱图现在应显示如下：
     </p>
-    <p>
-        <img src="image-24.png" /> <img src="image-25.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-24.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-25.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         y5 色谱图突出显示红色，积分边界之间的点用 x 轴正上方的红色虚线突出显示，其计数（17 和 20）标注在右侧。右边还有第二高的峰，位于 Pit01 的 45分钟处和 Pit02 的 44.6 分钟处。这两个峰似乎对 44.1
         分钟处的目标峰的贡献都不大，但在您打算进行大量测量的严格定量检测中，可能还是会删除这个离子对，以避免此峰与目标峰在强度可能更高的位置出现共洗脱的可能性。
@@ -755,14 +762,14 @@
     <p>
         在本教程中，您定义了用于生成 DIA 仪器方法或本教程中所述简单数据分析的 DIA 采集方案。您运用 DDA 搜索结果建立了谱图库，根据库中测得的 RT 设置了保留时间限制，定义了一组基于目标蛋白质和 DDA 运行的匹配谱图进行测量的离子对，导入了 DIA
         运行，并分析了获取的数据质量。和所有 Skyline 文档中一样，您最终可以生成目标肽段的峰面积和统计信息。本教程中还提到了其它几部用于进行更高级研究的教程（<a
-            href="https://skyline.ms/tutorial_method_edit.url">靶向方法编辑</a>、<a href="https://skyline.ms/tutorial_existing_quant.url">现有定量实验</a>、<a
-            href="https://skyline.ms/tutorial_irt.url">iRT 保留时间预测</a>、<a href="https://skyline.ms/tutorial_peak_picking.url">高级峰选择模型</a>、<a
+            href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>、<a href="https://skyline.ms/tutorial_existing_quant_zh.url">现有定量实验</a>、<a
+            href="https://skyline.ms/tutorial_irt_zh.url">iRT 保留时间预测</a>、<a href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>、<a
             href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>以及
         <a href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">Panorama 色谱图库</a>）。
     </p>
     <p>
         通过这个工作流程，您应当能够分析 Skyline 中的任何 DIA 数据集，前提是它伴随 DIA 运行之前、之后或之中采集的 DDA 运行。这是开始 DIA 数据分析的一种简单方法。但是，强烈建议您继续学习 <a
-            href="https://skyline.ms/tutorial_dia_swath.url">DIA/SWATH 数据分析</a>教程。从中您将使用校准的 iRT 值建立谱图库，并使用这些归一化保留时间和 mProphet
+            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。从中您将使用校准的 iRT 值建立谱图库，并使用这些归一化保留时间和 mProphet
         统计模型进行色谱峰的评分和选择。您还将根据调整后的 p 值，使用 Skyline 中的群组比较来估计每个肽段或蛋白质条件之间的倍数变化。
     </p>
     <h1>参考书目</h1>

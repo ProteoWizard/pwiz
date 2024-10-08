@@ -63,7 +63,7 @@
     <p>
         In the “Heart Failure” subfolder of the “GroupedStudies1” folder you just created, the data were collected at the MacCoss lab while
         investigating the potential and limitations of the approach described in the <a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine_zh.url">Targeted Method
             Refinement</a> tutorial. The data were never published for a variety of reasons, some of which will become apparent when you use Skyline
         to understand the collected data. However, many of the ideas that came from this trial of targeted method refinement and other experiments
         like it were published separate from this dataset.<sup>1</sup>
@@ -74,7 +74,7 @@
             silico</i> tryptic digestion. Parameters were set in Skyline to include all peptides between 6 and 30 amino acids long with no missed
         cleavages. For other proteins, the <i>in silico</i> processing was performed outside Skyline. The resulting peptide lists from these
         proteins were pasted directly into a Skyline document (see <a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">Targeted Method Editing</a>
+            href="https://skyline.ms/tutorial_method_edit_zh.url">Targeted Method Editing</a>
         tutorial). This created a document with 2,165 target peptides. For each doubly-charged precursor, singly-charged product ions corresponding to
         y<sub>3</sub> through y<sub>(n-1)</sub> were considered. This initial, exhaustive method covered 12,194 transitions and was measured with an
         unscheduled SRM method on a sample of pooled rat plasma. This initial analysis was only performed once and required 151 separate mass
@@ -598,9 +598,16 @@
         There are also some peaks where the chromatography looks very noisy. An example of this is on the right in the chromatograms below. This is
         because only the very right edge of the peptide peak was measured, and the higher intensity portion is missing.
     </p>
-    <p>
-        <img src="image-38.png" /><img src="image-39.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-38.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-39.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         In a case like this, you want to be very sure you avoid integrating some noise that Skyline fails to identify as a truncated peak. It may just
         be easier to remove the peaks for these replicates.
@@ -974,12 +981,18 @@
         Looking at the chromatograms for the diseased subjects, you will sometimes find something that may be a peak around 21 minutes for the y6
         transition. However, often, it is difficult to observe any consistent elution pattern:
     </p>
-    <p class="keep-next">
-         D_102_REP3 D_108_REP1
-    </p>
-    <p>
-        <img src="image-66.png" /><img src="image-67.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                D_102_REP3<br />
+                <img src="image-66.png" />
+            </td>
+            <td class="comp-fig">
+                D_108_REP1<br />
+                <img src="image-67.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         There is, however, clearly no visible peak in the chromatograms for the diseased subjects that could produce a peak area like those peaks
         observed in the healthy subjects. With the experience you have now acquired with peak drift and truncation, you should feel confident that the
@@ -1077,9 +1090,16 @@
     <p class="keep-next">
         These annotation definitions should look like:
     </p>
-    <p>
-        <img src="image-72.png" /> <img src="image-73.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig" style="padding: 5px;">
+                <img src="image-72.png" />
+            </td>
+            <td class="comp-fig" style="padding: 5px;">
+                <img src="image-73.png" />
+            </td>
+        </tr>
+    </table>
     <ul>
         <li>Click <b>OK</b> to return to the <b>Document Settings</b> form.</li>
         <li>Check the BioReplicate and Condition annotations to add them to your document.</li>
@@ -1347,9 +1367,19 @@
     <p class="keep-next">
         You will see graphs in the <b>Peak Areas</b> view like the following for the peptides of the protein NP_872280:
     </p>
-    <p>
-        <img src="image-90.png" /> <img src="image-91.png" /> <img src="image-92.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-90.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-91.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-92.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         In these graphs, the bars represent the mean average value (in this case, peak area ratios to global standards) across all replicates and the
         whiskers show one standard deviation to either side of the mean. This gives you some idea of the sample distributions from which the means
@@ -1385,9 +1415,16 @@
         Continuing up the list of peptides / proteins, you will see that the protein immediately above, NP_036714, is a much stronger
         candidate for use as a biomarker:
     </p>
-    <p>
-        <img src="image-93.png" /> <img src="image-94.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-93.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-94.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         Many of the peptides in this experiment show statistically significant differences in the means between the two groups. This should not be
         surprising given the source of our target list was the literature on differential protein expression in heart disease. Far fewer, however,
@@ -1397,9 +1434,16 @@
         When you reach the protein NP_001007697, which contains the peptide <b><u>C</u></b>SSLLWAGAAWLR, you will observe a case where the
         peptides assigned to a single protein experience very different relative expression levels between healthy and diseased groups:
     </p>
-    <p>
-        <img src="image-95.png" /> <img src="image-96.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-95.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-96.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         This should act as a reminder that while you can achieve some confidence in measuring the same peptide molecule over many samples, you will
         often be far less confident in assigning multiple peptide precursors to the same source protein form. The reasons for an observation of this

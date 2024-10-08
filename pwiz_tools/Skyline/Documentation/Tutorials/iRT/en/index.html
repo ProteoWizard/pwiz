@@ -11,10 +11,10 @@
     <p>
         Predicting peptide retention time has long been of interest in targeted proteomics. As early as version 0.2, Skyline integrated the SSRCalc
         hydrophobicity calculator<sup>1</sup> as one way to predict a peptide retention time given its unmodified sequence, as described in the “<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine.url">Targeted Method
             Refinement</a>” tutorial. By version 0.5, Skyline supported what has become the state-of-the-art in scheduled acquisition for targeted
         experiments. This technique, also described in the “<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine.url">Targeted Method
             Refinement</a>” tutorial, involves first measuring all targeted peptides unscheduled on the system you will use for your multi-replicate
         experiment. Retention times from the unscheduled injections are then used to schedule all subsequent acquisition, as long as no chromatography
         changes are necessary.
@@ -436,9 +436,16 @@
         You will see that several of these are transitions with interference, and have signal lower than 1% (by area) of the most
         intense transition:
     </p>
-    <p>
-        <img src="image-14.png" /><img src="image-15.png" /> 
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="image-14.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="image-15.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         Skyline excludes such transitions to help you in deciding which transitions to keep for your final quantitative method. If you have already
         made that decision, however, you hide this information by doing the following:
