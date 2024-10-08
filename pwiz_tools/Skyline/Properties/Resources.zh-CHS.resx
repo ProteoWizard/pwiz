@@ -3924,15 +3924,15 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
-    <value>错误：文档必须包含要导出 mProphet 特征的目标。</value>
+    <value>错误：要导出mProphet 特征文件，文档必须包含目标。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
-    <value>错误：文档必须包含 mProphet 特征导出结果。</value>
+    <value>错误：要导出mProphet 特征文件，文档必须包含结果。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
-    <value>错误：试图排除未知注释类型“{0}”。尝试其中一种方法：</value>
+    <value>错误：试图排除未知注释类型“{0}”。尝试下面的一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
@@ -3952,11 +3952,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
-    <value>错误：试图指定未知注释类型“{0}”。尝试其中一种方法：</value>
+    <value>错误：试图指定未知注释类型“{0}”。尝试下面的一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
-    <value>错误：试图指定未知注释目标“{0}”。尝试其中一种方法：</value>
+    <value>错误：试图指定未知注释目标“{0}”。尝试下面的一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
@@ -3976,7 +3976,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
-    <value>尝试以下一种方法：</value>
+    <value>尝试下面的一种方法：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_" xml:space="preserve">
@@ -3995,11 +3995,11 @@
     <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
-    <value>正在导入文件 {1} 中的肽段列表 {0}…</value>
+    <value>正在导入文件 {1} 中的肽段列表 {0}...</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
-    <value>正在导入文件 {0} 中的肽段列表…</value>
+    <value>正在导入文件 {0} 中的肽段列表...</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
