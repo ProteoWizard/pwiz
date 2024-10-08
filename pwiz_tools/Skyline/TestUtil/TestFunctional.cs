@@ -1224,6 +1224,21 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private static bool _isAutoScreenShotMode;
+
+        public bool IsAutoScreenShotMode
+        {
+            get { return _isAutoScreenShotMode || Program.PauseSeconds == -3; } // -3 is the magic number SkylineTester uses to indicate cover shot mode
+            set
+            {
+                _isAutoScreenShotMode = value;
+                if (_isAutoScreenShotMode)
+                {
+                    Program.PauseSeconds = -3; // -3 is the magic number SkylineTester uses to indicate cover shot mode
+                }
+            }
+        }
+
         public string CoverShotName { get; set; }
 
         private string GetCoverShotPath(string folderPath = null, string suffix = null)
@@ -1252,6 +1267,14 @@ namespace pwiz.SkylineTestUtil
         private bool IsTutorial
         {
             get { return TestContext.TestName.Contains("Tutorial"); }
+        }
+
+        private string TutorialPath
+        {
+            get { return IsTutorial ?
+                TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{CultureInfo.CurrentCulture.TwoLetterISOLanguageName}")
+                : null;
+            }
         }
 
         public virtual bool AuditLogCompareLogs
@@ -1286,22 +1309,22 @@ namespace pwiz.SkylineTestUtil
 
         private static FormLookup _formLookup;
 
-        public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null)
+        public void PauseForScreenShot(string description = null, int? pageNum = null, string fileName = null, int? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null, null, timeout);
+            PauseForScreenShot(description, pageNum, null, null, fileName, timeout);
         }
-        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null, int? timeout = null)
+        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null, string fileName = null, int ? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null, screenshotForm, timeout);
+            PauseForScreenShot(description, pageNum, null, screenshotForm, fileName, timeout);
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int? timeout = null)
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null, string fileName = null, int ? timeout = null)
             where TView : IFormView
         {
-            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout);
+            PauseForScreenShot(description, pageNum, typeof(TView), null, fileName, timeout);
         }
 
-        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, int? timeout = null)
+        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, string fileName = null, int ? timeout = null)
         {
             if (formType != null)
             {
@@ -1315,7 +1338,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
+            else if ((IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue)) || IsAutoScreenShotMode)
             {
                 if (screenshotForm == null)
                 {
@@ -1333,9 +1356,21 @@ namespace pwiz.SkylineTestUtil
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
+                
+                var fileToSave = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, fileName)}.png" : null;
 
-                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
+                if (IsAutoScreenShotMode)
+                {
+                    Thread.Sleep(1000);
+                    screenshotForm.Focus();
+                    _shotManager.TakeNextShot(screenshotForm, fileToSave);
+                }
+                else
+                {
+                    bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
+                    PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), fileToSave, LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
+                }
+
             }
             else
             {
