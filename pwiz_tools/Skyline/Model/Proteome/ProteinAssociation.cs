@@ -149,8 +149,8 @@ namespace pwiz.Skyline.Model.Proteome
                 var fastaRecord = fastaRecordIndex.Item1;
                 int progressValue = fastaRecord.Progress;
                 var fasta = fastaRecord.Sequence;
-                var candidateSequences = _peptideTrie.FindAll(fasta.Sequence).Select(result=>result.Keyword).Distinct().ToList();
-                ProteinPeptideMatches proteinPeptideMatches = new ProteinPeptideMatches(fastaRecord, candidateSequences, enzyme);
+                ProteinPeptideMatches proteinPeptideMatches = new ProteinPeptideMatches(fastaRecord, enzyme,
+                    _peptideTrie.FindAll(fasta.Sequence).Select(result => result.Keyword).Distinct());
                 lock (localResults)
                 {
                     if (broker.IsCanceled)
@@ -167,7 +167,6 @@ namespace pwiz.Skyline.Model.Proteome
                 }
             });
 
-            // Make a HashSet of all peptide sequences which match the digest settings in any protein sequence
             var proteinPeptideMatchesList = proteinPeptideMatchesDictionary
                 .OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
             var peptideAssociationGroups = new PeptideAssociationGroup[proteinPeptideMatchesList.Count];
@@ -245,7 +244,7 @@ namespace pwiz.Skyline.Model.Proteome
         private class ProteinPeptideMatches
         {
             private static readonly DigestSettings lenientDigestSettings = new DigestSettings(int.MaxValue, false);
-            public ProteinPeptideMatches(IProteinRecord proteinRecord, IEnumerable<string> candidatePeptides, Enzyme enzyme)
+            public ProteinPeptideMatches(IProteinRecord proteinRecord, Enzyme enzyme, IEnumerable<string> candidatePeptides)
             {
                 ProteinRecord = proteinRecord;
                 CandidatePeptides = ImmutableList.ValueOf(candidatePeptides);
