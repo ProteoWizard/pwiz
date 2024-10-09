@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.Proteome
                     digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).Select(p => p.Sequence)
                         .ToHashSet();
                     bool matchesDigestSettings = digestedPeptides.Contains(peptideSequence);
-                    proteinPeptideMatches.AddPeptideSequence(peptideSequence, matchesDigestSettings);
+                    proteinPeptideMatches.PeptideMatchesList.Add(Tuple.Create(peptideSequence, matchesDigestSettings));
                 }
 
                 lock (localResults)
@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Proteome
                         maxProgressValue = Math.Max(maxProgressValue, progressValue);
                     }
 
-                    if (proteinPeptideMatches.PeptideSequenceCount > 0)
+                    if (proteinPeptideMatches.PeptideMatchesList.Count > 0)
                     {
                         proteinPeptideMatchesDictionary.Add(fastaRecordIndex.Item2, proteinPeptideMatches);
                     }
@@ -194,19 +194,18 @@ namespace pwiz.Skyline.Model.Proteome
 
             // Make a HashSet of all peptide sequences which match the digest settings in any protein sequence
             var peptidesThatMatchDigestSettingsForAnyProtein = proteinPeptideMatchesDictionary.Values
-                .SelectMany(matches => matches.PeptidesMatchingDigestSettings).ToHashSet();
+                .SelectMany(matches => matches.MatchingPeptides).ToHashSet();
             foreach (var proteinPeptideMatches in proteinPeptideMatchesDictionary.OrderBy(kvp => kvp.Key)
                          .Select(kvp => kvp.Value))
             {
                 var fastaRecord = proteinPeptideMatches.ProteinRecord;
                 var matches = new List<PeptideDocNode>();
 
-                for (int iPeptide = 0; iPeptide < proteinPeptideMatches.PeptideSequenceCount; iPeptide++)
+                foreach ((string peptideSequence, bool matchesSettings) in proteinPeptideMatches.PeptideMatchesList)
                 {
-                    var peptideSequence = proteinPeptideMatches.GetPeptideSequence(iPeptide);
-                    if (!proteinPeptideMatches.MatchesDigestSettings(iPeptide))
+                    if (!matchesSettings)
                     {
-                        // The peptide could not have been digested by the enzyme from this protein sequence
+                        // The peptide could not have been digested by the enzyme from this protein sequence.
                         // Only skip it if there is at least one protein that could produce the digested peptide
                         if (peptidesThatMatchDigestSettingsForAnyProtein.Contains(peptideSequence))
                         {
@@ -262,42 +261,17 @@ namespace pwiz.Skyline.Model.Proteome
 
         private class ProteinPeptideMatches
         {
-            private List<string> _peptideSequences = new List<string>();
-            private List<bool> _matchesDigestSettingsList = new List<bool>();
             public ProteinPeptideMatches(IProteinRecord proteinRecord)
             {
                 ProteinRecord = proteinRecord;
+                PeptideMatchesList = new List<Tuple<string, bool>>();
             }
 
             public IProteinRecord ProteinRecord { get; }
-            public int PeptideSequenceCount
+            public List<Tuple<string, bool>> PeptideMatchesList { get; }
+            public IEnumerable<string> MatchingPeptides
             {
-                get { return _peptideSequences.Count; }
-            }
-
-            public string GetPeptideSequence(int i)
-            {
-                return _peptideSequences[i];
-            }
-
-            public bool MatchesDigestSettings(int i)
-            {
-                return _matchesDigestSettingsList[i];
-            }
-
-            public void AddPeptideSequence(string sequence, bool matchesDigestSettings)
-            {
-                _peptideSequences.Add(sequence);
-                _matchesDigestSettingsList.Add(matchesDigestSettings);
-            }
-
-            public IEnumerable<string> PeptidesMatchingDigestSettings
-            {
-                get
-                {
-                    return Enumerable.Range(0, PeptideSequenceCount).Where(i => _matchesDigestSettingsList[i])
-                        .Select(i => _peptideSequences[i]);
-                }
+                get => PeptideMatchesList.Where(t => t.Item2).Select(t => t.Item1);
             }
         }
 
