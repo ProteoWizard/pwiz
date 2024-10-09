@@ -312,10 +312,11 @@ namespace pwiz.Skyline.Alerts
         {
             try
             {
-                // was using BffHostCookie_PersistedButNeverSet
-                if (!Account.BffHostCookie_NotPersisted.IsNullOrEmpty())
+                var sessionCookieString= ArdiaAccount.GetSessionCookieString(Account);
+
+                if (sessionCookieString != null && (!sessionCookieString.IsNullOrEmpty()))
                 {
-                    _bffCookie = new Cookie(@"Bff-Host", Account.BffHostCookie_NotPersisted);
+                    _bffCookie = new Cookie(@"Bff-Host", sessionCookieString);
                     AuthenticatedHttpClientFactory = GetFactory();
 
                     // check that cookie is still valid
@@ -464,9 +465,7 @@ namespace pwiz.Skyline.Alerts
                 var bffCookie = await LoginIn_UsingSystemDefaultBrowser();
                 if (bffCookie != null)
                 {
-                    // Account = Account.ChangeBffHostCookie(bffCookie.Value);
-                    
-                    Account.BffHostCookie_NotPersisted = bffCookie.Value;
+                    ArdiaAccount.SetSessionCookieString(Account, bffCookie.Value );
 
                     AuthenticatedHttpClientFactory = GetFactory();
                 }
@@ -1693,8 +1692,7 @@ namespace pwiz.Skyline.Alerts
             {
                 _bffCookie = bffCookie.ToSystemNetCookie();
 
-                Account.BffHostCookie_NotPersisted = _bffCookie.Value;
-                // Account = Account.ChangeBffHostCookie(_bffCookie.Value);
+                ArdiaAccount.SetSessionCookieString(Account, _bffCookie.Value);
 
                 AuthenticatedHttpClientFactory = GetFactory();
 

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Xml;
 using System.Xml.Linq;
@@ -28,13 +30,31 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     [XmlRoot("ardia_account")]
     public class ArdiaAccount : RemoteAccount
     {
+        private static IDictionary<(string, string), string> _sessionCookieStrings = new ConcurrentDictionary<(string, string), string>();
+
+        private static (string, string) MakeKey(ArdiaAccount ardiaAccount)
+        {
+            return (ardiaAccount.ServerUrl, ardiaAccount.Username);
+        }
+
+        public static string GetSessionCookieString(ArdiaAccount ardiaAccount)
+        {
+            var key = MakeKey(ardiaAccount);
+            _sessionCookieStrings.TryGetValue(key, out var sessionCookieString);
+            return sessionCookieString;
+        }
+
+        public static void SetSessionCookieString(ArdiaAccount ardiaAccount, string sessionCookieString)
+        {
+            var key = MakeKey(ardiaAccount);
+            _sessionCookieStrings[key] = sessionCookieString;
+        }
+
+
         public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty);
 
         public bool DeleteRawAfterImport { get; private set; }
-        // BffHostCookie_PersistedButNeverSet is never set in a way that gets out of the ArdiaLoginDlg
-        public string BffHostCookie_PersistedButNeverSet { get; private set; }
-        public string BffHostCookie_NotPersisted { get; set; }
-
+        
         //  Following 'TestingOnly...' properties are for only supporting the automated tests in class ArdiaTest
         public string TestingOnly_NotSerialized_Role { get; private set; }
         public string TestingOnly_NotSerialized_Username { get; private set; }
@@ -164,14 +184,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return result;
         }
 
-        // BffHostCookie_PersistedButNeverSet is never set in a way that gets out of the ArdiaLoginDlg
-        // public ArdiaAccount ChangeBffHostCookie(string bffHostCookie)
-        // {
-        //     var result = ChangeProp(ImClone(this), im => im.BffHostCookie_PersistedButNeverSet = bffHostCookie);
-        //     result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
-        //     return result;
-        // }
-
         public ArdiaAccount ChangeTestingOnly_NotSerialized_Role(string role)
         {
             var result = ChangeProp(ImClone(this), im => im.TestingOnly_NotSerialized_Role = role);
@@ -215,10 +227,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                    Equals(TestingOnly_NotSerialized_Role, other.TestingOnly_NotSerialized_Role) &&
                    Equals(TestingOnly_NotSerialized_Username, other.TestingOnly_NotSerialized_Username) &&
                    Equals(TestingOnly_NotSerialized_Password, other.TestingOnly_NotSerialized_Password) &&
-                   DeleteRawAfterImport == other.DeleteRawAfterImport
-                   // &&
-                   // Equals(BffHostCookie_PersistedButNeverSet, other.BffHostCookie_PersistedButNeverSet)
-                   ;
+                   DeleteRawAfterImport == other.DeleteRawAfterImport;
         }
 
         public override int GetHashCode()
@@ -230,7 +239,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                 hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Username?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Password?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ DeleteRawAfterImport.GetHashCode();
-                // hashCode = (hashCode * 397) ^ (BffHostCookie_PersistedButNeverSet?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
