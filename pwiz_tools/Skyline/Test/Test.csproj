@@ -182,6 +182,7 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
     <Compile Include="ReferenceValueTest.cs" />
@@ -370,6 +371,7 @@
     <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PeakGroupIntegratorTest.zip" />
+    <None Include="ProteinAssociationTest.data\TwoProteins.fasta" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
