@@ -69,7 +69,7 @@ struct PWIZ_API_DECL TestResult
 
 struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
 {
-    ReaderTestConfig() : peakPicking(false), peakPickingCWT(false), thresholdCount(0), doublePrecision(false), autoTest(false) {}
+    ReaderTestConfig() : peakPicking(false), peakPickingCWT(false), thresholdCount(0), doublePrecision(false), autoTest(false), reportTimings(false) {}
     ReaderTestConfig(const ReaderTestConfig& rhs) : pwiz::msdata::Reader::Config(rhs)
     {
         peakPicking = rhs.peakPicking;
@@ -94,6 +94,7 @@ struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
     boost::optional<int> runIndex;
 
     bool autoTest; // test config variant generated automatically (e.g. thresholdCount) that does not use a separate mzML file
+    bool reportTimings;
 };
 
 /// A common test harness for vendor readers; returns a TestResult (with count of failedTests and totalTests)
