@@ -195,10 +195,12 @@ namespace pwiz.Skyline.Model.Proteome
             // Make a HashSet of all peptide sequences which match the digest settings in any protein sequence
             var peptidesThatMatchDigestSettingsForAnyProtein = proteinPeptideMatchesDictionary.Values
                 .SelectMany(matches => matches.MatchingPeptides).ToHashSet();
-            foreach (var proteinPeptideMatches in proteinPeptideMatchesDictionary.OrderBy(kvp => kvp.Key)
-                         .Select(kvp => kvp.Value))
+            var proteinPeptideMatchesList = proteinPeptideMatchesDictionary
+                .OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
+            var peptideAssociationGroups = new PeptideAssociationGroup[proteinPeptideMatchesList.Count];
+            ParallelEx.For(0, proteinPeptideMatchesList.Count, iProtein =>
             {
-                var fastaRecord = proteinPeptideMatches.ProteinRecord;
+                var proteinPeptideMatches = proteinPeptideMatchesList[iProtein];
                 var matches = new List<PeptideDocNode>();
 
                 foreach ((string peptideSequence, bool matchesSettings) in proteinPeptideMatches.PeptideMatchesList)
@@ -215,28 +217,25 @@ namespace pwiz.Skyline.Model.Proteome
 
                     matches.AddRange(_peptideToPath[peptideSequence]);
                 }
-
-                var peptideAssociationGroup = new PeptideAssociationGroup(matches);
-
-                if (broker.IsCanceled)
-                    return null;
-
                 if (matches.Count > 0)
                 {
-                    proteinAssociations[fastaRecord] = peptideAssociationGroup;
-                    ++localResults.ProteinsMapped;
-                    localResults.FinalPeptideCount += matches.Count;
+                    peptideAssociationGroups[iProtein] = new PeptideAssociationGroup(matches);
+                }
+            });
 
-                    foreach (var match in matches)
-                    {
-                        if (!peptideToProteins.ContainsKey(match))
-                            peptideToProteins.Add(match, new List<IProteinRecord> { fastaRecord });
-                        else
-                            peptideToProteins[match].Add(fastaRecord);
-                    }
+            for (int iProtein = 0; iProtein < proteinPeptideMatchesList.Count; iProtein++)
+            {
+                var fastaRecord = proteinPeptideMatchesList[iProtein].ProteinRecord;
+                var peptideAssociationGroup = peptideAssociationGroups[iProtein];
+                if (peptideAssociationGroup == null)
+                {
+                    ++localResults.ProteinsUnmapped;
                 }
                 else
-                    ++localResults.ProteinsUnmapped;
+                {
+                    ++localResults.ProteinsMapped;
+                    proteinAssociations[fastaRecord] = peptideAssociationGroup;
+                }
             }
 
             if (broker.IsCanceled)
