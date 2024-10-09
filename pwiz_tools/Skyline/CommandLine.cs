@@ -2274,14 +2274,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private IEnumerable<Peptide> DigestProteinToPeptides(FastaSequence sequence)
-        {
-            var peptideSettings = Document.Settings.PeptideSettings;
-            return peptideSettings.Enzyme.Digest(sequence, peptideSettings.DigestSettings);
-            // CONSIDER: should AssociateProteinsDlg use the length filters? The old PeptidePerProteinDlg doesn't seem to.
-            //peptideSettings.Filter.MaxPeptideLength, peptideSettings.Filter.MinPeptideLength);
-        }
-
         private bool AssociateProteins(CommandArgs commandArgs)
         {
             return HandleExceptions(commandArgs, () => 
@@ -2292,7 +2284,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
-                proteinAssociation.UseFastaFile(fastaPath, DigestProteinToPeptides, progressMonitor);
+                proteinAssociation.UseFastaFile(fastaPath, Document.Settings.PeptideSettings.Enzyme, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),
                     commandArgs.AssociateProteinsFindMinimalProteinList.GetValueOrDefault(),
