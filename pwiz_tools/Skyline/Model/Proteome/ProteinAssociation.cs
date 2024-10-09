@@ -141,10 +141,11 @@ namespace pwiz.Skyline.Model.Proteome
             var proteinAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
             int maxProgressValue = 0;
             broker.Message = ProteomeResources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
-            var proteinPeptideMatchesList = new List<ProteinPeptideMatches>();
+            var proteinPeptideMatchesDictionary = new Dictionary<int, ProteinPeptideMatches>();
 
-            ParallelEx.ForEach(proteinSource.Proteins, fastaRecord =>
+            ParallelEx.ForEach(proteinSource.Proteins.Select(Tuple.Create<IProteinRecord, int>), fastaRecordIndex =>
             {
+                var fastaRecord = fastaRecordIndex.Item1;
                 int progressValue = fastaRecord.Progress;
                 var proteinPeptideMatches = new ProteinPeptideMatches(fastaRecord);
                 var peptideHashSet = new HashSet<string>();
@@ -182,7 +183,7 @@ namespace pwiz.Skyline.Model.Proteome
 
                     if (proteinPeptideMatches.PeptideSequenceCount > 0)
                     {
-                        proteinPeptideMatchesList.Add(proteinPeptideMatches);
+                        proteinPeptideMatchesDictionary.Add(fastaRecordIndex.Item2, proteinPeptideMatches);
                     }
                     else
                     {
@@ -190,12 +191,12 @@ namespace pwiz.Skyline.Model.Proteome
                     }
                 }
             });
-            
-            // Make a HashSet of all peptide sequences which match the digest settings in any protein sequence
-            var peptidesThatMatchDigestSettingsForAnyProtein = proteinPeptideMatchesList
-                .SelectMany(matches => matches.PeptidesMatchingDigestSettings).ToHashSet();
 
-            ParallelEx.ForEach(proteinPeptideMatchesList, proteinPeptideMatches =>
+            // Make a HashSet of all peptide sequences which match the digest settings in any protein sequence
+            var peptidesThatMatchDigestSettingsForAnyProtein = proteinPeptideMatchesDictionary.Values
+                .SelectMany(matches => matches.PeptidesMatchingDigestSettings).ToHashSet();
+            foreach (var proteinPeptideMatches in proteinPeptideMatchesDictionary.OrderBy(kvp => kvp.Key)
+                         .Select(kvp => kvp.Value))
             {
                 var fastaRecord = proteinPeptideMatches.ProteinRecord;
                 var matches = new List<PeptideDocNode>();
@@ -211,35 +212,33 @@ namespace pwiz.Skyline.Model.Proteome
                         {
                             continue;
                         }
-                    } 
+                    }
+
                     matches.AddRange(_peptideToPath[peptideSequence]);
                 }
 
                 var peptideAssociationGroup = new PeptideAssociationGroup(matches);
 
-                lock (localResults)
+                if (broker.IsCanceled)
+                    return null;
+
+                if (matches.Count > 0)
                 {
-                    if (broker.IsCanceled)
-                        return;
+                    proteinAssociations[fastaRecord] = peptideAssociationGroup;
+                    ++localResults.ProteinsMapped;
+                    localResults.FinalPeptideCount += matches.Count;
 
-                    if (matches.Count > 0)
+                    foreach (var match in matches)
                     {
-                        proteinAssociations[fastaRecord] = peptideAssociationGroup;
-                        ++localResults.ProteinsMapped;
-                        localResults.FinalPeptideCount += matches.Count;
-
-                        foreach (var match in matches)
-                        {
-                            if (!peptideToProteins.ContainsKey(match))
-                                peptideToProteins.Add(match, new List<IProteinRecord> { fastaRecord });
-                            else
-                                peptideToProteins[match].Add(fastaRecord);
-                        }
+                        if (!peptideToProteins.ContainsKey(match))
+                            peptideToProteins.Add(match, new List<IProteinRecord> { fastaRecord });
+                        else
+                            peptideToProteins[match].Add(fastaRecord);
                     }
-                    else
-                        ++localResults.ProteinsUnmapped;
                 }
-            });
+                else
+                    ++localResults.ProteinsUnmapped;
+            }
 
             if (broker.IsCanceled)
                 return null;
