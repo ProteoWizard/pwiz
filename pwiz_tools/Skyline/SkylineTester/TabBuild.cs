@@ -196,15 +196,17 @@ namespace SkylineTester
 
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
+
                 // Add the --progress flag for richer logging - git leaves out most progress info when it isn't writing to an actual terminal
+                // Add the "-c http.postBuffer=524288000" argument to help with clone on unstable networks
                 if (branchName.Contains("master"))
                 {
-                    commandShell.AddWithRetry("{0} clone {1} --recurse-submodules --progress {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} -c http.postBuffer=524288000 clone {1} --recurse-submodules --progress {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
                 }
                 else
                 {
                     var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
-                    commandShell.AddWithRetry("{0} clone {1} --recurse-submodules --progress -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} -c http.postBuffer=524288000 clone {1} --recurse-submodules --progress -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
                 }
             }
 
@@ -214,7 +216,7 @@ namespace SkylineTester
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses {3} nolog",
+                commandShell.Add("{0} {1} {2} variant=release debug-symbols=on --i-agree-to-the-vendor-licenses {3} nolog",
                     Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
                     architecture,
                     runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe",

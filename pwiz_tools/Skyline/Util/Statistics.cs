@@ -1342,24 +1342,34 @@ namespace pwiz.Skyline.Util
 
         private static void Split(IList<double> list, double value, ref int left, ref int right)
         {
-            // Left and right scan until the pointers cross
-            do
+            try
             {
-                while (list[left] < value)
-                    left++;
-                while (value < list[right])
-                    right--;
 
-                if (left <= right)
+                // Left and right scan until the pointers cross
+                do
                 {
-                    double temp = list[left];
-                    list[left] = list[right];
-                    list[right] = temp;
+                    while (list[left] < value)
+                        left++;
+                    while (value < list[right])
+                        right--;
 
-                    left++;
-                    right--;
-                }
-            } while (left <= right);
+                    if (left <= right)
+                    {
+                        double temp = list[left];
+                        list[left] = list[right];
+                        list[right] = temp;
+
+                        left++;
+                        right--;
+                    }
+                } while (left <= right);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Console.WriteLine($@"left={left} right={right} size={list.Count}");
+                throw;
+            }
         }
 
         /// <summary>
