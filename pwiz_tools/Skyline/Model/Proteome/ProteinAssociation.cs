@@ -107,14 +107,9 @@ namespace pwiz.Skyline.Model.Proteome
             if (!File.Exists(file))
                 return;
 
-            ResetMapping();
             using var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             var fastaSource = new FastaSource(stream);
-            var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
-            if (proteinAssociations != null)
-            {
-                AssociatedProteins = proteinAssociations;
-            }
+            UseProteinSource(fastaSource, digestProteinToPeptides, broker);
         }
 
         // find matches using the background proteome
@@ -123,9 +118,14 @@ namespace pwiz.Skyline.Model.Proteome
             if (backgroundProteome.Equals(BackgroundProteome.NONE))
                 throw new InvalidOperationException(Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
 
-            ResetMapping();
             var proteome = backgroundProteome;
-            var proteinSource = new BackgroundProteomeSource(broker.CancellationToken, proteome);
+            UseProteinSource(new BackgroundProteomeSource(broker.CancellationToken, proteome), digestProteinToPeptides, broker);
+        }
+
+        public void UseProteinSource(IProteinSource proteinSource,
+            Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
+        {
+            ResetMapping();
             var proteinAssociations = FindProteinMatches(proteinSource, digestProteinToPeptides, broker);
             if (proteinAssociations != null)
             {

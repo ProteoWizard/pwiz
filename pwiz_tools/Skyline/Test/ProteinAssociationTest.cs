@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,10 +39,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestTrypticProteinAssociation()
         {
-            using var tempDir =
-                new TemporaryDirectory(Path.Combine(TestContext.TestRunDirectory, TestContext.TestName));
-            var fastaFilePath = Path.Combine(tempDir.DirPath, "TwoProteins.fasta");
-            File.WriteAllText(fastaFilePath, @">Protein1
+            var fastaFileText = @">Protein1
 MRALWVLGLCCVLLTFGSVRADDEVDVDGTVEEDLGKSREGSRTDDEVVQREEEAIQLDG
 LNASQIRELREKSEKFAFQAEVNRMMKLIINSLYKNKEIFLRELISNASDALDKIRLISL
 TDENALSGNEELTVKIKCDKEKNLLHVTDTGVGMTREELVKNLGTIAKSGTSEFLNKMTE
@@ -55,11 +53,14 @@ ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK");
                 "LISLTDENALSGNEELTVK", "NKEIFLR", "NLLHVTDTGVGMTR", "SGTSEFLNK", "TDDEVVQREEEAIQLDGLNASQIR",
                 "KYSQFINFPIYVWSSK"
             };
+            var fastaProteinSource =
+                new ProteinAssociation.FastaSource(new MemoryStream(Encoding.UTF8.GetBytes(fastaFileText)));
+
             var document = CreateDocumentWithPeptides(peptides);
 
             // Associate proteins using Trypsin. The peptide "NKEIFLR" is only tryptic for the first protein
             var trypsin = EnzymeList.GetDefault();
-            var trypsinAssociatedProteins = AssociateProteins(document, fastaFilePath, trypsin);
+            var trypsinAssociatedProteins = AssociateProteins(document, fastaProteinSource, trypsin);
             CollectionAssert.Contains(trypsinAssociatedProteins["Protein1"], "NKEIFLR");
             CollectionAssert.DoesNotContain(trypsinAssociatedProteins["Protein2"], "NKEIFLR");
             CollectionAssert.AreEquivalent(new[] { "ADLINNLGTIAK", "ELISNASDALDKIR", "IDIIPNPQER" },
@@ -67,18 +68,18 @@ ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK");
 
             // Now associate proteins using Chymotrypsin. The peptide "NKEIFLR" is not chymotryptic for either protein
             var chymotrypsin = new Enzyme("Chymotrypsin", "FWYL", "P");
-            var chymotrypsinAssociatedProteins = AssociateProteins(document, fastaFilePath, chymotrypsin);
+            var chymotrypsinAssociatedProteins = AssociateProteins(document, fastaProteinSource, chymotrypsin);
             CollectionAssert.Contains(chymotrypsinAssociatedProteins["Protein1"], "NKEIFLR");
             CollectionAssert.Contains(chymotrypsinAssociatedProteins["Protein2"], "NKEIFLR");
             CollectionAssert.AreEquivalent(new[] { "ADLINNLGTIAK", "ELISNASDALDKIR", "IDIIPNPQER", "NKEIFLR" },
                 chymotrypsinAssociatedProteins["Protein2"]);
         }
 
-        private static Dictionary<string, List<string>> AssociateProteins(SrmDocument document, string fastaFilePath, Enzyme enzyme)
+        private static Dictionary<string, List<string>> AssociateProteins(SrmDocument document, ProteinAssociation.IProteinSource proteinSource, Enzyme enzyme)
         {
             var lenientDigestSettings = new DigestSettings(DigestSettings.MAX_MISSED_CLEAVAGES, false);
             var proteinAssociation = new ProteinAssociation(document, new LongWaitBrokerImpl());
-            proteinAssociation.UseFastaFile(fastaFilePath, proteinSequence => enzyme.Digest(proteinSequence, lenientDigestSettings), new LongWaitBrokerImpl());
+            proteinAssociation.UseProteinSource(proteinSource, proteinSequence => enzyme.Digest(proteinSequence, lenientDigestSettings), new LongWaitBrokerImpl());
             return proteinAssociation.AssociatedProteins.ToDictionary(
                 kvp => kvp.Key.Sequence.Name, kvp => kvp.Value.Peptides.Select(p => p.Peptide.Sequence).ToList());
         }
