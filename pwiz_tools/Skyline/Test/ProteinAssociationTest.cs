@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -37,7 +38,17 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestTrypticProteinAssociation()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"Test\ProteinAssociationTest.data");
+            using var tempDir =
+                new TemporaryDirectory(Path.Combine(TestContext.TestRunDirectory, TestContext.TestName));
+            var fastaFilePath = Path.Combine(tempDir.DirPath, "TwoProteins.fasta");
+            File.WriteAllText(fastaFilePath, @">Protein1
+MRALWVLGLCCVLLTFGSVRADDEVDVDGTVEEDLGKSREGSRTDDEVVQREEEAIQLDG
+LNASQIRELREKSEKFAFQAEVNRMMKLIINSLYKNKEIFLRELISNASDALDKIRLISL
+TDENALSGNEELTVKIKCDKEKNLLHVTDTGVGMTREELVKNLGTIAKSGTSEFLNKMTE
+>Protein2
+MPEEVHHGEEEVETFAFQAEIAQLMSLIINTFYSNKEIFLRELISNASDALDKIRYESLT
+DPSKLDSGKELKIDIIPNPQERTLTLVDTGIGMTKADLINNLGTIAKSGTKAFMEALQAG
+ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK");
             var peptides = new[]
             {
                 "ADLINNLGTIAK", "ELISNASDALDKIR", "FAFQAEVNR", "IDIIPNPQER", "LIINSLYK",
@@ -45,7 +56,6 @@ namespace pwiz.SkylineTest
                 "KYSQFINFPIYVWSSK"
             };
             var document = CreateDocumentWithPeptides(peptides);
-            string fastaFilePath = TestFilesDir.GetTestPath("TwoProteins.fasta");
 
             // Associate proteins using Trypsin. The peptide "NKEIFLR" is only tryptic for the first protein
             var trypsin = EnzymeList.GetDefault();
@@ -58,8 +68,8 @@ namespace pwiz.SkylineTest
             // Now associate proteins using Chymotrypsin. The peptide "NKEIFLR" is not chymotryptic for either protein
             var chymotrypsin = new Enzyme("Chymotrypsin", "FWYL", "P");
             var chymotrypsinAssociatedProteins = AssociateProteins(document, fastaFilePath, chymotrypsin);
-            CollectionAssert.Contains(trypsinAssociatedProteins["Protein1"], "NKEIFLR");
-            CollectionAssert.Contains(trypsinAssociatedProteins["Protein2"], "NKEIFLR");
+            CollectionAssert.Contains(chymotrypsinAssociatedProteins["Protein1"], "NKEIFLR");
+            CollectionAssert.Contains(chymotrypsinAssociatedProteins["Protein2"], "NKEIFLR");
             CollectionAssert.AreEquivalent(new[] { "ADLINNLGTIAK", "ELISNASDALDKIR", "IDIIPNPQER", "NKEIFLR" },
                 chymotrypsinAssociatedProteins["Protein2"]);
         }

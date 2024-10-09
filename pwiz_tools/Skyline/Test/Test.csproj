@@ -371,7 +371,6 @@
     <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PeakGroupIntegratorTest.zip" />
-    <None Include="ProteinAssociationTest.data\TwoProteins.fasta" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
