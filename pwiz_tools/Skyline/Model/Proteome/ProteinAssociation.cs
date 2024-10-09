@@ -103,24 +103,24 @@ namespace pwiz.Skyline.Model.Proteome
             ParsimoniousProteins = null;
         }
 
-        public void UseFastaFile(string file, Enzyme enzyme, ILongWaitBroker broker)
+        public void UseFastaFile(string file, ILongWaitBroker broker)
         {
             if (!File.Exists(file))
                 return;
 
             using var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             var fastaSource = new FastaSource(stream);
-            UseProteinSource(fastaSource, enzyme, broker);
+            UseProteinSource(fastaSource, _document.Settings.PeptideSettings.Enzyme, broker);
         }
 
         // find matches using the background proteome
-        public void UseBackgroundProteome(BackgroundProteome backgroundProteome, Enzyme enzyme, ILongWaitBroker broker)
+        public void UseBackgroundProteome(BackgroundProteome backgroundProteome, ILongWaitBroker broker)
         {
             if (backgroundProteome.Equals(BackgroundProteome.NONE))
                 throw new InvalidOperationException(Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
 
             var proteome = backgroundProteome;
-            UseProteinSource(new BackgroundProteomeSource(broker.CancellationToken, proteome), enzyme, broker);
+            UseProteinSource(new BackgroundProteomeSource(broker.CancellationToken, proteome), _document.Settings.PeptideSettings.Enzyme, broker);
         }
 
         public void UseProteinSource(IProteinSource proteinSource, Enzyme enzyme, ILongWaitBroker broker)

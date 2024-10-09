@@ -2284,7 +2284,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
-                proteinAssociation.UseFastaFile(fastaPath, Document.Settings.PeptideSettings.Enzyme, progressMonitor);
+                proteinAssociation.UseFastaFile(fastaPath, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),
                     commandArgs.AssociateProteinsFindMinimalProteinList.GetValueOrDefault(),

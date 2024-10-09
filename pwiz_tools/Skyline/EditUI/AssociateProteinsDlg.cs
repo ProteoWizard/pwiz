@@ -412,9 +412,8 @@ namespace pwiz.Skyline.EditUI
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.PerformWork(this, 1000,
-                        broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome,
-                            _document.Settings.PeptideSettings.Enzyme, broker));
+                    longWaitDlg.PerformWork(this, 1000, broker => 
+                        _proteinAssociation.UseBackgroundProteome(backgroundProteome, broker));
                     if (longWaitDlg.IsCanceled)
                         return;
                 }
@@ -492,9 +491,7 @@ namespace pwiz.Skyline.EditUI
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.PerformWork(this, 1000,
-                        broker => _proteinAssociation.UseFastaFile(file, _document.Settings.PeptideSettings.Enzyme,
-                            broker));
+                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, broker));
                     if (longWaitDlg.IsCanceled)
                         return;
                 }
