@@ -49,7 +49,8 @@ function addTableOfContents(){
         headings.forEach(function (heading, index) {
             if(!heading.classList.contains("document-title")){
                 var headingTextContent = heading.textContent.trim();
-                if (headingTextContent.endsWith(":")){
+                //remove English and Chinese/Japanese colons
+                if (headingTextContent.endsWith(":") || headingTextContent.endsWith("：")){
                     headingTextContent = headingTextContent.slice(0, -1);
                 }
                 var headingId = headingTextContent.replace(/ /g,"_");
