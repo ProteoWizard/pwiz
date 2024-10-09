@@ -334,25 +334,30 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (commandArgs.ImportingFasta && !commandArgs.ImportingSearch)
+            // Because importing a FASTA or peptide list relies a lot on spectral
+            // libraries for transition selection, they only happen this early when
+            // importing a peptide search that will build a new library.
+            if (!commandArgs.ImportingSearch)
             {
-                if (!HandleExceptions(commandArgs,
-                        () => { ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins); },
-                        Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, 
-                        commandArgs.FastaPath, true))
+                if (commandArgs.ImportingFasta)
                 {
-                    return false;
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.FastaPath, true))
+                    {
+                        return false;
+                    }
                 }
-            }
-
-            if (commandArgs.ImportingPeptideList)
-            {
-                if (!HandleExceptions(commandArgs,
-                        () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
-                        Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
-                        commandArgs.PeptideListPath, true))
+                if (commandArgs.ImportingPeptideList)
                 {
-                    return false;
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.PeptideListPath, true))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -377,6 +382,17 @@ namespace pwiz.Skyline
             {
                 if (!ImportSearch(commandArgs))
                     return false;
+
+                if (commandArgs.ImportingPeptideList)
+                {
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.PeptideListPath, true))
+                    {
+                        return false;
+                    }
+                }
             }
 
             if (commandArgs.AssociatingProteins)

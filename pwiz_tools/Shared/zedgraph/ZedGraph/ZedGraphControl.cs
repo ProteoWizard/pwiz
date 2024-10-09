@@ -622,7 +622,7 @@ namespace ZedGraph
                 }
                 catch (Exception exception)
                 {
-                    Trace.TraceWarning(@"Error when painting a zedGraph:{0}", exception);
+                    Trace.TraceInformation(@"Error when painting a zedGraph:{0}", exception); // N.B. see TraceWarningListener for output details
                 }
 			}
 
