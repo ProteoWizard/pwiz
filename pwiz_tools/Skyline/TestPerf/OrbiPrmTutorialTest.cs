@@ -564,7 +564,7 @@ namespace TestPerf
                 });
             }
             Assert.IsNull(SkylineWindow.Document.MeasuredResults);
-
+            RunUI(()=>SkylineWindow.SaveDocument());
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             using (new WaitDocumentChange(null, true))
             {

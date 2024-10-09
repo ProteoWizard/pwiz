@@ -336,7 +336,7 @@ namespace pwiz.SkylineTest
             AssertEx.IsDocumentState(docPeptides3, 3, 2, 1, 3);
         }
 
-        public const string TEXT_FASTA_YEAST_FRAGMENT = ">>Sequence{0}\n" +
+        public const string TEXT_FASTA_YEAST_FRAGMENT = PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + "Sequence{0}\n" +
             "MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE\n" +
             "VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS\n" +
             "GEKGINTMDLAQVTGQDPRSVTGRIKKINHLLTSSQLIYKGHVVKQLKLKKFSHDGVDSN\n" +
@@ -344,7 +344,7 @@ namespace pwiz.SkylineTest
             "VLVVSPKNPAIKIRCVKYVKDIPDSKGSPSFEYDSNSADEDSVSDSKAAFEDEDLVEGLD\n" +
             "NFNATDLLQNQGLVMEEKEDAVKNEVLLNRFYPLQNQTYDIADKSGLKGISTMDVVNRIT";
 
-        public const string TEXT_BOVINE_PEPTIDES1 = ">>Peptides1\n" +
+        public const string TEXT_BOVINE_PEPTIDES1 = PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + "Peptides1\n" +
                                                 "FALPQYLK\n" +
                                                 "ALNEINQFYQK\n" +
                                                 "ALPMHIR\n" +
@@ -359,7 +359,7 @@ namespace pwiz.SkylineTest
                                                 "FWWENPGVFTEK\n" +
                                                 "IVGYLDEEGVLDQNR";
 
-        public const string TEXT_BOVINE_PEPTIDES2 = ">>Peptides2\n" +
+        public const string TEXT_BOVINE_PEPTIDES2 = PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + "Peptides2\n" +
                                                 "LVTDLTK\n" +
                                                 "AEFVEVTK\n" +
                                                 "LVNELTEFAK\n" +

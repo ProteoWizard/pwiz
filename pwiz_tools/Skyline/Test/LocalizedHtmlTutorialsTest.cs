@@ -146,6 +146,7 @@ namespace pwiz.SkylineTest
                 yield return "/html/body/ul/li";
                 yield return "/html/body/ol/li";
                 yield return "/html/body/table/tr/td";
+                yield return "/html/body/div/table/tr/td";
             }
         }
 

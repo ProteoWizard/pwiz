@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
@@ -135,7 +134,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 _workOrder = null;
                 if (OwnerControl != null)
                 {
-                    Trace.TraceInformation("CalculatedValueListener destroyed: {0}", Producer.ValueType);
+                    Messages.WriteAsyncDebugMessage("CalculatedValueListener destroyed: {0}", Producer.ValueType); // N.B. see TraceWarningListener for output details
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;
                     OwnerControl = null;
                 }
