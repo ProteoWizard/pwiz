@@ -206,6 +206,7 @@ namespace pwiz.Skyline.Model.Proteome
                 else
                 {
                     ++localResults.ProteinsMapped;
+                    localResults.FinalPeptideCount += peptideAssociationGroup.Peptides.Count;
                     proteinAssociations[fastaRecord] = peptideAssociationGroup;
                     foreach (var match in peptideAssociationGroup.Peptides)
                     {
