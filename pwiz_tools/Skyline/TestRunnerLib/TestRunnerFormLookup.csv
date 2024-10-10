@@ -14,6 +14,7 @@ AddRetentionTimePredictorDlg,TestAddLibrary
 AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*
+ArdiaLoginDlg,TestArdia
 AreaChartPropertyDlg,TestEditDialogs
 AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs

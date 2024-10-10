@@ -44,6 +44,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using log4net.Filter;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -1301,6 +1302,50 @@ namespace pwiz.Skyline.Properties
                 NormalizeOptionValue = value.PersistedName;
             }
         }
+
+        [UserScopedSetting]
+        public SerializableDictionary<string, ArdiaRegistrationCodeEntry> ArdiaRegistrationCodeEntries
+        {
+            get
+            {
+                var value = (SerializableDictionary<string, ArdiaRegistrationCodeEntry>)this[nameof(ArdiaRegistrationCodeEntries)];
+                if (value == null)
+                {
+                    value = new SerializableDictionary<string, ArdiaRegistrationCodeEntry>();
+                    this[nameof(ArdiaRegistrationCodeEntries)] = value;
+                }
+
+                return value;
+            }
+            set
+            {
+                this[nameof(ArdiaRegistrationCodeEntries)] = value;
+            }
+        }
+    }
+
+    public sealed class ArdiaRegistrationCodeEntry
+    {
+        /// <summary>
+        /// Gets or sets the client ID.
+        /// </summary>
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client secret.
+        /// </summary>
+        public string ClientSecret { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client name.
+        /// </summary>
+        public string ClientName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client application code.
+        /// </summary>
+        public string ClientApplicationCode { get; set; }
+
     }
 
     /// <summary>
