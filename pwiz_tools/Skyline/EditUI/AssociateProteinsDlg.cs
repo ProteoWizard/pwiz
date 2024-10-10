@@ -393,14 +393,6 @@ namespace pwiz.Skyline.EditUI
             UpdateParsimonyResults();
         }
 
-        private IEnumerable<Peptide> DigestProteinToPeptides(FastaSequence sequence)
-        {
-            var peptideSettings = _document.Settings.PeptideSettings;
-            return peptideSettings.Enzyme.Digest(sequence, peptideSettings.DigestSettings);
-            // CONSIDER: should AssociateProteinsDlg use the length filters? The old PeptidePerProteinDlg doesn't seem to.
-                //peptideSettings.Filter.MaxPeptideLength, peptideSettings.Filter.MinPeptideLength);
-        }
-
         // find matches using the background proteome
         public void UseBackgroundProteome()
         {
@@ -420,7 +412,8 @@ namespace pwiz.Skyline.EditUI
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, DigestProteinToPeptides, broker));
+                    longWaitDlg.PerformWork(this, 1000, broker => 
+                        _proteinAssociation.UseBackgroundProteome(backgroundProteome, broker));
                     if (longWaitDlg.IsCanceled)
                         return;
                 }
@@ -498,7 +491,7 @@ namespace pwiz.Skyline.EditUI
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, DigestProteinToPeptides, broker));
+                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, broker));
                     if (longWaitDlg.IsCanceled)
                         return;
                 }
