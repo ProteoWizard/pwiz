@@ -54,9 +54,16 @@ namespace pwiz.Skyline.Model
             if (tranGroupChromInfo == null)
                 return;
 
-            var chromGroupInfo = GetChromatogramGroupInfo(doc, nodePep, nodeTranGroup, resultsIndex, resultsFile);
-            if (chromGroupInfo == null)
+            var chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
+            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, out var chromGroupInfos))
                 return;
+
+            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
+            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
+                return;
+            if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
+                return;
+
             runTime = chromGroupInfo.RunStartTime;
 
             if (!tranGroupChromInfo.RetentionTime.HasValue || !tranGroupChromInfo.StartRetentionTime.HasValue || !tranGroupChromInfo.EndRetentionTime.HasValue)
@@ -152,7 +159,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
 
-                    var bestMatch = GetPeakMatch(doc, i, fileInfo, peptideDocNode, nodeTranGroup, referenceTarget, referenceMatchData);
+                    var bestMatch = GetPeakMatch(doc, chromSet, fileInfo, nodeTranGroup, referenceTarget, referenceMatchData);
                     if (bestMatch != null)
                         doc = bestMatch.ChangePeak(doc, peptideGroup, peptideDocNode, nodeTranGroup, chromSet.Name, fileInfo.FilePath);
                 }
@@ -201,18 +208,24 @@ namespace pwiz.Skyline.Model
             return best;
         }
 
-        private static PeakMatch GetPeakMatch(SrmDocument doc, int resultIndex, ChromFileInfo fileInfo, PeptideDocNode peptideDocNode, TransitionGroupDocNode nodeTranGroup,
+        private static PeakMatch GetPeakMatch(SrmDocument doc, ChromatogramSet chromSet, IPathContainer fileInfo, TransitionGroupDocNode nodeTranGroup,
             PeakMatchData referenceTarget, IEnumerable<PeakMatchData> referenceMatchData)
         {
-            
             if (referenceTarget == null)
                 return new PeakMatch(0, 0);
 
             var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var chromGroupInfo =
-                GetChromatogramGroupInfo(doc, peptideDocNode, nodeTranGroup, resultIndex, fileInfo.FileId);
-            if (chromGroupInfo == null)
+
+            ChromatogramGroupInfo[] loadInfos;
+            if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out loadInfos))
                 return null;
+
+            var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));
+            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
+                return null;
+            if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
+                return null;
+
             var matchData = new List<PeakMatchData>();
             double totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
             for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
@@ -303,7 +316,6 @@ namespace pwiz.Skyline.Model
                 if (largestPeak == null || peak.Height > largestPeak.Value.Height)
                     largestPeak = peak;
             }
-
             return largestPeak;
         }
 
@@ -313,22 +325,6 @@ namespace pwiz.Skyline.Model
             return nodeTranGroup.Transitions
                 .Select(transition => chromGroupInfo.GetTransitionInfo(transition, mzMatchTolerance))
                 .Where(chromatogramInfo => chromatogramInfo != null);
-        }
-
-        private static ChromatogramGroupInfo GetChromatogramGroupInfo(SrmDocument doc, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeTranGroup, int resultsIndex, ChromFileInfoId resultsFile)
-        {
-            float mzMatchTolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
-            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, out var chromGroupInfos))
-                return null;
-
-            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(resultsFile).FilePath, info.FilePath));
-            if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
-                return null;
-            if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
-                return null;
-            return chromGroupInfo;
         }
 
         private static PeakMatch MakePeakMatchBetween(float scale, PeakMatchData referenceTarget, PeakAlignment prev, PeakAlignment next)
