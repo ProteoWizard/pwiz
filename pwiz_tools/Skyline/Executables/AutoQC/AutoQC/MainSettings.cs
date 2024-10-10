@@ -181,6 +181,10 @@ namespace AutoQC
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_file__0__does_not_exist_, skylineFile) + Environment.NewLine +
                                             Resources.MainSettings_ValidateSkylineFile_Please_enter_a_path_to_an_existing_file_);
             }
+            if (!Path.HasExtension(skylineFile) || !Path.GetExtension(skylineFile).EndsWith(@".sky"))
+            {
+                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile__0__is_not_a_valid_Skyline_file__Skyline_files_have_a__sky_extension_, skylineFile));
+            }
         }
 
         public static void ValidateFolderToWatch(string folderToWatch)

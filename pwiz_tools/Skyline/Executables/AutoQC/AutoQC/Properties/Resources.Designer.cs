@@ -19,10 +19,10 @@ namespace AutoQC.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -178,7 +178,7 @@ namespace AutoQC.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to stop the configuration &quot;{0}&quot;?.
         /// </summary>
-        internal static string AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___ {
+        public static string AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___ {
             get {
                 return ResourceManager.GetString("AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configura" +
                         "tion___0___", resourceCulture);
@@ -548,6 +548,33 @@ namespace AutoQC.Properties {
             get {
                 return ResourceManager.GetString("ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_rep" +
                         "ort___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations file could not be imported..
+        /// </summary>
+        internal static string ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations file was imported..
+        /// </summary>
+        internal static string ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing annotations file..
+        /// </summary>
+        internal static string ConfigRunner_ImportAnnotationsFileIfWatching_Importing_annotations_file_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_ImportAnnotationsFileIfWatching_Importing_annotations_file_", resourceCulture);
             }
         }
         
@@ -1098,6 +1125,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid Skyline file. Skyline files have a .sky extension..
+        /// </summary>
+        public static string MainSettings_ValidateSkylineFile__0__is_not_a_valid_Skyline_file__Skyline_files_have_a__sky_extension_ {
+            get {
+                return ResourceManager.GetString("MainSettings_ValidateSkylineFile__0__is_not_a_valid_Skyline_file__Skyline_files_h" +
+                        "ave_a__sky_extension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter a path to an existing file..
         /// </summary>
         internal static string MainSettings_ValidateSkylineFile_Please_enter_a_path_to_an_existing_file_ {
@@ -1109,7 +1146,7 @@ namespace AutoQC.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline file name cannot be empty. Please specify path to a Skyline file..
         /// </summary>
-        internal static string MainSettings_ValidateSkylineFile_Skyline_file_name_cannot_be_empty__Please_specify_path_to_a_Skyline_file_ {
+        public static string MainSettings_ValidateSkylineFile_Skyline_file_name_cannot_be_empty__Please_specify_path_to_a_Skyline_file_ {
             get {
                 return ResourceManager.GetString("MainSettings_ValidateSkylineFile_Skyline_file_name_cannot_be_empty__Please_specif" +
                         "y_path_to_a_Skyline_file_", resourceCulture);

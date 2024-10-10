@@ -357,5 +357,93 @@ namespace AutoQC
         }
 
         #endregion
+
+        #region Methods used for tests
+        public void SetConfigName(string name)
+        {
+            textConfigName.Text = name;
+        }
+
+        public void SetSkylineDocPath(string skyDocPath)
+        {
+            textSkylinePath.Text = skyDocPath;
+        }
+
+        public void SetFolderToWatch(string folderToWatch)
+        {
+            textFolderToWatchPath.Text = folderToWatch;
+        }
+
+        public void UncheckRemoveResults()
+        {
+            checkBoxRemoveResults.Checked = false;
+        }
+
+        public void CheckRemoveResults()
+        {
+            checkBoxRemoveResults.Checked = true;
+        }
+
+        public void SetAnnotationsFilePath(string annotationsFilePath)
+        {
+            textAnnotationsFilePath.Text = annotationsFilePath;
+        }
+
+        public void ClickSave()
+        {
+            btnSaveConfig.PerformClick();
+        }
+
+        public void ClickCancel()
+        {
+            btnCancelConfig.PerformClick();
+        }
+
+        public void ClickOk()
+        {
+            btnOkConfig.PerformClick();
+        }
+
+        public bool SaveButtonVisible()
+        {
+            return btnSaveConfig.Visible;
+        }
+
+        public bool ConfigNotEditableLabelVisible()
+        {
+            return lblConfigRunning.Visible;
+        }
+
+        public void SelectPanoramaTab()
+        {
+            tabPanoramaSettings.Select();
+        }
+
+        public void CheckUploadToPanorama()
+        {
+            cbPublishToPanorama.Checked = true;
+        }
+
+        public void SetPanoramaServer(string serverUri)
+        {
+            textPanoramaUrl.Text = serverUri;
+        }
+
+        public void SetPanoramaUser(string username)
+        {
+            textPanoramaEmail.Text = username;
+        }
+
+        public void SetPanoramaPassword(string password)
+        {
+            textPanoramaPasswd.Text = password;
+        }
+
+        public void SetPanoramaFolder(string folder)
+        {
+            textPanoramaFolder.Text = folder;
+        }
+
+        #endregion
     }
 }
