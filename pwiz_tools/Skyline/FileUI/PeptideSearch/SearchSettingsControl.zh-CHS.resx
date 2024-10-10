@@ -780,7 +780,7 @@
     <value>2</value>
   </data>
   <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
-    <value>最小信噪比(&amp;S):</value>
+    <value>最小信噪比(&amp;S)：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
