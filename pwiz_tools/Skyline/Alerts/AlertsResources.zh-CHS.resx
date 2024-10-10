@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AlertDlg_GetDefaultButtonText__No" xml:space="preserve">
+    <value>否(&amp;N)</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText__Yes" xml:space="preserve">
+    <value>是(&amp;Y)</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_" xml:space="preserve">
+    <value>尚未找到 {0} 个文件。</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_" xml:space="preserve">
+    <value>将包含 {1} 个文件中的 {0} 个文件。</value>
+  </data>
+  <data name="EmptyProteinsDlg_EmptyProteinsDlg__0__new_proteins" xml:space="preserve">
+    <value>{0} 个新蛋白质</value>
+  </data>
+  <data name="EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein" xml:space="preserve">
+    <value>1 个新蛋白质</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>{0} 个分子不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_matching_multiple_proteins" xml:space="preserve">
+    <value>{0} 个肽段匹配多个蛋白质。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>{0} 个肽段不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_without_matching_proteins" xml:space="preserve">
+    <value>{0} 个肽段没有匹配到蛋白质。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>1 个分子不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_matching_multiple_proteins" xml:space="preserve">
+    <value>1 个肽段匹配多个蛋白质。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>1 个肽段不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_without_a_matching_protein" xml:space="preserve">
+    <value>没有相匹配的蛋白质的 1 个肽段。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules" xml:space="preserve">
+    <value>过滤分子</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules" xml:space="preserve">
+    <value>包含所有分子</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_the_current_filter_settings" xml:space="preserve">
+    <value>此分子不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_have_a_matching_protein" xml:space="preserve">
+    <value>此肽段没有匹配的蛋白质。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_match_the_current_filter_settings" xml:space="preserve">
+    <value>此肽段不匹配当前的过滤器设置。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_matches_multiple_proteins" xml:space="preserve">
+    <value>此肽段匹配多个蛋白质。</value>
+  </data>
+  <data name="ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported" xml:space="preserve">
+    <value>文档必须在结果可能被导入前保存。</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__first" xml:space="preserve">
+    <value>否则，请首先取消并安装{0}</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_This_tool_requires_0" xml:space="preserve">
+    <value>本工具需要{0}。</value>
+  </data>
+  <data name="MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_" xml:space="preserve">
+    <value>正在下载 MSFragger {0}</value>
+  </data>
+  <data name="PasteFilteredPeptidesDlg_Peptides_Do_you_want_to_filter_them_from_the_pasted_list" xml:space="preserve">
+    <value>您是否想要从已粘贴的列表中将其过滤出来？</value>
+  </data>
+  <data name="PasteFilteredPeptidesDlg_Peptides_The_following_peptides_did_not_meet_the_current_filter_criteria_" xml:space="preserve">
+    <value>下列肽段不符合当前的过滤条件：</value>
+  </data>
+  <data name="PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_" xml:space="preserve">
+    <value>您必须针对教程文件选择一个空目录。</value>
+  </data>
+  <data name="ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted" xml:space="preserve">
+    <value>错误报告将被公布。</value>
+  </data>
+  <data name="ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below" xml:space="preserve">
+    <value>如下所示，发生意外错误。</value>
+  </data>
+  <data name="ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_" xml:space="preserve">
+    <value>报告错误，以帮助改进 Skyline。</value>
+  </data>
+  <data name="ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_" xml:space="preserve">
+    <value>您上次运行时 Skyline 出现意外错误。</value>
+  </data>
+  <data name="ReportShutdownDlg_ReportShutdownDlg_Unexpected_Shutdown" xml:space="preserve">
+    <value>意外停机</value>
+  </data>
+  <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
+    <value>请选择缺失文件的所属文件夹。</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
+    <value>正在下载所需的文件…</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_" xml:space="preserve">
+    <value>需要以下文件。您是否要下载?</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_" xml:space="preserve">
+    <value>需要以下文件。您是否要下载?</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText__0__library" xml:space="preserve">
+    <value>{0}库</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Data_files___0_" xml:space="preserve">
+    <value>数据文件：{0}</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_ID__0__" xml:space="preserve">
+    <value>ID：{0}</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra__0__" xml:space="preserve">
+    <value>匹配的谱图：{0}</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Revision__0__" xml:space="preserve">
+    <value>修订：{0}</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__" xml:space="preserve">
+    <value>序列特异的肽段：{0}</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_" xml:space="preserve">
+    <value>特异的母离子：{0}</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetLibraryLinks_Library_source" xml:space="preserve">
+    <value>库源：</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetLibraryLinks_Library_sources" xml:space="preserve">
+    <value>库源：</value>
+  </data>
+  <data name="UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later" xml:space="preserve">
+    <value>或许稍后进行(&amp;L)</value>
+  </data>
+  <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
+    <value>未发现更新。</value>
+  </data>
+</root>

@@ -80,6 +80,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         spectrumMetadata.ChangeAnalyzer(proto.Analyzers[protoSpectrum.AnalyzerIndex - 1]);
                 }
 
+                if (protoSpectrum.ScanWindowIndex > 0)
+                {
+                    var scanWindow = proto.ScanWindows[protoSpectrum.ScanWindowIndex - 1];
+                    spectrumMetadata = spectrumMetadata.ChangeScanWindow(scanWindow.LowerLimit, scanWindow.UpperLimit);
+                }
+
                 var precursorsByLevel =
                     protoSpectrum.PrecursorIndex.ToLookup(index => proto.Precursors[index - 1].MsLevel, index=>precursors[index - 1]);
                 if (precursorsByLevel.Any())
@@ -98,6 +104,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             var spectrumPrecursor =
                 new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz, protoPrecursor.TargetMz < 0));
+            if (protoPrecursor.IsolationWindowLower != 0 || protoPrecursor.IsolationWindowUpper != 0)
+            {
+                spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                    protoPrecursor.IsolationWindowLower, protoPrecursor.IsolationWindowUpper);
+            }
             if (protoPrecursor.CollisionEnergy != 0)
             {
                 spectrumPrecursor = spectrumPrecursor.ChangeCollisionEnergy(protoPrecursor.CollisionEnergy);
@@ -112,6 +123,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             var precursors = new DistinctList<(int MsLevel, SpectrumPrecursor SpectrumPrecuror)>();
             var scanDescriptions = new DistinctList<string>{null};
             var analyzers = new DistinctList<string>{null};
+            var scanWindows = new DistinctList<Tuple<double, double>> { null };
             foreach (var spectrumMetadata in SpectrumMetadatas)
             {
                 var spectrum = new ResultFileMetaDataProto.Types.SpectrumMetadata
@@ -138,11 +150,22 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         spectrum.PrecursorIndex.Add(precursors.Add((msLevel, precursor)) + 1);
                     }
                 }
+
+                if (spectrumMetadata.ScanWindowLowerLimit.HasValue && spectrumMetadata.ScanWindowUpperLimit.HasValue)
+                {
+                    spectrum.ScanWindowIndex = scanWindows.Add(Tuple.Create(spectrumMetadata.ScanWindowLowerLimit.Value,
+                        spectrumMetadata.ScanWindowUpperLimit.Value));
+                }
                 proto.Spectra.Add(spectrum);
             }
 
             proto.ScanDescriptions.AddRange(scanDescriptions.Skip(1));
             proto.Analyzers.AddRange(analyzers.Skip(1));
+            proto.ScanWindows.AddRange(scanWindows.Skip(1).Select(tuple=>new ResultFileMetaDataProto.Types.ScanWindow
+            {
+                LowerLimit = tuple.Item1,
+                UpperLimit = tuple.Item2
+            }));
             foreach (var precursorTuple in precursors)
             {
                 var spectrumPrecursor = precursorTuple.SpectrumPrecuror;
@@ -154,6 +177,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 if (spectrumPrecursor.CollisionEnergy.HasValue)
                 {
                     protoPrecursor.CollisionEnergy = spectrumPrecursor.CollisionEnergy.Value;
+                }
+
+                if (spectrumPrecursor.IsolationWindowLowerWidth.HasValue)
+                {
+                    protoPrecursor.IsolationWindowLower = spectrumPrecursor.IsolationWindowLowerWidth.Value;
+                }
+
+                if (spectrumPrecursor.IsolationWindowUpperWidth.HasValue)
+                {
+                    protoPrecursor.IsolationWindowUpper = spectrumPrecursor.IsolationWindowUpperWidth.Value;
                 }
                 proto.Precursors.Add(protoPrecursor);
             }

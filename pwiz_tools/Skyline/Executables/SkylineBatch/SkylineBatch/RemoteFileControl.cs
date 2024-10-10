@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
 using PanoramaServerException = pwiz.PanoramaClient.PanoramaServerException;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
@@ -293,7 +293,7 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                CommonAlertDlg.ShowException(this, e);
             }
 
             Settings.Default.Save();

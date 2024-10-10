@@ -196,6 +196,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bilinear.
+        /// </summary>
+        public static string BilinearRegressionFit_bilinear {
+            get {
+                return ResourceManager.GetString("BilinearRegressionFit_bilinear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chebyshev.
         /// </summary>
         public static string ClusterMetricType_chebyshev {
@@ -804,6 +813,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string LodCalculation_turning_point {
             get {
                 return ResourceManager.GetString("LodCalculation_turning_point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bilinear turning point standard error.
+        /// </summary>
+        public static string LodCalculation_turning_point_stderr {
+            get {
+                return ResourceManager.GetString("LodCalculation_turning_point_stderr", resourceCulture);
             }
         }
         
@@ -1438,6 +1456,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hardklör.
+        /// </summary>
+        public static string SearchEngine_Hardklor {
+            get {
+                return ResourceManager.GetString("SearchEngine_Hardklor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS Amanda.
         /// </summary>
         public static string SearchEngine_MSAmanda {
@@ -1533,6 +1560,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SharedPeptides_Removed {
             get {
                 return ResourceManager.GetString("SharedPeptides_Removed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the gene with the most peptides.
+        /// </summary>
+        public static string SharedPeptidesGene_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the first gene.
+        /// </summary>
+        public static string SharedPeptidesGene_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between genes.
+        /// </summary>
+        public static string SharedPeptidesGene_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single gene).
+        /// </summary>
+        public static string SharedPeptidesGene_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_Removed", resourceCulture);
             }
         }
         
@@ -1839,6 +1902,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string Workflow_dia {
             get {
                 return ResourceManager.GetString("Workflow_dia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature Detection.
+        /// </summary>
+        public static string Workflow_feature_detection {
+            get {
+                return ResourceManager.GetString("Workflow_feature_detection", resourceCulture);
             }
         }
         

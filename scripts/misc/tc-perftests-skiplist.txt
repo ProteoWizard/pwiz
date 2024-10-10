@@ -19,7 +19,9 @@ TestDiaUmpireWiffFile
 TestDiaQeDiaUmpireTutorial
 TestDiaQeDiaUmpireTutorialFullFileset
 TestDiaQeFullSearchTutorial
+TestDiaSearchQeTutorial
 TestEncyclopeDiaSearchTutorialFullFileset
+TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates
 #TestMobilIon
 TestPeakPerf

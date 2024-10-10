@@ -31,6 +31,7 @@ using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
+using pwiz.Common;
 using SharedBatch;
 using Resources = AutoQC.Properties.Resources;
 using Settings = AutoQC.Properties.Settings;
@@ -49,6 +50,8 @@ namespace AutoQC
         public static void Main(string[] args)
         {
             ProgramLog.Init("AutoQC");
+            CommonApplicationSettings.ProgramName = "AutoQC Loader";
+            CommonApplicationSettings.ProgramNameAndVersion = Version();
             Application.EnableVisualStyles();
 
             AddFileTypesToRegistry();
@@ -299,8 +302,23 @@ namespace AutoQC
 
         private static bool InitSkylineSettings()
         {
+            ProgramLog.Info("Initializing Skyline settings.");
             if (SkylineInstallations.FindSkyline())
+            {
+                if (SkylineInstallations.HasSkyline)
+                {
+                    ProgramLog.Info(string.Format("Found SkylineRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineRunnerPath));
+                }
+                if (SkylineInstallations.HasSkylineDaily)
+                {
+                    ProgramLog.Info(string.Format("Found SkylineDailyRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineDailyRunnerPath));
+                }
+                // Save the Skyline settings otherwise, in a new installation of AutoQC Loader, "Skyline" and "Skyline Daily" options
+                // are disabled in the "Skyline" tab.
+                SharedBatch.Properties.Settings.Default.Save();
                 return true;
+            }
+
             var skylineForm = new FindSkylineForm(AppName, Icon());
             Application.Run(skylineForm);
 
@@ -408,7 +426,7 @@ namespace AutoQC
             return $"{AppName} {_version}";
         }
 
-        public static string AppName => "AutoQC Loader";
+        public static string AppName => CommonApplicationSettings.ProgramName;
 
         public static Icon Icon()
         {

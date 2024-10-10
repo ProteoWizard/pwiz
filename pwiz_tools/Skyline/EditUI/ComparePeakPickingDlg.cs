@@ -100,14 +100,14 @@ namespace pwiz.Skyline.EditUI
             // Intialize the y-axis selector combo box
             var yAxisOptions = new[]
             {
-                Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks,
+                EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks,
                 Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s,
-                Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups
+                EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups
             };
             comboBoxYAxis.Items.AddRange(yAxisOptions);
-            comboBoxYAxis.SelectedItem = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks;
+            comboBoxYAxis.SelectedItem = EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks;
             comboBoxFilesYAxis.Items.AddRange(yAxisOptions);
-            comboBoxFilesYAxis.SelectedItem = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks;
+            comboBoxFilesYAxis.SelectedItem = EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks;
 
             InitializeGraphPanes();
 
@@ -326,7 +326,7 @@ namespace pwiz.Skyline.EditUI
             string selectedItem = (string) comboBox.SelectedItem;
             zedGraphRoc.GraphPane.YAxis.Title.Text = selectedItem;
             zedGraphFiles.GraphPane.YAxis.Title.Text = selectedItem;
-            Normalizer = (selectedItem == Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks) ? NormalizeType.total :
+            Normalizer = (selectedItem == EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks) ? NormalizeType.total :
                          (selectedItem == Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s) ? NormalizeType.frac_manual
                                                                                                                         : NormalizeType.frac_all;
             comboBoxYAxis.SelectedItem = selectedItem;
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.EditUI
                 if (groupIndex == -1)
                 {
                     MessageDlg.Show(this,
-                        string.Format(Resources.ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_, selInfo.Sequence, selInfo.Charge));
+                        string.Format(EditUIResources.ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_, selInfo.Sequence, selInfo.Charge));
                     return;
                 }
                 skylineWindow.SelectedPath = document.GetPathTo((int)SrmDocument.Level.TransitionGroups, groupIndex);
@@ -521,17 +521,17 @@ namespace pwiz.Skyline.EditUI
         private void InitializeGraphPanes()
         {
             InitGraphPane(zedGraphRoc.GraphPane, 
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate,
-                          Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks,
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_);
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate,
+                          EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks,
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_);
             InitGraphPane(zedGraphQq.GraphPane, 
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Expected_False_Positive_Rate, 
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate, 
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot);
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Expected_False_Positive_Rate, 
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate, 
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot);
             InitGraphPane(zedGraphFiles.GraphPane,
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Replicate_Name,
-                          Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks,
-                          Resources.ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_an_analysis_of_runs
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Replicate_Name,
+                          EditUIResources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks,
+                          EditUIResources.ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_an_analysis_of_runs
                          );
             zedGraphRoc.Refresh();
             zedGraphQq.Refresh();
@@ -582,12 +582,12 @@ namespace pwiz.Skyline.EditUI
                 InitializeGraphPanes();
                 return;
             }
-            rocPane.Title.Text = Resources.ComparePeakPickingDlg_UpdateGraph_ROC_Plot_Comparison;
-            qqPane.Title.Text = Resources.ComparePeakPickingDlg_UpdateGraph_Q_Q_Comparison;
+            rocPane.Title.Text = EditUIResources.ComparePeakPickingDlg_UpdateGraph_ROC_Plot_Comparison;
+            qqPane.Title.Text = EditUIResources.ComparePeakPickingDlg_UpdateGraph_Q_Q_Comparison;
             bool observed = checkObserved.Checked;
             filesPane.Title.Text = string.Format(observed
-                ? Resources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__
-                : Resources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__, textBoxFilesQCutoff.Text);
+                ? EditUIResources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__
+                : EditUIResources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__, textBoxFilesQCutoff.Text);
             int i = -1;
             const double minRocY = 0;
             const double minRocX = 0;
@@ -644,18 +644,18 @@ namespace pwiz.Skyline.EditUI
             var minQqPlot = Math.Min(minQq * MIN_SIG_FP, Q_VALUE_SIG * 0.5);
             var maxQqPlot = Math.Max(maxQq * MARGIN, Q_VALUE_SIG * MARGIN);
             var equalityPoints = new PointPairList { { minQqPlot, minQqPlot }, { 1, 1 } };
-            var equalityCurve = new LineItem(Resources.ComparePeakPickingDlg_UpdateGraph_Equality, equalityPoints, Color.Black, SymbolType.None);
+            var equalityCurve = new LineItem(EditUIResources.ComparePeakPickingDlg_UpdateGraph_Equality, equalityPoints, Color.Black, SymbolType.None);
             qqPane.CurveList.Add(equalityCurve);
             if (_showFpCutoffQ)
             {
                 var significancePoints = new PointPairList { { Q_VALUE_SIG, minQq }, { Q_VALUE_SIG, maxQq } };
-                var significanceCurve = new LineItem(string.Format(Resources.ComparePeakPickingDlg_UpdateGraph__0__significance_threshold, Q_VALUE_SIG), significancePoints, _colorSigLine, SymbolType.None);
+                var significanceCurve = new LineItem(string.Format(EditUIResources.ComparePeakPickingDlg_UpdateGraph__0__significance_threshold, Q_VALUE_SIG), significancePoints, _colorSigLine, SymbolType.None);
                 qqPane.CurveList.Add(significanceCurve);    
             }
             if (_showFpCutoff)
             {
                 var significancePointsRoc = new PointPairList { { Q_VALUE_SIG, minRocY }, { Q_VALUE_SIG, maxRocY * MARGIN } };
-                var significanceCurveRoc = new LineItem(string.Format(Resources.ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate, Q_VALUE_SIG), significancePointsRoc, _colorSigLine, SymbolType.None);
+                var significanceCurveRoc = new LineItem(string.Format(EditUIResources.ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate, Q_VALUE_SIG), significancePointsRoc, _colorSigLine, SymbolType.None);
                 rocPane.CurveList.Add(significanceCurveRoc);    
             }
 
@@ -857,8 +857,8 @@ namespace pwiz.Skyline.EditUI
         private void checkObserved_CheckedChanged(object sender, EventArgs e)
         {
             labelCutoff.Text = checkObserved.Checked
-                ? Resources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_
-                : Resources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_;
+                ? EditUIResources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_
+                : EditUIResources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_;
             UpdateGraph();
         }
 
@@ -879,7 +879,7 @@ namespace pwiz.Skyline.EditUI
                         string comparisonName = peakBoundaries.Name;
                         BeginInvoke((Action) (() =>
                         {
-                            longWaitDlg.Text = string.Format(Resources.ComparePeakPickingDlg_RefreshDocument_Refresh__0_, comparisonName);
+                            longWaitDlg.Text = string.Format(EditUIResources.ComparePeakPickingDlg_RefreshDocument_Refresh__0_, comparisonName);
                             longWaitDlg.ProgressValue = 0;
                         }));
 
@@ -951,9 +951,9 @@ namespace pwiz.Skyline.EditUI
 
         public int ExcludeDefaults { get { return 0; } }
 
-        public string Title { get { return Resources.ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons; } }
+        public string Title { get { return EditUIResources.ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons; } }
 
-        public string Label { get { return Resources.ComparePeakBoundariesList_Label__Model_or_File_; } }
+        public string Label { get { return EditUIResources.ComparePeakBoundariesList_Label__Model_or_File_; } }
 
         public bool AllowReset { get { return true; } }
 

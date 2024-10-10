@@ -23,6 +23,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "BuildParser.h"
 #include "SpecData.h"
+#include "SslReader.h"
 
 namespace BiblioSpec {
 
@@ -92,15 +93,38 @@ void BuildParser::setSpecFileName(
 
     curSpecFileName_.clear();
 
-    string fileroot = specfileroot;
-    Verbosity::debug("checking for basename: %s", fileroot);
+    auto localDirectories = directories;
+    bal::replace_all(specfileroot, "\\", "/"); // attempt to make Windows paths parseable on POSIX
+
+    // if specfileroot has a parent path, try that directory first
+    bfs::path specfilepath(specfileroot);
+    if (specfilepath.has_parent_path())
+    {
+        try
+        {
+            if (bfs::exists(bfs::complete(specfilepath.parent_path(), filepath_)))
+            {
+                localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
+            }
+        }
+        catch (...)
+        {
+            // ignore any error that might happen checking if the file exists
+        }
+    }
+
+    string fileroot = specfilepath.filename().string();
+    Verbosity::debug("checking for basename: %s", fileroot.c_str());
     do {
         // try the location of the result file, then all dirs in the list
-        for(int i=-1; i<(int)directories.size(); i++) {
+        for(int i=-1; i<(int)localDirectories.size(); i++) {
 
             string path = filepath_.c_str();
             if( i >= 0 ) {
-                path += directories.at(i);
+                if (bfs::path(localDirectories[i]).is_absolute())
+                    path = localDirectories[i];
+                else
+					path += localDirectories[i];
             }
             if (path.empty())
                 path = ".";
@@ -151,8 +175,8 @@ void BuildParser::setSpecFileName(
 
     if( curSpecFileName_.empty() ) {
         string extString = fileNotFoundMessage(specfileroot,
-                                               extensions, directories);
-        throw BlibException(true, extString.c_str());
+                                               extensions, localDirectories);
+        throw BlibException(true, extString);
     }// else we found a file and set the name
 
     Verbosity::comment(V_DETAIL, "spectrum filename set to %s", curSpecFileName_.c_str());
@@ -223,7 +247,7 @@ string BuildParser::filesNotFoundMessage(
     messageString += "\n\nIn any of the following directories:\n" + bfs::canonical(deepestPath).make_preferred().string();
     set<string> parentPaths;
     for (const auto& dir : directories)
-        parentPaths.insert(bfs::canonical(deepestPath / dir).make_preferred().string());
+        parentPaths.insert((bfs::path(dir).is_absolute() ? dir : bfs::canonical(deepestPath / dir)).make_preferred().string());
     for (const auto& dir : boost::make_iterator_range(parentPaths.rbegin(), parentPaths.rend()))
         messageString += "\n" + dir;
 
@@ -318,6 +342,33 @@ sqlite3_int64 BuildParser::insertProtein(const Protein* protein) {
     return sqlite3_last_insert_rowid(blibMaker_.getDb());
 }
 
+// Optionally sort the psms before writing
+void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
+{
+    if (scoreType == PSM_SCORE_TYPE::HARDKLOR_IDOTP)
+    {
+        // Sort PSMs by mass before writing to library
+        std::stable_sort(psms_.begin(), psms_.end(), [](PSM* a, PSM* b)
+        {
+            if (a == NULL || b == NULL)
+            {
+                return b != NULL; // Nulls are ultimately ignored, but sort consistency matters
+            }
+            // Pick out the "123.45" from "mass123.45_RT6.78"
+            const double massA = boost::lexical_cast<double>(a->smallMolMetadata.moleculeName.substr(4, a->smallMolMetadata.moleculeName.find("_")));
+            const double massB = boost::lexical_cast<double>(b->smallMolMetadata.moleculeName.substr(4, b->smallMolMetadata.moleculeName.find("_")));
+            if (massA == massB)
+            {
+                if (a->charge == b->charge)
+                    return a->score > b->score; // High score first, so it gets retained in case we're discarding ambiguous
+                return a->charge < b->charge;
+            }
+            return massA < massB; // Lower mass first
+        }
+        );
+    }
+}
+
 /**
  * \brief Use the BlibBuilder to add to the library entries in the list
  * of psms, adding spectra from the curSpecFileName file. The same
@@ -354,19 +405,36 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     if (!hasMatches)
         Verbosity::status("No matches left after filtering for target sequences in %s.", curSpecFileName_.c_str());
 
+    // Optionally sort the psms before writing
+    OptionalSort(scoreType);
+
     // prune out any duplicates from the list of psms
-    if (!blibMaker_.keepAmbiguous()) {
+    if (!keepAmbiguous()) {
         removeDuplicates();
+        removeNulls();
         hasMatches = psms_.size() > 0;
         if (!hasMatches)
             Verbosity::status("No matches left after removing ambiguous spectra in %s.", curSpecFileName_.c_str());
     }
 
+    bool needsSpectra = false;
+    for (unsigned int i = 0; i < psms_.size(); i++) {
+        PSM* psm = psms_.at(i);
+        if (psm != NULL && !psm->isPrecursorOnly())
+        {
+            needsSpectra = true;
+            break;
+        }
+    }
+
     // for reading spectrum file
     if( specReader_ ) {
-        Verbosity::status("Loading %s.", curSpecFileName_.c_str());
-        specReader_->openFile(curSpecFileName_.c_str());
-        Verbosity::status("Reading spectra from %s.", curSpecFileName_.c_str());
+        if (needsSpectra)
+        {
+            Verbosity::status("Loading %s.", curSpecFileName_.c_str());
+            specReader_->openFile(curSpecFileName_.c_str());
+            Verbosity::status("Reading spectra from %s.", curSpecFileName_.c_str());
+        }
     } else {
         throw BlibException(true, "Cannot read spectrum file '%s' with NULL "
                             "reader.", curSpecFileName_.c_str());
@@ -395,8 +463,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         SpecData curSpectrum;
 
         // get spectrum information
-        bool success = specReader_->getSpectrum(psm, lookUpBy_,
-                                                curSpectrum, true); //getpeaks
+        bool success = needsSpectra ? specReader_->getSpectrum(psm, lookUpBy_,
+                                                curSpectrum, !psm->isPrecursorOnly()) : true;
         if( ! success ){
             string idStr = psm->idAsString();
             Verbosity::warn("Did not find spectrum '%s' in '%s'.",
@@ -405,8 +473,15 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         }
 
         curSpectrum.totalIonCurrent = 0;
-        for (int j = 0; j < curSpectrum.numPeaks; ++j)
-            curSpectrum.totalIonCurrent += curSpectrum.intensities[j];
+        if (!psm->isPrecursorOnly())
+        {
+            for (int j = 0; j < curSpectrum.numPeaks; ++j)
+                curSpectrum.totalIonCurrent += curSpectrum.intensities[j];
+        }
+        else
+        {
+            curSpectrum.numPeaks = 0;
+        }
 
         Verbosity::comment(V_DETAIL, "Adding spectrum %d (%s), charge %d.", 
                            psm->specKey, psm->specName.c_str(), psm->charge);
@@ -450,6 +525,11 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     }
 }
 
+bool BuildParser::keepAmbiguous()
+{
+    return blibMaker_.keepAmbiguous();
+}
+
 /**
  * Given a PSM and its corresponding spectrum, insert it into the
  * library.
@@ -465,7 +545,7 @@ void BuildParser::insertSpectrum(PSM* psm,
     string specIdStr = psm->idAsString();
 
     // check if charge state exists
-    if (psm->charge < 1) {
+    if (psm->charge == 0) {
         // try to calculate charge
         Verbosity::debug("Attempting to calculate charge state for spectrum %s (%s)",
                          specIdStr.c_str(), psm->modifiedSeq.c_str());
@@ -480,10 +560,15 @@ void BuildParser::insertSpectrum(PSM* psm,
         }
     }
 
+    if (!blibMaker_.keepCharge(psm->charge)) // Ignore items with unwanted charges
+    {
+        return;
+    }
+
     // this order must agree with insertSpectrumStmt_ as set in the ctor
     int field = 1;
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.mz);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, psm->smallMolMetadata.precursorMzDeclared == 0 ? curSpectrum.mz : psm->smallMolMetadata.precursorMzDeclared);
     sqlite3_bind_int(insertSpectrumStmt_, field++, psm->charge);
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
@@ -494,17 +579,34 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
     sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
-    if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
-        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
-        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.endTime);
+    sslPSM* sslpsm = dynamic_cast<sslPSM*>(psm);
+    double rt = (curSpectrum.retentionTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.retentionTime : curSpectrum.retentionTime;
+    double rtStart = (curSpectrum.startTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.startTime : curSpectrum.startTime;
+    double rtEnd = (curSpectrum.endTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.endTime : curSpectrum.endTime;
+    if (rt != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, rt);
+    } else {
+        sqlite3_bind_null(insertSpectrumStmt_, field++);
+    }
+    if (rtStart != 0 && rtEnd != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, rtStart);
+        sqlite3_bind_double(insertSpectrumStmt_, field++, rtEnd);
     } else {
         sqlite3_bind_null(insertSpectrumStmt_, field++);
         sqlite3_bind_null(insertSpectrumStmt_, field++);
     }
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
+    if (psm->isPrecursorOnly())
+    {
+        sqlite3_bind_null(insertSpectrumStmt_, field++); // No TIC if no spectrum
+    }
+    else
+    {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
+    }
     sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
-    sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, 
+        psm->isPrecursorOnly() ? "" : specIdStr.c_str(), // No spectrum ID for precursor-only records
+        -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);
     sqlite3_bind_int(insertSpectrumStmt_, field++, scoreType);
     // Small molecule: moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)
@@ -647,6 +749,10 @@ void BuildParser::removeDuplicates() {
         if( psm == NULL ){
             continue;
         }
+        if (psm->isPrecursorOnly())
+        {
+            continue; // There are no spectra to disambiguate
+        }
         // choose the correct id type
         string id = boost::lexical_cast<string>(psm->specKey);
         if( lookUpBy_ == INDEX_ID ){
@@ -706,7 +812,10 @@ void BuildParser::removeDuplicates() {
             }
         }
     }// next psm
+}
 
+void BuildParser::removeNulls() {
+    int startingNumPsms = psms_.size(); // for debugging
     // fill in any gaps
     unsigned int insert_index = 0;
     for(unsigned int move_index = 0; move_index < psms_.size(); move_index++ ) {

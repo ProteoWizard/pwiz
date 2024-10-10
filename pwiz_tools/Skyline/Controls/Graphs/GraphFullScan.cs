@@ -60,6 +60,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _zoomYAxis;
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
         private LibraryRankedSpectrumInfo _rmis;
+
+        // status info to calculate point dot products
+        private SpectrumPeaksInfo.MI[] _peaks;
+        private GraphSpectrum.Precursor _precursor;
+
         private int[] _transitionIndex;
         private MzRange _requestedRange;
 
@@ -95,7 +100,7 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.Title.IsVisible = true;
             GraphPane.Legend.IsVisible = false;
             // Make sure to use italics for "m/z"
-            AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, Resources.AbstractMSGraphItem_CustomizeXAxis_MZ);
+            AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
 
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
             spectrumBtn.Checked = Settings.Default.SumScansFullScan;
@@ -147,7 +152,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (spectra[0].Centroided != requestedCentroids)
                 {
                     MessageDlg.Show(this, string.Format(
-                        Resources.GraphFullScan_SetSpectraUI__peak_type_not_available,
+                        GraphsResources.GraphFullScan_SetSpectraUI__peak_type_not_available,
                         _msDataFileScanHelper.GetPeakTypeLocalizedName(requestedCentroids
                             ? PeakType.centroided
                             : PeakType.profile),
@@ -199,7 +204,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanExceptionUI(Exception ex)
         {
-            GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Spectrum_unavailable;
+            GraphPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable;
             MessageDlg.ShowException(this, ex);
         }
 
@@ -309,7 +314,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Need to check again once on the UI thread
                     if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
-                        GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Loading___;
+                        GraphPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
                         graphControl.Refresh();
                     }
                 }));
@@ -359,6 +364,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            GetRankedSpectrum();
             double[] massErrors = null;
             if (useHeatMap)
             {
@@ -598,13 +604,102 @@ namespace pwiz.Skyline.Controls.Graphs
                     var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
                         chrom => chrom.ContainsFile(_msDataFileScanHelper.ScanProvider.DataFilePath));
                     spectrumProperties.ReplicateName = chromSet?.Name;
+                    if (_peaks?.Length > 0)
+                    {
+                        var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id,
+                            _documentContainer.DocumentUI);
+                        //if current transition is deleted look up precursor from any of the transitions in the graph
+                        if(nodePath == null)
+                        {
+                            foreach (var t in _msDataFileScanHelper.ScanProvider.Transitions)
+                            {
+                                nodePath = DocNodePath.GetNodePath(t.Id, _documentContainer.DocumentUI);
+                                if (nodePath != null)
+                                    break;
+                            }
+                        }
+
+                        if (nodePath !=null)
+                        {
+                            if (!ReferenceEquals(nodePath.Precursor, _precursor?.DocNode))
+                            {
+                                _precursor = new GraphSpectrum.Precursor(_documentContainer.DocumentUI.Settings, null,
+                                    nodePath.Peptide, nodePath.Precursor);
+                            }
+
+                            // expectedSpectrum to docTransitions join
+                            var thisSpectrumHash = GetPeakIntensities(
+                                _msDataFileScanHelper.ScanProvider.Transitions.ToList(), stateProvider.DocumentUI);
+
+                            var isMs1 = _msDataFileScanHelper.Source == ChromSource.ms1;
+                            if (_precursor.Spectra?.Count > 0)
+                            {
+                                if (_precursor.DocNode.Transitions.Count(t => t.IsMs1 == isMs1) > 1)
+                                {
+                                    var dotpList = (
+                                        from peakDoc in _precursor.DocNode.Transitions
+                                        join peakSpec in thisSpectrumHash on ReferenceValue.Of(peakDoc.Id) equals peakSpec.Key
+                                        where peakDoc.IsMs1 == isMs1 && (peakDoc.HasLibInfo || peakDoc.IsMs1)
+                                        select new
+                                        {
+                                            expected = peakDoc.IsMs1
+                                                ? peakDoc.IsotopeDistInfo.Proportion
+                                                : peakDoc.LibInfo.Intensity,
+                                            actual = peakSpec.Value
+                                        }).ToList();
+
+                                    if (dotpList.Count > 1)
+                                    {
+                                        var dotp = new Statistics(dotpList.Select(d => (double)d.expected))
+                                            .NormalizedContrastAngleSqrt(new Statistics(
+                                                dotpList.Select(d => d.actual))).ToString(Formats.PEAK_FOUND_RATIO);
+                                        if (isMs1)
+                                            spectrumProperties.idotp = dotp;
+                                        else
+                                            spectrumProperties.dotp = dotp;
+                                    }
+                                }
+                            }
+                        }                    }
                 }
             }
 
-            //avoid control refresh if there are no changes
+            // avoid control refresh if there are no changes
             if (graphControlExtension.PropertiesSheet.SelectedObject == null || graphControlExtension.PropertiesSheet.SelectedObject is FullScanProperties currentProps && !currentProps.IsSameAs(spectrumProperties))
                 graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
+
+        private Dictionary<ReferenceValue<Identity>, double> GetPeakIntensities(
+            List<TransitionFullScanInfo> transitions, SrmDocument document)
+        {
+            
+            var docTransitions = CollectionUtil.SafeToDictionary(
+                transitions.Select(t => new KeyValuePair<SignedMz, TransitionFullScanInfo>(t.ProductMz, t)));
+
+            var isNegative = (_precursor.DocNode.Id as TransitionGroup)?.PrecursorAdduct.AdductCharge < 0;
+            var signedQ1FilterValues = docTransitions.Select(q => q.Key).ToList();
+            var key = new PrecursorTextId(_precursor.DocNode.PrecursorMz, null, null, null, null, ChromExtractor.summed);
+            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
+            filter.AddQ1FilterValues(signedQ1FilterValues, mz =>
+            {
+                docTransitions.TryGetValue(new SignedMz(mz, isNegative), out var transitionFullScanInfo);
+                return transitionFullScanInfo?.ExtractionWidth ??
+                       document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(mz);
+            });
+
+            // extract peak intensities for the document fragments from the current spectrum
+            var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
+                { Mzs = _peaks.Select(p => p.Mz).ToArray(), Intensities = _peaks.Select(p => (double)p.Intensity).ToArray(), NegativeCharge = isNegative } });
+
+            // expectedSpectrum to docTransitions join
+            var thisSpectrumHash = Enumerable.Range(0, expectedSpectrum.ProductFilters.Length)
+                .Select(i => new { mz = expectedSpectrum.ProductFilters[i].TargetMz, intensity = (double)expectedSpectrum.Intensities[i] })
+                .Where(d => docTransitions.ContainsKey(d.mz) && docTransitions[d.mz]?.Id is Transition)
+                .ToDictionary(d => ReferenceValue.Of(docTransitions[d.mz].Id), d => d.intensity);
+
+            return thisSpectrumHash;
+        }
+
         private class RankingContext
         {
             public int scanIndex;
@@ -758,12 +853,59 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
+        private void GetRankedSpectrum()
+        {
+            var spectra = _msDataFileScanHelper.MsDataSpectra;
+
+            IList<double> mzs;
+            IList<double> intensities;
+
+            if (spectra.Length == 1 && spectra[0].IonMobilities == null)
+            {
+                mzs = spectra[0].Mzs;
+                intensities = spectra[0].Intensities;
+            }
+            else
+            {
+                // Ion mobility being shown as 2-D spectrum
+                mzs = new List<double>();
+                intensities = new List<double>();
+
+                var fullScans = _msDataFileScanHelper.GetFilteredScans(out var ionMobilityFilterMin, out var ionMobilityFilterMax);
+
+                double minMz;
+                var indices = new int[fullScans.Length];
+                while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
+                {
+                    mzs.Add(minMz);
+                    intensities.Add(SumIntensities(fullScans, minMz, indices, ionMobilityFilterMin, ionMobilityFilterMax));
+                }
+            }
+
+            // Save the full spectrum for later use in dotp calculation
+            _peaks = new SpectrumPeaksInfo.MI[mzs.Count];
+            for (int i = 0; i < _peaks.Length; i++)
+                _peaks[i] = new SpectrumPeaksInfo.MI() { Mz = mzs[i], Intensity = (float)intensities[i] };
+
+            if (_msDataFileScanHelper.Source == ChromSource.fragment)
+            {
+                var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id,
+                    _documentContainer.DocumentUI);
+
+                if (nodePath != null) // Make sure user hasn't removed node since last update
+                {
+                    var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings,
+                        nodePath.Precursor, nodePath.Transition);
+                }
+            }
+        }
+
         /// <summary>
         /// Create stick graph of a single scan.
         /// </summary>
         private void  CreateSingleScan(out double[] massErrors)
         {
-            GraphPane.YAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+            GraphPane.YAxis.Title.Text = GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
             massErrors = null;
 
@@ -1204,7 +1346,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     GraphPane.SetScale(CreateGraphics());
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
-                    filterBtn.ToolTipText = Resources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
+                    filterBtn.ToolTipText = GraphsResources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
                 }
             }
             else

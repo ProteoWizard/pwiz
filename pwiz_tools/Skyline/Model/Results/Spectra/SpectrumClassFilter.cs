@@ -34,15 +34,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
 {
     public struct SpectrumClassFilter : IEquatable<SpectrumClassFilter>, IComparable, IComparable<SpectrumClassFilter>
     {
-        public static readonly FilterPage Ms1FilterPage = new FilterPage(() => Resources.SpectrumClassFilter_Ms1FilterPage_MS1,
-            ()=>Resources.SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram,
+        public static readonly FilterPage Ms1FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms1FilterPage_MS1,
+            ()=>SpectraResources.SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram,
             new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
                 FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
             ,
             SpectrumClassColumn.MS1.Select(col => col.PropertyPath));
 
-        public static readonly FilterPage Ms2FilterPage = new FilterPage(() => Resources.SpectrumClassFilter_Ms2FilterPage_MS2_,
-            ()=>Resources.SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram,
+        public static readonly FilterPage Ms2FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms2FilterPage_MS2_,
+            ()=>SpectraResources.SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram,
             new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
                 FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
             SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
@@ -149,6 +149,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public string GetAbbreviatedText()
         {
+            return GetText(false);
+        }
+
+        /// <summary>
+        /// Returns a string representation of the filter.
+        /// </summary>
+        /// <param name="includeAll">Whether to include the word "All" when describing a clause that accepts all items</param>
+        public string GetText(bool includeAll)
+        {
             if (IsEmpty)
             {
                 return string.Empty;
@@ -159,16 +168,23 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 var page = filterPages.Pages[iPage];
                 var clause = filterPages.Clauses[iPage];
+                string clauseText;
                 if (clause.IsEmpty)
                 {
                     if (page.Discriminant.IsEmpty)
                     {
-                        return string.Empty;
+                        return includeAll ? SpectraResources.SpectrumClassFilter_GetText_All : string.Empty;
                     }
-                    continue;
+                    else
+                    {
+                        clauseText = SpectraResources.SpectrumClassFilter_GetText_All;
+                    }
+                }
+                else
+                {
+                    clauseText = GetAbbreviatedText(filterPages.Clauses[iPage]);
                 }
                 string caption = filterPages.Pages[iPage].Caption;
-                var clauseText = GetAbbreviatedText(filterPages.Clauses[iPage]);
                 if (caption != null)
                 {
                     parts.Add(TextUtil.ColonSeparate(caption, clauseText));
@@ -286,7 +302,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
 
-            return string.Join(Resources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
+            return string.Join(SpectraResources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
         }
 
         public static SpectrumClassFilter ReadXml(XmlReader reader)

@@ -102,7 +102,13 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
                 ? Transition.CustomIon.GetMass(MzMassType)
-                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
+                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);
+        }
+
+        public TypedMass GetMoleculeMass(CustomMolecule molecule)
+        {
+            Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
+            return molecule.GetMass(MzMassType);
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
@@ -118,6 +124,8 @@ namespace pwiz.Skyline.Model
 
         [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
+
+        public bool ParticipatesInScoring => Transition.ParticipatesInScoring; // Don't use things like reporter ions (e.g. TMT etc) in "best" peak selection
 
         public TransitionDocNode ChangeExplicitSLens(double? value)
         {
@@ -215,8 +223,10 @@ namespace pwiz.Skyline.Model
 
         public static bool IsValidIsotopeTransition(Transition transition, IsotopeDistInfo isotopeDist)
         {
-            if (isotopeDist == null || !transition.IsPrecursor())
+            if (!transition.IsPrecursor())
                 return true;
+            if (isotopeDist == null)
+                return transition.MassIndex == 0;
             int i = isotopeDist.MassIndexToPeakIndex(transition.MassIndex);
             return 0 <= i && i < isotopeDist.CountPeaks;
         }
@@ -903,7 +913,7 @@ namespace pwiz.Skyline.Model
                         // Something is wrong, if the value has already been added (duplicate peak? out of order?)
                         if (peakAdded)
                         {
-                            throw new InvalidDataException(string.Format(Resources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
+                            throw new InvalidDataException(string.Format(ModelResources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
                                                               FragmentIonName));
                         }
                         

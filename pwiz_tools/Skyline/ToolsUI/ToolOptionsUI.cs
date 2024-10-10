@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,10 +31,10 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Prosit;
-using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Config;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina;
+using pwiz.Skyline.Model.Koina.Communication;
+using pwiz.Skyline.Model.Koina.Config;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
@@ -52,9 +52,9 @@ namespace pwiz.Skyline.ToolsUI
         private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
         private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
-        // For Prosit pinging
+        // For Koina pinging
         private readonly SrmSettings _settingsNoMod;
-        private readonly PrositIntensityModel.PeptidePrecursorNCE _pingInput;
+        private readonly KoinaIntensityModel.PeptidePrecursorNCE _pingInput;
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.ToolsUI
             var peptide = new PeptideDocNode(pingPep);
             var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
-            _pingInput = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
+            _pingInput = new KoinaIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
             _settingsNoMod = settings.ChangePeptideModifications(
                 pm => new PeptideModifications(new StaticMod[0], new TypedModifications[0]));
 
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.ToolsUI
             //tabControl.TabPages.Remove(tabMisc);
 
             // Populate the languages list with the languages that Skyline has been localized to
-            string defaultDisplayName = string.Format(Resources.ToolOptionsUI_ToolOptionsUI_Default___0__,
+            string defaultDisplayName = string.Format(ToolsUIResources.ToolOptionsUI_ToolOptionsUI_Default___0__,
                 CultureUtil.GetDisplayLanguage(CultureInfo.InstalledUICulture).DisplayName);
             listBoxLanguages.Items.Add(new DisplayLanguageItem(string.Empty, defaultDisplayName));
             foreach (var culture in CultureUtil.AvailableDisplayLanguages())
@@ -99,47 +99,55 @@ namespace pwiz.Skyline.ToolsUI
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
-            var iModels = PrositIntensityModel.Models.ToList();
+            var iModels = KoinaIntensityModel.Models.ToList();
             iModels.Insert(0, string.Empty);
-            var rtModels = PrositRetentionTimeModel.Models.ToList();
+            var rtModels = KoinaRetentionTimeModel.Models.ToList();
             rtModels.Insert(0, string.Empty);
 
-            tbxPrositServer.Text = PrositConfig.GetPrositConfig().Server;
+            tbxKoinaServer.Text = KoinaConfig.GetKoinaConfig().Server;
             intensityModelCombo.Items.AddRange(iModels.ToArray());
+            ComboHelper.AutoSizeDropDown(intensityModelCombo);
             iRTModelCombo.Items.AddRange(rtModels.ToArray());
+            ComboHelper.AutoSizeDropDown(iRTModelCombo);
             
-            prositServerStatusLabel.Text = string.Empty;
-            if (iModels.Contains(Settings.Default.PrositIntensityModel))
-                intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
-            if (rtModels.Contains(Settings.Default.PrositRetentionTimeModel))
-                iRTModelCombo.SelectedItem = Settings.Default.PrositRetentionTimeModel;
+            koinaServerStatusLabel.Text = string.Empty;
+            if (iModels.Contains(Settings.Default.KoinaIntensityModel))
+                intensityModelCombo.SelectedItem = Settings.Default.KoinaIntensityModel;
+            if (rtModels.Contains(Settings.Default.KoinaRetentionTimeModel))
+                iRTModelCombo.SelectedItem = Settings.Default.KoinaRetentionTimeModel;
 
             ceCombo.Items.AddRange(
-                Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object) c)
+                Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object) c)
                     .ToArray());
-            ceCombo.SelectedItem = Settings.Default.PrositNCE;
+            ceCombo.SelectedItem = Settings.Default.KoinaNCE;
             tbxSettingsFilePath.Text = System.Configuration.ConfigurationManager
                 .OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
         }
 
-        private class PrositPingRequest : PrositHelpers.PrositRequest
+        private class KoinaPingRequest : KoinaHelpers.KoinaRequest
         {
-            private Channel _channel;
-            public PrositPingRequest(string ms2Model, string rtModel, SrmSettings settings,
+            private static KoinaConfig _koinaConfig;
+            private static Channel _channel;
+
+            static KoinaPingRequest()
+            {
+                _koinaConfig = KoinaConfig.GetKoinaConfig();
+                _channel = _koinaConfig.CreateChannel();
+            }
+
+            public KoinaPingRequest(string ms2Model, string rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
                 null, null, settings, peptide, precursor, null, nce, updateCallback)
             {
-                var prositConfig = PrositConfig.GetPrositConfig();
-                _channel = prositConfig.CreateChannel();
-                Client = PrositPredictionClient.CreateClient(_channel, prositConfig.Server);
-                IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
-                RTModel = PrositRetentionTimeModel.GetInstance(rtModel);
+                Client = KoinaPredictionClient.CreateClient(_channel, _koinaConfig.Server);
+                IntensityModel = KoinaIntensityModel.GetInstance(ms2Model);
+                RTModel = KoinaRetentionTimeModel.GetInstance(rtModel);
 
                 if (IntensityModel == null && RTModel == null)
-                    throw new PrositNotConfiguredException();
+                    throw new KoinaNotConfiguredException();
             }
 
-            public override PrositHelpers.PrositRequest Predict()
+            public override KoinaHelpers.KoinaRequest Predict()
             {
                 ActionUtil.RunAsync(() =>
                 {
@@ -147,14 +155,14 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         var labelType = Precursor.LabelType;
                         var ms = IntensityModel.PredictSingle(Client, Settings,
-                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, labelType, NCE),
+                            new KoinaIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, labelType, NCE),
                             _tokenSource.Token);
 
                         var iRTMap = RTModel.PredictSingle(Client,
                             Settings,
                             Peptide, _tokenSource.Token);
 
-                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, labelType, NCE);
+                        var spectrumInfo = new SpectrumInfoKoina(ms, Precursor, labelType, NCE);
                         var irt = iRTMap[Peptide];
                         Spectrum = new SpectrumDisplayInfo(
                             spectrumInfo, Precursor, irt);
@@ -168,10 +176,6 @@ namespace pwiz.Skyline.ToolsUI
                         if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
                             return;
                     }
-                    finally
-                    {
-                        _channel.ShutdownAsync().Wait();
-                    }
                     
                     // Bad timing could cause the ping to finish right when we cancel as the form closes
                     // causing a UI update to be called after the form was destroyed
@@ -183,7 +187,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private PrositPingRequest _pingRequest;
+        private KoinaPingRequest _pingRequest;
 
 
         public enum ServerStatus
@@ -191,37 +195,37 @@ namespace pwiz.Skyline.ToolsUI
             UNAVAILABLE, QUERYING, AVAILABLE, SELECT_SERVER, SELECT_MODEL
         }
 
-        public ServerStatus PrositServerStatus { get; private set; }
+        public ServerStatus KoinaServerStatus { get; private set; }
 
         private void SetServerStatus(ServerStatus status)
         {
             switch (status)
             {
                 case ServerStatus.UNAVAILABLE:
-                    prositServerStatusLabel.Text =
-                        PrositResources.ToolOptionsUI_UpdateServerStatus_Server_unavailable;
-                    prositServerStatusLabel.ForeColor = Color.Red;
+                    koinaServerStatusLabel.Text =
+                        KoinaResources.ToolOptionsUI_UpdateServerStatus_Server_unavailable;
+                    koinaServerStatusLabel.ForeColor = Color.Red;
                     break;
                 case ServerStatus.QUERYING:
-                    prositServerStatusLabel.Text =
-                        PrositResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
-                    prositServerStatusLabel.ForeColor = Color.Black;
+                    koinaServerStatusLabel.Text =
+                        KoinaResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
+                    koinaServerStatusLabel.ForeColor = Color.Black;
                     break;
                 case ServerStatus.AVAILABLE:
-                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_ToolOptionsUI_Server_online;
-                    prositServerStatusLabel.ForeColor = Color.Green;
+                    koinaServerStatusLabel.Text = KoinaResources.ToolOptionsUI_ToolOptionsUI_Server_online;
+                    koinaServerStatusLabel.ForeColor = Color.Green;
                     break;
                 case ServerStatus.SELECT_SERVER:
-                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_SetServerStatus_Select_a_server;
-                    prositServerStatusLabel.ForeColor = Color.Red;
+                    koinaServerStatusLabel.Text = KoinaResources.ToolOptionsUI_SetServerStatus_Select_a_server;
+                    koinaServerStatusLabel.ForeColor = Color.Red;
                     break;
                 case ServerStatus.SELECT_MODEL:
-                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_SetServerStatus_Select_both_models;
-                    prositServerStatusLabel.ForeColor = Color.Red;
+                    koinaServerStatusLabel.Text = KoinaResources.ToolOptionsUI_SetServerStatus_Select_both_models;
+                    koinaServerStatusLabel.ForeColor = Color.Red;
                     break;
             }
 
-            PrositServerStatus = status;
+            KoinaServerStatus = status;
         }
 
         private void UpdateServerStatus()
@@ -231,7 +235,7 @@ namespace pwiz.Skyline.ToolsUI
 
             try
             {
-                if (string.IsNullOrEmpty(PrositIntensityModelCombo) || string.IsNullOrEmpty(PrositRetentionTimeModelCombo))
+                if (string.IsNullOrEmpty(KoinaIntensityModelCombo) || string.IsNullOrEmpty(KoinaRetentionTimeModelCombo))
                 {
                     _pingRequest?.Cancel();
                     SetServerStatus(ServerStatus.SELECT_MODEL);
@@ -241,16 +245,16 @@ namespace pwiz.Skyline.ToolsUI
                 var nodePep = new PeptideDocNode(new Peptide(_pingInput.Sequence), _pingInput.ExplicitMods);
                 var nodeGroup = new TransitionGroupDocNode(new TransitionGroup(nodePep.Peptide,
                     Adduct.FromChargeProtonated(_pingInput.PrecursorCharge), _pingInput.LabelType), Array.Empty<TransitionDocNode>());
-                var pr = new PrositPingRequest(PrositIntensityModelCombo,
-                    PrositRetentionTimeModelCombo,
+                var pr = new KoinaPingRequest(KoinaIntensityModelCombo,
+                    KoinaRetentionTimeModelCombo,
                     _settingsNoMod, nodePep, nodeGroup, _pingInput.NCE.Value,
                     () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();
-                    _pingRequest = (PrositPingRequest) pr.Predict();
-                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
-                    prositServerStatusLabel.ForeColor = Color.Black;
+                    _pingRequest = (KoinaPingRequest) pr.Predict();
+                    koinaServerStatusLabel.Text = KoinaResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
+                    koinaServerStatusLabel.ForeColor = Color.Black;
 
                 }
                 else if (_pingRequest.Spectrum == null)
@@ -315,11 +319,11 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
-                bool prositSettingsValidBefore = PrositHelpers.PrositSettingsValid;
-                Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
-                Settings.Default.PrositRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
-                Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
-                if (prositSettingsValidBefore != PrositHelpers.PrositSettingsValid)
+                bool koinaSettingsValidBefore = KoinaHelpers.KoinaSettingsValid;
+                Settings.Default.KoinaIntensityModel = (string) intensityModelCombo.SelectedItem;
+                Settings.Default.KoinaRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
+                Settings.Default.KoinaNCE = (int) ceCombo.SelectedItem;
+                if (koinaSettingsValidBefore != KoinaHelpers.KoinaSettingsValid)
                     Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
             base.OnClosed(e);
@@ -346,7 +350,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Remote, Prosit, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Remote, Koina, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
@@ -354,11 +358,11 @@ namespace pwiz.Skyline.ToolsUI
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
-        public class PrositTab : IFormView { }
+        public class KoinaTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES = // N.B. order must agree with TABS enum above
         {
-            new PanoramaTab(), new RemoteTab(), new PrositTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
+            new PanoramaTab(), new RemoteTab(), new KoinaTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
         };
 
         public void NavigateToTab(TABS tab)
@@ -390,13 +394,13 @@ namespace pwiz.Skyline.ToolsUI
             set { powerOfTenCheckBox.Checked = value; }
         }
 
-        public string PrositIntensityModelCombo
+        public string KoinaIntensityModelCombo
         {
             get { return (string)intensityModelCombo.SelectedItem; }
             set { intensityModelCombo.SelectedItem = value; }
         }
 
-        public string PrositRetentionTimeModelCombo
+        public string KoinaRetentionTimeModelCombo
         {
             get { return (string) iRTModelCombo.SelectedItem; }
             set { iRTModelCombo.SelectedItem = value; }
@@ -440,7 +444,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (MultiButtonMsgDlg.Show(this,
                     string.Format(
-                        Resources
+                        ToolsUIResources
                             .ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_,
                         Program.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
             {
@@ -450,9 +454,9 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private void prositDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void koinaDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(@"https://www.proteomicsdb.org/prosit/");
+            WebHelpers.OpenLink(@"https://koina.wilhelmlab.org/");
         }
 
         private void intensityModelCombo_SelectedIndexChanged(object sender, EventArgs e)
@@ -489,7 +493,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void ToolOptionsUI_Shown(object sender, EventArgs e)
         {
-            if (tabControl.SelectedIndex == (int)TABS.Prosit)
+            if (tabControl.SelectedIndex == (int)TABS.Koina)
                 UpdateServerStatus();
             else
             {
@@ -499,7 +503,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl.SelectedIndex == (int)TABS.Prosit)
+            if (tabControl.SelectedIndex == (int)TABS.Koina)
                 UpdateServerStatus();
         }
     }

@@ -149,7 +149,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 btnMinimize.Enabled = btnMinimizeAs.Enabled = false;
-                lblCurrentCacheFileSize.Text = Resources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
+                lblCurrentCacheFileSize.Text = FileUIResources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
                 lblSpaceSavings.Text = string.Empty;
             }
         }
@@ -167,9 +167,9 @@ namespace pwiz.Skyline.FileUI
             double noiseTime;
             string errorMessage = null;
             if (!double.TryParse(tbxNoiseTimeRange.Text, out noiseTime))
-                errorMessage = Resources.MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_valid_decimal_number;
+                errorMessage = FileUIResources.MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_valid_decimal_number;
             if (noiseTime < 0)
-                errorMessage = Resources.MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number;
+                errorMessage = FileUIResources.MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number;
             if (errorMessage != null)
             {
                 MessageDlg.Show(this, errorMessage);
@@ -203,13 +203,13 @@ namespace pwiz.Skyline.FileUI
             var document = DocumentUIContainer.DocumentUI;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized);
+                MessageDlg.Show(this, FileUIResources.MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized);
                 return;
             }
             if (!Settings.DiscardUnmatchedChromatograms && !Settings.NoiseTimeRange.HasValue)
             {
                 if (MultiButtonMsgDlg.Show(this, 
-                    Resources.MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue, 
+                    FileUIResources.MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue, 
                     MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {
                     return;
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.FileUI
                     longWaitBroker =>
                     {
                         _longWaitBroker = longWaitBroker;
-                        longWaitBroker.Message = Resources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
+                        longWaitBroker.Message = FileUIResources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
                         _minimizeResults.MinimizeCacheFile(targetFile);
                     });
 
@@ -284,7 +284,7 @@ namespace pwiz.Skyline.FileUI
             {
                 var message = TextUtil.LineSeparate(
                     string.Format(
-                        Resources
+                        FileUIResources
                             .MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
                         targetFile),
                     e.Message);
@@ -349,19 +349,19 @@ namespace pwiz.Skyline.FileUI
             }
 
             lblCurrentCacheFileSize.Text = string.Format(FileSize.FormatProvider,
-                Resources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs,
+                FileUIResources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs,
                 minStatistics.OriginalFileSize);
             if (minStatistics.PercentComplete == 100)
             {
                 lblSpaceSavings.Text = string.Format(
-                    Resources
+                    FileUIResources
                         .BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size,
                     minStatistics.MinimizedRatio);
             }
             else
             {
                 lblSpaceSavings.Text = string.Format(
-                    Resources.BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete,
+                    FileUIResources.BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete,
                     minStatistics.PercentComplete);
             }
 

@@ -38,6 +38,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
@@ -128,7 +129,7 @@ namespace TestPerf
                 IrtIntercept = -67.652,
 
                 FinalTargetCounts = new[] { 11, 215, 279, 1673 },
-                ScoringModelCoefficients = "-0.1511|-0.5825|5.5995|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
+                ScoringModelCoefficients = "-0.1511|-0.5825|5.5994|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
                 MassErrorStats = new[]
                 {
                     new[] {3.3, 3.7},
@@ -308,7 +309,7 @@ namespace TestPerf
                 string.Format(@"TestPerf\DiaSwath{0}Views.zip", InstrumentTypeName)
             };
 
-            TestFilesPersistent = new[] { Path.Combine(RootName, "DDA_search"), Path.Combine(RootName, "DIA") };
+            TestFilesPersistent = new[] { Path.Combine(RootName, "DDA_search"), Path.Combine(RootName, "DIA") + '\\' };
         }
 
         private void RunTest()
@@ -357,24 +358,25 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page", 3);
 
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            string diaDir = GetTestPath("DIA");
+            string diaDir = GetTestPath("DIA\\");
 
             // when in regular test mode, delete -diaumpire files so they get regenerated instead of reused
             // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+            /* TODO: how can this code work if we aren't running DiaUmpire in the persistent directory?
             if (!IsRecordMode)
             {
                 var diaumpireFiles = Directory.GetFiles(diaDir, "*-diaumpire.*");
                 var filesToRegenerate = diaumpireFiles.Skip(1); // regenerate all but 1 file in order to test file reusability
                 foreach (var file in filesToRegenerate)
                     FileEx.SafeDelete(file);
-            }
+            }*/
 
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)
@@ -389,13 +391,11 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
                 importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
@@ -413,7 +413,7 @@ namespace TestPerf
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
             RunDlg<EditStaticModDlg>(editStructModListUI.AddItem, editModDlg =>
             {
-                editModDlg.SetModification(OXIDATION_M, true); // Not L10N
+                editModDlg.SetModification(OXIDATION_M); // Not L10N
                 editModDlg.OkDialog();
             });
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
@@ -549,6 +549,9 @@ namespace TestPerf
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA search settings", 13);
 

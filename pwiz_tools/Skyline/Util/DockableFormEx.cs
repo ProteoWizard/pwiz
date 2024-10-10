@@ -91,11 +91,5 @@ namespace pwiz.Skyline.Util
         {
             get { return Program.FunctionalTest || Program.SkylineOffscreen; }
         }
-
-        public void CheckDisposed()
-        {
-            if (IsDisposed)
-                throw new ObjectDisposedException(@"Form disposed");
-        }
     }
 }

@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -37,7 +38,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <summary>
         /// Peptide
         /// </summary>
-        public static string TITLE { get { return Resources.PeptideTreeNode_Heading_Title; } }
+        public static string TITLE { get { return SeqNodeResources.PeptideTreeNode_Heading_Title; } }
 
         public static PeptideTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
@@ -61,17 +62,17 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return  DocNode.IsProteomic ? Resources.PeptideTreeNode_Heading_Title : Resources.PeptideTreeNode_Heading_Title_Molecule; }
+            get { return  DocNode.IsProteomic ? SeqNodeResources.PeptideTreeNode_Heading_Title : SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule; }
         }
 
         public override string ChildHeading
         {
-            get { return string.Format(Resources.PeptideTreeNode_ChildHeading__0__, Text); }
+            get { return string.Format(SeqNodeResources.PeptideTreeNode_ChildHeading__0__, Text); }
         }
 
         public override string ChildUndoHeading
         {
-            get { return string.Format(Resources.PeptideTreeNode_ChildUndoHeading__0__, Text); }
+            get { return string.Format(SeqNodeResources.PeptideTreeNode_ChildUndoHeading__0__, Text); }
         }
 
         protected override void OnModelChanged()
@@ -85,9 +86,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                 StateImageIndex = peakImageIndex;
 // ReSharper restore RedundantCheckBeforeAssignment
             var nodePep = (PeptideDocNode) Model;
+
             string label = DisplayText(nodePep, SequenceTree.GetDisplaySettings(nodePep));
+            // If the peptide sequence is too long, add some spaces because
+            // tooltip rendering is slow if text cannot be wrapped (Issue 925)
+            label = TextUtil.EnforceMaxWordLength(label, 1000);
             if (!string.Equals(label, Text))
                 Text = label;
+
             // Hard to tell what might cause label formatting to change
             _textSequences = null;
 
@@ -587,9 +593,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 SizeF size;
                 if (peptide.IsCustomMolecule)
                 {
-                    table.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.CustomMolecule.Name, rt);
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomMolecule.Formula, rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Neutral_Mass,
+                    table.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.CustomMolecule.Name, rt);
+                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomMolecule.Formula, rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_Neutral_Mass,
                         nodePep.CustomMolecule.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType).ToString(LocalizationHelper.CurrentCulture), rt);
                     foreach (var id in nodePep.CustomMolecule.AccessionNumbers.AccessionNumbers)
                     {
@@ -604,7 +610,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     string sourceText = nodePep.SourceTextId
                         .Replace(@".0]", @"]")
                         .Replace(@".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Source, sourceText, rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_Source, sourceText, rt);
                 }
 
                 if (nodePep.Children.Count > 1)
@@ -618,13 +624,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     // Add a spacing row, if anything was added
                     if (table.Count > 0)
                         table.AddDetailRow(@" ", @" ", rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Previous, peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, (peptide.Begin.Value + 1).ToString(LocalizationHelper.CurrentCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, (peptide.End ?? 0).ToString(LocalizationHelper.CurrentCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Next, peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_Previous, peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_First, (peptide.Begin.Value + 1).ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_Last, (peptide.End ?? 0).ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_Next, peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
                 }
                 if (nodePep.Rank.HasValue)
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Rank, nodePep.Rank.Value.ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(SeqNodeResources.PeptideTreeNode_RenderTip_Rank, nodePep.Rank.Value.ToString(LocalizationHelper.CurrentCulture), rt);
                
                 size = table.CalcDimensions(g);
                 if (draw)

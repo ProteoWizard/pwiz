@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AnnotationDef_AnnotationTarget_PrecursorResults" xml:space="preserve">
+    <value>母离子结果（多个）</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTarget_Replicates" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
+    <value>离子对结果（多个）</value>
+  </data>
+  <data name="AnnotationDef_ValidationErrorMessage_Invalid_value" xml:space="preserve">
+    <value>无效值</value>
+  </data>
+  <data name="AnnotationDef_ValidationErrorMessage_Value_must_be_a_number" xml:space="preserve">
+    <value>值必须是一个数字</value>
+  </data>
+  <data name="CollisionEnergyRegression_Validate_Collision_energy_regression_contains_multiple_coefficients_for_charge__0__" xml:space="preserve">
+    <value>碰撞能量回归针对电荷{0}包含多个系数。</value>
+  </data>
+  <data name="CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
+    <value>碰撞能量回归至少需要一个回归函数。</value>
+  </data>
+  <data name="DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_" xml:space="preserve">
+    <value>URI {0} 生成失败。</value>
+  </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>更新计算后注释</value>
+  </data>
+  <data name="DriftTimeWindowWidthCalculator_Validate_Fixed window_width_must_be_non_negative_" xml:space="preserve">
+    <value>固定窗口宽度必须为非负数。</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_" xml:space="preserve">
+    <value>酶必须拥有 C-末端剪切，以具备 C-末端限制。</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_" xml:space="preserve">
+    <value>酶必须拥有 N-末端剪切，以具备 N-末端限制。</value>
+  </data>
+  <data name="Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point" xml:space="preserve">
+    <value>酶必须至少具备一个切位点。</value>
+  </data>
+  <data name="ExplicitMods_ChangeModifications_Modification_type__0__not_found" xml:space="preserve">
+    <value>未发现修饰类型{0}。</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+    <value>默认为包含</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>中性丢失数必须大于或等于 {0}。</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>中性丢失数必须小于或等于 {0}。</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>中性丢失必须指定公式或有效的单一同位素和平均质量。</value>
+  </data>
+  <data name="FullScanAcquisitionExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
+    <value>数据依赖采集： 提取 MS2 色谱图但不用于定量</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
+    <value>非数据依赖采集： MS2 谱图用于其质荷比值在分离窗口内的所有母离子的色谱图</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0} 不是有效的全扫描采集方法</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP" xml:space="preserve">
+    <value>平行反应监测： MS2 谱图用于其质荷比在所选离子的 "方法匹配耐受性" 值内的母离子</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP" xml:space="preserve">
+    <value>类似于 "PRM"，但使用适用于 Thermo SureQuant 方法的 "触发采集" 和 "方法匹配耐受性" 设置</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP" xml:space="preserve">
+    <value>MS2 谱图用于其质荷比最接近所选离子的一个母离子的色谱图</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count" xml:space="preserve">
+    <value>计数</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent" xml:space="preserve">
+    <value>百分比</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_" xml:space="preserve">
+    <value>1/K0 (Vs/cm^2)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>补偿电压 (V)</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_can_specify_multiplexed_windows_only_for_prespecified_isolation_windows" xml:space="preserve">
+    <value>分离方案能仅针对预先设定的分离窗口指定多路复用窗口</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_filter_and_a_prespecifed_isolation_window" xml:space="preserve">
+    <value>分离方案不可具备过滤器和预先设定的分离窗口</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_right_filter_without_a_left_filter" xml:space="preserve">
+    <value>分离方案无法在不具备左过滤器的情况下具备右过滤器</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows" xml:space="preserve">
+    <value>针对所有离子的分离方案不包含分离窗口</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
+    <value>多路复用窗口针对每次扫描至少需要一个窗口</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_The_number_of_prespecified_isolation_windows_must_be_a_multiple_of_the_windows_per_scan_in_multiplexed_sampling" xml:space="preserve">
+    <value>预先设定的分离窗口数目必须是多路复用抽样中每次扫描的窗口倍数。</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_" xml:space="preserve">
+    <value>母离子质荷比过滤器必须在{0}和{1}之间</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Windows_per_scan_requires_multiplexed_isolation_windows" xml:space="preserve">
+    <value>每次扫描的窗口需要多重分离窗口</value>
+  </data>
+  <data name="IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value" xml:space="preserve">
+    <value>分离窗口起始值大于结束值。</value>
+  </data>
+  <data name="IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window" xml:space="preserve">
+    <value>目标值不在分离窗口的范围之内。</value>
+  </data>
+  <data name="IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value" xml:space="preserve">
+    <value>分离窗口需要一个目标值。</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_DoValidate_Atom_percent_enrichment__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>原子富集百分比{0}必须介于{1}和{2}之间</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__" xml:space="preserve">
+    <value>符号 {0} 不支持同位素富集</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_ToString__0__1__Percent" xml:space="preserve">
+    <value>{0} = {1}%</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>编号</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>正确/错误</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>值列表</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>查询：</value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+    <value>（未知）</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Always" xml:space="preserve">
+    <value>总是</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Matching_Library" xml:space="preserve">
+    <value>匹配的库</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Never" xml:space="preserve">
+    <value>从不</value>
+  </data>
+  <data name="MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_" xml:space="preserve">
+    <value>自定义离子不再支持多电荷。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>报告离子质量必须大于或等于 {0}。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ion_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>报告离子质量必须小于或等于 {0}。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>报告离子必须指定公式或有效的单一同位素和平均质量。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
+    <value>特殊碎片离子必须至少具备一个片段储存残片。</value>
+  </data>
+  <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
+    <value>特殊碎片离子必须指明发生片段存储的氨基酸残片终边。</value>
+  </data>
+  <data name="MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最小长度 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
+    <value>实际检测到的保留时间必须是正数值。</value>
+  </data>
+  <data name="MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
+    <value>序列{0}不是有效的肽段。</value>
+  </data>
+  <data name="ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup" xml:space="preserve">
+    <value>尝试向完整的 MassLookup 添加数据失败。</value>
+  </data>
+  <data name="ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup" xml:space="preserve">
+    <value>尝试访问不完整的 MassLookup 无效。</value>
+  </data>
+  <data name="OptimizableRegression_Validate_The_number_of_optimization_steps__0__is_not_between__1__and__2__" xml:space="preserve">
+    <value>最优步骤数目{0}不在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="OptimizableRegression_Validate_The_optimization_step_size__0__is_not_greater_than_zero" xml:space="preserve">
+    <value>最优步骤数目 {0} 不大于零。</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition" xml:space="preserve">
+    <value>离子对</value>
+  </data>
+  <data name="PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression" xml:space="preserve">
+    <value>肽段排除必须具备正则表达式。</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_excluded_n_terminal_amino_acids" xml:space="preserve">
+    <value>排除的 N 端氨基酸</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
+    <value>最大肽段长度</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_minimum_peptide_length" xml:space="preserve">
+    <value>最小肽段长度</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_The_peptide_exclusion__0__has_an_invalid_regular_expression__1__" xml:space="preserve">
+    <value>肽段排除{0}具备无效的正则表达式“{1}”。</value>
+  </data>
+  <data name="PeptideFilter_ExcludeExprToRegEx_Invalid_exclusion_list" xml:space="preserve">
+    <value>无效的排除列表。</value>
+  </data>
+  <data name="PeptideFilter_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__" xml:space="preserve">
+    <value>针对{0}的值 {1} 必须在 {2} 和 {3} 之间。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_" xml:space="preserve">
+    <value>库和库规格不匹配。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>库选择的肽段计数 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Limiting_peptides_per_protein_requires_a_ranking_method_to_be_specified" xml:space="preserve">
+    <value>限制每个蛋白质的肽段需要指定一种排名方法。</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_The_specified_method_of_matching_library_spectra_does_not_support_peptide_ranking" xml:space="preserve">
+    <value>指定的库谱图匹配方法不支持肽段排名。</value>
+  </data>
+  <data name="PeptideLibraries_EnsureRankId_Specified_libraries_do_not_support_the___0___peptide_ranking" xml:space="preserve">
+    <value>指定的库不支持“{0}”肽段排名。</value>
+  </data>
+  <data name="PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type" xml:space="preserve">
+    <value>尝试将包含无效类型的列表序列化。</value>
+  </data>
+  <data name="PeptideModifications_ChangeModifications_Modification_type__0__not_found" xml:space="preserve">
+    <value>未发现修饰类型{0}。</value>
+  </data>
+  <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最大中性丢失数 {0} 必须在 {1} 和 {2} 之间</value>
+  </data>
+  <data name="PeptideModifications_DoValidate_Maximum_variable_modifications__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最大可变修饰数 {0} 必须在 {1} 和 {2} 之间</value>
+  </data>
+  <data name="PeptideModifications_ReadXml_Heavy_modifications_found_without__0__attribute" xml:space="preserve">
+    <value>发现重修饰无“{0}”属性。</value>
+  </data>
+  <data name="PeptideModifications_ReadXml_Internal_standard_type__0__not_found" xml:space="preserve">
+    <value>内部标准类型{0}未找到。</value>
+  </data>
+  <data name="PeptidePrediction_CalcMaxTrendReplicates_Calculating_scheduling_from_trends_requires_a_retention_time_window_for_measured_data" xml:space="preserve">
+    <value>计算趋势的时序需要针对测量数据的保留时间窗口。</value>
+  </data>
+  <data name="PeptidePrediction_DoValidate_The_retention_time_window__0__for_a_scheduled_method_based_on_measured_results_must_be_between__1__and__2__" xml:space="preserve">
+    <value>基于测量结果的预定方法保留时间窗口{0}必须在{1}和{2}之间。</value>
+  </data>
+  <data name="PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions" xml:space="preserve">
+    <value>分段线性函数</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Matching" xml:space="preserve">
+    <value>匹配</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Overlapping" xml:space="preserve">
+    <value>重叠</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Preceding" xml:space="preserve">
+    <value>先前的</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
+    <value>“{0}”不是有效的表格名称。</value>
+  </data>
+  <data name="ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__" xml:space="preserve">
+    <value>未能针对列 {0} 发现表格。</value>
+  </data>
+  <data name="ReportSpec_ReadXml_Missing_table_name" xml:space="preserve">
+    <value>缺少表名称。</value>
+  </data>
+  <data name="ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
+    <value>“{0}”不是有效的表格名称。</value>
+  </data>
+  <data name="RetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid" xml:space="preserve">
+    <value>保留时间计算器{0}无效。</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>查找阈值</value>
+  </data>
+  <data name="RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values" xml:space="preserve">
+    <value>斜率和截距必须同时具有值或同时没有值</value>
+  </data>
+  <data name="RetentionTimeRegression_Validate_Invalid_negative_retention_time_window__0__" xml:space="preserve">
+    <value>无效的负数保留时间窗口{0}。</value>
+  </data>
+  <data name="RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator" xml:space="preserve">
+    <value>保留时间回归必须针对得分计算器指定一个序列。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential" xml:space="preserve">
+    <value>针对去簇电压的回归必须在离子对设置的“预测”标签中被选定，以针对去簇电压导入最优数据。</value>
+  </data>
+  <data name="SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling" xml:space="preserve">
+    <value>“{0}”不是针对全扫描特别处理的有效设置</value>
+  </data>
+  <data name="SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec" xml:space="preserve">
+    <value>设置缺少库规格</value>
+  </data>
+  <data name="SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition" xml:space="preserve">
+    <value>修饰“{0}”已经存在，只是具有不同的定义。</value>
+  </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+    <value>({0} Da)</value>
+    <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+    <value>质量</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+    <value>未知质量</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+    <value>{0} 丢失</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+    <value>{0} 中性丢失</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+    <value>丢失</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+    <value>丢失</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+    <value>中性丢失
+</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+    <value>中性丢失</value>
+  </data>
+  <data name="StaticMod_ToModTerminus_Invalid_terminus__0__" xml:space="preserve">
+    <value>无效末端“{0}”。</value>
+  </data>
+  <data name="StaticMod_Validate_Formula_not_allowed_with_labeled_atoms" xml:space="preserve">
+    <value>公式不允许带有标记原子。</value>
+  </data>
+  <data name="StaticMod_Validate_Invalid_amino_acid___0___" xml:space="preserve">
+    <value>无效氨基酸“{0}”。</value>
+  </data>
+  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_variable" xml:space="preserve">
+    <value>仅限丢失的修饰可能不可变。</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_formula_may_not_be_empty" xml:space="preserve">
+    <value>修饰公式不可能为空。</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>修饰必须指定公式、标记的原子或有效的单一同位素和平均质量。</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses" xml:space="preserve">
+    <value>带有公式的修饰可能无法指定修饰质量。</value>
+  </data>
+  <data name="StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed" xml:space="preserve">
+    <value>不允许带有标记原子的终端修饰。</value>
+  </data>
+  <data name="StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus" xml:space="preserve">
+    <value>可变修饰必须指定氨基酸或末端。</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_1_ion" xml:space="preserve">
+    <value>1 个离子</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_2_ions" xml:space="preserve">
+    <value>2 个离子</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_5_ions" xml:space="preserve">
+    <value>5 个离子</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_6_ions" xml:space="preserve">
+    <value>6 个离子</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_last_ion_minus_2" xml:space="preserve">
+    <value>最后一个离子 - 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_last_ion_minus_3" xml:space="preserve">
+    <value>最后一个离子 - 3</value>
+  </data>
+  <data name="TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__" xml:space="preserve">
+    <value>不支持的第一个片段名称{0}。</value>
+  </data>
+  <data name="TransitionFilter_FragmentRangeLastName_Unsupported_last_fragment_name__0__" xml:space="preserve">
+    <value>不支持的最后一个片段名称{0}。</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_ion_2" xml:space="preserve">
+    <value>离子 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
+    <value>离子 4</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor" xml:space="preserve">
+    <value>质荷比 &gt; 母离子</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） - 1</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） - 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） + 1</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） + 2</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__" xml:space="preserve">
+    <value>子离子设置“{0}”中的未知片段名称</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
+    <value>标记{0}不是有效的终止片段过滤器。</value>
+  </data>
+  <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
+    <value>标记{0}不是有效的起始片段过滤器。</value>
+  </data>
+  <data name="TransitionFilter_IonTypes_At_least_one_ion_type_is_required" xml:space="preserve">
+    <value>至少需要一个离子类型。</value>
+  </data>
+  <data name="TransitionFilter_PrecursorCharges_Precursor_charges" xml:space="preserve">
+    <value>母离子电荷</value>
+  </data>
+  <data name="TransitionFilter_ProductCharges_Product_ion_charges" xml:space="preserve">
+    <value>子离子电荷</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
+    <value>分子母离子加合物</value>
+  </data>
+  <data name="TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__" xml:space="preserve">
+    <value>母离子排除窗口必须在{0}和{1}之间。</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
+    <value>{0}不能为空。</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__" xml:space="preserve">
+    <value>发现无效电荷{1}。{0}必须在{2}和{3}之间。</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once" xml:space="preserve">
+    <value>母离子电荷多次指定电荷{0}。</value>
+  </data>
+  <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode" xml:space="preserve">
+    <value>尝试针对非 DIA 模式创建一个分离方案</value>
+  </data>
+  <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter" xml:space="preserve">
+    <value>尝试创建一个没有母离子过滤器的分离方案</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
+    <value>针对带有 QIT 质量分析器的 MS1 过滤，只有 1 个同位素峰值被支持。</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included" xml:space="preserve">
+    <value>在未包含任何母离子同位素的情况下不允许其他任何全扫描 MS1 过滤器设置。</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_The_precursor_isotope_count_for_MS1_filtering_must_be_between__0__and__1__peaks" xml:space="preserve">
+    <value>针对 MS1 过滤的母离子同位素峰个数必须在 {0} 和 {1} 之间。</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_The_precursor_isotope_percent_for_MS1_filtering_must_be_between__0___and__1___of_the_base_peak" xml:space="preserve">
+    <value>针对 MS1 过滤的母离子同位素百分比必须在基峰的 {0}%和 {1}%之间。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_" xml:space="preserve">
+    <value>针对 QIT 分辨率必须在{0}和{1}之间。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
+    <value>针对{2}分辨力必须 在{0}和{1}之间。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
+    <value>{0}需要质荷比值，分辨力将在该值上被校准。</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Unexpected_resolving_power_mz_value_for__0__" xml:space="preserve">
+    <value>针对{0}的分辨力质荷比值出现意外</value>
+  </data>
+  <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th" xml:space="preserve">
+    <value>结果{0:0.##}，{1:0.##}质荷比</value>
+  </data>
+  <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th" xml:space="preserve">
+    <value>结果{0:0.##}质荷比</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_maximum_m_z_value__0__is_less_than__1__from_minimum__2__" xml:space="preserve">
+    <value>仪器最大质荷比值 {0} 小于来自最小值 {2} 的 {1}。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_maximum_mz_exceeds_allowable_maximum__0__" xml:space="preserve">
+    <value>仪器最大质荷比超过容许的最大值 {0}。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_minimum_mz_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>仪器最小质荷比值 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_No_other_full_scan_MS_MS_filter_settings_are_allowed_when_precursor_filter_is_none" xml:space="preserve">
+    <value>在没有母离子过滤器的情况下，不允许出现任何其他全扫描 MS/MS 过滤器设置。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart_" xml:space="preserve">
+    <value>容许的保留时间范围从{0}到{1}必须至少相隔 {2} 分钟。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_number_of_inclusions__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>内含物最大数目 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_number_of_transitions__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>离子对最大数目 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_retention_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最大保留时间 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_minimum_retention_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>最小保留时间 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_mz_match_tolerance__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>质荷比匹配耐受性{0}必须在{1}和{2}之间。</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_precursor_mz_filter_must_be_between__0__and__1__" xml:space="preserve">
+    <value>母离子质荷比过滤器必须在{0}和{1}之间</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>库离子计数值 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>库离子匹配耐受性值 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>库最小离子计数值 {0} 必须在 {1} 和 {2} 之间。</value>
+  </data>
+  <data name="TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_" xml:space="preserve">
+    <value>预计丢失{0}未在修饰{1}中发现</value>
+  </data>
+  <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
+    <value>离子对预测需要碰撞能量回归函数。</value>
+  </data>
+  <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
+    <value>补偿电压参数必须在离子对设置的“预测”标签中被选定，以针对补偿电压导入最优数据。</value>
+  </data>
+  <data name="TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
+    <value>高分辨率 MS1 过滤需要使用单一同位素母离子质量。</value>
+  </data>
+  <data name="TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan" xml:space="preserve">
+    <value>仪器的固件包含限制必须在执行多路复用 DIA 扫描前指定。</value>
+  </data>
+  <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type" xml:space="preserve">
+    <value>静态模式质量已被添加到此重类型。</value>
+  </data>
+  <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
+    <value>静态模式质量可能无法被添加至轻类型。</value>
+  </data>
+  <data name="XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty" xml:space="preserve">
+    <value>名称属性不得缺失或为空。</value>
+  </data>
+  <data name="StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_" xml:space="preserve">
+    <value>同位素修饰可能不可变。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

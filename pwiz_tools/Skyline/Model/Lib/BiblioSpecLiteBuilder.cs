@@ -73,9 +73,9 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null)
+        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null, bool useExplicitPeakBounds = true)
         {
-            LibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
+            LibrarySpec = new BiblioSpecLiteSpec(name, outputPath, useExplicitPeakBounds);
 
             InputFiles = inputFiles;
 
@@ -95,6 +95,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool IncludeAmbiguousMatches { get; set; }
         public IrtStandard IrtStandard { get; set; }
         public bool? PreferEmbeddedSpectra { get; set; }
+        public IList<int> Charges { get; set; } // Optional list of desired charges, if populated BlibBuild ignores any not listed
         public bool DebugMode { get; set; }
 
         public IList<string> InputFiles
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool BuildLibrary(IProgressMonitor progress)
         {
             _ambiguousMatches = null;
-            IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
+            IProgressStatus status = new ProgressStatus(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
             progress.UpdateProgress(status);
             if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
             {
@@ -144,7 +145,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            string message = string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
+            string message = string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
                                            Path.GetFileName(OutputPath));
             progress.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
@@ -156,6 +157,7 @@ namespace pwiz.Skyline.Model.Lib
                 Id = Id,
                 PreferEmbeddedSpectra = PreferEmbeddedSpectra,
                 DebugMode = DebugMode,
+                Charges = Charges,
             };
 
             bool retry = true;
@@ -201,7 +203,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     Console.WriteLine(x.Message);
                     progress.UpdateProgress(status.ChangeErrorException(
-                        new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
+                        new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
                                                     redundantLibrary), x)));
                     return false;
                 }
@@ -231,7 +233,7 @@ namespace pwiz.Skyline.Model.Lib
             catch
             {
                 progress.UpdateProgress(status.ChangeErrorException(
-                    new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
+                    new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
                                                 OutputPath))));
                 return false;
             }

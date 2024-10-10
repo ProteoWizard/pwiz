@@ -1,0 +1,955 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Data Independent Acquisition</h1>
+    <p>
+        Data-independent acquisition (DIA)<sup>1,2</sup> is an advanced technique for performing large scale targeted proteomics experiments. Targeted
+        acquisition approaches such as selected reaction monitoring (SRM) and parallel reaction monitoring (PRM) are limited to only a handful of
+        peptides without acquisition scheduling or tens to hundreds of peptides per mass spec run with scheduling. DIA allows the measurement of much
+        larger numbers of peptides (thousands or even whole proteomes) with only modest sacrifices in sensitivity, selectivity and reproducibility
+        relative to SRM. DIA also has the advantage that the peptides to be measured do not need to be specified in advance or scheduled, but rather,
+        product ion chromatograms for any desired peptide within a broad range of precursor m/z can be extracted after acquisition from a DIA run.
+    </p>
+    <p>
+        Since support for chromatogram extraction from DIA data was first implemented in Skyline, in October 2010, this support has been improved
+        regularly, so that as of version 21.1, Skyline supports several popular strategies and workflows for analyzing DIA data. Skyline also supports
+        all DIA-capable instruments including Q-TOF instruments from SCIEX, Agilent, Bruker and Waters and Q-Orbitrap instruments from Thermo.
+    </p>
+    <p>
+        One effective DIA workflow starts with any number of initial data-dependent acquisition (DDA) runs on a certain instrument type and
+        chromatography set-up. It is beneficial to carry out these initial shotgun measurements on the same instrument where DIA will be run. However,
+        it is also possible to transfer targeted assays between instrument platforms if similar fragmentation techniques and chromatography are used.
+        For these initial DDA measurements, samples may be fractionated or otherwise simplified to reach higher proteome coverage. The DDA runs are
+        processed with a peptide spectrum matching pipeline, and the resulting peptide ID’s spectra and retention times are then used to create either
+        a spectral library and retention time (iRT) library (in Skyline) or an extended transition list (with similar information for a subset of
+        fragment ions) called an “assay library” (in other tools). These libraries of fragment ion relative abundance and normalized retention time
+        (iRT) can be used in any number of subsequent DIA runs employing the same instrumentation and standard peptides for retention time alignment.
+    </p>
+    <p>
+        Although many methods exist for converting DDA search results to a library suitable for this library DIA analysis approach (described as the
+        “Prior Knowledge Workflow” in <a
+            href="https://skyline.ms/webinar02.url">Skyline
+            Tutorial Webinar #2</a> and has since been documented more thoroughly in webinars <a href="https://skyline.ms/webinar14.url">#14</a>, <a
+            href="https://skyline.ms/webinar15.url">#15</a>, and <a href="https://skyline.ms/webinar18.url">#18</a> as well as the tutorial <a
+            href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a>), a straightforward and accessible way to start DIA
+        analysis is simply to intersperse DDA runs with DIA runs on the same instrument and use the spectra and retention times of the DDA results as
+        predictions for the DIA runs.
+    </p>
+    <p>
+        In this tutorial, you will learn how to set up, import, and process DIA runs in Skyline using the simple interspersed DDA/DIA approach. If you
+        are going to use DIA in your research, it is highly recommended that you continue to the more powerful, more complex methods described in the
+        webinars and tutorial listed above.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/DIA-20_2.zip">https://skyline.ms/DIA-20_2.zip</a>
+    </p>
+    <p>
+        Note that the file is very large (4.5 GB download, and 6.0 GB uncompressed), because it includes DIA runs which are generally very large files,
+        often in the order of 100 to 200 times larger than files for SRM runs. If this download takes you too long or you do not have the available
+        disk space, you can alternatively download a smaller (660 MB download, and 918 MB uncompressed) version of the tutorial here:
+    </p>
+    <p>
+        <a href="https://skyline.ms/DIALibrary-20_2.zip">https://skyline.ms/DIALibrary-20_2.zip</a>
+    </p>
+    <p>
+        If you choose the small version, lacking the mass spec raw data files, you will need to skip some steps in the tutorial, which will be noted in
+        the text below. Regardless of which ZIP file you choose, the next step is to extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\damodei\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\damodei\Documents\DIA-20_2
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, you can choose the proteomics interface by doing the following:
+    </p>
+    <ul class="keep-next">
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Proteomics interface</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in proteomics mode which is displayed by the protein icon <img src="../../shared/protein-icon.png" /> in the upper
+        right-hand corner of the Skyline window.
+    </p>
+    <p>
+        For DIA analysis, you will want to force Skyline to integrate peak areas for all extracted quantitative transitions. To do that:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Integrate All</b>.</li>
+    </ul>
+    <h1>Setting Up an Isolation Scheme for DIA</h1>
+    <p>
+        You should be looking at Skyline with a new empty document with only the default settings. To illustrate the entire process for analyzing DIA
+        data in Skyline, you will build up a Skyline document appropriate for DIA analysis from scratch, filling in the necessary settings,
+        transitions, spectral libraries, and retention time information.
+    </p>
+    <p>
+        If you were performing an experiment using the DIA with interspersed DDA workflow, you would first configure your instrument for both the DIA
+        and DDA runs, with only very general consideration of any peptide targets you might be interested in, like making sure the precursor m/z range
+        covered contains the targets. The DDA method is left to you, but Skyline can help you set up the DIA method by allowing you to define your
+        “isolation scheme” (a pattern of precursor isolation windows to fragment for MS/MS). Even if you have already collected DIA data, you will
+        want to define the isolation scheme you used to help Skyline to process your DIA runs. To define an isolation scheme for this tutorial
+        experiment, take the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Full-Scan</b> tab.</li>
+        <li>In the <b>MS1 filtering</b> section, in the <b>Isotope peaks included</b> dropdown, select “Count”.</li>
+        <li>In the <b>Peaks</b> field, enter “3”.</li>
+        <li>In the <b>MS/MS filtering</b> section, in the <b>Acquisition method</b> dropdown, select “DIA” to tell Skyline that
+            you will be importing DIA data.</li>
+    </ul>
+    <p>
+        For most tryptic peptides, the first 3 isotope peaks are the most intense. You can also use an intensity threshold based on percentage of the
+        base (most intense) isotope peak, but these settings are a reasonable default for tryptic peptides.
+    </p>
+    <ul>
+        <li>Set the <b>Precursor mass analyzer</b> and <b>Product mass analyzer</b> to “Centroided”.</li>
+    </ul>
+    <table>
+        <tr>
+            <td><b>Note</b>: These data were collected on a Q-Exactive, in which both MS1 and MS2 scans were performed using the Orbitrap.
+                However, we have found that extracting chromatograms from centroided spectra yields better results than using the native profile
+                spectra when the mass analyzer is specified as “Orbitrap”.</td>
+        </tr>
+    </table>
+    <ul>
+        <li>In the <b>Mass Accuracy</b> fields in both <b>MS1 filtering</b> and <b>MS/MS filtering</b> enter “20” ppm.
+        </li>
+    </ul>
+    <p class="keep-next">
+        The <b>Transition Settings</b> form should look something like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <table>
+        <tr>
+            <td><b>Note</b>: You are leaving the <b>Retention time filtering</b> option as <b>Use only scans within</b> [5] <b>minutes of MS/MS IDs</b>. This tells Skyline it should only extract intensities from DIA spectra acquired
+                within 5 minutes of a peptide spectrum matching found in your library. For a single peptide spectrum match, the total extraction
+                window will be 10 minutes. If there is more than one ID for a given peptide, Skyline will extract from spectra acquired within the
+                range between the minimum ID time minus 5 minutes and the maximum ID time plus 5 minutes. (All ID retention times are stored even in
+                the non-redundant library you have built, as you will see later.) The second option, <b>Use only scans within</b> [5] <b>minutes of predicted RT</b>, uses an RT predictor (for example SSRCalc or, more commonly, an iRT library) to
+                determine the extraction time range. You will not use an RT predictor in this tutorial, but they are discussed in other tutorials and
+                webinars previously mentioned and the <a
+                    href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">Importing
+                    Assay Libraries</a> tip (on the Skyline web page under <a
+                    href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tips">Tips</a> &gt; <a
+                    href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">Working with Other
+                    Quantitative Tools</a>).</td>
+        </tr>
+    </table>
+    <p>
+        You have set the basic full-scan instrument parameters. Next, you will specify the DIA isolation scheme, or the pattern of precursor
+        <i>m/z</i> ranges that the instrument cycles through when performing DIA. For example, in the data set for this tutorial, the Q Exactive
+        instrument used a cycle of precursor <i>m/z</i> ranges starting with 500 to 520 <i>m/z</i>, then 520 to 540 <i>m/z</i>, all the way up
+        to 880 to 900 <i>m/z</i> (or 20 consecutive 20 m/z windows from 500 to 900 <i>m/z</i>), and then repeated the cycle. To specify this
+        isolation scheme in Skyline, follow these steps:
+    </p>
+    <ul>
+        <li>From the <b>Isolation scheme</b> dropdown list menu, select <b>&lt;Add...&gt;</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Isolation Scheme</b> form should appear as follows:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>Choose <b>Prespecified isolation windows</b>.</li>
+    </ul>
+    <p>
+        This will enable a grid allowing you to specify the isolation windows. You can enter window boundaries manually in the grid, but since the
+        cycle of window boundaries is highly regular in this case (from 500 to 900 <i>m/z</i> in increments of 20 <i>m/z</i>), there is a faster
+        way to specify the boundaries:
+    </p>
+    <ul>
+        <li>Click the <b>Calculate</b> button to show the <b>Calculate Isolation Scheme</b> form.</li>
+        <li>In the <b>Start m/z</b> field, enter “500”.</li>
+        <li>In the <b>End m/z</b> field, enter “900”.</li>
+        <li>In the <b>Window width</b> field, enter “20”.</li>
+        <li>Check the <b>Optimize window placement</b> check box.</li>
+    </ul>
+    <p>
+        This will place window boundaries optimized to be roughly 0.25 m/z from where charge 1 and 2 peptide precursors can occur. Some charge 3 and 4
+        precursors may be closer to these boundaries, but with 20 m/z windows, these should still occur infrequently, alleviating the need for the
+        windows overlapping margins (0.5 m/z on either side) proposed in the original paper on SWATH<sup>2</sup> if the Q1 isolation is reasonably
+        efficient at the borders<sup>3</sup>.
+    </p>
+    <p>
+        <img src="s-precursor-frequency-graph.png" />
+    </p>
+    <p class="fig-text">
+        <b>Figure</b>: Histograms calculated from peptide precursors with charges 1-4 found in common libraries of observed peptides. The
+        tallest peaks represent charge 1-4 precursors, the second tallest peaks represent charge 2 and 4 precursors, and the smaller peaks represent
+        charge 3 only precursors, with charge 4 only precursors visible only as small shoulders on the charge 3 only peaks. Vertical lines marked
+        “Optimal” Boundary indicate the optimize window placement boundaries in this range. (Courtesy of Brian Searle)
+    </p>
+    <p>
+        <img src="s-isolation-window-graphs.png" />
+    </p>
+    <p class="fig-text">
+        Supplemental Figure S1 from Gillet, et al. MCP 2012: c) shows perfect rectangular isolation of the defined range, d) shows less ideal signal
+        drop-off over 0.5 m/z at the edge of a defined quadrupole isolation range, e &amp; f) show how a full isotope distribution gets split between
+        windows without and with overlapping margins. It is important to remember that entire isotope distributions are being isolated though only the
+        monoisotopic m/z is targeted, making it possible to get strong fragment ion signal even when a monoisotopic precursor m/z seems very close to
+        the edge of an isolation window.
+    </p>
+    <p>
+        If the DIA data you are working with has already been acquired, it is important that the isolation scheme defined at this point reflects the
+        instrument settings that have been used for acquisition. In this case, you are generally safest, clicking the <b>Import</b> button
+        and pointing Skyline to one of your existing data files.
+    </p>
+    <p class="keep-next">
+        The <b>Calculate Isolation Scheme</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Skyline will automatically fill in the boundaries of the 20 windows required to cover 500 to 900 <i>m/z</i> in intervals of 20 <i>m/z</i>.
+    </p>
+    <p class="keep-next">
+        The <b>Edit Isolation Scheme</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        Skyline also allows you to visualize the precursor <i>m/z</i> range isolations over time, to check that what you have entered is correct:
+    </p>
+    <ul>
+        <li>Click the <b>Graph</b> button to the right of the <b>Calculate</b> button you just clicked.</li>
+    </ul>
+    <p class="keep-next">
+        You should see a graph of the cycle of isolation windows as it steps forward in time, with cycles/time on the y axis and
+        <i>m/z</i> on the x-axis:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Close</b> button.</li>
+        <li>In the <b>Name</b> field, enter the name “500 to 900 by 20” for this isolation scheme.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Isolation Scheme</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Transition Settings</b> form.</li>
+    </ul>
+    <p>
+        Note that in DIA the instrument does <i>not</i> require a set of specific transitions (SRM) or precursors (PRM) to measure, so your document
+        now has all the information needed to set up a DIA run, despite still being empty of targets. The DIA isolation scheme can be exported to an
+        instrument as follows:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Isolation List</b>.</li>
+    </ul>
+    <p>
+        The <b>Export</b> <b>Isolation List</b> form will appear, allowing you to choose the format of the isolation list export.
+    </p>
+    <ul>
+        <li>From the <b>Instrument type</b> dropdown list, choose <b>Thermo Q Exactive</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The form should look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the save form that appears, navigate to the folder you created for this tutorial.</li>
+        <li>In the <b>File name</b> field, enter the name “DIA_tutorial_isolation_list.csv”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Open the file you saved. It should look like this:
+    </p>
+    <p>
+        <img src="s-isolation-list-csv.png" />
+    </p>
+    <p>
+        This isolation scheme is formatted for a Thermo Q Exactive (on which the data in this tutorial were acquired), but Skyline can also export to
+        several other instrument types.
+    </p>
+    <p>
+        If this were a real DIA experiment, then you would use this isolation list file to run your DIA acquisition on your instrument. Alternatively,
+        you can also simply specify the isolation scheme manually in the instrument software. Other method parameters for the data acquisition (for
+        example MS/MS isolation width and resolution) will need to be set manually in the method file.
+    </p>
+    <h1>Using the Import Peptide Search wizard</h1>
+    <p>
+        Assuming now that all DDA and DIA runs for your experiment are complete, as they actually are for this tutorial, you would start the data
+        analysis workflow by matching MS/MS spectra from the DDA runs to peptides using a search engine such as X! Tandem, resulting in a series of
+        .xtan.xml files, or .pep.xml files, if you ran Peptide Prophet and the Trans Proteomic Pipeline (TPP). In this tutorial, if you downloaded
+        DIA-20_2.zip (and not DIALibrary-20_2.zip), you are provided a single .pep.xml file for a DDA run and a .mzXML file conversion (804 MB) of the
+        original raw DDA data file. The first step of configuring the Skyline document for analysis of the associated DIA runs will be to import these
+        search results into Skyline, creating a spectral library that contains MS/MS spectra and the retention times at which they were acquired. To
+        import the DDA search results do the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b>, and click <b>Peptide Search</b>.</li>
+    </ul>
+    <p>
+        Skyline tells you that you need to save the current document so that it will know where you want to perform the analysis on your computer disk
+        drive.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Navigate to the folder you created for this tutorial.</li>
+        <li>In the <b>File name</b> field, type “DIA-tutorial”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> wizard should appear looking like this:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        For this data set a <b>Cut-off score</b> field set to “0.95” means peptide spectrum matches with a PeptideProphet score of 0.95 or
+        better will be included, because the DDA data was processed with the TPP (after peptide spectrum matching with SEQUEST). For other spectrum
+        matching pipelines that use q values or expectation scores, where zero is best and 1 worst, the cut-off score uses 1 – score. So that, 0.95
+        would mean ≤0.05. For a reusable library, you would probably want to use a more stringent cut-off like 0.99 (i.e. ≤0.01 or 1% false discovery
+        rate for q values).
+    </p>
+    <ul>
+        <li>Click the <b>Add Files</b> button.</li>
+        <li>In the <b>Add Input Files</b> form that appears, select the following file from the directory where you put the tutorial:<ul>
+                <li>interact-20130311_DDA_Pit01.pep.xml</li>
+            </ul>
+        </li>
+    </ul>
+    <p>
+        This file contains peptide spectrum matching results from a single DDA run. For a real experiment, you would actually perform the DDA
+        acquisitions on a mass spectrometer, then run the output files through a search engine to produce one or more of these files (usually one for
+        TPP-produced pepXML). Here, they have simply been provided for you. Note that the original DDA run data file (converted to mzXML),
+        interact-20130311_DDA_Pit01.mzXML, is also present in the same folder. You do not need to import this file for chromatogram extraction, but it
+        needs to be present in order for the library builder to find the MS/MS spectra for the library, which are not present in the .pep.xml file.
+        Other spectrum matching pipeline outputs, such as Mascot DAT files, Proteome Discoverer pdResult files and X! Tandem native XML files include
+        all the necessary information in a single output file. You can find a <a href="https://skyline.ms/build-blib.url">complete list of supported
+            tools and file formats</a> on the Skyline website.
+    </p>
+    <ul>
+        <li>Click <b>Open</b> to add this file to the library you are building.</li>
+        <li>In the <b>Workflow</b> box, click the <b>DIA</b> option.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Spectral Library</b> page of the wizard should now look like this:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <ul>
+        <li>Click <b>Next</b> to build a spectral library from these search results.</li>
+    </ul>
+    <p>
+        When Skyline has finished building the spectral library, all the peptides matched to MS/MS spectra and their retention times from the DDA runs
+        are available for inclusion in your Skyline document. But first, you are presented the <b>Extract Chromatograms</b> page which
+        allows you to tell Skyline where to find the DIA data files it will use for chromatogram extraction, peak detection, and peak area
+        calculation.
+    </p>
+    <ul>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>In the DIA folder, select both .raw files included with this tutorial.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Browse for Results Files</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        Skyline presents a form asking if you want to remove the common prefix “20130311_DIA_Pit0” which makes the replicate names shown in the Skyline
+        interface shorter and generally easier to work with. In this case, however, the names would be shortened to just “1” and “2”.
+    </p>
+    <ul>
+        <li>In the <b>Common prefix</b> field, Delete the suffix “Pit0”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Results</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The <b>Add Modifications</b> page appears showing that the spectral library included peptides sequences with M[+16], which was
+        matched to the Unimod modification “Oxidation (M)”. If you wanted to allow for this type of modification in your targets list, you could just
+        check the checkbox beside the modification name, which you will not do in this tutorial.
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This brings you to the <b>Configure Transition Settings</b> page as shown below:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        You can use these default settings for this tutorial, but you could consider alternatives for your own data in the future.
+    </p>
+    <ul>
+        <li>The precursor ion charges 2 and 3 are generally the most common and safest.</li>
+        <li>Ion charges and types indicate y- and b-ions, charges 1 and 2, and the precursor ion extracted from MS1 spectra.</li>
+        <li>The range of product ions indicates all but y1, y2, b1, and b2 which are less selective and therefore commonly excluded.</li>
+        <li>The min and max m/z range refer to the MS/MS spectra only, since the acceptable precursor m/z range is defined by the DIA isolation
+            scheme.</li>
+        <li>The option to exclude the DIA precursor window range tells Skyline not to include transitions that fall in the DIA isolation window (e.g.
+            a product ion at 513 <i>m/z</i> will not be included if the precursor falls in the 500 to 520 <i>m/z</i> DIA window). This may be a
+            desirable exclusion in some cases, because precursor ions escaping fragmentation can cause increased noise and potential interference in
+            the MS/MS spectra over the original isolation range, making quantification based on fragment ions in this range less reliable.</li>
+        <li>The ion match tolerance of 0.05 refers to the tolerance used in matching DDA library spectra to fragment ions and assign library
+            intensities. This is roughly 50 ppm (at 1000 <i>m/z</i>), and perhaps still even a bit wide for Orbitrap MS/MS spectra.</li>
+        <li>The options to pick 6 fragment ions and require 6 fragment ions means that all targets will have exactly 6 transitions and peptides with
+            spectra that do not match at least 6 ions will be excluded.</li>
+    </ul>
+    <p>
+        To move to the next page, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This will bring you to the <b>Configure Full-Scan Settings</b> page, which should show the same settings you
+        configured earlier, but make sure it looks like this:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        This brings you to the <b>Import Fasta</b> page where you are asked to specify in FASTA format the proteins you wish to target along
+        with the protease enzyme you used to digest them into peptides, which you can leave as the default Trypsin with no missed cleavages allowed.
+    </p>
+    <ul>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>In the <b>Open FASTA</b> form, navigate to the tutorial folder you have been working in and double-click the file named
+            “pituitary_database.fasta”.</li>
+    </ul>
+    <p class="keep-next">
+        The form should now look like this:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        In this simple introduction with only 6 targeted proteins in the FASTA text you have just included, you will not use decoys or a dynamic peak
+        picking model generated with the mProphet algorithm. For more details on these options, you should consult the <a
+            href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a> tutorial.
+    </p>
+    <ul>
+        <li>Click the <b>Finish</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will display a form that tells you it will add 6 proteins and 21 peptides covering 25 precursors with 225
+        transitions. For every protein, only the peptides that were present in the spectral library are included in this list.
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The proteins and peptides should appear in the <b>Targets</b> pane, and chromatogram extraction should begin automatically from the
+        raw data files you chose. You can move or close the progress window and continue below:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Expand All</b>, and click <b>Precursors</b>.</li>
+    </ul>
+    <p>
+        This will show the full set of transitions Skyline has included. Note that every peptide includes all eligible precursors between 500 and 900
+        m/z, and that every precursor includes 6 b and y transitions as well as 3 precursor ions (M, M+1 and M+2). Note, also, that every precursor
+        has a corresponding library spectrum. The text for each transition ends with a “rank” or “irank” number indicating its intensity ranking in
+        either the library spectrum for fragment ions or the isotope distribution for precursor isotope ions.
+    </p>
+    <p class="keep-next">
+        The <b>Targets</b> view should look like this:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        In DIA, it is possible to extract any set of product ions, because the instrument covers every possible precursor-product combination in the
+        500-900 <i>m/z</i> range (at least those within the measured range of the MS/MS spectra). However, in practice, extracting every possible
+        product ion is often unnecessary, and in fact can hinder peptide detection by adding chromatograms which are noisy and have very low signal
+        for the desired peptide. The product ion selection rules you set to require the 6 most intense transitions (not including y1, y2, b1, and b2)
+        have gained broad acceptance in the proteomics community.
+    </p>
+    <p>
+        In large DIA experiments, it can be helpful to have decoy peptides<sup>6</sup> to train advanced peak picking (peptide detection) models, which
+        may improve Skyline automated peak picking and allows Skyline to produce detection probability scores (q values). Decoy peptides are not
+        strictly necessary for a DIA workflow, and are needed only if you choose to apply a custom peak scoring method. In many cases, the Skyline
+        default peak picking performs very well and no custom peak scoring is needed, and even when custom peak scoring is used, alternatives to
+        decoys exist (see the <a
+            href="https://skyline.ms/tutorial_peak_picking_ja.url">Advanced Peak Picking
+            Models</a> tutorial). No decoys will be added to the document for this tutorial.
+    </p>
+    <h1>Exploring DIA Results</h1>
+    <p>
+        Once the DIA runs are fully imported, you can look at the results:
+    </p>
+    <ul>
+        <li>Make sure the tab labeled “Pit01” is selected in the chromatogram pane.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Collapse All</b> and click <b>Peptides</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Split Graph</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b>, and click <b>Row</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b>, and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Right-click one of the chromatogram graphs, and click <b>Legend</b> to uncheck it.</li>
+        <li>Dock the <b>Peak Areas – Replicate Comparison</b> graph to the right edge of the main window on top of the <b>Library
+                Match</b> view.</li>
+        <li>Select the first peptide K.YALSQDV<b><u>C</u></b>TYR.D [64, 74] in the <b>Targets</b> view.</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline window should look something like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        This is not a great example to start with. It makes things look much worse than they really are. You, as a human observer, can easily tell that
+        the peak integration boundaries need adjusting. This is probably due to the fact that Skyline picks its integration boundaries based on the
+        fragment chromatograms, and if you look closely, you can see that there are some places where the signal drops to the x-axis. In centroided
+        data, this is usually due to a peak shifting outside the extraction window, which you set earlier to +/- 20 ppm.
+    </p>
+    <p>
+        When you see evidence of this kind of signal dropout, you would be right to question whether the extraction settings might be too narrow. The
+        best way to check on that in Skyline is to do the following:
+    </p>
+    <ul>
+        <li>In the <b>View</b> menu, choose <b>Mass Errors</b>, and click <b>Histogram</b>.</li>
+        <li>Right-click in the graph that appears, choose <b>Transitions</b> and click <b>All</b>. (to check)</li>
+    </ul>
+    <p>
+        In a document with more targets, this second step may be unnecessary to get a sense of the mass error distribution, using only the most intense
+        transitions for each peptide precursor, but in this case, it will give you a better sense of the distribution, which should now look like
+        this:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        As rules of thumb, you should be looking to see that:
+    </p>
+    <ol>
+        <li>The mean (2.7) is not far from zero.</li>
+        <li>The tolerance you set (20 ppm) is not less than the mean + 3 * the standard deviation (12.6) which is expected to cover 99.8% of a
+            normally distributed value.</li>
+    </ol>
+    <p>
+        By these rules, a choice of 15 ppm is probably not bad for the mass spectra in the imported files.
+    </p>
+    <ul>
+        <li>Right-click in the graph, choose <b>Transitions</b> and click <b>Precursors</b>.</li>
+    </ul>
+    <p>
+        You will see the mean (2.9) and standard deviation (2.1) seem to indicate that a 9.2 ppm would have been sufficient. This should be enough to
+        convince you that any signal dropout you see in the extracted chromatograms are not a result of a 20 ppm mass error tolerance being too
+        narrow. We will return to what might be causing this anomaly later.
+    </p>
+    <p>
+        For now, do the following:
+    </p>
+    <ul>
+        <li>Close the <b>Mass Errors – Histogram</b> window by clicking the X in the upper-right corner.</li>
+        <li>Adjust the integration ranges in both files to cover the entire peaks by clicking and dragging beneath either x-axis, for the precursors
+            or the fragments, starting at one side of the peak and releasing at the other. (Note that you can use the mouse scroll wheel to adjust the
+            zooming before adjusting the integration boundaries.)</li>
+        <li>Right-click a chromatogram graph, click <b>Peptide ID Times</b> and choose <b>From Other Runs</b>.</li>
+    </ul>
+    <p>
+        This last step will add cyan vertical lines to the chromatogram graphs at the retention times for the peptide spectrum matches in your spectral
+        library. These are the times around which you chose to extract +/- 5 minutes of chromatograms. If your DIA and DDA runs had highly similar
+        chromatography, then you should expect to see these lines near the chosen peaks.
+    </p>
+    <p class="keep-next">
+        The Skyline window should now look something like this:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        Here are a few things to take note of:
+    </p>
+    <ol>
+        <li>The chromatogram graphs still highlight the original integration range in violet.</li>
+        <li>The chromatogram graphs annotate the apex of all 4 peaks you see at 45.7 minutes.</li>
+        <li>The peaks are also annotated with mass error values ranging from 2.3 to 6.4 ppm. Since you know the mean mass error values were 2.7 for
+            fragment ions and 2.9 for precursor ions, you can tell they are all &lt; 4 ppm from that mean.</li>
+        <li>In the <b>Peak Areas</b> plot for precursors, you can see annotations with “idotp 0.97”. This is a measure of similarity to the
+            expected isotope distribution, shown in the left-most bar, and 0.97 is quite good.</li>
+        <li>In the <b>Peak Areas</b> plot for fragments, you can see annotations with “dotp 0.88” and “dotp 0.95”. This is a measure of
+            similarity to the library spectrum, shown in the left-most bar, and 0.88 is acceptable, while 0.95 is quite good.</li>
+    </ol>
+    <p>
+        Now it is time to continue to the next peptide:
+    </p>
+    <ul>
+        <li>Either click K.<b><u>C</u></b>NTDYSD<b><u>C</u></b>IHEAIK.T [107, 120] or press the down-arrow key (if the selection
+            in the <b>Targets</b> view is blue).</li>
+    </ul>
+    <p>
+        You will see that when there are multiple charge states, the transition split view splits on charge state, but not ion type, and that the
+        precursor ion intensities extracted from MS1 scans typically dwarf the product ion intensities extracted from MS/MS scans:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <table>
+        <tr>
+            <td><b>Note</b>: For clarity, the legend was restored, and the plot was resized for the image above.</td>
+        </tr>
+    </table>
+    <ul>
+        <li>Click the + to the left of the peptide or press the right-arrow key.</li>
+        <li>Click the 863.3640++ precursor or press the down-arrow key.</li>
+    </ul>
+    <p class="keep-next">
+        The doubly charged precursor of the second peptide should now be selected, and the Skyline Window should look like this:
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        All the metrics you were introduced to on the last peptide, mass error, idotp, and dotp, look even better for this precursor. You may feel you
+        would choose different integration boundaries, especially on the peak in “Pit02”. You can try and then use the Skyline Undo/Redo buttons to
+        prove to yourself that it does not change the peak areas very much. Unless the integration boundaries are missing a large part of the peak, as
+        in the first peptide, you are usually better off accepting slight differences like this.
+    </p>
+    <ul>
+        <li>Click the 575.9117+++ precursor or press the down-arrow key.</li>
+    </ul>
+    <p>
+        This is the more intense precursor by about 7-fold. And it also looks quite good. Though, you may notice an interference on the y5
+        chromatogram. To see this more clearly, do the following:
+    </p>
+    <ul>
+        <li>Click the + to the left of the precursor or press the right-arrow key.</li>
+        <li>Click the H [y5] - 597.3355+ transition below the precursor.</li>
+    </ul>
+    <p class="keep-next">
+        The chromatograms should now look like this:
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-22.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-23.png" />
+            </td>
+        </tr>
+    </table>
+    <p>
+        The y5 chromatogram has been highlighted in red and the points between the integration boundaries have been highlighted with red dashed lines
+        just above the x-axis, with their count (17 and 20) noted to the right. Also to the right is a second peak at 45 minutes in Pit01 and 44.6
+        minutes in Pit02. Neither seems to contribute much if any area to the peak of interest at 44.1 minutes, but in a strict quantitative assay
+        that you planned to measure a lot, you might still remove this transition to avoid the possibility of this peak coeluting with the peak of
+        interest and possibly at much higher intensity.
+    </p>
+    <p>
+        Continue to the next peptide:
+    </p>
+    <ul>
+        <li>Click the K.ELVYETVR.V [72, 79] peptide or press the down-arrow until it is selected.</li>
+    </ul>
+    <p>
+        At a first glance this peptide also looks very good in terms of coelution, integration boundaries, mass errors, and dot-product values. If you
+        look more closely, you may notice the right edge of the precursor chromatograms seem to drop off more quickly than the fragment chromatograms.
+        This is indeed signal dropout again, and it has the same cause as before, which we will return to later.
+    </p>
+    <p>
+        The 4<sup>th</sup> peptide looks much less appealing than the 3<sup>rd</sup> but it appears to be consistently integrating a peak at around
+        53.5 minutes.
+    </p>
+    <p>
+        To see the full range of chromatograms extracted, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b>, and click <b>None</b> (Shift-F11).</li>
+    </ul>
+    <p>
+        This will show you that Skyline has only extracted the chromatogram in a +/-5 minute window around the DDA ID times – the ID’s occur near 53.5
+        minutes and so Skyline extracts from 48.5 to 58.5 minutes.
+    </p>
+    <p>
+        In DIA, there can be a lot of interference, because precursor isolation windows are so wide (e.g. 10-25 m/z). However, the Skyline automated
+        peak picking is often able to pick the correct peaks, even when a very abundant interference is present. In this case, you can see there are
+        more abundant peaks, but Skyline has still chosen the best available peak. You can now leave it and continue down after doing the following to
+        restore peak zooming.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p>
+        The next 5 precursors look quite good until you reach the peptide K.NYGLLY<b><u>C</u></b>FR.K [184, 192]. The peaks for this peptide
+        are over 1 minute wide and not very Gaussian shaped. Skyline has misplaced the right integration boundary on both peaks, capturing only 2/3 of
+        the peaks. To correct this, you can do the following:
+    </p>
+    <ul>
+        <li>Hover the mouse cursor over any of the black dashed lines indicating the right integration boundary until the cursor changes to a splitter
+            cursor (<img src="../../shared/vertical-split-cursor-icon.png" />) with arrows pointing left and right.</li>
+        <li>Click and drag the boundary to the desired location capturing the full peak.</li>
+    </ul>
+    <p class="keep-next">
+        The plots for this peptide should now look like this:
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <p>
+        The combination of the cyan ID lines, the idotp of 0.99, and the dotp of 096 should give you high confidence in this peak assignment.
+    </p>
+    <p>
+        Because of the chromatography in these runs, you will need to repeat this type of correction several times for the later peptides in this list.
+        Based on several published software comparison papers, Skyline compares well with other tools in its peak integration. Faced with challenging
+        peak shapes, other tools will have similar issues.
+    </p>
+    <h1>Understanding Extracted Chromatograms</h1>
+    <p>
+        The next two peptides, AVVLSHYIHNLSSEMFSEFDK and AINS<b><u>C</u></b>HTSSLATPEDK, lack any convincing signal around peptide ID times
+        from DDA. You can use shift-F11 to zoom out, the mouse scroll wheel for mouse-centered zooming and ctrl-click-and-drag to pan, but you will
+        not find anything in the chromatograms for either peptide. You can delete them or simply move on to the peptide SWNEPLYHLVTEVR.
+    </p>
+    <p>
+        This peptide has two precurors, doubly charged at 871.9467 and triply charged at 581.6335.
+    </p>
+    <ul>
+        <li>Select the first precursor 871.9467++ (idotp 0.94, dotp 0.82).</li>
+    </ul>
+    <p>
+        Both precursors have nicely coeluting fragment ion chromatograms with no obvious interference. Both also show obvious interference on the left
+        in the MS1 chromatograms.
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        You can get a sense of scale in intensity (ions per second) by looking at the <b>Peak Areas</b> plots where the precurors (MS1) total
+        close to 1 million, and the products (MS/MS) total 20 to 25 thousand or a 40-to-50-fold difference. As you saw earlier, the MS1 signal dwarfs
+        the MS/MS, but it is also more prone to noise and interference.
+    </p>
+    <table>
+        <tr>
+            <td><b>Note</b>: All use of the <b>Full Scan</b> view below will only work, if you have downloaded the full tutorial
+                data set. Otherwise, Skyline will display a message that the raw data files are missing.</td>
+        </tr>
+    </table>
+    <p>
+        To get a better sense of what happened in the MS1 scans from which these chromatograms were extracted, do the following:
+    </p>
+    <ul>
+        <li>Hover the mouse cursor over the apex of the “precursor [M+1]” peak to the left of the integrated peak until you see purple circle appear,
+            and the mouse cursor changes to a pointing hand.</li>
+        <li>Click in the circle.</li>
+    </ul>
+    <p>
+        Skyline will show the <b>Full Scan</b> view displaying a range of the MS1 scan from which the precursor chromatogram points were
+        extracted. You could see the entire MS1 scan by clicking on the button with the magnifying glass and a plus (<img src="../../shared/magnifying-glass-icon.png" />) in
+        the upper right corner of the view. Instead, do the following:
+    </p>
+    <ul>
+        <li>Make sure you are looking at the spectrum acquired exactly at 70.19 min (indicated in title), otherwise use the arrow buttons in the upper
+            right corner to navigate to this spectrum.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Full Scan</b> graph should now look something like this:
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <p>
+        The intensities in the centroid-mode peaks are shown as sticks. Intensities that were used to create the points on the chromatograms are
+        highlighted in the chromatogram colors, and the extraction ranges are shown as shaded regions. You can see the M+3 and the M+4 peaks, which
+        were not extracted to the right of the shaded peaks. You are viewing the spectrum that produced the apex of the interfering peak to the left
+        of the integrated peak for this precursor. You can see a full isotope distribution for a doubly charged precursor one Dalton heavier than the
+        targeted peptide. Its monoisotopic peak is very close to the M+1 of target.
+    </p>
+    <ul>
+        <li>Now use the arrow buttons (<img src="../../shared/arrow-buttons.png" />) in the <b>Full Scan</b> view toolbar to review scans between this one and
+            the one that produced the apex of the integrated peak.</li>
+    </ul>
+    <p>
+        At 70.56 minutes, you should see the first MS1 spectrum that contains a peak in the targeted monoisotopic filter range, highlighted blue. Not
+        until 70.67 minutes do you see the first MS1 spectrum where the monoisotopic peak is the most intense.
+    </p>
+    <p>
+        To perform a similar analysis on the product ion MS/MS scans:
+    </p>
+    <ul>
+        <li>Hover the mouse cursor over the apex of the “y10+” peak until you see an aqua circle appear, and the mouse cursor change to a pointing
+            hand.</li>
+        <li>Click in the circle.</li>
+    </ul>
+    <p>
+        You should see a graph in the <b>Full Scan</b> view that looks like this:
+    </p>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <p>
+        You can see the MS/MS peak that contributed the point to the chromatogram you just clicked on highlighted in aqua and annotated y10. The fact
+        that the isotope peaks are 1 m/z apart should give you added confidence that they result from a singly charged ion.
+    </p>
+    <ul>
+        <li>Repeat the steps above for the y10++ chromatogram in purple.</li>
+    </ul>
+    <p>
+        You should see a spectrum like plot like this one:
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        Again, you can see the tallest peak in a series highlighted and annotated, with the following peaks in the series 0.5 <i>m/z</i> apart,
+        indicating an isotope distribution for a doubly charged ion. This should leave you feeling more confident that the signal extracted in the
+        product ion chromatogram matches what you are targeting.
+    </p>
+    <h2>Understanding how interference produces signal dropout</h2>
+    <p>
+        In the MS1 spectra you reviewed above, the interfering ion and the targeted ion of interest have highly similar mass to charge ratios despite
+        their 1 Dalton difference in neutral mass. Ion <i>m/z</i> values that are less similar can still be close enough to produce a single,
+        unresolved profile peak in a mass spectrometer. In this case the single peak may end up centroided to an <i>m/z</i> value even greater than
+        20 ppm from your target <i>m/z</i> value. This is the most common cause of the signal dropout you have already seen in this tutorial.
+    </p>
+    <p>
+        You can use the <b>Full Scan</b> view to see this in action by doing the following:
+    </p>
+    <ul>
+        <li>Click the K.ELVYETVR.V peptide. (3<sup>rd</sup> in the <b>Targets</b> view)</li>
+        <li>Hover the mouse cursor over the apex of the “precursor” peak in the “Pit02” replicate until you see a blue circle appear, and the mouse
+            cursor change to a pointing hand.</li>
+        <li>Click in the circle.</li>
+        <li>Use the right arrow button (<img src="../../shared/right-arrow-button.png" />) in the <b>Full Scan</b> view toolbar to review the MS1 spectra until you
+            reach 41.7 minutes.</li>
+    </ul>
+    <p>
+        You will see a peak at M-1 (left of the monoisotopic precursor) growing as you advance in time.
+    </p>
+    <p class="keep-next">
+        By 41.67 minutes it is the largest peak:
+    </p>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <p>
+        At 41.68 minutes, you can see the extracted peaks shift left in m/z:
+    </p>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <p>
+        And at 41.70 minutes, they have shifted out of the +/- 20 ppm extraction ranges:
+    </p>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <p>
+        Extraction from centroided MS/MS spectra for DIA, especially on Thermo Orbitrap instruments, has proven more reliable in broad statistical
+        tests, but this is still a useful concept to understand when looking at the data. Interference in this setting can reduce total signal when
+        you would normally expect it to cause an increase in signal.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you defined a DIA acquisition scheme for use in producing a DIA instrument method or simply data analysis, as in this
+        tutorial. You built a spectral library from DDA search results, set up retention time restriction based on the measured RTs in the library,
+        defined a set of transitions to be measured based on proteins of interest and matching spectra from the DDA runs, imported DIA runs, and
+        analyzed the resulting data quality. Ultimately, as in all Skyline documents, you can produce peak areas and statistical information on the
+        peptides of interest. Several other tutorials (<a href="https://skyline.ms/tutorial_method_edit_ja.url">Targeted Method Editing</a>, <a
+            href="https://skyline.ms/tutorial_existing_quant_ja.url">Existing and Quantitative Experiments</a>, <a
+            href="https://skyline.ms/tutorial_irt_ja.url">iRT Retention Time Prediction</a>, <a
+            href="https://skyline.ms/tutorial_peak_picking_ja.url">Advanced Peak Picking Models</a>, <a
+            href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">Importing
+            Assay Libraries</a> and <a href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">Panorama Chromatogram
+            Libraries</a>) have been mentioned in this tutorial for more advanced study.
+    </p>
+    <p>
+        This workflow should enable you to analyze any DIA data set in Skyline, provided it is accompanied by DDA runs acquired before, after or among
+        your DIA runs. This is one easy way to get started with DIA data analysis. However, you are strongly encouraged to continue your study with
+        the <a href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a> tutorial. In it, you will build a spectral library with
+        calibrated iRT values and use these normalized retention times and an mProphet statistical model for chromatogram peak scoring and picking.
+        You will also use a group comparison in Skyline to estimate fold-change between conditions for each peptide or protein, with adjusted p
+        values.
+    </p>
+    <h1>Bibliography</h1>
+    <p class="bibliography">
+        1. Venable, J. D., Dong, M.-Q., Wohlschlegel, J., Dillin, A. &amp; Yates, J. R. Automated approach for quantitative
+        analysis of complex peptide mixtures from tandem mass spectra. <i>Nat. Methods</i> <b>1</b>, 39–45 (2004).
+    </p>
+    <p class="bibliography">
+        2. Gillet, L. C. <i>et al</i>. Targeted data extraction of the MS/MS spectra generated by data-independent acquisition:
+        a new concept for consistent and accurate proteome analysis. <i>Mol. Cell. Proteomics MCP</i> <b>11</b>, O111.016717 (2012).
+    </p>
+    <p class="bibliography">
+        3. Egertson, J. D. <i>et al</i>. Multiplexed MS/MS for improved data-independent acquisition. <i>Nat. Methods</i>
+        <b>10</b>, 744–746 (2013).
+    </p>
+    <p class="bibliography">
+        4. Krokhin, O. V. <i>et al</i>. An improved model for prediction of retention times of tryptic peptides in ion pair
+        reversed-phase HPLC: its application to protein peptide mapping by off-line HPLC-MALDI MS. <i>Mol. Cell. Proteomics MCP</i>
+        <b>3</b>, 908–919 (2004).
+    </p>
+    <p class="bibliography">
+        5. Escher, C. <i>et al</i>. Using iRT, a normalized retention time for more targeted measurement of peptides.
+        <i>Proteomics Accept</i>. (2012).
+    </p>
+    <p class="bibliography">
+        6. Reiter, L. <i>et al</i>. mProphet: automated data processing and statistical validation for large-scale SRM
+        experiments. <i>Nat. Methods</i> <b>8</b>, 430–435 (2011).
+    </p>
+</body>
+
+</html>

@@ -1,0 +1,696 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Audit Logging</h1>
+    <h1>Introduction</h1>
+    <p>
+        This tutorial covers how to use the Skyline audit log. The audit logging system keeps track of all document modifications and displays them in
+        an interactive grid, similar to the Document Grid. It benefits from all the features of the Document Grid, such as creating report templates,
+        sorting by columns and editing cells, for example for adding a Reason to a log entry. One of the design goals of the audit log was to give
+        anyone the ability to reconstruct the state of a document, given only the audit log and the original data. This makes it an invaluable tool
+        for a researcher using Skyline. As you will see, the audit log also makes the “Undo-Redo” feature more usable by providing more specific
+        change messages and allowing you to undo changes in the audit log grid itself. To demonstrate important benefits of the audit log, this
+        tutorial is based on the Absolute Quantification Tutorial, in which the absolute abundance of a target peptide is determined using Selected
+        Reaction Monitoring (SRM) mass spectrometry by creating an external calibration curve with an internal standard heavy labeled reference
+        peptide. This tutorial will be mostly focused on how to configure the audit log, how your actions are logged and how to read and work with the
+        audit log. If you find you want to learn more about absolute quantification, you should refer to the Absolute Quantification Tutorial
+        directly, which covers the topic in more detail.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/AuditLog.zip">https://skyline.ms/tutorials/AuditLog.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\tobiasr\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\tobiasr\Documents\AuditLog
+    </p>
+    <p>
+        The folder should contain a total of 9 RAW files, which you will import into Skyline later.
+    </p>
+    <p>
+        <b>Note</b>: In configuring Skyline for this tutorial, be sure to follow the steps below in the order presented to avoid creating
+        audit logs of these initial setup steps. 
+    </p>
+    <ul>
+        <li>Start Skyline. </li>
+        <li>If you are using Skyline for the first time you will be prompted to select a default user interface. In the right-hand corner, ensure that
+            the protein icon <img src="../../shared/protein-icon.png" /> is showing, indicating that Skyline is presenting the <b>Proteomics
+                interface</b>. This can easily be changed in the future. </li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default, but you may still have an audit log entry describing what
+        it took to get from any previous settings back to the defaults.
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>New</b>.</li>
+        <li>When prompted whether you want to save your changes, click the <b>No</b> button.</li>
+    </ul>
+    <h2>Opening the audit log</h2>
+    <p>
+        Now open the audit log by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Other Grids</b> and click <b>Audit Log</b> (Alt + 4)</li>
+    </ul>
+    <p>
+        This should bring up the <b>Audit Log</b> view in its default configuration as shown below:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <p>
+        In the top right corner, you can see that audit logging is currently enabled, which is the default. By unchecking the box, audit logging can be
+        disabled. Initially the audit log is showing its default column configuration, displaying the <b>Time</b>, <b>All Info
+            Message</b>, and <b>Reason</b> columns. These columns will be explained in more detail and you will learn how to customize
+        the columns in this grid. Keep this window open throughout the tutorial to observe how log messages appear as you interact with Skyline.
+    </p>
+    <h1>Configuring Settings for Inserting a New Peptide</h1>
+    <p>
+        Before you insert a new peptide into the document, you need to configure the transition and peptide settings for this experiment as follows:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Filter</b> tab.</li>
+        <li>In the <b>Product ion selection</b> box, in the <b>From</b> dropdown list select <b>ion 3</b> and in the
+            <b>To</b> dropdown list ‘<b>last ion – 1</b>’.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        After you click <b>OK</b>, several messages will appear in the audit log window. Before taking a closer look at the audit log, first
+        configure the peptide settings as follows:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Modifications</b> tab.</li>
+        <li>Click the <b>Edit list</b> button next to the <b>Isotope modifications</b> list.</li>
+        <li>Click the <b>Add</b> button.</li>
+        <li>From the <b>Name</b> dropdown list choose ‘Label:13C(6)15N(2) (C-term K)’. </li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modifications</b> form.</li>
+        <li>In the <b>Isotope modifications</b> list, check the new ‘Label:13C(6)15N(2) (C-term K)’ modification.</li>
+        <li>Click the <b>OK</b> button in the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <h1>Reading the Audit Log</h1>
+    <p>
+        Now the <b>Audit Log</b> view should look like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        Each dark gray message and all messages below it until the next dark gray message or the end of the audit log represent a single undoable
+        operation. The transition settings and the peptide settings were changed, which creates a total of two audit log entries. By default, new
+        messages appear at the top like an email inbox. Looking at the first entry when the transition settings were changed, the gray message is a
+        one line summary of the entire entry: <b>Transition Settings – Filter changed</b>. This message is called the <b>Undo-Redo
+            message</b>, because it is also used in the Skyline Undo and Redo dropdown lists. To see this, return to the main Skyline window
+        where you can:
+    </p>
+    <ul>
+        <li>In the main toolbar, click the small black dropdown arrowhead next to the <b>Undo</b> button.</li>
+    </ul>
+    <p>
+        You will see a list of the changes you have made to the Skyline document like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        Before audit logging was introduced into Skyline, both messages here would have only said <b>Changed settings</b>. Therefore, even if
+        you have audit logging disabled, you can still benefit from it through improved Undo and Redo descriptions.
+    </p>
+    <p>
+        Return to the <b>Audit Log</b> view. The next five messages under the <b>Undo-Redo message</b> are the <b>All Info
+            messages</b>, which describe every change in detail. Log messages will tell you exactly where a setting changed. For instance, the
+        first message reads <b>Settings &gt; Transition Settings – Filter &gt; Product ion selection start changed from “m/z &gt; precursor” to
+            “ion 3”</b>. Recall that this is exactly where we navigated earlier to select the collision energy. The “greater than” symbols
+        indicate that a menu item, while the “--" indicates that what follows is a tab, such as the <b>Filter</b> tab. Next look at the
+        message above, which describes the changes you made to the peptide settings. Note that the <b>Undo-Redo message</b> is a concise
+        description of the isotope modification you added. Looking below at the <b>All Info messages</b>, you can see that the audit log
+        contains the exact definition of the modification you added, despite you not having configured it manually. This is to allow others to
+        reproduce those changes in the future, even if they do not have this particular modification in their Skyline instance, in which case they
+        would have to create it manually.
+    </p>
+    <h1>Undoing Changes Using the Audit Log View</h1>
+    <p>
+        Again, looking at the <b>Audit Log</b> view, you should see that there is a single leftward curving arrow next to the audit log entry
+        at the top that describes the peptides settings changes. This is the same arrow as on the <b>Undo</b> button in the toolbar. 
+    </p>
+    <ul>
+        <li>Click the arrow in the top row of the <b>Audit Log</b> grid.</li>
+    </ul>
+    <p>
+        This should make the audit log entry disappear and undo the change.
+    </p>
+    <p>
+        In the main Skyline toolbar and you should see the <b>Redo</b> button that was previously a grey arrow pointing rightward, turn blue.
+        To see the dropdown list of changes you can redo:
+    </p>
+    <ul>
+        <li>Click on the small black arrowhead to the right the <b>Redo</b> button in the main toolbar.</li>
+    </ul>
+    <p>
+        You will see the list shown below.
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        You can see the change you just undid through the <b>Audit Log</b> grid.
+    </p>
+    <ul>
+        <li>Click on the change to redo the operation. </li>
+    </ul>
+    <p>
+        Now return to the <b>Audit Log</b> grid and you will see that the audit log entry is back. Note that next to the other audit log
+        entry below it is an icon with two undo arrows. This indicates that if you undo this change, all changes made after this one will also be
+        undone. In this case undoing the transition settings change entry will also undo the peptide settings change entry. This exactly how undo
+        works when using the undo dropdown list in the toolbar. You can undo back to a certain point in the document history, but you cannot revert a
+        single change in the middle of the list. Note that once you close Skyline and open the document, those undo arrows will disappear from the
+        audit log, since only changes made during your current Skyline session can be undone or redone, again consistent with the
+        <b>Undo</b> and <b>Redo</b> buttons and menu items.
+    </p>
+    <h1>Inserting a Peptide Sequence</h1>
+    <p>
+        To add a peptide target to your new document perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Insert</b> and click <b>Peptides</b>.</li>
+        <li>Copy “IEAIPQIDK” to the clipboard and paste it into the first <b>Peptide Sequence</b> cell.</li>
+        <li>Copy “GST-tag” to the clipboard and paste it into the first <b>Protein Name</b> cell.</li>
+    </ul>
+    <p>
+        The form should now look like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Insert</b> button.</li>
+    </ul>
+    <p>
+        The <b>Targets</b> view should show the newly added peptide with a light and a heavy labeled precursor:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <p>
+        If you do not see all of the elements shown above, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Expand All</b> and click <b>Precursors</b>.</li>
+    </ul>
+    <p>
+        Refer to the <b>Audit Log</b> grid and you should see a new message as the first row indicating that you inserted the peptide
+        IEAIPQIDK. There are no other detailed messages about this change. The audit log entry consists of a single audit log messages as shown below:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        Note that there is a magnifying glass icon next to the new audit log entry. This appears whenever there is extra information associated with an
+        audit log entry. 
+    </p>
+    <ul>
+        <li>Click on the magnifying glass.</li>
+    </ul>
+    <p>
+        This will bring the <b>Audit Log Extra Information</b> form as shown below:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <p>
+        The extra information window shows all the information that was pasted into the grid when inserting the peptide, including the column header
+        names. The cell values are separated by tab characters, which means you can copy entire rows from this window and paste them into the
+        <b>Insert Peptides</b> form you just used to reproduce this operation.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to close the <b>Audit Log Extra Information</b> form.</li>
+    </ul>
+    <p>
+        Before continuing, you should save the document.
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu in Skyline, click <b>Save As</b>.</li>
+        <li>Navigate to the AuditLog folder created earlier.</li>
+        <li>In the File name field, enter “AuditLogTutorial”.</li>
+        <li>Click the <b>Save</b> button.</li>
+        <li>On the <b>File</b> menu, click <b>Open containing folder</b>.</li>
+    </ul>
+    <p>
+        In the Windows File Explorer, you should see a file called “AuditLogTutorial.skyl” (along with AuditLogTutorial.sky and
+        .sky.view). If you do not see these file extensions, you may need to show file extensions in the File Explorer. This .skyl file is the audit
+        log file. If you open it in a text editor like Notepad, you will see XML format text. If you are interested in the format, refer to the audit
+        logging paper (in review at <i>Bioinformatics</i>). The audit logging file (like the .sky.view which contains window layout and selection
+        information) can be deleted at any time without damaging the document stored in the .sky file.
+    </p>
+    <h1>Importing Data Files into Skyline</h1>
+    <p>
+        Your next task is to import the mass spectrometer data files from the SRM runs for this experiment:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Use the <b>Add single-injection replicates in files</b> option in the <b>Import Results</b> form. (default)</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>Import Results Files</b> form, navigate to the AuditLog folder and select all of the 9 raw files.</li>
+        <li>Click the <b>Open</b> button to choose the files.</li>
+    </ul>
+    <p>
+        After the import completes, Skyline should have created 9 new replicates. The <b>Audit Log</b> view should now look like this:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <p>
+        The audit log did not create copies of the files that were imported, but rather just stored the paths of files (here shortened to just the file
+        names). The first 9 detailed messages are the paths of the 9 raw data files you imported. The last two messages describe the settings in the
+        <b>Import Results</b> form when you clicked the <b>OK</b> button. 
+    </p>
+    <p>
+        Note that the primary entry again has a magnifying glass around a plus sign, which means it has extra information associated with it. This is
+        always the case for a series of dialogs such as when importing results, where you configure a process that modified the document, instead of
+        directly modifying the document like when changing the settings.
+    </p>
+    <ul>
+        <li>Click on the magnifying glass to view the extra information.</li>
+    </ul>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to close the form.</li>
+    </ul>
+    <p>
+        The extra information for wizards like the import results wizard does not contain any additional information, but rather a neatly formatted and
+        more concise version of what is in the audit log. If you have any programming experience, this format might look familiar to you.
+    </p>
+    <h1>Calibration Curve Settings</h1>
+    <p>
+        Now, configure quantification settings to help Skyline calculate a calibration curve:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Quantification</b> tab.</li>
+        <li>In the <b>Regression Fit</b> dropdown list, choose “Linear”.</li>
+        <li>In the <b>Normalization Method</b> dropdown list, choose “Ratio to Heavy”.</li>
+        <li>In the <b>Units</b> field, enter “fmol/ul”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This adds the audit log entry shown below:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        The changes made are listed under the heading <b>Peptide Settings – Quantification changed</b> and each step is captured in a
+        detailed message describing it with enough detail that the step could be repeated.
+    </p>
+    <h2>Specify the analyte concentrations of the external standards:</h2>
+    <p>
+        Next, specify the analyte concentration for each replicate using the <b>Document Grid</b> as follows:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>In the top left of the <b>Document Grid</b>, click the <b>Reports</b> dropdown list and choose
+            <b>Replicates</b>.</li>
+        <li>In the row for FOXN1-GST, set its <b>Sample Type</b> to “Unknown”.</li>
+        <li>Copy the following data and paste it into the <b>Document Grid</b> to set each of the “Standard_#” replicates <b>Sample
+                Type</b> to “Standard” and their <b>Analyte Concentrations</b> to the values below.</li>
+    </ul>
+    <div style="margin-left : 20px;">
+        <table>
+            <tr>
+                <td>Standard</td>
+                <td>40</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>12.5</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>2.5</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>0.5</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>0.25</td>
+            </tr>
+            <tr>
+                <td>Standard</td>
+                <td>0.1</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        The <b>Document Grid: Replicates</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        Review the <b>Audit Log</b> grid to see that it shows the following:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <p>
+        The Undo-Redo messages indicates that 16 values were pasted into the <b>Document Grid</b>. There are a total of 17 detailed messages.
+        The first message indicates that the <b>Replicates</b> report was used. This is important because in order to reproduce this change
+        made in the <b>Document Grid</b>, you need to know what columns were present. The follow 16 messages describe each cell change, one
+        for each of 8 changes in the <b>Sample Type</b> column and 8 in the <b>Analyte Concentration</b> column. Since you pasted
+        data, this audit log entry again contains extra information. 
+    </p>
+    <ul>
+        <li>Open the extra information window by clicking on the magnifying glass icon.</li>
+    </ul>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        This displays a much more concise view of the data that was pasted into the document and again the data can be easily copied and pasted to
+        reproduce the operation. The report that was used is also indicated at the end of this extra information – in this case:
+        <b>“Replicates”</b>.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to close the <b>Audit Log Extra Information</b> form.</li>
+    </ul>
+    <h1>Adjusting Integration Boundaries</h1>
+    <p>
+        Next, you will look at the integration boundaries of the peptide in the FOXN1-GST sample:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Arrange</b> <b>Graphs</b> and click <b>Tabbed</b>.</li>
+        <li>Click on the <b>FOXN1-GST</b> tab, or select the <b>FOXN1-GST</b> replicate in the dropdown list labeled
+            <b>Replicates</b> at the top of the <b>Targets</b> view.</li>
+        <li>Ensure that the IEAIPQIDK peptide is selected in the <b>Targets</b> view.</li>
+    </ul>
+    <p>
+        Now you should see the chromatograms of the IEAIPQIDK peptide in the FOXN1-GST sample.
+    </p>
+    <p>
+        By selecting either the light or heavy precursor in the <b>Targets</b> view you can review the integration boundaries for that
+        precursor.
+    </p>
+    <ul>
+        <li>Select the heavy precursor and zoom in on the peak using the scroll-wheel beneath the x-axis. </li>
+    </ul>
+    <p>
+        You should see something like the following:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        The integration boundaries look acceptable and changing them may simply add variance to the peak area calculations. However, you might feel the
+        peak could be better centered within the integration range. To make a change like this, do the following:
+    </p>
+    <ul>
+        <li>Click beneath the x-axis where you want the range to start and hold while dragging until the cursor is under where you want the range to
+            end. (e.g. 20.65 to 20.15)</li>
+    </ul>
+    <p>
+        Three new rows should appear in the <b>Audit Log</b> view, as shown below:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        Note that the new log entry describes a change related to an item in the <b>Targets</b> window, it uses a format similar to the one
+        seen previously when changing document settings. Generally, the audit log will refer to items in the <b>Targets</b> view by <b>Protein/Peptide List &gt; Peptide &gt; Transition group &gt; Transition</b>.
+    </p>
+    <p>
+        When someone else reads this audit log, this integration boundary change might seem arbitrary without any explanation. Or, months or years
+        later, you may have forgotten why you made this change. To document your reasoning do the following:
+    </p>
+    <ul>
+        <li>Click in the <b>Reason</b> cell next to the log message.</li>
+        <li>Enter a Reason such as “<i>Changed peak integration as instructed by the tutorial</i>” and press Enter. </li>
+    </ul>
+    <p>
+        The audit log should look like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        Note that the reason entered in the dark gray row is shown in all three new rows. This is the overall reason for the change. To give a
+        different reason for each row, you would need to use a report field called <b>Detailed Reason</b>. You will learn how to customize
+        the columns shown in the <b>Audit Log</b> view below.
+    </p>
+    <h1>Calibration Curve Review</h1>
+    <p>
+        Now view the calibration curve you have configured as follows:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Calibration Curve</b>.</li>
+    </ul>
+    <p>
+        The curve fits the first four points, but not as well for the points closer to zero. Use the scroll wheel to zoom in on the lower four points.
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        You can see that the last three points fall off the line, which indicates that they are below the limit of detection for this peptide. These
+        three and the fourth lowest concentration point may also be pulling the regression line away from the fourth highest concentration point at
+        2.5 fmol/ul. To create a better fit for the four highest concentration points, you can exclude the four lower points from the regression as
+        follows:
+    </p>
+    <ul>
+        <li>For each of the lowest four points, right-click on the point and click <b>Exclude Standard</b>.</li>
+    </ul>
+    <p>
+        If you zoom out on the other four points, you should see that the curve fits them better now, and the R-Squared value in the top left corner of
+        the graph should become 1.
+    </p>
+    <p>
+        Review the <b>Audit Log</b> grid and, you should see four new entries, one for each point you excluded from the calibration:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        You should again add a reason to explain why the replicates were excluded by doing the following:
+    </p>
+    <ul>
+        <li>Click on the top <b>Reason</b> cell and enter “<i>Excluded standard below LOD</i>” and press Enter.</li>
+        <li>Select all four <b>Reason</b> cells.</li>
+        <li>Right-click on the selection, and click <b>Fill Down</b>.</li>
+    </ul>
+    <h1>Customizing the Audit Log Display</h1>
+    <p>
+        You now have a growing audit log and it has become difficult to see all your changes at once. The <b>Audit Log</b> view is based on
+        the <b>Document Grid</b> and can, therefore, be customized just like the <b>Document Grid</b>:
+    </p>
+    <ul>
+        <li>In the top left corner of the <b>Audit Log</b>, click on the <b>Reports</b> menu.</li>
+    </ul>
+    <p>
+        There are three default reports you can choose from (<b>Undo Redo</b>, <b>Summary</b>, and <b>All Info</b>):
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click on the <b>Undo Redo</b> menu item.</li>
+        <li>Adjust the column widths so you can see their full contents.</li>
+    </ul>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        Now the <b>Audit Log</b> view only displays the <b>Undo Redo</b> messages and not the detail messages, presenting a concise
+        overview of what you changed in the document. Going from bottom to top, your changes can be summarized as follows:
+    </p>
+    <ul>
+        <li>You first configured the transition settings and peptide settings to include the desired transitions and modifications.</li>
+        <li>You inserted the peptide.</li>
+        <li>You imported the results.</li>
+        <li>You started configuring the calibration curve, by configuring quantification settings.</li>
+        <li>You pasted the standard and analyte concentration information into the document grid. </li>
+        <li>You adjusted one of the peak boundaries and provided a reason for it. </li>
+        <li>Finally, you excluded four standards from the calibration curve, again providing a reason.</li>
+    </ul>
+    <p>
+        Next, you will customize the <b>Audit Log</b> view manually to show other columns:
+    </p>
+    <ul>
+        <li>In the top left corner of the <b>Audit Log</b> view, click <b>Reports</b> and choose <b>Customize
+                Report</b>.</li>
+        <li>Check the <b>Skyline Version</b> and <b>User</b> columns in the left-hand list.</li>
+        <li>In the <b>Report Name</b> field, enter ‘Custom Columns’.</li>
+    </ul>
+    <p>
+        The filled-out form should look like the following:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The <b>Audit Log</b> should now look like the following, although you will have a different <b>User</b> name and you might
+        be using a different <b>Skyline Version</b>.
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <p>
+        Below is a list of all of the columns you can display and their meaning:
+    </p>
+    <ul>
+        <li><b>Time Stamp</b>: Time at which the change was made (adjusted to your local time).</li>
+        <li><b>Undo Redo Message</b>: The most specific single line message describing the entire document change. This message will also be
+            displayed in Skyline’s toolbar when clicking on the arrows next to the Undo-Redo arrows.</li>
+        <li><b>Summary Message</b>: Similar (and often the same) as the Undo Redo Message, but for certain messages shorter.</li>
+        <li><b>All Info Message(s)</b>: A list of messages that describe the document change in detail. </li>
+        <li><b>User</b>: Identity of the user who made the change as authenticated by the local operating system. </li>
+        <li><b>Reason</b>: The reason for the change, which can be set by editing the cell in the audit log grid after the change was made.
+            (Optional)</li>
+        <li><b>Detailed Reason</b>: A reason that can be set for each of the detailed “All Info messages”. (Optional)</li>
+        <li><b>Extra Info</b>: additional information, usually large amount of data pasted into the document. (Optional)</li>
+    </ul>
+    <h1>Panorama Upload</h1>
+    <p>
+        To proceed with the rest of the tutorial you need an account established on PanoramaWeb.org or another web server running Panorama.
+    </p>
+    <p>
+        Panorama is a web-based proteomics data sharing platform that supports uploading and viewing of Skyline files. To upload your Skyline document
+        into Panorama:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Upload to Panorama</b>.</li>
+    </ul>
+    <p>
+        If you have not used Panorama before the following message should appear:
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Continue</b> button.</li>
+    </ul>
+    <p>
+        The next form should ask you for the URL of the Panorama server you want to use and your credentials. 
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <ul>
+        <li>Enter the URL if you are using your own Panorama server, or leave it as PanoramaWeb.org.</li>
+        <li>In the <b>Email</b> and <b>Password</b> fields, enter your credentials.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        If the connection was successful, the next form should show you the Panorama server URL and the folders on the server available for upload.
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <ul>
+        <li>Click the <b>+</b> next to the URL to expand the list of folders you have access to if necessary.</li>
+        <li>Select the folder into which you want to upload the document.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Click the <b>Yes</b> button in the next form to open a web browser to uploaded document.</li>
+    </ul>
+    <p>
+        Skyline automatically creates a ZIP file containing all the files associated with your document and uploads it to the Panorama server. Click OK
+        when asked to open the document in Panorama. You might be asked to log in to Panorama in the browser first. Once you have signed in the page
+        should look like this:
+    </p>
+    <p>
+        <img src="s-panorama-zip-view.png" />
+    </p>
+    <table>
+        <tr>
+            <td>Detailed discussion of the Panorama functionality is beyond the scope of this tutorial. Please refer to <a
+                    href="https://panoramaweb.org/sharing_documents.url">https://panoramaweb.org/sharing_documents.url</a> for more details.</td>
+        </tr>
+    </table>
+    <p>
+        Note the <span class="blue">≡</span> symbol next to the number of document versions. This is a link that allows you to access the audit log
+        information for the document. If you upload a document without a valid audit log this symbol will not be shown.
+    </p>
+    <ul>
+        <li>Hover mouse cursor over the <span class="blue">≡</span> symbol to observe the explanatory tooltip.</li>
+        <li>Click the <span class="blue">≡</span> symbol.</li>
+    </ul>
+    <p>
+        Now you should see the following page:
+    </p>
+    <p>
+        <img src="s-panorama-audit-log.png" />
+    </p>
+    <p>
+    </p>
+    <p>
+        This is an audit log viewer very similar to the Audit Log grid in Skyline. For the sake of brevity, it shows Undo Redo messages only by
+        default, but full details are available through the grid button on the left. It is very similar to the Skyline <b>Reports</b> menu
+        and allows you to select, create, and customize grid views. By default, Panorama ships with the <b>default</b> view and
+        <b>AllMessagesView</b>, but you can also create your own.
+    </p>
+    <ul>
+        <li>Click on the <b>Grid View</b> button</li>
+        <li>Select <b>AllMessagesView</b> from the dropdown menu. </li>
+    </ul>
+    <p>
+        <img src="s-create-view.png" />
+    </p>
+    <p>
+        Now your page should look like this:
+    </p>
+    <p>
+        <img src="s-customized-view.png" />
+    </p>
+    <p>
+        All the messages and message types in the audit log are now displayed.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        This tutorial went through setting up an absolute quantification experiment to demonstrate how to use the Skyline audit log and how to upload
+        it to Panorama. The audit log keeps tracks of all changes you make to your document and is fully customizable. It is a powerful tool to
+        reproduce the state of a document from scratch and can be useful when working on the same document with collaborators or when requesting
+        troubleshooting help from the Skyline team.
+    </p>
+</body>
+
+</html>

@@ -62,8 +62,8 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                VALUES[0] = Resources.IonTypeExtension_LOCALIZED_VALUES_precursor;
-                VALUES[1] = Resources.IonTypeExtension_LOCALIZED_VALUES_custom;
+                VALUES[0] = ModelResources.IonTypeExtension_LOCALIZED_VALUES_precursor;
+                VALUES[1] = ModelResources.IonTypeExtension_LOCALIZED_VALUES_custom;
                 return VALUES;
             }
         }
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Model
             return chargePos;
         }
 
-        public static string StripChargeIndicators(string text, int min, int max)
+        public static string StripChargeIndicators(string text, int min, int max, bool knownProteomic = false)
         {
             if (!MayHaveChargeIndicator(text))
                 return text;
@@ -332,15 +332,21 @@ namespace pwiz.Skyline.Model
                 }
                 // Allow any run of charge indicators no matter how long, because users guess this might work
                 int chargePos = FindChargeSymbolRepeatStart(line, min, max);
+                var chargeSepLocal = GetChargeSeparator(CultureInfo.CurrentCulture);
                 if (chargePos == -1)
                 {
                     // Or any formal protonated charge state indicator
-                    chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.CurrentCulture);
+                    if (line.Contains(chargeSepLocal))
+                        chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.CurrentCulture);
                     // Or the US/Invariant formatted version
-                    if (chargePos == -1 && GetChargeSeparator(CultureInfo.CurrentCulture) != GetChargeSeparator(CultureInfo.InvariantCulture))
-                        chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.InvariantCulture);
+                    if (chargePos == -1)
+                    {
+                        var chargeSepInvariant = GetChargeSeparator(CultureInfo.InvariantCulture);
+                        if (!Equals(chargeSepLocal, chargeSepInvariant) && line.Contains(chargeSepInvariant))
+                            chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.InvariantCulture);
+                    }
                 }
-                if (chargePos == -1)
+                if (chargePos == -1 && !knownProteomic)
                 {
                     // Check for adduct description
                     Adduct adduct;
@@ -634,6 +640,8 @@ namespace pwiz.Skyline.Model
             return IsCustom(IonType, Group);
         }
 
+        public bool ParticipatesInScoring => !IsReporterIon(); // Don't include things like TMT in retention time calcs
+
         public bool IsNonPrecursorNonReporterCustomIon()
         {
             return !IsPrecursor() && IsNonReporterCustomIon();
@@ -642,6 +650,11 @@ namespace pwiz.Skyline.Model
         public bool IsNonReporterCustomIon()
         {
             return IsCustom() && !(CustomIon is SettingsCustomIon);
+        }
+
+        public bool IsReporterIon()
+        {
+            return IsCustom() && (CustomIon is SettingsCustomIon);
         }
 
         public char FragmentNTermAA
@@ -686,14 +699,14 @@ namespace pwiz.Skyline.Model
                     if (TransitionGroup.MIN_PRECURSOR_CHARGE > Charge || Charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                     {
                         throw new InvalidDataException(
-                            string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                            string.Format(ModelResources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
                             Charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));                    
                     }
                 }
                 else if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
+                        string.Format(ModelResources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
                                                                  Charge, MIN_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
                 }
             }
@@ -703,28 +716,28 @@ namespace pwiz.Skyline.Model
                 {
                     throw new InvalidDataException(
                         string.Format(
-                            Resources.Transition_Validate_A_transition_of_ion_type__0__can_t_have_a_custom_ion, IonType));
+                            ModelResources.Transition_Validate_A_transition_of_ion_type__0__can_t_have_a_custom_ion, IonType));
                 }    
             }
             else if (IsCustom())
             {
                     throw new InvalidDataException(
                         string.Format(
-                           Resources.Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_, IonType));
+                           ModelResources.Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_, IonType));
             }
             else
             {
                 if (Ordinal < 1)
-                    throw new InvalidDataException(string.Format(Resources.Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__, Ordinal));
+                    throw new InvalidDataException(string.Format(ModelResources.Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__, Ordinal));
                 if (IsPrecursor())
                 {
                     if (Ordinal != Group.Peptide.Length)
-                        throw new InvalidDataException(string.Format(Resources.Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide));
+                        throw new InvalidDataException(string.Format(ModelResources.Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide));
                 }
                 else if (Ordinal > Group.Peptide.Length - 1)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__,
+                        string.Format(ModelResources.Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__,
                             Ordinal, Group.Peptide.Length - 1, Group.Peptide.Target));
                 }
 
@@ -736,7 +749,7 @@ namespace pwiz.Skyline.Model
                         !MPROPHET_REVERSED_MASS_SHIFTS.Contains(i => i == DecoyMassShift.Value))
                     {
                         throw new InvalidDataException(
-                            string.Format(Resources.Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__,
+                            string.Format(ModelResources.Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__,
                                 DecoyMassShift, MIN_PRODUCT_DECOY_MASS_SHIFT, MAX_PRODUCT_DECOY_MASS_SHIFT));
                     }
                 }
@@ -850,7 +863,7 @@ namespace pwiz.Skyline.Model
         {
             if (IsPrecursor())
             {
-                return Resources.Transition_ToString_precursor + GetChargeIndicator(Adduct) +
+                return ModelResources.Transition_ToString_precursor + GetChargeIndicator(Adduct) +
                        GetMassIndexText(MassIndex);
             }
 

@@ -106,6 +106,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
@@ -114,6 +117,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -128,6 +132,8 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -136,18 +142,42 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Executables\AssortResources\CsProjFile.cs">
+      <Link>CsProjFile.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceAssorter.cs">
+      <Link>ResourceAssorter.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceFile.cs">
+      <Link>ResourceFile.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceIdentifiers.cs">
+      <Link>ResourceIdentifiers.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceReference.cs">
+      <Link>ResourceReference.cs</Link>
+    </Compile>
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
+    <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
+    <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
+    <Compile Include="CalibrationCurveOptionsTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
+    <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
+    <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="LocalizedHtmlTutorialsTest.cs" />
+    <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
+    <Compile Include="MassListIonsTest.cs" />
+    <Compile Include="MatchExpressionTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
@@ -254,6 +284,7 @@
     <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
+    <Compile Include="SrmSettingsNewTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
@@ -274,6 +305,10 @@
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
       <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>

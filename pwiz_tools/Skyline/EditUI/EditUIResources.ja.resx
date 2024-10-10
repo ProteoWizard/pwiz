@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Imported_Files" xml:space="preserve">
+    <value>インポートされたファイルの比較中</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Models" xml:space="preserve">
+    <value>モデルの比較中</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_" xml:space="preserve">
+    <value>ドキュメントには分析に対する適格な黒的グラフがありません。 有効なクロマトグラムはデコイまたはiRT標準であってはいけません。</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_" xml:space="preserve">
+    <value>モデルピーク境界の比較エラー：{0}</value>
+  </data>
+  <data name="AlignItem_ToString_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
+    <value>保持時間カルキュレータ....</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
+    <value>保持時間カルキュレータ（{0}）</value>
+  </data>
+  <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
+    <value>共有ペプチド</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>すべてのペプチドを確認できる最小のタンパク質グループを検索する(&amp;M)</value>
+  </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_" xml:space="preserve">
+    <value>インポート済みのFASTAファイルを用いて一致が見つかりませんでした。</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
+    <value>タンパク質グループあたりのペプチド最小数(&amp;N)：</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
+    <value>既存のタンパク質の関連付けは破棄されます。</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
+    <value>ドキュメント内のペプチドすべてを関連するタンパク質かタンパク質グループに編成します。</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
+    <value>サブセットタンパク質グループを削除(&amp;R)</value>
+  </data>
+  <data name="AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_" xml:space="preserve">
+    <value>バックグラウンドプロテオームを用いて一致が見つかりませんでした。</value>
+  </data>
+  <data name="ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes" xml:space="preserve">
+    <value>分</value>
+  </data>
+  <data name="ChromChartPropertyDlg_cbRelative_CheckedChanged_widths" xml:space="preserve">
+    <value>幅</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Label__Model_or_File_" xml:space="preserve">
+    <value>モデルまたはファイル(&amp;M)：</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons" xml:space="preserve">
+    <value>ピーク境界比較を編集</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_" xml:space="preserve">
+    <value>観測されたFPR：</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
+    <value>Q値のカットオフ：</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_" xml:space="preserve">
+    <value>荷電状態が{1}であるペプチド{0}が見つかりません</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
+    <value>ピークグループの割合</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks" xml:space="preserve">
+    <value>修正ピークを合計</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
+    <value>q-Qプロットを確認するために比較用のモデル/ファイルを追加</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
+    <value>ROCプロットを確認するために比較用のモデル/ファイルを追加します。</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_an_analysis_of_runs" xml:space="preserve">
+    <value>実行の分析を確認するために比較用のモデル/ファイルを追加します。</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Expected_False_Positive_Rate" xml:space="preserve">
+    <value>期待された偽陽性率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate" xml:space="preserve">
+    <value>観測された偽陽性率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Replicate_Name" xml:space="preserve">
+    <value>繰り返し測定名</value>
+  </data>
+  <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
+    <value>{0}の更新</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
+    <value>{0}観測された偽陽性率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
+    <value>{0}有意水準</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Equality" xml:space="preserve">
+    <value>等式</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Q_Q_Comparison" xml:space="preserve">
+    <value>Q-Q比較</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__" xml:space="preserve">
+    <value>繰り返し測定の比較（観測されたFPR &lt; {0}）</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__" xml:space="preserve">
+    <value>繰り返し測定の比較（Q値 &lt; {0}）</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_ROC_Plot_Comparison" xml:space="preserve">
+    <value>ROCプロット比較</value>
+  </data>
+  <data name="CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard" xml:space="preserve">
+    <value>メタファイルイメージがクリップボードにコピーされました</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled" xml:space="preserve">
+    <value>タイル</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_dataGridViewLinkedPeptides_CellToolTipTextNeeded_Edit_Modifications" xml:space="preserve">
+    <value>修飾を編集</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Both_ends_of_this_crosslink_cannot_be_the_same_" xml:space="preserve">
+    <value>このクロスリンクの両端を同じにすることはできません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_Invalid_crosslinker" xml:space="preserve">
+    <value>無効なクロスリンカー</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_The_crosslinker___0___cannot_attach_to_this_amino_acid_position_" xml:space="preserve">
+    <value>クロスリンカー「{0}」はこのアミノ酸位置に結合できません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_cannot_be_blank_" xml:space="preserve">
+    <value>このアミノ酸の位置はブランクにできません。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_amino_acid_position_in_this_peptide_is_already_being_used_by_another_crosslink_" xml:space="preserve">
+    <value>このペプチドでは、このアミノ酸位置はすでに他のクロスリンクが使用しています。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_is_not_a_valid_amino_acid_position_in_this_peptide_" xml:space="preserve">
+    <value>このペプチドではこのアミノ酸位置は無効です。</value>
+  </data>
+  <data name="EditLinkedPeptidesDlg_MakeCrosslink_This_peptide_is_not_valid_" xml:space="preserve">
+    <value>このペプチドは無効です。</value>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard" xml:space="preserve">
+    <value>破棄</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks" xml:space="preserve">
+    <value>クロスリンクの編集</value>
+    <comment>This should match one of the options presented in EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks</comment>
+  </data>
+  <data name="EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks" xml:space="preserve">
+    <value>このアミノ酸のクロスリンクを削除すると、クロスリンクされているペプチドの結合がなくなります。今すぐクロスリンクを編集しますか、それとも結合しなくなったペプチドを破棄しますか？</value>
+  </data>
+  <data name="EditPepModsDlg_GetIsotopeLabelText_Isotope__0__" xml:space="preserve">
+    <value>同位体{0}：</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__" xml:space="preserve">
+    <value>{0}へのクロスリンク：{1} [{2}]</value>
+    <comment>{0} is a peptide sequence, {1} is an amino acid letter and {2} is a number
+Example: Crosslink to PEPTIDE: T [4]</comment>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Invalid_crosslink___0_" xml:space="preserve">
+    <value>無効なクロスリンク：{0}</value>
+  </data>
+  <data name="EditPepModsDlg_GetTooltip_Looplink___0____1__" xml:space="preserve">
+    <value>ループリンク：{0} [{1}]</value>
+    <comment>{0} is a single amino acid letter and {1} is a number
+Example: Looplink: T [4]
+</comment>
+  </data>
+  <data name="EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__" xml:space="preserve">
+    <value>クロスリンクされているペプチドの1つ以上がこのペプチドに結合しなくなりました。</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>ケース{0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
+  </data>
+  <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
+    <value>&lt;&lt; 詳細を隠す(&amp;V)</value>
+  </data>
+  <data name="FindNodeDlg_AdvancedVisible_Show_Advanced" xml:space="preserve">
+    <value>詳細を表示(&amp;V)&gt;&gt;</value>
+  </data>
+  <data name="GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_" xml:space="preserve">
+    <value>ペプチド{0}の数は、デコイ{1}のペプチドプリカーサーモデルの数より少なくなければなりません。でなければ、「{2}」のデコイ生成法を使用してください。</value>
+  </data>
+  <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns" xml:space="preserve">
+    <value>{0}行目では、行に2列以上あります</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time" xml:space="preserve">
+    <value>取得時間</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Document" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Position" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
+    <value>「{0}」はアミノ酸に対応する大文字ではありません。</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_An_unexpected_error_occurred__" xml:space="preserve">
+    <value>予期しないエラーが発生しました： </value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_There_is_no_name_for_this_protein" xml:space="preserve">
+    <value>このタンパク質には名前がありません</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_This_must_start_with____" xml:space="preserve">
+    <value>これは「&gt;」から始まる必要があります</value>
+  </data>
+  <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
+    <value>このタンパク質にはシークエンスがありません</value>
+  </data>
+  <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
+    <value>FASTAファイル</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_This_peptide_sequence_was_not_found_in_the_protein_sequence" xml:space="preserve">
+    <value>このペプチドシークエンスがタンパク質シークエンスで見つかりませんでした</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
+    <value>ペプチド修飾を解釈できません</value>
+  </data>
+  <data name="PasteDlg_AddPeptides_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>以下の修飾にUnimod定義を使用しますか？</value>
+  </data>
+  <data name="PasteDlg_AddProteins_Invalid_protein_sequence__0__" xml:space="preserve">
+    <value>無効なタンパク質シークエンス：{0}</value>
+  </data>
+  <data name="PasteDlg_AddProteins_Missing_protein_sequence" xml:space="preserve">
+    <value>欠損しているタンパク質シークエンス</value>
+  </data>
+  <data name="PasteDlg_AddProteins_This_protein_was_not_found_in_the_background_proteome_database" xml:space="preserve">
+    <value>このタンパク質がバックグラウンドプロテオームデータベースで見つかりませんでした。</value>
+  </data>
+  <data name="PasteDlg_Description_Insert" xml:space="preserve">
+    <value>挿入</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_FASTA" xml:space="preserve">
+    <value>FASTAを挿入</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_peptide_list" xml:space="preserve">
+    <value>ペプチドリストを挿入</value>
+  </data>
+  <data name="PasteDlg_Description_Insert_protein_list" xml:space="preserve">
+    <value>タンパク質リストを挿入</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
+    <value>ペプチドシークエンスは空にできません。</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline" xml:space="preserve">
+    <value>このクロスリンクされたペプチドの構造は、Skylineではサポートされていません</value>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters" xml:space="preserve">
+    <value>このペプチドシークエンスには無効な文字が含まれています。</value>
+  </data>
+  <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
+    <value>比較用モデルを選択しなければなりません。</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications" xml:space="preserve">
+    <value>同位体修飾の置換</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications" xml:space="preserve">
+    <value>同位体修飾を置換しています</value>
+  </data>
+  <data name="PermuteIsotopeModificationsDlg_OkDialog_Updating_settings" xml:space="preserve">
+    <value>設定を更新しています</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Add_label_type" xml:space="preserve">
+    <value>標識タイプを追加(&amp;B)：</value>
+  </data>
+  <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
+    <value>選択した同位体標識タイプのプリカーサーがない場合、追加されます</value>
+  </data>
+  <data name="RefineDlg_MSLevel_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="RefineDlg_MSLevel_2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio" xml:space="preserve">
+    <value>{0}は最小ピーク検出率未満である必要があります。</value>
+  </data>
+  <data name="RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type" xml:space="preserve">
+    <value>ラベルタイプ「{0}」を追加できません。このタイプの修飾はありません。</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_best" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_" xml:space="preserve">
+    <value>ピークを再積分するには、モデルをトレーニングし、選択する必要があります。</value>
+  </data>
+  <data name="RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File" xml:space="preserve">
+    <value>FASTAファイルを追加</value>
+  </data>
+  <data name="RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available" xml:space="preserve">
+    <value>使用可能なタンパク質メタデータがありません</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
+    <value>ファイル{0}の読み取りに失敗しました。{1}</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_" xml:space="preserve">
+    <value>現在のドキュメントとFASTAファイル{0}の間に、一致するタンパク質シークエンスがありません</value>
+  </data>
+  <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
+    <value>テンプレートファイルが有効ではありません。</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_" xml:space="preserve">
+    <value>この操作により、現在のフィルタ設定に一致するペプチドのない{0}個のタンパク質が破棄されました。</value>
+  </data>
+  <data name="SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>保持時間予測に合わせるには、まずペプチド設定/予測で保持時間予測を設定する必要があります。</value>
+  </data>
+  <data name="UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_" xml:space="preserve">
+    <value>行をグリッドに追加しています。</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__" xml:space="preserve">
+    <value>バックグラウンドプロテオーム{0}のクエリ実行に失敗しました。</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences" xml:space="preserve">
+    <value>一致するペプチドシークエンスを持つタンパク質の検索中</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database" xml:space="preserve">
+    <value>バックグラウンドプロテオームデータベースのクエリ中</value>
+  </data>
+  <data name="UniquePeptidesDlg_OkDialog_Exclude_peptides" xml:space="preserve">
+    <value>ペプチドを排除</value>
+  </data>
+  <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
+    <value>これらのタンパク質に含まれるもの：</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>すべてのペプチドを説明する最小の遺伝子グループを検索する(&amp;M)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
+    <value>遺伝子あたりの最小ペプチド数(&amp;N)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
+    <value>サブセットの遺伝子を削除(&amp;R)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

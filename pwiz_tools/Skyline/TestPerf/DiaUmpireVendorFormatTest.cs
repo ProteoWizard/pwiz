@@ -25,6 +25,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -148,7 +149,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             string[] searchFiles = DiaFiles.Select(p => GetVendorFileTestPath(p)).ToArray();
             foreach (var searchFile in searchFiles)
@@ -169,13 +170,11 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.CIRT_SHORT;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
                 importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -190,7 +189,7 @@ namespace TestPerf
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
             RunDlg<EditStaticModDlg>(editStructModListUI.AddItem, editModDlg =>
             {
-                editModDlg.SetModification(OXIDATION_M, true); // Not L10N
+                editModDlg.SetModification(OXIDATION_M); // Not L10N
                 editModDlg.OkDialog();
             });
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
@@ -294,7 +293,9 @@ namespace TestPerf
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
             });
 
             RunUI(() =>

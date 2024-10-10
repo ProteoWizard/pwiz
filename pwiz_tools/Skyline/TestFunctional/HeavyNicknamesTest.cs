@@ -66,11 +66,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, peptideDocNode.TransitionGroupCount);
             Assert.AreEqual(1167.5152, peptideDocNode.TransitionGroups.First().PrecursorMz, .001);
             Assert.AreEqual(1232.5547, peptideDocNode.TransitionGroups.Last().PrecursorMz, .001);
+            WaitForDocumentLoaded();
+            var docCurrent = SkylineWindow.Document;
 
             // Insert a molecule group with one molecule in it.
-            RunUI(()=>SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+
             const string moleculeGroupName = "MyMoleculeGroup";
-            var docCurrent = SkylineWindow.Document;
 
             var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             
@@ -89,7 +91,8 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(colDlg, colDlg.OkDialog);
-            DismissAutoManageDialog(docCurrent); // If we're asked about automanage, decline it
+            DismissAutoManageDialog(); // When asked about automanage, decline it
+            WaitForDocumentChange(docCurrent);
 
             PeptideGroupDocNode myMoleculeGroup = null;
             WaitForConditionUI(() =>
@@ -134,12 +137,17 @@ namespace pwiz.SkylineTestFunctional
                 dlg.FormulaBox.Formula = "T10C10[M+H]";
                 dlg.OkDialog();
             });
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.MoleculeCount == 6);
+            var doc = SkylineWindow.Document;
+            AssertEx.IsDocumentState(doc, null, 2, 6, 7 , 5);
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 transitionSettingsUI.Peaks = 2;
                 transitionSettingsUI.OkDialog();
             });
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 2, 6, 7, 17);
 
             // Verify that the molecules with H' and D have the same precursor masses
             var hPrime = SkylineWindow.Document.Molecules.FirstOrDefault(mol =>

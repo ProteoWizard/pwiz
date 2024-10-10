@@ -30,6 +30,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -44,7 +45,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_MSP
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.NistLibrary_SpecFilter_NIST_Spectral_Library, EXT); }            
+            get { return TextUtil.FileDialogFilterAll(LibResources.NistLibrary_SpecFilter_NIST_Spectral_Library, EXT); }            
         }
 
         public NistLibSpec(string name, string path)
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.NistLibrary_SpecFilter_NIST_Spectral_Library;
+            return LibResources.NistLibrary_SpecFilter_NIST_Spectral_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class NistLibSpecBase : LibrarySpec
     {
         public static readonly PeptideRankId PEP_RANK_TFRATIO =
-            new PeptideRankId(@"TFRatio", () => Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio);
+            new PeptideRankId(@"TFRatio", () => LibResources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio);
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
 
@@ -320,7 +321,7 @@ namespace pwiz.Skyline.Model.Lib
         public override LibraryFiles LibraryFiles
         {
             // NIST libraries don't have source file information
-            get { return new LibraryFiles(); }
+            get { return LibraryFiles.EMPTY; }
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
@@ -381,7 +382,8 @@ namespace pwiz.Skyline.Model.Lib
         public const double DUMMY_GC_ESI_MASS = 1000; // Some GC libraries only offer fragment info (as there's no intact mass to measure after 100% fragmentation) so use a dummy mass
 
         // Version 6 adds peak annotations
-        private const int FORMAT_VERSION_CACHE = 6; 
+        // Version 7 adds ion mobility
+        private const int FORMAT_VERSION_CACHE = 7; 
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
@@ -630,7 +632,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Not sure the cause, but found a case where LibraryPath was CachePath (.splc)
                 if (Equals(FilePath, CachePath))
-                    loader.UpdateProgress(status.ChangeErrorException(new IOException(string.Format(Resources.NistLibraryBase_Load_The_file___0___is_not_a_valid_library_, FilePath))));
+                    loader.UpdateProgress(status.ChangeErrorException(new IOException(string.Format(LibResources.NistLibraryBase_Load_The_file___0___is_not_a_valid_library_, FilePath))));
                 else
                 {
                     // Reset readStream so we don't read corrupt file.
@@ -653,7 +655,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
 
-                    status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
+                    status = status.ChangeMessage(string.Format(LibResources.NistLibraryBase_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
 
                     loader.UpdateProgress(status);
@@ -665,7 +667,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
 
                 var valueCache = new ValueCache();
-                status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Loading__0__library, Path.GetFileName(FilePath)));
+                status = status.ChangeMessage(string.Format(LibResources.NistLibraryBase_Load_Loading__0__library, Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
                 // Use a buffered stream for initial read
@@ -707,7 +709,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Read spectrum header
                     int charge = ReadSize(stream);
                     if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                        throw new InvalidDataException(Resources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
+                        throw new InvalidDataException(LibResources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
 
                     float tfRatio = PrimitiveArrays.ReadOneValue<float>(stream);
                     bool hasRt = PrimitiveArrays.ReadOneValue<bool>(stream);
@@ -721,8 +723,9 @@ namespace pwiz.Skyline.Model.Lib
                     int annotationsSize = ReadSize(stream);
                     long location = PrimitiveArrays.ReadOneValue<long>(stream);
                     LibKey key = LibKey.Read(valueCache, stream);
+                    IonMobilityAndCCS ionMobility = IonMobilityAndCCS.Read(stream);
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, rt, irt, totalIntensity,
-                                                              (ushort)copies, (ushort)numPeaks, compressedSize, annotationsSize, location);
+                        (ushort)copies, (ushort)numPeaks, compressedSize, annotationsSize, location, ionMobility);
                 }
                 // Checksum = checksum.ChecksumValue;
                 SetLibraryEntries(libraryEntries);
@@ -750,7 +753,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!cached)
                 {
-                    x = new Exception(string.Format(Resources.NistLibraryBase_Load_Failed_loading_library__0__, FilePath), x);
+                    x = new Exception(string.Format(LibResources.NistLibraryBase_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
@@ -800,11 +803,13 @@ namespace pwiz.Skyline.Model.Lib
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_IONMODE = new Regex(@" ^ IonMode:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
-        private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
-        private const string MZVAULT_NEGATIVE_SCAN_INIDCATOR = @"Negative scan";
+        private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
+        private const string MZVAULT_NEGATIVE_SCAN_INDICATOR = @"Negative scan";
         private const string MZVAULT_FORMULA_UNKNOWN = @"unknown";
+        // Ion Mobility
+        private static readonly Regex REGEX_CCS = new Regex(@"^CCS(?:_Sqa)?:\s*(.*)", NOCASE); // Accept CCS or CCS_SqA
 
         // ReSharper restore LocalizableElement
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out string warning)
@@ -874,6 +879,7 @@ namespace pwiz.Skyline.Model.Lib
                     double? precursorMz = null;
                     double? molWeight = null;
                     bool? isPositive = null;
+                    IonMobilityAndCCS ionMobility = IonMobilityAndCCS.EMPTY;
 
                     // Process until the start of the peaks
                     while ((line = reader.ReadLine()) != null)
@@ -920,8 +926,13 @@ namespace pwiz.Skyline.Model.Lib
                             continue;  // Line is fully consumed
                         }
 
+                        if (ParseIonMobility(line, lineCount, ref ionMobility))
+                        {
+                            continue;  // Line is fully consumed
+                        }
+
                         if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase))
-                            ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
+                            ThrowIOException(lineCount, LibResources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
                         else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase))
                             break; // Start of next section - no peaks declared for this one, apparently, but not necessarily an error
 
@@ -993,7 +1004,7 @@ namespace pwiz.Skyline.Model.Lib
                         continue; // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. CONSIDER(bspratt): throw an error? Historical behavior is to be silent.
 
                     if (numPeaksDeclared == 0)
-                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
+                        ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
 
                     double totalIntensity = 0;
                     var annotations = isPeptide ? null : new List<List<SpectrumPeakAnnotation>>(); // List of lists, as each peak may have multiple annotations
@@ -1005,7 +1016,7 @@ namespace pwiz.Skyline.Model.Lib
                         var linePeaks = reader.ReadLine();
                         if (linePeaks == null)
                         {
-                            ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__, sequence));
+                            ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__, sequence));
                             break;  // ReSharper
                         }
                         lineCount++;
@@ -1110,7 +1121,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     if (numNonZeroPeaks > ushort.MaxValue)
-                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
+                        ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
 
                     if (numNonZeroPeaks < numPeaksDeclared)
                     {
@@ -1142,7 +1153,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
                         info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
-                            (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location);
+                            (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location, ionMobility);
                         if (!isPeptide)
                         {
                             // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
@@ -1156,7 +1167,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         // If the key is invalid, build a representation of the key that can be used to note failures
                         var key = new LibKey(sequence ?? @"???", 0);
-                        info = new NistSpectrumInfo(key, 0, null, null, 0, 0, 0, 0, 0, location);
+                        info = new NistSpectrumInfo(key, 0, null, null, 0, 0, 0, 0, 0, location, null);
                     }
                     libraryEntries.Add(info);
                 }
@@ -1193,6 +1204,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(info.AnnotationsSize), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(info.Location), 0, sizeof(long));
                     info.Key.Write(outStream);
+                    info.IonMobility.Write(outStream);
                 }
 
                 outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
@@ -1215,8 +1227,8 @@ namespace pwiz.Skyline.Model.Lib
             if (ambiguousKeys.Any() && ambiguousKeys.All(k => k.IsSmallMoleculeKey))
             {
                 var pairType = ambiguousKeys.Any(k => k.IsSmallMoleculeKey)
-                    ? Resources.NistLibraryBase_CreateCache_molecule_adduct
-                    : Resources.NistLibraryBase_CreateCache_peptide_charge;
+                    ? LibResources.NistLibraryBase_CreateCache_molecule_adduct
+                    : LibResources.NistLibraryBase_CreateCache_peptide_charge;
                 warning = string.Format(Resources.NistLibraryBase_CreateCache_,
                     pairType, TextUtil.LineSeparate(ambiguousKeys.Select(k => k.ToString())));
             }
@@ -1269,12 +1281,12 @@ namespace pwiz.Skyline.Model.Lib
         private static bool ParseMzVaultPolarity(string line, ref bool? isPositive, ref double mzMatchTolerance)
         {
             var isMzVault = false;
-            if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
+            if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INDICATOR))
             {
                 isPositive = true;
                 isMzVault = true;
             }
-            else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
+            else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INDICATOR))
             {
                 isPositive = false;
                 isMzVault = true;
@@ -1287,6 +1299,27 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return isMzVault; // Line was consumed
+        }
+
+        private bool ParseIonMobility(string line, long lineCount, ref IonMobilityAndCCS im)
+        {
+            if (!im.HasCollisionalCrossSection)
+            {
+                var match = REGEX_CCS.Match(line);
+                if (match.Success)
+                {
+                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var ccs))
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__,
+                                line));
+                    }
+                    im = im.ChangeCollisionalCrossSection(ccs);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1445,7 +1478,7 @@ namespace pwiz.Skyline.Model.Lib
                     catch
                     {
                         ThrowIOException(lineCount,
-                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
                                 line));
                     }
 
@@ -1461,7 +1494,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
                     {
                         ThrowIOException(lineCount,
-                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
                                 line));
                     }
                     molWeight = mw;
@@ -1474,9 +1507,9 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_IONMODE.Match(line);
                 if (match.Success)
                 {
-                    if (string.Equals(@"positive", match.Groups[1].Value))
+                    if (string.Equals(@"positive", match.Groups[1].Value, StringComparison.InvariantCultureIgnoreCase))
                         isPositive = true;
-                    else if (string.Equals(@"negative", match.Groups[1].Value))
+                    else if (string.Equals(@"negative", match.Groups[1].Value, StringComparison.InvariantCultureIgnoreCase))
                         isPositive = false;
                     return true;  // Line is fully consumed
                 }
@@ -1541,7 +1574,7 @@ namespace pwiz.Skyline.Model.Lib
         private void ThrowIoExceptionInvalidPeakFormat(long lineCount, int i, string sequence)
         {
             ThrowIOException(lineCount,
-                string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                string.Format(LibResources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
         }
 
         private static void ParseFragmentAnnotation(int iTab2, List<List<SpectrumPeakAnnotation>> annotations, int i, string line, Adduct adduct, int charge,
@@ -1595,7 +1628,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private void ThrowIOException(long lineNum, string message)
         {
-            throw new IOException(string.Format(Resources.NistLibraryBase_ThrowIOException__0__line__1__2__, FilePath,
+            throw new IOException(string.Format(LibResources.NistLibraryBase_ThrowIOException__0__line__1__2__, FilePath,
                                                 lineNum, message));
         }
 
@@ -1687,9 +1720,9 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Single read to get all the peaks
                     if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
-                        throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                        throw new IOException(LibResources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                     if (annotationsBytes != null && fs.Read(annotationsBytes, 0, info.AnnotationsSize) < info.AnnotationsSize)
-                        throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                        throw new IOException(LibResources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 catch (Exception)
                 {
@@ -1717,7 +1750,7 @@ namespace pwiz.Skyline.Model.Lib
                 var annotations = SpectrumPeakAnnotation.FromCacheFormat(Encoding.UTF8.GetString(annotationsBytes));
                 if (annotations.Count != info.NumPeaks)
                 {
-                    throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                    throw new IOException(LibResources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 for (int i = 0; i < info.NumPeaks; i++)
                 {
@@ -1736,7 +1769,8 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new SpectrumInfoLibrary(this, labelType, i)
                 {
                     SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]),
-                    RetentionTime = _libraryEntries[i].RT
+                    RetentionTime = _libraryEntries[i].RT,
+                    IonMobilityInfo = _libraryEntries[i].IonMobility,
                 };
             }
         }
@@ -1787,6 +1821,91 @@ namespace pwiz.Skyline.Model.Lib
             
             retentionTimes = new LibraryRetentionTimes(null, dictionary);
             return dictionary.Any();
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
+        {
+            int i = FindEntry(key);
+            if (i != -1 && !IonMobilityAndCCS.IsNullOrEmpty(_libraryEntries[i].IonMobility))
+            {
+                ionMobilities = new[]{ _libraryEntries[i].IonMobility};
+                return true;
+            }
+
+            return base.TryGetIonMobilityInfos(key, filePath, out ionMobilities);
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ILookup<LibKey, IonMobilityAndCCS> ionMobilitiesLookup;
+            if (targetIons != null)
+            {
+                if (!targetIons.Any())
+                {
+                    ionMobilities = null;
+                    return true; // return value false means "that's not a proper file index"'
+                }
+
+                ionMobilitiesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
+                    entry => entry.Key,
+                    entry => entry.IonMobility);
+            }
+            else
+            {
+                ionMobilitiesLookup = _libraryEntries.ToLookup(
+                    entry => entry.Key,
+                    entry => entry.IonMobility);
+            }
+            var ionMobilitiesDict = ionMobilitiesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
+                grouping => grouping.Key,
+                grouping =>
+                {
+                    var array = grouping.Distinct().ToArray();
+                    Array.Sort(array);
+                    return array;
+                });
+            var nonEmptyIonMobilitiesDict = ionMobilitiesDict
+                .Where(kvp => kvp.Value.Length > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            ionMobilities = nonEmptyIonMobilitiesDict.Any() ? new LibraryIonMobilityInfo(filePath?.GetFilePath(), false, nonEmptyIonMobilitiesDict) : null;
+            return true;  // return value false means "that's not a proper file index"'
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            if (targetIons != null && targetIons.Length > 0)
+            {
+                var ionMobilitiesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
+                foreach (var target in targetIons)
+                {
+                    foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
+                    {
+                        var matchedTarget = matchedItem.Key;
+                        var match = matchedItem.IonMobility;
+                        if (IonMobilityAndCCS.IsNullOrEmpty(match))
+                            continue;
+                        if (ionMobilitiesDict.TryGetValue(matchedTarget, out var mobilities))
+                        {
+                            var newMobilities = mobilities.Append(match).ToArray();
+                            Array.Sort(newMobilities);
+                            ionMobilitiesDict[matchedTarget] = newMobilities;
+                        }
+                        else
+                        {
+                            ionMobilitiesDict[matchedTarget] = new[]{match};
+                        }
+                    }
+                }
+                if (!ionMobilitiesDict.Values.Any(v => v.Any()))
+                {
+                    ionMobilities = null;
+                    return false;
+                }
+                ionMobilities = new LibraryIonMobilityInfo(FilePath, false, ionMobilitiesDict);
+                return true;
+            }
+
+            return base.TryGetIonMobilityInfos(targetIons, out ionMobilities);
         }
 
         #region Implementation of IXmlSerializable
@@ -1870,9 +1989,10 @@ namespace pwiz.Skyline.Model.Lib
         private readonly int _compressedSize;
         private readonly int _annotationsSize;
         private readonly long _location;
+        private readonly IonMobilityAndCCS _ionMobility;
 
         public NistSpectrumInfo(LibKey key, float tfRatio, double? rt, double? irt, float totalIntensity,
-            ushort copies, ushort numPeaks, int compressedSize, int annotationsSize, long location)
+            ushort copies, ushort numPeaks, int compressedSize, int annotationsSize, long location, IonMobilityAndCCS ionMobility)
         {
             _key = key;
             _totalIntensity = totalIntensity;
@@ -1884,6 +2004,7 @@ namespace pwiz.Skyline.Model.Lib
             _compressedSize = compressedSize;
             _annotationsSize = annotationsSize;
             _location = location;
+            _ionMobility = ionMobility ?? IonMobilityAndCCS.EMPTY;
         }
 
         public LibKey Key { get { return _key; } }
@@ -1898,5 +2019,6 @@ namespace pwiz.Skyline.Model.Lib
         public int CompressedSize { get { return _compressedSize; } }
         public int AnnotationsSize { get { return _annotationsSize; } }
         public long Location { get { return _location; } }
+        public IonMobilityAndCCS IonMobility { get { return _ionMobility; } }
     }
 }

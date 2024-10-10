@@ -154,7 +154,7 @@ namespace pwiz.SkylineTest
                     {
                         var newFormula = ParsedMolecule.Create(massCalc.GetModFormula(original.AAs[0], original));
                         Assert.AreEqual(0.0, newFormula.MonoMassOffset); // Should be no unexplained mass.
-                        modToMatch = modToMatch.ChangeFormula(newFormula).ChangeLabelAtoms(LabelAtoms.None);
+                        modToMatch = modToMatch.ChangeFormula(newFormula);
                     }
 
                     count = CountEquivalent(unimodArray, modToMatch, compareDict, i);
@@ -246,26 +246,23 @@ namespace pwiz.SkylineTest
             int totalCount = 0;
             for (int i = 0; i < dict.Length; i++)
             {
-                int count = 0;
                 StaticMod mod = dict[i].Value;
 
                 if (index != -1 && index == i)
-                    Assert.IsTrue(mod.Equivalent(modToMatch));
+                {
+                    if (!mod.Equivalent(modToMatch))
+                        Assert.IsTrue(mod.Equivalent(modToMatch));
+                }
 
                 if (mod.Equivalent(modToMatch))
-                    count++;
-                if (!equivMods.ContainsKey(mod.Name))
-                    equivMods.Add(mod.Name, count);
-                else
                 {
-                    equivMods[mod.Name] += count;
+                    equivMods.TryGetValue(mod.Name, out int count);
+                    count++;
+                    equivMods[mod.Name] = count;
+                    totalCount++;
                 }
-                totalCount += count;
             }
-
             return totalCount;
         }
-
-       
     }
 }

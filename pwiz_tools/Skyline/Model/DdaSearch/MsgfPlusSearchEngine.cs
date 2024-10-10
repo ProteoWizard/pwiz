@@ -33,6 +33,8 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.BiblioSpec;
+using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -124,6 +126,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
         private StringBuilder modsText;
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
@@ -131,7 +134,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
         public override string[] Ms2Analyzers => INSTRUMENT_TYPES;
         public override string EngineName => @"MS-GF+";
+        public override string CutoffScoreName => _cutoffScoreName;
+        public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
+        public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
         public override Bitmap SearchEngineLogo => null;
+        public override string SearchEngineBlurb => string.Empty;
         public override event NotificationEventHandler SearchProgressChanged;
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
@@ -169,7 +176,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
                 catch (Exception ex)
                 {
-                    _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
+                    _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
                     _success = false;
                 }
                 finally
@@ -309,7 +316,13 @@ namespace pwiz.Skyline.Model.DdaSearch
             precursorMzTolerance = mzTolerance;
         }
 
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Do nothing. MSGF+ does not run percolator or take a cutoff value
+        }
+
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".mgf", @".ms2" };
+
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
             requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;

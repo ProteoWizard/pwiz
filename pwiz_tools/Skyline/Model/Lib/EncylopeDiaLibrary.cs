@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -46,7 +45,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT = ".elib";
         public static string FILTER_ELIB
         {
-            get { return TextUtil.FileDialogFilter(Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library, EXT); }
+            get { return TextUtil.FileDialogFilter(LibResources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library, EXT); }
         }
 
         public EncyclopeDiaSpec(string name, string path)
@@ -71,7 +70,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library;
+            return LibResources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 5;
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
-        private ImmutableList<string> _sourceFiles;
+        private LibraryFiles _sourceFiles = LibraryFiles.EMPTY;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
         // List of entries which includes items which do not have a spectrum but which do have peak boundaries
         private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
@@ -116,7 +115,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                return TextUtil.FileDialogFilter(Resources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT);
+                return TextUtil.FileDialogFilter(LibResources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT);
             }
         }
 
@@ -368,7 +367,7 @@ on one.SourceFile = two.SourceFile";
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
                 SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
-                _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
                 return true;
@@ -454,7 +453,7 @@ on one.SourceFile = two.SourceFile";
                         sourceFiles.Add(Encoding.UTF8.GetString(bytes));
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
-                    _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                    _sourceFiles = new LibraryFiles(sourceFiles);
                     List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
                     while (spectrumInfos.Count < spectrumInfoCount)
                     {
@@ -466,7 +465,7 @@ on one.SourceFile = two.SourceFile";
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(@"Exception loading cache: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }
@@ -664,7 +663,7 @@ on one.SourceFile = two.SourceFile";
         {
             get
             {
-                return new LibraryFiles{FilePaths = _sourceFiles};
+                return _sourceFiles;
             }
         }
 
@@ -699,6 +698,14 @@ on one.SourceFile = two.SourceFile";
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
+        }
+
+        public override bool HasExplicitBounds
+        {
+            get
+            {
+                return true;
+            }
         }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)

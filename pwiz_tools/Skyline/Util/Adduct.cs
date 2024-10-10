@@ -21,6 +21,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
@@ -69,12 +70,11 @@ namespace pwiz.Skyline.Util
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
         private string Description { get; set; } // The text description (will be empty for protonation, we just use charge)
-        private ParsedMolecule IsotopeLabels { get; set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
-        private TypedMass AverageMassAdduct { get; set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
-        private TypedMass MonoMassAdduct { get; set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass AverageMassAdduct { get; private set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass MonoMassAdduct { get; private set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
         private int MassMultiplier { get; set; } // Returns, for example, the 2 in "[2M+Na]", which means the ion is two molecules + the adduct mass. 
-        private TypedMass IsotopesIncrementalAverageMass { get; set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
-        private TypedMass IsotopesIncrementalMonoMass { get; set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
+        public TypedMass IsotopesIncrementalAverageMass { get; private set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
+        public TypedMass IsotopesIncrementalMonoMass { get; private set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
 
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Util
                     if (posClose >= 0 && posClose < posNext)
                     {
                         // This isn't an adduct description, probably actually examining a modified peptide e.g. K[1Ac]IDGFGPMK
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                     }
                     if (input[posNext] != '+' && input[posNext] != '-') 
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Util
                     success = int.TryParse(massMultiplierStr, out massMultiplier);
                     if (!success || massMultiplier <= 0)
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                     }
                 }
@@ -370,9 +370,9 @@ namespace pwiz.Skyline.Util
                         // ReSharper restore LocalizableElement
                         if (test.Any(t => !char.IsDigit(t) && t != '\0') || test[test.Length - 1] != '\0') // This will catch 2Cl373H -> "2\03H" or 2Cl373H23 -> "2\03\03"
                         {
-                            var errmsg = string.Format(Resources.Adduct_ParseDescription_isotope_error,
+                            var errmsg = string.Format(UtilResources.Adduct_ParseDescription_isotope_error,
                                     match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
-                            throw new InvalidOperationException(errmsg);
+                            throw new InvalidDataException(errmsg);
                         }
 
                         label = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, nickname.Value)); // eg Cl37 -> Cl'
@@ -509,17 +509,17 @@ namespace pwiz.Skyline.Util
                         }
                         catch (ArgumentException)
                         {
-                            throw new InvalidOperationException(
+                            throw new InvalidDataException(
                                 string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                                     ion, input));
                         }
                     }
                 }
             }
-            AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
+            AdductCharge = declaredCharge ?? calculatedCharge ?? 0; // If user supplied a charge (e.g. [M+2CH3+Cl]+) believe them even if our calculation/guess disagrees
             if (!composition.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
-                throw new InvalidOperationException(
+                throw new InvalidDataException(
                     string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                         composition.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), input));
             }
@@ -541,20 +541,32 @@ namespace pwiz.Skyline.Util
                 }
                 if (!success)
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidDataException(
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                 }
             }
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
-                throw new InvalidOperationException(
-                    string.Format(
-                        Resources
-                            .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
-                        input, declaredCharge.Value, calculatedCharge));
+                // Only complain if this is an obvious error, like "[M+H]-"
+                foreach (var adducts in new[] { COMMON_PROTONATED_ADDUCTS, COMMON_SMALL_MOL_ADDUCTS})
+                {
+                    foreach (var adduct in adducts)
+                    {
+                        if (Equals(Composition, adduct.Composition))
+                        {
+                            throw new InvalidDataException(
+                                string.Format(
+                                    UtilResources
+                                        .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
+                                    input, declaredCharge.Value, calculatedCharge));
+                        }
+                    }
+                }
             }
         }
         public Adduct Unlabeled { get; private set; } // Version of this adduct without any isotope labels
+
+        public ParsedMolecule IsotopeLabels { get; private set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
 
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
@@ -962,7 +974,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            throw new InvalidOperationException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
+            throw new InvalidDataException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
         }
 
         /// <summary>
@@ -1159,7 +1171,8 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.F, -1},
                 {@"CH3COO", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
-                {@"NH4", 1}
+                {@"NH4", 1},
+                {@"CH3", 1} // Methyl
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
@@ -1317,7 +1330,7 @@ namespace pwiz.Skyline.Util
                 var components = DICT_ADDUCT_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1})", c.Key, c.Value));
                 components += DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + ", " + String.Format("{0} ({1})", c.Key, c.Value));
                 var chargers = DICT_ADDUCT_ION_CHARGES.Aggregate<KeyValuePair<string, int>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1:+#;-#;+0})", c.Key, c.Value));
-                return string.Format(Resources.IonInfo_AdductTips_, components, chargers);
+                return string.Format(UtilResources.IonInfo_AdductTips_, components, chargers);
             }
         }
         // ReSharper restore LocalizableElement
@@ -1384,9 +1397,10 @@ namespace pwiz.Skyline.Util
                     resultDict.Add(pair.Key, pair.Value);
                     count = pair.Value;
                 }
-                if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                if (!molecule.IsMassOnly &&
+                    count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidDataException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
                             this, pair.Key, molecule.ToString()));
                 }
@@ -1400,18 +1414,20 @@ namespace pwiz.Skyline.Util
 
         private ParsedMolecule ApplyIsotopeValues(ParsedMolecule molecule, int massMultiplier, IDictionary<string, int> resultDict)
         {
-            if (!HasIsotopeLabels)
-            {
-                return molecule.ChangeMolecule(Molecule.FromDict(resultDict)); // Nothing to do, but previous caller may have manipulated the formula as represented in resultDict
-            }
-
             TypedMass massModMono;
             TypedMass massModAvg;
-            if (molecule.IsMassOnly)
+
+            if (!HasIsotopeLabels)
             {
-                // Just add the incremental mass of of the declared isotopes
-                massModMono = molecule.MonoMassOffset + IsotopesIncrementalMonoMass;
-                massModAvg = molecule.AverageMassOffset + IsotopesIncrementalAverageMass;
+                // Caller has already multiplied chemical formula, handle mass offsets here
+                massModMono = molecule.MonoMassOffset * massMultiplier;
+                massModAvg = molecule.AverageMassOffset * massMultiplier;
+            }
+            else if (molecule.IsMassOnly)
+            {
+                // Just add the incremental mass of the declared isotopes
+                massModMono = (molecule.MonoMassOffset + IsotopesIncrementalMonoMass) * massMultiplier;
+                massModAvg = (molecule.AverageMassOffset + IsotopesIncrementalAverageMass) * massMultiplier;
             }
             else
             {
@@ -1444,9 +1460,9 @@ namespace pwiz.Skyline.Util
                     }
                     else // Can't remove that which is not there
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(
-                                Resources
+                                UtilResources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
                                 this, unlabeledSymbol, molecule.ToString()));
                     }

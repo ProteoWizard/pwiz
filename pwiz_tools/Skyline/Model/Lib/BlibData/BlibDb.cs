@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -25,7 +26,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
@@ -245,16 +248,32 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
         }
 
+        private static object ExecuteScalar(string commandText, SQLiteConnection connection)
+        {
+            using var cmd = new SQLiteCommand(commandText, connection);
+            return cmd.ExecuteScalar();
+        }
+
+        private static void ExecuteNonQuery(string commandText, SQLiteConnection connection)
+        {
+            using var cmd = new SQLiteCommand(commandText, connection);
+            cmd.ExecuteNonQuery();
+        }
 
         private class SpectrumInserter : IDisposable
         {
-            private SQLiteCommand _insertSpectraCmd;
+            private const int _spectraBufferSize = 12;
+            private class InsertCommands
+            {
+                public SQLiteCommand[] _insertSpectraCmd;
+                public SQLiteCommand[] _insertAnnotationsCmd;
+                public SQLiteCommand[] _insertPeaksCmd;
+                public SQLiteCommand[] _insertRetentionTimesCmd;
+                public SQLiteCommand[] _insertModificationsCmd;
+                public List<DbRefSpectra> _buffer;
+            }
+            private ConcurrentDictionary<int, InsertCommands> _insertCommandsByThread;
             private long _lastSpectraId, _lastAnnotationId, _lastRetentionTimesId, _lastModificationId;
-
-            private SQLiteCommand _insertAnnotationsCmd;
-            private SQLiteCommand _insertPeaksCmd;
-            private SQLiteCommand _insertRetentionTimesCmd;
-            private SQLiteCommand _insertModificationsCmd;
 
             private List<PropertyInfo> _dbRefSpectraProperties;
             private List<PropertyInfo> _dbRefSpectraPeaksProperties;
@@ -262,23 +281,43 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             private List<PropertyInfo> _dbModificationProperties;
             private List<PropertyInfo> _dbRetentionTimeProperties;
 
-            private static SQLiteCommand GenerateInsertCommand(SQLiteConnection connection, string table, IList<PropertyInfo> properties)
+            private static SQLiteCommand[] GenerateInsertCommand(SQLiteConnection connection, string table, IList<PropertyInfo> properties)
             {
                 string PropertySqlName(PropertyInfo p)
                 {
                     return p.PropertyType.BaseType == typeof(DbEntity) ? p.Name + @"Id" : p.Name;
                 }
 
+                var result = new SQLiteCommand[2]; // individual and batch
                 // ReSharper disable LocalizableElement
+                string valuesBlock = "(" + string.Join(",", Enumerable.Repeat("?", properties.Count)) + ")";
                 string sql = "INSERT INTO " + table + " (" +
-                             string.Join(",", properties.Select(PropertySqlName)) + ") VALUES (" +
-                             string.Join(",", Enumerable.Repeat("?", properties.Count)) + ")";
-                // ReSharper restore LocalizableElement
+                             string.Join(",", properties.Select(PropertySqlName)) + ") VALUES " + valuesBlock;
 
-                var cmd = new SQLiteCommand(sql, connection);
+                var cmd = result[0] = new SQLiteCommand(sql, connection);
                 for (int i = 0; i < properties.Count; ++i)
                     cmd.Parameters.Add(new SQLiteParameter());
-                return cmd;
+
+                string batchSql = sql + "," + string.Join(",", Enumerable.Repeat(valuesBlock, _spectraBufferSize - 1));
+                cmd = result[1] = new SQLiteCommand(batchSql, connection);
+                for(int j = 0; j < _spectraBufferSize; ++j)
+                {
+                    for (int i = 0; i < properties.Count; ++i)
+                        cmd.Parameters.Add(new SQLiteParameter());
+                }
+                // ReSharper restore LocalizableElement
+                return result;
+            }
+
+            private static SQLiteCommand[] CloneCommands(SQLiteCommand[] commands)
+            {
+                var result = new SQLiteCommand[commands.Length];
+                for (var i = 0; i < commands.Length; i++)
+                {
+                    var cmd = commands[i];
+                    result[i] = cmd.Clone() as SQLiteCommand;
+                }
+                return result;
             }
 
             private static IEnumerable<PropertyInfo> GetProperties(Type dbType)
@@ -302,10 +341,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 var connection = session.Connection as SQLiteConnection;
 
-                _lastSpectraId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectra", connection).ExecuteScalar();
-                _lastAnnotationId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectraPeakAnnotations", connection).ExecuteScalar();
-                _lastRetentionTimesId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RetentionTimes", connection).ExecuteScalar();
-                _lastModificationId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM Modifications", connection).ExecuteScalar();
+                _lastSpectraId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectra", connection);
+                _lastAnnotationId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectraPeakAnnotations", connection);
+                _lastRetentionTimesId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RetentionTimes", connection);
+                _lastModificationId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM Modifications", connection);
 
                 _dbRefSpectraProperties = new List<PropertyInfo>();
                 foreach (var property in typeof(DbRefSpectra).GetProperties())
@@ -328,69 +367,147 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 _dbModificationProperties = GetProperties(typeof(DbModification)).ToList();
                 _dbRetentionTimeProperties = GetProperties(typeof(DbRetentionTimes)).ToList();
 
-                _insertSpectraCmd = GenerateInsertCommand(connection, @"RefSpectra", _dbRefSpectraProperties);
-                _insertPeaksCmd = GenerateInsertCommand(connection, @"RefSpectraPeaks", _dbRefSpectraPeaksProperties);
-                _insertAnnotationsCmd = GenerateInsertCommand(connection, @"RefSpectraPeakAnnotations", _dbRefSpectraPeakAnnotationsProperties);
-                _insertModificationsCmd = GenerateInsertCommand(connection, @"Modifications", _dbModificationProperties);
-                _insertRetentionTimesCmd = GenerateInsertCommand(connection, @"RetentionTimes", _dbRetentionTimeProperties);
+                _insertCommandsByThread = new ConcurrentDictionary<int, InsertCommands>();
+                var masterCmds = _insertCommandsByThread[0] = new InsertCommands();
+
+                masterCmds._insertSpectraCmd = GenerateInsertCommand(connection, @"RefSpectra", _dbRefSpectraProperties);
+                masterCmds._insertPeaksCmd = GenerateInsertCommand(connection, @"RefSpectraPeaks", _dbRefSpectraPeaksProperties);
+                masterCmds._insertAnnotationsCmd = GenerateInsertCommand(connection, @"RefSpectraPeakAnnotations", _dbRefSpectraPeakAnnotationsProperties);
+                masterCmds._insertModificationsCmd = GenerateInsertCommand(connection, @"Modifications", _dbModificationProperties);
+                masterCmds._insertRetentionTimesCmd = GenerateInsertCommand(connection, @"RetentionTimes", _dbRetentionTimeProperties);
             }
 
             public void InsertSpectrum(DbRefSpectra dbRefSpectrum)
             {
-                {
-                    int i = 0;
-                    dbRefSpectrum.Id = ++_lastSpectraId;
-                    foreach (var property in _dbRefSpectraProperties)
-                        _insertSpectraCmd.Parameters[i++].Value = GetPropertyValue(dbRefSpectrum, property);
-                    _insertSpectraCmd.ExecuteNonQuery();
+                int threadId = Thread.CurrentThread.ManagedThreadId;
 
-                    i = 0;
-                    dbRefSpectrum.Peaks.RefSpectra ??= dbRefSpectrum;
-                    foreach (var property in _dbRefSpectraPeaksProperties)
-                        _insertPeaksCmd.Parameters[i++].Value = GetPropertyValue(dbRefSpectrum.Peaks, property);
+                if (!_insertCommandsByThread.TryGetValue(threadId, out InsertCommands insertCommands))
+                {
+                    var masterCmds = _insertCommandsByThread[0];
+                    insertCommands = _insertCommandsByThread[threadId] = new InsertCommands();
+                    insertCommands._insertSpectraCmd = CloneCommands(masterCmds._insertSpectraCmd);
+                    insertCommands._insertPeaksCmd = CloneCommands(masterCmds._insertPeaksCmd);
+                    insertCommands._insertAnnotationsCmd = CloneCommands(masterCmds._insertAnnotationsCmd);
+                    insertCommands._insertModificationsCmd = CloneCommands(masterCmds._insertModificationsCmd);
+                    insertCommands._insertRetentionTimesCmd = CloneCommands(masterCmds._insertRetentionTimesCmd);
+                    insertCommands._buffer = new List<DbRefSpectra>(_spectraBufferSize);
+                }
+
+                var buffer = insertCommands._buffer;
+                buffer.Add(dbRefSpectrum);
+                dbRefSpectrum.Id = Interlocked.Increment(ref _lastSpectraId);
+                if (_spectraBufferSize > 1 && buffer.Count < _spectraBufferSize)
+                    return;
+
+                FlushBuffer(insertCommands);
+                buffer.Clear();
+            }
+
+            private void FlushBuffer(InsertCommands insertCommands = null)
+            {
+                int threadId = Thread.CurrentThread.ManagedThreadId;
+
+                if (insertCommands == null)
+                    if (!_insertCommandsByThread.TryGetValue(threadId, out insertCommands))
+                        return;
+
+                var buffer = insertCommands._buffer;
+                if (!buffer.Any())
+                    return;
+
+                int whichCmd = _spectraBufferSize > 1 && buffer.Count == _spectraBufferSize ? 1 : 0;
+                var _insertSpectraCmd = insertCommands._insertSpectraCmd[whichCmd];
+                var _insertPeaksCmd = insertCommands._insertPeaksCmd[whichCmd];
+                var _insertAnnotationsCmd = insertCommands._insertAnnotationsCmd[0];
+                var _insertRetentionTimesCmd = insertCommands._insertRetentionTimesCmd[0];
+                var _insertModificationsCmd = insertCommands._insertModificationsCmd[0];
+
+                int spectraCmdParameter = 0, peaksCmdParameter = 0;
+                foreach (var dbRefSpectrum in buffer)
+                {
+                    {
+                        foreach (var property in _dbRefSpectraProperties)
+                            _insertSpectraCmd.Parameters[spectraCmdParameter++].Value = GetPropertyValue(dbRefSpectrum, property);
+
+                        dbRefSpectrum.Peaks.RefSpectra ??= dbRefSpectrum;
+                        foreach (var property in _dbRefSpectraPeaksProperties)
+                            _insertPeaksCmd.Parameters[peaksCmdParameter++].Value = GetPropertyValue(dbRefSpectrum.Peaks, property);
+                    }
+
+                    if (whichCmd == 0)
+                    {
+                        spectraCmdParameter = 0;
+                        peaksCmdParameter = 0;
+                        _insertSpectraCmd.ExecuteNonQuery();
+                        _insertPeaksCmd.ExecuteNonQuery();
+                    }
+                }
+
+                if (whichCmd == 1)
+                {
+                    _insertSpectraCmd.ExecuteNonQuery();
                     _insertPeaksCmd.ExecuteNonQuery();
                 }
 
-                if (dbRefSpectrum.PeakAnnotations != null)
-                    foreach (var annotation in dbRefSpectrum.PeakAnnotations)
+                foreach (var dbRefSpectrum in buffer)
+                {
+                    if (dbRefSpectrum.PeakAnnotations != null)
                     {
-                        int i = 0;
-                        annotation.Id = ++_lastAnnotationId;
-                        annotation.RefSpectra = dbRefSpectrum;
-                        foreach (var property in _dbRefSpectraPeakAnnotationsProperties)
-                            _insertAnnotationsCmd.Parameters[i++].Value = GetPropertyValue(annotation, property);
-                        _insertAnnotationsCmd.ExecuteNonQuery();
+                        foreach (var annotation in dbRefSpectrum.PeakAnnotations)
+                        {
+                            int i = 0;
+                            annotation.Id = Interlocked.Increment(ref _lastAnnotationId);
+                            annotation.RefSpectra = dbRefSpectrum;
+                            foreach (var property in _dbRefSpectraPeakAnnotationsProperties)
+                                _insertAnnotationsCmd.Parameters[i++].Value = GetPropertyValue(annotation, property);
+                            _insertAnnotationsCmd.ExecuteNonQuery();
+                        }
                     }
 
-                foreach (var retentionTime in dbRefSpectrum.RetentionTimes)
-                {
-                    int i = 0;
-                    retentionTime.Id = ++_lastRetentionTimesId;
-                    retentionTime.RefSpectra = dbRefSpectrum;
-                    foreach (var property in _dbRetentionTimeProperties)
-                        _insertRetentionTimesCmd.Parameters[i++].Value = GetPropertyValue(retentionTime, property);
-                    _insertRetentionTimesCmd.ExecuteNonQuery();
+                    {
+                        foreach (var retentionTime in dbRefSpectrum.RetentionTimes)
+                        {
+                            int i = 0;
+                            retentionTime.Id = Interlocked.Increment(ref _lastRetentionTimesId);
+                            retentionTime.RefSpectra = dbRefSpectrum;
+                            foreach (var property in _dbRetentionTimeProperties)
+                                _insertRetentionTimesCmd.Parameters[i++].Value = GetPropertyValue(retentionTime, property);
+                            _insertRetentionTimesCmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    if (dbRefSpectrum.Modifications != null)
+                    {
+                        foreach (var modification in dbRefSpectrum.Modifications)
+                        {
+                            int i = 0;
+                            modification.Id = Interlocked.Increment(ref _lastModificationId);
+                            modification.RefSpectra = dbRefSpectrum;
+                            foreach (var property in _dbModificationProperties)
+                                _insertModificationsCmd.Parameters[i++].Value = GetPropertyValue(modification, property);
+                            _insertModificationsCmd.ExecuteNonQuery();
+                        }
+                    }
                 }
 
-                if (dbRefSpectrum.Modifications != null)
-                    foreach (var modification in dbRefSpectrum.Modifications)
-                    {
-                        int i = 0;
-                        modification.Id = ++_lastModificationId;
-                        modification.RefSpectra = dbRefSpectrum;
-                        foreach (var property in _dbModificationProperties)
-                            _insertModificationsCmd.Parameters[i++].Value = GetPropertyValue(modification, property);
-                        _insertModificationsCmd.ExecuteNonQuery();
-                    }
             }
 
             public void Dispose()
             {
-                _insertSpectraCmd?.Dispose();
-                _insertAnnotationsCmd?.Dispose();
-                _insertPeaksCmd?.Dispose();
-                _insertRetentionTimesCmd?.Dispose();
-                _insertModificationsCmd?.Dispose();
+                foreach (var cmd in _insertCommandsByThread)
+                {
+                    if (cmd.Key > 0)
+                    {
+                        FlushBuffer(cmd.Value);
+                        cmd.Value._buffer.Clear();
+                    }
+                    cmd.Value._insertSpectraCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertAnnotationsCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertPeaksCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertRetentionTimesCmd.ForEach(c => c.Dispose());
+                    cmd.Value._insertModificationsCmd.ForEach(c => c.Dispose());
+                }
+                _insertCommandsByThread.Clear();
             }
         }
 
@@ -410,47 +527,65 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             var listLibrary = new List<BiblioLiteSpectrumInfo>();
 
+            var localStatus = status;
             using (ISession session = OpenWriteSession())
-            using (ITransaction transaction = session.BeginTransaction())
             {
+                // speed up writing by turning off filesystem synchronization and journaling
+                var connection = session.Connection as SQLiteConnection;
+                ExecuteNonQuery(@"PRAGMA journal_mode=OFF;
+                PRAGMA synchronous=OFF;
+                PRAGMA defer_foreign_keys = ON;", connection);
+
+                using ITransaction transaction = session.BeginTransaction();
                 int progressPercent = -1;
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
                 var proteinTablesBuilder = new ProteinTablesBuilder(session);
-                using var spectrumInserter = new SpectrumInserter(session);
-                foreach (var spectrum in listSpectra)
+                using (var spectrumInserter = new SpectrumInserter(session))
                 {
-                    var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
-                    spectrumInserter.InsertSpectrum(dbRefSpectrum);
-                    var ionMobilitiesByFileId = new IndexedIonMobilities(
-                        dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
-                            Select(rt =>
-                            {
-                                var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
-                                var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
-                                return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
-                            }));
-                    listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
-                                                                dbRefSpectrum.Copies,
-                                                                dbRefSpectrum.NumPeaks,
-                                                                (int) (dbRefSpectrum.Id ?? 0),
-                                                                spectrum.Protein,
-                                                                default(IndexedRetentionTimes),
-                                                                ionMobilitiesByFileId));
-                    proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
-                    if (progressMonitor != null)
+                    ParallelEx.ForEach(listSpectra, spectrum =>
                     {
-                        if (progressMonitor.IsCanceled)
-                            return null;
-                        int progressNew = (i*100/listSpectra.Count);
-                        if (progressPercent != progressNew)
+                        var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
+                        spectrumInserter.InsertSpectrum(dbRefSpectrum);
+                        var ionMobilitiesByFileId = new IndexedIonMobilities(
+                            dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
+                                Select(rt =>
+                                {
+                                    var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
+                                    var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
+                                    return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
+                                }));
+                        lock(listLibrary)
                         {
-                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
-                            progressPercent = progressNew;
+                            listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
+                                dbRefSpectrum.Copies,
+                                dbRefSpectrum.NumPeaks,
+                                (int)(dbRefSpectrum.Id ?? 0),
+                                spectrum.Protein,
+                                default(IndexedRetentionTimes),
+                                ionMobilitiesByFileId));
+                            proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
+                            if (progressMonitor != null)
+                            {
+                                if (progressMonitor.IsCanceled)
+                                    return;
+                                int progressNew = (i*100/listSpectra.Count);
+                                if (progressPercent != progressNew)
+                                {
+                                    progressMonitor.UpdateProgress(localStatus = localStatus.ChangePercentComplete(progressNew));
+                                    progressPercent = progressNew;
+                                }
+                            }
+
+                            ++i;
                         }
-                    }
-                    ++i;
+                    }, maxThreads:4);
                 }
+
+                if (progressMonitor?.IsCanceled ?? false)
+                    return null;
+
+                status = localStatus;
 
                 session.Flush();
                 session.Clear();
@@ -491,6 +626,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
             var isProteomic = smallMoleculeAttributes.IsEmpty;
             var ionMobility = spectrum.IonMobility ?? IonMobilityAndCCS.EMPTY;
+
+            long fileId;
+            lock (session)
+                fileId = GetSpectrumSourceId(session, spectrum.SourceFile, sourceFiles);
+
             var refSpectra = new DbRefSpectra
             {
                 PeptideSeq = isProteomic ? FastaSequence.StripModifications(spectrum.Key.Target).Sequence : string.Empty,
@@ -509,7 +649,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 IonMobilityType = (int)ionMobility.IonMobility.Units,
                 IonMobilityHighEnergyOffset = ionMobility.HighEnergyIonMobilityValueOffset,
                 CollisionalCrossSectionSqA = ionMobility.CollisionalCrossSectionSqA,
-                FileId = GetSpectrumSourceId(session, spectrum.SourceFile, sourceFiles),
+                FileId = fileId,
                 SpecIdInFile = null,
                 Score = 0.0,
                 ScoreType = 0
@@ -531,12 +671,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 {
                     if (string.IsNullOrEmpty(rt.SourceFile))
                         throw new InvalidDataException(@"Spectrum must have a source file");
-
+                    long rtFileId;
+                    lock (session)
+                        rtFileId = GetSpectrumSourceId(session, rt.SourceFile, sourceFiles);
                     refSpectra.RetentionTimes.Add(new DbRetentionTimes
                     {
                         BestSpectrum = rt.IsBest ? 1 : 0,
                         RetentionTime = rt.RetentionTime,
-                        SpectrumSourceId = GetSpectrumSourceId(session, rt.SourceFile, sourceFiles),
+                        SpectrumSourceId = rtFileId,
                         IonMobility = rt.IonMobility.IonMobility.Mobility,
                         IonMobilityType = (int)rt.IonMobility.IonMobility.Units,
                         IonMobilityHighEnergyOffset = rt.IonMobility.HighEnergyIonMobilityValueOffset,
@@ -576,7 +718,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             Library library, SrmDocument document,
             IDictionary<LibKey, LibKey> smallMoleculeConversionMap)
         {
-            if (!UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
+            if (!UpdateProgressMessage(string.Format(BlibDataResources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
                 return null;
 
             string libAuthority = @"unknown.org";
@@ -642,12 +784,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var dictFiles = new Dictionary<string, long>();
             var dictFilesRedundant = new Dictionary<string, long>();
 
-            // Hash table to score the score types in the library
+            // Hash table to store the score types in the library
             var dictScoreTypes = new Dictionary<string, ushort>();
 
             ISession redundantSession = null;
             ITransaction redundantTransaction = null;
             int redundantSpectraCount = 0;
+
+            var dataFiles = library.LibraryDetails.DataFiles.ToArray();
 
             try
             {
@@ -726,7 +870,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             precursorAdduct,
                                             smallMoleculeAttributes,
                                             dictFiles,
-                                            dictScoreTypes);
+                                            dictScoreTypes,
+                                            GetSpectrumSourceFile(spectrumInfo.FilePath, dataFiles));
 
                                         session.Save(refSpectra);
 
@@ -772,7 +917,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     // Ids of spectra in the redundant library, where available, are also returned.
                                     var redundantSpectraKeys = new List<SpectrumKeyTime>();
                                     BuildRefSpectra(document, session, convertingToSmallMolecules, refSpectra, spectra,
-                                        dictFiles, dictScoreTypes, redundantSpectraKeys);
+                                        dictFiles, dictScoreTypes, redundantSpectraKeys, dataFiles);
 
                                     session.Save(refSpectra);
                                     session.Flush();
@@ -963,24 +1108,26 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             SpectrumInfo[] spectra, // Yes, this could be IEnumerable, but then Resharper throws bogus warnings about possible multiple enumeration
             IDictionary<string, long> dictFiles,
             IDictionary<string, ushort> dictScoreTypes,
-            ICollection<SpectrumKeyTime> redundantSpectraKeys)
+            ICollection<SpectrumKeyTime> redundantSpectraKeys,
+            SpectrumSourceFileDetails[] dataFiles)
         {
             bool foundBestSpectrum = false;
 
             foreach(SpectrumInfoLibrary spectrum in spectra)
             {
+                var spectrumSourceFile = GetSpectrumSourceFile(spectrum.FilePath, dataFiles);
                 if(spectrum.IsBest)
                 {
                     if(foundBestSpectrum)
                     {
                         throw new InvalidDataException(
-                            string.Format(Resources.BlibDb_BuildRefSpectra_Multiple_reference_spectra_found_for_peptide__0__in_the_library__1__,
+                            string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Multiple_reference_spectra_found_for_peptide__0__in_the_library__1__,
                                           refSpectra.PeptideModSeq, FilePath));
                     }
                     
                     foundBestSpectrum = true;
 
-                    MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes);
+                    MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes, spectrumSourceFile);
                 }
 
                 // Determine if this spectrum is from a file that is in the document.
@@ -996,7 +1143,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles);
+                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+                    spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile);
 
                 // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
                 // or object of type SpectrumLiteKey for redundant spectra
@@ -1034,6 +1182,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
         }
 
+        private static SpectrumSourceFileDetails GetSpectrumSourceFile(string filePath, SpectrumSourceFileDetails[] dataFiles)
+        {
+            return string.IsNullOrEmpty(filePath) || dataFiles.IsNullOrEmpty()
+                ? null
+                : dataFiles.FirstOrDefault(df => string.Equals(filePath, df.FilePath));
+        }
+
         private class SpectrumKeyTime
         {
             public SpectrumKeyTime(SpectrumLiteKey key, DbRetentionTimes time, string filePath)
@@ -1050,7 +1205,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum,
             Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes,
-            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes)
+            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
             var refSpectra = new DbRefSpectra
             {
@@ -1064,12 +1219,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
                 OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty
             };
-            MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes);
+            MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes, spectrumSourceFile);
             return refSpectra;
         }
 
         private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, DbRefSpectra refSpectra,
-            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes)
+            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
@@ -1095,12 +1250,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
-            refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles) : null;
+
+            refSpectra.FileId = spectrum.FilePath != null
+                ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+                    spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile)
+                : null;
             refSpectra.SpecIdInFile = null;
             refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
-            refSpectra.ScoreType = !string.IsNullOrEmpty(spectrum.SpectrumHeaderInfo?.ScoreType)
-                ? GetScoreTypeId(session, spectrum.SpectrumHeaderInfo.ScoreType, dictScoreTypes)
-                : (ushort) 0;
+            refSpectra.ScoreType = GetScoreTypeId(session, spectrum.SpectrumHeaderInfo?.ScoreType, dictScoreTypes, spectrumSourceFile);
             if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
             {
                 refSpectra.PeptideSeq = string.Empty;
@@ -1113,44 +1270,57 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles)
         {
+            return GetSpectrumSourceId(session, filePath, dictFiles, null, null);
+        }
+
+        private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles, 
+           string scoreName, SpectrumSourceFileDetails spectrumSourceFile)
+        {
             if (!dictFiles.TryGetValue(filePath, out var spectrumSourceId))
             {
-                spectrumSourceId = SaveSourceFile(session, filePath);
+                spectrumSourceId = SaveSourceFile(session, filePath, spectrumSourceFile?.IdFilePath,
+                    spectrumSourceFile?.GetScoreTypeCutoff(scoreName));
                 if (spectrumSourceId == 0)
                 {
-                    throw new SQLiteException(string.Format(Resources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
+                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
                 }
                 dictFiles.Add(filePath, spectrumSourceId);
             }
             return spectrumSourceId;
         }
 
-        private static ushort GetScoreTypeId(ISession session, string scoreName, IDictionary<string, ushort> dictScoreTypes)
+        private static ushort GetScoreTypeId(ISession session, string scoreName, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
-            if (!dictScoreTypes.TryGetValue(scoreName, out var scoreTypeId))
+            if (string.IsNullOrEmpty(scoreName)) return 0;
+            if (dictScoreTypes.TryGetValue(scoreName, out var savedScoreTypeId)) return savedScoreTypeId;
+
+            var scoreType = spectrumSourceFile.GetScoreType(scoreName) ?? new ScoreType(scoreName, null);
+            var scoreTypeId = SaveScoreType(session, scoreType);
+            if (scoreTypeId == 0)
             {
-                scoreTypeId = SaveScoreType(session, scoreName);
-                if (scoreTypeId == 0)
-                {
-                    throw new SQLiteException(string.Format(Resources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreName));
-                }
-                dictScoreTypes.Add(scoreName, scoreTypeId);
+                throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreType.NameInvariant));
             }
+            dictScoreTypes.Add(scoreType.NameInvariant, scoreTypeId);
+
             return scoreTypeId;
         }
 
-        private static long SaveSourceFile(ISession session, string filePath)
+        private static long SaveSourceFile(ISession session, string filePath, string idFileName, double? cutoffScore)
         {
-            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = null, CutoffScore = null};
+            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = idFileName, CutoffScore = cutoffScore};
             session.Save(sourceFile);
             return sourceFile.Id.GetValueOrDefault();
         }
 
-        private static ushort SaveScoreType(ISession session, string scoreName)
+        private static ushort SaveScoreType(ISession session, ScoreType scoreType)
         {
-            var scoreType = new DbScoreTypes {ScoreType = scoreName};
-            session.Save(scoreType);
-            return (ushort) scoreType.Id.GetValueOrDefault();
+            var scoreTypeDb = new DbScoreTypes
+            {
+                ScoreType = scoreType.NameInvariant, 
+                ProbabilityType = scoreType.ProbabilityTypeDescription
+            };
+            session.Save(scoreTypeDb);
+            return (ushort) scoreTypeDb.Id.GetValueOrDefault();
         }
 
         /// <summary>
@@ -1270,7 +1440,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             if (!pepLibraries.HasLibraries)
                 return document;
             if (!pepLibraries.IsLoaded)
-                throw new InvalidOperationException(Resources.BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed);
+                throw new InvalidOperationException(BlibDataResources.BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed);
 
             // Separate group nodes by the libraries to which they refer
             var setUsedLibrarySpecs = new HashSet<LibrarySpec>();

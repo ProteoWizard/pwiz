@@ -5,23 +5,30 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
     public class PeptideQuantifier
     {
-        private NormalizationData _normalizationData;
-        private Func<NormalizationData> _getNormalizationDataFunc;
-        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
+        private readonly Lazy<NormalizationData> _normalizationData;
+        public PeptideQuantifier(Lazy<NormalizationData> normalizationData, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
-            PeptideGroupDocNode = peptideGroup;
+            PeptideGroup = peptideGroup;
             PeptideDocNode = peptideDocNode;
             QuantificationSettings = quantificationSettings;
-            _getNormalizationDataFunc = getNormalizationDataFunc;
+            _normalizationData = normalizationData;
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
+        public PeptideQuantifier(Lazy<NormalizationData> normalizationData,
+            PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode,
+            QuantificationSettings quantificationSettings) : this(normalizationData,
+            peptideGroupDocNode.PeptideGroup, peptideDocNode, quantificationSettings)
+        {
+        }
+
+        public static PeptideQuantifier GetPeptideQuantifier(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
             // Quantify on all label types which are not internal standards.
@@ -34,14 +41,25 @@ namespace pwiz.Skyline.Model.GroupComparison
             };
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroupDocNode peptideGroup,
+        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroup peptideGroup,
             PeptideDocNode peptide)
         {
-            return GetPeptideQuantifier(() => NormalizationData.GetNormalizationData(document, false, null), 
-                document.Settings, peptideGroup, peptide);
+
+            return GetPeptideQuantifier(NormalizationData.LazyNormalizationData(document), document.Settings, peptideGroup, peptide);
+        }
+        public static PeptideQuantifier GetPeptideQuantifier(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
+            PeptideDocNode peptide)
+        {
+            return GetPeptideQuantifier(getNormalizationDataFunc, settings, peptideGroupDocNode.PeptideGroup, peptide);
         }
 
-        public PeptideGroupDocNode PeptideGroupDocNode { get; private set; }
+        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document,
+            PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode)
+        {
+            return GetPeptideQuantifier(document, peptideGroupDocNode.PeptideGroup, peptideDocNode);
+        }
+
+        public PeptideGroup  PeptideGroup  { get; private set; }
         public PeptideDocNode PeptideDocNode {get; private set; }
         public QuantificationSettings QuantificationSettings { get; private set; }
 
@@ -54,14 +72,6 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
 
-        public NormalizationData GetNormalizationData()
-        {
-            if (_normalizationData == null)
-            {
-                _normalizationData = _getNormalizationDataFunc();
-            }
-            return _normalizationData;
-        }
         public double? QValueCutoff { get; set; }
 
         public bool IncludeTruncatedPeaks { get; set; }
@@ -142,7 +152,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         transition, treatMissingAsZero);
                     if (null != quantity)
                     {
-                        IdentityPath transitionIdentityPath = new IdentityPath(PeptideGroupDocNode.PeptideGroup,
+                        IdentityPath transitionIdentityPath = new IdentityPath(PeptideGroup,
                             PeptideDocNode.Peptide, precursor.TransitionGroup, transition.Transition);
                         quantities.Add(transitionIdentityPath, quantity);
                     }
@@ -192,7 +202,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
                     precursor, transition, false);
-                if (quantity != null)
+                if (false == quantity?.Truncated)
                 {
                     double value = quantity.Intensity / quantity.Denominator;
                     if (transition.ExplicitQuantitative)
@@ -214,6 +224,54 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             return numerator / denominator;
+        }
+
+        public PeptideQuantifier WithQuantifiableTransitions(
+            IEnumerable<IdentityPath> quantifiableTransitionIdentityPaths)
+        {
+            ICollection<IdentityPath> identityPathSet = quantifiableTransitionIdentityPaths as ICollection<IdentityPath> ??
+                                                        quantifiableTransitionIdentityPaths.ToHashSet();
+            if (identityPathSet.Count > 1 && !(identityPathSet is HashSet<IdentityPath>))
+            {
+                identityPathSet = identityPathSet.ToHashSet();
+            }
+            var newTransitionGroups = new List<TransitionGroupDocNode>();
+            foreach (var transitionGroupDocNode in PeptideDocNode.TransitionGroups)
+            {
+                if (SkipTransitionGroup(transitionGroupDocNode))
+                {
+                    newTransitionGroups.Add(transitionGroupDocNode);
+                    continue;
+                }
+
+                var newTransitions = new List<TransitionDocNode>();
+                foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
+                {
+                    var identityPath = new IdentityPath(PeptideGroup,
+                        PeptideDocNode.Peptide, transitionGroupDocNode.TransitionGroup,
+                        transitionDocNode.Transition);
+                    newTransitions.Add(transitionDocNode.ChangeQuantitative(identityPathSet.Contains(identityPath)));
+                }
+                newTransitionGroups.Add((TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(newTransitions.ToArray()));
+            }
+
+            var newPeptideDocNode = (PeptideDocNode) PeptideDocNode.ChangeChildren(newTransitionGroups.ToArray());
+            return new PeptideQuantifier(_normalizationData, PeptideGroup, newPeptideDocNode,
+                QuantificationSettings);
+        }
+
+        public PeptideQuantifier WithQuantificationSettings(QuantificationSettings quantificationSettings)
+        {
+            return new PeptideQuantifier(_normalizationData, PeptideGroup, PeptideDocNode,
+                quantificationSettings);
+        }
+
+        public PeptideQuantifier MakeAllTransitionsQuantitative()
+        {
+            var allTransitionIdentityPaths = PeptideDocNode.TransitionGroups.SelectMany(tg =>
+                tg.Transitions.Select(t => new IdentityPath(PeptideGroup, PeptideDocNode.Peptide,
+                    tg.TransitionGroup, t.Transition))).ToHashSet();
+            return WithQuantifiableTransitions(allTransitionIdentityPaths);
         }
 
         private Quantity GetTransitionQuantity(
@@ -242,14 +300,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, IncludeTruncatedPeaks, transitionGroup, transition, replicateIndex, chromInfo);
+            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, true, transitionGroup, transition, replicateIndex, chromInfo);
             if (!normalizedArea.HasValue)
             {
                 return null;
             }
 
             double denominator = 1.0;
-
+            bool truncated = false;
             if (null != peptideStandards)
             {
                 if (QuantificationSettings.SimpleRatios)
@@ -276,10 +334,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             else
             {
-                if (chromInfo.IsTruncated.GetValueOrDefault())
-                {
-                    return null;
-                }
+                truncated = chromInfo.IsTruncated.GetValueOrDefault() && !IncludeTruncatedPeaks;
                 if (Equals(normalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
                 {
                     var fileInfo = srmSettings.MeasuredResults.Chromatograms[replicateIndex]
@@ -297,7 +352,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
-                    var normalizationData = GetNormalizationData();
+                    var normalizationData = _normalizationData.Value;
                     if (null == normalizationData)
                     {
                         throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
@@ -320,7 +375,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     denominator = factor.Value;
                 }
             }
-            return new Quantity(normalizedArea.Value, denominator);
+            return new Quantity(normalizedArea.Value, denominator, truncated);
         }
 
         private TransitionChromInfo GetTransitionChromInfo(TransitionDocNode transitionDocNode, int replicateIndex)
@@ -391,7 +446,68 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new PeptideDocNode.TransitionKey(transitionGroup, transitionDocNode.Key(transitionGroup), RatioLabelType);
         }
 
-        public static double? SumQuantities(IEnumerable<Quantity> quantities, NormalizationMethod normalizationMethod, bool simpleRatios)
+        public double? SumQuantities(IEnumerable<Quantity> quantities)
+        {
+            return SumQuantities(quantities, QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod));
+        }
+
+        public AnnotatedDouble SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
+            IDictionary<IdentityPath, Quantity> availableQuantities)
+        {
+            return SumTransitionQuantities(completeTransitionSet, availableQuantities,
+                QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod));
+        }
+
+        public static AnnotatedDouble SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
+            IDictionary<IdentityPath, Quantity> availableQuantities, QuantificationSettings quantificationSettings)
+        {
+            var quantitiesToSum = availableQuantities.Where(entry => completeTransitionSet.Contains(entry.Key))
+                .Select(kvp => kvp.Value).ToList();
+            string error = null;
+            if (quantitiesToSum.Count != completeTransitionSet.Count)
+            {
+                var missingTransitions =
+                    completeTransitionSet.Where(idPath => !availableQuantities.ContainsKey(idPath)).ToList();
+                if (missingTransitions.Count == 1)
+                {
+                    error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing, missingTransitions.First().Child);
+                }
+                else
+                {
+                    error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Missing_values_for__0___1__transitions, missingTransitions.Count, completeTransitionSet.Count);
+                }
+            }
+            else if (quantitiesToSum.Any(q => q.Truncated))
+            {
+                var truncatedTransitions = availableQuantities
+                    .Where(kvp => completeTransitionSet.Contains(kvp.Key) && kvp.Value.Truncated).ToList();
+                if (truncatedTransitions.Count > 0)
+                {
+                    if (truncatedTransitions.Count == 1)
+                    {
+                        error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated, truncatedTransitions[0].Key.Child);
+                    }
+                    else if(truncatedTransitions.Count == completeTransitionSet.Count)
+                    {
+                        error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated, truncatedTransitions.Count);
+                    }
+                    else 
+                    {
+                        error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions, truncatedTransitions.Count, completeTransitionSet.Count);
+                    }
+                }
+            }
+
+            double? sum = SumQuantities(quantitiesToSum, quantificationSettings);
+            if (sum.HasValue)
+            {
+                return AnnotatedDouble.WithMessage(sum.Value, error);
+            }
+            return null;
+        }
+
+        private static double? SumQuantities(IEnumerable<Quantity> quantities,
+            QuantificationSettings quantificationSettings)
         {
             double numerator = 0;
             double denominator = 0;
@@ -406,22 +522,25 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            if (!simpleRatios && normalizationMethod is NormalizationMethod.RatioToLabel)
+            if (!quantificationSettings.SimpleRatios && quantificationSettings.NormalizationMethod is NormalizationMethod.RatioToLabel)
             {
-                return numerator/denominator;
+                return numerator / denominator;
             }
-            return numerator/denominator*count;
+            return numerator / denominator * count;
+
         }
 
         public class Quantity
         {
-            public Quantity(double intensity, double denominator)
+            public Quantity(double intensity, double denominator, bool truncated)
             {
                 Intensity = intensity;
                 Denominator = denominator;
+                Truncated = truncated;
             }
             public double Intensity { get; private set; }
             public double Denominator { get; private set; }
+            public bool Truncated { get; private set; }
         }
 
         public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, bool allowTruncated, TransitionGroupDocNode transitionGroup,

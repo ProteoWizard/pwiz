@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Irt
             if (sequence.IsProteomic)
             {
                 if (!FastaSequence.IsValidPeptideSequence(sequence.Sequence))
-                    return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+                    return string.Format(IrtResources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
             }
             return null;
         }
@@ -65,9 +65,9 @@ namespace pwiz.Skyline.Model.Irt
         {
             double rtValue;
             if (rtText == null || !double.TryParse(rtText, out rtValue))
-                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
+                return IrtResources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
             if (!allowNegative && rtValue <= 0)
-                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
+                return IrtResources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
             return null;
         }
     }

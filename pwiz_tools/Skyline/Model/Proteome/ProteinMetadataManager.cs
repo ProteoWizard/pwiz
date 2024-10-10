@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.Proteome
                 if (progressMonitor.IsCanceled)
                     return null;
 
-                IProgressStatus progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
+                IProgressStatus progressStatus = new ProgressStatus(ProteomeResources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
                 int nResolved = 0;
                 int nUnresolved = docOrig.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
 
@@ -164,17 +164,30 @@ namespace pwiz.Skyline.Model.Proteome
                                     }
                                     else if (nodePepGroup.ProteinMetadata.NeedsSearch())
                                     {
-                                        var proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.Name);
-                                        if ((proteinMetadata == null) && !Equals(nodePepGroup.Name, nodePepGroup.OriginalName))
-                                            proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.OriginalName); // Original name might hit
-                                        if ((proteinMetadata == null) && !String.IsNullOrEmpty(nodePepGroup.ProteinMetadata.Accession))
-                                            proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.ProteinMetadata.Accession); // Parsed accession might hit
-                                        if ((proteinMetadata != null) && !proteinMetadata.NeedsSearch())
+                                        void CheckBackgroundProteome(FastaSequence seq, ProteinMetadata proteinMetadataOrGroup, int i)
                                         {
-                                            // Background proteome has already resolved this
-                                            _processedNodes.Add(nodePepGroup.Id.GlobalIndex, proteinMetadata);
-                                            nResolved++;
+                                            var currentProteinMetadata = proteinMetadataOrGroup.ProteinMetadataList[i];
+                                            var proteinMetadata = proteomeDb.GetProteinMetadataByName(seq.Name);
+                                            if ((proteinMetadata == null) && !Equals(nodePepGroup.Name, nodePepGroup.OriginalName))
+                                                proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.OriginalName); // Original name might hit
+                                            if ((proteinMetadata == null) && !String.IsNullOrEmpty(currentProteinMetadata.Accession))
+                                                proteinMetadata = proteomeDb.GetProteinMetadataByName(currentProteinMetadata.Accession); // Parsed accession might hit
+                                            if ((proteinMetadata != null) && !proteinMetadata.NeedsSearch())
+                                            {
+                                                // Background proteome has already resolved this
+                                                if (_processedNodes.TryGetValue(nodePepGroup.Id.GlobalIndex, out var processedProteinGroupMetadata))
+                                                    _processedNodes[nodePepGroup.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(proteinMetadata);
+                                                else
+                                                    _processedNodes.Add(nodePepGroup.Id.GlobalIndex, nodePepGroup.ProteinMetadata.ChangeSingleProteinMetadata(proteinMetadata));
+                                            }
                                         }
+
+                                        for (var i = 0; i < nodePepGroup.ProteinMetadata.ProteinMetadataList.Count; i++)
+                                        {
+                                            var fastaSequenceOrGroup = nodePepGroup.PeptideGroup as FastaSequence;
+                                            CheckBackgroundProteome(fastaSequenceOrGroup?.FastaSequenceList[i], nodePepGroup.ProteinMetadata, i);
+                                        }
+                                        nResolved++;
                                     }
 
                                     if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved / nUnresolved, ref progressStatus))
@@ -198,45 +211,68 @@ namespace pwiz.Skyline.Model.Proteome
                         var proteinsToSearch = new List<ProteinSearchInfo>(); 
                         foreach (PeptideGroupDocNode node in docOrig.PeptideGroups)
                         {
-                            if (node.ProteinMetadata.NeedsSearch() && !_processedNodes.ContainsKey(node.Id.GlobalIndex)) // Did we already process this?
+                            if (!node.ProteinMetadata.NeedsSearch())
                             {
-                                void ProcessNode(FastaSequence seq, ProteinMetadata proteinMetadataOrGroup, int i, int nResolved2, ref IProgressStatus progressStatus2)
+                                continue;
+                            }
+
+                            var completedNames = new HashSet<string>();
+                            if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedNode))
+                            {
+                                if (!processedNode.NeedsSearch())
                                 {
-                                    var proteinMetadata = proteinMetadataOrGroup.ProteinMetadataList[i];
-                                    if (proteinMetadata.WebSearchInfo.IsEmpty()) // Never even been hit with regex
+                                    continue;
+                                }
+
+                                foreach (var part in processedNode.ProteinMetadataList)
+                                {
+                                    if (!part.NeedsSearch())
                                     {
-                                        // Use Regexes to get some metadata, and a search term
-                                        var parsedProteinMetaData = FastaImporter.ParseProteinMetaData(proteinMetadata);
-                                        if ((parsedProteinMetaData == null) || Equals(parsedProteinMetaData.Merge(proteinMetadata), proteinMetadata.SetWebSearchCompleted()))
-                                        {
-                                            // That didn't parse well enough to make a search term, or didn't add any new info - just set it as searched so we don't keep trying
-                                            if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedProteinGroupMetadata))
-                                                _processedNodes[node.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted());
-                                            else
-                                                _processedNodes.Add(node.Id.GlobalIndex, proteinMetadataOrGroup.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted()));
-                                            if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved2 / nUnresolved, ref progressStatus2))
-                                                return;
-                                            proteinMetadata = null; // No search to be done
-                                        }
+                                        completedNames.Add(part.Name);
+                                    }
+                                }
+                            }
+
+                            void ProcessNode(FastaSequence seq, ProteinMetadata proteinMetadataOrGroup, int i, int nResolved2, ref IProgressStatus progressStatus2)
+                            {
+                                var proteinMetadata = proteinMetadataOrGroup.ProteinMetadataList[i];
+                                if (proteinMetadata.WebSearchInfo.IsEmpty()) // Never even been hit with regex
+                                {
+                                    // Use Regexes to get some metadata, and a search term
+                                    var parsedProteinMetaData = FastaImporter.ParseProteinMetaData(proteinMetadata);
+                                    if ((parsedProteinMetaData == null) || Equals(parsedProteinMetaData.Merge(proteinMetadata), proteinMetadata.SetWebSearchCompleted()))
+                                    {
+                                        // That didn't parse well enough to make a search term, or didn't add any new info - just set it as searched so we don't keep trying
+                                        if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedProteinGroupMetadata))
+                                            _processedNodes[node.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted());
                                         else
-                                        {
-                                            proteinMetadata = proteinMetadata.Merge(parsedProteinMetaData); // Fill in any gaps with parsed info
-                                        }
+                                            _processedNodes.Add(node.Id.GlobalIndex, proteinMetadataOrGroup.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted()));
+                                        if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved2 / nUnresolved, ref progressStatus2))
+                                            return;
+                                        proteinMetadata = null; // No search to be done
                                     }
-
-                                    if (proteinMetadata != null)
+                                    else
                                     {
-                                        // We note the sequence length because it's useful in disambiguating search results
-                                        proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), seq?.Sequence.Length ?? 0));
-                                        docNodesWithUnresolvedProteinMetadata.Add(proteinsToSearch.Last(), node);
+                                        proteinMetadata = proteinMetadata.Merge(parsedProteinMetaData); // Fill in any gaps with parsed info
                                     }
                                 }
 
-                                for (var i = 0; i < node.ProteinMetadata.ProteinMetadataList.Count; i++)
+                                if (proteinMetadata != null)
                                 {
-                                    var fastaSequenceOrGroup = node.PeptideGroup as FastaSequence;
-                                    ProcessNode(fastaSequenceOrGroup?.FastaSequenceList[i], node.ProteinMetadata, i, nResolved, ref progressStatus);
+                                    // We note the sequence length because it's useful in disambiguating search results
+                                    proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), seq?.Sequence.Length ?? 0));
+                                    docNodesWithUnresolvedProteinMetadata.Add(proteinsToSearch.Last(), node);
                                 }
+                            }
+
+                            for (var i = 0; i < node.ProteinMetadata.ProteinMetadataList.Count; i++)
+                            {
+                                if (completedNames.Contains(node.ProteinMetadata.ProteinMetadataList[i].Name))
+                                {
+                                    continue;
+                                }
+                                var fastaSequenceOrGroup = node.PeptideGroup as FastaSequence;
+                                ProcessNode(fastaSequenceOrGroup?.FastaSequenceList[i], node.ProteinMetadata, i, nResolved, ref progressStatus);
                             }
                         }
 
@@ -303,6 +339,11 @@ namespace pwiz.Skyline.Model.Proteome
                         // Not yet processed
                         listProteins.Add(node);
                     }
+                }
+
+                if (ArrayUtil.ReferencesEqual(listProteins, docOrig.MoleculeGroups.ToList()))
+                {
+                    return null;
                 }
                 var docNew = docOrig.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
                 progressMonitor.UpdateProgress(progressStatus.Complete());
@@ -385,7 +426,7 @@ namespace pwiz.Skyline.Model.Proteome
 
             // If the desired field is not populated because it's not yet searched, say so
             if (metadata.NeedsSearch())
-                return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
+                return ProteomeResources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
 
             // If the desired field is not populated, return something like "<name: YAL01234>"
             var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, metadata.Name);

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
@@ -36,7 +35,9 @@ namespace pwiz.Skyline.Model
 
         public TargetResolver(IEnumerable<Target> targetsEnum)
         {
-            var targets = targetsEnum.ToArray();
+            var targets = targetsEnum.Select(t => t.ToSerializableString())
+                .Distinct()
+                .Select(Target.FromSerializableString).ToArray(); // Normalizes masses (e.g. "344.300548579909" vs "344.300548580")
 
             // For molecules allow lookup by formula, InChIKey etc in addition to display name
             var accessions = new HashSet<Tuple<string, Target>>();
@@ -83,9 +84,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                _targetsByName = targets.Select(t => t.ToSerializableString())
-                    .Distinct()
-                    .Select(Target.FromSerializableString).ToLookup(GetTargetDisplayName);
+                _targetsByName = targets.ToLookup(GetTargetDisplayName);
             }
 
         }
@@ -163,7 +162,7 @@ namespace pwiz.Skyline.Model
             }
             if (matches.Length > 1)
             {
-                errorMessage = string.Format(Resources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_, text, string.Join(@", ",matches.Select(t => t.InvariantName)));
+                errorMessage = string.Format(ModelResources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_, text, string.Join(@", ",matches.Select(t => t.InvariantName)));
                 return null;
             }
             Target target;
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Model
 
             if (target == null)
             {
-                errorMessage = string.Format(Resources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___, text);
+                errorMessage = string.Format(ModelResources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___, text);
             }
 
             return target;

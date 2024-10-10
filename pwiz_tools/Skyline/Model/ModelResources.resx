@@ -1,0 +1,824 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation" xml:space="preserve">
+    <value>Failed to find a valid Analyst installation</value>
+  </data>
+  <data name="AbiMethodExporter_EnsureAnalyst_Waiting_for_Analyst_to_start" xml:space="preserve">
+    <value>Waiting for Analyst to start...</value>
+  </data>
+  <data name="AbiMethodExporter_EnsureAnalyst_Working" xml:space="preserve">
+    <value>Working...</value>
+  </data>
+  <data name="AbstractDiaExporter_Export_Cannot_save_to__0__" xml:space="preserve">
+    <value>Cannot save to {0}.</value>
+  </data>
+  <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List" xml:space="preserve">
+    <value>Exporting Isolation List</value>
+  </data>
+  <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__" xml:space="preserve">
+    <value>Exporting Isolation List ({0} cycles out of {0})</value>
+  </data>
+  <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__" xml:space="preserve">
+    <value>Exporting Isolation List ({0} cycles out of {1})</value>
+  </data>
+  <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
+    <value>The number of required transitions {0} exceeds the maximum {1}</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count" xml:space="preserve">
+    <value>Check max concurrent {0} count.</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
+    <value>Check max concurrent {0} count and optimization step count.</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings" xml:space="preserve">
+    <value>Failed to schedule the following peptides with the current settings:</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required" xml:space="preserve">
+    <value>Maximum transitions per file required</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_precursors" xml:space="preserve">
+    <value>precursors</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled" xml:space="preserve">
+    <value>The required peptide {0} cannot be scheduled</value>
+  </data>
+  <data name="AbstractMassListExporter_ExportScheduledBuckets_transitions" xml:space="preserve">
+    <value>transitions</value>
+  </data>
+  <data name="AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted" xml:space="preserve">
+    <value>The following modifications could not be interpreted.</value>
+  </data>
+  <data name="AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__" xml:space="preserve">
+    <value>Invalid amino acid '{0}' found in the value '{1}'.</value>
+  </data>
+  <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
+    <value>The amino acid '{0}' is repeated in the value '{1}'.</value>
+  </data>
+  <data name="Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations" xml:space="preserve">
+    <value>Annotation conflict for '{0}' found attempting to merge annotations.</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
+    <value>{0} ({1} - {2})</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+    <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___" xml:space="preserve">
+    <value>Getting scheduling...</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
+    <value>Scheduling failure (no targets?)</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_" xml:space="preserve">
+    <value>Template is required for method export.</value>
+  </data>
+  <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
+    <value>Bad chromatogram data for charge {0} state of peptide {1}</value>
+  </data>
+  <data name="ChromatogramExporter_Export_Exporting_Chromatograms_for__0_" xml:space="preserve">
+    <value>Exporting Chromatograms for {0}</value>
+  </data>
+  <data name="ChromatogramExporter_ExportGroupNode_One_or_more_missing_chromatograms_at_charge_state__0__of__1_" xml:space="preserve">
+    <value>One or more missing chromatograms at charge state {0} of {1}</value>
+  </data>
+  <data name="ChromatogramExporter_GetExtractorName_Invalid_extractor_name_" xml:space="preserve">
+    <value>Invalid extractor name.</value>
+  </data>
+  <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
+    <value>Custom molecules must specify a formula or valid monoisotopic and average masses.</value>
+  </data>
+  <data name="DecoyGeneration_ADD_RANDOM_Random_Mass_Shift" xml:space="preserve">
+    <value>Random Mass Shift</value>
+  </data>
+  <data name="DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence" xml:space="preserve">
+    <value>Reverse Sequence</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
+    <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
+  </data>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>Starting DIA-Umpire conversion</value>
+  </data>
+  <data name="DisplayModificationOption_FULL_NAME_Full_Name" xml:space="preserve">
+    <value>Full Name</value>
+  </data>
+  <data name="DisplayModificationOption_MASS_DELTA_Mass_Difference" xml:space="preserve">
+    <value>Mass Difference</value>
+  </data>
+  <data name="DisplayModificationOption_NOT_SHOWN_Not_Shown" xml:space="preserve">
+    <value>Not Shown</value>
+  </data>
+  <data name="DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code" xml:space="preserve">
+    <value>Three Letter Code</value>
+  </data>
+  <data name="DisplayModificationOption_UNIMOD_ID_Unimod_ID" xml:space="preserve">
+    <value>Unimod ID</value>
+  </data>
+  <data name="DocNodeParent_GetPathTo_Index__0__exceeds_length__1__" xml:space="preserve">
+    <value>Index {0} exceeds length {1}</value>
+  </data>
+  <data name="DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only__2__" xml:space="preserve">
+    <value>Node reported {0} descendants at depth {1}, but found only {2}.</value>
+  </data>
+  <data name="ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__" xml:space="preserve">
+    <value>Invalid extended peptide format {0}</value>
+    <comment>Protein or peptide sequence</comment>
+  </data>
+  <data name="ExPeptideRowReader_Create_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
+    <value>Isotope labeled entry found without matching settings.</value>
+  </data>
+  <data name="ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
+    <value>Check the Modifications tab in Transition Settings.</value>
+  </data>
+  <data name="ExportFileTypeExtension_LOCALIZED_VALUES_IsolationList" xml:space="preserve">
+    <value>IsolationList</value>
+  </data>
+  <data name="ExportFileTypeExtension_LOCALIZED_VALUES_List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="ExportFileTypeExtension_LOCALIZED_VALUES_Method" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
+    <value>All targets must have an ion mobility value. These can be set explicitly or contained in an ion mobility library or spectral library. The following ion mobility values are missing:</value>
+  </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled" xml:space="preserve">
+    <value>Scheduled</value>
+  </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Standard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered" xml:space="preserve">
+    <value>Triggered</value>
+  </data>
+  <data name="ExportOptimize_CE_Collision_Energy" xml:space="preserve">
+    <value>Collision Energy</value>
+  </data>
+  <data name="ExportOptimize_COV_Compensation_Voltage" xml:space="preserve">
+    <value>Compensation Voltage</value>
+  </data>
+  <data name="ExportOptimize_COV_FINE_Fine_Tune" xml:space="preserve">
+    <value>Fine Tune</value>
+  </data>
+  <data name="ExportOptimize_COV_MEDIUM_Medium_Tune" xml:space="preserve">
+    <value>Medium Tune</value>
+  </data>
+  <data name="ExportOptimize_COV_ROUGH_Rough_Tune" xml:space="preserve">
+    <value>Rough Tune</value>
+  </data>
+  <data name="ExportOptimize_DP_Declustering_Potential" xml:space="preserve">
+    <value>Declustering Potential</value>
+  </data>
+  <data name="ExportOptimize_NONE_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ExportProperties_ExportFile_Unrecognized_instrument_type__0__" xml:space="preserve">
+    <value>Unrecognized instrument type {0}.</value>
+  </data>
+  <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Single" xml:space="preserve">
+    <value>Single</value>
+  </data>
+  <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends" xml:space="preserve">
+    <value>Trends</value>
+  </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_Buckets" xml:space="preserve">
+    <value>Buckets</value>
+  </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_Protein" xml:space="preserve">
+    <value>Protein</value>
+  </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_Single" xml:space="preserve">
+    <value>Single</value>
+  </data>
+  <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
+    <value>Error on line {0}: invalid non-ASCII character '{1}' at position {2}; are you sure this is a FASTA file?</value>
+  </data>
+  <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
+    <value>{0} proteins and {1} peptides added</value>
+  </data>
+  <data name="FastaImporter_Import_Adding_protein__0__" xml:space="preserve">
+    <value>Adding protein {0}</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library.</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>Check your settings to make sure you are using a library and restrictive enough transition selection.</value>
+  </data>
+  <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
+    <value>Error at or around line {0}: {1}</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
+    <value>This import causes the document to contain more than {0:n0} peptides at line {1:n0}.</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
+    <value>This import causes the document to contain more than {0:n0} transitions in {1:n0} peptides at line {2:n0}.</value>
+  </data>
+  <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
+    <value>Last column does not contain a valid protein sequence</value>
+  </data>
+  <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
+    <value>Too few columns found</value>
+  </data>
+  <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
+    <value>Peptides in different FASTA sequences may not be compared.</value>
+  </data>
+  <data name="FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared" xml:space="preserve">
+    <value>Peptides without FASTA sequence information may not be compared.</value>
+  </data>
+  <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
+    <value>A protein sequence may not be empty.</value>
+  </data>
+  <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__" xml:space="preserve">
+    <value>A protein sequence may not contain the character '{0}' at {1}.</value>
+  </data>
+  <data name="FileIterator_Init_Cannot_save_to__0__" xml:space="preserve">
+    <value>Cannot save to {0}.</value>
+  </data>
+  <data name="FileIterator_WriteTransition_Unexpected_failure_writing_transitions" xml:space="preserve">
+    <value>Unexpected failure writing transitions.</value>
+  </data>
+  <data name="GeneralRowReader_Create_No_valid_precursor_m_z_column_found" xml:space="preserve">
+    <value>No valid precursor m/z column found.</value>
+  </data>
+  <data name="GeneralRowReader_Create_No_valid_product_m_z_column_found" xml:space="preserve">
+    <value>No valid product m/z column found.</value>
+  </data>
+  <data name="IdentityNotFoundException_IdentityNotFoundException_Failed_to_find_document_node" xml:space="preserve">
+    <value>Failed to find document node.</value>
+  </data>
+  <data name="IdentityPath_GetPathTo_Index__0__out_of_range_1_to__1__" xml:space="preserve">
+    <value>Index {0} out of range -1 to {1}</value>
+  </data>
+  <data name="IdentityPathTraversal_Traverse_Invalid_attempt_to_perform_parent_operation_on_leaf_node" xml:space="preserve">
+    <value>Invalid attempt to perform parent operation on leaf node.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
+    <value>iRT standards</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
+    <value>Declustering Potential</value>
+  </data>
+  <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
+    <value>custom</value>
+  </data>
+  <data name="IonTypeExtension_LOCALIZED_VALUES_precursor" xml:space="preserve">
+    <value>precursor</value>
+  </data>
+  <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
+    <value>Reading isolation scheme from {0}</value>
+  </data>
+  <data name="IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifications" xml:space="preserve">
+    <value>Permuting isotope modifications</value>
+  </data>
+  <data name="LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_" xml:space="preserve">
+    <value>The number '{0}' is not in the correct format.</value>
+  </data>
+  <data name="MassListImporter_Import_Importing__0__" xml:space="preserve">
+    <value>Importing {0}</value>
+  </data>
+  <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
+    <value>Inspecting peptide sequence information</value>
+  </data>
+  <data name="MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence" xml:space="preserve">
+    <value>Invalid transition list. Transition lists must contain at least precursor m/z, product m/z, and peptide sequence.</value>
+  </data>
+  <data name="MassListImporter_Import_Reading_transition_list" xml:space="preserve">
+    <value>Reading transition list</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_" xml:space="preserve">
+    <value>Check the isolation scheme in the full scan tab of the transition settings.</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_" xml:space="preserve">
+    <value>The precursor m/z {0} of the peptide {1} is out of range for the instrument settings.</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_" xml:space="preserve">
+    <value>The precursor m/z {0} of the peptide {1} is outside the range covered by the DIA isolation scheme.</value>
+  </data>
+  <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
+    <value>Check the Modifications tab in Transition Settings.</value>
+  </data>
+  <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_" xml:space="preserve">
+    <value>Isotope labeled entry found without matching settings.</value>
+  </data>
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
+    <value>No peptide modified sequence column specified</value>
+  </data>
+  <data name="MethodExporter_ExportMethod_Exporting_method__0__" xml:space="preserve">
+    <value>Exporting method {0}...</value>
+  </data>
+  <data name="MethodExporter_ExportMethod_Exporting_methods" xml:space="preserve">
+    <value>Exporting methods...</value>
+  </data>
+  <data name="Metrics_Col1K0LowerLimit__1_K0_lower_limit" xml:space="preserve">
+    <value>1/K0 lower limit</value>
+  </data>
+  <data name="Metrics_Col1K0UpperLimit__1_K0_upper_limit" xml:space="preserve">
+    <value>1/K0 upper limit</value>
+  </data>
+  <data name="Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_" xml:space="preserve">
+    <value>Max sampling time (seconds)</value>
+  </data>
+  <data name="Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_" xml:space="preserve">
+    <value>Mean sampling time (seconds)</value>
+  </data>
+  <data name="Metrics_ColMz_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="Metrics_ColRtBegin_RT_begin" xml:space="preserve">
+    <value>RT begin</value>
+  </data>
+  <data name="Metrics_ColRtEnd_RT_end" xml:space="preserve">
+    <value>RT end</value>
+  </data>
+  <data name="Metrics_ColTarget_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="ModificationMatcher_CreateMatches_Matching_modifications" xml:space="preserve">
+    <value>Matching modifications</value>
+  </data>
+  <data name="ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___" xml:space="preserve">
+    <value>Unrecognized modification placement for Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3}).</value>
+  </data>
+  <data name="ModificationMatcher_ThrowUnimodException_Unrecognized_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___" xml:space="preserve">
+    <value>Unrecognized Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3}).</value>
+  </data>
+  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
+    <value>Adjusting peak boundaries</value>
+  </data>
+  <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
+    <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_" xml:space="preserve">
+    <value>Invalid drift time high energy offset value {0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_" xml:space="preserve">
+    <value>Invalid drift time value {0}</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Energy" xml:space="preserve">
+    <value>Collision Energy</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Collisional Cross Section (sq A)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>Explicit Declustering Potential</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_" xml:space="preserve">
+    <value>Explicit Drift Time (msec)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_" xml:space="preserve">
+    <value>Explicit Drift Time High Energy Offset (msec)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecule_List_Name" xml:space="preserve">
+    <value>Molecule List Name</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Charge" xml:space="preserve">
+    <value>Precursor Charge</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
+    <value>Precursor Formula</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_m_z" xml:space="preserve">
+    <value>Product m/z</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Importing_Peak_Boundaries" xml:space="preserve">
+    <value>Importing Peak Boundaries</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_" xml:space="preserve">
+    <value>Peptide has unrecognized modifications {0} at line {1}</value>
+  </data>
+  <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__" xml:space="preserve">
+    <value>Unable to read apex retention time value for peptide {0} of file {1}.</value>
+  </data>
+  <data name="Peptide_ToString_missed__0__" xml:space="preserve">
+    <value>(missed {0})</value>
+  </data>
+  <data name="Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence" xml:space="preserve">
+    <value>Peptide sequence exceeds the bounds of the protein sequence.</value>
+  </data>
+  <data name="Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values" xml:space="preserve">
+    <value>Peptides from protein sequences must have start and end values.</value>
+  </data>
+  <data name="Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties" xml:space="preserve">
+    <value>Peptides without a protein sequence do not support the start and end properties.</value>
+  </data>
+  <data name="Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__" xml:space="preserve">
+    <value>The peptide sequence {0} does not agree with the protein sequence {1} at ({2}:{3}).</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_Normalization" xml:space="preserve">
+    <value>Global Standard</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_QC" xml:space="preserve">
+    <value>QC</value>
+  </data>
+  <data name="PeptideDocNodeToString__0__rank__1__" xml:space="preserve">
+    <value>{0} (rank {1})</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor" xml:space="preserve">
+    <value>Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor.</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__" xml:space="preserve">
+    <value>The peptide {0} was not found in the sequence {1}.</value>
+  </data>
+  <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_" xml:space="preserve">
+    <value>Missing iRT value for peptide {0}, precursor m/z {1}.</value>
+  </data>
+  <data name="PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_" xml:space="preserve">
+    <value>The current document settings would cause the number of peptides to exceed {0:n0}. The document settings must be more restrictive or add fewer proteins.</value>
+  </data>
+  <data name="PersistedViews_ExternalToolsGroup_External_Tools" xml:space="preserve">
+    <value>External Tools</value>
+  </data>
+  <data name="PersistedViews_MainGroup_Main" xml:space="preserve">
+    <value>Main</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins" xml:space="preserve">
+    <value>Group of {0} proteins</value>
+  </data>
+  <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
+    <value>Converted To Molecules</value>
+  </data>
+  <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
+    <value>The document does not contain the given reference type.</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_" xml:space="preserve">
+    <value>The document does not have a global standard to normalize by.</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
+    <value>Failed to find a valid SCIEX OS installation.</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
+    <value>Waiting for SCIEX OS to start</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
+    <value>Working...</value>
+  </data>
+  <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
+    <value>Invalid instrument type for SCIEX OS method export.</value>
+  </data>
+  <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
+    <value>Precursor isotope {0} is outside the isotope distribution {1} to {2}.</value>
+  </data>
+  <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__" xml:space="preserve">
+    <value>No formula found for the amino acid '{0}'</value>
+  </data>
+  <data name="SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_" xml:space="preserve">
+    <value>Modification definition {0} missing close bracket.</value>
+  </data>
+  <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
+    <value>The modification {0} is not valid. Expected a numeric delta mass.</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which must be either 'True' or 'False'.</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
+    <value>Developer Build</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Latest___0__" xml:space="preserve">
+    <value>Latest ({0})</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
+    <value>The file you are trying to open ("{0}") does not appear to be a Skyline document. Skyline documents normally have a "{1}" or "{2}" filename extension and are in XML format.</value>
+  </data>
+  <data name="SkypFile_FILTER_SKYP_Skyline_Document_Pointer" xml:space="preserve">
+    <value>Skyline Document Pointer</value>
+  </data>
+  <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
+    <value>Name of shared Skyline archive cannot be null or empty.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound" xml:space="preserve">
+    <value>Compound</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
+    <value>RT (min)</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units" xml:space="preserve">
+    <value>Missing ion mobility units</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error" xml:space="preserve">
+    <value>unknown error</value>
+  </data>
+  <data name="SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides" xml:space="preserve">
+    <value>Must have an active iRT calculator to add iRT peptides.</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_No_replicate_named__0__was_found" xml:space="preserve">
+    <value>No replicate named {0} was found</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
+    <value>No results found for the precursor {0} in the file {1}</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__" xml:space="preserve">
+    <value>No results found for the precursor {0} in the replicate {1}</value>
+  </data>
+  <data name="SrmDocument_ChangePeak_The_file__0__was_not_found_in_the_replicate__1__" xml:space="preserve">
+    <value>The file {0} was not found in the replicate {1}.</value>
+  </data>
+  <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files" xml:space="preserve">
+    <value>Skyline Files</value>
+  </data>
+  <data name="SrmDocument_FILTER_DOC_Skyline_Documents" xml:space="preserve">
+    <value>Skyline Documents</value>
+  </data>
+  <data name="SrmDocument_GetPeptideGroupId_peptides" xml:space="preserve">
+    <value>peptides</value>
+  </data>
+  <data name="SrmDocument_GetPeptideGroupId_sequence" xml:space="preserve">
+    <value>sequence</value>
+  </data>
+  <data name="SrmDocument_GetSmallMoleculeGroupId_molecules" xml:space="preserve">
+    <value>molecules</value>
+  </data>
+  <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
+    <value>The peptide {0} was found multiple times with user modifications.</value>
+  </data>
+  <data name="SrmDocument_MoveNode_Invalid_move_source" xml:space="preserve">
+    <value>Invalid move source.</value>
+  </data>
+  <data name="SrmDocument_MoveNode_Invalid_move_target" xml:space="preserve">
+    <value>Invalid move target.</value>
+  </data>
+  <data name="SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__" xml:space="preserve">
+    <value>Compressing files for sharing archive {0}</value>
+  </data>
+  <data name="SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__" xml:space="preserve">
+    <value>Extracting files from sharing archive {0}</value>
+  </data>
+  <data name="SrmDocumentSharing_FILTER_SHARING_Shared_Files" xml:space="preserve">
+    <value>Shared Files</value>
+  </data>
+  <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_contains_multiple_Skyline_documents" xml:space="preserve">
+    <value>The zip file is not a shared file. The file contains multiple Skyline documents.</value>
+  </data>
+  <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents" xml:space="preserve">
+    <value>The zip file is not a shared file. The file does not contain any Skyline documents.</value>
+  </data>
+  <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
+    <value>Writing chromatograms</value>
+  </data>
+  <data name="SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__" xml:space="preserve">
+    <value>Failure removing temporary directory {0}.</value>
+  </data>
+  <data name="SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__" xml:space="preserve">
+    <value>Compressing {0}</value>
+  </data>
+  <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
+    <value>Results found in document with no replicates.</value>
+  </data>
+  <data name="StandardType_SURROGATE_STANDARD_Surrogate_Standard" xml:space="preserve">
+    <value>Surrogate Standard</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
+    <value>Unable to resolve molecule from '{0}'.</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
+    <value>Unable to resolve molecule from "{0}": could be any of {1}</value>
+    <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_" xml:space="preserve">
+    <value>Failed to find a valid Thermo instrument installation.</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_" xml:space="preserve">
+    <value>Thermo instrument software may not be installed correctly. The library {0} could not be found.</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_" xml:space="preserve">
+    <value>Thermo method creation software may not be installed correctly.</value>
+  </data>
+  <data name="Transition_ToString_precursor" xml:space="preserve">
+    <value>precursor</value>
+  </data>
+  <data name="Transition_Validate_A_transition_of_ion_type__0__can_t_have_a_custom_ion" xml:space="preserve">
+    <value>A transition of ion type {0} can't have a custom ion</value>
+  </data>
+  <data name="Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_" xml:space="preserve">
+    <value>A transition of ion type {0} must have a custom ion.</value>
+  </data>
+  <data name="Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Fragment decoy mass shift {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__" xml:space="preserve">
+    <value>Fragment ordinal {0} exceeds the maximum {1} for the peptide {2}.</value>
+  </data>
+  <data name="Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__" xml:space="preserve">
+    <value>Fragment ordinal {0} may not be less than 1.</value>
+  </data>
+  <data name="Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Precursor charge {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide" xml:space="preserve">
+    <value>Precursor ordinal must be the length of the peptide.</value>
+  </data>
+  <data name="Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Product ion charge {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_" xml:space="preserve">
+    <value>Duplicate or out of order peak in transition {0}</value>
+  </data>
+  <data name="TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Precursor charge {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Precursor decoy mass shift {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__" xml:space="preserve">
+    <value>Grouping transitions from file {0} with file {1}</value>
+  </data>
+  <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
+    <value>Attempt to add integration information for missing file.</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak" xml:space="preserve">
+    <value>Missing End Time In Change Peak</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak" xml:space="preserve">
+    <value>Missing Start Time in Change Peak</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__" xml:space="preserve">
+    <value>No peak found at {0:F01}</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
+    <value>File Id {0} does not match any file in document.</value>
+  </data>
+  <data name="UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo" xml:space="preserve">
+    <value>Undo transaction may not be started in undo/redo.</value>
+  </data>
+  <data name="UndoManager_Commit_Commit_called_with_no_pending_undo_record" xml:space="preserve">
+    <value>Commit called with no pending undo record.</value>
+  </data>
+  <data name="UndoManager_Restore_Attempt_to_index__0__beyond_length__1__" xml:space="preserve">
+    <value>Attempt to index {0} beyond length {1}.</value>
+  </data>
+  <data name="UndoManager_Restore_Attempting_undo_redo_inside_undo_transaction" xml:space="preserve">
+    <value>Attempting undo/redo inside undo transaction.</value>
+  </data>
+  <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
+    <value>Failed to find a valid MassLynx installation.</value>
+  </data>
+  <data name="WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found" xml:space="preserve">
+    <value>MassLynx may not be installed correctly. The library {0} could not be found.</value>
+  </data>
+  <data name="WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly" xml:space="preserve">
+    <value>Waters method creation software may not be installed correctly.</value>
+  </data>
+  <data name="ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_" xml:space="preserve">
+    <value>Failed attempting to add the file {0}</value>
+  </data>
+  <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
+    <value>The name '{0}' is already in use from the path {1}</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula" xml:space="preserve">
+    <value>Chemical Formula</value>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
+    <value>found more than one UniMod match; add terminus and/or amino acid specificity to choose a single match</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_" xml:space="preserve">
+    <value>found more than one UniMod match but the given specificity ({0}) does not match any of them.</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
+  </data>
+  <data name="ModificationMatcher_GetStaticMod_no_UniMod_match" xml:space="preserve">
+    <value>no UniMod match</value>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
+  </data>
+  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
+    <value>detected features</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_" xml:space="preserve">
+      <value>Failed to interpret modified sequence {0}</value>
+  </data>
+</root>

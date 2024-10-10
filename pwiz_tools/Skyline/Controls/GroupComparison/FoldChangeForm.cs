@@ -251,12 +251,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
 
             var index = 0;
-            menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Grid, null, OnGridClick));
+            menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Grid, null, OnGridClick));
             if (!(sender.ParentForm is FoldChangeVolcanoPlot))
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Volcano_Plot, null, OnVolcanoPlotClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Volcano_Plot, null, OnVolcanoPlotClick));
             if(!(sender.ParentForm is FoldChangeBarGraph))
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Bar_Graph, null, OnBarGraphClick));
-            menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Settings, null, OnSettingsClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Bar_Graph, null, OnBarGraphClick));
+            menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Settings, null, OnSettingsClick));
             menuStrip.Items.Insert(index++, new ToolStripSeparator());
         }
 
@@ -328,6 +328,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         {
                             grid.ViewToRestore = ViewName.Parse(parsed.Parts[2]);
                         }
+                    }
+
+                    if (foldChangeForm is FoldChangeVolcanoPlot volcano)
+                    {
+                        if (parsed.Parts.Count >= 3)
+                            volcano.SetLayout(groupComparisonName, parsed.Parts[2]);
                     }
 
                     return foldChangeForm;

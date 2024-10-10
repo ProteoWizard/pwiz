@@ -48,7 +48,11 @@ namespace pwiz.Common.DataBinding.Internal
 
         protected ReportResults Pivot(CancellationToken cancellationToken, QueryResults results)
         {
-            var pivoter = new Pivoter(results.Parameters.ViewInfo);
+            var viewInfo = results.Parameters.ViewInfo;
+            // Construct the ViewInfo again so that it picks up the latest property definitions from
+            // the DataSchema.
+            viewInfo = new ViewInfo(viewInfo.DataSchema, viewInfo.ParentColumn.PropertyType, viewInfo.ViewSpec);
+            var pivoter = new Pivoter(viewInfo);
             return pivoter.ExpandAndPivot(cancellationToken, results.SourceRows);
         }
 
@@ -186,6 +190,7 @@ namespace pwiz.Common.DataBinding.Internal
             var sortRows = new SortRow[unsortedRows.Count];
             for (int iRow = 0; iRow < sortRows.Length; iRow++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
             }
             Array.Sort(sortRows);

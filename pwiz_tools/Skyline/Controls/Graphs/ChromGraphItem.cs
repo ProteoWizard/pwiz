@@ -26,6 +26,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -82,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               TransitionDocNode transition,
                               ChromatogramInfo chromatogram,
                               TransitionChromInfo tranPeakInfo,
-                              RegressionLine timeRegressionFunction,
+                              AlignmentFunction timeRegressionFunction,
                               bool[] annotatePeaks,
                               double[] dotProducts,
                               double bestProduct,
@@ -163,7 +164,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public TransitionDocNode TransitionNode { get; private set; }
         public ChromatogramInfo Chromatogram { get; private set; }
         public TransitionChromInfo TransitionChromInfo { get; private set; }
-        public RegressionLine TimeRegressionFunction { get; private set; }
+        public AlignmentFunction TimeRegressionFunction { get; private set; }
         public TransformChrom? TransformChrom { get; set; }
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
@@ -299,13 +300,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     string title = Chromatogram.FilePath.GetSampleOrFileName();
                     var extractor = Chromatogram.Header.Extractor;
                     if (extractor == ChromExtractor.base_peak)
-                        return string.Format(Resources.ChromGraphItem_Title__0____base_peak, title);
+                        return string.Format(GraphsResources.ChromGraphItem_Title__0____base_peak, title);
                     if (extractor == ChromExtractor.summed)
-                        return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
+                        return string.Format(GraphsResources.ChromGraphItem_Title__0____TIC, title);
                     return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ?? @"no summary text";
                 }
                 if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
-                    return string.Format(Resources.ChromGraphItem_Title_Step__0_, OptimizationStep);
+                    return string.Format(GraphsResources.ChromGraphItem_Title_Step__0_, OptimizationStep);
 
                 return GetTitle(TransitionGroupNode, TransitionNode);
             }
@@ -485,7 +486,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             color = ColorScheme.ChromGraphItemSelected;
                         }
                         AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
-                            Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
+                            GraphsResources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
                             ScaleRetentionTime(retentionTime));
                     }
                 }
@@ -544,7 +545,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         g,
                         annotations,
                         ptTop,
-                        Resources.ChromGraphItem_AddAnnotations_Explicit,
+                        GraphsResources.ChromGraphItem_AddAnnotations_Explicit,
                         GraphObjType.predicted_rt_window,
                         COLOR_RETENTION_TIME,
                         ScaleRetentionTime(time));
@@ -578,7 +579,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                g,
                                                annotations,
                                                ptTop,
-                                               Resources.ChromGraphItem_AddAnnotations_Predicted,
+                                               GraphsResources.ChromGraphItem_AddAnnotations_Predicted,
                                                GraphObjType.predicted_rt_window,
                                                COLOR_RETENTION_TIME,
                                                ScaleRetentionTime(time));
@@ -1066,7 +1067,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class FailedChromGraphItem : NoDataChromGraphItem
     {
         public FailedChromGraphItem(TransitionGroupDocNode nodeGroup, Exception x)
-            : base(string.Format(Resources.FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__, ChromGraphItem.GetTitle(nodeGroup), x.Message))
+            : base(string.Format(GraphsResources.FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__, ChromGraphItem.GetTitle(nodeGroup), x.Message))
         {            
         }
     }
@@ -1074,19 +1075,19 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class NotFoundChromGraphItem : NoDataChromGraphItem
     {
         public NotFoundChromGraphItem(TransitionDocNode nodeTran)
-            : base(string.Format(Resources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeTran)))
+            : base(string.Format(GraphsResources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeTran)))
         {
         }
 
         public NotFoundChromGraphItem(TransitionGroupDocNode nodeGroup)
-            : base(string.Format(Resources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeGroup)))
+            : base(string.Format(GraphsResources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeGroup)))
         {
         }
     }
 
     public sealed class UnavailableChromGraphItem : NoDataChromGraphItem
     {
-        public UnavailableChromGraphItem(string message) : base(message ?? Resources.UnavailableChromGraphItem_UnavailableChromGraphItem_Chromatogram_information_unavailable)
+        public UnavailableChromGraphItem(string message) : base(message ?? GraphsResources.UnavailableChromGraphItem_UnavailableChromGraphItem_Chromatogram_information_unavailable)
         {
         }
     }
@@ -1157,12 +1158,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractChromGraphItem_CustomizeYAxis_Intensity);
+            CustomizeAxis(axis, GraphsResources.AbstractChromGraphItem_CustomizeYAxis_Intensity);
         }
 
         public void CustomizeXAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractChromGraphItem_CustomizeXAxis_Retention_Time);
+            CustomizeAxis(axis, GraphsResources.AbstractChromGraphItem_CustomizeXAxis_Retention_Time);
         }
 
         private static void CustomizeAxis(Axis axis, string title)

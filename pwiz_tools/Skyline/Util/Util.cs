@@ -1395,8 +1395,8 @@ namespace pwiz.Skyline.Util
         /// <returns>True if the two IEnumerables enumerate over equal objects</returns>
         public static bool Equals<TItem>(IEnumerable<TItem> e1, IEnumerable<TItem> e2)
         {
-            IEnumerator<TItem> enum1 = e1.GetEnumerator();
-            IEnumerator<TItem> enum2 = e2.GetEnumerator();
+            using IEnumerator<TItem> enum1 = e1.GetEnumerator();
+            using IEnumerator<TItem> enum2 = e2.GetEnumerator();
             bool b1, b2;
             while (MoveNext(enum1, out b1, enum2, out b2))
             {
@@ -1528,7 +1528,7 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(name))
                 throw new InvalidOperationException(
-                    Resources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
+                    UtilResources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
             if (REGEX_XML_ID.IsMatch(name))
                 return name;
 
@@ -1862,7 +1862,7 @@ namespace pwiz.Skyline.Util
                     $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
                     $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 5 sec extra time when running code coverage or other analysis
-                milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
+                milliseconds += (5000 * (loopCount)) / maxLoopCount; // Each loop a little more desperate
             }
             DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);

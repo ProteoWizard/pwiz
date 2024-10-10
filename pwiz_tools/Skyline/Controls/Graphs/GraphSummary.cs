@@ -144,6 +144,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public string LabelLayoutString { get; set; }
+
         public GraphTypeSummary Type { get; set; }
 
         public GraphSummary(GraphTypeSummary type, IDocumentUIContainer documentUIContainer, IController controller, int targetResultsIndex, int originalIndex = -1)
@@ -285,7 +287,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + '|' + _controller.GetType().Name + '|' + Type;
+            var res = base.GetPersistentString() + '|' + _controller.GetType().Name + '|' + Type;
+            var panelLayouts = GraphPanes.OfType<ILayoutPersistable>().FirstOrDefault()?.GetPersistentString();
+            if (panelLayouts != null)
+            {
+                res = res + '|' + Uri.EscapeDataString(panelLayouts);
+            }
+            return res;
         }
 
         public IEnumerable<string> Categories
@@ -584,7 +592,8 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram = 1 << 5,
         histogram2d = 1 << 6,
         detections = 1 << 7,
-        detections_histogram = 1 << 8
+        detections_histogram = 1 << 8,
+        abundance = 1 << 9
     }
 
     public static class Extensions
@@ -596,23 +605,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.invalid:
                     return string.Empty;
                 case GraphTypeSummary.replicate:
-                    return Resources.Extensions_CustomToString_Replicate_Comparison;
+                    return GraphsResources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
-                    return Resources.Extensions_CustomToString_Peptide_Comparison;
+                    return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
+                case GraphTypeSummary.abundance:
+                    return GraphsResources.Extensions_CustomToString_Relative_Abundance;
                 case GraphTypeSummary.score_to_run_regression:
-                    return Resources.Extensions_CustomToString_Score_To_Run_Regression;
+                    return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:
-                    return Resources.Extensions_CustomToString_Scheduling;
+                    return GraphsResources.Extensions_CustomToString_Scheduling;
                 case GraphTypeSummary.run_to_run_regression:
-                    return Resources.Extensions_CustomToString_Run_To_Run_Regression;
+                    return GraphsResources.Extensions_CustomToString_Run_To_Run_Regression;
                 case GraphTypeSummary.histogram:
-                    return Resources.Extensions_CustomToString_Histogram;
+                    return GraphsResources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
-                    return Resources.Extensions_CustomToString__2D_Histogram;
+                    return GraphsResources.Extensions_CustomToString__2D_Histogram;
                 case GraphTypeSummary.detections:
-                    return Resources.Extensions_CustomToString_Detections_Replicates;
+                    return GraphsResources.Extensions_CustomToString_Detections_Replicates;
                 case GraphTypeSummary.detections_histogram:
-                    return Resources.Extensions_CustomToString_Detections_Histogram;
+                    return GraphsResources.Extensions_CustomToString_Detections_Histogram;
                 default:
                     return string.Empty;
             }

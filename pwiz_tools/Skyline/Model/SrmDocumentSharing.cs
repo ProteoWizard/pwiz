@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.Model
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
-            get { return TextUtil.FileDialogFilter(Resources.SrmDocumentSharing_FILTER_SHARING_Shared_Files, EXT); }
+            get { return TextUtil.FileDialogFilter(ModelResources.SrmDocumentSharing_FILTER_SHARING_Shared_Files, EXT); }
         }
 
         public SrmDocumentSharing(string sharedPath)
@@ -77,8 +78,8 @@ namespace pwiz.Skyline.Model
             get
             {
                 return string.Format(Document != null
-                        ? Resources.SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__
-                        : Resources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
+                        ? ModelResources.SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__
+                        : ModelResources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
                     Path.GetFileName(SharedPath));
             }
         }
@@ -174,14 +175,14 @@ namespace pwiz.Skyline.Model
                 if (!file.EndsWith(SrmDocument.EXT)) continue;
 
                 if (!string.IsNullOrEmpty(skylineFile))
-                    throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_contains_multiple_Skyline_documents);
+                    throw new IOException(ModelResources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_contains_multiple_Skyline_documents);
 
                 skylineFile = file;
             }
 
             if (string.IsNullOrEmpty(skylineFile))
             {
-                throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents);
+                throw new IOException(ModelResources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents);
             }
             return skylineFile;
         }
@@ -376,7 +377,7 @@ namespace pwiz.Skyline.Model
                 catch (IOException x)
                 {
                     var message = TextUtil.LineSeparate(string.Format(
-                            Resources.SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__,
+                            ModelResources.SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__,
                             _tempDir.DirPath),
                         x.Message);
                     throw new IOException(message);
@@ -485,7 +486,7 @@ namespace pwiz.Skyline.Model
                 var minimizer = Document.Settings.MeasuredResults.GetChromCacheMinimizer(Document);
                 var settings = new ChromCacheMinimizer.Settings().ChangeCacheFormat(cacheFormat);
                 var lockObject = new object();
-                ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(Resources.SrmDocumentSharing_MinimizeToFile_Writing_chromatograms));
+                ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(ModelResources.SrmDocumentSharing_MinimizeToFile_Writing_chromatograms));
                 minimizer.Minimize(settings, stats =>
                 {
                     if (ProgressMonitor.IsCanceled)
@@ -571,7 +572,7 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         var message = string.Format(
-                            Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
+                            ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
                             e.CurrentEntry.FileName);
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
                     }
@@ -587,7 +588,7 @@ namespace pwiz.Skyline.Model
             public ZipFileShare()
             {
                 // Make sure large files don't cause this to fail.
-                _zip = new ZipFile { UseZip64WhenSaving = Zip64Option.AsNecessary };
+                _zip = new ZipFile (Encoding.UTF8) { UseZip64WhenSaving = Zip64Option.AsNecessary };
 
                 _dictNameToPath = new Dictionary<string, string>();
             }
@@ -602,8 +603,8 @@ namespace pwiz.Skyline.Model
                 {
                     if (path != existingPath)
                     {
-                        throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_, path),
-                            string.Format(Resources.ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_, fileName, existingPath)));
+                        throw new IOException(TextUtil.LineSeparate(string.Format(ModelResources.ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_, path),
+                            string.Format(ModelResources.ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_, fileName, existingPath)));
                     }
 
                     // No need to add exactly the same path twice

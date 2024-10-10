@@ -73,6 +73,10 @@
     <Folder Include="Test\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj">
       <Project>{69531d2c-bad8-4e79-9df3-482a74d6d0bf}</Project>
       <Name>SharedBatchTest</Name>

@@ -219,6 +219,15 @@
   <data name="CalculatedConcentration">
     <value>Calculated Concentration</value>
   </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>Calculated Concentration Message</value>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>Calculated Concentration Raw</value>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>Calculated Concentration Strict</value>
+  </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
@@ -540,6 +549,9 @@
   <data name="IsDecoy">
     <value>Is Decoy</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>Isolation Window Width</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>Isotope Dist Index</value>
   </data>
@@ -708,6 +720,9 @@
   <data name="MedianPeakArea">
     <value>Median Peak Area</value>
   </data>
+  <data name="Message">
+    <value>Message</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -767,6 +782,18 @@
   </data>
   <data name="MoleculeListAbundance">
     <value>Molecule List Abundance</value>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>Molecule List Abundance Message</value>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>Molecule List Abundance Strict</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Molecule List Abundance Transition Averaged</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Molecule List Abundance Transition Summed</value>
   </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
@@ -836,6 +863,15 @@
   </data>
   <data name="NormalizedArea">
     <value>Normalized Area</value>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>Normalized Area Message</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Normalized Area Raw</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Normalized Area Strict</value>
   </data>
   <data name="NumberOfPoints">
     <value>Number of Points</value>
@@ -954,6 +990,15 @@
   <data name="PrecursorCalculatedConcentration">
     <value>Precursor Calculated Concentration</value>
   </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Precursor Calculated Concentration Message</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>Precursor Calculated Concentration Raw</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>Precursor Calculated Concentration Strict</value>
+  </data>
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
   </data>
@@ -983,6 +1028,15 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>Precursor Normalized Area</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Precursor Normalized Area Message</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Precursor Normalized Area Raw</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Precursor Normalized Area Strict</value>
   </data>
   <data name="PrecursorNote">
     <value>Precursor Note</value>
@@ -1049,6 +1103,18 @@
   </data>
   <data name="ProteinAbundance">
     <value>Protein Abundance</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>Protein Abundance Message</value>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>Protein Abundance Strict</value>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Protein Abundance Transition Averaged</value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Protein Abundance Transition Summed</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
@@ -1121,6 +1187,9 @@
   </data>
   <data name="RatioToStandard">
     <value>Ratio To Standard</value>
+  </data>
+  <data name="Raw">
+    <value>Raw</value>
   </data>
   <data name="RawData">
     <value>Raw Data</value>
@@ -1302,8 +1371,14 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
   </data>
+  <data name="Strict">
+    <value>Strict</value>
+  </data>
   <data name="SummaryMessage">
     <value>Summary Message</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>Surrogate External Standard</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>Target Qualitative Ion Ratio</value>

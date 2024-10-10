@@ -66,8 +66,16 @@ namespace AutoQC
                 mainSettings.SkylineFilePath, MainSettings.ValidateSkylineFile, TextUtil.FILTER_SKY, PathDialogOptions.File);
             var validFolderToWatch = await GetValidPath("folder to watch",
                 mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, null, PathDialogOptions.Folder);
+
+            string validAnnotationsFilePath = null;
+            if (mainSettings.HasAnnotationsFile())
+            {
+                validAnnotationsFilePath = await GetValidPath("Annotations file", mainSettings.AnnotationsFilePath,
+                    MainSettings.ValidateAnnotationsFile, TextUtil.EXT_CSV, PathDialogOptions.File);
+            }
+            
             return new MainSettings(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
-                mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
+                mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString(), validAnnotationsFilePath);
         }
 
         private async Task <PanoramaSettings> FixInvalidPanoramaSettings()
@@ -121,7 +129,7 @@ namespace AutoQC
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    AlertDlg.ShowError(this, Program.AppName, errorMessage);
+                    AlertDlg.ShowError(this, errorMessage);
             }
             // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
@@ -154,7 +162,7 @@ namespace AutoQC
             // the first time a path is changed, ask if user wants all path roots replaced
             if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot))
             {
-                var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
                 _askedAboutRootReplacement = true;
                 if (replaceRoot)
                 {

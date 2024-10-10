@@ -1,0 +1,1196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_" xml:space="preserve">
+    <value>The following files are not valid library input files:</value>
+  </data>
+  <data name="AddPathsDlg_OkDialog_The_following_files_could_not_be_found_" xml:space="preserve">
+    <value>The following files could not be found:</value>
+  </data>
+  <data name="AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_" xml:space="preserve">
+    <value>A retention time predictor with that name already exists. Please choose a new name.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__" xml:space="preserve">
+    <value>An error occurred attempting to add the FASTA file {0}.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File" xml:space="preserve">
+    <value>Add FASTA File</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__" xml:space="preserve">
+    <value>An error occurred attempting to create the proteome file {0}.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome" xml:space="preserve">
+    <value>Create Background Proteome</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme" xml:space="preserve">
+    <value>Open Background Proteome</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_FILTER_PROTDB_Proteome_File" xml:space="preserve">
+    <value>Proteome File</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
+    <value>Choose a valid proteome file, or click the 'Create' button to create a new one from FASTA files.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Please_specify_a_full_path_to_the_proteome_file" xml:space="preserve">
+    <value>Please specify a full path to the proteome file.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_The_background_proteome__0__already_exists" xml:space="preserve">
+    <value>The background proteome '{0}' already exists.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
+    <value>The proteome file {0} does not exist.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
+    <value>The proteome file is not valid.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_You_must_specify_a_proteome_file" xml:space="preserve">
+    <value>You must specify a proteome file.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file" xml:space="preserve">
+    <value>Click the 'Open' button to choose an existing proteome file, or click the 'Create' button to create a new proteome file.</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__" xml:space="preserve">
+    <value>Loading protein information from {0}</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File" xml:space="preserve">
+    <value>Loading Proteome File</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_file_contains__0__proteins" xml:space="preserve">
+    <value>The proteome file contains {0} proteins.</value>
+  </data>
+  <data name="BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__" xml:space="preserve">
+    <value>An error occurred reading files in the directory {0}.</value>
+  </data>
+  <data name="BuildLibraryDlg_AddDirectory_Find_Input_Files" xml:space="preserve">
+    <value>Find Input Files</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_" xml:space="preserve">
+    <value>The file {0} is a library file and does not need to be built. Would you like to add this library to the document?</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file" xml:space="preserve">
+    <value>The file {0} is not a valid library input file.</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files" xml:space="preserve">
+    <value>The following files are not valid library input files:</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
+    <value>These files are library files and do not need to be built. Edit the list of libraries to add them directly.</value>
+  </data>
+  <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
+    <value>Add Input Directory</value>
+  </data>
+  <data name="BuildLibraryDlg_btnAddFile_Click_Add_Input_Files" xml:space="preserve">
+    <value>Add Input Files</value>
+  </data>
+  <data name="BuildLibraryDlg_btnAddFile_Click_Matched_Peptides" xml:space="preserve">
+    <value>Matched Peptides (</value>
+  </data>
+  <data name="BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in" xml:space="preserve">
+    <value>Finding library input files in</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__" xml:space="preserve">
+    <value>Access violation attempting to write to {0}.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__" xml:space="preserve">
+    <value>Failure attempting to create a file in {0}.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_" xml:space="preserve">
+    <value>Please check that you have write access to this folder.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
+    <value>The directory {0} does not exist.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path" xml:space="preserve">
+    <value>The output path {0} is a directory. You must specify a file path.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
+    <value>You must specify an output file path.</value>
+  </data>
+  <data name="BuildLibraryNotification_BuildLibraryNotification_Library__0__" xml:space="preserve">
+    <value>Library {0}</value>
+  </data>
+  <data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
+    <value>The number of generated windows could not be adjusted to be a multiple of the windows per scan. Try changing the windows per scan or the End value.</value>
+  </data>
+  <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer" xml:space="preserve">
+    <value>Window width must be an integer value when optimize window placement is selected.</value>
+  </data>
+  <data name="DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap" xml:space="preserve">
+    <value>Fast Overlap (Experimental)</value>
+  </data>
+  <data name="DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX" xml:space="preserve">
+    <value>Overlap and MSX</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_" xml:space="preserve">
+    <value>Choose a type for this annotation to apply to.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_" xml:space="preserve">
+    <value>Choose a value for this annotation.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to" xml:space="preserve">
+    <value>Choose at least one type for this annotation to apply to.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
+    <value>There is already an annotation defined named '{0}'.</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows" xml:space="preserve">
+    <value>Extraction Windows</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle" xml:space="preserve">
+    <value>Cycle</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows" xml:space="preserve">
+    <value>Measurement Windows</value>
+  </data>
+  <data name="DoconvolutionMethod_MSX_Msx" xml:space="preserve">
+    <value>Msx</value>
+  </data>
+  <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
+    <value>Overlap</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_" xml:space="preserve">
+    <value>Are you sure you want to delete those items from those lists?</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_List___0___with__1__items" xml:space="preserve">
+    <value>List '{0}' with {1} items</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_" xml:space="preserve">
+    <value>The following lists have items in them which will be deleted when you remove the lists from your document:</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_" xml:space="preserve">
+    <value>The list '{0}' has {1} items in it. If you remove that list from your document, those items will be deleted. Are you sure you want to delete those items from that list?</value>
+  </data>
+  <data name="DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_" xml:space="preserve">
+    <value>An error occurred while applying the rule set '{0}'. Do you want to continue with the change to the Document Settings?</value>
+  </data>
+  <data name="EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression" xml:space="preserve">
+    <value>Measured results must be completely loaded before they can be used to create a collision energy regression.</value>
+  </data>
+  <data name="EditCEDlg_OkDialog_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
+    <value>Collision energy regressions require at least one regression function.</value>
+  </data>
+  <data name="EditCEDlg_OkDialog_The_collision_energy_regression__0__already_exists" xml:space="preserve">
+    <value>The collision energy regression '{0}' already exists.</value>
+  </data>
+  <data name="EditCEDlg_ShowGraph_Collision_Energy" xml:space="preserve">
+    <value>Collision Energy</value>
+  </data>
+  <data name="EditCEDlg_ShowGraph_Collision_Energy_Regression_Charge__0__" xml:space="preserve">
+    <value>Collision Energy Regression Charge {0}</value>
+  </data>
+  <data name="EditCEDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
+  </data>
+  <data name="EditCEDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
+    <value>Insufficient data found to calculate a new regression.</value>
+  </data>
+  <data name="EditCEDlg_ValidateCell_A_value_is_required" xml:space="preserve">
+    <value>A value is required.</value>
+  </data>
+  <data name="EditCEDlg_ValidateCell_The_entry__0__is_not_valid" xml:space="preserve">
+    <value>The entry {0} is not valid.</value>
+  </data>
+  <data name="EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5" xml:space="preserve">
+    <value>The entry '{0}' is not a valid charge. Precursor charges must be between 1 and 5.</value>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_On_line__0__1__" xml:space="preserve">
+    <value>On line {0}, {1}</value>
+    <comment>Line refers to line number. {1} is a message</comment>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5" xml:space="preserve">
+    <value>the value {0} is not a valid charge. Charges must be integer values between 1 and 5.</value>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept" xml:space="preserve">
+    <value>the value {0} is not a valid intercept.</value>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope" xml:space="preserve">
+    <value>the value {0} is not a valid slope.</value>
+  </data>
+  <data name="EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_" xml:space="preserve">
+    <value>The compensation voltage parameters '{0}' already exist.</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_" xml:space="preserve">
+    <value>&amp;Monoisotopic m/z:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_" xml:space="preserve">
+    <value>&amp;Monoisotopic mass:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_" xml:space="preserve">
+    <value>A&amp;verage m/z:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_" xml:space="preserve">
+    <value>A&amp;verage mass:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__" xml:space="preserve">
+    <value>Addu&amp;ct for {0}:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_" xml:space="preserve">
+    <value>Chemi&amp;cal formula:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_similar_transition_already_exists_" xml:space="preserve">
+    <value>A similar transition already exists.</value>
+  </data>
+  <data name="EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression" xml:space="preserve">
+    <value>Measured results must be completely loaded before they can be used to create a declustering potential regression.</value>
+  </data>
+  <data name="EditDPDlg_OkDialog_The_declustering_potential_regression__0__already_exists" xml:space="preserve">
+    <value>The declustering potential regression '{0}' already exists.</value>
+  </data>
+  <data name="EditDPDlg_ShowGraph_Declustering_Potential" xml:space="preserve">
+    <value>Declustering Potential</value>
+  </data>
+  <data name="EditDPDlg_ShowGraph_Declustering_Potential_Regression" xml:space="preserve">
+    <value>Declustering Potential Regression</value>
+  </data>
+  <data name="EditDPDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
+  </data>
+  <data name="EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
+    <value>Insufficient data found to calculate a new regression.</value>
+  </data>
+  <data name="EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_" xml:space="preserve">
+    <value>{0} must contain a valid regular expression.</value>
+  </data>
+  <data name="EditExclusionDlg_OkDialog_The_peptide_exclusion__0__already_exists" xml:space="preserve">
+    <value>The peptide exclusion '{0}' already exists.</value>
+  </data>
+  <data name="EditExclusionDlg_OkDialog_The_text__0__is_not_a_valid_regular_expression" xml:space="preserve">
+    <value>The text '{0}' is not a valid regular expression.</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_" xml:space="preserve">
+    <value>&amp;Monoisotopic loss:</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_" xml:space="preserve">
+    <value>A&amp;verage loss:</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_" xml:space="preserve">
+    <value>Loss &amp;chemical formula:</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>Neutral loss masses must be greater than or equal to {0}.</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>Neutral loss masses must be less than or equal to {0}.</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses" xml:space="preserve">
+    <value>Please specify a formula or constant masses.</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_The_loss__0__already_exists" xml:space="preserve">
+    <value>The loss '{0}' already exists</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_GetIsolationWindows_Overlap_requires_an_even_number_of_windows_" xml:space="preserve">
+    <value>Overlap requires an even number of windows.</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___" xml:space="preserve">
+    <value>Reading isolation scheme...</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_" xml:space="preserve">
+    <value>Multiplex graphing is not supported.</value>
+  </data>
+  <data name="EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue" xml:space="preserve">
+    <value>There are overlaps in a single cycle of your extraction windows. Are you sure you want to continue?</value>
+  </data>
+  <data name="EditIsotopeEnrichmentDlg_OkDialog_The_isotope_enrichments_named__0__already_exist" xml:space="preserve">
+    <value>The isotope enrichments named '{0}' already exist.</value>
+  </data>
+  <data name="EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid" xml:space="preserve">
+    <value>The entry {0} is not valid.</value>
+  </data>
+  <data name="EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The enrichment {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="EditLabelTypeListDlg_OkDialog_The_label_name__0__may_not_be_used_more_than_once" xml:space="preserve">
+    <value>The label name '{0}' may not be used more than once.</value>
+  </data>
+  <data name="EditLabelTypeListDlg_OkDialog_The_label_names__0__and__1__conflict_Use_more_unique_names" xml:space="preserve">
+    <value>The label names '{0}' and '{1}' conflict. Use more unique names.</value>
+  </data>
+  <data name="EditLabelTypeListDlg_OkDialog_The_name__0__conflicts_with_the_default_light_isotope_label_type" xml:space="preserve">
+    <value>The name '{0}' conflicts with the default light isotope label type.</value>
+  </data>
+  <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
+    <value>Legacy Libraries</value>
+  </data>
+  <data name="EditLibraryDlg_GetLibraryPath_Spectral_Libraries" xml:space="preserve">
+    <value>Spectral Libraries</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_Loading_chromatogram_library" xml:space="preserve">
+    <value>Loading chromatogram library</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library" xml:space="preserve">
+    <value>Please choose a  non-redundant library.</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
+    <value>The file {0} appears to be a redundant library.</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_file__0__does_not_exist" xml:space="preserve">
+    <value>The file {0} does not exist.</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_library__0__already_exists" xml:space="preserve">
+    <value>The library '{0}' already exists.</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_path__0__is_a_directory" xml:space="preserve">
+    <value>The path {0} is a directory.</value>
+  </data>
+  <data name="EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue" xml:space="preserve">
+    <value>This will reset the list to its default values. Continue?</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_" xml:space="preserve">
+    <value>&amp;Monoisotopic mass:</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
+    <value>A&amp;verage mass:</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_" xml:space="preserve">
+    <value>Ion &amp;chemical formula:</value>
+  </data>
+  <data name="EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses" xml:space="preserve">
+    <value>Please specify a formula or constant masses.</value>
+  </data>
+  <data name="EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>Reporter ion masses must be less than or equal to {0}.</value>
+  </data>
+  <data name="EditMeasuredIonDlg_OkDialog_The_special_ion__0__already_exists" xml:space="preserve">
+    <value>The special ion '{0}' already exists.</value>
+  </data>
+  <data name="EditMeasuredIonDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid" xml:space="preserve">
+    <value>{0} must contain at least one amino acid.</value>
+  </data>
+  <data name="EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid" xml:space="preserve">
+    <value>The character '{0}' is not a valid amino acid.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
+    <value>Are you sure you want to create a new optimization library file? Any changes to the current library will be lost.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library" xml:space="preserve">
+    <value>Create Optimization Library</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
+    <value>Are you sure you want to open a new optimization library file? Any changes to the current library will be lost.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library" xml:space="preserve">
+    <value>Open Optimization Library</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_" xml:space="preserve">
+    <value>The file {0} could not be created.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_" xml:space="preserve">
+    <value>A library with the name {0} already exists. Do you want to overwrite it?</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_" xml:space="preserve">
+    <value>Click the Create button to create a new library or the Open button to open an existing library file.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Failure_updating_optimizations_in_the_optimization_library__The_database_may_be_out_of_synch_" xml:space="preserve">
+    <value>Failure updating optimizations in the optimization library. The database may be out of synch.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_library" xml:space="preserve">
+    <value>library</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Please_choose_a_library_file_for_the_optimization_library_" xml:space="preserve">
+    <value>Please choose a library file for the optimization library.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Please_enter_a_name_for_the_optimization_library_" xml:space="preserve">
+    <value>Please enter a name for the optimization library.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Please_use_a_full_path_to_a_library_file_for_the_optimization_library_" xml:space="preserve">
+    <value>Please use a full path to a library file for the optimization library.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
+    <value>The file {0} does not exist. Click the Create button to create a new library or the Open button to find the missing file.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies" xml:space="preserve">
+    <value>{0} optimized collision energies</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy" xml:space="preserve">
+    <value>{0} optimized collision energy</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage" xml:space="preserve">
+    <value>{0} optimized compensation voltage</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages" xml:space="preserve">
+    <value>{0} optimized compensation voltages</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential" xml:space="preserve">
+    <value>{0} optimized declustering potential</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials" xml:space="preserve">
+    <value>{0} optimized declustering potentials</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_" xml:space="preserve">
+    <value>The optimization with sequence {0}, charge {1}, fragment ion {2}, and product charge {3} appears in the {4} table more than once.</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
+    <value>The value {0} is not a valid modified peptide sequence.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
+    <value>Failed training the model:</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
+    <value>Composite Score (Normalized)</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value" xml:space="preserve">
+    <value>P Value</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value" xml:space="preserve">
+    <value>Q value</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
+    <value>Train a model to see composite score</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution" xml:space="preserve">
+    <value>Train a model to see P value distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution" xml:space="preserve">
+    <value>Train a model to see Q value distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_InitGraphPane_Peak_count" xml:space="preserve">
+    <value>Peak count</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_InitGraphPane_Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign" xml:space="preserve">
+    <value>Unexpected Coefficient Sign</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_Calculating" xml:space="preserve">
+    <value>Calculating</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_" xml:space="preserve">
+    <value>There are no decoy peptides in the current document. Uncheck the Use Decoys Box.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_Training" xml:space="preserve">
+    <value>Training</value>
+    <comment>trainng the scoring model</comment>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModelClick_Scoring" xml:space="preserve">
+    <value>Scoring</value>
+    <comment>scoring peaks</comment>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown" xml:space="preserve">
+    <value>unknown</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
+    <value>Combined normal distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
+    <value>Decoy normal distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoys" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides" xml:space="preserve">
+    <value>P values of target peptides</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_" xml:space="preserve">
+    <value>Pi zero (expected nulls)</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
+    <value>Second best peaks</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
+    <value>Second best peaks normal distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_" xml:space="preserve">
+    <value>Trained model is not applicable to current dataset.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides" xml:space="preserve">
+    <value>Q values of target peptides</value>
+  </data>
+  <data name="EditRTDlg_OkDialog__0__must_be_greater_than_0" xml:space="preserve">
+    <value>{0} must be greater than 0.</value>
+  </data>
+  <data name="EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm" xml:space="preserve">
+    <value>Retention time prediction requires a calculator algorithm.</value>
+  </data>
+  <data name="EditRTDlg_OkDialog_The_retention_time_regression__0__already_exists" xml:space="preserve">
+    <value>The retention time regression '{0}' already exists.</value>
+  </data>
+  <data name="EditRTDlg_RecalcRegression__0__peptides_R__1__" xml:space="preserve">
+    <value>({0} peptides, R = {1})</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__" xml:space="preserve">
+    <value>An error occurred attempting to initialize the calculator {0}.</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Initializing" xml:space="preserve">
+    <value>Initializing</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Initializing__0__calculator" xml:space="preserve">
+    <value>Initializing {0} calculator</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Measured_Time" xml:space="preserve">
+    <value>Measured Time</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Retention_Times_by_Score" xml:space="preserve">
+    <value>Retention Times by Score</value>
+  </data>
+  <data name="EditRTDlg_ShowPeptides_Calculate_Left" xml:space="preserve">
+    <value>&amp;Calculate &lt;&lt;</value>
+  </data>
+  <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
+    <value>&amp;Calculate &gt;&gt;</value>
+  </data>
+  <data name="EditRTDlg_UpdateCalculator_The__0__calculator_cannot_score_any_of_the_peptides" xml:space="preserve">
+    <value>The {0} calculator cannot score any of the peptides.</value>
+  </data>
+  <data name="EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings" xml:space="preserve">
+    <value>The calculator cannot be used to score peptides. Please check its settings.</value>
+  </data>
+  <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
+    <value>&amp;Chemical formula:</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___" xml:space="preserve">
+    <value>Click 'Custom' to use the name '{0}'.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___" xml:space="preserve">
+    <value>Click 'Unimod' to use the name '{0}'.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Continue" xml:space="preserve">
+    <value>Continue?</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid" xml:space="preserve">
+    <value>Labeled atoms on terminal modification are not valid.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_The_modification__0__already_exists" xml:space="preserve">
+    <value>The modification '{0}' already exists.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable" xml:space="preserve">
+    <value>The variable checkbox only applies to precursor modification. Product ion losses are inherently variable.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings" xml:space="preserve">
+    <value>There is a Unimod modification with the same settings.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings" xml:space="preserve">
+    <value>There is an existing modification with the same settings:</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___" xml:space="preserve">
+    <value>This modification does not match the Unimod specifications for '{0}'.</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Unimod" xml:space="preserve">
+    <value>Unimod</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name" xml:space="preserve">
+    <value>Use non-standard settings for this name?</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Variable_modifications_must_specify_amino_acid_or_terminus" xml:space="preserve">
+    <value>Variable modifications must specify amino acid or terminus.</value>
+  </data>
+  <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
+    <value>'{0}' is not a recognized Unimod name.</value>
+  </data>
+  <data name="EditStaticModDlg_UpdateListAvailableMods_Show_all" xml:space="preserve">
+    <value>&lt;Show all...&gt;</value>
+  </data>
+  <data name="EditStaticModDlg_UpdateListAvailableMods_Show_common" xml:space="preserve">
+    <value>&lt;Show common...&gt;</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library" xml:space="preserve">
+    <value>Export Filtered MIDAS Library</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_" xml:space="preserve">
+    <value>A library with this name already exists.</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
+    <value>You must enter a name for the filtered library.</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_" xml:space="preserve">
+    <value>You must enter a path for the filtered library.</value>
+  </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
+    <value>Formulas are written in standard chemical notation, e.g. "C2H6O".  Heavy isotopes are indicated by a prime (e.g. C' for C13) or double prime for less abundant stable iostopes (e.g. O" for O17, O' for O18).</value>
+  </data>
+  <data name="FormulaBox_helpToolStripMenuItem_Click_Formula_Help" xml:space="preserve">
+    <value>Formula Help</value>
+  </data>
+  <data name="FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_" xml:space="preserve">
+    <value>Mass &amp;Accuracy:</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
+    <value>Full gradient chromatograms will take longer to import, consume more disk space, and may make peak picking less effective.</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_" xml:space="preserve">
+    <value>None of the spectral libraries in this document contain any retention times for any of the peptides in this document.</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_" xml:space="preserve">
+    <value>This document does not contain any spectral libraries.</value>
+  </data>
+  <data name="GridViewDriver_GetValue_on_line__0__" xml:space="preserve">
+    <value>on line {0}</value>
+  </data>
+  <data name="IsolationWidthType_FIXED_Fixed" xml:space="preserve">
+    <value>Fixed</value>
+  </data>
+  <data name="IsolationWidthType_RESULTS_Results" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin" xml:space="preserve">
+    <value>Results with margin</value>
+  </data>
+  <data name="LabelTypeComboDriver_LabelTypeComboDriver_LabelType" xml:space="preserve">
+    <value>LabelType</value>
+  </data>
+  <data name="LabelTypeComboDriver_LoadList_Edit_list" xml:space="preserve">
+    <value>&lt;Edit list...&gt;</value>
+  </data>
+  <data name="LabelTypeComboDriver_LoadList_Internal_standard_type" xml:space="preserve">
+    <value>I&amp;nternal standard type:</value>
+  </data>
+  <data name="LabelTypeComboDriver_LoadList_Internal_standard_types" xml:space="preserve">
+    <value>I&amp;nternal standard types:</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library" xml:space="preserve">
+    <value>Adding iRTs to library</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>An error occurred trying to add iRTs to the library.</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_library" xml:space="preserve">
+    <value>Loading library</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers" xml:space="preserve">
+    <value>Loading retention time providers</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Processing_retention_times" xml:space="preserve">
+    <value>Processing retention times</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
+    <value>Add retention time predictor</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library" xml:space="preserve">
+    <value>Adding optimization library</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_" xml:space="preserve">
+    <value>Adding optimization values from {0}</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load_the_optimization_library_file__0__" xml:space="preserve">
+    <value>An error occurred attempting to load the optimization library file {0}.</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_" xml:space="preserve">
+    <value>The active document must contain results in order to add optimized values.</value>
+  </data>
+  <data name="LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0___and_product_ion___2___in_the_list_" xml:space="preserve">
+    <value>There is already an optimization with sequence '{0}' and product ion '{2}' in the list.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_" xml:space="preserve">
+    <value>Missing product ion on line {1}.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_" xml:space="preserve">
+    <value>The pasted text must contain the same number of columns as the table.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_" xml:space="preserve">
+    <value>Optimized values must be greater than zero.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_" xml:space="preserve">
+    <value>Optimized values must be valid decimal numbers.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateProductIon_Product_ion__0__is_invalid_" xml:space="preserve">
+    <value>Product ion {0} is invalid.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateProductIon_Product_ion_cannot_be_empty_" xml:space="preserve">
+    <value>Product ion cannot be empty.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__" xml:space="preserve">
+    <value>Invalid product ion format {0} on line {1}.</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateSequence_Sequence_cannot_be_empty_" xml:space="preserve">
+    <value>Sequence cannot be empty.</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog__0__cannot_be_blank" xml:space="preserve">
+    <value>{0} cannot be blank</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___" xml:space="preserve">
+    <value>There is already a result file rule set named '{0}'.</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_" xml:space="preserve">
+    <value>This is not a valid regular expression.</value>
+  </data>
+  <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
+    <value>The text '{0}' must either be a valid regular expression or blank</value>
+  </data>
+  <data name="PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list" xml:space="preserve">
+    <value>The sequence '{0}' is already present in the list.</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_" xml:space="preserve">
+    <value>Invalid decimal number format {0} on line {1}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_" xml:space="preserve">
+    <value>Missing peptide sequence on line {0}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
+    <value>Missing value on line {0}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
+    <value>The pasted text must have two columns.</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_" xml:space="preserve">
+    <value>The text {0} is not a valid peptide sequence on line {1}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_" xml:space="preserve">
+    <value>The time {0} must be greater than zero on line {1}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list" xml:space="preserve">
+    <value>The added lists contains {0} peptides which already appear in the {1} list.</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times" xml:space="preserve">
+    <value>The added lists contains {0} peptides which appear multiple times.</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_already_appear_in_the__0__list" xml:space="preserve">
+    <value>The following peptides already appear in the {0} list:</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list" xml:space="preserve">
+    <value>The following peptides appear multiple times in the added list:</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__already_appears_in_the__1__list" xml:space="preserve">
+    <value>The peptide '{0}' already appears in the {1} list.</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list" xml:space="preserve">
+    <value>The peptide '{0}' appears multiple times in the added list.</value>
+  </data>
+  <data name="PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not" xml:space="preserve">
+    <value>Do you want to uncheck the ones that do not?</value>
+  </data>
+  <data name="PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides" xml:space="preserve">
+    <value>Not all libraries chosen support the '{0}' ranking for peptides.</value>
+  </data>
+  <data name="PeptideSettingsUI_OkDialog_Changing_peptide_settings" xml:space="preserve">
+    <value>Changing peptide settings</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
+    <value>Failed loading MIDAS library {0}.</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
+    <value>Loading {0}</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library" xml:space="preserve">
+    <value>Loading MIDAS Library</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_" xml:space="preserve">
+    <value>Multiple MIDAS libraries in document. Select only one before filtering.</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes" xml:space="preserve">
+    <value>Peptide settings have been changed. Save changes?</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__" xml:space="preserve">
+    <value>Failed to load background proteome {0}.</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__" xml:space="preserve">
+    <value>In order to use the 'Bilinear turning point' method of LOD calculation, 'Regression fit' must be set to 'Bilinear'.</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
+    <value>The file {0} is missing.</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file" xml:space="preserve">
+    <value>The file {0} may not be a valid proteome file.</value>
+  </data>
+  <data name="SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings" xml:space="preserve">
+    <value>Do you want to overwrite the existing settings?</value>
+  </data>
+  <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
+    <value>The name {0} already exists.</value>
+  </data>
+  <data name="StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_" xml:space="preserve">
+    <value>The settings have been reset to the default values.</value>
+  </data>
+  <data name="StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on" xml:space="preserve">
+    <value>Integrate all: on</value>
+  </data>
+  <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
+    <value>The SureQuant acquisition method requires "Triggered Chromatogram Extraction". Unchecking this option will switch to the PRM acquisition method. Do you want to continue?</value>
+  </data>
+  <data name="TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak" xml:space="preserve">
+    <value>Min % of base pea&amp;k:</value>
+  </data>
+  <data name="TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks" xml:space="preserve">
+    <value>Pea&amp;ks:</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified" xml:space="preserve">
+    <value>Before performing a multiplexed DIA scan, the instrument's firmware inclusion limit must be specified.</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Changing_transition_settings" xml:space="preserve">
+    <value>Changing transition settings</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
+    <value>For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
+    <value>High resolution MS1 filtering requires use of monoisotopic precursor masses.</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
+    <value>Molecule ion types must contain a comma separated list of ion types. Valid types are "f" (for fragment) and/or "p" (for precursor)</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart" xml:space="preserve">
+    <value>The allowable retention time range {0} to {1} must be at least {2} minutes apart.</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes" xml:space="preserve">
+    <value>This is not a valid number of minutes.</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus" xml:space="preserve">
+    <value>Adducts---</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus" xml:space="preserve">
+    <value>Adducts+++</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="TransitionSettingsUI_SetAnalyzerType_Resolution" xml:space="preserve">
+    <value>Res&amp;olution:</value>
+  </data>
+  <data name="TransitionSettingsUI_SetAnalyzerType_Resolving_power" xml:space="preserve">
+    <value>Res&amp;olving power:</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0}{1} library {2} will be ignored.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0} and {1} library {2} will be ignored.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
+    <value>{0} existing</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__proteins" xml:space="preserve">
+    <value>{0} proteins,</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__unmatched" xml:space="preserve">
+    <value>{0} unmatched</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Add_All" xml:space="preserve">
+    <value>Add All</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library" xml:space="preserve">
+    <value>Add all peptides from {0} library</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document" xml:space="preserve">
+    <value>All library peptides already exist in the current document.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_entries" xml:space="preserve">
+    <value>entries</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
+    <value>entry</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_Molecules" xml:space="preserve">
+    <value>Matching Molecules</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings" xml:space="preserve">
+    <value>Matching molecules to the current document settings</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_Peptides" xml:space="preserve">
+    <value>Matching Peptides</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings" xml:space="preserve">
+    <value>Matching peptides to the current document settings</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_No_peptides_match_the_current_document_settings" xml:space="preserve">
+    <value>No peptides match the current document settings.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Please_retry_this_operation" xml:space="preserve">
+    <value>Please retry this operation.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_The_document_changed_during_processing" xml:space="preserve">
+    <value>The document changed during processing.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
+    <value>This operation will add {0} {1} molecules, {2} precursors and {3} transitions to the document.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
+    <value>This operation will add {0} {1} peptides, {2} precursors and {3} transitions to the document.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_Add_library_peptide__0__" xml:space="preserve">
+    <value>Add library peptide {0}</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings" xml:space="preserve">
+    <value>Modifications for this peptide do not match current document settings.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document" xml:space="preserve">
+    <value>The peptide {0} already exists with charge {1} in the current document.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_" xml:space="preserve">
+    <value>The precursor m/z {0:F04} is not measured by the current DIA isolation scheme.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
+    <value>The precursor m/z {0:F04} is outside the instrument range {1} to {2}.</value>
+  </data>
+  <data name="ViewLibraryDlg_CheckLibraryInSettings_Add_Library" xml:space="preserve">
+    <value>Add Library</value>
+  </data>
+  <data name="ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it" xml:space="preserve">
+    <value>Would you like to add it?</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureBackgroundProteome_A_background_proteome_is_required_to_associate_proteins" xml:space="preserve">
+    <value>A background proteome is required to associate proteins.</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__" xml:space="preserve">
+    <value>An error occurred while trying to process the file {0}.</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
+    <value>Copying database</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
+    <value>The background proteome '{0}' is in an older format.  In order to be able to efficiently find peptide sequences, the background proteome should be upgraded to the latest version.  Do you want to upgrade the background proteome now?</value>
+  </data>
+  <data name="ViewLibraryDlg_MatchModifications_Add_modifications" xml:space="preserve">
+    <value>Add modifications</value>
+  </data>
+  <data name="ViewLibraryDlg_MatchModifications_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="ViewLibraryDlg_MatchModifications_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides" xml:space="preserve">
+    <value>Updating list of peptides</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
+    <value>Molecules {0} through {1} of {2} total.</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Peptides__0__through__1__of__2__total" xml:space="preserve">
+    <value>Peptides {0} through {1} of {2} total.</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_CCS__" xml:space="preserve">
+    <value>CCS: </value>
+    <comment>CCS is abbreviation for Collision Cross Section</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
+    <value>Failure loading spectrum. Library may be corrupted.</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
+    <value>File: {0}</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_IM__" xml:space="preserve">
+    <value>IM: </value>
+    <comment>&gt;IM is abbreviation for Ion Mobility</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
+    <value>RT</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
+    <value>Unauthorized access attempting to read from library.</value>
+  </data>
+  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_" xml:space="preserve">
+    <value>The library {0} is no longer available in the Skyline settings. Reload the library explorer?</value>
+  </data>
+  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings" xml:space="preserve">
+    <value>There are no libraries in the current settings.</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules" xml:space="preserve">
+    <value>Library Molecules</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides" xml:space="preserve">
+    <value>Library Peptides</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present" xml:space="preserve">
+    <value>Skipping {0} already present</value>
+  </data>
+  <data name="ViewLibSpectrumGraphItem_Title__0__1_" xml:space="preserve">
+    <value>{0}{1} m/z</value>
+  </data>
+  <data name="ViewLibSpectrumGraphItem_Title__0__1__Charge__2__" xml:space="preserve">
+    <value>{0}{1}, Charge {2}</value>
+  </data>
+  <data name="WindowMargin_ASYMMETRIC_Asymmetric" xml:space="preserve">
+    <value>Asymmetric</value>
+  </data>
+  <data name="WindowMargin_NONE_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="WindowMargin_SYMMETRIC_Symmetric" xml:space="preserve">
+    <value>Symmetric</value>
+  </data>
+  <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
+    <value>Extraction</value>
+  </data>
+  <data name="WindowType_MEASUREMENT_Measurement" xml:space="preserve">
+    <value>Measurement</value>
+  </data>
+  <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
+    <value>
+
+This library entry only provides precursor
+information, there is no spectrum to show</value>
+  </data>
+  <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
+    <value>minutes of detected features</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
+    <value>Hardklor looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
+    <value>This is the value assumed by Hardklor, it cannot be adjusted.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_" xml:space="preserve">
+    <value>Sets the MS data type for Hardklor's FWHM calculation. Normally set to Centroided.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_" xml:space="preserve">
+    <value>Sets the mass analyzer type for Hardklor's FWHM calculation.</value>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
+    <value>&amp;Instrument values</value>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
+    <value>Instrument values (from full-scan settings)</value>
+  </data>
+  <data name="FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient" xml:space="preserve">
+    <value>{0} methods usually specify the time range for the mass spectrometer to acquire spectra.
+
+Applying retention time filtering in Skyline is typically unnecessary and may lead to truncated extracted ion chromatograms.
+
+Use this option only if your acquisition method includes multiple targets with the same m/z.</value>
+  </data>
+  <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
+    <value>Are you sure you want to train a peak scoring model for this document?
+      
+This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+
+Before training a peak scoring model, it is recommended that you follow these steps:
+
+1. Navigate to "Settings &gt; Peptide Settings - Libraries" tab and click "Edit List".
+2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.
+3. Navigate to "Edit &gt; Manage Results" and click the "Re-score" button.
+
+This will provide Skyline with a variety of candidate peaks to evaluate peak quality.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
+    <value>Train Model</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
+      <value>You must specify a valid path to a Skyline document to learn from.</value>
+  </data>
+  <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
+    <value>MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature.</value>
+  </data>
+</root>

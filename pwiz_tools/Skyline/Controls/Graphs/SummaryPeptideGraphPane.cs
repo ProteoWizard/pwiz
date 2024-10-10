@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -55,7 +54,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             PaneKey = paneKey;
             string xAxisTitle = 
-                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
+                Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
@@ -169,7 +168,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (Settings.Default.AreaLogScale && allowLogScale)
             {
-                YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
+                YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
                 YAxis.Scale.MinAuto = false;
                 FixedYMin = YAxis.Scale.Min = 1;
@@ -241,9 +240,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide or molecule
-                var sequences = new List<Tuple<string, bool>>();
+                var sequences = new List<UniquePrefixGenerator.TargetLabel>();
                 foreach (var nodePep in document.Molecules)
-                    sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
+                    sequences.Add(new UniquePrefixGenerator.TargetLabel(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
                 var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
 
                 int pointListCount = 0;
@@ -600,7 +599,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return retentionTimeValues;
                 }
-                RegressionLine regressionFunction;
+                AlignmentFunction regressionFunction;
                 if (!RetentionTimeTransformOp.TryGetRegressionFunction(chromFileInfoId, out regressionFunction))
                 {
                     return null;

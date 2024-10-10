@@ -30,7 +30,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Util
@@ -169,6 +168,15 @@ namespace pwiz.Skyline.Util
         void UpdateUI(bool selectionChanged = true);
     }
 
+    /// <summary>
+    /// Implement if you need a graph to persist some information
+    /// into the .view file
+    /// </summary>
+    public interface ILayoutPersistable
+    {
+        string GetPersistentString();
+    }
+
     public sealed class MoveThreshold
     {
         public MoveThreshold(int width, int height)
@@ -270,7 +278,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception)
             {
-                throw new WebToolException(Resources.Could_not_open_web_Browser_to_show_link_, link);
+                throw new WebToolException(UtilResources.Could_not_open_web_Browser_to_show_link_, link);
             }
         }
                 
@@ -323,7 +331,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static void ShowLinkFailure(IWin32Window parent, string link)
         {
-            AlertLinkDlg.Show(parent, Resources.Could_not_open_web_Browser_to_show_link_, link, link, false);
+            AlertLinkDlg.Show(parent, UtilResources.Could_not_open_web_Browser_to_show_link_, link, link, false);
         }
 
         
@@ -367,7 +375,7 @@ window.onload = submitForm;
             }
             catch (Exception)
             {                                
-                throw new IOException(Resources.WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_);                
+                throw new IOException(UtilResources.WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_);                
             }
 
             try
@@ -378,7 +386,7 @@ window.onload = submitForm;
             }
             catch(Exception)
             {
-                throw new WebToolException(Resources.Could_not_open_web_Browser_to_show_link_, link);
+                throw new WebToolException(UtilResources.Could_not_open_web_Browser_to_show_link_, link);
             }
 
             DeleteTempHelper d = new DeleteTempHelper(filePath);

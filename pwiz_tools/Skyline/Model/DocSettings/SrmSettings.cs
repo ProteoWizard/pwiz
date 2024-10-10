@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (precursorCalc == null)
             {
                 // Try to track down this exception:
-                // https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
+                // https://skyline.ms/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
                 throw new InvalidDataException(
                     String.Format(@"unable to locate precursor calculator for isotope label type {0} and mods {1}",
                         labelType == null ? @"(null)" : labelType.ToString(),
@@ -630,16 +630,20 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Cached standard types
         /// </summary>
-        private ImmutableDictionary<StandardType, ImmutableList<PeptideDocNode>> _cachedPeptideStandards;
-        private static readonly PeptideDocNode[] EMPTY_STANDARDS = new PeptideDocNode[0];
+        private ImmutableDictionary<StandardType, ImmutableList<IdPeptideDocNode>> _cachedPeptideStandards;
 
-        public IEnumerable<PeptideDocNode> GetPeptideStandards(StandardType standardType)
+        public ImmutableList<IdPeptideDocNode> GetPeptideStandards(StandardType standardType)
         {
-            ImmutableList<PeptideDocNode> standardPeptides;
+            ImmutableList<IdPeptideDocNode> standardPeptides;
             if (_cachedPeptideStandards == null || !_cachedPeptideStandards.TryGetValue(standardType, out standardPeptides))
-                return EMPTY_STANDARDS; // So that emptiness is reference equal
+                return ImmutableList<IdPeptideDocNode>.EMPTY;
 
             return standardPeptides;
+        }
+
+        public IEnumerable<IdPeptideDocNode> GetSurrogateStandards(string name)
+        {
+            return GetPeptideStandards(StandardType.SURROGATE_STANDARD).Where(idPep=>idPep.PeptideDocNode.ModifiedTarget.InvariantName == name);
         }
 
         public SrmSettings CachePeptideStandards(IList<DocNode> peptideGroupDocNodesOrig,
@@ -650,7 +654,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return this;
 
             // Build an initial mutable dictionay and lists
-            var cachedPeptideStandards = new Dictionary<StandardType, IList<PeptideDocNode>>();
+            var cachedPeptideStandards = new Dictionary<StandardType, List<IdPeptideDocNode>>();
             foreach (PeptideGroupDocNode nodePepGroup in peptideGroupDocNodes)
             {
                 foreach (var nodePep in nodePepGroup.Molecules)
@@ -658,37 +662,37 @@ namespace pwiz.Skyline.Model.DocSettings
                     var standardType = nodePep.GlobalStandardType;
                     if (standardType == null)
                         continue;
-                    IList<PeptideDocNode> listPeptideAndGroup;
+                    List<IdPeptideDocNode> listPeptideAndGroup;
                     if (!cachedPeptideStandards.TryGetValue(standardType, out listPeptideAndGroup))
                     {
-                        listPeptideAndGroup = new List<PeptideDocNode>();
+                        listPeptideAndGroup = new List<IdPeptideDocNode>();
                         cachedPeptideStandards.Add(standardType, listPeptideAndGroup);
                     }
                     // Update the PeptideChromInfo before adding it to the list
                     var nodeWithUpdatedResults = nodePep.ChangeSettings(this, new SrmSettingsDiff(this, true));
                     if (nodePep.Equals(nodeWithUpdatedResults))
                     {
-                        listPeptideAndGroup.Add(nodePep);
+                        listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodePep));
                     }
                     else
                     {
-                        listPeptideAndGroup.Add(nodeWithUpdatedResults);
+                        listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodeWithUpdatedResults));
                     }
                 }
             }
             // Create new read-only lists, if necessary
             bool createdNewList = false;
-            var cachedPeptideStandardsRo = new Dictionary<StandardType, ImmutableList<PeptideDocNode>>();
+            var cachedPeptideStandardsRo = new Dictionary<StandardType, ImmutableList<IdPeptideDocNode>>();
             foreach (var pair in cachedPeptideStandards)
             {
                 var standardType = pair.Key;
                 var peptidesNew = pair.Value;
-                ImmutableList<PeptideDocNode> peptides;
+                ImmutableList<IdPeptideDocNode> peptides;
                 if (_cachedPeptideStandards == null ||
                     !_cachedPeptideStandards.TryGetValue(standardType, out peptides) ||
                     !ArrayUtil.EqualsDeep(peptides, peptidesNew))
                 {
-                    peptides = MakeReadOnly(peptidesNew);
+                    peptides = ImmutableList.ValueOf(peptidesNew);
                     createdNewList = true;
                 }
                 cachedPeptideStandardsRo.Add(standardType, peptides);
@@ -699,7 +703,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (_cachedPeptideStandards == null || _cachedPeptideStandards.Count == cachedPeptideStandardsRo.Count)
                     return this;
             }
-            var prop = new ImmutableDictionary<StandardType, ImmutableList<PeptideDocNode>>(cachedPeptideStandardsRo);
+            var prop = new ImmutableDictionary<StandardType, ImmutableList<IdPeptideDocNode>>(cachedPeptideStandardsRo);
             return ChangeProp(ImClone(this), im => im._cachedPeptideStandards = prop);
         }
 
@@ -846,7 +850,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var peptideStandards = GetPeptideStandards(StandardType.GLOBAL_STANDARD);
             if (peptideStandards != null)
             {
-                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.TransitionGroups))
+                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.PeptideDocNode.TransitionGroups))
                 {
                     var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
                     foreach (var groupChromInfo in chromInfos)
@@ -859,16 +863,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             return globalStandardArea;
-        }
-
-        public IEnumerable<PeptideDocNode> GetInternalStandards(string internalStandardName)
-        {
-            if (null == internalStandardName)
-            {
-                return GetPeptideStandards(StandardType.GLOBAL_STANDARD);
-            }
-            return GetPeptideStandards(StandardType.SURROGATE_STANDARD)
-                .Where(pep => pep.ModifiedTarget.Sequence == internalStandardName);
         }
 
         public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<Adduct> precursorCharges, ExplicitMods mods)
@@ -1017,36 +1011,37 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // Use the explicitly specified CCS value if provided, and if we know how to convert to IM
                 var im = instrumentInfo.IonMobilityFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value,
-                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                // Now get the window width
-                var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
-                return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
+                {
+                    // Now get the window width
+                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                    return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                }
             }
-            else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
+            if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
-                // Use the explicitly specified IM value
+                // Use the explicitly specified IM value if no CCS provided, or if CCS=>IM conversion failed
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                if (instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+                if (!nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && // Retain original CCS if CCS=>IM failed
+                    instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
                 {
                     // Try to get a CCS value for this explicitly stated IM value - useful in reports
-                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                     imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
                 }
                 // Now get the window width
                 var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
             }
-            else
-            {
-                // Use library values
-                return GetIonMobilityHelper(nodePep, nodeGroup,
-                    instrumentInfo,
-                    libraryIonMobilityInfo, ionMobilityMax);
-            }
+            // Use library values
+            return GetIonMobilityHelper(nodePep, nodeGroup,
+                instrumentInfo,
+                libraryIonMobilityInfo, ionMobilityMax);
         }
 
         /// <summary>
@@ -1098,7 +1093,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
             {
                 // Try to get a CCS value for this IM value - useful in reports
-                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 result = result.ChangeCollisionCrossSection(ccs);
             }
             return result ?? IonMobilityFilter.EMPTY;
@@ -1125,9 +1120,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
         {
-            if (!nodePep.IsProteomic)
-                return new double[0]; // No retention time prediction for small molecules
-
             var lookupSequence = nodePep.SourceUnmodifiedTarget;
             var lookupMods = nodePep.SourceExplicitMods;
             if (filePath != null)
@@ -1405,7 +1397,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                 }
-                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues && filePath != null)
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
                 {
                     var libraries = PeptideSettings.Libraries;
                     if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)
@@ -1517,7 +1509,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var peptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
             var enumDocNodes = peptide.CreateDocNodes(this, this);
-            return enumDocNodes.GetEnumerator().MoveNext();
+            return enumDocNodes.Any();
         }
 
         public bool Accept(string peptideSequence)
@@ -1855,7 +1847,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     var librarySpec = libraries.LibrarySpecs[i];
                     if (librarySpec == null)
-                        throw new InvalidDataException(Resources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
+                        throw new InvalidDataException(DocSettingsResources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
                     librarySpecs[iSpec] = librarySpec;
                     if (!File.Exists(librarySpec.FilePath))
                     {
@@ -1935,7 +1927,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     (!defSet.StaticModList.Contains(mod.ChangeExplicit(false)) || (mod.IsVariable && allowVariableOverwrite)) &&
                     // A variable modification set explicitly, can show up as explicit only in a document.
                     // This condition makes sure it doesn't overwrite the existing variable mod.
-                    (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
+                    // Carefully because not all mods can be made variable without throwing
+                    (!mod.IsExplicit || !defSet.StaticModList.Contains(m => Equals(mod.ChangeVariable(false), m.ChangeVariable(false)))))
                 {
                     newStaticMods.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
                     if (!overwrite)
@@ -1944,7 +1937,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (defSet.StaticModList.Any(existingMod => Equals(existingMod.Name, modName)))
                         {
                             throw new InvalidDataException(
-                                string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                string.Format(DocSettingsResources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
                                     modName));
                         }
                     }
@@ -1964,7 +1957,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             if (defSet.HeavyModList.Any(existingMod => Equals(existingMod.Name, modName)))
                             {
                                 throw new InvalidDataException(
-                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                    string.Format(DocSettingsResources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
                                         modName));
                             }
                         }
@@ -2082,6 +2075,21 @@ namespace pwiz.Skyline.Model.DocSettings
                     result = result.ChangeTransitionSettings(transitionSettings =>
                         transitionSettings.ChangeLibraries(
                             transitionSettings.Libraries.ChangeIonMatchMzTolerance(new MzTolerance(newToleranceValue))));
+                }
+            }
+
+            if (documentFormat < DocumentFormat.VERSION_24_11)
+            {
+                if (!result.TransitionSettings.FullScan.SpectrumClassFilter.IsEmpty)
+                {
+                    var fullScan = result.TransitionSettings.FullScan;
+                    if (fullScan.SpectrumClassFilter.Clauses.Contains(TransitionFullScan.IgnoreSimScansFilter))
+                    {
+                        fullScan = fullScan.ChangeIgnoreSimScans(true);
+                    }
+
+                    fullScan = fullScan.ChangeSpectrumFilter(default);
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(fullScan));
                 }
             }
 
@@ -2362,7 +2370,22 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _store[(int)ionType + OFFSET_I, index] = value;
             }
-        }    
+        }
+
+        public T GetIonValue(IonType ionType, int ionNumber)
+        {
+            if (ionType.IsNTerminal())
+                return this[ionType, ionNumber - 1];
+            return this[ionType, _store.GetLength(1) - ionNumber];
+        }
+
+        public void SetIonValue(IonType ionType, int ionNumber, T value)
+        {
+            if (ionType.IsNTerminal())
+                this[ionType, ionNumber - 1] = value;
+            else
+                this[ionType, _store.GetLength(1) - ionNumber] = value;
+        }
     }
 
 

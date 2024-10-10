@@ -23,13 +23,18 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
@@ -68,7 +73,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly int _lower_margin;
         private IonType[] InitialPeptideIonTypes;
         private IonType[] InitialSmallMoleculeIonTypes;
-
+        private SpectrumClassFilter _spectrumFilter;
+        
         public TransitionSettingsUI(SkylineWindow parent)
         {
             InitializeComponent();
@@ -196,6 +202,7 @@ namespace pwiz.Skyline.SettingsUI
 
             DoIsolationSchemeChanged();
             cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
+            SpectrumFilter = _transitionSettings.FullScan.SpectrumClassFilter;
         }
 
         public const double SureQuantMzMatchTolerance = 0.007;
@@ -332,12 +339,6 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.PrecursorResMz = value; }
         }
 
-        public bool IgnoreSimScans
-        {
-            get { return FullScanSettingsControl.IgnoreSimScans; }
-            set { FullScanSettingsControl.IgnoreSimScans = value; }
-        }
-
         public bool UseSelectiveExtraction
         {
             get { return FullScanSettingsControl.UseSelectiveExtraction; }
@@ -430,7 +431,7 @@ namespace pwiz.Skyline.SettingsUI
             if (smallMoleculeIonTypes.Length == 0)
             {
                 helper.ShowTextBoxError(textSmallMoleculeIonTypes,
-                    Resources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
+                    SettingsUIResources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
                 return;
             }
             smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToArray();
@@ -568,7 +569,7 @@ namespace pwiz.Skyline.SettingsUI
             if (minTime.HasValue && maxTime.HasValue && maxTime.Value - minTime.Value < TransitionInstrument.MIN_TIME_RANGE)
             {
                 helper.ShowTextBoxError(textMaxTime,
-                                        string.Format(Resources.TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart,
+                                        string.Format(SettingsUIResources.TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart,
                                                       minTime, maxTime, TransitionInstrument.MIN_TIME_RANGE));
                 return;
             }
@@ -589,7 +590,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!precursorMassType.IsMonoisotopic())
                 {
-                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
+                    MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
                     tabControl1.SelectedIndex = (int)TABS.Prediction;
                     comboPrecursorMass.Focus();
                     return;
@@ -616,7 +617,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (isolationScheme != null && isolationScheme.WindowsPerScan.HasValue && !maxInclusions.HasValue)
             {
-                MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified);
+                MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified);
                 tabControl1.SelectedIndex = (int)TABS.Instrument;
                 textMaxInclusions.Focus();
                 return;
@@ -643,7 +644,7 @@ namespace pwiz.Skyline.SettingsUI
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return;
-
+            fullScan = fullScan.ChangeSpectrumFilter(SpectrumClassFilter.FromFilterPages(GetFilterPages()));
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
             if (!IonMobilityControl.ValidateIonMobilitySettings(helper, out var ionMobilityFiltering))
@@ -652,12 +653,11 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref ionMobilityFiltering, IonMobility);
 
             TransitionSettings settings = new TransitionSettings(prediction,
-                filter, libraries, integration, instrument, fullScan, ionMobilityFiltering);
-
+                    filter, libraries, integration, instrument, fullScan, ionMobilityFiltering);
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
             {
-                if (!_parent.ChangeSettingsMonitored(this, Resources.TransitionSettingsUI_OkDialog_Changing_transition_settings,
+                if (!_parent.ChangeSettingsMonitored(this, SettingsUIResources.TransitionSettingsUI_OkDialog_Changing_transition_settings,
                                                      s => s.ChangeTransitionSettings(settings)))
                 {
                     return;
@@ -1178,8 +1178,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Create a cascading menu item on parent menu
                 var text = charge > 0
-                    ? Resources.TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus
-                    : Resources.TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus;
+                    ? SettingsUIResources.TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus
+                    : SettingsUIResources.TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus;
                 var menuItem = new ToolStripMenuItem()
                 {
                     Text = text.Substring(0, text.Length - (3 - Math.Abs(charge)))  // Trim "Adducts +++" or "Adducts ---" as needed
@@ -1202,7 +1202,7 @@ namespace pwiz.Skyline.SettingsUI
                             // Start another cascade level for the more exotic adducts
                             var menuItemMore = new ToolStripMenuItem()
                             {
-                                Text = Resources.TransitionSettingsUI_PopulateAdductMenu_More
+                                Text = SettingsUIResources.TransitionSettingsUI_PopulateAdductMenu_More
                             };
                             menuItem.DropDownItems.Add(menuItemMore);
                             menuItem = menuItemMore;
@@ -1298,6 +1298,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (smallMolIons.Count > 0)
                 textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
+            UpdateSpectrumFilterText();
         }
 
         public bool TriggeredAcquisition
@@ -1311,7 +1312,7 @@ namespace pwiz.Skyline.SettingsUI
             if (AcquisitionMethod == FullScanAcquisitionMethod.SureQuant && !cbxTriggeredAcquisition.Checked)
             {
                 var message =
-                    Resources.TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_;
+                    SettingsUIResources.TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_;
                 switch (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK))
                 {
                     case DialogResult.Cancel:
@@ -1332,6 +1333,93 @@ namespace pwiz.Skyline.SettingsUI
                     IonMatchTolerance = matchTolerance / 1000;
                 else
                     IonMatchTolerance = matchTolerance * 1000;
+            }
+        }
+        private void btnEditSpectrumFilter_Click(object sender, EventArgs e)
+        {
+            EditSpectrumFilter();
+        }
+
+        public SpectrumClassFilter SpectrumFilter
+        {
+            get
+            {
+                return _spectrumFilter;
+            }
+            set
+            {
+                _spectrumFilter = value;
+                UpdateSpectrumFilterText();
+            }
+        }
+
+        private void UpdateSpectrumFilterText()
+        {
+            tbxSpectrumFilter.Text = SpectrumClassFilter.FromFilterPages(GetFilterPages()).GetText(true);
+        }
+
+        /// <summary>
+        /// Returns the appropriate set of spectrum filter pages that should be displayed in the filter editor,
+        /// taking into account whether MS1 and MS2 are enabled on the full scan tab.
+        /// </summary>
+        public FilterPages GetFilterPages()
+        {
+            var filterPages = SpectrumFilter.GetFilterPages();
+            if (filterPages.Pages.Contains(SpectrumClassFilter.GenericFilterPage))
+            {
+                return filterPages;
+            }
+
+            var requiredPages = new List<FilterPage>();
+            if (PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None)
+            {
+                requiredPages.Add(SpectrumClassFilter.Ms1FilterPage);
+            }
+            if (AcquisitionMethod != FullScanAcquisitionMethod.None)
+            {
+                requiredPages.Add(SpectrumClassFilter.Ms2FilterPage);
+            }
+
+            var newPages = new List<FilterPage>();
+            var newClauses = new List<FilterClause>();
+            foreach (var requiredPage in requiredPages)
+            {
+                bool found = false;
+                for (int i = 0; i < filterPages.Pages.Count; i++)
+                {
+                    if (Equals(requiredPage, filterPages.Pages[i]))
+                    {
+                        found = true;
+                        newPages.Add(filterPages.Pages[i]);
+                        newClauses.Add(filterPages.Clauses[i]);
+                    }
+                }
+
+                if (!found)
+                {
+                    newPages.Add(requiredPage);
+                    newClauses.Add(FilterClause.EMPTY);
+                }
+            }
+
+            return new FilterPages(newPages, newClauses);
+        }
+
+        public void EditSpectrumFilter()
+        {
+            var skylineDataSchema = new SkylineDataSchema(_parent, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
+            var filterPages = GetFilterPages();
+            if (filterPages.Pages.Count == 0)
+            {
+                MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_);
+                return;
+            }
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            dlg.CreateCopyVisible = false;
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                SpectrumFilter = SpectrumClassFilter.FromFilterPages(dlg.FilterPages);
             }
         }
     }

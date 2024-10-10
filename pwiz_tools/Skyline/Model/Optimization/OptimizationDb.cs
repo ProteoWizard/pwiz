@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Optimization
 
         public static string FILTER_OPTDB
         {
-            get { return TextUtil.FileDialogFilter(Resources.OptimizationDb_FILTER_OPTDB_Optimization_Libraries, EXT); }
+            get { return TextUtil.FileDialogFilter(OptimizationResources.OptimizationDb_FILTER_OPTDB_Optimization_Libraries, EXT); }
         }
 
         public const int SCHEMA_VERSION_CURRENT = 3; // Version 3 saves Charge and ProductCharge as TEXT instead of INT to accomodate adduct descriptions
@@ -216,17 +216,17 @@ namespace pwiz.Skyline.Model.Optimization
         //Throws DatabaseOpeningException
         public static OptimizationDb GetOptimizationDb(string path, IProgressMonitor loadMonitor, SrmDocument document)
         {
-            var status = new ProgressStatus(string.Format(Resources.OptimizationDb_GetOptimizationDb_Loading_optimization_library__0_, path));
+            var status = new ProgressStatus(string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_Loading_optimization_library__0_, path));
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status);
 
             try
             {
                 if (path == null)
-                    throw new OptimizationsOpeningException(Resources.OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_);
+                    throw new OptimizationsOpeningException(OptimizationResources.OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_);
 
                 if (!File.Exists(path))
-                    throw new OptimizationsOpeningException(String.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__does_not_exist_, path));
+                    throw new OptimizationsOpeningException(String.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_The_file__0__does_not_exist_, path));
 
                 string message;
                 try
@@ -243,19 +243,19 @@ namespace pwiz.Skyline.Model.Optimization
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    message = string.Format(Resources.OptimizationDb_GetOptimizationDb_You_do_not_have_privilieges_to_access_the_file__0__, path);
+                    message = string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_You_do_not_have_privilieges_to_access_the_file__0__, path);
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_path_containing__0__does_not_exist_, path);
+                    message = string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_The_path_containing__0__does_not_exist_, path);
                 }
                 catch (FileNotFoundException)
                 {
-                    message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_created__Perhaps_you_do_not_have_sufficient_privileges_, path);
+                    message = string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_created__Perhaps_you_do_not_have_sufficient_privileges_, path);
                 }
                 catch (SQLiteException)
                 {
-                    message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__is_not_a_valid_optimization_library_file_, path);
+                    message = string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_The_file__0__is_not_a_valid_optimization_library_file_, path);
                 }
                 catch (GenericADOException)
                 {
@@ -265,12 +265,12 @@ namespace pwiz.Skyline.Model.Optimization
                     }
                     catch (Exception e)
                     {
-                        message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_from_old_format_failed____1_, path, e.Message);
+                        message = string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_from_old_format_failed____1_, path, e.Message);
                     }
                 }
                 catch (Exception e)
                 {
-                    message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_, path, e.Message);
+                    message = string.Format(OptimizationResources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_, path, e.Message);
                 }
 
                 throw new OptimizationsOpeningException(message);
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Optimization
             matcher.CreateMatches(newDoc.Settings, peptideList, Settings.Default.StaticModList, Settings.Default.HeavyModList);
             FastaImporter importer = new FastaImporter(newDoc, matcher);
             // ReSharper disable LocalizableElement
-            string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList));
+            string text = TextUtil.LineSeparate(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList));
             // ReSharper restore LocalizableElement
             PeptideGroupDocNode imported = importer.Import(new StringReader(text), null, Helpers.CountLinesInString(text)).First();
 

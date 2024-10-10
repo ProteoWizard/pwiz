@@ -39,7 +39,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
-using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -50,10 +50,10 @@ namespace pwiz.Skyline.Model.Lib
 {
     public sealed class LibraryManager : BackgroundLoader
     {
-        private readonly Dictionary<string, Library> _loadedLibraries =
-            new Dictionary<string, Library>();
-        private readonly Dictionary<string, LibraryLoadLock> _loadingLibraries =
-            new Dictionary<string, LibraryLoadLock>();
+        private readonly Dictionary<LibrarySpecKey, Library> _loadedLibraries =
+            new Dictionary<LibrarySpecKey, Library>();
+        private readonly Dictionary<LibrarySpecKey, LibraryLoadLock> _loadingLibraries =
+            new Dictionary<LibrarySpecKey, LibraryLoadLock>();
 
         private class LibraryLoadLock
         {
@@ -300,11 +300,11 @@ namespace pwiz.Skyline.Model.Lib
         public Library LoadLibrary(LibrarySpec spec, Func<ILoadMonitor> getMonitor)
         {
             LibraryLoadLock loadLock;
-
+            var specKey = GetKey(spec);
             lock (_loadedLibraries)
             {
                 Library library;
-                if (_loadedLibraries.TryGetValue(spec.Name, out library))
+                if (_loadedLibraries.TryGetValue(specKey, out library))
                 {
                     if (Equals(spec, library.CreateSpec(library.FileNameHint)))
                     {
@@ -312,15 +312,15 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     else
                     {
-                        _loadedLibraries.Remove(spec.Name);
+                        _loadedLibraries.Remove(specKey);
                     }
                 }
                 // If the library has not yet been loaded, then create a new lock
                 // for everyone to wait on until the library has been loaded.
-                if (!_loadingLibraries.TryGetValue(spec.Name, out loadLock))
+                if (!_loadingLibraries.TryGetValue(specKey, out loadLock))
                 {
                     loadLock = new LibraryLoadLock();
-                    _loadingLibraries.Add(spec.Name, loadLock);
+                    _loadingLibraries.Add(specKey, loadLock);
                 }
             }
 
@@ -335,12 +335,12 @@ namespace pwiz.Skyline.Model.Lib
 
             lock (_loadedLibraries)
             {
-                _loadingLibraries.Remove(spec.Name);
+                _loadingLibraries.Remove(specKey);
                 if (loadLock.Library != null)
                 {
                     // Update the newly loaded library in the dictionary, regardless of whether
                     // we were the thread that actually did the loading.
-                    _loadedLibraries[spec.Name] = loadLock.Library;
+                    _loadedLibraries[specKey] = loadLock.Library;
                 }
                 return loadLock.Library;
             }
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(spec.Name);
+                    _loadedLibraries.Remove(GetKey(spec));
                 }
 
                 ForDocumentLibraryReload(container, specs.Select(spec => spec.Name).ToArray());
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(spec.Name);
+                    _loadedLibraries.Remove(GetKey(spec));
                 }
             }
         }
@@ -382,12 +382,12 @@ namespace pwiz.Skyline.Model.Lib
                 foreach (var spec in specs)
                 {
                     Library library;
-                    if (_loadedLibraries.TryGetValue(spec.Name, out library))
+                    if (_loadedLibraries.TryGetValue(GetKey(spec), out library))
                     {
                         var specCompare = library.CreateSpec(library.FileNameHint);
                         if (!Equals(spec, specCompare))
                         {
-                            _loadedLibraries.Remove(spec.Name);
+                            _loadedLibraries.Remove(GetKey(spec));
                         }
                     }
                 }
@@ -399,7 +399,7 @@ namespace pwiz.Skyline.Model.Lib
             lock (_loadedLibraries)
             {
                 Library library;
-                _loadedLibraries.TryGetValue(spec.Name, out library);
+                _loadedLibraries.TryGetValue(GetKey(spec), out library);
                 return library;
             }
         }
@@ -438,13 +438,13 @@ namespace pwiz.Skyline.Model.Lib
             // Avoid building a library that is loading or allowing the library to be loaded
             // while it is building
             LibraryLoadLock loadLock;
-
+            var specKey = GetKey(builder.LibrarySpec);
             lock (_loadedLibraries)
             {
-                if (!_loadingLibraries.TryGetValue(builder.LibrarySpec.Name, out loadLock))
+                if (!_loadingLibraries.TryGetValue(specKey, out loadLock))
                 {
                     loadLock = new LibraryLoadLock();
-                    _loadingLibraries.Add(builder.LibrarySpec.Name, loadLock);
+                    _loadingLibraries.Add(specKey, loadLock);
                 }
             }
 
@@ -471,13 +471,13 @@ namespace pwiz.Skyline.Model.Lib
 
             lock (_loadedLibraries)
             {
-                _loadingLibraries.Remove(builder.LibrarySpec.Name);
+                _loadingLibraries.Remove(specKey);
                 if (success)
                 {
                     // If the library was already loaded, make sure the new copy
                     // replaces the load in the library load cache.
                     string name = builder.LibrarySpec.Name;
-                    _loadedLibraries.Remove(name);
+                    _loadedLibraries.Remove(specKey);
 
                     // If the current document contains the newly built library,
                     // make sure it is reloaded into the document, by resetting all
@@ -546,6 +546,44 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             public bool HasUI { get { return false; } }
+        }
+
+        private class LibrarySpecKey
+        {
+            public LibrarySpecKey(string name, string path)
+            {
+                Name = name;
+                Path = path;
+            }
+
+            public string Name { get; }
+            public string Path { get; }
+
+            protected bool Equals(LibrarySpecKey other)
+            {
+                return Name == other.Name && Path == other.Path;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((LibrarySpecKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Path != null ? Path.GetHashCode() : 0);
+                }
+            }
+        }
+
+        private static LibrarySpecKey GetKey(LibrarySpec librarySpec)
+        {
+            return new LibrarySpecKey(librarySpec.Name, librarySpec.IsDocumentLocal ? librarySpec.FilePath : null);
         }
     }
 
@@ -902,7 +940,7 @@ namespace pwiz.Skyline.Model.Lib
         protected static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException(Resources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
+                throw new InvalidDataException(LibResources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
         }
 
         protected static void SafeReadComplete(Stream stream, ref byte[] buffer, int size)
@@ -910,7 +948,7 @@ namespace pwiz.Skyline.Model.Lib
             if (size > buffer.Length)
                 buffer = new byte[size];
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException(Resources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
+                throw new InvalidDataException(LibResources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
         }
 
         #endregion
@@ -937,6 +975,11 @@ namespace pwiz.Skyline.Model.Lib
                 hashCode = (hashCode * 397) ^ UseExplicitPeakBounds.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public virtual bool HasExplicitBounds
+        {
+            get { return false; }
         }
 
         #region Implementation of IXmlSerializable
@@ -1117,7 +1160,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var spectrumPeaks = ReadSpectrum(_libraryEntries[(int)spectrumKey]);
             if (spectrumPeaks == null)
-                throw new IOException(string.Format(Resources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
+                throw new IOException(string.Format(LibResources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
 
             return new SpectrumPeaksInfo(spectrumPeaks);
         }
@@ -1236,43 +1279,10 @@ namespace pwiz.Skyline.Model.Lib
             return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
         }
 
-        // ReSharper disable PossibleMultipleEnumeration
-        protected int FindFileInList(MsDataFileUri sourceFile, IEnumerable<string> fileNames)
+        protected int FindFileInList(MsDataFileUri sourceFile, LibraryFiles fileNames)
         {
-            if (fileNames == null)
-            {
-                return -1;
-            }
-            string sourceFileToString = sourceFile.ToString();
-            int iFile = 0;
-            foreach (var fileName in fileNames)
-            {
-                if (fileName.Equals(sourceFileToString))
-                {
-                    return iFile;
-                }
-                iFile++;
-            }
-            string baseName = sourceFile.GetFileNameWithoutExtension();
-            iFile = 0;
-            foreach (var fileName in fileNames)
-            {
-                try
-                {
-                    if (MeasuredResults.IsBaseNameMatch(baseName, Path.GetFileNameWithoutExtension(fileName)))
-                    {
-                        return iFile;
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignore: Invalid filename
-                }
-                iFile++;
-            }
-            return -1;
+            return fileNames.FindIndexOf(sourceFile);
         }
-        // ReSharper restore PossibleMultipleEnumeration
     }
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
@@ -1456,7 +1466,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Use median CCS to calculate an ion mobility value
                 ccs = new Statistics(ionMobilityInfos.Select(im => im.CollisionalCrossSectionSqA.Value)).Median(); // Median is more tolerant of errors than Average
-                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge).Mobility,
+                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge, chargedPeptide).Mobility,
                     ionMobilityFunctionsProvider.IonMobilityUnits);
             }
             else
@@ -1470,7 +1480,7 @@ namespace pwiz.Skyline.Model.Lib
                     ionMobility = IonMobilityValue.GetIonMobilityValue(medianValue, units);
                     if (ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
                     {
-                        ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(ionMobility, mz, chargedPeptide.Charge);
+                        ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(ionMobility, mz, chargedPeptide.Charge, chargedPeptide);
                     }
                     else // No mobility -> conversion provided, just return median CCS
                     {
@@ -1498,11 +1508,11 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
-            new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
+            new PeptideRankId(@"Spectrum count", () => LibResources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
-            new PeptideRankId(@"Total intensity", () => Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity);
+            new PeptideRankId(@"Total intensity", () => LibResources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity);
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
-            new PeptideRankId(@"Picked intensity", () => Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity);
+            new PeptideRankId(@"Picked intensity", () => LibResources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity);
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
@@ -1525,11 +1535,11 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        protected LibrarySpec(string name, string path)
+        protected LibrarySpec(string name, string path, bool useExplicitPeakBounds = true)
             : base(name)
         {
             FilePath = path;
-            UseExplicitPeakBounds = true;
+            UseExplicitPeakBounds = useExplicitPeakBounds;
         }
 
         [Track]
@@ -1573,7 +1583,7 @@ namespace pwiz.Skyline.Model.Lib
                 lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
                 if (!UseExplicitPeakBounds)
                 {
-                    lines.Add(Resources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
+                    lines.Add(LibResources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
                 }
 
                 return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
@@ -1633,10 +1643,10 @@ namespace pwiz.Skyline.Model.Lib
         public override void WriteXml(XmlWriter writer)
         {
             if (IsDocumentLocal)
-                throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML);
+                throw new InvalidOperationException(LibResources.LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML);
 
             if (IsDocumentLibrary)
-                throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_);
+                throw new InvalidOperationException(LibResources.LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_);
 
             // Write tag attributes
             base.WriteXml(writer);
@@ -2192,13 +2202,18 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ParsedMolecule.IsNullOrEmpty(ChemicalFormulaOrMasses) ||
                     (string.IsNullOrEmpty(MoleculeName) && string.IsNullOrEmpty(InChiKey) && string.IsNullOrEmpty(OtherKeys))
-                ? Resources.SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_
+                ? LibResources.SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_
                 : null;
         }
 
         public MoleculeAccessionNumbers CreateMoleculeID()
         {
             return new MoleculeAccessionNumbers(OtherKeys, InChiKey);
+        }
+
+        internal static string FormatMass(double mass)
+        {
+            return string.Format(@"{0:F04}", mass);
         }
 
         public List<KeyValuePair<string,string>> LocalizedKeyValuePairs
@@ -2218,12 +2233,12 @@ namespace pwiz.Skyline.Model.Lib
                 var massMono = BioMassCalc.MONOISOTOPIC.CalculateMass(ChemicalFormulaOrMasses);
                 if (massMono != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, massMono.ToString()));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, FormatMass(massMono)));
                 }
                 var massAverage = BioMassCalc.AVERAGE.CalculateMass(ChemicalFormulaOrMasses);
                 if (massAverage != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, chemicalFormula));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, FormatMass(massAverage)));
                 }
                 if (!string.IsNullOrEmpty(InChiKey))
                 {
@@ -2368,7 +2383,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 for (int i = 0; i < infoOther.SpectrumPeaks.Peaks.Length; ++i)
                 {
-                    spectrumErrors.Add(new TransitionImportErrorInfo(string.Format(Resources.SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__, 
+                    spectrumErrors.Add(new TransitionImportErrorInfo(string.Format(LibResources.SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__, 
                                                                                    Key.Target,
                             Key.Target,
                             PrecursorMz),
@@ -2420,7 +2435,7 @@ namespace pwiz.Skyline.Model.Lib
                 var info = library.GetSpectra(key, null, LibraryRedundancy.best).FirstOrDefault();
                 if (info == null)
                 {
-                    throw new IOException(string.Format(Resources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Target));
+                    throw new IOException(string.Format(LibResources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Target));
                 }
                 spectrumMzInfos.Add(new SpectrumMzInfo
                 {
@@ -2487,7 +2502,7 @@ namespace pwiz.Skyline.Model.Lib
         public abstract LibraryChromGroup ChromatogramData { get; }
     }
 
-    public class SpectrumInfoLibrary : SpectrumInfo
+    public class SpectrumInfoLibrary : SpectrumInfo, IEquatable<SpectrumInfoLibrary>
     {
         private Library _library;
         // Cache peaks and chromatograms to avoid loading every time
@@ -2548,8 +2563,41 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
         public double? RetentionTime { get; set; }
-        public IonMobilityAndCCS IonMobilityInfo { get; private set; }
+        public IonMobilityAndCCS IonMobilityInfo { get; set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
+
+        public bool Equals(SpectrumInfoLibrary other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) && 
+                   Equals(_library, other._library) && 
+                   Equals(_peaksInfo, other._peaksInfo) && 
+                   Equals(_chromGroup, other._chromGroup) && 
+                   Equals(SpectrumKey, other.SpectrumKey) && 
+                   Equals(SpectrumHeaderInfo, other.SpectrumHeaderInfo) && 
+                   FilePath == other.FilePath && Nullable.Equals(RetentionTime, other.RetentionTime) && 
+                   Equals(IonMobilityInfo, other.IonMobilityInfo) && 
+                   Protein == other.Protein;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (_library != null ? _library.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_peaksInfo != null ? _peaksInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_chromGroup != null ? _chromGroup.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumKey != null ? SpectrumKey.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumHeaderInfo != null ? SpectrumHeaderInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FilePath != null ? FilePath.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (IonMobilityInfo != null ? IonMobilityInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Protein != null ? Protein.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
 
         public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, TransitionGroupDocNode precursorInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
         {
@@ -2573,12 +2621,16 @@ namespace pwiz.Skyline.Model.Lib
                     baseIM = string.Format(@"{0:F2} {1}", IonMobilityInfo.IonMobility.Mobility, IonMobilityInfo.IonMobility.UnitsString);
             }
 
+            var isMolecule = pepInfo.Target != null && !pepInfo.Target.IsProteomic;
+
             var res = new SpectrumProperties()
             {
                 LibraryName = Name,
                 PrecursorMz = precursorInfo.PrecursorMz.Value.ToString(Formats.Mz),
                 Score = SpectrumHeaderInfo?.Score,
                 Charge = pepInfo.Charge,
+                Formula = isMolecule ? pepInfo.Formula : null,
+                Adduct = isMolecule ? pepInfo.AdductAsFormula : null,
                 RetentionTime = baseRT,
                 CCS = baseCCS,
                 IonMobility = baseIM,
@@ -2616,13 +2668,13 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public class SpectrumInfoProsit : SpectrumInfo
+    public class SpectrumInfoKoina : SpectrumInfo
     {
-        public static readonly string NAME = @"Prosit";
+        public static readonly string NAME = @"Koina";
 
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
+        public SpectrumInfoKoina(KoinaMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
             : base(labelType, true)
         {
             _peaksInfo = ms2Spectrum?.GetSpectrum(precursor).SpectrumPeaks;
@@ -2765,17 +2817,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(Link))
                 result.Add($@"LinkURL: {Link} ");
             return TextUtil.LineSeparate(result);
-        }
-    }
-
-    public sealed class LibraryFiles
-    {
-        private IEnumerable<string> _filePaths;
-
-        public IEnumerable<string> FilePaths
-        {
-            get { return _filePaths ?? (_filePaths = new List<string>()); }
-            set { _filePaths = value; }
         }
     }
 
@@ -3059,6 +3100,27 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(FilePath))
                 result.Add($@"FilePath: {FilePath}");
             return TextUtil.LineSeparate(result);
+        }
+
+        public double? GetScoreTypeCutoff(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Value;
+        }
+
+        public ScoreType GetScoreType(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Key;
+        }
+
+        private KeyValuePair<ScoreType, double?> GetScoreTypeKvp(string scoreTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(scoreTypeName) || ScoreThresholds == null)
+                return default(KeyValuePair<ScoreType, double?>);
+
+            return ScoreThresholds.FirstOrDefault(
+                s => s.Key.NameInvariant.Equals(scoreTypeName, StringComparison.Ordinal));
         }
     }
 }

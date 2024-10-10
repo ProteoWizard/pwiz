@@ -129,8 +129,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private double? GetAreaProportion(IEnumerable<Peptide> peptides)
         {
-            var normalizedArea = GetQuantificationResult()?.NormalizedArea;
-            if (!normalizedArea.HasValue)
+            var normalizedArea = GetQuantificationResult()?.NormalizedArea?.Strict;
+            if (normalizedArea == null)
             {
                 return null;
             }
@@ -141,12 +141,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
                     {
-                        total += peptideResult.GetQuantificationResult()?.NormalizedArea ?? 0.0;
+                        total += peptideResult.GetQuantificationResult()?.NormalizedArea?.Strict ?? 0.0;
                     }
                 }
             }
 
-            return normalizedArea.Value / total;
+            return normalizedArea / total;
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -237,7 +237,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         if (!string.IsNullOrEmpty(ResultFile.Replicate.BatchName) ||
                             Peptide.DocNode.HasPrecursorConcentrations)
                         {
-                            Settings.Default.CalibrationCurveOptions.SingleBatch = true;
+                            Settings.Default.CalibrationCurveOptions =
+                                Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(true);
                             calibrationForm.UpdateUI(false);
                         }
                     }
@@ -310,8 +311,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return owner.Peptide.GetCalibrationCurveFitter();
                 }
-                var calibrationCurveFitter =
-                    new CalibrationCurveFitter(owner.Peptide.GetPeptideQuantifier(), owner.SrmDocument.Settings);
+
+                var calibrationCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
+                    owner.DataSchema.LazyNormalizationData, owner.SrmDocument.Settings,
+                    new IdPeptideDocNode(owner.Peptide.Protein.DocNode.PeptideGroup, owner.Peptide.DocNode));
                 calibrationCurveFitter.SingleBatchReplicateIndex = owner.ResultFile.Replicate.ReplicateIndex;
                 return calibrationCurveFitter;
             }

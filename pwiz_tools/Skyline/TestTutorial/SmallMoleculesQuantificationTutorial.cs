@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeQuantification";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-23_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
@@ -402,8 +402,12 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid - Molecule Ratio Results - manually widen to show all columns", 25);
-                Settings.Default.CalibrationCurveOptions.LogXAxis = true;
-                Settings.Default.CalibrationCurveOptions.LogYAxis = true;
+                RunUI(() =>
+                {
+                    Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions
+                        .ChangeLogXAxis(true)
+                        .ChangeLogYAxis(true);
+                });
 
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 RunUI(()=>calibrationForm.UpdateUI(false));

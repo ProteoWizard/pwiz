@@ -142,19 +142,6 @@ ostream& operator<<(ostream& os, const Config& config)
     return os;
 }
 
-static double string_to_double( const std::string& str )
-{
-    errno = 0;
-    const char* stringToConvert = str.c_str();
-    const char* endOfConversion = stringToConvert;
-    double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-    if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
-        throw bad_lexical_cast(); // not a double
-    if (*endOfConversion)
-        throw bad_lexical_cast(); // started out as a double but became something else - like "10foo.raw"
-    return value;
-}
-
 void ShowExamples(ostringstream &usage)
 {
     usage << "Examples:\n"
@@ -254,7 +241,6 @@ Config parseCommandLine(int argc, char** argv)
     bool format_MS2 = false;
     bool format_CMS2 = false;
     bool format_mzMLb = false;
-    int mzMLb_compression_level = 0;
     int mzMLb_chunk_size = 0;    
     bool format_mz5 = false;
     bool precision_32 = false;
@@ -270,19 +256,15 @@ Config parseCommandLine(int argc, char** argv)
     bool mz_linear = false;
     bool intensity_linear = false;
     bool noindex = false;
-    bool zlib = false;
+    bool zlib = true;
     bool gzip = false;
     bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
     double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
-    string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
-    string ms_numpress_linear_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressLinearErrorTolerance).str();
+    double ms_numpress_linear_default = BinaryDataEncoder_default_numpressLinearErrorTolerance;
     bool ms_numpress_pic = false; // if true, use this numpress Pic compression
     double ms_numpress_slof = -1; // if >= 0, use this numpress slof compression with this tolerance
     double ms_numpress_linear_abs_tolerance = -1; // if >= 0, use this numpress linear compression with this absolute Th tolerance
-    string ms_numpress_linear_abs_tolerance_str; // input as text
-    string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
-    string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
-    string ms_numpress_slof_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance).str();
+    double ms_numpress_slof_default = BinaryDataEncoder_default_numpressSlofErrorTolerance;
     string runIndexSet;
     bool detailedHelp = false;
     bool writeDoc = false;
@@ -292,7 +274,8 @@ Config parseCommandLine(int argc, char** argv)
     pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
     int wrapWidth = consoleBounds.first;
     po::options_description od_config("Options", wrapWidth);
-    od_config.add_options()
+    auto addOptions = [&](auto& optionsDescription) {
+        optionsDescription.add_options()
         ("filelist,f",
             po::value<string>(&filelistFilename),
             ": specify text file containing filenames")
@@ -334,7 +317,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<int>(&mzMLb_chunk_size)->default_value(1048576),
             ": mzMLb dataset chunk size in bytes")
         ("mzMLbCompressionLevel",
-            po::value<int>(&mzMLb_compression_level)->default_value(0),
+            po::value<int>(&config.writeConfig.mzMLb_compression_level)->default_value(4),
             ": mzMLb GZIP compression level (0-9)")
 #endif
         ("mgf",
@@ -401,19 +384,19 @@ Config parseCommandLine(int argc, char** argv)
             po::value<string>(&config.contactFilename),
             ": filename for contact info")
         ("zlib,z",
-            po::value<bool>(&zlib)->zero_tokens(),
-            ": use zlib compression for binary data")
+            po::value<bool>(&zlib)->implicit_value(true),
+            ": use zlib compression for binary data (add =off to disable compression)")
         ("numpressLinear",
-            po::value<std::string>(&ms_numpress_linear_str)->implicit_value(ms_numpress_linear_default),
+            po::value<double>(&ms_numpress_linear)->implicit_value(ms_numpress_linear_default, toString(ms_numpress_linear_default)),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressLinearAbsTol",
-            po::value<std::string>(&ms_numpress_linear_abs_tolerance_str)->implicit_value(ms_numpress_linear_abs_tolerance_str_default),
+            po::value<double>(&ms_numpress_linear_abs_tolerance)->implicit_value(ms_numpress_linear_abs_tolerance),
             ": desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.")
         ("numpressPic",
             po::value<bool>(&ms_numpress_pic)->zero_tokens(),
             ": use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)")
         ("numpressSlof",
-            po::value<std::string>(&ms_numpress_slof_str)->implicit_value(ms_numpress_slof_default),
+            po::value<double>(&ms_numpress_slof)->implicit_value(ms_numpress_slof_default, toString(ms_numpress_slof_default)),
             ": use numpress short logged float compression for binary intensities (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressAll,n",
             po::value<bool>(&ms_numpress_all)->zero_tokens(),
@@ -455,7 +438,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&config.ignoreZeroIntensityPoints)->zero_tokens()->default_value(config.ignoreZeroIntensityPoints),
             ": some vendor readers do not include zero samples in their profile data; the default behavior is to add the zero samples but this option disables that")
         ("ignoreUnknownInstrumentError",
-            po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(!config.unknownInstrumentIsError),
+            po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(false),
             ": if true, if an instrument cannot be determined from a vendor file, it will not be an error")
         ("stripLocationFromSourceFiles",
             po::value<bool>(&config.stripLocationFromSourceFiles)->zero_tokens(),
@@ -482,6 +465,8 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&writeDoc)->zero_tokens(),
            ": writes output of --help and --show-examples, without version info")
                 ;
+    };
+    addOptions(od_config);
 
     // handle positional arguments
 
@@ -525,14 +510,16 @@ Config parseCommandLine(int argc, char** argv)
     }
     else
     {
-        // append options description to usage string
-        usage << od_config;
-
         // extra usage
         if (writeDoc)
         {
             wrapWidth = 10000; // Let viewer handle wrapping
         }
+
+        // append options description to usage string
+        po::options_description nowrap_config("Options", wrapWidth);
+        addOptions(nowrap_config);
+        usage << nowrap_config;
         usage << SpectrumListFactory::usage(detailedHelp, detailedHelp ? nullptr : "(run this program with --help to see details for all filters)", wrapWidth);
         usage << ChromatogramListFactory::usage(detailedHelp, nullptr, wrapWidth) << endl;
         if (writeDoc)
@@ -593,7 +580,7 @@ Config parseCommandLine(int argc, char** argv)
             if (isHTTP(filename))
                 globbedFilenames.push_back(filename);
             else if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
-                cout << "[msconvert] no files found matching \"" << filename << "\"" << endl;
+                throw user_error("[msconvert] no files found matching \"" + filename + "\"");
         }
 
         config.filenames.clear();
@@ -611,35 +598,6 @@ Config parseCommandLine(int argc, char** argv)
             string filename;
             getlinePortable(is, filename);
             if (is) config.filenames.push_back(filename);
-        }
-    }
-
-    // check stuff
-
-    if (ms_numpress_slof_str.length()) // was that a numerical arg to --numpressSlof, or a filename?
-    {
-        try 
-        {
-            ms_numpress_slof = string_to_double(ms_numpress_slof_str); 
-        }
-        catch(...) {
-            config.filenames.push_back(ms_numpress_slof_str); // actually that was a filename
-            ms_numpress_slof = BinaryDataEncoder_default_numpressSlofErrorTolerance;
-        }
-    }
-    if (ms_numpress_linear_abs_tolerance_str.length()) // this argument needs to be numerical
-    {
-        ms_numpress_linear_abs_tolerance = string_to_double(ms_numpress_linear_abs_tolerance_str);
-    }
-    if (ms_numpress_linear_str.length()) // was that a numerical arg to --numpressLinear, or a filename?
-    {
-        try 
-        {
-            ms_numpress_linear = string_to_double(ms_numpress_linear_str); 
-        }
-        catch(...) {
-            config.filenames.push_back(ms_numpress_linear_str); // actually that was a filename
-            ms_numpress_linear = BinaryDataEncoder_default_numpressLinearErrorTolerance;
         }
     }
 
@@ -775,14 +733,8 @@ Config parseCommandLine(int argc, char** argv)
     if (noindex)
         config.writeConfig.indexed = false;
 
-    if (zlib || mzMLb_compression_level > 0)
-    {
-        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-        if (mzMLb_compression_level == 0)
-            config.writeConfig.mzMLb_compression_level = 4;            
-        else
-            config.writeConfig.mzMLb_compression_level = mzMLb_compression_level;                       
-    }
+    if (zlib)
+        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib; 
  
     config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
 

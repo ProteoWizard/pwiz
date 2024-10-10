@@ -61,6 +61,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adduct.
+        /// </summary>
+        internal static string Adduct {
+            get {
+                return ResourceManager.GetString("Adduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Measured.
         /// </summary>
         internal static string Category_AcquisitionInfo {
@@ -115,6 +124,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adduct of the selected ion.
+        /// </summary>
+        internal static string Description_Adduct {
+            get {
+                return ResourceManager.GetString("Description_Adduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collisional cross section (CCS) of the ion isolated to acquire the spectrum.
         /// </summary>
         internal static string Description_CCS {
@@ -138,6 +156,15 @@ namespace pwiz.Skyline.Model {
         internal static string Description_FileName {
             get {
                 return ResourceManager.GetString("Description_FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral chemical formula of the selected ion.
+        /// </summary>
+        internal static string Description_Formula {
+            get {
+                return ResourceManager.GetString("Description_Formula", resourceCulture);
             }
         }
         
@@ -237,6 +264,15 @@ namespace pwiz.Skyline.Model {
         internal static string FilePath {
             get {
                 return ResourceManager.GetString("FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Formula.
+        /// </summary>
+        internal static string Formula {
+            get {
+                return ResourceManager.GetString("Formula", resourceCulture);
             }
         }
         

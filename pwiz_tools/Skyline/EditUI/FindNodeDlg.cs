@@ -87,6 +87,15 @@ namespace pwiz.Skyline.EditUI
             set { cbCaseSensitive.Checked = value; }
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            if (!Program.SkylineOffscreen)
+            {
+                this.Focus(); // It's natural to want to start typing the search term immediately after hitting ctrl-F
+            }
+            base.OnShown(e);
+        }
+
         private void textSequence_TextChanged(object sender, EventArgs e)
         {
             EnableDisableButtons();
@@ -147,12 +156,12 @@ namespace pwiz.Skyline.EditUI
                 if (_advancedVisible)
                 {
                     Height = _fullHeight;
-                    btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Hide_Advanced;
+                    btnShowHideAdvanced.Text = EditUIResources.FindNodeDlg_AdvancedVisible_Hide_Advanced;
                 }
                 else
                 {
                     Height = _fullHeight - (checkedListBoxFinders.Bottom - btnShowHideAdvanced.Bottom);
-                    btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Show_Advanced;
+                    btnShowHideAdvanced.Text = EditUIResources.FindNodeDlg_AdvancedVisible_Show_Advanced;
                 }
             }
         }

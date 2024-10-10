@@ -112,6 +112,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\DisposableCollection.cs" />
+    <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />
     <Compile Include="Chemistry\IonMobilityValue.cs" />
@@ -139,9 +141,36 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="GUI\GuiMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GuiMessages.resx</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\CommonAlertDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\CommonAlertDlg.Designer.cs">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonResources\GeneralTerms.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GeneralTerms.resx</DependentUpon>
+    </Compile>
+    <Compile Include="CommonResources\Images.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Images.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
+    <Compile Include="SystemUtil\Caching\Production.cs" />
+    <Compile Include="SystemUtil\Caching\Receiver.cs" />
+    <Compile Include="SystemUtil\Caching\Producer.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="SystemUtil\CommonTextUtil.cs" />
+    <Compile Include="SystemUtil\Messages.cs" />
     <Compile Include="SystemUtil\FileSize.cs" />
     <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
     <Compile Include="SystemUtil\IFormView.cs" />
@@ -207,6 +236,28 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="GUI\GuiMessages.ja.resx">
+      <DependentUpon>GuiMessages.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\GuiMessages.zh-CHS.resx">
+      <DependentUpon>GuiMessages.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\GuiMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GuiMessages.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CommonAlertDlg.ja.resx">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CommonAlertDlg.resx">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CommonAlertDlg.zh-CHS.resx">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -220,6 +271,35 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\GeneralTerms.ja.resx">
+      <DependentUpon>GeneralTerms.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\GeneralTerms.zh-CHS.resx">
+      <DependentUpon>GeneralTerms.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\GeneralTerms.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GeneralTerms.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\Images.ja.resx">
+      <DependentUpon>Images.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\Images.zh-CHS.resx">
+      <DependentUpon>Images.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\Images.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Images.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CommonResources\Copy.bmp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

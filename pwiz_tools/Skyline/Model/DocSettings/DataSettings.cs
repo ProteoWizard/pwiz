@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -55,6 +54,7 @@ namespace pwiz.Skyline.Model.DocSettings
             AuditLogging = true;
             Lists = ImmutableList<ListData>.EMPTY;
             MetadataRuleSets = ImmutableList<MetadataRuleSet>.EMPTY;
+            RelativeAbundanceFormatting = RelativeAbundanceFormatting.DEFAULT;
         }
 
         [TrackChildren(true)]
@@ -90,6 +90,16 @@ namespace pwiz.Skyline.Model.DocSettings
             private set;
         }
 
+        [TrackChildren]
+        public RelativeAbundanceFormatting RelativeAbundanceFormatting { get; private set; }
+
+        public DataSettings ChangeRelativeAbundanceFormatting(RelativeAbundanceFormatting relativeAbundanceFormatting)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.RelativeAbundanceFormatting =
+                    relativeAbundanceFormatting ?? RelativeAbundanceFormatting.DEFAULT);
+        }
+
         public DataSettings ChangeExtractedMetadata(IEnumerable<MetadataRuleSet> extractedMetadata)
         {
             return ChangeProp(ImClone(this),
@@ -110,6 +120,14 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return (Program.FunctionalTest && !AuditLogList.IgnoreTestChecks) || _auditLogging; }
 
             private set { _auditLogging = value; }
+        }
+
+        /// <summary>
+        /// Returns whether audit logging would be enabled for this document if a unit test were not running
+        /// </summary>
+        public bool IsAuditLoggingEnabled
+        {
+            get { return _auditLogging; }
         }
 
         public string DocumentGuid { get; private set; }
@@ -133,7 +151,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public DataSettings ChangePanoramaPublishUri(Uri newUri)
         {
             if (!newUri.IsWellFormedOriginalString()) // https://msdn.microsoft.com/en-us/library/system.uri.iswellformedoriginalstring
-                throw new ArgumentException(string.Format(Resources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
+                throw new ArgumentException(string.Format(DocSettingsResources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
             return ChangeProp(ImClone(this), im => im.PanoramaPublishUri = newUri);
         }
 
@@ -237,6 +255,8 @@ namespace pwiz.Skyline.Model.DocSettings
             ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
             Lists= ImmutableList.ValueOf(allElements.OfType<ListData>());
             MetadataRuleSets = ImmutableList.ValueOf(allElements.OfType<MetadataRuleSet>());
+            RelativeAbundanceFormatting = allElements.OfType<RelativeAbundanceFormatting>()
+                .FirstOrDefault() ?? RelativeAbundanceFormatting.DEFAULT;
         }
 
         private enum Attr
@@ -253,7 +273,7 @@ namespace pwiz.Skyline.Model.DocSettings
 //            Assume.IsFalse(string.IsNullOrEmpty(DocumentGuid)); // Should have a document GUID by this point
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
-            writer.WriteAttribute(Attr.audit_logging, AuditLogging);
+            writer.WriteAttribute(Attr.audit_logging, _auditLogging);
             var elements = AnnotationDefs.Cast<IXmlSerializable>()
                 .Concat(GroupComparisonDefs)
                 .Concat(Lists)
@@ -261,6 +281,11 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ViewSpecList.ViewSpecs.Any())
             {
                 elements = elements.Concat(new[] {ViewSpecList});
+            }
+
+            if (!Equals(RelativeAbundanceFormatting, RelativeAbundanceFormatting.DEFAULT))
+            {
+                elements = elements.Append(RelativeAbundanceFormatting);
             }
             writer.WriteElements(elements, GetElementHelpers());
         }
@@ -274,6 +299,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
                 new XmlElementHelperSuper<ListData, IXmlSerializable>(),
                 new XmlElementHelperSuper<MetadataRuleSet, IXmlSerializable>(),
+                new XmlElementHelperSuper<RelativeAbundanceFormatting, IXmlSerializable>()
             };
         }
         #endregion
@@ -283,14 +309,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return ArrayUtil.EqualsDeep(other._annotationDefs, _annotationDefs)
-                   && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs)
+            return Equals(other._annotationDefs, _annotationDefs)
+                   && Equals(other._groupComparisonDefs, _groupComparisonDefs)
                    && Equals(ViewSpecList, other.ViewSpecList)
                    && Equals(PanoramaPublishUri, other.PanoramaPublishUri)
                    && Equals(AuditLogging, other.AuditLogging)
                    && Equals(DocumentGuid, other.DocumentGuid)
                    && Equals(Lists, other.Lists)
-                   && Equals(MetadataRuleSets, other.MetadataRuleSets);
+                   && Equals(MetadataRuleSets, other.MetadataRuleSets)
+                   && Equals(RelativeAbundanceFormatting, other.RelativeAbundanceFormatting);
         }
 
         public override bool Equals(object obj)
@@ -305,14 +332,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = _annotationDefs.GetHashCodeDeep();
-                result = result*397 + _groupComparisonDefs.GetHashCodeDeep();
-                result = result*397 + ViewSpecList.GetHashCode();
-                result = result*397 + (PanoramaPublishUri == null ? 0 : PanoramaPublishUri.GetHashCode());
-                result = result*397 + (AuditLogging ? 1 : 0);
-                result = result*397 + (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
-                result = result*397 + Lists.GetHashCode();
-                result = result*397 + MetadataRuleSets.GetHashCode();
+                int result = _annotationDefs.GetHashCode();
+                result = result * 397 ^ _groupComparisonDefs.GetHashCode();
+                result = result * 397 ^ ViewSpecList.GetHashCode();
+                result = result * 397 ^ (PanoramaPublishUri == null ? 0 : PanoramaPublishUri.GetHashCode());
+                result = result * 397 ^ AuditLogging.GetHashCode();
+                result = result * 397 ^ (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
+                result = result * 397 ^ Lists.GetHashCode();
+                result = result * 397 ^ MetadataRuleSets.GetHashCode();
+                result = result * 397 ^ RelativeAbundanceFormatting.GetHashCode();
                 return result;
             }
         }

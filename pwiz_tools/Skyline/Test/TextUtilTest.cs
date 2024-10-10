@@ -64,7 +64,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(garbageString, TextUtil.DecryptString(TextUtil.EncryptString(garbageString)));
         }
 
-        [TestMethod]
+         [TestMethod]
         public void TestCommonPrefixAndSuffix()
         {
             string[] baseStrings = {"mediummer", "much, much longer", string.Empty, "short"};
@@ -111,7 +111,8 @@ namespace pwiz.SkylineTest
         {   
             //Sample test strings
             var orderedSample = new List<string>() 
-            {   
+            {
+                "0a123.30561n","0a123.456n","0a123.4567n", // Note this isn't the order supported by the filename natural sort - it doesn't understand 123.30561 as a decimal, sees it as two distinct parts
                 "1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","4tuzE",
                 "4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","7Z25C","8fMsb","8HRzI",
                 "8wqJy","9jz1y","a5E6p","a736Q","aL4lL","alpXu","B-2ag","BRrbj","bzUgj","c8qdT","CdaAF",
@@ -129,19 +130,23 @@ namespace pwiz.SkylineTest
                 "vscw3","W2ffg","waINu","wAYVn","wcnac","wgnCt","Whe2M","WHs9b","wj-Sy","woie2","WOrKF",
                 "XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
             };
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalStringComparer.Compare), orderedSample);
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalFilenameComparer.Compare), orderedSample);
+            var orderedSampleFilename = orderedSample.Select(s => s.Replace("30561n", "356n")).ToList(); // Make it amenable to windows filename sort tradtiion
 
             // Run test 12 time to ensure consistency 
             for (int i = 0; i < 12; i++)
             {
-                SortAndTest(orderedSample); // Test sort on a smaller sample set
+                SortAndTest(orderedSample, false); // Test sort on a smaller sample set, using the decimal-aware sort
+                SortAndTest(orderedSampleFilename, true); // Test sort on a smaller sample set, using the filename sort
             }
 
             // Shuffle an input list and sort. Compares against original in order version to ensure consistency
-            void SortAndTest(List<string> ordered)
+            void SortAndTest(List<string> ordered, bool useFilenameSort)
             {
                 List<string> misOrdered = Shuffle(ordered); // Shuffle
 
-                misOrdered.Sort((x, y) => NaturalComparer.Compare(x, y)); // Naturally sort
+                misOrdered.Sort((x, y) => useFilenameSort ? NaturalFilenameComparer.Compare(x, y) : NaturalStringComparer.Compare(x, y)); // Naturally sort
 
                 // Compare with original. Prints out discrepancies between sort and original if they should occur
                 for (int i = 0; i < ordered.Count; i++)
@@ -166,6 +171,72 @@ namespace pwiz.SkylineTest
                 }
                 return misOrdered;
             }
+        }
+
+        [TestMethod]
+        public void TestNaturalStringComparerWellBehaved()
+        {
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalStringComparer.Compare), new[]
+            {
+                "01234",
+                "1234",
+                "1112222222222222222222222222222222222",
+                "01112222222222222222222222222222222222",
+                "/",
+                ".",
+                ","
+            });
+        }
+
+        [TestMethod]
+        public void TestEnforceMaxWordLength()
+        {
+            Assert.AreEqual(6, GetMaxWordLength("Hello, world"));
+            Assert.AreEqual(6, GetMaxWordLength("Hello world!"));
+            Assert.AreEqual(5, GetMaxWordLength("Hello-world"));
+            foreach (var input in new[]
+                     {
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                         "The quick brown fox jumps over a lazy dog",
+                     })
+            {
+                int inputMaxWordLength = GetMaxWordLength(input);
+                var inputWithoutSpaces = input.Replace(" ", "");
+                for (int enforcedMaxWordLength = 1; enforcedMaxWordLength <= input.Length; enforcedMaxWordLength++)
+                {
+                    var result = TextUtil.EnforceMaxWordLength(input, enforcedMaxWordLength);
+                    if (inputMaxWordLength <= enforcedMaxWordLength)
+                    {
+                        Assert.AreEqual(input, result);
+                    }
+                    else
+                    {
+                        Assert.AreNotEqual(input, result);
+                        Assert.AreEqual(enforcedMaxWordLength, GetMaxWordLength(result));
+                        var resultWithoutSpaces = result.Replace(" ", "");
+                        Assert.AreEqual(inputWithoutSpaces, resultWithoutSpaces);
+                    }
+                }
+            }
+        }
+
+        private int GetMaxWordLength(string str)
+        {
+            int maxWordLength = 0;
+            int currentWordLength = 0;
+            foreach (var ch in str)
+            {
+                if (char.IsWhiteSpace(ch) || ch == '-')
+                {
+                    maxWordLength = Math.Max(maxWordLength, currentWordLength);
+                    currentWordLength = 0;
+                }
+                else
+                {
+                    currentWordLength++;
+                }
+            }
+            return Math.Max(maxWordLength, currentWordLength);
         }
     }
 }

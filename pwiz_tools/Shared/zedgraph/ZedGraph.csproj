@@ -80,6 +80,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -127,6 +131,7 @@
     <Compile Include="ZedGraph\JapaneseCandleStick.cs" />
     <Compile Include="ZedGraph\JapaneseCandleStickItem.cs" />
     <Compile Include="ZedGraph\Label.cs" />
+    <Compile Include="ZedGraph\LabelLayout.cs" />
     <Compile Include="ZedGraph\Legend.cs" />
     <Compile Include="ZedGraph\Line.cs" />
     <Compile Include="ZedGraph\LinearAsOrdinalScale.cs" />

@@ -1,0 +1,821 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Parallel Reaction Monitoring</h1>
+    <p>
+        Skyline supports several methods of extracting chromatography-based quantitative measurements from the raw data files of full-scan mass
+        spectrometers, such as ion trap, Orbitrap, and Q-TOF instruments. Skyline supports these methods of analysis for instruments from all 6 major
+        mass spectrometer vendors: Agilent, Bruker, SCIEX, Shimadzu, Thermo-Scientific, and Waters, using an approach flexible enough for both high
+        and low resolution mass analyzers.
+    </p>
+    <p>
+        In this tutorial, you will learn how to use Skyline to analyze MS/MS spectra acquired with a targeted approach called parallel reaction
+        monitoring (PRM), which has also been called pseudo-SRM and MRM-HR™. As implied by these names, PRM is the full-scan method most similar to
+        the practice of SRM with triple quadrupole mass spectrometers, where Skyline got its start:
+    </p>
+    <p>
+        <img style="width: 500px;" src="s-triple-quadrupole-mass-spectrometer.png" />
+    </p>
+    <p>
+        As SRM scans through precursor and product ion pairs, collecting single intensity measurements for each in a cycle over time, PRM scans through
+        a data independent list of precursor ions collecting full MS/MS spectra for each in a cycle over time. 
+    </p>
+    <p>
+        <img style="width: 500px;" src="s-single-intensity-measurements.png" />
+    </p>
+    <p>
+        Time-intensity chromatograms are extracted by Skyline from the full spectra acquired in this manner.
+    </p>
+    <p>
+        <img src="s-full-spectrum-chromatogram.png" />
+    </p>
+    <p>
+        The resulting chromatograms provide quantitative data similar to the SRM data from triple quadrupole experiments, in the now familiar Skyline
+        user interface.
+    </p>
+    <p>
+        <img src="s-intensity-retention-time-graph.png" />
+    </p>
+    <p>
+        PRM can be used to provide an alternative for a triple quadrupole when time on such an instrument is not an option. Though, filtering high
+        resolution MS/MS may offer benefits in selectivity over traditional SRM, and the collected scans can be processed in peptide searches to help
+        validate integrated chromatogram peaks. PRM can also be used for system suitability runs on a wide variety of full-scan instruments, even when
+        they are predominantly used for data dependent acquisition (DDA) of MS/MS spectra for peptide spectrum matching pipelines. This ID-free
+        quality control approach will be presented in a separate tutorial, however. This tutorial will explore the use of PRM for targeted
+        quantitative measurement on a low resolution Thermo LTQ and a high resolution Agilent Q-TOF.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.gs.washington.edu/tutorials/TargetedMSMS_2.zip">https://skyline.gs.washington.edu/tutorials/TargetedMSMS_2.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\TargetedMSMS
+    </p>
+    <p>
+        It will contain all the files necessary for this tutorial. Now, in the Windows Explorer, navigate to the new ‘TargetedMSMS’ folder, and into
+        the ‘Low Res’ subfolder it contains. To open the Skyline project you will use for analyzing the PRM data from a low resolution Thermo LTQ,
+        double-click on the file ‘BSA_Protea_label_free_meth3.sky’.
+    </p>
+    <p>
+        Select the first peptide in the document, and Skyline should look something like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <p>
+        This is a relatively small document. The indicators in the lower right corner, on the status bar, tell you that it contains 10 peptide
+        precursors, with a total of 78 product ions or transitions targeted. Several of the precursors have associated MS/MS library spectra from the
+        public NIST library for bovine serum albumin (BSA). There are also two other peptides, one human and one bovine, measured in both unmodified
+        and phosphorylated forms, for which MS/MS library spectra are not present.
+    </p>
+    <p>
+        If you are not familiar with how to create a document like this in Skyline, several of the introductory tutorials and instructional videos
+        cover a range of Skyline method editing features. This tutorial will begin from existing documents, assuming you are familiar with Skyline as
+        an editor for targeted proteomics methods.
+    </p>
+    <h1>Configuring a Skyline Document for PRM</h1>
+    <p>
+        In the Windows Explorer, you will also see two Thermo raw files in the same ‘Low Res’ folder in which you found this Skyline document. These
+        files contain a series of MS1 and MS/MS spectra acquired on a low resolution LTQ instrument using the PRM approach described above, with a
+        method that looks like:
+    </p>
+    <ol>
+        <li>MS1 scan</li>
+        <li>MS/MS scan – parent <i>m/z</i> 582.32</li>
+        <li>MS/MS scan – parent <i>m/z</i> 473.90</li>
+        <li>MS/MS scan – parent <i>m/z</i> 722.34</li>
+        <li>MS/MS scan – parent <i>m/z</i> 653.36</li>
+        <li>MS/MS scan – parent <i>m/z</i> 820.47</li>
+        <li>MS/MS scan – parent <i>m/z</i> 547.32</li>
+        <li>MS/MS scan – parent <i>m/z</i> 523.77</li>
+        <li>MS/MS scan – parent <i>m/z</i> 563.76</li>
+        <li>MS/MS scan – parent <i>m/z</i> 417.89</li>
+        <li>MS/MS scan – parent <i>m/z</i> 444.55</li>
+    </ol>
+    <p>
+        You can use Skyline to export PRM methods like this for instruments from Thermo-Scientific, Bruker and SCIEX. For Agilent and Waters
+        instruments and the Thermo Q Exactive, Skyline can export an Isolation List, or the PRM equivalent of a SRM transition list. Before exporting
+        a method for a full-scan instrument, you must configure the document for full-scan data analysis.
+    </p>
+    <p>
+        To configure the current document for analysis of the Thermo raw files provided with this tutorial, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Full-Scan</b> tab.</li>
+    </ul>
+    <p>
+        This document has not yet been set up for chromatogram extraction from full-scan data. It will still work perfectly well for SRM data, but you
+        will need to make some changes to prepare it for importing full-scan data files. The <b>Full-Scan</b> tab will look like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        To extract chromatograms from full-scan data, Skyline needs a little more information.
+    </p>
+    <ul>
+        <li>For MS1 filtering: from the <b>Isotope peaks included</b> drop list, choose ‘Count’.</li>
+        <li>From the <b>Precursor mass analyzer</b> drop list, choose ‘QIT’.</li>
+        <li>For <b>MS/MS filtering</b> from the <b>Acquisition method</b> drop list choose ‘Targeted’.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Full-Scan</b> tab should now look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        Note that when both MS1 and MS/MS filtering are enabled, all precursor ion chromatograms will be extracted exclusively from MS1 spectra, and
+        all fragment ion chromatograms will be extracted exclusively from MS/MS spectra. If you wanted to see how precursor ions show up in the MS/MS
+        scans, you would have to use a document with MS1 filtering disabled.
+    </p>
+    <p>
+        Skyline has defaulted the <b>Retention time filtering</b> setting to <b>Use only scans within 5 minutes of MS/MS IDs</b>,
+        but this setting is highlighted in red. If you hover the mouse cursor over the red text, you will see the tip “None of the spectral libraries
+        in this document contain any retention times for any of the peptides in this document.” This is warning you that unless you change something
+        in your spectral libraries, despite this setting intended to narrow the length of time over which chromatograms are extracted, Skyline will
+        have to resort to extracting chromatograms from all matching MS/MS spectra, because it lacks any MS/MS IDs with associated retention times.
+        You will, however, be importing peptide search data derived from searching the targeted MS/MS spectra for this experiment. Do the following
+        now to narrow the range of chromatogram extraction even a little more:
+    </p>
+    <ul>
+        <li>Change the extraction range from ‘5’ to ‘2’ minutes.</li>
+    </ul>
+    <p>
+        This can greatly reduce the size of your Skyline files, speed up import times and improve chromatogram peak picking.
+    </p>
+    <p>
+        To ensure that the MS/MS library spectrum matching corresponds correctly to the chromatograms Skyline will extract, you need to make sure the
+        MS/MS resolution in the full-scan settings matches the library ion match tolerance. For this data set, perform the following steps:
+    </p>
+    <ul>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>In the <b>Ion match tolerance</b> field, enter ‘0.7’.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Library</b> tab should look like this:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        The library ion match window is now the same as the chromatogram extraction window. This can be a little more complicated with high resolution
+        data, because the chromatogram extraction window will vary with m/z. In the future, we hope to add a check box to force the two settings to
+        match, but for now values between 0.05 and 0.01 usually work best for high resolution data, depending on the resolving power setting for your
+        MS/MS mass analyzer.
+    </p>
+    <p>
+        Because the MS1 full-scan settings indicate that the single monoisotopic precursor peak should be extracted from the MS1 scans in the results
+        files, you will want to make sure the document contains transition items for the precursor ions. Skyline should have already added ‘p’ (which
+        stands for precursor) to the <b>Ion types</b> field in the <b>Filter</b> tab, but check just to make sure:
+    </p>
+    <ul>
+        <li>Click the <b>Filter</b> tab.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Filter</b> tab should now look like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        To make sure each peptide precursor item contains a precursor transition, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Expand All</b> and click <b>Precursors</b> (Ctrl-W).</li>
+    </ul>
+    <p>
+        Unfortunately, all of the precursors have been manually edited in this document, which keeps Skyline from changing the transitions in response
+        to changes in the <b>Filter</b> tab. You will have to add the precursor transitions manually, as follows:
+    </p>
+    <ul>
+        <li>Hover the mouse cursor over the first precursor ‘582.3190++’, and click the drop-arrow to the right of the label.</li>
+        <li>Check the precursor transition at the top of the pop-up pick-list that appears.</li>
+    </ul>
+    <p>
+        The form should now look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the green check button (Enter).</li>
+    </ul>
+    <p>
+        Repeat this procedure for each of the 9 other precursors in the document. Re-select the first peptide when these changes have been completed.
+    </p>
+    <p>
+        The document is now configured to work with PRM data. You could also now use it to export a PRM method for an LTQ instrument.
+    </p>
+    <h1>PRM Method Export</h1>
+    <p>
+        You are best off exporting any method from a Skyline document using the instrument control computer on which you intend to run the method. This
+        is because most of the instrument vendors have not designed their method editing software to perform well in other settings, and Skyline must
+        use libraries from these vendors to make the necessary changes to a template method you provide. In some cases, you can set up vendor software
+        on a personal computer to mimic the environment on the instrument control PC, but this is not recommended. You will be much better off editing
+        your Skyline document on your personal computer, and then transferring it to an instrument control computer for the final method export.
+    </p>
+    <p>
+        To export a Thermo LTQ method for the current document, therefore, you would first transfer the document to the instrument control computer for
+        a Thermo LTQ, and then perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Method</b>.</li>
+        <li>In the <b>Instrument</b> type drop list, Skyline should default to ‘Thermo LTQ’.</li>
+        <li>Choose <b>Single method</b>.</li>
+        <li>In the <b>Method type</b> drop list, choose ‘Standard’.</li>
+        <li>Click the <b>Browse</b> button beside the <b>Template file</b> field.</li>
+        <li>If you are doing this on an LTQ, navigate to a folder containing a template method for your instrument containing a single MS1
+            scan.<br />If not, navigate to the ‘Low Res’ subfolder in the ‘TargetedMSMS’ folder you created for this tutorial.</li>
+        <li>If you are doing this on a LTQ, double-click your template method.<br />If not, double-click the ‘TargetedMSMS_template.meth’ file
+            provided with this tutorial.</li>
+    </ul>
+    <p>
+        The <b>Export Method</b> form should now look like:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>Export Thermo LTQ Method</b> form presented, navigate to a folder where you wish to save the method.</li>
+        <li>In the <b>File name</b> field, enter ‘TargetedMSMS_BSA_Protea.meth’.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        If you actually performed these steps on a Thermo LTQ, this operation should succeed, and create the new ‘TargetedMSMS_BSA_Protea.meth’ file
+        you specified. If you double-click on the file, then the LTQ Instrument Setup software should show you something like this:
+    </p>
+    <p>
+        <img src="s-ltq-instrument-setup-software.png" />
+    </p>
+    <p>
+        Otherwise, Skyline will show you the following error message:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <p>
+        Simply click the <b>OK</b> button to continue the rest of the tutorial, but remember that similar steps will work for Thermo Ion Trap
+        and Fusion, Bruker QTOF and SCIEX QTOF instrument control computers. Or you can use File &gt; Export &gt; Isolation List for Agilent QTOF,
+        Thermo Q Exactive, and Waters QTOF instruments.
+    </p>
+    <p>
+        In a small document like this, however, you should be able to create a method like the one above by hand, since it only requires setting up a
+        MS1 scan and 10 MS/MS scans for the specific precursor m/z values in this document. To generate a report containing the precursor <i>m/z</i>
+        values for this purpose, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Report</b>.</li>
+        <li>Click the <b>Edit list</b> button in the <b>Export Report</b> form.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Reports</b> form.</li>
+        <li>In the <b>Edit Report</b> form, add the following fields:<ul>
+                <li>Protein Name</li>
+                <li>Peptides.Precursors.Modified Sequence</li>
+                <li>Peptides.Precursors.Charge</li>
+                <li>Peptides.Precursors.Mz</li>
+            </ul>
+        </li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Report</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Preview</b> button.</li>
+        <li>In the <b>Preview New Report</b> form, click the ‘Precursor Mz’ column header.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Preview Report</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        With the precursor <i>m/z</i> values presented in this form, it should not take long to set up a PRM method for this document, even on an
+        instrument that currently lacks direct method export support. In fact, the original method for the data you are about to inspect was created
+        in this way. Note, however, that more and more PRM experiments are becoming as reliant on scheduled acquisition as SRM, for which the
+        scheduling algorithms in Skyline quickly become invaluable.
+    </p>
+    <h1>Importing and Inspecting Full-Scan Data</h1>
+    <p>
+        To import both the peptide search results and the two raw data files collected on a Thermo LTQ for this document, perform the following steps:
+    </p>
+    <ul>
+        <li>Press the Esc key until all forms have been dismissed, and only the Skyline main window remains.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Peptide Search</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline presents a wizard form that looks like this:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        The first page of this form can be used to build a spectral library for your Skyline document. To do this now, perform the following steps:
+    </p>
+    <ul>
+        <li>In the <b>Cut-off score</b> field, enter ‘0.99’.</li>
+        <li>Check the <b>Filter for document peptides</b> checkbox to keep only spectra that identify the peptides in your document.</li>
+        <li>Click the <b>Add Files</b> button in the <b>Import Peptide Search</b> form.</li>
+        <li>Navigate into the ‘search’ subfolder of the ‘Low Res’ folder.</li>
+        <li>Type ‘*.xml’ in the <b>File name</b> field.</li>
+        <li>Hold the Ctrl key and click on the two files in this folder ending in .perc.xml.</li>
+        <li>Click the <b>Open</b> button in the <b>Add Input Files</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The form should now look like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        Skyline begins building a spectral library from the results of a Sequest/Percolator peptide search performed on the PRM data for this
+        experiment, presenting you with a progress form as it does this. When Skyline has completed this step, it searches for any raw data files
+        around the peptide search spectrum source files or the Skyline document, and in this case, it finds two matching Thermo raw files. If it could
+        not find matching data files, you would be asked to locate them.
+    </p>
+    <p class="keep-next">
+        The wizard form should now look like the following, showing you the files Skyline will use for chromatogram extraction:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline detects that these long file names have a common prefix and suffix and offers to remove them for you, showing a form
+        like this:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        Because Skyline will show these replicate names in graph labels and other UI elements, it is often a good idea to accept these shortened names,
+        as you will do here.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Skyline shows several of the transition settings you have already adjusted. These settings can be useful when you are starting from scratch, as
+        in the <a href="https://skyline.ms/tutorial_ms1_filtering_zh.url">MS1 Full-Scan Filtering tutorial</a>, but you don’t need to change anything
+        further here.
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button in the wizard form.</li>
+    </ul>
+    <p>
+        Skyline now shows the full-scan settings, which again you already adjusted for this dataset.
+    </p>
+    <ul>
+        <li>Click the <b>Finish</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The file import should begin, with progress displayed in the status bar at the bottom Skyline window, and the <b>Loading
+            chromatograms</b> form.
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <h1>Reviewing the Data</h1>
+    <p>
+        While the targeted chromatograms are being extracted and analyzed for peaks, you can do the following to prepare for viewing the extracted
+        chromatograms:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Tiled</b> (Ctrl-T).</li>
+        <li>On the <b>Edit</b> menu, choose <b>Collapse All</b> and click <b>Precursors</b> (Ctrl-Shift-W).</li>
+    </ul>
+    <p class="keep-next">
+        When the import has completed, the Skyline window should look something like this:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        It may be a little difficult to see the chromatograms in this view because of the large number of spectrum IDs, which are annotated with dark
+        blue vertical lines, the letters ‘ID’ and the time in minutes of the identified spectrum. The chosen chromatogram peak appears in the middle
+        of these IDs with a black arrowhead pointing to its apex.
+    </p>
+    <p>
+        You may note that the chromatogram peak intensities (1.4 x 10<sup>7</sup>) look a lot more similar than you might expect from a 4:1 dilution.
+        This is because the BSA protein digest was used as a constant background in the dilution of the other two proteins in the document.
+    </p>
+    <p>
+        If you do see this full-chromatogram view in Skyline, do the following to zoom into the integrated peaks in the chromatograms:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p class="keep-next">
+        This should cause the chromatogram graphs to look like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        Now you can see the individual lines for spectra that were identified as the target peptide, and if you look closely, you can see one red line
+        in the middle of the chromatogram peak for the 20fmol sample. This is the spectrum that is currently showing in the <b>Library
+            Match</b> view and the one the BiblioSpec library building tool chose as the “best spectrum”. You can look at other spectra in the
+        <b>Library Match</b> view by clicking on the lines in the chromatogram plots, or by clicking in the dropdown list at the top of the
+        <b>Library Match</b> view and choosing from the long list of spectrum times. It may be a little surprising how far from the obvious
+        chromatogram peak a peptide search engine is able to identify a spectrum as containing this abundant peptide. If you look at the spectra
+        beyond the peak integration boundaries, you will see that they have very low signal-to-noise.
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        And yet, the search was performed with unspecified cleavage on a FASTA file containing the three expected proteins followed by the entire
+        Uniprot FASTA reversed.
+    </p>
+    <ul>
+        <li>Click the ‘X’ in the upper right corner of the <b>Library Match</b> view to close it.</li>
+    </ul>
+    <p>
+        And, since, so many peptide ID annotations can be a bit much when inspecting the chromatogram graphs:
+    </p>
+    <ul>
+        <li>Right-click a chromatogram graph, choose <b>Peptide ID Times</b> and click <b>Matching</b>, if it is checked.</li>
+    </ul>
+    <p>
+        Turning your attention to the <b>Targets</b> view, you can see that all of the target peptides now have matching MS/MS spectra and
+        show an icon <img src="../../shared/target-peptide-with-spectrum-icon.png" /> with a small spectrum in the lower right corner. You can see 0.84 is the lowest dot-product score
+        (labeled ‘dotp’) which provides a correlation score between the measured product ion peak areas and the fragment ion intensities in the
+        library spectra, for the precursor ‘417.8946+++ (dotp 0.84)’. The <b>Targets</b> view shows only the dot-product scores for the
+        active replicate, which is ‘20fmol’. You can tell the active replicate because its tab text is bold, and it is selected in the drop list at
+        the top of the <b>Targets</b> view. You can see the dot-product scores for the ‘80fmol’ replicate by either clicking on its
+        chromatogram graph, or by selecting it in the drop list.
+    </p>
+    <p>
+        To review this information for all replicates at the same time do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Products</b> (Ctrl-Alt-F10).</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peak Areas</b> graph should now look like this:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        But, if it does not, you may still need to perform some of the following steps:
+    </p>
+    <ul>
+        <li>Right-click the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>None</b>.</li>
+        <li>Right-click the <b>Peak Areas</b> graph, and click <b>Show Library</b>.</li>
+        <li>Right-click the <b>Peak Areas</b> graph, and click <b>Show Dot Product</b>.</li>
+    </ul>
+    <p>
+        You can review all of the target peptides with these settings to see that they all match the search spectra very well, and that the
+        concentrations of the BSA peptides remain relatively constant in these samples. Some of the BSA peptides show higher peak areas for the 20
+        fmol sample and some for the 80 fmol sample, though this is simply due to measurement variance. For the full 5-point dilution curve, the peak
+        area graph for the LVNELTEFAK peptide shown above looks like:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <p>
+        Next, turn your attention to the human peptide DRVYIHPF, where you should expect to see the 4:1 concentration ratio implied by the sample names
+        80 fmol and 20 fmol. To get a better look at the measurements Skyline has actually made, do the following:
+    </p>
+    <ul>
+        <li>Right-click the <b>Peak Areas</b> graph, choose <b>Transitions</b> and click <b>All</b>.</li>
+        <li>Right-click the <b>Peak Areas</b> graph, choose <b>Transitions</b> and click <b>Split Graph</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peak Areas</b> graph should now look something like:
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        The 80 fmol product ions sum to about 3 x 10<sup>6</sup> and the 20 fmol product ions sum to about 0.7 x 10<sup>6</sup>, which is not far from
+        the expected 4:1 ratio, but for the precursor ions extracted from MS1 scans, the 80 fmol area is about 8 x 10<sup>6</sup> and the 20 fmol area
+        is about 0.9 x 10<sup>6</sup>, or a 9:1 ratio. Turn your attention to the chromatogram graphs to understand the source of the discrepancy.
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <p>
+        You can see that the product ion chromatograms experience much less noise than the chromatograms extracted from MS1. With the background
+        subtraction applied by Skyline, the precursor area for 20 fmol above the background is quite low. Product ion chromatograms from MS/MS are
+        more selective than precursor chromatograms from MS1 at the same resolution, and the product ion chromatograms show much less background.
+    </p>
+    <p>
+        If you review all of the last 4 peptides in the document now, you can also see that all 4 peptide forms now show about a 4:1 ratio in intensity
+        between the 80 fmol and 20 fmol samples respectively, as expected. (The data are two points taken from a dilution series. Due to size
+        considerations for this tutorial, only 2 points were included.)
+    </p>
+    <p>
+        These data and other experiments have shown that a low resolution LTQ is an acceptable instrument for performing quantitative experiments using
+        fragment ion chromatograms extracted from MS/MS spectra.<sup>1</sup>
+    </p>
+    <p class="keep-next">
+        You can also do the following to compare the relative ion abundances across replicates:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Transitions</b> and click <b>Products</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Total</b>.</li>
+    </ul>
+    <p>
+        In this mode, you can again review all of the peptides in the document to see that the relative abundances of the fragment ions are very
+        similar between replicates, and very similar to the library spectrum fragment intensities.
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td  class="comp-fig">
+                R.IKNLQ<strong><u>S</u></strong>LDPSH.- [80, 90]<br />
+                <img src="s-23.png" />
+            </td>
+            <td class="comp-fig">
+                K.HLVDEPQNLIK.Q [401, 411]<br />
+                <img src="s-24.png" />
+            </td>
+        </tr>
+    </table>
+    <h1>Working with High-Resolution Mass Spectra</h1>
+    <p>
+        The other data set included with this tutorial is a complete dilution series performed on a BSA digest, and measured by an Agilent 6500 Series
+        Q-TOF. In order to keep this data small enough to be downloaded with this tutorial, all of the spectrum peaks in the high-resolution spectra
+        have been centroided, though Skyline full-scan filtering works with profile spectra. Because we have found that Skyline does quite well with
+        vendor centroided spectra, there is now an option to force the use of centroided spectra even when profile spectra are available.
+    </p>
+    <p>
+        To begin working with this Q-TOF data, save the file you have been working on, and open the ‘BSA_Agilent.sky’ file in the ‘TOF’ subfolder of
+        the tutorial folder you created.
+    </p>
+    <h1>Configuring a Skyline Document for High-Resolution PRM</h1>
+    <p>
+        Again, this is a complete Skyline document for the experiment measured by the raw data files in the ‘TOF’ folder, but its settings currently
+        only allow SRM data to be imported. If you try at this point to import any of the TOF mass spectrometer data files included with this
+        tutorial, you will get the following error message:
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        If you actually tried this, get the document back to its original state by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Close</b> button.</li>
+        <li>On the <b>Edit</b> menu, click <b>Undo</b> (Ctrl-Z).</li>
+    </ul>
+    <p>
+        You can adjust the document settings to make them compatible with the PRM experiment captured in the tutorial data files by doing the
+        following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Full-Scan</b> tab.</li>
+        <li>For MS1 filtering:<ul>
+                <li>From the <b>Isotope peaks included</b> dropdown list, choose ‘Count’.</li>
+                <li>In the <b>Peaks</b> field, enter ‘3’.</li>
+                <li>From the <b>Precursor mass analyzer</b> dropdown list, choose ‘Centroided’.</li>
+                <li>In the <b>Mass error</b> field, enter ’20’ ppm.</li>
+            </ul>
+        </li>
+        <li>For MS/MS filtering:<ul>
+                <li>From the <b>Acquisition method</b> drop list choose ‘Targeted’.</li>
+                <li>From the <b>Product mass analyzer</b> drop list choose ‘Centroided’.</li>
+                <li>In the <b>Mass error</b> field, enter ‘20’ ppm.</li>
+            </ul>
+        </li>
+    </ul>
+    <p>
+        The <b>Full-Scan</b> tab should now look like this:
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <p>
+        For this data set, there are no peptide search results from which to get MS/MS IDs, which is why this option appears in red. Nor do you have
+        any way of predicting the retention time at which the peptides will elute prior to importing any data. If you leave the settings as they are,
+        Skyline will extract from all matching scans, because of the lack of MS/MS IDs. You can also choose this explicitly by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Include all matching scans</b> option for <b>Retention time filtering</b>.</li>
+    </ul>
+    <p>
+        Skyline also shows this option in red, and if you hover the mouse cursor over the red text, you will see the tip ‘Full gradient chromatograms
+        will take longer to import, consume more disk space, and may make peak picking less effective.’ In this case, however, the data were acquired
+        with a scheduled PRM method, and Skyline will automatically adjust the length of the chromatograms to only the time range where MS/MS spectra
+        were acquired, despite the fact that MS1 spectra were acquired over the full gradient.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        To make sure each peptide precursor item now contains precursor transitions, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Expand All</b> and click <b>Precursors</b> (Ctrl-W).</li>
+    </ul>
+    <p>
+        In this case, you will see that all peptides now contain 3 precursor transitions (M, M+1 and M+2), which is only possible with high-resolution
+        MS1 scans. The transitions in the <b>Targets</b> view should look something like this:
+    </p>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <p>
+        The precursor transitions were added automatically, because none of the peptides have been edited manually, leaving them in auto-select mode.
+        Again, Skyline automatically added the ‘p’ ion type in the <b>Filter</b> tab because you chose MS1 filtering.
+    </p>
+    <p>
+        You can also see that Skyline is using orthogonal rankings to rank the precursor isotope peaks (irank) and the product ion peaks (rank). The
+        precursor isotope peaks are ranked according to the expected isotope distribution. While the product ion peaks are ranked separately by their
+        relative intensities in the matching library spectrum.
+    </p>
+    <h1>Importing and Inspecting High-Resolution Full-Scan Data</h1>
+    <p>
+        To import the run with the highest concentration for the dilution series into the document, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button in the <b>Import Results</b> form.</li>
+        <li>Select all 6 data files ending in .d by clicking and dragging a rectangle around them.</li>
+        <li>Click the <b>Open</b> button in the <b>Import Results Files</b> form.</li>
+    </ul>
+    <p>
+        While the targeted chromatograms are being extracted and analyzed for peaks, you can do the following to prepare for viewing the extracted
+        chromatograms:
+    </p>
+    <ul>
+        <li>Select the first peptide (K.LVNELTEFAK.T [65, 74]) in the <b>Targets</b> view.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Collapse All</b> and click <b>Precursors</b> (Ctrl-Shift-W).</li>
+        <li>Click the ‘X’ in the upper right corner of the <b>Library Match</b> view to close it.</li>
+        <li>In the <b>View</b> menu, choose <b>Arrange Graphs</b>, and click <b>Tiled</b>.</li>
+    </ul>
+    <p>
+        When the import has completed, the Skyline window should look something like this:
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        First, you should notice that the chromatograms in the chromatogram graph cover only a range of 3 minutes, in the image above 12 to 15 minutes.
+    </p>
+    <p>
+        Zooming in on the <b>Targets</b> view, you can see that now two orthogonal dot product values, idotp and dotp, have been added for
+        the precursor isotope distributions and the product ion intensities respectively. For this highest concentration, 500 fmol, these values show
+        very good correlation between the chromatogram peaks and the expected relative intensities.
+    </p>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <p>
+        To zoom into the chosen peaks on all graphs, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p class="keep-next">
+        This should make the chromatograms look like:
+    </p>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <p>
+        One thing you might notice from the six chromatogram graphs is that the 50 amol sample has a more intense (700) and better formed peak group
+        than the 100 amol sample (40). All of the peaks have very similar retention times, making it unlikely that this is due to Skyline picking the
+        wrong peak in the 100 amol sample. Also, notice that for high resolution data, Skyline shows a mass error value below the peak retention time
+        annotation, indicating the difference between the expected <i>m/z</i> value and a weighted average of the points in the peak. The figure
+        above shows quite nicely the general trend that higher intensity data tends to be more accurate than lower intensity data, likely due to the
+        changing proportion of intensity caused by noise.
+    </p>
+    <p>
+        You can get a little more insight into intensity issue with the 50 amol sample by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Right-click the <b>Peak Areas</b> graph, and click <b>Log Scale</b>.</li>
+    </ul>
+    <p>
+        This should make the <b>Peak Areas</b> graph look like:
+    </p>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <p>
+        In this view, the 50 amol sample appears to match more closely to 10 fmol sample than the 100 amol sample. If you review the 4 other peptides,
+        you will find that in two (SLHTLFGDEL<b><u>C</u></b>K and KVPQVSTPTLVEVSR) the total peak are for the 50 amol sample is actually
+        more intense than the 10 fmol sample, though in the other two the peaks are smaller. Clearly the concentration in this sample is not actually
+        50 amol. The two peptides with response between 10 fmol and 100 fmol give the impression that the concentration was actually something between
+        these concentrations, but the other 3 peptides weaken that case.
+    </p>
+    <p>
+        One more thing worth checking is whether the samples were actually measured in the order indicated by the numeric prefix (1, 2, 3 … 6). To
+        achieve this, do the following:
+    </p>
+    <ul>
+        <li>Right-click the <b>Peak Areas</b> graph, choose <b>Order</b> and click <b>Acquired Time</b>.</li>
+    </ul>
+    <p>
+        You will see that the graph does not change, which means that the samples were indeed acquired in the order indicated. Response curves like
+        this are usually acquired from lowest concentration to highest concentration to reduce the impact of carryover.
+    </p>
+    <p>
+        With Skyline you have been able to gain some insight very quickly into the quality of the concentration curve data.
+    </p>
+    <p>
+        As one last verification step, you may want to have a look at the MS1 filtered precursor peaks to see if they tell a similar story. To view the
+        MS1 peaks, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>All</b> (Shift-F10).</li>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Split Graph</b>.</li>
+    </ul>
+    <p>
+        The chromatogram graphs should now look something like this:
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td  class="comp-fig">
+                K.LVNELTEFAK.T (500 fmol)<br />
+                <img src="s-32.png" />
+            </td>
+        </tr>
+    </table>
+    <p>
+        As before, you can see that the most intense product ion (y8) attains about 1/5 the intensity of the monoisotopic precursor (1.4 x
+        10<sup>5</sup> v. 7.2 x 10<sup>5</sup>), while even the M+2 peak is still more intense than the y8 peak.
+    </p>
+    <p>
+        To view the precursor peaks alone, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Precursors</b> (Alt-F10).</li>
+    </ul>
+    <p class="keep-next">
+        This should leave Skyline looking like:
+    </p>
+    <p>
+        <img src="s-33.png" />
+    </p>
+    <p class="keep-next">
+        The <b>Peak Areas</b> graph should look like:
+    </p>
+    <p>
+        <img src="s-34.png" />
+    </p>
+    <p>
+        If you review each of the 5 peptides again, you will see that the relative intensities of the concentration points are very similar to what you
+        saw with the product ion comparisons.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you have learned how to set up a Skyline document for performing PRM experiments. This will allow you to perform SRM-like
+        experiments on full-scan instruments, like ion trap and Q-TOF (and Q-Orbitrap) instruments. You can also use this technique for regular system
+        suitability, quality control or diagnostic tests on your full-scan instruments. You have learned how to export PRM methods, currently working
+        for Thermo, SCIEX, and Bruker, and how to use Skyline reports to get a list of target precursor <i>m/z</i> values for instruments that do
+        not currently support method export. (Note: Skyline can now export PRM isolation lists for Agilent, SCIEX, Thermo, and Waters instruments.)
+        You have learned how to import native results files, and even how to extract chromatograms from the MS1 scans which may be included in these
+        files. Once imported, there are a few new annotations, like irank and idotp for included MS1 scans, and you may want to choose to view only
+        information from either MS1 or MS/MS scans. Otherwise, the chromatogram, summary graphs, and reports, that Skyline supplies to help you
+        understand your data, should be familiar from triple quadrupole SRM experiments or tutorials.
+    </p>
+    <h1>References</h1>
+    <p class="bibliography">
+        1. Stacy D. Sherrod <i>et al</i>. Label-Free Quantitation of Protein Modifications by Pseudo-Selected Reaction
+        Monitoring with Internal Reference Peptides. <i>J. Proteome Res. (submitted)</i> 
+    </p>
+    <p class="bibliography">
+        2. Schilling, B. <i>et al</i>. Platform Independent and Label-Free Quantitation of Proteomic Data Using MS1 Extracted
+        Ion Chromatograms in Skyline. Application to Protein Acetylation and Phosphorylation. <i>Mol Cell Proteomics</i>
+        (2012).doi:10.1074/mcp.M112.017707
+    </p>
+</body>
+
+</html>

@@ -25,7 +25,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -91,14 +90,14 @@ namespace pwiz.Skyline.Util
                     // Byte count from the beginning of the clipboard to the start of the context, or -1 if no context
                     case @"starthtml":
                         if (startHmtl != 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
                         startHmtl = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the context, or -1 if no context.
                     case @"endhtml":
                         if (startHmtl == 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
                         int endHtml = int.Parse(val);
 
                         _fullText = rawClipboardText.Substring(startHmtl, endHtml - startHmtl);
@@ -107,14 +106,14 @@ namespace pwiz.Skyline.Util
                     //  Byte count from the beginning of the clipboard to the start of the fragment.
                     case @"startfragment":
                         if (startFragment != 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
                         startFragment = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the fragment.
                     case @"endfragment":
                         if (startFragment == 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
                         int endFragment = int.Parse(val);
                         _fragment = rawClipboardText.Substring(startFragment, endFragment - startFragment);
                         break;
@@ -128,7 +127,7 @@ namespace pwiz.Skyline.Util
 
             if (_fullText == null && _fragment == null)
             {
-                throw new FormatException(Resources.HtmlFragment_HtmlFragment_No_data_specified);
+                throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_No_data_specified);
             }
         }
 
@@ -218,7 +217,11 @@ namespace pwiz.Skyline.Util
         public static string ClipBoardText(string htmlFragment, string title, Uri sourceUrl)
         {
             if (title == null)
-                title = @"From Clipboard"; // CONSIDER: localize? This is a title for an HTML page. I think the encodings different.
+            {
+                // Use a blank title if none was specified.
+                // The title shows up when pasting into GMail.
+                title = string.Empty;
+            }
 
             StringBuilder sb = new StringBuilder();
 
@@ -311,12 +314,12 @@ EndSelection:<<<<<<<3
 
         public static string GetPasteErrorMessage()
         {
-            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
         }
 
         public static string GetCopyErrorMessage()
         {
-            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
         }
 
         public static string GetOpenClipboardMessage(string prefix)
@@ -330,7 +333,7 @@ EndSelection:<<<<<<<3
                     GetWindowThreadProcessId(hwnd, out processId);
                     var process = Process.GetProcessById((int)processId);
                     var message = prefix + Environment.NewLine;
-                    message += string.Format(Resources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
+                    message += string.Format(UtilResources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
                             process.ProcessName, processId);
                     return message;
                 }

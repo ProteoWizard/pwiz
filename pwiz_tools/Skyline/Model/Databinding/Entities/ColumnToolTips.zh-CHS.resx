@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
-		Microsoft ResX Schema
+    Microsoft ResX Schema
 
-		Version 1.3
+    Version 1.3
 
-		The primary goals of this format is to allow a simple XML format 
-		that is mostly human readable. The generation and parsing of the 
-		various data types are done through the TypeConverter classes 
-		associated with the data types.
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
 
-		Example:
+    Example:
 
-		... ado.net/XML headers & schema ...
-		<resheader name="resmimetype">text/microsoft-resx</resheader>
-		<resheader name="version">1.3</resheader>
-		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-		<data name="Name1">this is my long string</data>
-		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-			[base64 mime encoded serialized .NET Framework object]
-		</data>
-		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-			[base64 mime encoded string representing a byte array form of the .NET Framework object]
-		</data>
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">1.3</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1">this is my long string</data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+      [base64 mime encoded serialized .NET Framework object]
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+      [base64 mime encoded string representing a byte array form of the .NET Framework object]
+    </data>
 
-		There are any number of "resheader" rows that contain simple 
-		name/value pairs.
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
 
-		Each data row contains a name, and value. The row also contains a 
-		type or mimetype. Type corresponds to a .NET class that support 
-		text/value conversion through the TypeConverter architecture. 
-		Classes that don't support this are serialized and stored with the 
-		mimetype set.
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
 
-		The mimetype is used for serialized objects, and tells the 
-		ResXResourceReader how to depersist the object. This is currently not 
-		extensible. For a given mimetype the value must be set accordingly:
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
 
-		Note - application/x-microsoft.net.object.binary.base64 is the format 
-		that the ResXResourceWriter will generate, however the reader can 
-		read any of the formats listed below.
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
 
-		mimetype: application/x-microsoft.net.object.binary.base64
-		value   : The object must be serialized with 
-			: System.Serialization.Formatters.Binary.BinaryFormatter
-			: and then encoded with base64 encoding.
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+      : System.Serialization.Formatters.Binary.BinaryFormatter
+      : and then encoded with base64 encoding.
 
-		mimetype: application/x-microsoft.net.object.soap.base64
-		value   : The object must be serialized with 
-			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-			: and then encoded with base64 encoding.
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+      : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+      : and then encoded with base64 encoding.
 
-		mimetype: application/x-microsoft.net.object.bytearray.base64
-		value   : The object must be serialized into a byte array 
-			: using a System.ComponentModel.TypeConverter
-			: and then encoded with base64 encoding.
-	-->
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+      : using a System.ComponentModel.TypeConverter
+      : and then encoded with base64 encoding.
+  -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -107,7 +107,11 @@
     <value>重复测定的值是用于计算倍数的变化。此数值取决于归一化方法以及是基于蛋白质还是肽段级别来计算倍数的变化。</value>
   </data>
   <data name="Accuracy">
-    <value>分析物浓度（在重复测定中指定的）与计算浓度比</value>
+    <value>计算的浓度与指定的分析物浓度之比</value>
+    <comment>Needs Review:English text changed
+Old English:Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)
+Current English:Ratio of Calculated Concentration to the specified Analyte Concentration
+Old Localized:分析物浓度（在重复测定中指定的）与计算浓度比</comment>
   </data>
   <data name="AcquiredTime">
     <value>质谱仪上一次开始获取此重复测定数据的时间
@@ -207,9 +211,31 @@
 离子对的保留时间值。</value>
   </data>
   <data name="CalculatedConcentration">
-    <value>分析物的浓度由以下任一一种方式计算：
+    <value>分析物浓度通过以下任意一种方式计算：
+1. 使用校准曲线（前提是“肽段设置 &gt; 定量”指定了回归拟合）
+2. 使用与内标 (或替代) 的比，并乘以内标浓度。</value>
+    <comment>Needs Review:English text changed
+Old English:The concentration of the analyte is calculated by either:
+    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration
+Current English:The concentration of the analyte calculated using either:
+1. The calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration
+Old Localized:分析物的浓度由以下任一一种方式计算：
     1.使用校正曲线（前提是“肽段设定 &gt; 定量”指定了回归拟合）
-    2.使用与内标（或替代）的比，并乘以内标浓度</value>
+    2.使用与内标（或替代）的比，并乘以内标浓度</comment>
+  </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>如果缺失的数据影响到比较重复测定之间“计算的浓度”，则发出警告</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>即使缺失的数据影响到重复测定之间的比较，仍可获取计算的浓度值</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>缺失的数据影响到重复测定之间的比较时，不可获取计算的浓度值</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalibrationCurve">
     <value>校正曲线，其使用样品类型为“标准”并标明“分析物浓度”的重复测定计算。</value>
@@ -591,13 +617,35 @@
     <value>离子迁移库中母离子的碰撞横截面</value>
   </data>
   <data name="LibraryDotProduct">
-    <value>母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
+    <value>相当于用户界面中显示的“dotp”。母离子的单个离子对峰面积
+与匹配的 MS/MS
+谱图库谱图中匹配离子峰的强度之间的点积（注释：截止版本 v1.4，为 1 â€“ Arcos(dotp)/(Pi/2)，
+其中 dotp 是上文所述的值， 又称归一化谱图对比角度）；或者如果母离子没有匹配的
+库谱图或离子对少于 4 个，则为 #N/A。这是用于方法调整的 35 
+个有用值。当
+存在 6 个或更多离子对时， 效果最佳。</value>
+    <comment>Needs Review:English text changed
+Old English:The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.
+Current English:Equivalent to "dotp" displayed in the user interface. The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.
+Old Localized:母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
 中匹配离子峰的强度之间的点积（注释：截止版本 v1.4，为 1 – Arcos(dotp)/(Pi/2)，
 其中 dotp 是上文所述的值，
 又称归一化谱图对比角度）；或者如果母离子没有匹配的
 库谱图或离子对少于 4 个，则为 #N/A。这是用于
 方法调整的 35 个有用值。当存在 6 个或更多离子对时，
-效果最佳。</value>
+效果最佳。</comment>
   </data>
   <data name="LibraryIntensity">
     <value>对应匹配库谱图中离子对子离子的
@@ -666,13 +714,17 @@
     <value>此片段中所有中性丢失的总质量。</value>
   </data>
   <data name="MassErrorPPM">
-    <value>质量误差 PPM</value>
+    <value>以百万分之几 (PPM) 表示的预期质荷比值与测量值之差</value>
+    <comment>Needs Review:English text changed
+Old English:Mass Error PPM
+Current English:The difference between the expected and measured m/z values expressed in parts per million (PPM)
+Old Localized:质量误差 PPM</comment>
   </data>
   <data name="MassErrors">
     <value>色谱图的质量误差。</value>
   </data>
   <data name="MatchingPrecursors">
-    <value>所选母离子的子集，其母离子质荷比与谱图网格中的行表示的任何谱图相匹配。</value>
+    <value>所选母离子的子集，其母离子质荷比与谱图网格中以行表示的任何谱图相匹配。</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -748,6 +800,10 @@
 如果有内标标签类型，则仅使用母离子标签类型为内标的离子对峰面积来计算中位数峰面积。
 如果没有内标峰面积，则根据所有离子对峰面积计算中位数离子对峰面积。</value>
   </data>
+  <data name="Message">
+    <value>缺失值（若有）可能影响重复测定之间进行“原始”值比较时，则发出警告。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -809,9 +865,31 @@
     <value>Skyline 文档中的一组分子。</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>表示分子列表丰度的数值。对该分子列表下所有离子对的归一化面积求平均值，即可得出该数值。
+    <value>代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label.
+Current English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
+Old Localized:表示分子列表丰度的数值。对该分子列表下所有离子对的归一化面积求平均值，即可得出该数值。
 根据“分子定量”设置中指定的归一化方法对面积进行归一化处理。
-如果该重复测定中有任何离子对缺少值，则除非归一化方法是与标记之间的比率，否则分子列表丰度将为空白</value>
+如果该重复测定中有任何离子对缺少值，则除非归一化方法是与标记之间的比率，否则分子列表丰度将为空白</comment>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>如果缺失的数据影响到比较重复测定之间的“分子列表丰度”，则发出警告</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>分子列表下的离子对面积归一化的平均值。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>分子列表下的离子对面积归一化总和。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</value>
@@ -868,13 +946,17 @@
     <value>分离的母离子的质荷比值</value>
   </data>
   <data name="Ms2Precursors">
-    <value>对于 MS 级别 3 或更高的谱图，第一级母离子分裂后隔离的母离子的质荷比值</value>
+    <value>对于 MS 级别 3 或更高的谱图，第一级母离子分裂后而隔离的母离子的质荷比值</value>
   </data>
   <data name="MsLevel">
     <value>指明该结果是否仅使用母离子强度（一级质谱）或子离子强度（二级质谱）获得。</value>
   </data>
   <data name="NextAa">
-    <value>下一个氨基酸</value>
+    <value>蛋白质序列中紧跟肽段之后的氨基酸残基。</value>
+    <comment>Needs Review:English text changed
+Old English:Next Aa
+Current English:The amino acid residue found immediately after the peptide in the protein sequence.
+Old Localized:下一个氨基酸</comment>
   </data>
   <data name="NormalizationDivisor">
     <value>使用默认归一化方法时观察值除以的数字。
@@ -884,8 +966,31 @@
     <value>覆盖与该特定分子一起使用的归一化方法，进行绝对定量和组间比较。</value>
   </data>
   <data name="NormalizedArea">
-    <value>根据明示的肽段/分子“归一化方法”或在“设定 &gt; 肽段设定 &gt; 定量”中指定的归一化方法:
-    归一化肽段/分子强度而得的值</value>
+    <value>根据
+明示的肽段/分子“归一化方法”
+或在“设置 &gt; 肽段设置 &gt; 定量”中指定的归一化方法归一化肽段/分子强度而得出的值</value>
+    <comment>Needs Review:English text changed
+Old English:Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
+    Settings &gt; Peptide Settings &gt; Quantification
+Current English:Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit "Normalization Method" for the peptide/molecule 
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification
+Old Localized:根据明示的肽段/分子“归一化方法”或在“设定 &gt; 肽段设定 &gt; 定量”中指定的归一化方法:
+    归一化肽段/分子强度而得的值</comment>
+  </data>
+  <data name="NormalizedAreaMessage">
+    <value>缺失的数据影响到重复测定之间的“归一化面积”值时发出警告</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>根据
+明示的肽段/分子“归一化方法”或在“设置 &gt; 肽段设置 &gt; 定量”中指定的归一化方法归一化肽段/分子强度而得出的值。在缺失的数据影响到重复测定之间的比较时仍可获取</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>根据
+明示的肽段/分子“归一化方法”或在“设置 &gt; 肽段设置 &gt; 定量”中指定的归一化方法归一化肽段/分子强度而得出的值。在缺失的数据影响到重复测定之间的比较时不可获取</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
     <value>色谱图中的点数。</value>
@@ -992,6 +1097,10 @@
   <data name="PeptideSequenceLength">
     <value>肽段序列中的氨基酸计数。</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>谱图库中与肽段和结果文件相匹配的谱图数量。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PointCount">
     <value>在曲线拟合中使用的数据点数。</value>
   </data>
@@ -1010,8 +1119,26 @@
   <data name="PrecursorCalculatedConcentration">
     <value>使用同位素响应曲线所计算母离子结果浓度。</value>
   </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>如果缺失的数据影响到比较重复测定之间“母离子计算的浓度”，则发出警告</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>使用同位素响应曲线所计算母离子结果浓度。在缺失的数据影响到重复测定之间的比较时仍可获取</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>使用同位素响应曲线所计算母离子结果浓度。在缺失的数据影响到重复测定之间的比较时不可获取</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="PrecursorCharge">
     <value>与母离子相关的电荷。</value>
+    <comment>Needs Review:English text changed
+Old English:
+      The charge associated with the precursor ion.
+    
+Current English:The charge associated with the precursor ion.
+Old Localized:与母离子相关的电荷。</comment>
   </data>
   <data name="PrecursorConcentration">
     <value>将该母离子掺入样品时的浓度。用于产生同位素响应曲线。</value>
@@ -1039,9 +1166,29 @@
     <value>母离子的中性质量（以道尔顿为单位）</value>
   </data>
   <data name="PrecursorNormalizedArea">
-    <value>母离子结果的校准后面积。
+    <value>母离子归一化面积结果。等于根据肽段归一化方法归一化的母离子总面积结果。如果肽段归一化方法为“无”或为与标签的比率，则母离子归一化面积将等于母离子总面积。</value>
+    <comment>Needs Review:English text changed
+Old English:The normalized area of the Precursor Result.
+This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.
+Current English:Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If Peptide Normalization Method is "None" or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Old Localized:母离子结果的校准后面积。
 其等同于根据肽段校准方法所校准的母离子结果总面积。
-若肽段校准方法为“无”或相对于标记的比率。那么母离子校准后面积将等于母离子总面积。</value>
+若肽段校准方法为“无”或相对于标记的比率。那么母离子校准后面积将等于母离子总面积。</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>缺失值影响到比较重复测定的“母离子归一化面积”值时发出警告</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>母离子归一化面积结果。等于根据肽段归一化方法归一化的母离子总面积结果。如果肽段归一化方法为“无”或为与标签的比率，则母离子归一化面积将等于母离子总面积。在缺失的数据影响到重复测定之间的比较时仍可获取</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>母离子归一化面积结果。等于根据肽段归一化方法归一化的母离子总面积结果。如果肽段归一化方法为“无”或为与标签的比率，则母离子归一化面积将等于母离子总面积。在缺失的数据影响到重复测定之间的比较时不可获取</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与母离子相关的
@@ -1084,7 +1231,7 @@
 或如果未分配保留时间回归，则为 #N/A。</value>
   </data>
   <data name="PresetScanConfiguration">
-    <value>代表应用于该谱图的设置的数字</value>
+    <value>用于代表该谱图的设置的数字</value>
   </data>
   <data name="PreviousAa">
     <value>上一个 Aa</value>
@@ -1115,11 +1262,34 @@
     <value>蛋白质</value>
   </data>
   <data name="ProteinAbundance">
-    <value>表示特定重复测定中蛋白质丰度的数值。
+    <value>代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the protein in the particular replicate.
+The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
+The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label.
+Current English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Old Localized:表示特定重复测定中蛋白质丰度的数值。
 对蛋白质下所有离子对的归一化面积取平均值，即可计算出蛋白质丰度。
 离子对面积根据“肽段定量”设置中指定的归一化方法进行归一化处理。
 如果任何离子对在“重复测定”中缺少峰面积，蛋白质丰度将为空白，除非归一化方法是与标记的比率设置中指定的归一化方法进行归一化处理。
-如果该重复测定中有任何离子对缺少峰面积，则除非归一化方法是与标记之间的比率，否则蛋白质丰度将为空白。</value>
+如果该重复测定中有任何离子对缺少峰面积，则除非归一化方法是与标记之间的比率，否则蛋白质丰度将为空白。</comment>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>如果缺失的数据影响到比较重复测定之间的“蛋白质丰度”，则发出警告</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>“蛋白质”下的离子对面积归一化的平均值。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>“蛋白质”下的离子对面积归一化总和。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
@@ -1202,10 +1372,18 @@
 漂移范围。</value>
   </data>
   <data name="RatioDotProduct">
-    <value>比率点积</value>
+    <value>相当于用户界面中显示的“rdotp”。库点积中所述的点积计算，但在母离子峰面积（如轻标）和标准类型母离子峰面积（如重标）之间进行计算，如果没有标准类型或母离子为标准类型则为 #N/A。</value>
+    <comment>Needs Review:English text changed
+Old English:Ratio Dot Product
+Current English:Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.
+Old Localized:比率点积</comment>
   </data>
   <data name="RatioToStandard">
     <value>肽段的轻标/重标面积比</value>
+  </data>
+  <data name="Raw">
+    <value>即使缺失的数据影响到重复测定之间的比较，仍可获取计算值。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
     <value>原始（未内插）的色谱图数据。色谱图的间隔时间不均匀，每个离子对的色谱图可能具有不同的点数。</value>
@@ -1330,13 +1508,13 @@
     <value>通过仪器方法添加到谱图的文本描述</value>
   </data>
   <data name="ScanWindowWidth">
-    <value>谱图可能具有强度值的质荷比值上限和下限之间的差异</value>
+    <value>谱图中可能含有的强度值，其质荷比值上限和下限之间的差异</value>
   </data>
   <data name="Score">
     <value>特定特征的数值。</value>
   </data>
   <data name="ShapeCorrelation">
-    <value>该离子对的色谱峰相较于同一母离子下所有离子对的中位数峰形状的 Pearson 关联。</value>
+    <value>该离子对的色谱峰对比同一母离子下所有离子对的中位数峰形状的 Pearson 关联。</value>
   </data>
   <data name="Skewness">
     <value>色谱峰不对称性的测量值。</value>
@@ -1351,7 +1529,7 @@
     <value>标准化分子标识符</value>
   </data>
   <data name="SpectrumFilter">
-    <value>谱图必须满足才能包含在提取的离子色谱图中的额外条件</value>
+    <value>谱图必须满足被包含在提取的离子色谱图中的额外条件</value>
   </data>
   <data name="SpectrumIds">
     <value>用于色谱图的谱图标识符。</value>
@@ -1403,8 +1581,16 @@
     <value>母离子总面积归一化值的标准
 偏差。</value>
   </data>
+  <data name="Strict">
+    <value>缺失的数据影响到重复测定之间的比较时，不可获取计算值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="SummaryMessage">
     <value>更改的描述</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>将使用其拟合校准曲线来对该肽段或分子定量的其他肽段或分子的名称</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>所有未从校准排除的外部标准重复测定中定性离子比值的平均值。</value>

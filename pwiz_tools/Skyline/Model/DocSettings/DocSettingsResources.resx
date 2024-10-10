@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AnnotationDef_AnnotationTarget_PrecursorResults" xml:space="preserve">
+    <value>Precursor Results</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTarget_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
+    <value>Transition Results</value>
+  </data>
+  <data name="AnnotationDef_ValidationErrorMessage_Invalid_value" xml:space="preserve">
+    <value>Invalid value</value>
+  </data>
+  <data name="AnnotationDef_ValidationErrorMessage_Value_must_be_a_number" xml:space="preserve">
+    <value>Value must be a number</value>
+  </data>
+  <data name="CollisionEnergyRegression_Validate_Collision_energy_regression_contains_multiple_coefficients_for_charge__0__" xml:space="preserve">
+    <value>Collision energy regression contains multiple coefficients for charge {0}.</value>
+  </data>
+  <data name="CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
+    <value>Collision energy regressions require at least one regression function.</value>
+  </data>
+  <data name="DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_" xml:space="preserve">
+    <value>The URI {0} is not well formed.</value>
+  </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>Updating calculated annotations</value>
+  </data>
+  <data name="DriftTimeWindowWidthCalculator_Validate_Fixed window_width_must_be_non_negative_" xml:space="preserve">
+    <value>Fixed window width must be non negative.</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_" xml:space="preserve">
+    <value>Enzyme must have C-terminal cleavage to have C-terminal restrictions.</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_" xml:space="preserve">
+    <value>Enzyme must have N-terminal cleavage to have N-terminal restrictions.</value>
+  </data>
+  <data name="Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point" xml:space="preserve">
+    <value>Enzymes must have at least one cleavage point.</value>
+  </data>
+  <data name="ExplicitMods_ChangeModifications_Modification_type__0__not_found" xml:space="preserve">
+    <value>Modification type {0} not found.</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+    <value>Include by default</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>Neutral losses must be greater than or equal to {0}.</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>Neutral losses must be less than or equal to {0}.</value>
+  </data>
+  <data name="FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>Neutral losses must specify a formula or valid monoisotopic and average masses.</value>
+  </data>
+  <data name="FullScanAcquisitionExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
+    <value>Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
+    <value>Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0} is not a valid Full Scan Acquisition Method</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP" xml:space="preserve">
+    <value>Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP" xml:space="preserve">
+    <value>Similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP" xml:space="preserve">
+    <value>MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent" xml:space="preserve">
+    <value>Percent</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_" xml:space="preserve">
+    <value>1/K0 (Vs/cm^2)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_" xml:space="preserve">
+    <value>Compensation Voltage (V)</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_can_specify_multiplexed_windows_only_for_prespecified_isolation_windows" xml:space="preserve">
+    <value>Isolation scheme can specify multiplexed windows only for prespecified isolation windows</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_filter_and_a_prespecifed_isolation_window" xml:space="preserve">
+    <value>Isolation scheme cannot have a filter and a prespecifed isolation window</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_right_filter_without_a_left_filter" xml:space="preserve">
+    <value>Isolation scheme cannot have a right filter without a left filter</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows" xml:space="preserve">
+    <value>Isolation scheme for all ions cannot contain isolation windows</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
+    <value>Multiplexed windows require at least one window per scan</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_The_number_of_prespecified_isolation_windows_must_be_a_multiple_of_the_windows_per_scan_in_multiplexed_sampling" xml:space="preserve">
+    <value>The number of prespecified isolation windows must be a multiple of the windows per scan in multiplexed sampling.</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_" xml:space="preserve">
+    <value>The precursor m/z filter must be between {0} and {1}</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Windows_per_scan_requires_multiplexed_isolation_windows" xml:space="preserve">
+    <value>Windows per scan requires multiplexed isolation windows</value>
+  </data>
+  <data name="IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value" xml:space="preserve">
+    <value>Isolation window Start value is greater than the End value.</value>
+  </data>
+  <data name="IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window" xml:space="preserve">
+    <value>Target value is not within the range of the isolation window.</value>
+  </data>
+  <data name="IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value" xml:space="preserve">
+    <value>Isolation window requires a Target value.</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_DoValidate_Atom_percent_enrichment__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Atom percent enrichment {0} must be between {1} and {2}</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__" xml:space="preserve">
+    <value>Isotope enrichment is not supported for the symbol {0}</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_ToString__0__1__Percent" xml:space="preserve">
+    <value>{0} = {1}%</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>True/False</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>Value List</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>Lookup: </value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+    <value>(Unknown)</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Always" xml:space="preserve">
+    <value>Always</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Matching_Library" xml:space="preserve">
+    <value>Matching Library</value>
+  </data>
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_" xml:space="preserve">
+    <value>Multiple charge states for custom ions are no longer supported.</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>Reporter ion masses must be greater than or equal to {0}.</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ion_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>Reporter ion masses must be less than or equal to {0}.</value>
+  </data>
+  <data name="MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>Reporter ions must specify a formula or valid monoisotopic and average masses.</value>
+  </data>
+  <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
+    <value>Special fragment ions must have at least one fragmentation residue.</value>
+  </data>
+  <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
+    <value>Special fragment ions must specify the terminal side of the amino acid residue on which fragmentation occurs.</value>
+  </data>
+  <data name="MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The minimum length {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
+    <value>Measured retention times must be positive values.</value>
+  </data>
+  <data name="MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
+    <value>The sequence {0} is not a valid peptide.</value>
+  </data>
+  <data name="ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup" xml:space="preserve">
+    <value>Invalid attempt to add data to completed MassLookup.</value>
+  </data>
+  <data name="ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup" xml:space="preserve">
+    <value>Invalid attempt to access incomplete MassLookup.</value>
+  </data>
+  <data name="OptimizableRegression_Validate_The_number_of_optimization_steps__0__is_not_between__1__and__2__" xml:space="preserve">
+    <value>The number of optimization steps {0} is not between {1} and {2}.</value>
+  </data>
+  <data name="OptimizableRegression_Validate_The_optimization_step_size__0__is_not_greater_than_zero" xml:space="preserve">
+    <value>The optimization step size {0} is not greater than zero.</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition" xml:space="preserve">
+    <value>Transition</value>
+  </data>
+  <data name="PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression" xml:space="preserve">
+    <value>Peptide exclusion must have a regular expression.</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_excluded_n_terminal_amino_acids" xml:space="preserve">
+    <value>excluded n-terminal amino acids</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_maximum_peptide_length" xml:space="preserve">
+    <value>maximum peptide length</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_minimum_peptide_length" xml:space="preserve">
+    <value>minimum peptide length</value>
+  </data>
+  <data name="PeptideFilter_DoValidate_The_peptide_exclusion__0__has_an_invalid_regular_expression__1__" xml:space="preserve">
+    <value>The peptide exclusion {0} has an invalid regular expression '{1}'.</value>
+  </data>
+  <data name="PeptideFilter_ExcludeExprToRegEx_Invalid_exclusion_list" xml:space="preserve">
+    <value>Invalid exclusion list.</value>
+  </data>
+  <data name="PeptideFilter_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__" xml:space="preserve">
+    <value>The value {1} for {0} must be between {2} and {3}.</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_" xml:space="preserve">
+    <value>Libraries and library specifications do not match.</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Library picked peptide count {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Limiting_peptides_per_protein_requires_a_ranking_method_to_be_specified" xml:space="preserve">
+    <value>Limiting peptides per protein requires a ranking method to be specified.</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_The_specified_method_of_matching_library_spectra_does_not_support_peptide_ranking" xml:space="preserve">
+    <value>The specified method of matching library spectra does not support peptide ranking.</value>
+  </data>
+  <data name="PeptideLibraries_EnsureRankId_Specified_libraries_do_not_support_the___0___peptide_ranking" xml:space="preserve">
+    <value>Specified libraries do not support the '{0}' peptide ranking.</value>
+  </data>
+  <data name="PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type" xml:space="preserve">
+    <value>Attempt to serialize list containing invalid type.</value>
+  </data>
+  <data name="PeptideModifications_ChangeModifications_Modification_type__0__not_found" xml:space="preserve">
+    <value>Modification type {0} not found.</value>
+  </data>
+  <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Maximum neutral losses {0} must be between {1} and {2}</value>
+  </data>
+  <data name="PeptideModifications_DoValidate_Maximum_variable_modifications__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Maximum variable modifications {0} must be between {1} and {2}</value>
+  </data>
+  <data name="PeptideModifications_ReadXml_Heavy_modifications_found_without__0__attribute" xml:space="preserve">
+    <value>Heavy modifications found without '{0}' attribute.</value>
+  </data>
+  <data name="PeptideModifications_ReadXml_Internal_standard_type__0__not_found" xml:space="preserve">
+    <value>Internal standard type {0} not found.</value>
+  </data>
+  <data name="PeptidePrediction_CalcMaxTrendReplicates_Calculating_scheduling_from_trends_requires_a_retention_time_window_for_measured_data" xml:space="preserve">
+    <value>Calculating scheduling from trends requires a retention time window for measured data.</value>
+  </data>
+  <data name="PeptidePrediction_DoValidate_The_retention_time_window__0__for_a_scheduled_method_based_on_measured_results_must_be_between__1__and__2__" xml:space="preserve">
+    <value>The retention time window {0} for a scheduled method based on measured results must be between {1} and {2}.</value>
+  </data>
+  <data name="PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions" xml:space="preserve">
+    <value>piecwise linear functions</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Matching" xml:space="preserve">
+    <value>Matching</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Overlapping" xml:space="preserve">
+    <value>Overlapping</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Preceding" xml:space="preserve">
+    <value>Preceding</value>
+  </data>
+  <data name="RelativeRTExtension_LOCALIZED_VALUES_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
+    <value>The name '{0}' is not a valid table name.</value>
+  </data>
+  <data name="ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__" xml:space="preserve">
+    <value>Failed to find the table for the column {0}.</value>
+  </data>
+  <data name="ReportSpec_ReadXml_Missing_table_name" xml:space="preserve">
+    <value>Missing table name.</value>
+  </data>
+  <data name="ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
+    <value>The name '{0}' is not a valid table name.</value>
+  </data>
+  <data name="RetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid" xml:space="preserve">
+    <value>The retention time calculator {0} is not valid.</value>
+  </data>
+  <data name="RetentionTimeRegression_FindThreshold_Finding_threshold" xml:space="preserve">
+    <value>Finding threshold</value>
+  </data>
+  <data name="RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values" xml:space="preserve">
+    <value>Slope and intercept must both have values or both not have values</value>
+  </data>
+  <data name="RetentionTimeRegression_Validate_Invalid_negative_retention_time_window__0__" xml:space="preserve">
+    <value>Invalid negative retention time window {0}.</value>
+  </data>
+  <data name="RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator" xml:space="preserve">
+    <value>Retention time regression must specify a sequence to score calculator.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential" xml:space="preserve">
+    <value>A regression for declustering potention must be selected in the Prediction tab of the Transition Settings in order to import optimization data for decluserting potential.</value>
+  </data>
+  <data name="SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling" xml:space="preserve">
+    <value>"{0}" is not a valid setting for full scan special handling</value>
+  </data>
+  <data name="SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec" xml:space="preserve">
+    <value>Settings missing library spec.</value>
+  </data>
+  <data name="SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition" xml:space="preserve">
+    <value>The modification '{0}' already exists with a different definition.</value>
+  </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+    <value>({0} Da)</value>
+    <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+    <value>Mass</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+    <value>Unknown mass</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+    <value>{0} losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+    <value>{0} neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+    <value>Loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+    <value>Losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+    <value>Neutral loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+    <value>Neutral losses</value>
+  </data>
+  <data name="StaticMod_ToModTerminus_Invalid_terminus__0__" xml:space="preserve">
+    <value>Invalid terminus '{0}'.</value>
+  </data>
+  <data name="StaticMod_Validate_Formula_not_allowed_with_labeled_atoms" xml:space="preserve">
+    <value>Formula not allowed with labeled atoms.</value>
+  </data>
+  <data name="StaticMod_Validate_Invalid_amino_acid___0___" xml:space="preserve">
+    <value>Invalid amino acid '{0}'.</value>
+  </data>
+  <data name="StaticMod_Validate_Loss_only_modifications_may_not_be_variable" xml:space="preserve">
+    <value>Loss-only modifications may not be variable.</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_formula_may_not_be_empty" xml:space="preserve">
+    <value>Modification formula may not be empty.</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
+    <value>Modification must specify a formula, labeled atoms or valid monoisotopic and average masses.</value>
+  </data>
+  <data name="StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses" xml:space="preserve">
+    <value>Modification with a formula may not specify modification masses.</value>
+  </data>
+  <data name="StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed" xml:space="preserve">
+    <value>Terminal modification with labeled atoms not allowed.</value>
+  </data>
+  <data name="StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus" xml:space="preserve">
+    <value>Variable modifications must specify amino acid or terminus.</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_1_ion" xml:space="preserve">
+    <value>1 ion</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_2_ions" xml:space="preserve">
+    <value>2 ions</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_5_ions" xml:space="preserve">
+    <value>5 ions</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_6_ions" xml:space="preserve">
+    <value>6 ions</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_last_ion_minus_2" xml:space="preserve">
+    <value>last ion - 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_last_ion_minus_3" xml:space="preserve">
+    <value>last ion - 3</value>
+  </data>
+  <data name="TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__" xml:space="preserve">
+    <value>Unsupported first fragment name {0}.</value>
+  </data>
+  <data name="TransitionFilter_FragmentRangeLastName_Unsupported_last_fragment_name__0__" xml:space="preserve">
+    <value>Unsupported last fragment name {0}.</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_ion_2" xml:space="preserve">
+    <value>ion 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
+    <value>ion 4</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor" xml:space="preserve">
+    <value>m/z &gt; precursor</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1" xml:space="preserve">
+    <value>(m/z &gt; precursor) - 1</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2" xml:space="preserve">
+    <value>(m/z &gt; precursor) - 2</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1" xml:space="preserve">
+    <value>(m/z &gt; precursor) + 1</value>
+  </data>
+  <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2" xml:space="preserve">
+    <value>(m/z &gt; precursor) + 2</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__" xml:space="preserve">
+    <value>Unknown fragment name in Transition Settings '{0}'</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
+    <value>The label {0} is not a valid end fragment filter.</value>
+  </data>
+  <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
+    <value>The label {0} is not a valid start fragment filter.</value>
+  </data>
+  <data name="TransitionFilter_IonTypes_At_least_one_ion_type_is_required" xml:space="preserve">
+    <value>At least one ion type is required.</value>
+  </data>
+  <data name="TransitionFilter_PrecursorCharges_Precursor_charges" xml:space="preserve">
+    <value>Precursor charges</value>
+  </data>
+  <data name="TransitionFilter_ProductCharges_Product_ion_charges" xml:space="preserve">
+    <value>Product ion charges</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
+    <value>Molecule precursor adducts</value>
+  </data>
+  <data name="TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__" xml:space="preserve">
+    <value>A precursor exclusion window must be between {0} and {1}.</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
+    <value>{0} cannot be empty.</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__" xml:space="preserve">
+    <value>Invalid charge {1} found. {0} must be between {2} and {3}.</value>
+  </data>
+  <data name="TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once" xml:space="preserve">
+    <value>Precursor charges specified charge {0} more than once.</value>
+  </data>
+  <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode" xml:space="preserve">
+    <value>Tried to create an isolation scheme for non-DIA mode</value>
+  </data>
+  <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter" xml:space="preserve">
+    <value>Tried to create an isolation scheme without precursor filter</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
+    <value>For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included" xml:space="preserve">
+    <value>No other full-scan MS1 filter settings are allowed when no precursor isotopes are included.</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_The_precursor_isotope_count_for_MS1_filtering_must_be_between__0__and__1__peaks" xml:space="preserve">
+    <value>The precursor isotope count for MS1 filtering must be between {0} and {1} peaks.</value>
+  </data>
+  <data name="TransitionFullScan_DoValidate_The_precursor_isotope_percent_for_MS1_filtering_must_be_between__0___and__1___of_the_base_peak" xml:space="preserve">
+    <value>The precursor isotope percent for MS1 filtering must be between {0}% and {1}% of the base peak.</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_" xml:space="preserve">
+    <value>Resolution must be between {0} and {1} for QIT.</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
+    <value>Resolving power must be between {0} and {1} for {2}.</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
+    <value>The m/z value at which the resolving power is calibrated is required for {0}.</value>
+  </data>
+  <data name="TransitionFullScan_ValidateRes_Unexpected_resolving_power_mz_value_for__0__" xml:space="preserve">
+    <value>Unexpected resolving power m/z value for {0}</value>
+  </data>
+  <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th" xml:space="preserve">
+    <value>Results {0:0.##},{1:0.##} m/z</value>
+  </data>
+  <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th" xml:space="preserve">
+    <value>Results {0:0.##} m/z</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_maximum_m_z_value__0__is_less_than__1__from_minimum__2__" xml:space="preserve">
+    <value>Instrument maximum m/z value {0} is less than {1} from minimum {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_maximum_mz_exceeds_allowable_maximum__0__" xml:space="preserve">
+    <value>Instrument maximum m/z exceeds allowable maximum {0}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_Instrument_minimum_mz_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Instrument minimum m/z value {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_No_other_full_scan_MS_MS_filter_settings_are_allowed_when_precursor_filter_is_none" xml:space="preserve">
+    <value>No other full-scan MS/MS filter settings are allowed when precursor filter is none.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart_" xml:space="preserve">
+    <value>The allowable retention time range {0} to {1} must be at least {2} minutes apart.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_number_of_inclusions__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The maximum number of inclusions {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_number_of_transitions__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The maximum number of transitions {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_maximum_retention_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The maximum retention time {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_minimum_retention_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The minimum retention time {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_mz_match_tolerance__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The m/z match tolerance {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionInstrument_DoValidate_The_precursor_mz_filter_must_be_between__0__and__1__" xml:space="preserve">
+    <value>The precursor m/z filter must be between {0} and {1}</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Library ion count value {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Library ion match tolerance value {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Library min ion count value {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_" xml:space="preserve">
+    <value>Expected loss {0} not found in the modification {1}</value>
+  </data>
+  <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
+    <value>Transition prediction requires a collision energy regression function.</value>
+  </data>
+  <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
+    <value>Compensation voltage parameters must be selected in the Prediction tab of the Transition Settings in order to import optimization data for compensation voltage</value>
+  </data>
+  <data name="TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
+    <value>High resolution MS1 filtering requires use of monoisotopic precursor masses.</value>
+  </data>
+  <data name="TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan" xml:space="preserve">
+    <value>The instrument's firmware inclusion limit must be specified before doing a multiplexed DIA scan.</value>
+  </data>
+  <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type" xml:space="preserve">
+    <value>Static mod masses have already been added for this heavy type.</value>
+  </data>
+  <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type" xml:space="preserve">
+    <value>Static mod masses may not be added to light type.</value>
+  </data>
+  <data name="XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty" xml:space="preserve">
+    <value>Name property may not be missing or empty.</value>
+  </data>
+  <data name="StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_" xml:space="preserve">
+    <value>Isotope modifications may not be variable.</value>
+  </data>
+</root>

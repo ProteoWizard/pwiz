@@ -47,6 +47,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateIonMobilityFilterWindowWidthControls();
         }
 
+        public IonMobilityWindowWidthCalculator IonMobilityWindowWidthCalculator => _ionMobilityFiltering.FilterWindowWidthCalculator;
+
         public void InitializeSettings(IModifyDocumentContainer documentContainer, bool? defaultState = null)
         {
 
@@ -162,6 +164,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public void AddIonMobilityLibrary()
         {
             CheckDisposed();
+            UpdateIonMobilityPeakWidthCalculator();  // Current user settings may be needed in library updating
             var list = Settings.Default.IonMobilityLibraryList;
             var libNew = list.EditItem(this, null, list, null);
             if (libNew != null)
@@ -174,6 +177,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public void EditIonMobilityLibrary()
         {
             var list = Settings.Default.IonMobilityLibraryList;
+            UpdateIonMobilityPeakWidthCalculator(); // Current user settings may be needed in library updating
             var libNew = list.EditItem(this, _driverIonMobilityLib.SelectedItem, list, null);
             if (libNew != null)
             {
@@ -353,6 +357,29 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             var useSpectralLibraryIonMobilities = cbUseSpectralLibraryIonMobilities.Checked;
 
+            var ionMobilityWindowWidthCalculator = ValidateIonMobilityPeakWidthCalculator(helper);
+            return ionMobilityWindowWidthCalculator == null ? null : new TransitionIonMobilityFiltering(IonMobilityLibrary, useSpectralLibraryIonMobilities, ionMobilityWindowWidthCalculator);
+        }
+
+        private void UpdateIonMobilityPeakWidthCalculator()
+        {
+            try
+            {
+                var helper = new MessageBoxHelper(this.ParentForm, false);
+                var result = ValidateIonMobilityPeakWidthCalculator(helper);
+                if (result != null)
+                    _ionMobilityFiltering = _ionMobilityFiltering == null
+                        ? new TransitionIonMobilityFiltering(null, false, result)
+                        : _ionMobilityFiltering.ChangeFilterWindowWidthCalculator(result);
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+            }
+        }
+
+        public IonMobilityWindowWidthCalculator ValidateIonMobilityPeakWidthCalculator(MessageBoxHelper helper)
+        {
             var peakWidthType = ShowPeakWidthTypeControl ? 
                 (IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType)comboBoxWindowType.SelectedIndex :
                 IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
@@ -413,9 +440,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     break;
             }
 
-            var ionMobilityWindowWidthCalculator =
-                new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax, fixedPeakWidth);
-            return new TransitionIonMobilityFiltering(IonMobilityLibrary, useSpectralLibraryIonMobilities, ionMobilityWindowWidthCalculator);
+            return new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax, fixedPeakWidth);
         }
 
         private IonMobilityLibrary GetSelectedIonMobilityLibrary()
@@ -445,7 +470,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public string ValidateFixedWindow(double fixedWindow)
         {
             if (fixedWindow < 0)
-                return Resources.IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_;
+                return IonMobilityResources.IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_;
             return null;
         }
 

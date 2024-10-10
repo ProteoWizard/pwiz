@@ -577,6 +577,11 @@ namespace pwiz.ProteowizardWrapper
             return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
         }
 
+        public double CCSFromIonMobility(double ionMobility, double mz, int charge)
+        {
+            return IonMobilitySpectrumList.ionMobilityToCCS(ionMobility, mz, charge);
+        }
+
         public eIonMobilityUnits IonMobilityUnits
         {
             get
@@ -724,6 +729,12 @@ namespace pwiz.ProteowizardWrapper
 
         private static readonly string[] msLevelOrFunctionArrayNames = { "ms level", "function" };
 
+        public double? GetChromatogramCollisionEnergy(int chromIndex)
+        {
+            using var chrom = ChromatogramList.chromatogram(chromIndex, DetailLevel.FullMetadata);
+            return chrom.precursor?.activation?.cvParam(CVID.MS_collision_energy)?.value;
+        }
+
         public void GetChromatogram(int chromIndex, out string id,
             out float[] timeArray, out float[] intensityArray, bool onlyMs1OrFunction1 = false)
         {
@@ -830,7 +841,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double[] GetTotalIonCurrent()
         {
-            if (ChromatogramList == null)
+            if (ChromatogramList == null || ChromatogramList.size() == 0)
             {
                 return null;
             }
@@ -1155,6 +1166,10 @@ namespace pwiz.ProteowizardWrapper
             return msDataSpectrum;
         }
 
+        // UserParam name that indicates that scan window bounds were obtained
+        // from centroided data and therefore do not represent the entire
+        // range that was monitored
+        private const string CENTROIDED_MIN_MAX = @"centroided min/max";
         private SpectrumMetadata GetSpectrumMetadata(Spectrum spectrum)
         {
             if (spectrum == null)
@@ -1176,7 +1191,16 @@ namespace pwiz.ProteowizardWrapper
                 {
                     if (msPrecursor.IsolationMz.HasValue)
                     {
-                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                        var spectrumPrecursor =
+                            new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor
+                                .PrecursorCollisionEnergy);
+                        if (msPrecursor.IsolationWindowLower.HasValue && msPrecursor.IsolationWindowUpper.HasValue)
+                        {
+                            spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                                msPrecursor.IsolationWindowLower.Value,
+                                msPrecursor.IsolationWindowUpper.Value);
+                        }
+                        spectrumPrecursors.Add(spectrumPrecursor);
                     }
                 }
                 precursorsByMsLevel.Add(spectrumPrecursors);
@@ -1201,6 +1225,44 @@ namespace pwiz.ProteowizardWrapper
                     metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
                 }
             }
+            double? scanWindowLowerLimit = null;
+            double? scanWindowUpperLimit = null;
+            foreach (var scan in spectrum.scanList.scans)
+            {
+                foreach (var window in scan.scanWindows)
+                {
+                    if (!window.userParam(CENTROIDED_MIN_MAX).empty())
+                    {
+                        // min/max values obtained from centroided data are unreliable
+                        continue;
+                    }
+                    var cvParamLowerLimit = window.cvParam(CVID.MS_scan_window_lower_limit);
+                    if (cvParamLowerLimit != null)
+                    {
+                        double windowStart = cvParamLowerLimit.value;
+                        if (scanWindowLowerLimit == null || windowStart < scanWindowLowerLimit)
+                        {
+                            scanWindowLowerLimit = windowStart;
+                        }
+                    }
+
+                    var cvParamUpperLimit = window.cvParam(CVID.MS_scan_window_upper_limit);
+                    if (cvParamUpperLimit != null)
+                    {
+                        double windowEnd = cvParamUpperLimit.value;
+                        if (scanWindowUpperLimit == null || windowEnd > scanWindowUpperLimit)
+                        {
+                            scanWindowUpperLimit = windowEnd;
+                        }
+                    }
+                }
+            }
+
+            if (scanWindowLowerLimit.HasValue && scanWindowUpperLimit.HasValue)
+            {
+                metadata = metadata.ChangeScanWindow(scanWindowLowerLimit.Value, scanWindowUpperLimit.Value);
+            }
+
             return metadata;
         }
 
@@ -1621,18 +1683,31 @@ namespace pwiz.ProteowizardWrapper
         private static IEnumerable<MsPrecursor> GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            return spectrum.scanList.scans[0].scanWindows.Select(s =>
+            foreach (var scanWindow in spectrum.scanList.scans[0].scanWindows)
             {
-                double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
-                double windowEnd = s.cvParam(CVID.MS_scan_window_upper_limit).value;
-                double isolationWidth = (windowEnd - windowStart) / 2;
-                return new MsPrecursor
+                if (!scanWindow.userParam(CENTROIDED_MIN_MAX).empty())
                 {
-                    IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
-                    IsolationWindowLower = isolationWidth,
-                    IsolationWindowUpper = isolationWidth
-                };
-            });
+                    // The upper and lower window limits cannot be trusted.
+                    // Just return a MsPrecursor whose IsolationWindowTargetMz can be used
+                    // to determine the polarity of the spectrum.
+                    yield return new MsPrecursor
+                    {
+                        IsolationWindowTargetMz = new SignedMz(1, negativePolarity)
+                    };
+                }
+                else
+                {
+                    double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
+                    double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
+                    double isolationWidth = (windowEnd - windowStart) / 2;
+                    yield return new MsPrecursor
+                    {
+                        IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
+                        IsolationWindowLower = isolationWidth,
+                        IsolationWindowUpper = isolationWidth
+                    };
+                }
+            }
         }
 
         private static SignedMz? GetPrecursorMz(Precursor precursor, bool negativePolarity)
@@ -1703,7 +1778,7 @@ namespace pwiz.ProteowizardWrapper
 
             try
             {
-                var msd = new MSData();
+                using var msd = new MSData();
                 FULL_READER_LIST.read(filepath, msd);
                 return true;
             }

@@ -135,6 +135,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
+    <Compile Include="BullseyeSharpTest.cs" />
+    <Compile Include="DiaSearchTutorialTest.cs" />
+    <Compile Include="FeatureDetectionTest.cs" />
+    <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
     <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />
     <Compile Include="DiaUmpireVendorFormatTest.cs" />
@@ -168,6 +172,7 @@
     <Compile Include="PerfMobilIonTest.cs" />
     <Compile Include="PerfMs3ChromatogramTest.cs" />
     <Compile Include="PerfNegativeIonDIATest.cs" />
+    <Compile Include="PerfNonScoringTransitionsTest.cs" />
     <Compile Include="PerfOpenSwathConvert.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
@@ -218,6 +223,10 @@
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
+      <Project>{e3f0e34f-f9e6-4360-996f-e2054e4fa1ae}</Project>
+      <Name>TestRunnerLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
       <Name>TestUtil</Name>
@@ -254,6 +263,7 @@
     <None Include="DiaSwathTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
+    <None Include="FeatureDetectionTest.zip" />
     <None Include="OrbiPrmViews.zip" />
     <None Include="PerfImportHundredsOfReplicatesTest.zip" />
     <None Include="HiResMetabolomicsViews.zip" />

@@ -228,6 +228,10 @@ TsfDataImpl::TsfDataImpl(const string& rawpath, int preferOnlyMsLevel)
         double bpi = row.get<double>(++idx);
         double tic = row.get<double>(++idx);
 
+        int numPeaks = row.get<int>(++idx);
+        if (numPeaks == 0)
+            continue;
+
         tic_->times.push_back(rt);
         bpc_->times.push_back(rt);
         tic_->intensities.push_back(tic);
@@ -240,10 +244,6 @@ TsfDataImpl::TsfDataImpl(const string& rawpath, int preferOnlyMsLevel)
             ticMs1_->intensities.push_back(tic);
             bpcMs1_->intensities.push_back(bpi);
         }
-
-        int numPeaks = row.get<int>(++idx);
-        if (numPeaks == 0)
-            continue;
 
         optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
         optional<double> precursorMz(row.get<optional<double> >(++idx));

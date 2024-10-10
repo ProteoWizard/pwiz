@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -28,6 +29,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ZedGraph
 {
@@ -141,6 +143,19 @@ namespace ZedGraph
 		/// </summary>
 		/// <seealso cref="Default.LineType"/>
 		private LineType _lineType;
+
+		private LabelLayout _labelLayout;
+
+		public bool EnableLabelLayout
+		{
+			get => _labelLayout != null;
+			set
+			{
+				if (!value)
+					_labelLayout = null;
+			}
+		}
+		public LabelLayout Layout => _labelLayout;
 
 	#endregion
 
@@ -848,7 +863,7 @@ namespace ZedGraph
 			foreach ( Axis axis in _y2AxisList )
 				axis.Scale.ResetScaleData();
 			*/
-		}
+        }
 
 		internal void DrawGrid( Graphics g, float scaleFactor )
 		{
@@ -1507,9 +1522,147 @@ namespace ZedGraph
 			return slices;
 		}
 
-	#endregion
+		#endregion
 
-	#region General Utility Methods
+		#region General Utility Methods
+
+		/// <summary>
+		/// Performs the graph label layout. Places the labels into the coordinates specified in the savedLayoutString parameter
+		/// and performs the layout algorithm for the points that are not found there or whose user coordinates have changed.
+		/// Ignores the points not visible in the chart rectangle.
+		/// </summary>
+		/// <param name="labPoints">List of LabeledPoints objects prepared by the user graph. These should have
+		/// Point and Label components assigned.</param>
+		/// <param name="existingLayout">the list of saved label layout information. If provided, the points on the list
+		/// will be placed at the specified coordinates and layout optimization will not be performed for them.</param>
+		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, List<LabeledPoint.PointLayout> existingLayout = null)
+        {
+			// DigitalRune docking panel sometimes is resized with negative chart width, which crashes the layout algorithm.
+            if (!labPoints.Any() || Chart.Rect.Width <= 0 || Chart.Rect.Height <= 0)
+                return;
+            // Need this to make sure the coordinate transforms work correctly.
+            XAxis.Scale.SetupScaleData(this, XAxis);
+            YAxis.Scale.SetupScaleData(this, YAxis);
+
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
+
+                var visiblePoints = new List<LabeledPoint>();
+                foreach (var labeledPoint in labPoints)
+                {
+                    if (_labelLayout.IsPointVisible(labeledPoint.Point))
+                    {
+						labeledPoint.Label.IsDraggable = true;
+                        visiblePoints.Add(labeledPoint);
+                        labeledPoint.Label.IsVisible = true;
+                    }
+                    else
+                        labeledPoint.Label.IsVisible = false;
+                }
+				
+                if (visiblePoints.Any())
+                {
+                    var savedLayout = existingLayout ?? new List<LabeledPoint.PointLayout>();
+					var newPoints = new List<LabeledPoint>();
+                    foreach (var point in visiblePoints)
+                    {
+                        // if we already have a saved point layout for this peptide we do not need to re-adjust it
+						// CONSIDER: There is no stable persistent protein ID, so we cannot match the points using identityPath
+                        //var savedPoint = savedLayout.FirstOrDefault(p => p.Identity.Equals(point.UniqueID.ToString()));
+                        var savedPoint = savedLayout.FirstOrDefault(p => point.Point.Equals(p.PointLocation));
+                        if (savedPoint != null)
+                        {
+                            _labelLayout.AddLabel(point, savedPoint.LabelLocation);
+                            GraphObjList.Remove(point.Connector);
+                            _labelLayout.DrawConnector(point, g);
+                        }
+						else // we should add all the existing points first to make sure the layout algorithm takes them into account when placing the new ones.
+                            newPoints.Add(point);
+                    }
+                    foreach (var point in newPoints)
+                    {
+                        if (_labelLayout.PlaceLabel(point, g))
+                        {
+                            GraphObjList.Remove(point.Connector);
+                            _labelLayout.DrawConnector(point, g);
+                        }
+					}
+				}
+            }
+        }
+
+        public void UpdateConnectors()
+        {
+			if (_labelLayout == null)
+				return;
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+
+                foreach (var labPointPair in _labelLayout.LabeledPoints)
+                { 
+                    _labelLayout.UpdateConnector(labPointPair.Value, g);
+                }
+            }
+
+        }
+			public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
+        {
+            isOverBoundary = false;
+            if (_labelLayout != null)
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    if (FindNearestObject(mousePt, g, out var nearestObj, out _))
+                    {
+                        if (nearestObj is TextObj label && _labelLayout.LabeledPoints.TryGetValue(label, out var labPoint))
+                        {
+                            float scaleFactor = CalcScaleFactor();
+                            isOverBoundary = labPoint.Label.PointOnBoxBoundary(mousePt, this, g, scaleFactor);
+                            return labPoint;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        
+        public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
+        {
+            labPoint = OverLabel(mousePt, out _);
+            return labPoint !=	null;
+        }
+
+        public RectangleF GetRect(TextObj obj, Graphics g)
+        {
+            PointF pix = obj.Location.Transform(this);
+            var points = obj.FontSpec.GetBox(g, obj.Text, pix.X, pix.Y, obj.Location.AlignH,
+                obj.Location.AlignV, CalcScaleFactor(), new SizeF());
+            double x0;
+            double y0;
+            ReverseTransform(points[0], out x0, out y0);
+
+            double x1;
+            double y1;
+            ReverseTransform(points[2], out x1, out y1);
+
+            float width = (float)(x1 - x0);
+            float height = (float)(y0 - y1);
+            var rect = new RectangleF((float)x0, (float)y0, width, height);
+
+            return rect;
+        }
+
+        public RectangleF GetRectScreen(TextObj obj, Graphics g)
+        {
+            PointF pix = obj.Location.Transform(this);
+            var points = obj.FontSpec.GetBox(g, obj.Text, pix.X, pix.Y, obj.Location.AlignH,
+                obj.Location.AlignV, CalcScaleFactor(), new SizeF());
+            var res = new RectangleF(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
+            return res;
+        }
+
 		/// <summary>
 		/// Transform a data point from the specified coordinate type
 		/// (<see cref="CoordType"/>) to screen coordinates (pixels).
@@ -2174,9 +2327,11 @@ namespace ZedGraph
 									{
 										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 									}
-
-									distX = ( xVal - xAct ) * xPixPerUnit;
-									distY = ( yVal - yAct ) * yPixPerUnitAct;
+									// Pixel distance needs to be calculated differently for log scale graphs
+									distY = YAxis.Type == AxisType.Log ? LogScalePixelDistance(yVal, yAct, _chart._rect.Height) : 
+										(yVal - yAct) * yPixPerUnitAct;
+									distX = XAxis.Type == AxisType.Log ? LogScalePixelDistance(xVal, xAct, _chart._rect.Width) : 
+										( xVal - xAct ) * xPixPerUnit;
 									dist = distX * distX + distY * distY;
 
 									if ( dist >= minDist )
@@ -2222,6 +2377,11 @@ namespace ZedGraph
 				return false;
 		}
 
+		private double LogScalePixelDistance(double positionA, double positionB, double totalDistance)
+		{
+			var fractionOfDistance = (Math.Log(positionA) - Math.Log(positionB)) / Math.Log(totalDistance);
+			return fractionOfDistance * totalDistance;
+		}
 		/// <summary>
 		/// Search through the <see cref="GraphObjList" /> and <see cref="CurveList" /> for
 		/// items that contain active <see cref="Link" /> objects.

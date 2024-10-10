@@ -157,14 +157,18 @@
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
+    <Compile Include="ConsoleAddAnnotationsTest.cs" />
+    <Compile Include="ConsoleVerboseExceptionsTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
+    <Compile Include="OptimizationSpacingTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
     <Compile Include="RefineTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ResourcesTest.cs" />
     <Compile Include="Results\AgilentCEOptTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
     <Compile Include="Results\AgilentMseTest.cs" />
@@ -240,6 +244,7 @@
     <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
+    <None Include="ConsoleAddAnnotationsTest.zip" />
     <None Include="ConsoleAnnotationsExportToImportTest.zip" />
     <None Include="ConsoleExportAnnotationsTest.zip" />
     <None Include="ConsoleExportMProphetTest.zip" />

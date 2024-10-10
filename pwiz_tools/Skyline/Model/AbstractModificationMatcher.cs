@@ -141,17 +141,26 @@ namespace pwiz.Skyline.Model
                     UpdateMatcher(info, null);
                     continue;
                 }
-                // If the modification isn't indicated by a double, assume it must be the name of the modification.
-                AAModMatch? match;
-                if (!info.UserIndicatedHeavy || info.Mass == null)
-                    match = info.Mass != null ? GetModByMass(info) : GetModByName(info); 
-                else
+                AAModMatch? match = null;
+                // If there is an Unimod ID try looking it up by name
+                if (info.UniModId.HasValue)
+                    match = GetModByName(info);
+                if (match == null)
                 {
-                    StaticMod mod = GetModByMassInSettings(info, (double) info.Mass, false) ??
-                                    UniMod.MassLookup.MatchModificationMass((double) info.Mass, info.AA,
-                                                                            info.RoundedTo, false, info.Terminus,
-                                                                            info.AppearsToBeSpecificMod);
-                    match = mod == null ? (AAModMatch?) null : new AAModMatch {HeavyMod = mod};
+                    // If the modification isn't indicated by a double, assume it must be the name of the modification.
+                    if (!info.UserIndicatedHeavy || info.Mass == null)
+                        match = info.Mass != null ? GetModByMass(info) : GetModByName(info); 
+                    else
+                    {
+                        StaticMod mod = GetModByMassInSettings(info, (double)info.Mass, false) ??
+                                        UniMod.MatchModificationMass((double)info.Mass, info.AA,
+                                            info.RoundedTo, false, info.Terminus,
+                                            info.AppearsToBeSpecificMod);
+                        if (mod != null)
+                        {
+                            match = new AAModMatch { HeavyMod = mod };
+                        }
+                    }
                 }
                 if (match != null)
                 {
@@ -159,7 +168,9 @@ namespace pwiz.Skyline.Model
                     var heavyMod = match.Value.HeavyMod;
                     if (!info.AppearsToBeSpecificMod && heavyMod != null && string.IsNullOrEmpty(heavyMod.AAs)
                         && !_foundHeavyLabels.Contains(heavyMod))
-                            _foundHeavyLabels.Add(heavyMod);
+                    {
+                        _foundHeavyLabels.Add(heavyMod);
+                    }
                 }
                 UpdateMatcher(info, match);
             }
@@ -222,7 +233,7 @@ namespace pwiz.Skyline.Model
                 if (match != null)
                     continue;
                 // Look in Unimod to complete the match.
-                matchComplete = UniMod.MassLookup.MatchModificationMass(partialMatch.UnexplainedMass, info.AA,
+                matchComplete = UniMod.MatchModificationMass(partialMatch.UnexplainedMass, info.AA,
                                                             info.RoundedTo, !partialMatch.Structural,
                                                             info.Terminus, info.AppearsToBeSpecificMod);
                 if (matchComplete != null)
@@ -438,7 +449,7 @@ namespace pwiz.Skyline.Model
             get
             {
 
-                return TextUtil.LineSeparate(Resources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
+                return TextUtil.LineSeparate(ModelResources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
                                      string.Empty,
                                      TextUtil.SpaceSeparate(UnmatchedSequences.OrderBy(s => s)));
             }
@@ -616,7 +627,7 @@ namespace pwiz.Skyline.Model
                 return CreateCrosslinkDocNode(peptide, crosslinkLibraryKey, diff, out nodeGroupMatched);
             }
             var seq = target.Sequence;
-            seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
             if (peptide == null)
             {
                 string seqUnmod = FastaSequence.StripModifications(seq);
@@ -1164,6 +1175,7 @@ namespace pwiz.Skyline.Model
             public bool UserIndicatedHeavy { get { return ModKey.UserIndicatedHeavy; } }
             public double? Mass { get { return ModKey.Mass; } }
             public string Name { get { return ModKey.Name; } }
+            public int? UniModId { get { return ModKey.UniModId; } }
             public int RoundedTo { get { return ModKey.RoundedTo; } }
             public bool AppearsToBeSpecificMod { get { return ModKey.AppearsToBeSpecificMod; } }
             public bool IsMassMatch(StaticMod mod, double mass)
@@ -1197,6 +1209,7 @@ namespace pwiz.Skyline.Model
             }
             public double? Mass { get; set; }
             public string Name { get; set; }
+            public int? UniModId { get; set; }
             public int RoundedTo { get; set; }
             public bool AppearsToBeSpecificMod { get; set; }
             public bool UserIndicatedHeavy { get; set; }
@@ -1208,14 +1221,21 @@ namespace pwiz.Skyline.Model
             public override string ToString()
             {
                 return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? @"{0}{{{1}{2}}}" : @"{0}[{1}{2}]",
-                    AA, Mass > 0 ? @"+" : string.Empty, Mass);
+                    AA, Mass > 0 ? @"+" : string.Empty, Mass) + TerminusText;
             }
+
+            public string TerminusText => Terminus.HasValue ? @"-" + Terminus.Value : string.Empty;
         }
 
         public struct AAModMatch
         {
             public StaticMod StructuralMod { get; set; }
             public StaticMod HeavyMod { get; set; }
+
+            public override string ToString()
+            {
+                return (StructuralMod ?? HeavyMod)?.ToString() ?? string.Empty;
+            }
         }
 
         public struct PartialMassMatch

@@ -132,6 +132,9 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Exploris_240,
     InstrumentModelType_Orbitrap_Exploris_480,
     InstrumentModelType_Orbitrap_Eclipse,
+    InstrumentModelType_Orbitrap_GC,
+    InstrumentModelType_Orbitrap_Astral,
+    InstrumentModelType_Stellar,
 
     InstrumentModelType_Count,
 };
@@ -241,13 +244,16 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"ORBITRAP EXPLORIS 120", InstrumentModelType_Orbitrap_Exploris_120, Exact},
     {"ORBITRAP EXPLORIS 240", InstrumentModelType_Orbitrap_Exploris_240, Exact},
     {"ORBITRAP EXPLORIS 480", InstrumentModelType_Orbitrap_Exploris_480, Exact},
+    {"ORBITRAP GC", InstrumentModelType_Orbitrap_GC, Contains},
     {"ECLIPSE", InstrumentModelType_Orbitrap_Eclipse, Contains},
+    {"ASTRAL", InstrumentModelType_Orbitrap_Astral, Contains},
     {"FUSION ETD", InstrumentModelType_Orbitrap_Fusion_ETD, Contains},
     {"FUSION LUMOS", InstrumentModelType_Orbitrap_Fusion_Lumos, Contains},
     {"FUSION", InstrumentModelType_Orbitrap_Fusion, Contains},
     {"ASCEND", InstrumentModelType_Orbitrap_Ascend, Contains},
     {"SURVEYOR PDA", InstrumentModelType_Surveyor_PDA, Exact},
     {"ACCELA PDA", InstrumentModelType_Accela_PDA, Exact},
+    {"STELLAR", InstrumentModelType_Stellar, Contains},
 };
 
 inline InstrumentModelType parseInstrumentModelType(const std::string& instrumentModel)
@@ -336,6 +342,8 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_Fusion_ETD:
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
+        case InstrumentModelType_Orbitrap_Astral:
+    case InstrumentModelType_Stellar:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
@@ -363,6 +371,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
         case InstrumentModelType_GC_IsoLink:
+        case InstrumentModelType_Orbitrap_GC:
             ionSources.push_back(IonizationType_EI);
             break;
 
@@ -411,7 +420,9 @@ enum PWIZ_API_DECL ScanFilterMassAnalyzerType
     ScanFilterMassAnalyzerType_TOFMS = 3,         // Time of Flight
     ScanFilterMassAnalyzerType_FTMS = 4,          // Fourier Transform
     ScanFilterMassAnalyzerType_Sector = 5,        // Magnetic Sector
-    ScanFilterMassAnalyzerType_Count = 6
+    ScanFilterMassAnalyzerType_Any = 6,           // returned by RawFileReader when filter type is unspecified
+    ScanFilterMassAnalyzerType_ASTMS = 7,         // ASymmetric Track lossless
+    ScanFilterMassAnalyzerType_Count = 8
 };
 
 
@@ -426,6 +437,7 @@ enum PWIZ_API_DECL MassAnalyzerType
     MassAnalyzerType_Orbitrap,
     MassAnalyzerType_FTICR,
     MassAnalyzerType_Magnetic_Sector,
+    MassAnalyzerType_Astral, // ASymmetric TRack Lossless
     MassAnalyzerType_Count
 };
 
@@ -462,6 +474,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_GC:
         {
             switch (scanFilterType)
             {
@@ -472,6 +485,15 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
                     return MassAnalyzerType_Linear_Ion_Trap;
             }
         }
+
+        case InstrumentModelType_Orbitrap_Astral:
+            switch (scanFilterType)
+            {
+                case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_Orbitrap;
+                default:
+                case ScanFilterMassAnalyzerType_ASTMS:
+                    return MassAnalyzerType_Astral;
+            }
 
         case InstrumentModelType_LTQ_FT:
         case InstrumentModelType_LTQ_FT_Ultra:
@@ -527,6 +549,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             return MassAnalyzerType_Linear_Ion_Trap;
 
         case InstrumentModelType_DFS:
@@ -562,6 +585,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
                 case ScanFilterMassAnalyzerType_SQMS: return MassAnalyzerType_Single_Quadrupole;
                 case ScanFilterMassAnalyzerType_TOFMS: return MassAnalyzerType_TOF;
                 case ScanFilterMassAnalyzerType_TQMS: return MassAnalyzerType_Triple_Quadrupole;
+                case ScanFilterMassAnalyzerType_ASTMS: return MassAnalyzerType_Astral;
                 default: return MassAnalyzerType_Unknown;
             }
     }
@@ -583,6 +607,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_GC:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             break;
 
@@ -602,6 +627,11 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Eclipse:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
+            break;
+
+        case InstrumentModelType_Orbitrap_Astral:
+            massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
+            massAnalyzers.push_back(MassAnalyzerType_Astral);
             break;
 
         case InstrumentModelType_LTQ_FT:
@@ -661,6 +691,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
 
@@ -723,6 +754,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_GC:
             detectors.push_back(DetectorType_Inductive);
             break;
 
@@ -743,6 +775,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_Astral:
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
@@ -789,6 +822,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_Stellar:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 
@@ -884,28 +918,28 @@ enum PWIZ_API_DECL PolarityType
 
 enum PWIZ_API_DECL DataPointType
 {
-	DataPointType_Unknown = -1,
-	DataPointType_Centroid = 0,
-	DataPointType_Profile,
+    DataPointType_Unknown = -1,
+    DataPointType_Centroid = 0,
+    DataPointType_Profile,
     DataPointType_Count
 };
 
 
 enum PWIZ_API_DECL AccurateMassType
 {
-	AccurateMass_Unknown = -1,
-	AccurateMass_NotActive = 0,                 // NOTE: in filter as "!AM": accurate mass not active
-	AccurateMass_Active,                        // accurate mass active 
-	AccurateMass_ActiveWithInternalCalibration, // accurate mass with internal calibration
-	AccurateMass_ActiveWithExternalCalibration  // accurate mass with external calibration
+    AccurateMass_Unknown = -1,
+    AccurateMass_NotActive = 0,                 // NOTE: in filter as "!AM": accurate mass not active
+    AccurateMass_Active,                        // accurate mass active 
+    AccurateMass_ActiveWithInternalCalibration, // accurate mass with internal calibration
+    AccurateMass_ActiveWithExternalCalibration  // accurate mass with external calibration
 };
 
 
 enum PWIZ_API_DECL TriBool
 {
-	TriBool_Unknown = -1,
-	TriBool_False = 0,
-	TriBool_True = 1
+    TriBool_Unknown = -1,
+    TriBool_False = 0,
+    TriBool_True = 1
 };
 
 } // namespace Thermo

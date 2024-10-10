@@ -155,6 +155,24 @@ namespace pwiz.Skyline.Model.Results
             // All-ions extraction for MS1 scans only
             if (Q1 == 0)
                 return null;
+            if (CollisionEnergy.HasValue)
+            {
+                foreach (var spectrum in spectra)
+                {
+                    foreach (var precursor in spectrum.Precursors)
+                    {
+                        if (!precursor.PrecursorCollisionEnergy.HasValue)
+                        {
+                            return null;
+                        }
+
+                        if (Math.Abs(precursor.PrecursorCollisionEnergy.Value - CollisionEnergy.Value) > 0.05)
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
 
             return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
@@ -177,13 +195,6 @@ namespace pwiz.Skyline.Model.Results
             if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
             {
                 return null; // No compensation voltage match
-            }
-
-            if (CollisionEnergy.HasValue &&
-                spectra.SelectMany(s => s.Precursors).Select(p => p.PrecursorCollisionEnergy)
-                    .Any(ce => !ce.HasValue || Math.Abs(ce.Value - CollisionEnergy.Value) > 0.05))
-            {
-                return null;
             }
 
             int targetCount = 1;
@@ -694,6 +705,11 @@ namespace pwiz.Skyline.Model.Results
             return hashCode;
         }
 
+        public override string ToString()
+        {
+            return $@"mz={mz} heo={ionMobilityHighEnergyOffset}"; // For debug convenience, not user facing
+        }
+
         public int CompareTo(SpectrumFilterValues other)
         {
             if (ReferenceEquals(this, other)) return 0;
@@ -707,7 +723,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return 1;
             if (ReferenceEquals(this, obj)) return 0;
-            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type MzAndIonMobilityHighEnergyOffset");
+            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type SpectrumFilterValues");
             return CompareTo((SpectrumFilterValues)obj);
         }
     }

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -104,13 +103,13 @@ namespace pwiz.Skyline.Controls.Graphs
             _templatePane.Border.IsVisible = false;
             _templatePane.Title.IsVisible = true;
 
-            _templatePane.XAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
+            _templatePane.XAxis.Title.Text = GraphsResources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
             _templatePane.XAxis.MinorTic.IsOpposite = false;
             _templatePane.XAxis.MajorTic.IsOpposite = false;
             _templatePane.XAxis.Scale.Min = 0.0;
             _templatePane.XAxis.Scale.Max = X_AXIS_START;
 
-            _templatePane.YAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity;
+            _templatePane.YAxis.Title.Text = GraphsResources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity;
             _templatePane.YAxis.MinorTic.IsOpposite = false;
             _templatePane.YAxis.MajorTic.IsOpposite = false;
             _templatePane.YAxis.Scale.Min = 0.0;
@@ -123,7 +122,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Location = { CoordinateFrame = CoordType.ChartFraction },
                 ZOrder = ZOrder.D_BehindAxis
             };
-            _canceledText = new TextObj(Resources.AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled, 0.5, 0.5)
+            _canceledText = new TextObj(GraphsResources.AsyncChromatogramsGraph2_AsyncChromatogramsGraph2_Canceled, 0.5, 0.5)
             {
                 FontSpec = new FontSpec(@"Arial", 24, Color.Gray, true, false, false)
                 {

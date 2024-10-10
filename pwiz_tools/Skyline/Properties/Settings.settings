@@ -245,6 +245,15 @@
     <Setting Name="AreaLogScale" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="AreaProteinTargets" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ExcludePeptideListsFromAbundanceGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ExcludeStandardsFromAbundanceGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="AreaPeptideOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
     </Setting>
@@ -686,22 +695,22 @@
     <Setting Name="MixedMoleculeSettingsTab" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="Prosit" Type="System.Boolean" Scope="User">
+    <Setting Name="Koina" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="PrositIntensityModel" Type="System.String" Scope="User">
+    <Setting Name="KoinaIntensityModel" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PrositRetentionTimeModel" Type="System.String" Scope="User">
+    <Setting Name="KoinaRetentionTimeModel" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PrositServer" Type="System.String" Scope="User">
+    <Setting Name="KoinaServer" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="LibMatchMirror" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="PrositNCE" Type="System.Int32" Scope="User">
+    <Setting Name="KoinaNCE" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">27</Value>
     </Setting>
     <Setting Name="ShowQcTraceName" Type="System.String" Scope="User">
@@ -854,8 +863,29 @@
     <Setting Name="PanoramaLocalSavePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="ExportMethodXICWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.02</Value>
+    </Setting>
     <Setting Name="FullScanPropertySheetVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="FeatureFindingMinIntensityPPM" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">10.0</Value>
+    </Setting>
+    <Setting Name="FeatureFindingMinIdotP" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.98</Value>
+    </Setting>
+    <Setting Name="FeatureFindingSignalToNoise" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="GroupComparisonAvoidLabelOverlap" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="GroupComparisonSuspendLabelLayout" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RelativeAbundanceLogScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>	
   </Settings>
 </SettingsFile>

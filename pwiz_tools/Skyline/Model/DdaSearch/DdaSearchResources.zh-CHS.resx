@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found" xml:space="preserve">
+    <value>找不到酶文件 {0}</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found" xml:space="preserve">
+    <value>找不到仪器文件 {0}</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found" xml:space="preserve">
+    <value>找不到 Obo 文件（psi-ms.obo 和 unimod.obo）</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
+    <value>找不到 Unimod 文件 {0}</value>
+  </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>搜索失败：{0}</value>
+  </data>
+  <data name="DdaSearch_Search_is_canceled" xml:space="preserve">
+    <value>正在取消搜索。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__" xml:space="preserve">
+    <value>正在检测 {0} 中的诱饵前缀。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_common_prefixes_were_found_" xml:space="preserve">
+    <value>未找到共同前缀。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_common_suffixes_were_found_" xml:space="preserve">
+    <value>未找到共同后缀。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____" xml:space="preserve">
+    <value>未检测到诱饵前缀。将使用反向序列作为诱饵 (带有前缀 '{0}') 生成新的 FASTA。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__" xml:space="preserve">
+    <value>未检测到诱饵前缀，但现有诱饵数据库似乎位于 {0}。再次尝试诱饵前缀计算。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__" xml:space="preserve">
+    <value>没有任何前缀的频度足以成为诱饵前缀 (出现在至少 40% 的条目中)。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Some_common_prefixes_were_found_" xml:space="preserve">
+    <value>找到了一些共同前缀：</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_" xml:space="preserve">
+    <value>找到了一些共同后缀，但这些后缀不受支持：</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes" xml:space="preserve">
+    <value>后缀 {0} 可能用作诱饵后缀，但 Skyline 的 DDA 搜索工具不支持诱饵后缀。建议使用没有诱饵的原始 FASTA 重新运行。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_" xml:space="preserve">
+    <value>使用 {0} 作为最有可能的诱饵前缀。</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Using_decoy_database_at__0___1_" xml:space="preserve">
+    <value>使用位于{0} 的诱饵数据库。{1}</value>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Starting_msconvert_conversion_" xml:space="preserve">
+    <value>正在启动 msconvert 转换。</value>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
+    <value>保留时间校准：{0} 与 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
+    <value>正在查找在多个重复测定中出现的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
+    <value>参见 Hardklor/Bullseye 日志了解详细信息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_" xml:space="preserve">
+    <value>在 {0} 和 {1} 之间进行校准时出错：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
+    <value>正在准备对“{0}”进行保留时间校准</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_" xml:space="preserve">
+    <value>正在使用 {0} 搜索类似肽段的特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_" xml:space="preserve">
+    <value>正在使用 {0} 搜索 Hardklor 结果中的持久特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
+    <value>文件“{0}”正在转换为 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_" xml:space="preserve">
+    <value>最小同位素点积(&amp;D)：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
+    <value>Hardklor 使用平均氨基酸模型在 MS1 扫描中搜索类似肽段的特征。Hardklor 所发现的特征在 Skyline 中表示为小分子，Hardklor 使用其化学式来生成与特征相匹配的同位素分布，再加上用来匹配高分辨率峰质量与电荷比的质量偏移。这并非质谱仪中产生 MS1 峰的分子的实际化学式，而是匹配同位素分布的近似值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

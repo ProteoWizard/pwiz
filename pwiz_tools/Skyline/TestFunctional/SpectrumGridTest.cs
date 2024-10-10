@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(2, spectrumGrid.DataGridView.RowCount);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.PresetScanConfiguration, CheckState.Unchecked);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.Ms2Precursors, CheckState.Unchecked);
+                spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.IsolationWindowWidth, CheckState.Unchecked);
             });
             WaitForConditionUI(() => spectrumGrid.IsComplete());
             RunUI(()=>spectrumGrid.DataGridView.SelectAll());
@@ -114,7 +115,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(spectrumGrid, spectrumGrid.Close);
 
             // Make sure that the document can be reopened
-            RunUI(()=>SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+            RunUI(()=>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
+            });
             WaitForDocumentLoaded();
         }
 

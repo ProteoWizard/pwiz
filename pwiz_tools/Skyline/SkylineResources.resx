@@ -1,0 +1,1189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool" xml:space="preserve">
+    <value> and a conflicting tool</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_" xml:space="preserve">
+    <value>Conflicting report: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_" xml:space="preserve">
+    <value>Conflicting reports: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_" xml:space="preserve">
+    <value>Conflicting tool: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports" xml:space="preserve">
+    <value>Error: There are {0} conflicting reports</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report" xml:space="preserve">
+    <value>Error: There is a conflicting report</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_" xml:space="preserve">
+    <value>Overwriting report: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_" xml:space="preserve">
+    <value>Overwriting reports: {0}</value>
+  </data>
+  <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
+    <value>name to give protdb imported by --background-proteome-file</value>
+  </data>
+  <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The dwell time {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
+    <value>Error: The arguments {0} and {1} options cannot be used together.</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_" xml:space="preserve">
+    <value>The arguments below can be used to install tools onto the Tools menu and do not rely on the '--in' argument because they independent of a specific Skyline document.</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_Tools_Installation" xml:space="preserve">
+    <value>Tools Installation</value>
+  </data>
+  <data name="CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export" xml:space="preserve">
+    <value>The instrument type {0} is not valid for isolation list export</value>
+  </data>
+  <data name="CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export" xml:space="preserve">
+    <value>The instrument type {0} is not valid for method export</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} or '{1}'</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
+    <value>Error: Regular expression {0} cannot be parsed.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The specified working directory {0} does not exist.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
+    <value>Error: Unexpected argument --{0}</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
+    <value>No isolation list will be exported.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_method_will_be_exported_" xml:space="preserve">
+    <value>No method will be exported.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_" xml:space="preserve">
+    <value>No transition list will be exported.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_" xml:space="preserve">
+    <value>Warning: Incorrect Usage of the --tool-program-macro command.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_" xml:space="preserve">
+    <value>Warning: The instrument type {0} is not valid. Please choose from:</value>
+  </data>
+  <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown object name '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The primary transition count {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The run length {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_" xml:space="preserve">
+    <value>The instrument parameter {0} is not valid for optimization.</value>
+  </data>
+  <data name="CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export" xml:space="preserve">
+    <value>The instrument type {0} is not valid for transition list export</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__" xml:space="preserve">
+    <value>Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}.</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_" xml:space="preserve">
+    <value>Error: Model cutoffs cannot be applied in calibrating the Skyline default model.</value>
+  </data>
+  <data name="CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_" xml:space="preserve">
+    <value>Use of the argument {0} requires one of the following arguments:</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_" xml:space="preserve">
+    <value>Error: {0} does not match the regular expression.</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__" xml:space="preserve">
+    <value>Error: Match to regular expression is empty for {0}.</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>Sample name '{0}' does not match the pattern '{1}'. Ignoring {2}</value>
+  </data>
+  <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
+    <value>Creating ion mobility library "{0}" in "{1}"...</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>Error: Failed to create scoring model.</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>Error: There are no decoy peptides in the document. Failed to create scoring model.</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>Excluding feature score '{0}'</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>Excluding feature scores:</value>
+  </data>
+  <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
+    <value>Error: Excluding feature scores is not permitted with the default Skyline model.</value>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
+    <value>Error: Failure attempting to save annotations file {0}.</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_" xml:space="preserve">
+    <value>Chromatograms file {0} exported successfully.</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
+    <value>Error: At least one chromatogram type must be selected</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_" xml:space="preserve">
+    <value>Error: Failure attempting to save chromatograms file {0}</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Error__The_document_must_have_imported_results" xml:space="preserve">
+    <value>Error: The document must have imported results</value>
+  </data>
+  <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
+    <value>Exporting chromatograms file {0}...</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
+    <value>Error: You must specify an output file to write to with the --exp-file=path/to/file parameter. No transition list will be exported.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
+    <value>Error: the {0} instrument lacks support for direct method export for triggered acquisition.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_" xml:space="preserve">
+    <value>Error: The file {0} could not be saved.  Check that the specified file directory exists and is writeable.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_" xml:space="preserve">
+    <value>Error: The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
+    <value>Error: the instrument type {0} does not support triggered acquisition.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_" xml:space="preserve">
+    <value>Error: the retention time prediction calculator is unable to score.  Check the calculator settings.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_" xml:space="preserve">
+    <value>Error: the retention time predictor is unable to auto-calculate a regression.  Check to make sure the document contains times for all of the required standard peptides.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_" xml:space="preserve">
+    <value>Error: the specified replicate {0} does not exist in the document.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_" xml:space="preserve">
+    <value>Error: The template extension {0} does not match the expected extension for the instrument {1}. No method will be exported.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>Error: to export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_" xml:space="preserve">
+    <value>Error: To export a scheduled method, you must first import results for all peptides in the document.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
+    <value>Warning: Max transitions per injection must be set to some value between {0} and {1} for export strategies "protein" and "buckets" and for scheduled methods. You specified {3}. Defaulting to {2}.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
+    <value>Warning: No export strategy specified (from "single", "protein" or "buckets"). Defaulting to "single".</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_" xml:space="preserve">
+    <value>Warning: The add-energy-ramp parameter is only applicable for Thermo transition lists. This parameter will be ignored.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___" xml:space="preserve">
+    <value>Warning: The vendor {0} does not match the vendor in either the CE or DP prediction setting.  Continuing exporting a transition list anyway...</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
+    <value>You must export a {0} transition list and manually import it into a method file using vendor software.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_" xml:space="preserve">
+    <value>Check to make sure it is not read-only.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
+    <value>Error: Failure attempting to save {0} report to {1}.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
+    <value>Error: The report {0} could not be saved to {1}.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
+    <value>Error: The report {0} does not exist. If it has spaces in its name, use "double quotes" around the entire list of command parameters.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Exporting_report__0____" xml:space="preserve">
+    <value>Exporting report {0}...</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__" xml:space="preserve">
+    <value>Report {0} exported successfully to {1}.</value>
+  </data>
+  <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
+    <value>Error: Failure attempting to save mProphet features file {0}.</value>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__" xml:space="preserve">
+    <value>Error: Failure attempting to save spectral library file {0}.</value>
+  </data>
+  <data name="CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__" xml:space="preserve">
+    <value>Warning: Could not find the background proteome file {0}.</value>
+  </data>
+  <data name="CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__" xml:space="preserve">
+    <value>Error: Could not find the ion mobility library {0}.</value>
+  </data>
+  <data name="CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__" xml:space="preserve">
+    <value>Error: Could not find the iRT database {0}.</value>
+  </data>
+  <data name="CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__" xml:space="preserve">
+    <value>Could not find the optimization library {0}.</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__" xml:space="preserve">
+    <value>Error: Failure reading file information from directory {0}.</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__" xml:space="preserve">
+    <value>Error: No data sources found in directory {0}.</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
+    <value>Error: Failed while reading annotations.</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_" xml:space="preserve">
+    <value>Error: Failed importing peak boundaries.</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_" xml:space="preserve">
+    <value>Importing peak boundaries from {0}</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
+    <value>{0} -&gt; {1}  Note: The file has already been imported. Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Adding_results___" xml:space="preserve">
+    <value>Adding results...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___" xml:space="preserve">
+    <value>File write date {0} is after --import-before date {1}. Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
+    <value>File write date {0} is before --import-on-or-after date {1}. Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__" xml:space="preserve">
+    <value>Error: Could not get last write time for file {0}.</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
+    <value>Adding 1 modification.</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Loading_library" xml:space="preserve">
+    <value>Loading library</value>
+  </data>
+  <data name="CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__" xml:space="preserve">
+    <value>Warning: Unable to locate results file '{0}'</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+    <value>iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly.</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
+    <value>The iRT standard name '{0}' is invalid.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
+    <value>Error: Failed to load {0}.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_" xml:space="preserve">
+    <value>Error: {0} does not exist. --report-add command failed.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+    <value>Error: Reports could not be imported from {0}</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__" xml:space="preserve">
+    <value>Error: Canceled installing tools from {0}.</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_" xml:space="preserve">
+    <value>Error: to import tools from a zip you must specify a path --tool-add-zip must be followed by an existing path.</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Installing_tools_from__0_" xml:space="preserve">
+    <value>Installing tools from {0}</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_ion_abundance_values_" xml:space="preserve">
+    <value>Error: Imported assay library {0} lacks ion abundance values.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_and_ion_abundance_values_" xml:space="preserve">
+    <value>Error: Imported assay library {0} lacks iRT and ion abundance values.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Error__Imported_assay_library__0__lacks_iRT_values_" xml:space="preserve">
+    <value>Error: Imported assay library {0} lacks iRT values.</value>
+  </data>
+  <data name="CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_" xml:space="preserve">
+    <value>Importing iRT transition list {0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
+    <value>Added: {0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
+    <value>Removed: {0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Limiting_chromatogram_noise_to______0__minutes_around_peak___" xml:space="preserve">
+    <value>Limiting chromatogram noise to +/- {0} minutes around peak...</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Minimizing_results_to__0_" xml:space="preserve">
+    <value>Minimizing results to {0}</value>
+  </data>
+  <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
+    <value>Removing unused chromatograms...</value>
+  </data>
+  <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
+    <value>Error: No new results added. Skipping Panorama import.</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
+    <value>Choose one of {0}</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_" xml:space="preserve">
+    <value>Error: The label type '{0}' was not found in the document.</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_" xml:space="preserve">
+    <value>Error: Failed to reintegrate peaks successfully.</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_" xml:space="preserve">
+    <value>Error: The current peak scoring model is incompatible with one or more peptides in the document. Please train a new model.</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__" xml:space="preserve">
+    <value>Error: Unknown peak scoring model '{0}'</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
+    <value>Error: You must first import results into the document before reintegrating.</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removed__0__" xml:space="preserve">
+    <value>Removed {0}.</value>
+    <comment>Context is removed file</comment>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_all_results" xml:space="preserve">
+    <value>Removing all results</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
+    <value>Removing results before </value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_" xml:space="preserve">
+    <value>Error: Failed to get optimization function {0}. {1}</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_open_log_file__0_" xml:space="preserve">
+    <value>Error: Failed to open log file {0}</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
+    <value>Error: Failure occurred. Exiting...</value>
+  </data>
+  <data name="CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__" xml:space="preserve">
+    <value>Error: You cannot simultaneously export a transition list and a method.  Neither will be exported. Please change the command line parameters.</value>
+  </data>
+  <data name="CommandLine_Run_Exiting___" xml:space="preserve">
+    <value>Exiting...</value>
+  </data>
+  <data name="CommandLine_Run_Not_setting_library_" xml:space="preserve">
+    <value>Not setting library.</value>
+  </data>
+  <data name="CommandLine_Run_Writing_to_log_file__0_" xml:space="preserve">
+    <value>Writing to log file {0}</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_" xml:space="preserve">
+    <value>Error: {0} does not exist. --batch-commands failed.</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_" xml:space="preserve">
+    <value>Error: failed to open file {0} --batch-commands command failed.</value>
+  </data>
+  <data name="CommandLine_SaveFile_Saving_file___" xml:space="preserve">
+    <value>Saving file...</value>
+  </data>
+  <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
+    <value>Error: Failed saving to the user configuration file.</value>
+  </data>
+  <data name="CommandLine_SetAnnotations_" xml:space="preserve">
+    <value>Error: An annotation titled '{0}' already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled '{0}' was not added.</value>
+  </data>
+  <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition filter settings.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transiton full-scan settings.</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__" xml:space="preserve">
+    <value>Changing ion mobility spectral library resolving power to {0}.</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_" xml:space="preserve">
+    <value>Enabling extraction based on spectral library ion mobility values.</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the ion mobility settings.</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition instrument settings.</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
+    <value>Error: The file {0} appears to be a redundant library.</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition library settings.</value>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the peptide digestion settings.</value>
+  </data>
+  <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the peptide filter settings.</value>
+  </data>
+  <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition prediction settings.</value>
+  </data>
+  <data name="CommandProgressMonitor_UpdateProgressInternal_Message__" xml:space="preserve">
+    <value>Message: </value>
+  </data>
+  <data name="CommandWaitBroker_UpdateProgress_Waiting___" xml:space="preserve">
+    <value>Waiting...</value>
+  </data>
+  <data name="CommandWaitBroker_Wait_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_" xml:space="preserve">
+    <value>The following names already exist:
+
+{0}
+
+</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_" xml:space="preserve">
+    <value>The name '{0}' already exists.</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
+    <value>Error: An unknown error occurred trying to verify access to Panorama folder '{0}' on the server {1}.
+{2}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
+    <value>Error: Unable to verify access to Panorama folder.
+{0}</value>
+  </data>
+  <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
+    <value>Error: Unable to verify Panorama server information.
+{0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_" xml:space="preserve">
+    <value>Unknown error attempting to upload to Panorama.
+{0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Error: An import error occurred on the Panorama server {0}.</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Error: Document import was cancelled on the Panorama server {0}.</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_" xml:space="preserve">
+    <value>Error details can be found at {0}</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
+    <value>Job details can be found at {0}.</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
+    <value>Uploading document to Panorama</value>
+  </data>
+  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
+    <value>Error copying external tools from previous installation</value>
+  </data>
+  <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
+    <value>Copying external tools from a previous installation</value>
+  </data>
+  <data name="Program_Main_Install_32_bit__0__" xml:space="preserve">
+    <value>Install 32-bit {0}</value>
+  </data>
+  <data name="Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version" xml:space="preserve">
+    <value>You are attempting to run a 64-bit version of {0} on a 32-bit OS. Please install the 32-bit version.</value>
+  </data>
+  <data name="SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching" xml:space="preserve">
+    <value>Do you want to save your current settings before switching?</value>
+  </data>
+  <data name="SkylineWindow_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_custom_product_ion__0_" xml:space="preserve">
+    <value>Add custom product ion {0}</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_Transition" xml:space="preserve">
+    <value>Add Transition</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
+    <value>Custom molecules cannot be added to a peptide list.</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_protein_" xml:space="preserve">
+    <value>Custom molecules cannot be added to a protein.</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Precursor" xml:space="preserve">
+    <value>Add Precursor</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
+    <value>Add molecule {0}</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
+    <value>Add Molecule and Precursor</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
+    <value>Add molecule precursor {0}</value>
+  </data>
+  <data name="SkylineWindow_AddStandardsToDocument_Add_standard_peptides" xml:space="preserve">
+    <value>Add standard peptides</value>
+  </data>
+  <data name="SkylineWindow_BuildAreaGraphMenu_Show_Expected" xml:space="preserve">
+    <value>Show Expected</value>
+  </data>
+  <data name="SkylineWindow_BuildAreaGraphMenu_Show_Library" xml:space="preserve">
+    <value>Show Library</value>
+  </data>
+  <data name="SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location" xml:space="preserve">
+    <value>Store Panorama upload location</value>
+  </data>
+  <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
+    <value>Change settings</value>
+  </data>
+  <data name="SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway" xml:space="preserve">
+    <value>Click OK to open the document anyway.</value>
+  </data>
+  <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
+    <value>The data file '{0}' is missing, and the following original instrument output could not be found:</value>
+  </data>
+  <data name="SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction" xml:space="preserve">
+    <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but the prediction algorithm has not been calibrated. Do you want to generate full gradient chromatograms?</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes" xml:space="preserve">
+    <value>Do you want to save changes?</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="SkylineWindow_CheckSaveDocument_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_" xml:space="preserve">
+    <value>Could not find the spectral library {0} for this document. Without the library, no spectrum ID information will be available.</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
+    <value>Find Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library" xml:space="preserve">
+    <value>Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
+    <value>Are you sure you want to abruptly terminate Skyline? You will lose all unsaved work.</value>
+  </data>
+  <data name="SkylineWindow_CreateRegression_Set_regression__0__" xml:space="preserve">
+    <value>Set regression {0}</value>
+  </data>
+  <data name="SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread" xml:space="preserve">
+    <value>The DocumentUI property may only be accessed on the UI thread.</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
+    <value>Background Proteome</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Find_Background_Proteome" xml:space="preserve">
+    <value>Find Background Proteome</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Proteome_File" xml:space="preserve">
+    <value>Proteome File</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files" xml:space="preserve">
+    <value>ion mobility library files</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_" xml:space="preserve">
+    <value>The ion mobility library specified could not be opened:</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library" xml:space="preserve">
+    <value>Find Ion Mobility Library</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library" xml:space="preserve">
+    <value>Ion Mobility Library</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_Find_iRT_Calculator" xml:space="preserve">
+    <value>Find iRT Calculator</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator" xml:space="preserve">
+    <value>iRT Calculator</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Database_Files" xml:space="preserve">
+    <value>iRT Database Files</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened" xml:space="preserve">
+    <value>The database file specified could not be opened:</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library" xml:space="preserve">
+    <value>Find Optimization Library</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Optimization_Library" xml:space="preserve">
+    <value>Optimization Library</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_Optimization_Library_Files" xml:space="preserve">
+    <value>Optimization Library Files</value>
+  </data>
+  <data name="SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_" xml:space="preserve">
+    <value>The database file specified could not be opened:</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_" xml:space="preserve">
+    <value>Change peak end to {0:F01}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_" xml:space="preserve">
+    <value>Change peak start to {0:F01}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_" xml:space="preserve">
+    <value>Change peak to {0:F01}-{1:F01}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks" xml:space="preserve">
+    <value>Change peaks</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak" xml:space="preserve">
+    <value>Remove peak</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_" xml:space="preserve">
+    <value>The raw file must be re-imported in order to show full scans: {0}</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_" xml:space="preserve">
+    <value>Pick peak {0:F01}</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
+    <value>Opening a document inside a ZIP file is not supported.</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_The_path_to_the_file_to_open_is_too_long_" xml:space="preserve">
+    <value>The path to the file to open is too long.</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__" xml:space="preserve">
+    <value>Unzip the file {0} first and then open the extracted file {1}.</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>Import Annotations</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_" xml:space="preserve">
+    <value>There is an existing library with the same name {0} as the document library to be created. Overwrite?</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_" xml:space="preserve">
+    <value>You must save the Skyline document in order to import an assay library.</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library" xml:space="preserve">
+    <value>Assay Library</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
+    <value>Import Assay Library</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Failed_importing_file__0__1__" xml:space="preserve">
+    <value>Failed importing file {0}. {1}</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Failed_importing_files" xml:space="preserve">
+    <value>Failed importing files:</value>
+  </data>
+  <data name="SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document" xml:space="preserve">
+    <value>Import Skyline Document</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>Would you like to use the Unimod definitions for the following modifications?</value>
+  </data>
+  <data name="SkylineWindow_ImportFiles_Import_Skyline_document_data" xml:space="preserve">
+    <value>Import Skyline document data</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_added" xml:space="preserve">
+    <value>{0} transitions added</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
+    <value>&amp;Create...</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Keep" xml:space="preserve">
+    <value>&amp;Keep</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Overwrite" xml:space="preserve">
+    <value>&amp;Overwrite</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
+    <value>&amp;Skip</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
+    <value>Adding iRT values</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Analyzing_input__0_" xml:space="preserve">
+    <value>Analyzing input {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Associate_Proteins_enabled" xml:space="preserve">
+    <value>Associate Proteins enabled</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
+    <value>Columns identified as {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>&amp;Disable</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>&amp;Enable</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
+    <value>Finishing up import</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_" xml:space="preserve">
+    <value>Keep the existing iRT values or overwrite with imported values?</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_" xml:space="preserve">
+    <value>The file does not contain intensities. Valid column names for intensities are:</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_" xml:space="preserve">
+    <value>The file does not contain iRTs. Valid column names for iRTs are:</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_" xml:space="preserve">
+    <value>Unexpected document change during operation: {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_" xml:space="preserve">
+    <value>You must save the Skyline document in order to create a spectral library from a transition list.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library" xml:space="preserve">
+    <value>Creating Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_" xml:space="preserve">
+    <value>The standard peptides do not appear to be on the iRT-C18 scale. Would you like to recalibrate them to this scale?</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_transition_list" xml:space="preserve">
+    <value>Import transition list</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title" xml:space="preserve">
+    <value>Import Transition List</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries" xml:space="preserve">
+    <value>Import Peak Boundaries</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation" xml:space="preserve">
+    <value>Unexpected Document Change During Operation.</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__" xml:space="preserve">
+    <value>Failed reading the file {0}.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_" xml:space="preserve">
+    <value>Are you sure? Peak scoring models trained with non-matching targets and decoys may produce incorrect results.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
+    <value>&amp;Continue</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
+    <value>Do you want to generate new decoys or continue with the current decoys?</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
+    <value>&amp;Generate</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Import__0__" xml:space="preserve">
+    <value>Import {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Import_results" xml:space="preserve">
+    <value>Import results</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_" xml:space="preserve">
+    <value>The document contains a decoy that does not match the targets:</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_" xml:space="preserve">
+    <value>The following iRT standard peptides are missing from the document:</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
+    <value>This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__" xml:space="preserve">
+    <value>With {0} standard peptides, {1} are required with a correlation of {2}.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_" xml:space="preserve">
+    <value>You must add at least one target transition before importing results.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results" xml:space="preserve">
+    <value>You must save this document before importing results.</value>
+  </data>
+  <data name="SkylineWindow_IntegrateAll_Clear_integrate_all" xml:space="preserve">
+    <value>Clear integrate all</value>
+  </data>
+  <data name="SkylineWindow_IntegrateAll_Set_integrate_all" xml:space="preserve">
+    <value>Set integrate all</value>
+  </data>
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
+    <value>In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator.</value>
+  </data>
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
+    <value>The standard peptides for an iRT calculator can only be set in the iRT calculator editor.</value>
+  </data>
+  <data name="SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread" xml:space="preserve">
+    <value>Must be called from event thread</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results" xml:space="preserve">
+    <value>A failure occurred attempting to re-import results.</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_" xml:space="preserve">
+    <value>Failed to remove library runs from the document library.</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_MIDAS_library_" xml:space="preserve">
+    <value>Failed to remove library runs from the MIDAS library.</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Manage_results" xml:space="preserve">
+    <value>Manage results</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_" xml:space="preserve">
+    <value>The document must contain mass spec data to manage results.</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>Mark transitions non-quantitative</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>Mark transitions quantitative</value>
+  </data>
+  <data name="SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document" xml:space="preserve">
+    <value>Failure attempting to modify the document.</value>
+  </data>
+  <data name="SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved" xml:space="preserve">
+    <value>An unexpected error has prevented global settings changes from this session from being saved.</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_Failure_opening__0__" xml:space="preserve">
+    <value>Failure opening {0}.</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
+    <value>Downloading file {0}</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Loading_remote_server_folders" xml:space="preserve">
+    <value>Loading remote server folders</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_" xml:space="preserve">
+    <value>No Panorama servers were found.</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Open From Panorama</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_" xml:space="preserve">
+    <value>Press 'Add' to add a new server.</value>
+  </data>
+  <data name="SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read" xml:space="preserve">
+    <value>The zip file {0} cannot be read.</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>This file was last uploaded to: {0}</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
+    <value>Upload to the same location?</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
+    <value>Reimporting chromatograms</value>
+  </data>
+  <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
+    <value>Remove peptides above CV cutoff</value>
+  </data>
+  <data name="SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers" xml:space="preserve">
+    <value>Remove retention time outliers</value>
+  </data>
+  <data name="SkylineWindow_ResetDefaultSettings_Reset_default_settings" xml:space="preserve">
+    <value>Reset default settings</value>
+  </data>
+  <data name="SkylineWindow_RestoreDocument_Failed_to_restore_document" xml:space="preserve">
+    <value>Failed to restore document</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Failed_writing_to__0__" xml:space="preserve">
+    <value>Failed writing to {0}.</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Optimizing_data_file___" xml:space="preserve">
+    <value>Optimizing data file...</value>
+  </data>
+  <data name="SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name" xml:space="preserve">
+    <value>The document must be fully loaded before it can be saved to a new name.</value>
+  </data>
+  <data name="SkylineWindow_SaveSettings_Name_settings" xml:space="preserve">
+    <value>Name settings</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
+    <value>Would you like to use the Unimod definitions for the following modifications?</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__" xml:space="preserve">
+    <value>Add {0}</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__" xml:space="preserve">
+    <value>Edit name {0}</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_DragDrop_Drag_and_drop" xml:space="preserve">
+    <value>Drag and drop</value>
+  </data>
+  <data name="SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__" xml:space="preserve">
+    <value>Pick {0}</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Clear_standard_type" xml:space="preserve">
+    <value>Clear standard type</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Set_standard_type_to__0_" xml:space="preserve">
+    <value>Set standard type to {0}</value>
+  </data>
+  <data name="SkylineWindow_SetupCalculatorChooser_Auto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="SkylineWindow_ShareDocument_Compressing_Files" xml:space="preserve">
+    <value>Compressing Files</value>
+  </data>
+  <data name="SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__" xml:space="preserve">
+    <value>Failed attempting to create sharing file {0}.</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_Share_Document" xml:space="preserve">
+    <value>Share Document</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents" xml:space="preserve">
+    <value>Skyline Shared Documents</value>
+  </data>
+  <data name="SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared" xml:space="preserve">
+    <value>The document must be fully loaded before it can be shared.</value>
+  </data>
+  <data name="SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings" xml:space="preserve">
+    <value>Change document settings</value>
+  </data>
+  <data name="SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator" xml:space="preserve">
+    <value>Update {0} calculator</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_ESP_Feature_Files" xml:space="preserve">
+    <value>ESP Feature Files</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
+    <value>Export ESP Features</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_Failed_attempting_to_save_ESP_features_to__0__" xml:space="preserve">
+    <value>Failed attempting to save ESP features to {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>The document must contain targets for which to export features.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>Export Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>Exporting spectral library {0}...</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>Failed exporting spectral library to {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>The document must be fully loaded before importing a peptide search.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>You must save this document before importing a peptide search.</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>The document must contain targets for which to export features.</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
+    <value>The document must have imported results.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
+    <value>Document cannot be uploaded to a Panorama server without a user account.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Edit_existing" xml:space="preserve">
+    <value>Edit existing</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
+    <value>Press Continue to use the server of your choice.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>The document must be fully loaded before it can be uploaded.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_" xml:space="preserve">
+    <value>The document must be saved before it can be uploaded.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to" xml:space="preserve">
+    <value>There are no Panorama servers to upload to</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_Invalid_file_specified" xml:space="preserve">
+    <value>Invalid file specified.</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_Must_have_a_window_handle_to_begin_processing" xml:space="preserve">
+    <value>Must have a window handle to begin processing.</value>
+  </data>
+  <data name="SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file" xml:space="preserve">
+    <value>The URI {0} is not a file.</value>
+  </data>
+  <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
+    <value>Submitting an unhandled error report</value>
+  </data>
+  <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
+    <value>Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR" xml:space="preserve">
+    <value>Targets at {0}% FDR</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__" xml:space="preserve">
+    <value>Failure attempting to load the window layout file {0}.</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Rename_or_delete_this_file_to_restore_the_default_layout" xml:space="preserve">
+    <value>Rename or delete this file to restore the default layout.</value>
+  </data>
+  <data name="SkylineWindow_UpdateGraphUI_Skyline_may_also_need_to_be_restarted" xml:space="preserve">
+    <value>Skyline may also need to be restarted.</value>
+  </data>
+  <data name="SkylineWindow_UpdateProgressUI_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
+    <value>No libraries to show. Would you like to add a library?</value>
+  </data>
+  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+    <value>Upgrading to {0} (downloading {1} of {2})</value>
+  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+    <value>Upgrading {0}</value>
+  </data>
+  <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
+    <value>Press 'Edit existing' to add user account information for an existing server.</value>
+  </data>
+  <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the peptide modification settings.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
+    <value>The document must be fully loaded before performing feature detection.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
+    <value>You must save this document before performing feature detection.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
+    <value>{0} is not a valid file name for uploading to Panorama.</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>Associating peptides with proteins</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" xml:space="preserve">
+    <value>DIA with DIA-Umpire</value>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
+    <value>Run Peptide Search</value>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
+    <value>You must save this document before running a peptide search.</value>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_" xml:space="preserve">
+    <value>The document must be fully loaded before running a peptide search.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
+    <value>Library from DIA deconvoluted to single-precursor MS/MS spectra and chromatograms from raw DIA spectra of same runs</value>
+  </data>
+  <data name="SkylineWindow_SaveDocumentBeforeImportingResults" xml:space="preserve">
+    <value>There are some results on disk which are not in the current document.
+Saving the document now will remove those extra results and ensure that the current settings are used to import new results.
+
+Do you want to save the document now?</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Error_updating_file___0___" xml:space="preserve">
+    <value>Error updating file '{0}'.</value>
+  </data>
+</root>

@@ -22,7 +22,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -93,7 +92,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return _message;
             }
-            string fullMessage = string.Format(Resources.EditDescription_GetUndoText_Set__0__to___1__,
+            string fullMessage = string.Format(DatabindingResources.EditDescription_GetUndoText_Set__0__to___1__,
                 ColumnCaption.GetCaption(dataSchemaLocalizer), Value);
             return TruncateLongMessage(fullMessage);
         }

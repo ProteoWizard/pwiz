@@ -289,7 +289,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             textPeptide.Focus();
             if (_selectedLibrary is MidasLibrary || MatchModifications())
-                UpdateListPeptide(0);
+                UpdateListPeptide(listPeptide.SelectedIndex);
         }
 
         private void ViewLibraryDlg_Activated(object sender, EventArgs e)
@@ -314,13 +314,13 @@ namespace pwiz.Skyline.SettingsUI
                     Program.MainWindow.FocusDocument();
                     var result = MultiButtonMsgDlg.Show(
                         this,
-                        string.Format(Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_, _selectedLibName),
-                        Resources.ViewLibraryDlg_MatchModifications_Yes, Resources.ViewLibraryDlg_MatchModifications_No, true);
+                        string.Format(SettingsUIResources.ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_, _selectedLibName),
+                        SettingsUIResources.ViewLibraryDlg_MatchModifications_Yes, SettingsUIResources.ViewLibraryDlg_MatchModifications_No, true);
                     if (result == DialogResult.Yes)
                     {
                         if (Settings.Default.SpectralLibraryList.Count == 0)
                         {
-                            MessageDlg.Show(this, Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings);
+                            MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings);
                             Close();
                             return;
                         }
@@ -376,7 +376,6 @@ namespace pwiz.Skyline.SettingsUI
             // Order matters!!
             LoadLibrary();
             InitializePeptides();
-            _currentRange = new RangeList(0, _peptides.Count);
             UpdatePageInfo();
             UpdateStatusArea();
             cbShowModMasses.Checked = Settings.Default.ShowModMassesInExplorer;
@@ -427,7 +426,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var message = TextUtil.LineSeparate(string.Format(Resources.ViewLibraryDlg_LoadLibrary_An_error_occurred_attempting_to_import_the__0__library, selectedLibrarySpec.Name),
                                         x.Message);
-                        MessageDlg.Show(this, message);
+                        MessageDlg.ShowWithException(this, message, x);
                     }
                 }
             }
@@ -460,7 +459,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         var info = new ViewLibraryPepInfo(key, libInfo);
                         // If there are any, set the ion mobility values of entry
-                        return key.IsSmallMoleculeKey ? SetIonMobilityCCSValues(info) : info; // Don't do this for peptides until we have performance issues worked out
+                        return SetIonMobilityCCSValues(info);
                     });
             }
 
@@ -499,7 +498,7 @@ namespace pwiz.Skyline.SettingsUI
                 _matcher = addModificationsDlg.Matcher;
                 if (addModificationsDlg.NewDocumentModsStatic.Any() || addModificationsDlg.NewDocumentModsHeavy.Any())
                 {
-                    Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_MatchModifications_Add_modifications, doc =>
+                    Program.MainWindow.ModifyDocument(SettingsUIResources.ViewLibraryDlg_MatchModifications_Add_modifications, doc =>
                     {
                         var mods = doc.Settings.PeptideSettings.Modifications;
                         mods = mods.ChangeStaticModifications(mods.StaticModifications.Concat(addModificationsDlg.NewDocumentModsStatic).ToList())
@@ -552,16 +551,16 @@ namespace pwiz.Skyline.SettingsUI
 
             const string numFormat = "#,0";
             var peptideCountFormat = HasSmallMolecules
-                ? Resources.ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_
-                : Resources.ViewLibraryDlg_UpdateStatusArea_Peptides__0__through__1__of__2__total;
+                ? SettingsUIResources.ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_
+                : SettingsUIResources.ViewLibraryDlg_UpdateStatusArea_Peptides__0__through__1__of__2__total;
 
             PeptideCount.Text =
                 string.Format(peptideCountFormat,
                               showStart.ToString(numFormat),
                               showEnd.ToString(numFormat),
-                                _peptides.Count.ToString(numFormat));
+                                _currentRange.Count.ToString(numFormat)); // Count the filtered items
 
-            PageCount.Text = string.Format(Resources.ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__, _pageInfo.Page,
+            PageCount.Text = string.Format(SettingsUIResources.ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__, _pageInfo.Page,
                                            _pageInfo.Pages);
         }
 
@@ -583,7 +582,7 @@ namespace pwiz.Skyline.SettingsUI
                     int end = _pageInfo.EndIndex;
                     new LongOperationRunner
                     {
-                        JobTitle = Resources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
+                        JobTitle = SettingsUIResources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
                     }.Run(longWaitBroker =>
                     {
                         for (int i = start; i < end; i++)
@@ -805,14 +804,14 @@ namespace pwiz.Skyline.SettingsUI
                             else if (!string.IsNullOrEmpty(filename))
                             {
                                 hasFileText = true;
-                                labelFilename.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_File, filename);
+                                labelFilename.Text = string.Format(SettingsUIResources.ViewLibraryDlg_UpdateUI_File, filename);
                             }
 
                             if (rt.HasValue)
                             {
                                 hasRtText = true;
                                 baseRT = rt.Value.ToString(Formats.RETENTION_TIME);
-                                labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + baseRT;
+                                labelRT.Text = SettingsUIResources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + baseRT;
                             }
 
                             var dt = spectrumInfo.IonMobilityInfo;
@@ -824,13 +823,13 @@ namespace pwiz.Skyline.SettingsUI
                                 if (ccs.HasValue)
                                 {
                                     baseCCS = string.Format(@"{0:F2}", ccs.Value);
-                                    ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + baseCCS;
+                                    ccsText = SettingsUIResources.ViewLibraryDlg_UpdateUI_CCS__ + baseCCS;
                                 }
 
                                 if (dt.HasIonMobilityValue)
                                 {
                                     baseIM = string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
-                                    imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + baseIM;
+                                    imText = SettingsUIResources.ViewLibraryDlg_UpdateUI_IM__ + baseIM;
                                 }
                                 if ((dt.HighEnergyIonMobilityValueOffset ?? 0) != 0) // Show the high energy value (as in Waters MSe) if different
                                     imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
@@ -919,12 +918,12 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (UnauthorizedAccessException)
             {
-                SetGraphItem(new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
+                SetGraphItem(new NoDataMSGraphItem(SettingsUIResources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
                 return;
             }
             catch (IOException)
             {
-                SetGraphItem(new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
+                SetGraphItem(new NoDataMSGraphItem(SettingsUIResources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
                 return;
             }
 
@@ -1058,7 +1057,10 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void FilterAndUpdate()
         {
-            _currentRange = _peptides.Filter(textPeptide.Text, comboFilterCategory.SelectedItem.ToString());
+            var filterCategory = comboFilterCategory.SelectedItem.ToString();
+            _currentRange = _peptides.Filter(textPeptide.Text, filterCategory);
+            _filterTextPerFilterType[filterCategory] = textPeptide.Text; // Keep different text for each filter type
+            _previousFilterType = filterCategory;
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
@@ -1328,6 +1330,10 @@ namespace pwiz.Skyline.SettingsUI
             FilterAndUpdate();
         }
 
+        // Don't lose the user's search strings when flipping between filters
+        private Dictionary<string, string> _filterTextPerFilterType = new Dictionary<string, string>();
+        private string _previousFilterType;
+
         private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
             var cancelled = false;
@@ -1361,7 +1367,24 @@ namespace pwiz.Skyline.SettingsUI
             // when the user begins typing
             _peptides.CreateCachedList(propertyName);
 
-            FilterAndUpdate();
+            // Each filter type has a different search string, swap them in as needed
+            var filterType = comboFilterCategory.SelectedItem.ToString();
+            var needsUpdate = true;
+            if (!Equals(filterType, _previousFilterType))
+            {
+                var newText = _filterTextPerFilterType.TryGetValue(filterType, out var text) ? text : string.Empty;
+                if (!Equals(textPeptide.Text, newText))
+                {
+                    textPeptide.Text = newText;
+                    needsUpdate = false; // Update will file automatically
+                }
+            }
+            if (needsUpdate)
+            {
+                FilterAndUpdate();
+            }
+
+            textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1745,7 +1768,7 @@ namespace pwiz.Skyline.SettingsUI
             var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo);
             if (nodePepMatched == null || nodePepMatched.Children.Count == 0)
             {
-                MessageDlg.Show(this, Resources.ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings);
+                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings);
                 return;
             }
             double precursorMz = nodePepMatched.TransitionGroups.First().PrecursorMz;
@@ -1753,14 +1776,14 @@ namespace pwiz.Skyline.SettingsUI
             double maxMz = startingDocument.Settings.TransitionSettings.Instrument.MaxMz;
             if (minMz > precursorMz || precursorMz > maxMz)
             {
-                MessageDlg.Show(this, string.Format(Resources.ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__,
+                MessageDlg.Show(this, string.Format(SettingsUIResources.ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__,
                                                     precursorMz, minMz, maxMz));
                 return;
             }
             var isolationScheme = startingDocument.Settings.TransitionSettings.FullScan.IsolationScheme;
             if (isolationScheme != null && !isolationScheme.IsInRangeMz(precursorMz))
             {
-                MessageDlg.Show(this, string.Format(Resources.ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_,
+                MessageDlg.Show(this, string.Format(SettingsUIResources.ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_,
                                                     precursorMz));
                 return;
             }
@@ -1771,7 +1794,7 @@ namespace pwiz.Skyline.SettingsUI
                 var chargeMatched = ((TransitionGroupDocNode)nodePepMatched.Children[0]).TransitionGroup.PrecursorAdduct;
                 if (!cbAssociateProteins.Checked && Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document,
+                    MessageDlg.Show(this, string.Format(SettingsUIResources.ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document,
                                                         nodePepMatched.Peptide, chargeMatched));
                     return;
                 }
@@ -1783,7 +1806,7 @@ namespace pwiz.Skyline.SettingsUI
             IdentityPath toPath = Program.MainWindow.SelectedPath;
             IdentityPath selectedPath = toPath;
 
-            string message = string.Format(Resources.ViewLibraryDlg_AddPeptide_Add_library_peptide__0__,
+            string message = string.Format(SettingsUIResources.ViewLibraryDlg_AddPeptide_Add_library_peptide__0__,
                                            nodePepMatched.Peptide.Target);
 
             entryCreatorList.Add(AuditLogEntry.SettingsLogFunction);
@@ -1868,7 +1891,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (backgroundProteome.BackgroundProteomeSpec.IsNone)
                 {
                     MessageDlg.Show(this,
-                                    Resources.
+                                    SettingsUIResources.
                                         ViewLibraryDlg_EnsureBackgroundProteome_A_background_proteome_is_required_to_associate_proteins);
                     return false;
                 }
@@ -1896,7 +1919,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
                 String message = string.Format(
-                    Resources.ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_,
+                    SettingsUIResources.ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_,
                     backgroundProteome.Name);
                 using (var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNoCancel))
                 {
@@ -1916,7 +1939,7 @@ namespace pwiz.Skyline.SettingsUI
                         using (var fileSaver = new FileSaver(backgroundProteome.DatabasePath))
                         {
                             var progressStatus =
-                                new ProgressStatus().ChangeMessage(Resources
+                                new ProgressStatus().ChangeMessage(SettingsUIResources
                                     .ViewLibraryDlg_EnsureDigested_Copying_database);
                             progressMonitor.UpdateProgress(progressStatus);
                             File.Copy(backgroundProteome.DatabasePath, fileSaver.SafeName, true);
@@ -1942,7 +1965,7 @@ namespace pwiz.Skyline.SettingsUI
             catch (Exception e)
             {
                 string errorMessage = TextUtil.LineSeparate(
-                    string.Format(Resources.ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__,
+                    string.Format(SettingsUIResources.ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__,
                         backgroundProteome.DatabasePath), e.Message);
                 MessageDlg.ShowWithException(owner, errorMessage, e);
                 return false;
@@ -1958,10 +1981,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var message = TextUtil.LineSeparate(string.Format(
                     Resources.ViewLibraryDlg_CheckLibraryInSettings_The_library__0__is_not_currently_added_to_your_document, _selectedLibName),
-                    Resources.ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it);
+                    SettingsUIResources.ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it);
                 var result = MultiButtonMsgDlg.Show(
-                    this, message, Resources.ViewLibraryDlg_MatchModifications_Yes,
-                    Resources.ViewLibraryDlg_MatchModifications_No, true);
+                    this, message, SettingsUIResources.ViewLibraryDlg_MatchModifications_Yes,
+                    SettingsUIResources.ViewLibraryDlg_MatchModifications_No, true);
                 if (result == DialogResult.No)
                     return result;
                 if (result == DialogResult.Yes)
@@ -1971,7 +1994,7 @@ namespace pwiz.Skyline.SettingsUI
                             new List<Library>(docLibraries.Libraries) { _selectedLibrary })));
                     var copy = newDoc;
                     if (addToDoc)
-                        Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, oldDoc => copy,
+                        Program.MainWindow.ModifyDocument(SettingsUIResources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, oldDoc => copy,
                             docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectral_library, docPair.NewDocumentType, _selectedLibName));
                 }
 
@@ -2022,8 +2045,8 @@ namespace pwiz.Skyline.SettingsUI
             var hasSmallMolecules = HasSmallMolecules;
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides;
-                longWaitDlg.Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings;
+                longWaitDlg.Text = hasSmallMolecules ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides;
+                longWaitDlg.Message = hasSmallMolecules ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings;
                 longWaitDlg.PerformWork(this, 1000, broker => pepMatcher.AddAllPeptidesToDocument(broker, entryCreatorList));
                 newDocument = pepMatcher.DocAllPeptides;
                 if (longWaitDlg.IsCanceled || newDocument == null)
@@ -2034,7 +2057,7 @@ namespace pwiz.Skyline.SettingsUI
             var numMatchedPeptides = pepMatcher.MatchedPeptideCount;
             if (numMatchedPeptides == 0)
             {
-                MessageDlg.Show(this, Resources.ViewLibraryDlg_AddAllPeptides_No_peptides_match_the_current_document_settings);
+                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_No_peptides_match_the_current_document_settings);
                 return;
             }
 
@@ -2043,15 +2066,15 @@ namespace pwiz.Skyline.SettingsUI
             var groupCountDiff = newDocument.MoleculeTransitionGroupCount - startingDocument.MoleculeTransitionGroupCount;
             if (peptideCountDiff + groupCountDiff == 0)
             {
-                MessageDlg.Show(this, Resources.ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document);
+                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document);
                 return;
             }
             var pepGroupCountDiff = newDocument.MoleculeGroupCount - startingDocument.MoleculeGroupCount;
-            string proteins = cbAssociateProteins.Checked ? string.Format(Resources.ViewLibraryDlg_AddAllPeptides__0__proteins, pepGroupCountDiff)
+            string proteins = cbAssociateProteins.Checked ? string.Format(SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__proteins, pepGroupCountDiff)
                 : string.Empty;
             var format = HasSmallMolecules
-                ? Resources.ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document
-                : Resources.ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document;
+                ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document
+                : SettingsUIResources.ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document;
 
             string msg = string.Format(format,
                                         proteins, peptideCountDiff, groupCountDiff,
@@ -2063,21 +2086,21 @@ namespace pwiz.Skyline.SettingsUI
             if (hasSkipped || hasUnmatched)
             {
                 string duplicatePeptides = hasSkipped
-                                               ? string.Format(Resources.ViewLibraryDlg_AddAllPeptides__0__existing,numSkipped)
+                                               ? string.Format(SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__existing,numSkipped)
                                                : string.Empty;
                 string unmatchedPeptides = hasUnmatched
-                                               ? string.Format(Resources.ViewLibraryDlg_AddAllPeptides__0__unmatched,numUnmatchedPeptides)
+                                               ? string.Format(SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__unmatched,numUnmatchedPeptides)
                                                : string.Empty;
                 string entrySuffix = (numSkipped + numUnmatchedPeptides > 1
-                                          ? Resources.ViewLibraryDlg_AddAllPeptides_entries
-                                          : Resources.ViewLibraryDlg_AddAllPeptides_entry);
+                                          ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides_entries
+                                          : SettingsUIResources.ViewLibraryDlg_AddAllPeptides_entry);
                 msg = TextUtil.LineSeparate(msg, string.Empty, string.Empty,
                     string.Format((hasSkipped && hasUnmatched)
-                                        ? Resources.ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored
-                                        : Resources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
+                                        ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored
+                                        : SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
                                     duplicatePeptides, unmatchedPeptides, entrySuffix));
             }
-            var dlg = new MultiButtonMsgDlg(msg, Resources.ViewLibraryDlg_AddAllPeptides_Add_All)
+            var dlg = new MultiButtonMsgDlg(msg, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Add_All)
             {
                 Tag = numUnmatchedPeptides
             };
@@ -2096,7 +2119,7 @@ namespace pwiz.Skyline.SettingsUI
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
             var toPath = Program.MainWindow.SelectedPath;
             entryCreatorList.Add(AuditLogEntry.SettingsLogFunction);
-            Program.MainWindow.ModifyDocument(string.Format(Resources.ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library, SelectedLibraryName), 
+            Program.MainWindow.ModifyDocument(string.Format(SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library, SelectedLibraryName), 
                 doc =>
                 {
                     if (ReferenceEquals(doc, startingDocument))
@@ -2104,8 +2127,8 @@ namespace pwiz.Skyline.SettingsUI
                     if (!Equals(doc.Settings.PeptideSettings.Modifications, startingDocument.Settings.PeptideSettings.Modifications))
                     {
                         selectedPath = toPath;
-                        var message = TextUtil.LineSeparate(Resources.ViewLibraryDlg_AddAllPeptides_The_document_changed_during_processing,
-                            Resources.ViewLibraryDlg_AddAllPeptides_Please_retry_this_operation);
+                        var message = TextUtil.LineSeparate(SettingsUIResources.ViewLibraryDlg_AddAllPeptides_The_document_changed_during_processing,
+                            SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Please_retry_this_operation);
                         throw new InvalidDataException(message);
                     }
                     var newDoc = doc;
@@ -2387,7 +2410,7 @@ namespace pwiz.Skyline.SettingsUI
         public int SelectedLibIndex
         {
             get { return comboLibrary.SelectedIndex; }
-            set { listPeptide.SelectedIndex = value; }
+            set { comboLibrary.SelectedIndex = value; }
         }
 
         public bool HasSelectedLibrary => _selectedLibrary != null;
@@ -2607,13 +2630,16 @@ namespace pwiz.Skyline.SettingsUI
                         libraryNamePrefix += @" - ";
                     if (_key.IsPrecursorKey)
                     {
-                        return string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1_, libraryNamePrefix, _key.PrecursorMz.GetValueOrDefault());
+                        return string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1_, libraryNamePrefix, _key.PrecursorMz.GetValueOrDefault());
                     }
-                    if (_key.IsSmallMoleculeKey)
+                    var title = _key.IsSmallMoleculeKey ?
+                        string.Format(@"{0}{1}{2}", libraryNamePrefix, TransitionGroup.Peptide.CustomMolecule.DisplayName, TransitionGroup.PrecursorAdduct) :
+                        string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
+                    if (this.PeaksCount == 0)
                     {
-                        return string.Format(@"{0}{1}{2}", libraryNamePrefix, TransitionGroup.Peptide.CustomMolecule.DisplayName, TransitionGroup.PrecursorAdduct);
+                        title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
                     }
-                    return string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
+                    return title;
                 }
             }
         }
@@ -2962,11 +2988,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public IonMobilityAndCCS GetIonMobility(ViewLibraryPepInfo pepInfo)
         {
-            var bestSpectrum = _selectedLibrary.GetSpectra(pepInfo.Key,
-                IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
-            if (bestSpectrum != null)
+            if (_selectedLibrary.TryGetIonMobilityInfos(new[] { pepInfo.Key }, out var ionMobilities))
             {
-                return bestSpectrum.IonMobilityInfo;
+                return ionMobilities.GetIonMobilityDict().Values.SelectMany(x => x).FirstOrDefault() ?? IonMobilityAndCCS.EMPTY;
             }
             return IonMobilityAndCCS.EMPTY;
         }

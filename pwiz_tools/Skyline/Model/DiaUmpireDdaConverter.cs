@@ -18,6 +18,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -75,9 +76,11 @@ namespace pwiz.Skyline.Model
 
             for (int i = 0; i < OriginalSpectrumSources.Length; ++i)
             {
-                // TODO/CONSIDER: source path may not be writable
-                string outputFilepath = Path.Combine(Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? "",
-                    OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
+                string outputDirectory = Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? string.Empty;
+                if (Program.FunctionalTest || !DirectoryEx.IsWritable(outputDirectory))
+                    outputDirectory = Path.GetDirectoryName(Program.MainWindow.DocumentFilePath) ?? string.Empty;
+
+                var outputFilepath = Path.Combine(outputDirectory, OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
                 ConvertedSpectrumSources[i] = new MsDataFilePath(outputFilepath);
             }
         }
@@ -97,7 +100,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(Resources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
+                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(ModelResources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -130,7 +133,7 @@ namespace pwiz.Skyline.Model
                             if (equivalentConfig)
                             {
                                 progressMonitor?.UpdateProgress(status.ChangeMessage(
-                                    string.Format(Resources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
+                                    string.Format(ModelResources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
                                         spectrumSource.GetSampleOrFileName())));
                                 continue;
                             }
@@ -247,7 +250,8 @@ namespace pwiz.Skyline.Model
             rhs = rhs.ToLowerInvariant().Replace(@"true", @"1").Replace(@"false", @"0");
             if (int.TryParse(lhs, out int lhsInt) && int.TryParse(rhs, out int rhsInt))
                 return lhsInt == rhsInt;
-            if (double.TryParse(lhs, out double lhsDbl) && double.TryParse(rhs, out double rhsDbl))
+            if (double.TryParse(lhs.Replace(@".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), out double lhsDbl) &&
+                double.TryParse(rhs.Replace(@".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), out double rhsDbl))
                 return lhsDbl.AlmostEqual(rhsDbl, 5);
             return lhs == rhs;
         }
