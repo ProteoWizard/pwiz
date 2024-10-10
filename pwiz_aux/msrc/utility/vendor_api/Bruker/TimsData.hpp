@@ -249,6 +249,8 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const;
 
+    virtual double oneOverK0ToCCS(double oneOverK0, int charge) const;
+
     virtual double ccsToOneOverK0(double ccs, double mz, int charge) const;
 
     /// returns the number of spectra available from the MS source
@@ -318,6 +320,8 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     friend struct TimsSpectrum;
     TimsBinaryDataPtr tdfStoragePtr_;
     TimsBinaryData& tdfStorage_;
+
+    double largestPeakMz;
 
     ///
     /// cache entire frames while dealing with single spectrum access
