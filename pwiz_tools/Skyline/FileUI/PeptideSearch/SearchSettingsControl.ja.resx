@@ -644,7 +644,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
-    <value>試料内で検出されたすべてのフィーチャーの強度の合計に対して強度がこれより低いフィーチャーを無視</value>
+    <value>試料内で検出されたすべてのフィーチャーの強度の合計に対する強度がこれより低いフィーチャーを無視</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
@@ -749,7 +749,7 @@
     <value>3</value>
   </data>
   <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
-    <value>Hardklor設定の信号対ノイズ比の閾値を設定します。つまり、スコア算出アルゴリズムで考慮されるにはスペクトルウィンドウでピークが超える必要のある相対的存在量です。これは、ペプチドが同定されたスペクトル領域のローカルノイズ閾値であることに留意してください。</value>
+    <value>Hardklor設定のシグナルノイズ比の閾値を設定します。つまり、スコア算出アルゴリズムで考慮されるためにスペクトルウィンドウでピークが超える必要のある相対的存在量となります。これは、ペプチドが同定されたスペクトル領域のローカルノイズ閾値であることに留意してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
@@ -830,7 +830,7 @@
     <value>17</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>ライブラリに含める結果のスペクトルに対するカットオフに使用される1.0から 0までのスコア（1.0が最も高確率と考えられる）。
+    <value>ライブラリに含める結果のスペクトルに対するカットオフに使用される1.0から0までのスコア（1.0が最も高確率と考えられる）。
 TPP pepXMLでは、この値は最小PeptideProphet確率です。Mascotでは、この値は1 - 最大期待値です。SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
     <comment>Needs Review:New resource</comment>
   </data>

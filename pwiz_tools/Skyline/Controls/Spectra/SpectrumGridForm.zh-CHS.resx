@@ -414,7 +414,7 @@
     <value>4</value>
   </data>
   <data name="btnAddSpectrumFilter.Text" xml:space="preserve">
-    <value>添加 Spectrum 过滤器…</value>
+    <value>添加谱图过滤器…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;btnAddSpectrumFilter.Name" xml:space="preserve">

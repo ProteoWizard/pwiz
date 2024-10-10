@@ -173,7 +173,7 @@
     <value>msconvert変換を開始しています</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-    <value>保持時間のアラインメント：{0}対{1}</value>
+    <value>保持時間アラインメント：{0}対{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
@@ -209,7 +209,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
-    <value>Hardklorは、アベラジンモデルを使用してMS1スキャンでペプチド様フィーチャーを検索します。Hardklorが発見したフィーチャーは、SkylineではHardklorがその特徴に一致する同位体分布を生成するために使用した化学式を持つ小分子として表現されます。さらに、高分解能ピークの質量対電荷比に一致させるために質量オフセットも付加されます。これは質量分析計のMS1ピークの原因となる分子の実際の式ではなく、一致する同位体分布の近似値です。</value>
+    <value>Hardklorは、averagineモデルを使用してMS1スキャンでペプチド様フィーチャーを検索します。Hardklorが発見したフィーチャーは、SkylineではHardklorがそのフィーチャーに一致する同位体分布を生成するために使用した化学式を持つ小分子として表現されます。さらに、高分解能ピークの質量電荷比に一致させるために質量オフセットも付加されます。これは質量分析計で検出されたMS1ピークの実際の分子式ではなく、同位体分布の一致を使用した近似式です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

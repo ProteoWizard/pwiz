@@ -189,7 +189,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>Agilent 6400シリーズ装置タイプのメソッドには.m拡張子が付き、qqqacqmethod.xsdファイルが含まれると予測されています。これがAgilent TQメソッドである場合は、装置タイプとして「Agilent MassHunter 12以降」を選択してください。</value>
+    <value>Agilent 6400シリーズ装置タイプのメソッドには.m拡張子が付き、qqqacqmethod.xsdファイルが含まれます。これがAgilent TQメソッドである場合は、装置タイプとして「Agilent MassHunter 12以降」を選択してください。</value>
     <comment>Needs Review:English text changed
 Old English:The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.
 Current English:Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose "Agilent MassHunter 12 or higher" as your instrument type.

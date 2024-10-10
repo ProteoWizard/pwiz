@@ -142,7 +142,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="radioDIA.ToolTip" xml:space="preserve">
-    <value>DDA MS/MSからのライブラリスペクトルと、個別のDIAランからのクロマトグラム</value>
+    <value>個別のDIAランのクロマトグラムを含むDDA MS/MSのライブラリスペクトル</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
@@ -210,7 +210,7 @@
     <value>MS&amp;1フィルタを用いたDDA</value>
   </data>
   <data name="radioDDA.ToolTip" xml:space="preserve">
-    <value>DDA MS/MSからのライブラリスペクトルと、MS1からのクロマトグラム</value>
+    <value>MS1のクロマトグラムを含むDDA MS/MSのライブラリスペクトル</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">

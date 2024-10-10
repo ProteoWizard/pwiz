@@ -107,7 +107,7 @@
     <value>倍率変化の計算に使用されたこの繰り返し測定の値です。数値は正規化メソッドの他、倍率変化がタンパク質レベルで計算されているかペプチドレベルで計算されているかに依存します。</value>
   </data>
   <data name="Accuracy">
-    <value>指定したアナライト濃度と算出される濃度の比率</value>
+    <value>指定したアナライト濃度に対する算出された濃度の比率</value>
     <comment>Needs Review:English text changed
 Old English:Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)
 Current English:Ratio of Calculated Concentration to the specified Analyte Concentration
@@ -204,7 +204,7 @@ Old Localized:アナライトの濃度と算出される濃度の比率（繰り
   <data name="CalculatedConcentration">
     <value>アナライト濃度は、以下のいずれかによって計算されます： 
 1. 校正曲線（[ペプチド設定] &gt; [定量] に[回帰適合] が指定されている場合）
-2. 内部標準（またはサロゲート）に対する比率と内部標準濃度による乗算</value>
+2. 内部標準（またはサロゲート）に対する比率を [内部標準濃度] で乗算</value>
     <comment>Needs Review:English text changed
 Old English:The concentration of the analyte is calculated by either:
     1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
@@ -910,7 +910,7 @@ Old Localized:次のAa</comment>
     <value>絶対定量とグループ比較のために、特定の分子で使用する正規化のメソッドを無効にします。</value>
   </data>
   <data name="NormalizedArea">
-    <value>そのペプチド/分子の明示的な「正規化メソッド」または [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドでペプチド/分子強度を正規化して取得される値です。</value>
+    <value>そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。</value>
     <comment>Needs Review:English text changed
 Old English:Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
     Settings &gt; Peptide Settings &gt; Quantification
@@ -924,11 +924,11 @@ Old Localized:そのペプチド/分子に指定された「正規化メソッ�
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaRaw">
-    <value>そのペプチド/分子の明示的な「正規化メソッド」または [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドでペプチド/分子強度を正規化して取得される値です。繰り返し測定間の比較に欠損データの影響がある場合に利用可能です。</value>
+    <value>そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。繰り返し測定間の比較に欠損データの影響がある場合に利用可能です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaStrict">
-    <value>そのペプチド/分子に指定された「正規化メソッド」または [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
+    <value>そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
@@ -1208,11 +1208,11 @@ Old Localized:特定の繰り返し測定のタンパク質の存在量を表す
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>タンパク質の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
+    <value>[タンパク質] の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>タンパク質の下にあるトランジションの合計正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
+    <value>[タンパク質] の下にあるトランジションの合計正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
@@ -1285,7 +1285,7 @@ Old Localized:特定の繰り返し測定のタンパク質の存在量を表す
     <value>MaxRetentionTimeとMinRetentionTime との差です。これを使用すると測定された保持時間の広がりの幅を評価できます。</value>
   </data>
   <data name="RatioDotProduct">
-    <value>ユーザーインターフェイスに表示される「rdotp」と同じ意味です。ライブラリ内積の内積の計算を説明していますが、これはプリカーサーのピーク面積（例えばライト）と標準タイプのプリカーサーのピーク面積（例えばヘビー）との間の場合であり、標準タイプが存在しない場合またはプリカーサーが標準タイプの場合は#N/Aとなります。</value>
+    <value>ユーザーインターフェイスに表示される「rdotp」と同じ意味です。[ライブラリ内積] の内積計算を示していますが、これはプリカーサーのピーク面積（例えばlight）と標準用プリカーサーのピーク面積（例えばheavy）との間の場合であり、標準が存在しないまたはプリカーサーが標準の場合は#N/Aとなります。</value>
     <comment>Needs Review:English text changed
 Old English:Ratio Dot Product
 Current English:Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.

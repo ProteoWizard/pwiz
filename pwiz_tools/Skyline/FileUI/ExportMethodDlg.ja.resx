@@ -1741,7 +1741,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="cbExportSciexOSQuantMethod.ToolTip" xml:space="preserve">
-    <value>SCIEX OS Quantと互換性のある分析メソッドを、Analyst取得メソッドと同じディレクトリと同じベース名でエクスポートします。</value>
+    <value>SCIEX OS Quantと互換性のある分析メソッドを、Analyst取得メソッドと同じディレクトリに同じベース名でエクスポートします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbExportSciexOSQuantMethod.Name" xml:space="preserve">

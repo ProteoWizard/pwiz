@@ -798,7 +798,7 @@
     <value>「{0}」という名前は既にパス{1}で使用されています。</value>
   </data>
   <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
-    <value>UniModに一致する結果が複数見つかりました。末端および/またはアミノ酸の特異性で絞り込み、一致する結果を1つだけ選択してください</value>
+    <value>UniModに一致する結果が複数見つかりました。末端やアミノ酸の特異性で絞り込み、一致する結果を1つだけ選択してください</value>
     <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
 Needs Review:New resource</comment>
   </data>
