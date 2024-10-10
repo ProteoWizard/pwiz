@@ -672,7 +672,7 @@
     <value>4</value>
   </data>
   <data name="labelMinIntensityPPM.Text" xml:space="preserve">
-    <value>最小强度比例(&amp;I):</value>
+    <value>最小强度比例(&amp;I)：</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
