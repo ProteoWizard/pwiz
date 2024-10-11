@@ -96,7 +96,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
                 throw;
         }
 
-        Scan* scan = !s->scanList.empty() ? &s->scanList.scans[0] : 0;
+        const Scan& scan = !s->scanList.empty() ? s->scanList.scans[0] : Scan();
 
         if (s->cvParam(MS_ms_level).valueAs<int>() > 1 &&
             !s->precursors.empty() &&
@@ -105,7 +105,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             os << "BEGIN IONS\n";
 
             const SelectedIon& si = s->precursors[0].selectedIons[0];
-            CVParam scanTimeParam = scan ? scan->cvParam(MS_scan_start_time) : CVParam();
+            CVParam scanTimeParam = scan.cvParam(MS_scan_start_time);
             CVParam chargeParam = si.cvParam(MS_charge_state);
 
             CVParam spectrumTitle = s->cvParam(MS_spectrum_title);
@@ -113,8 +113,8 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
                 os << "TITLE=" << spectrumTitle.value << '\n';
             else if (titleIsThermoDTA)
             {
-                string scan = id::value(s->id, "scan");
-                os << "TITLE=" << thermoBasename << '.' << scan << '.' << scan << '.' << chargeParam.value << '\n';
+                string scan_string = id::value(s->id, "scan");
+                os << "TITLE=" << thermoBasename << '.' << scan_string << '.' << scan_string << '.' << chargeParam.value << '\n';
             }
             else
                 os << "TITLE=" << s->id << '\n';
@@ -132,12 +132,12 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
                 os << " " << intensityParam.valueFixedNotation();
             os << '\n';
 
-            CVParam inverseReduceIonMobility = scan->cvParam(MS_inverse_reduced_ion_mobility);
+            CVParam inverseReduceIonMobility = scan.cvParam(MS_inverse_reduced_ion_mobility);
             if (!inverseReduceIonMobility.empty())
                 os << "INVREION=" << inverseReduceIonMobility.valueFixedNotation();
             os << '\n';
 
-            CVParam collisionalCrossSectionalArea = scan->cvParam(MS_collisional_cross_sectional_area);
+            CVParam collisionalCrossSectionalArea = scan.cvParam(MS_collisional_cross_sectional_area);
             if (!collisionalCrossSectionalArea.empty())
                 os << "COLLCROSSSA=" << collisionalCrossSectionalArea.valueFixedNotation();
             os << '\n';
