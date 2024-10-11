@@ -25,7 +25,6 @@
 
 #include "SpectrumList_Bruker.hpp"
 
-#include "pwiz/data/vendor_readers/Thermo/ChromatogramList_Thermo.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 
 
