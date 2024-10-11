@@ -1141,11 +1141,11 @@
   <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
     <value>
 
-このライブラリエントリはプリカーサー情報のみを提供します。表示できるスペクトルはありません</value>
+このライブラリエントリはプリカーサー情報のみを提供し、表示できるスペクトルはありません</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
-    <value>分間の検出されたフィーチャー</value>
+    <value>検出されたフィーチャーの分数</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
@@ -1175,7 +1175,7 @@
   <data name="FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient" xml:space="preserve">
     <value>{0}メソッドは通常、質量分析計がスペクトルを取得する時間範囲を指定します。
 Skylineで保持時間フィルタリングを適用する必要は通常ありません。適用すると、抽出イオンクロマトグラムの切断につながる可能性があります。
-このオプションは、取得方法に同じm/zの複数ターゲットが含まれている場合にのみ使用してください。</value>
+このオプションは、取得メソッドに同じm/zを持つ複数ターゲットが含まれている場合にのみ使用してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
