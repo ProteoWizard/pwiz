@@ -29,16 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PeakImputationForm));
             this.panel1 = new System.Windows.Forms.Panel();
-            this.cbxAlignAllGraphs = new System.Windows.Forms.CheckBox();
+            this.lblMinutes = new System.Windows.Forms.Label();
             this.groupBoxDocumentStatistics = new System.Windows.Forms.GroupBox();
-            this.tbxAvgPeakWidthCV = new System.Windows.Forms.TextBox();
-            this.lblAvgPeakWidthCV = new System.Windows.Forms.Label();
-            this.tbxAlignedDocRtStdDev = new System.Windows.Forms.TextBox();
-            this.lblAligned = new System.Windows.Forms.Label();
             this.tbxUnalignedDocRtStdDev = new System.Windows.Forms.TextBox();
-            this.lblUnaligned = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBoxScope = new System.Windows.Forms.GroupBox();
             this.radioScopeDocument = new System.Windows.Forms.RadioButton();
@@ -61,26 +55,12 @@
             this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
             this.lblSdCutoff = new System.Windows.Forms.Label();
-            this.groupBoxCutoff = new System.Windows.Forms.GroupBox();
-            this.lblCutoffPercent = new System.Windows.Forms.Label();
-            this.radioPValue = new System.Windows.Forms.RadioButton();
-            this.radioPercentile = new System.Windows.Forms.RadioButton();
-            this.radioQValue = new System.Windows.Forms.RadioButton();
-            this.radioScore = new System.Windows.Forms.RadioButton();
-            this.tbxCoreScoreCutoff = new System.Windows.Forms.TextBox();
-            this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
-            this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.lblMinutes = new System.Windows.Forms.Label();
-            this.lblPercentPeakWidth = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
-            this.groupBoxCutoff.SuspendLayout();
             this.SuspendLayout();
             // 
             // databoundGridControl
@@ -90,11 +70,7 @@
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.lblPercentPeakWidth);
             this.panel1.Controls.Add(this.lblMinutes);
-            this.panel1.Controls.Add(this.tbxMaxPeakWidthVariation);
-            this.panel1.Controls.Add(this.label2);
-            this.panel1.Controls.Add(this.cbxAlignAllGraphs);
             this.panel1.Controls.Add(this.groupBoxDocumentStatistics);
             this.panel1.Controls.Add(this.groupBoxScope);
             this.panel1.Controls.Add(this.tbxScoringModel);
@@ -105,92 +81,39 @@
             this.panel1.Controls.Add(this.cbxOverwriteManual);
             this.panel1.Controls.Add(this.tbxRtDeviationCutoff);
             this.panel1.Controls.Add(this.lblSdCutoff);
-            this.panel1.Controls.Add(this.groupBoxCutoff);
-            this.panel1.Controls.Add(this.comboRetentionTimeAlignment);
-            this.panel1.Controls.Add(this.lblRetentionTimeAlignment);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 223);
             this.panel1.TabIndex = 1;
             // 
-            // cbxAlignAllGraphs
+            // lblMinutes
             // 
-            this.cbxAlignAllGraphs.AutoSize = true;
-            this.cbxAlignAllGraphs.Location = new System.Drawing.Point(181, 52);
-            this.cbxAlignAllGraphs.Name = "cbxAlignAllGraphs";
-            this.cbxAlignAllGraphs.Size = new System.Drawing.Size(97, 17);
-            this.cbxAlignAllGraphs.TabIndex = 25;
-            this.cbxAlignAllGraphs.Text = "Align all graphs";
-            this.cbxAlignAllGraphs.UseVisualStyleBackColor = true;
-            this.cbxAlignAllGraphs.CheckedChanged += new System.EventHandler(this.SettingsControlChanged);
+            this.lblMinutes.AutoSize = true;
+            this.lblMinutes.Location = new System.Drawing.Point(91, 79);
+            this.lblMinutes.Name = "lblMinutes";
+            this.lblMinutes.Size = new System.Drawing.Size(43, 13);
+            this.lblMinutes.TabIndex = 28;
+            this.lblMinutes.Text = "minutes";
             // 
             // groupBoxDocumentStatistics
             // 
-            this.groupBoxDocumentStatistics.Controls.Add(this.tbxAvgPeakWidthCV);
-            this.groupBoxDocumentStatistics.Controls.Add(this.lblAvgPeakWidthCV);
-            this.groupBoxDocumentStatistics.Controls.Add(this.tbxAlignedDocRtStdDev);
-            this.groupBoxDocumentStatistics.Controls.Add(this.lblAligned);
             this.groupBoxDocumentStatistics.Controls.Add(this.tbxUnalignedDocRtStdDev);
-            this.groupBoxDocumentStatistics.Controls.Add(this.lblUnaligned);
             this.groupBoxDocumentStatistics.Controls.Add(this.label1);
-            this.groupBoxDocumentStatistics.Location = new System.Drawing.Point(463, 9);
+            this.groupBoxDocumentStatistics.Location = new System.Drawing.Point(326, 12);
             this.groupBoxDocumentStatistics.Name = "groupBoxDocumentStatistics";
             this.groupBoxDocumentStatistics.Size = new System.Drawing.Size(164, 179);
             this.groupBoxDocumentStatistics.TabIndex = 24;
             this.groupBoxDocumentStatistics.TabStop = false;
             this.groupBoxDocumentStatistics.Text = "Document-wide statistics";
             // 
-            // tbxAvgPeakWidthCV
-            // 
-            this.tbxAvgPeakWidthCV.Location = new System.Drawing.Point(9, 150);
-            this.tbxAvgPeakWidthCV.Name = "tbxAvgPeakWidthCV";
-            this.tbxAvgPeakWidthCV.ReadOnly = true;
-            this.tbxAvgPeakWidthCV.Size = new System.Drawing.Size(100, 20);
-            this.tbxAvgPeakWidthCV.TabIndex = 6;
-            // 
-            // lblAvgPeakWidthCV
-            // 
-            this.lblAvgPeakWidthCV.AutoSize = true;
-            this.lblAvgPeakWidthCV.Location = new System.Drawing.Point(6, 134);
-            this.lblAvgPeakWidthCV.Name = "lblAvgPeakWidthCV";
-            this.lblAvgPeakWidthCV.Size = new System.Drawing.Size(119, 13);
-            this.lblAvgPeakWidthCV.TabIndex = 5;
-            this.lblAvgPeakWidthCV.Text = "Average peak width CV";
-            // 
-            // tbxAlignedDocRtStdDev
-            // 
-            this.tbxAlignedDocRtStdDev.Location = new System.Drawing.Point(9, 109);
-            this.tbxAlignedDocRtStdDev.Name = "tbxAlignedDocRtStdDev";
-            this.tbxAlignedDocRtStdDev.ReadOnly = true;
-            this.tbxAlignedDocRtStdDev.Size = new System.Drawing.Size(100, 20);
-            this.tbxAlignedDocRtStdDev.TabIndex = 4;
-            // 
-            // lblAligned
-            // 
-            this.lblAligned.AutoSize = true;
-            this.lblAligned.Location = new System.Drawing.Point(6, 93);
-            this.lblAligned.Name = "lblAligned";
-            this.lblAligned.Size = new System.Drawing.Size(45, 13);
-            this.lblAligned.TabIndex = 3;
-            this.lblAligned.Text = "Aligned:";
-            // 
             // tbxUnalignedDocRtStdDev
             // 
-            this.tbxUnalignedDocRtStdDev.Location = new System.Drawing.Point(9, 70);
+            this.tbxUnalignedDocRtStdDev.Location = new System.Drawing.Point(9, 50);
             this.tbxUnalignedDocRtStdDev.Name = "tbxUnalignedDocRtStdDev";
             this.tbxUnalignedDocRtStdDev.ReadOnly = true;
             this.tbxUnalignedDocRtStdDev.Size = new System.Drawing.Size(100, 20);
             this.tbxUnalignedDocRtStdDev.TabIndex = 2;
-            // 
-            // lblUnaligned
-            // 
-            this.lblUnaligned.AutoSize = true;
-            this.lblUnaligned.Location = new System.Drawing.Point(6, 54);
-            this.lblUnaligned.Name = "lblUnaligned";
-            this.lblUnaligned.Size = new System.Drawing.Size(58, 13);
-            this.lblUnaligned.TabIndex = 1;
-            this.lblUnaligned.Text = "Unaligned:";
             // 
             // label1
             // 
@@ -259,10 +182,10 @@
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(463, 194);
+            this.progressBar1.Location = new System.Drawing.Point(326, 194);
             this.progressBar1.Maximum = 10000;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(334, 23);
+            this.progressBar1.Size = new System.Drawing.Size(471, 23);
             this.progressBar1.TabIndex = 19;
             // 
             // groupBoxResults
@@ -277,7 +200,7 @@
             this.groupBoxResults.Controls.Add(this.lblRejected);
             this.groupBoxResults.Controls.Add(this.tbxAccepted);
             this.groupBoxResults.Controls.Add(this.lblAccepted);
-            this.groupBoxResults.Location = new System.Drawing.Point(336, 9);
+            this.groupBoxResults.Location = new System.Drawing.Point(188, 9);
             this.groupBoxResults.Name = "groupBoxResults";
             this.groupBoxResults.Size = new System.Drawing.Size(121, 208);
             this.groupBoxResults.TabIndex = 18;
@@ -384,7 +307,7 @@
             // cbxOverwriteManual
             // 
             this.cbxOverwriteManual.AutoSize = true;
-            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 193);
+            this.cbxOverwriteManual.Location = new System.Drawing.Point(12, 103);
             this.cbxOverwriteManual.Name = "cbxOverwriteManual";
             this.cbxOverwriteManual.Size = new System.Drawing.Size(140, 17);
             this.cbxOverwriteManual.TabIndex = 16;
@@ -394,7 +317,7 @@
             // 
             // tbxRtDeviationCutoff
             // 
-            this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(181, 111);
+            this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(15, 76);
             this.tbxRtDeviationCutoff.Name = "tbxRtDeviationCutoff";
             this.tbxRtDeviationCutoff.Size = new System.Drawing.Size(70, 20);
             this.tbxRtDeviationCutoff.TabIndex = 15;
@@ -406,153 +329,11 @@
             // lblSdCutoff
             // 
             this.lblSdCutoff.AutoSize = true;
-            this.lblSdCutoff.Location = new System.Drawing.Point(178, 94);
+            this.lblSdCutoff.Location = new System.Drawing.Point(12, 59);
             this.lblSdCutoff.Name = "lblSdCutoff";
             this.lblSdCutoff.Size = new System.Drawing.Size(67, 13);
             this.lblSdCutoff.TabIndex = 14;
             this.lblSdCutoff.Text = "Max RT shift";
-            // 
-            // groupBoxCutoff
-            // 
-            this.groupBoxCutoff.Controls.Add(this.lblCutoffPercent);
-            this.groupBoxCutoff.Controls.Add(this.radioPValue);
-            this.groupBoxCutoff.Controls.Add(this.radioPercentile);
-            this.groupBoxCutoff.Controls.Add(this.radioQValue);
-            this.groupBoxCutoff.Controls.Add(this.radioScore);
-            this.groupBoxCutoff.Controls.Add(this.tbxCoreScoreCutoff);
-            this.groupBoxCutoff.Location = new System.Drawing.Point(12, 52);
-            this.groupBoxCutoff.Name = "groupBoxCutoff";
-            this.groupBoxCutoff.Size = new System.Drawing.Size(142, 138);
-            this.groupBoxCutoff.TabIndex = 13;
-            this.groupBoxCutoff.TabStop = false;
-            this.groupBoxCutoff.Text = "Exemplary Cutoff";
-            // 
-            // lblPercent
-            // 
-            this.lblCutoffPercent.AutoSize = true;
-            this.lblCutoffPercent.Location = new System.Drawing.Point(118, 116);
-            this.lblCutoffPercent.Name = "lblCutoffPercent";
-            this.lblCutoffPercent.Size = new System.Drawing.Size(15, 13);
-            this.lblCutoffPercent.TabIndex = 11;
-            this.lblCutoffPercent.Text = "%";
-            this.lblCutoffPercent.Visible = false;
-            // 
-            // radioPValue
-            // 
-            this.radioPValue.AutoSize = true;
-            this.radioPValue.Location = new System.Drawing.Point(6, 42);
-            this.radioPValue.Name = "radioPValue";
-            this.radioPValue.Size = new System.Drawing.Size(61, 17);
-            this.radioPValue.TabIndex = 10;
-            this.radioPValue.TabStop = true;
-            this.radioPValue.Text = "P-value";
-            this.radioPValue.UseVisualStyleBackColor = true;
-            this.radioPValue.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
-            // 
-            // radioPercentile
-            // 
-            this.radioPercentile.AutoSize = true;
-            this.radioPercentile.Location = new System.Drawing.Point(6, 89);
-            this.radioPercentile.Name = "radioPercentile";
-            this.radioPercentile.Size = new System.Drawing.Size(72, 17);
-            this.radioPercentile.TabIndex = 2;
-            this.radioPercentile.TabStop = true;
-            this.radioPercentile.Text = "Percentile";
-            this.radioPercentile.UseVisualStyleBackColor = true;
-            this.radioPercentile.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
-            // 
-            // radioQValue
-            // 
-            this.radioQValue.AutoSize = true;
-            this.radioQValue.Location = new System.Drawing.Point(6, 66);
-            this.radioQValue.Name = "radioQValue";
-            this.radioQValue.Size = new System.Drawing.Size(94, 17);
-            this.radioQValue.TabIndex = 1;
-            this.radioQValue.TabStop = true;
-            this.radioQValue.Text = "Library q-value";
-            this.radioQValue.UseVisualStyleBackColor = true;
-            this.radioQValue.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
-            // 
-            // radioScore
-            // 
-            this.radioScore.AutoSize = true;
-            this.radioScore.Checked = true;
-            this.radioScore.Location = new System.Drawing.Point(6, 19);
-            this.radioScore.Name = "radioScore";
-            this.radioScore.Size = new System.Drawing.Size(53, 17);
-            this.radioScore.TabIndex = 0;
-            this.radioScore.TabStop = true;
-            this.radioScore.Text = "Score";
-            this.radioScore.UseVisualStyleBackColor = true;
-            this.radioScore.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
-            // 
-            // tbxCoreScoreCutoff
-            // 
-            this.tbxCoreScoreCutoff.Location = new System.Drawing.Point(6, 112);
-            this.tbxCoreScoreCutoff.Name = "tbxCoreScoreCutoff";
-            this.tbxCoreScoreCutoff.Size = new System.Drawing.Size(106, 20);
-            this.tbxCoreScoreCutoff.TabIndex = 9;
-            this.toolTip1.SetToolTip(this.tbxCoreScoreCutoff, resources.GetString("tbxCoreScoreCutoff.ToolTip"));
-            this.tbxCoreScoreCutoff.Leave += new System.EventHandler(this.SettingsControlChanged);
-            // 
-            // comboRetentionTimeAlignment
-            // 
-            this.comboRetentionTimeAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRetentionTimeAlignment.FormattingEnabled = true;
-            this.comboRetentionTimeAlignment.Location = new System.Drawing.Point(181, 25);
-            this.comboRetentionTimeAlignment.Name = "comboRetentionTimeAlignment";
-            this.comboRetentionTimeAlignment.Size = new System.Drawing.Size(127, 21);
-            this.comboRetentionTimeAlignment.TabIndex = 1;
-            this.toolTip1.SetToolTip(this.comboRetentionTimeAlignment, "The retention time alignment setting controls how the times from the accepted pea" +
-        "ks are mapped onto the runs where a new peak needs to be chosen.");
-            this.comboRetentionTimeAlignment.SelectedIndexChanged += new System.EventHandler(this.SettingsControlChanged);
-            // 
-            // lblRetentionTimeAlignment
-            // 
-            this.lblRetentionTimeAlignment.AutoSize = true;
-            this.lblRetentionTimeAlignment.Location = new System.Drawing.Point(178, 9);
-            this.lblRetentionTimeAlignment.Name = "lblRetentionTimeAlignment";
-            this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
-            this.lblRetentionTimeAlignment.TabIndex = 0;
-            this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
-            // 
-            // tbxMaxPeakWidthVariation
-            // 
-            this.tbxMaxPeakWidthVariation.Location = new System.Drawing.Point(181, 158);
-            this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
-            this.tbxMaxPeakWidthVariation.Size = new System.Drawing.Size(70, 20);
-            this.tbxMaxPeakWidthVariation.TabIndex = 27;
-            this.tbxMaxPeakWidthVariation.Text = "20";
-            this.toolTip1.SetToolTip(this.tbxMaxPeakWidthVariation, "Peaks whose retention time is less than this distance from the accepted peaks wil" +
-        "l also be assumed to be correct.");
-            this.tbxMaxPeakWidthVariation.TextChanged += new System.EventHandler(this.SettingsControlChanged);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(178, 138);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(125, 13);
-            this.label2.TabIndex = 26;
-            this.label2.Text = "Max peak width variation";
-            // 
-            // lblMinutes
-            // 
-            this.lblMinutes.AutoSize = true;
-            this.lblMinutes.Location = new System.Drawing.Point(257, 114);
-            this.lblMinutes.Name = "lblMinutes";
-            this.lblMinutes.Size = new System.Drawing.Size(43, 13);
-            this.lblMinutes.TabIndex = 28;
-            this.lblMinutes.Text = "minutes";
-            // 
-            // lblPercentPeakWidth
-            // 
-            this.lblPercentPeakWidth.AutoSize = true;
-            this.lblPercentPeakWidth.Location = new System.Drawing.Point(257, 161);
-            this.lblPercentPeakWidth.Name = "lblPercentPeakWidth";
-            this.lblPercentPeakWidth.Size = new System.Drawing.Size(15, 13);
-            this.lblPercentPeakWidth.TabIndex = 29;
-            this.lblPercentPeakWidth.Text = "%";
             // 
             // PeakImputationForm
             // 
@@ -573,8 +354,6 @@
             this.groupBoxScope.PerformLayout();
             this.groupBoxResults.ResumeLayout(false);
             this.groupBoxResults.PerformLayout();
-            this.groupBoxCutoff.ResumeLayout(false);
-            this.groupBoxCutoff.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -582,16 +361,8 @@
         #endregion
 
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Label lblRetentionTimeAlignment;
-        private System.Windows.Forms.ComboBox comboRetentionTimeAlignment;
         private System.Windows.Forms.TextBox tbxRtDeviationCutoff;
         private System.Windows.Forms.Label lblSdCutoff;
-        private System.Windows.Forms.GroupBox groupBoxCutoff;
-        private System.Windows.Forms.RadioButton radioPValue;
-        private System.Windows.Forms.RadioButton radioPercentile;
-        private System.Windows.Forms.RadioButton radioQValue;
-        private System.Windows.Forms.RadioButton radioScore;
-        private System.Windows.Forms.TextBox tbxCoreScoreCutoff;
         private System.Windows.Forms.CheckBox cbxOverwriteManual;
         private System.Windows.Forms.Button btnImputeBoundaries;
         private System.Windows.Forms.GroupBox groupBoxResults;
@@ -608,24 +379,14 @@
         private System.Windows.Forms.GroupBox groupBoxScope;
         private System.Windows.Forms.RadioButton radioScopeDocument;
         private System.Windows.Forms.RadioButton radioScopeSelection;
-        private System.Windows.Forms.Label lblCutoffPercent;
         private System.Windows.Forms.GroupBox groupBoxDocumentStatistics;
-        private System.Windows.Forms.Label lblUnaligned;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox tbxAlignedDocRtStdDev;
-        private System.Windows.Forms.Label lblAligned;
         private System.Windows.Forms.TextBox tbxUnalignedDocRtStdDev;
         private System.Windows.Forms.TextBox tbxMeanRtStdDev;
         private System.Windows.Forms.Label lblMeanRtStdDev;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label lblNeedRemoval;
-        private System.Windows.Forms.CheckBox cbxAlignAllGraphs;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.Label lblAvgPeakWidthCV;
-        private System.Windows.Forms.TextBox tbxAvgPeakWidthCV;
-        private System.Windows.Forms.Label lblPercentPeakWidth;
         private System.Windows.Forms.Label lblMinutes;
-        private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
-        private System.Windows.Forms.Label label2;
     }
 }

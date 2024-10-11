@@ -7,21 +7,17 @@ namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class RatedPeak : Immutable
     {
-        public RatedPeak(ReplicateFileInfo resultFileInfo, AlignmentFunction alignmentFunction, TimeIntervals chromatogramTimeIntervals, PeakBounds rawPeakBounds, double? score, bool manuallyIntegrated)
+        public RatedPeak(ReplicateFileInfo resultFileInfo, TimeIntervals chromatogramTimeIntervals, PeakBounds rawPeakBounds, double? score, bool manuallyIntegrated)
         {
             ReplicateFileInfo = resultFileInfo;
-            AlignmentFunction = alignmentFunction;
             TimeIntervals = chromatogramTimeIntervals;
             RawPeakBounds = MakeValidPeakBounds(TimeIntervals, rawPeakBounds);
-            AlignedPeakBounds = RawPeakBounds?.Align(alignmentFunction);
             ManuallyIntegrated = manuallyIntegrated;
             Score = score;
         }
 
         public ReplicateFileInfo ReplicateFileInfo { get; }
         public PeakBounds RawPeakBounds { get; }
-
-        public PeakBounds AlignedPeakBounds { get; private set; }
 
         public TimeIntervals TimeIntervals { get; }
 
@@ -73,8 +69,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             return ChangeProp(ImClone(this), im => im.RtShift = value);
         }
-
-        public AlignmentFunction AlignmentFunction { get; }
 
         public class PeakBounds : IFormattable
         {

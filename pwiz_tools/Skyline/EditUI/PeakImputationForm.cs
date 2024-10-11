@@ -56,7 +56,7 @@ namespace pwiz.Skyline.EditUI
             BindingListSource.SetViewContext(viewContext);
             _receiver = PeakImputationData.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
             _receiver.ProgressChange += ReceiverOnProgressChange;
-            var meanStandardDeviation = PeakImputationData.GetMeanRtStandardDeviation(SkylineWindow.Document, null);
+            var meanStandardDeviation = PeakImputationData.GetMeanRtStandardDeviation(SkylineWindow.Document);
             if (meanStandardDeviation.HasValue)
             {
                 string format = meanStandardDeviation > 0.05 ? Formats.RETENTION_TIME : Formats.RoundTrip;
@@ -100,24 +100,10 @@ namespace pwiz.Skyline.EditUI
 
                 var document = _data.Params.Document;
                 tbxUnalignedDocRtStdDev.Text =
-                    PeakImputationData.GetMeanRtStandardDeviation(document, null)
+                    PeakImputationData.GetMeanRtStandardDeviation(document)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
-                tbxAlignedDocRtStdDev.Text =
-                    PeakImputationData.GetMeanRtStandardDeviation(document, _data.Alignments)
-                        ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
-                tbxAvgPeakWidthCV.Text = PeakImputationData.GetAveragePeakWidthCV(document)?.ToString(Formats.CV) ??
-                                         string.Empty;
 
                 progressBar1.Visible = false;
-                if (_data.Alignments != null && cbxAlignAllGraphs.Checked)
-                {
-                    SkylineWindow.RetentionTimeTransformOp =
-                        _data.Alignments.ChangeName(comboRetentionTimeAlignment.SelectedItem.ToString());
-                }
-                else
-                {
-                    SkylineWindow.RetentionTimeTransformOp = null;
-                }
             }
             else
             {
@@ -198,38 +184,14 @@ namespace pwiz.Skyline.EditUI
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
-            ComboHelper.ReplaceItems(comboRetentionTimeAlignment, GetAlignmentOptions(document), 1);
             var scoringModel = GetScoringModelToUse(document);
             tbxScoringModel.Text = scoringModel.Name;
 
-            radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
-            radioQValue.Enabled = HasQValues(document);
-            radioPercentile.Enabled = DocumentWide;
-            var alignmentOption = comboRetentionTimeAlignment.SelectedItem as AlignmentOption;
             var parameters = new PeakImputationData.Parameters(document)
-                .ChangeRtValueType(alignmentOption?.RtValueType)
-                .ChangeAlignmentType(alignmentOption?.AlignmentType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
-                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null))
-                .ChangeMaxPeakWidthVariation(GetDoubleValue(tbxMaxPeakWidthVariation, 0, null) / 100);
+                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null));
             double? scoreCutoff;
-            if (CutoffType == CutoffScoreType.RAW)
-            {
-                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, null, null);
-            }
-            else
-            {
-                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, 0, 100);
-                if (CutoffType == CutoffScoreType.PERCENTILE)
-                {
-                    scoreCutoff /= 100;
-                }
-            }
-
-            lblCutoffPercent.Visible = CutoffType == CutoffScoreType.PERCENTILE;
-
-            parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
             if (!DocumentWide)
             {
                 var peptideIdentityPaths =
@@ -343,12 +305,6 @@ namespace pwiz.Skyline.EditUI
                 get { return _ratedPeak.RawPeakBounds; }
             }
 
-            [ChildDisplayName("Aligned{0}")]
-            public RatedPeak.PeakBounds AlignedBounds
-            {
-                get { return _ratedPeak.AlignedPeakBounds; }
-            }
-
             public bool ManuallyIntegrated
             {
                 get
@@ -407,13 +363,13 @@ namespace pwiz.Skyline.EditUI
 
             public override string ToString()
             {
-                return TextUtil.ColonSeparate(ResultFile?.Replicate.ToString(), _ratedPeak.AlignedPeakBounds?.ToString());
+                return TextUtil.ColonSeparate(ResultFile?.Replicate.ToString(), _ratedPeak.RawPeakBounds?.ToString());
             }
 
             public string ToString(string format, IFormatProvider formatProvider)
             {
                 return TextUtil.ColonSeparate(ResultFile.Replicate.ToString(),
-                    _ratedPeak.AlignedPeakBounds?.ToString(format, formatProvider));
+                    _ratedPeak.RawPeakBounds?.ToString(format, formatProvider));
             }
 
             public RatedPeak GetRatedPeak()
@@ -462,99 +418,6 @@ namespace pwiz.Skyline.EditUI
         {
             OnDocumentChanged();
         }
-        private CutoffScoreType _oldCutoffType = CutoffScoreType.RAW;
-
-        public CutoffScoreType CutoffType
-        {
-            get
-            {
-                if (radioQValue.Checked)
-                {
-                    return CutoffScoreType.QVALUE;
-                }
-
-                if (radioPValue.Checked)
-                {
-                    return CutoffScoreType.PVALUE;
-                }
-
-                if (radioPercentile.Checked)
-                {
-                    return CutoffScoreType.PERCENTILE;
-                }
-                return CutoffScoreType.RAW;
-            }
-
-            set
-            {
-                if (value == CutoffScoreType.QVALUE)
-                {
-                    radioQValue.Checked = true;
-                }
-
-                if (value == CutoffScoreType.PVALUE)
-                {
-                    radioPValue.Checked = true;
-                }
-
-                if (value == CutoffScoreType.PERCENTILE)
-                {
-                    radioPercentile.Checked = true;
-                }
-
-                if (value == CutoffScoreType.RAW)
-                {
-                    radioScore.Checked = true;
-                }
-            }
-        }
-
-        private void CutoffTypeChanged(object sender, EventArgs e)
-        {
-            UpdateCutoffValue();
-        }
-
-        private void UpdateCutoffValue()
-        {
-            var newCutoffType = CutoffType;
-            if (newCutoffType == _oldCutoffType)
-            {
-                return;
-            }
-            if (_inChange)
-            {
-                return;
-            }
-            try
-            {
-                _inChange = true;
-                var cutoffValue = GetDoubleValue(tbxCoreScoreCutoff, null, null);
-                if (cutoffValue.HasValue)
-                {
-                    var score = _oldCutoffType.ToRawScore(_scoreConversionData, cutoffValue.Value);
-                    if (score.HasValue && !double.IsNaN(score.Value))
-                    {
-                        var newCutoff = newCutoffType.FromRawScore(_scoreConversionData, score.Value);
-                        if (newCutoff.HasValue && !double.IsNaN(newCutoff.Value))
-                        {
-                            if (newCutoffType == CutoffScoreType.PERCENTILE)
-                            {
-                                newCutoff *= 100;
-                            }
-                            tbxCoreScoreCutoff.Text = newCutoff.ToString();
-                        }
-                    }
-                }
-                _oldCutoffType = newCutoffType;
-                UpdateUi();
-            }
-            finally
-            {
-                _inChange = false;
-            }
-
-        }
-
         private double? GetDoubleValue(TextBox textBox, double? min, double? max)
         {
             var text = textBox.Text.Trim();
@@ -679,13 +542,7 @@ namespace pwiz.Skyline.EditUI
                             }
                             var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
                                 rejectedPeak.ReplicateFileInfo);
-                            var bestPeakBounds =
-                                exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
-                            if (bestPeakBounds == null)
-                            {
-                                continue;
-                            }
-
+                            var bestPeakBounds =exemplaryBounds;
                             newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
                             changeCount++;
                         }
@@ -775,63 +632,6 @@ namespace pwiz.Skyline.EditUI
             yield return new ViewSpec().SetRowType(typeof(Row))
                 .SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)))
                 .SetSublistId(ppPeaks).SetName("Details");
-        }
-
-        private class AlignmentOption
-        {
-            public AlignmentOption(string name, RtValueType rtValueType, AlignmentType alignmentType)
-            {
-                Name = name;
-                RtValueType = rtValueType;
-                AlignmentType = alignmentType;
-            }
-
-            public string Name { get; }
-            public override string ToString()
-            {
-                return Name;
-            }
-
-            public RtValueType RtValueType { get; }
-            public AlignmentType AlignmentType { get; }
-
-            protected bool Equals(AlignmentOption other)
-            {
-                return Name == other.Name && Equals(RtValueType, other.RtValueType) && Equals(AlignmentType, other.AlignmentType);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((AlignmentOption)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hashCode = (Name != null ? Name.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (RtValueType != null ? RtValueType.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (AlignmentType != null ? AlignmentType.GetHashCode() : 0);
-                    return hashCode;
-                }
-            }
-        }
-
-        private static IEnumerable<AlignmentOption> GetAlignmentOptions(SrmDocument document)
-        {
-            yield return new AlignmentOption(string.Empty, null, null);
-            yield return new AlignmentOption("Peak Apexes", RtValueType.PEAK_APEXES, AlignmentType.CONSENSUS);
-            // yield return new AlignmentOption("Good peak apex consensus", RtValueType.HIGH_SCORING_PEAK_APEXES,
-            //     AlignmentType.CONSENSUS);
-            // yield return new AlignmentOption("Peak Apex KDE", RtValueType.PEAK_APEXES, AlignmentType.KDE);
-            if (RtValueType.PSM_TIMES.IsValidFor(document))
-            {
-                yield return new AlignmentOption("PSM Times", RtValueType.PSM_TIMES, AlignmentType.CONSENSUS);
-//                yield return new AlignmentOption("PSM Times KDE", RtValueType.PSM_TIMES, AlignmentType.KDE);
-            }
         }
 
         public class ImputeButtonCell : DataGridViewButtonCell

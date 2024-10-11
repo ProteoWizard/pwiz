@@ -140,18 +140,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public class Parameters : Immutable
         {
-            public Parameters(SrmDocument document, RtValueType rtValueType)
+            public Parameters(SrmDocument document)
             {
                 Document = document;
-                RtValueType = rtValueType;
             }
             public SrmDocument Document { get; private set; }
 
-            public RtValueType RtValueType { get; private set; }
-
             protected bool Equals(Parameters other)
             {
-                return ReferenceEquals(Document, other.Document) && Equals(RtValueType, other.RtValueType);
+                return ReferenceEquals(Document, other.Document);
             }
 
             public override bool Equals(object obj)
@@ -166,7 +163,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             {
                 unchecked
                 {
-                    return (RuntimeHelpers.GetHashCode(Document) * 397) ^ RtValueType.GetHashCode();
+                    return RuntimeHelpers.GetHashCode(Document);
                 }
             }
         }
