@@ -307,7 +307,6 @@ struct PWIZ_API_DECL CompassData
     virtual bool canConvertOneOverK0AndCCS() const { return false; }
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const { return 0; }
 
-    virtual double oneOverK0ToCCS(double oneOverK0, int charge) const { return 0; }
     virtual double ccsToOneOverK0(double ccs, double mz, int charge) const { return 0; }
 
     /// returns the number of spectra available from the MS source
