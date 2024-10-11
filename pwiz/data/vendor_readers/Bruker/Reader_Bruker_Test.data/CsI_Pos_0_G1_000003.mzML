@@ -68,8 +68,6 @@
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="7.81485056e08"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="5.704013312e09"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="346.508114349683" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="1999.965681673184" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
