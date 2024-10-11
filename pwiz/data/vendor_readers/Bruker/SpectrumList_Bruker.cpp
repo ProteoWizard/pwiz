@@ -24,7 +24,6 @@
 
 
 #include "SpectrumList_Bruker.hpp"
-
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 
 
@@ -487,26 +486,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                     }*/
                     result->set(MS_profile_spectrum);
                 }
-            }
-        }
-
-        if (result->getMZArray() != nullptr)
-        {
-            auto mz = result->getMZArray()->data;
-
-            if (mz.size() > 0)
-            {
-                auto it = std::min_element(mz.begin(), mz.end());
-                std::size_t index1 = std::distance(mz.begin(), it);
-
-                it = std::max_element(mz.begin(), mz.end());
-                std::size_t index2 = std::distance(mz.begin(), it);
-
-                if (mz.size() > index1)
-                    result->set(MS_lowest_observed_m_z, mz[index1], MS_m_z);
-
-                if (mz.size() > index2)
-                    result->set(MS_highest_observed_m_z, mz[index2], MS_m_z);
             }
         }
     /*}
