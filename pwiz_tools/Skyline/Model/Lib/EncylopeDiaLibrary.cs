@@ -99,6 +99,7 @@ namespace pwiz.Skyline.Model.Lib
         private readonly PooledSqliteConnection _pooledSqliteConnection;
         // List of entries which includes items which do not have a spectrum but which do have peak boundaries
         private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
+        private bool _hasExplicitBoundsQValues;
 
         private EncyclopeDiaLibrary()
         {
@@ -394,6 +395,12 @@ on one.SourceFile = two.SourceFile";
             {
                 _allLibraryEntries = new LibKeyMap<ElibSpectrumInfo>(allEntries, allEntries.Select(entry => entry.Key.LibraryKey));
             }
+
+            // Some EncyclopeDIA libraries assign the same q-value to all the replicates for a given peptide
+            // so we only want to say we have q-values if the numbers are sometimes different.
+            _hasExplicitBoundsQValues = _allLibraryEntries.Any(entry =>
+                entry.FileDatas.Values.Select(fileData => fileData.PeakBounds?.Score)
+                    .OfType<double>().Distinct().Count() > 1);
         }
 
         private void WriteCache(ILoadMonitor loader)
@@ -669,7 +676,7 @@ on one.SourceFile = two.SourceFile";
 
         public override ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
-            int fileId = FindFileInList(filePath, _sourceFiles);
+            int fileId = FindSource(filePath);
             if (fileId < 0)
             {
                 return null;
@@ -698,6 +705,11 @@ on one.SourceFile = two.SourceFile";
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
+        }
+
+        public override bool HasExplicitBoundsQValues
+        {
+            get { return _hasExplicitBoundsQValues; }
         }
 
         public override bool HasExplicitBounds
@@ -758,7 +770,7 @@ on one.SourceFile = two.SourceFile";
 
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
-            return TryGetRetentionTimes(FindFileInList(filePath, _sourceFiles), filePath.ToString(), out retentionTimes);
+            return TryGetRetentionTimes(FindSource(filePath), filePath.ToString(), out retentionTimes);
         }
 
         private bool TryGetRetentionTimes(int fileId, string filePath, out LibraryRetentionTimes retentionTimes)
@@ -786,6 +798,12 @@ on one.SourceFile = two.SourceFile";
             return true;
         }
 
+        // ReSharper disable PossibleMultipleEnumeration
+        private int FindSource(MsDataFileUri sourceFile)
+        {
+            return FindFileInList(sourceFile, _sourceFiles);
+        }
+
         public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             retentionTimes = null;
@@ -794,7 +812,7 @@ on one.SourceFile = two.SourceFile";
             {
                 return false;
             }
-            int fileId = FindFileInList(filePath, _sourceFiles);
+            int fileId = FindSource(filePath);
             if (fileId < 0)
             {
                 return false;
@@ -816,7 +834,7 @@ on one.SourceFile = two.SourceFile";
         public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)
-                iFile = FindFileInList(MsDataFileUri.Parse(filePath), _sourceFiles);
+                iFile = FindSource(MsDataFileUri.Parse(filePath));
             if (iFile.Value < 0)
             {
                 return new double[0];
