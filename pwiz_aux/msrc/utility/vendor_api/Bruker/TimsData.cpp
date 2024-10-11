@@ -285,7 +285,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     vector<double> scanNumbers(maxNumScans+1);
     for (int i = 0; i <= maxNumScans; ++i)
         scanNumbers[i] = i;
-
     for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
     {
         vector<double>& oneOverK0 = oneOverK0ByScanNumberByCalibration_[i];
@@ -320,7 +319,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     {
         if (isDdaPasef)
         {
-            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, LargestPeakMz, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
+            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
                               "FROM PasefFrameMsMsInfo f "
                               "JOIN Precursors p ON p.id=f.precursor " +
                               pasefIsolationMzFilter +
@@ -338,7 +337,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
-
                 PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
 
                 info.scanBegin = row.get<int>(++idx);
@@ -347,7 +345,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.isolationMz = row.get<double>(++idx);
                 info.isolationWidth = row.get<double>(++idx);
                 info.collisionEnergy = row.get<double>(++idx);
-                largestPeakMz = row.get<double>(++idx);
                 info.monoisotopicMz = row.get<double>(++idx);
                 info.charge = row.get<int>(++idx);
                 info.avgScanNumber = row.get<double>(++idx);
@@ -387,8 +384,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 // NB: some data has ScanNumEnd > NumScans, which should not happen because ScanNumEnd is supposed to be an exclusive 0-based index, so clamp it here
                 info.numScans = min(frame->numScans(), 1 + scanEnd) - scanBegin;
 
-                const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
-
                 if (!isolationMzFilter_.empty())
                 {
                     // swap values for min/max below
@@ -412,6 +407,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                             filteredScanEnd = scanEnd;
                             break;
                         }
+
+                        const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
 
                         // 1/k0 is inverse to scan number (lowest scan number is highest 1/k0)
                         auto scanNumLowerBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().second); --scanNumLowerBoundItr;
@@ -541,22 +538,22 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     {
                         const auto& precursor = frame->pasef_precursor_info_[p];
 
-                        // add MS2s that don't have PASEF info (between last precursor's scanEnd and this precursor's scanBegin)
-                        if (p > 0)
-                        {
-                            const auto& lastPrecursor = frame->pasef_precursor_info_[p - 1];
-                            for (int i = lastPrecursor->scanEnd + 1; i < precursor->scanBegin; ++i, ++scanIndex)
+                            // add MS2s that don't have PASEF info (between last precursor's scanEnd and this precursor's scanBegin)
+                            if (p > 0)
                             {
-                                spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
+                                const auto& lastPrecursor = frame->pasef_precursor_info_[p - 1];
+                                for (int i = lastPrecursor->scanEnd + 1; i < precursor->scanBegin; ++i, ++scanIndex)
+                                {
+                                    spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
+                                }
                             }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < precursor->scanBegin; ++i, ++scanIndex)
+                            else
                             {
-                                spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
+                                for (int i = 0; i < precursor->scanBegin; ++i, ++scanIndex)
+                                {
+                                    spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
+                                }
                             }
-                        }
 
                         // add MS2s for this precursor
                         for (int i = precursor->scanBegin; i <= precursor->scanEnd; ++i, ++scanIndex)
@@ -602,11 +599,6 @@ bool TimsDataImpl::canConvertOneOverK0AndCCS() const { return true; }
 double TimsDataImpl::oneOverK0ToCCS(double oneOverK0, double mz, int charge) const
 {
     return tims_oneoverk0_to_ccs_for_mz(oneOverK0, charge, mz);
-}
-
-double TimsDataImpl::oneOverK0ToCCS(double oneOverK0, int charge) const
-{
-    return oneOverK0ToCCS(oneOverK0, largestPeakMz, charge);
 }
 
 double TimsDataImpl::ccsToOneOverK0(double ccs, double mz, int charge) const
@@ -862,21 +854,16 @@ void TimsSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) c
     if (HasPasefPrecursorInfo())
     {
         const auto& info = GetPasefPrecursorInfo();
-        isolationInfo.resize(1, IsolationInfo{
-	                             info.isolationMz, IsolationMode_On, info.collisionEnergy,
-	                             info.intensity
-                             });
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
     }
     else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
     {
         const auto& info = getDiaPasefIsolationInfo();
-        isolationInfo.resize(1, IsolationInfo{
-	                                info.isolationMz, IsolationMode_On, info.collisionEnergy, 0
-                             });
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
     }
     else if (frame_.precursorMz_.is_initialized())
     {
-        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On,  0 });
+        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On, 0 });
     }
 }
 
@@ -916,18 +903,20 @@ int TimsSpectrum::getChargeState() const
 {
     if (HasPasefPrecursorInfo())
         return GetPasefPrecursorInfo().charge;
-    return frame_.chargeState_.get_value_or(0);
+    else
+        return frame_.chargeState_.get_value_or(0);
 }
 
 double TimsSpectrum::getIsolationWidth() const
 {
     if (HasPasefPrecursorInfo())
         return GetPasefPrecursorInfo().isolationWidth;
-
-    if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
+    else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
+    {
         return getDiaPasefIsolationInfo().isolationWidth;
-
-    return frame_.isolationWidth_.get_value_or(0);
+    }
+    else
+        return frame_.isolationWidth_.get_value_or(0);
 }
 
 int TimsSpectrum::getWindowGroup() const
