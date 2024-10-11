@@ -18,8 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 
 namespace pwiz.Common.Graph
@@ -232,7 +232,7 @@ namespace pwiz.Common.Graph
             {
                 return point => point.Y;
             }
-            Trace.TraceError(@"Could not determine type of axis {0}", axis);
+            Messages.WriteAsyncDebugMessage(@"Could not determine type of axis {0}", axis);
             return null;
         }
 

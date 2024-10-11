@@ -124,7 +124,8 @@ namespace pwiz.SkylineTestFunctional
                 // Choose a scheduling replicate (the one saved above)
                 RunUI(() => Assert.IsTrue(chooseSchedulingReplicatesDlg.TrySetReplicateChecked(
                     chromSetForScheduling, true)));
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(chooseSchedulingReplicatesDlg.OkDialog);
+                var promptToSaveDlg = ShowDialog<AlertDlg>(chooseSchedulingReplicatesDlg.OkDialog);
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(promptToSaveDlg.ClickNo);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("40fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
@@ -161,6 +162,7 @@ namespace pwiz.SkylineTestFunctional
                 const string calcName = "TestCalculator";
                 const string regressionName = "TestCalculatorAutoCalcRegression";
                 var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() => peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Prediction);
                 var editIrtDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.AddCalculator);
                 RunUI(() =>
                 {
@@ -179,16 +181,15 @@ namespace pwiz.SkylineTestFunctional
                     editRtDlg.SetTimeWindow(1.0);
                 });
                 OkDialog(editRtDlg, editRtDlg.OkDialog);
-                RunUI(() =>
-                {
-                    peptideSettingsDlg.ChooseRegression(regressionName);
-                    peptideSettingsDlg.UseMeasuredRT(false);
-                });
+                WaitForConditionUI(() => Equals(regressionName, peptideSettingsDlg.RetentionTimeRegressionName),
+                    () => string.Format("Expected regression name '{0}' not set. Found '{1}' instead.", regressionName, peptideSettingsDlg.RetentionTimeRegressionName));
+                RunUI(() => peptideSettingsDlg.UseMeasuredRT(false));
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
                 docBeforeImport = WaitForDocumentChange(docBeforeSettingsChange);
                 AssertEx.AreEqual(calcName, SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator.Name);
                 Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                var promptToSaveDlg = ShowDialog<AlertDlg>(SkylineWindow.ImportResults);
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(promptToSaveDlg.ClickNo);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);

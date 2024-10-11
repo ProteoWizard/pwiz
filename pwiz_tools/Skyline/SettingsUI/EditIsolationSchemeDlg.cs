@@ -447,7 +447,7 @@ namespace pwiz.Skyline.SettingsUI
                 bool overlap = Overlap;
                 int increment = overlap ? 2 : 1;
                 int subtraction = overlap ? 3 : 1;
-                const double tolerance = 0.0001;
+                const double tolerance = 0.001;
                 for (int i = 0; i < sortedWindowList.Count - subtraction; i += increment)
                 {
                     for (int j = 0; j < increment; j++)

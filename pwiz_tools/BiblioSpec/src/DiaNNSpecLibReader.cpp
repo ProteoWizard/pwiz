@@ -20,6 +20,7 @@
 #include "pwiz/data/common/Unimod.hpp"
 #include "libraries/csv.h"
 #include <boost/type_index.hpp>
+#include <pwiz/data/proteome/AminoAcid.hpp>
 
 namespace BiblioSpec
 {
@@ -184,14 +185,27 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
         if (symbol < 'A' || symbol > 'Z') {
             if (symbol != '(' && symbol != '[') continue;
             end = closing_bracket(name, symbol, i);
+            int position = max(1, static_cast<int>(j));
 
             if (name.find("(UniMod:", i, modPrefixLength) != i)
-                throw std::runtime_error("unable to handle mod in library entry: " + name);
+            {
+                string potentialMass = name.substr(i + 1, end - i - 1);
+                if (potentialMass.find_first_not_of("01234567890.") != string::npos)
+                    throw std::runtime_error("unable to handle mod in library entry as either a UniMod id or delta mass: " + potentialMass + " in " + name);
+                double modMass = lexical_cast<double>(potentialMass);
+                if (i > 0)
+                    modMass -= pwiz::proteome::AminoAcid::Info::record(name[i - 1]).residueFormula.monoisotopicMass();
+
+                if (!mods.empty() && mods.back().position == position)
+                    mods.back().deltaMass += modMass;
+                else
+                    mods.emplace_back(position, modMass);
+                continue;
+            }
 
             i += modPrefixLength;
-            mod = name.substr(i, end-i);
+            mod = name.substr(i, end - i);
             CVID unimodCvid = (CVID) (UNIMOD_unimod_root_node + lexical_cast<int>(mod));
-            int position = max(1, static_cast<int>(j));
             if (!mods.empty() && mods.back().position == position)
                 mods.back().deltaMass += unimod::modification(unimodCvid).deltaMonoisotopicMass();
             else 

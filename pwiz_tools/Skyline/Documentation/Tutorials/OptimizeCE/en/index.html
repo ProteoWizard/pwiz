@@ -1,0 +1,773 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Collision Energy Optimization</h1>
+    <p>
+        Skyline supports a rich user interface and fully automated pipeline for predicting and optimizing SRM instrument parameters like collision
+        energy (CE) and declustering potential (DP). This tutorial focuses on CE optimization, but the same principles apply to DP optimization. In
+        2016, concept was expanded to include compensation voltage (CoV) on the SCIEX SelexION and more recently Thermo FAIMS instruments. It could
+        eventually apply to other parameters, such as cone voltage and RF lens. This functionality described here has been tested and in use for over
+        a decade on instruments from Agilent, SCIEX, Shimadzu, Thermo, and Waters.
+    </p>
+    <p>
+        In most cases, the default method in Skyline of assigning CE values to transitions sacrifices very little peak area to full, empirical
+        optimization of each transition separately<sup>1</sup>, but Skyline provides ample support for performing per-transition CE optimization when
+        you feel the need. The default method in Skyline for calculating CE values is to use a linear equation of the form:
+    </p>
+    <p>
+        CE = slope * (precursor <i>m/z</i>) + intercept
+    </p>
+    <p>
+        Each charge state is allowed to have a separate equation.
+    </p>
+    <p>
+        The default equations provided with a new Skyline installation generally cover charges 2 and 3 for charge 1 fragments of peptides. If you are
+        working with higher charge state precursors or fragments, then individual fragment optimization is likely to provide greater
+        benefit<sup>2</sup>. If you are working with molecules other than peptides, you should consult the “<a
+            href="https://skyline.ms/tutorial_small_method_ce.url">Small Molecule Method Development and CE Optimization</a>” tutorial.
+    </p>
+    <p>
+        This tutorial will cover how to use Skyline both to derive your own linear equations for CE and to perform empirical, per-transition
+        optimization.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/OptimizeCE.zip">https://skyline.ms/tutorials/OptimizeCE.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\OptimizeCE
+    </p>
+    <p>
+        It will contain all the files necessary for this tutorial. Open the file CE_Vantage_15mTorr.sky in this folder, either by double-clicking on it
+        in Windows Explorer, or by clicking <b>Open</b> in the <b>File</b> menu in Skyline.
+    </p>
+    <h1>Deriving a New Linear Equation</h1>
+    <p>
+        In most cases, you will be able to use an existing linear equation for calculating the CE of your SRM transitions for peptides. If you have
+        used Skyline to run any experiments before, then you have probably already done this. Skyline also makes it easy to derive your own linear
+        equation, or just to check that your system produces similar results to the linear equation you intend to use. This tutorial will walk you
+        through how we did this originally for our Thermo TSQ Vantage.
+    </p>
+    <p>
+        The file CE_Vantage_15mTorr.sky, which you have opened, contains 20 charge 2 precursors and 10 charge 3 precursors, which we measured
+        successfully in the Michrom bovine protein mix. After determining the CE values that produce the maximum peak area for each of these
+        precursors Skyline can perform a simple linear regression to derive the equation we seek. Skyline can also generate the methods containing the
+        measurements it needs to determine those optimal CE values.
+    </p>
+    <p>
+        The methods Skyline creates will contain multiple transitions for each product ion to be measured over a range of CE values centered at the CE
+        predicted by an existing linear equation.
+    </p>
+    <p>
+        To look at the linear equation settings used in this experiment do the following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>From the <b>Collision energy</b> drop-list, Choose <b>&lt;Edit list…&gt;</b>.</li>
+        <li>In the <b>Collision Energy Regression</b> list, select “Thermo”.</li>
+        <li>Click the <b>Edit</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        You should be presented with a form that looks like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <p>
+        In it you can see the slope and y-intercept values used for both charge 2 and charge 3 precursors. Any precursor charges that are not covered
+        will use the linear equation for the closest charge. At the bottom of the form, you can also see the fields <b>Step count</b> and
+        <b>Step size</b>. These tell Skyline how many transitions to measure for each product ion, at what voltage interval.
+    </p>
+    <p>
+        For this experiment, we used 5 steps on either side of the equation predicted value, for a total of 11 transitions per product ion, each 1 volt
+        apart. In your own experiments you may choose to change these values to better suit your instrument and your confidence in the original linear
+        equation.
+    </p>
+    <p>
+        For this tutorial, simply cancel out of the forms you have opened, and we will turn to method creation.
+    </p>
+    <h2>Measuring Retention Times for Method Scheduling</h2>
+    <p>
+        The optimization method for this tutorial will contain 11 transitions for every product ion or 1320 transitions total. Initial unscheduled
+        measurement of all 1320 transitions required 22 sample injections. By using the Skyline support for scheduled methods, we were able to
+        decrease this number to 5 and even 4 sample injections.
+    </p>
+    <p>
+        The first step in creating these scheduled methods is to acquire unscheduled SRM for the peptides in the document using the default equation CE
+        values. The unscheduled data will be used to record the peptide retention time ranges for building a scheduled SRM method for the actual CE
+        optimization. To create an unscheduled transition list do the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and then click <b>Transition List</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Make sure the form looks like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Specify your OptimizeCE folder as the location to save.</li>
+        <li>Name the file CE_Vantage_15mTorr_unscheduled.csv</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        When you open the resulting CSV file in Excel, you will find it is an unscheduled Skyline transition list for a Thermo Scientific SRM
+        instrument (pre-Quantiva), as shown below, with 6 columns in the order precursor m/z, product m/z, CE, peptide sequence, protein name,
+        fragment ion:
+    </p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3624</td>
+                <td>18.9</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.3253</td>
+                <td>18.9</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>504.2413</td>
+                <td>18.9</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y4</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>390.1983</td>
+                <td>18.9</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y3</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>853.4302</td>
+                <td>21.4</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y7</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>754.3618</td>
+                <td>21.4</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>641.2777</td>
+                <td>21.4</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>526.2508</td>
+                <td>21.4</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y4</td>
+            </tr>
+            <tr>
+                <td>623.2959</td>
+                <td>1047.484</td>
+                <td>24.5</td>
+                <td>TPEVDDEALEK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y9</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        We used this method to acquire SRM data for the 120 transitions with the default, predicted CE. You can import the resulting instrument output
+        file by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b>, and then click <b>Results</b>.</li>
+        <li>Select <b>Add one new replicate</b>.</li>
+        <li>In the <b>Name</b> field, enter ‘Unscheduled’.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Select the file CE_Vantage_15mTorr_unscheduled.raw</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        After the import is completed, Skyline should look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        You can select a few of the peptides in the tree-view to see their chromatograms in the chart on the right.
+    </p>
+    <h2>Creating Optimization Methods</h2>
+    <p>
+        Skyline now has the information it needs to create scheduled optimization methods for the 1320 transitions required. To create these methods:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and then click <b>Transition List</b>.</li>
+        <li>Edit the form to look like this:</li>
+    </ul>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        NOTE: We eventually realized that 132 was a better value for <b>Max concurrent transitions</b>, because it allows 3 precursors * 4
+        transitions * 11 CE values to be measured concurrently. The number 110 used in this tutorial is a vestige of initial measurements made with 5
+        transitions. We encourage you to consider your transitions per precursor * CE values carefully in choosing this value to maximize your
+        measurements per method.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Specify your OptimizeCE folder as the location to save.</li>
+        <li>Name the file CE_Vantage_15mTorr.csv</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        These actions should cause Skyline to create 5 new transition lists of similar size, and Windows Explorer should show
+        something like the following for your OptimizeCE folder:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        If you open one of the CSV files in Excel, it should contain a transition list like the one below, with 9 columns in the order precursor m/z,
+        product m/z, CE, start time, stop time, polarity, peptide sequence, protein name, fragment ion:
+    </p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3124</td>
+                <td>13.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3224</td>
+                <td>14.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3324</td>
+                <td>15.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3424</td>
+                <td>16.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3524</td>
+                <td>17.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3624</td>
+                <td>18.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3724</td>
+                <td>19.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3824</td>
+                <td>20.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.3924</td>
+                <td>21.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.4024</td>
+                <td>22.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>688.4124</td>
+                <td>23.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.2753</td>
+                <td>13.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.2853</td>
+                <td>14.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.2953</td>
+                <td>15.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.3053</td>
+                <td>16.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.3153</td>
+                <td>17.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>458.7404</td>
+                <td>617.3253</td>
+                <td>18.9</td>
+                <td>7.81</td>
+                <td>11.81</td>
+                <td>1</td>
+                <td>IDALNENK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        There are 11 CE values for each product ion. The product m/z value is incremented slightly for each value as first described by Sherwood et
+        al., 2009<sup>3</sup>. This provides a platform independent means for Skyline to recognize the CE values when the measured data is imported.
+    </p>
+    <h2>Analyzing Optimization Data</h2>
+    <p>
+        Once data for each of the exported methods is collected, you can import it into Skyline for subsequent analysis. For this tutorial, you will
+        import the instrument output files we have supplied by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b>, and then click <b>Results</b>.</li>
+        <li>Select <b>Add one new replicate</b>.</li>
+        <li>In the <b>Name</b> field, enter “Optimize CE”.</li>
+        <li>From the <b>Optimizing</b> drop-list, choose “Collision Energy”.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the Import Results Files dialog use shift-click to select the 5 raw files<br />CE_Vantage_15mTorr_0001 – 0005.raw</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        While the files are importing, do the following to prepare for viewing the collected data:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b>, and then click <b>Single</b> (F10).</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b>, and then click <b>Replicate Comparison</b> (F7).</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b>, and then click <b>Best Peak</b> (F11).</li>
+        <li>Arrange the graph windows for side-by-side viewing.</li>
+        <li>Select a peptide or precursor in the <b>Targets</b> view.</li>
+    </ul>
+    <p>
+        Once the data is loaded, Skyline should look something like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <p>
+        The red bar in the middle of the <b>Peak Areas</b> view and the red curve among the chromatograms is the measurement for the
+        transition with the CE calculated by the starting linear equation. In the image above, the maximum peak area was achieved at a CE value 4
+        volts lower (labeled Step -4 in the legend) than the calculated default CE.
+    </p>
+    <p>
+        You should now review the peaks for all of the peptide precursors to verify the integration boundaries for each peak. When you get to the
+        peptide EGIHAQQK, you will find that it measured very little signal. Given the quality of the unscheduled peak, this may be due to a retention
+        time shift that caused the peptide to elute outside the scheduling window. Before recalculating the linear equation for CE with these data,
+        you will want to delete this peptide.
+    </p>
+    <p>
+        The first peptide in the document, IDALNENK, is probably also questionable given its significant drop in intensity and its shift from a
+        retention time of 9.8 minutes to 11.0 minutes. But it is worth looking at from another perspective:
+    </p>
+    <ul>
+        <li>Select IDALNENK in the <b>Targets</b> view.</li>
+        <li>Right-click in the peak area chart, choose <b>Normalize To</b> and click <b>Total</b>. </li>
+    </ul>
+    <p>
+        In this view all peak areas are normalized to the area of the calculated CE value in red. The area of the peak with the calculated CE is given
+        100%, and the optimization values go from almost invisible beside the unscheduled peak to showing a curve a little less smooth than others,
+        but not that bad.
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        For this tutorial, however, remove this peptide before calculating the new equation for the Thermo TSQ Vantage.
+    </p>
+    <h2>Creating a New Equation for CE</h2>
+    <p>
+        To create a newly optimized linear equation for CE using this data, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, choose <b>Transition Settings</b>.</li>
+        <li>From the <b>Collision energy</b> drop-list, choose <b>&lt;Add…&gt;</b>.</li>
+        <li>In the <b>Name</b> field, enter ‘Thermo Vantage Tutorial’.</li>
+        <li>Click the <b>Use Results</b> button.</li>
+    </ul>
+    <p>
+        If you deleted the two suggested peptides, Skyline should calculate the equation coefficients as:
+    </p>
+    <table>
+        <tr>
+            <td>Charge</td>
+            <td>Slope</td>
+            <td>Intercept</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>0.0305</td>
+            <td>2.5061</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>0.0397</td>
+            <td>1.4217</td>
+        </tr>
+    </table>
+    <p>
+        You may wonder how close they are to the original values.
+    </p>
+    <ul>
+        <li>Click the <b>Show Graph</b> button to find out.</li>
+    </ul>
+    <p>
+        Skyline will present the following graphs:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <p>
+        The points correlate very well to the new linear equation, and appear to be on average 3-4 volts below the CE values chosen by the default
+        equations.
+    </p>
+    <ul>
+        <li>To return to the document, click the <b>Close</b> button and two <b>OK</b> buttons.</li>
+    </ul>
+    <h1>Optimizing Each Transition</h1>
+    <p>
+        The document settings have been changed to make Skyline use a new linear equation for calculating the CE values in any new method or transition
+        list export. But what if you are planning on moving to measuring large numbers of replicates, and just want to use the CE value which produced
+        the maximum peak area in the optimization data set you imported?
+    </p>
+    <p>
+        To cause Skyline to use optimal measured values in exported methods:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Check the <b>Use optimization values when present</b> checkbox.</li>
+        <li>From the <b>Optimize by</b> drop-list, choose <b>Transition</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        And, to export a method with each transition optimized separately:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and click <b>Transition List</b>.</li>
+        <li>Select <b>Single method</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Name the file CE_Vantage_15mTorr_optimized.csv</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        If you open the exported transition list in Excel, you will see the same 9 columns, because this is still a scheduled method. Even when you
+        have enough cycle time to cover all your transitions for the entire gradient of your experiment, the instrument output files will be smaller
+        and import faster, if you use a scheduled method. These are obviously desirable attributes of data for a large enough multi-replicate study to
+        warrant empirical CE optimization of each transition.
+    </p>
+    <p>
+        The exported transition list should look like:
+    </p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>533.295</td>
+                <td>853.4302</td>
+                <td>17.4</td>
+                <td>16.35</td>
+                <td>20.35</td>
+                <td>1</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y7</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>754.3618</td>
+                <td>17.4</td>
+                <td>16.35</td>
+                <td>20.35</td>
+                <td>1</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>641.2777</td>
+                <td>18.4</td>
+                <td>16.35</td>
+                <td>20.35</td>
+                <td>1</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>533.295</td>
+                <td>526.2508</td>
+                <td>23.4</td>
+                <td>16.35</td>
+                <td>20.35</td>
+                <td>1</td>
+                <td>VLVLDTDYK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y4</td>
+            </tr>
+            <tr>
+                <td>623.2959</td>
+                <td>1047.484</td>
+                <td>21.5</td>
+                <td>10.98</td>
+                <td>14.98</td>
+                <td>1</td>
+                <td>TPEVDDEALEK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y9</td>
+            </tr>
+            <tr>
+                <td>623.2959</td>
+                <td>918.4415</td>
+                <td>21.5</td>
+                <td>10.98</td>
+                <td>14.98</td>
+                <td>1</td>
+                <td>TPEVDDEALEK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y8</td>
+            </tr>
+            <tr>
+                <td>623.2959</td>
+                <td>819.3731</td>
+                <td>22.5</td>
+                <td>10.98</td>
+                <td>14.98</td>
+                <td>1</td>
+                <td>TPEVDDEALEK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y7</td>
+            </tr>
+            <tr>
+                <td>623.2959</td>
+                <td>460.2766</td>
+                <td>24.5</td>
+                <td>10.98</td>
+                <td>14.98</td>
+                <td>1</td>
+                <td>TPEVDDEALEK</td>
+                <td>gi|2194089|Beta_Lactoglobulin</td>
+                <td>y4</td>
+            </tr>
+            <tr>
+                <td>471.2562</td>
+                <td>769.4567</td>
+                <td>16.3</td>
+                <td>15.03</td>
+                <td>19.03</td>
+                <td>1</td>
+                <td>DGGIDPLVR</td>
+                <td>gi|129823|Lactoperoxidase</td>
+                <td>y7</td>
+            </tr>
+            <tr>
+                <td>471.2562</td>
+                <td>712.4352</td>
+                <td>15.3</td>
+                <td>15.03</td>
+                <td>19.03</td>
+                <td>1</td>
+                <td>DGGIDPLVR</td>
+                <td>gi|129823|Lactoperoxidase</td>
+                <td>y6</td>
+            </tr>
+            <tr>
+                <td>471.2562</td>
+                <td>599.3511</td>
+                <td>15.3</td>
+                <td>15.03</td>
+                <td>19.03</td>
+                <td>1</td>
+                <td>DGGIDPLVR</td>
+                <td>gi|129823|Lactoperoxidase</td>
+                <td>y5</td>
+            </tr>
+            <tr>
+                <td>471.2562</td>
+                <td>484.3242</td>
+                <td>20.3</td>
+                <td>15.03</td>
+                <td>19.03</td>
+                <td>1</td>
+                <td>DGGIDPLVR</td>
+                <td>gi|129823|Lactoperoxidase</td>
+                <td>y4</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        You can see that the CE values in the third column differ among transitions of the same precursor. Skyline has chosen the CE value that
+        produced the maximum measured peak area for each transition.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        There is certainly more to learn about CE optimization. For instance, you can look into storing your optimized transition CE values in an
+        optimization library, also on the <b>Transition Settings – Prediction</b> tab. Hopefully this tutorial will be enough to get you
+        started on using Skyline for your CE optimization needs. If your instrument is not now explicitly covered by name in the Transition Settings
+        list of linear equations for CE calculation, you may want to run your own tests to ensure you are using a linear equation that calculates the
+        best CE values as accurately as possible. If you are performing SRM experiments with many peptides in charge states not covered by an existing
+        equation, you probably will want to calculate new equations for those charge states. This tutorial should have provided you with the tools you
+        will need in these cases. We hope you will use them.
+    </p>
+    <h1>Bibliography</h1>
+    <p class="bibliography">
+        1. MacLean, B. <i>et al</i>. Effect of Collision Energy Optimization on the Measurement of Peptides by Selected Reaction
+        Monitoring (SRM) Mass Spectrometry. <i>Anal. Chem</i>. <b>82</b>, 10116–10124 (2010).
+    </p>
+    <p class="bibliography">
+        2. Schmidlin, T. <i>et al</i>. Diet-induced neuropeptide expression: feasibility of quantifying extended and highly
+        charged endogenous peptide sequences by selected reaction monitoring. <i>Anal. Chem</i>. <b>87</b>, 9966–9973 (2015).
+    </p>
+    <p class="bibliography">
+        3. Sherwood, C. A. <i>et al</i>. Rapid Optimization of MRM-MS Instrument Parameters by Subtle Alteration of Precursor
+        and Product m/z Targets. <i>J. Proteome Res</i>. <b>8</b>, 3746–3751 (2009).
+    </p>
+</body>
+
+</html>

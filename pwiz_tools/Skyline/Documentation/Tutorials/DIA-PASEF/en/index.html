@@ -1,0 +1,858 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Analysis of diaPASEF data in Skyline</h1>
+    <table>
+        <tr>
+            <td>Note: This tutorial uses data from a Bruker timsTOF Pro instrument. If you prefer to use the data from a Thermo Q-Exactive Plus or
+                Sciex TripleTOF, see their respective versions. </td>
+        </tr>
+    </table>
+    <p>
+        In this tutorial you will learn how to use Skyline to perform targeted post-acquisition analysis for peptide and inferred protein detection and
+        quantification using a SWATH-MS dataset acquired on a QqTOF instrument with IMS separation (timsTOF Pro, Bruker), using a 24 fixed width
+        window precursor isolation scheme and a 17-minute gradient.
+    </p>
+    <p>
+        The data are from samples replicating the <a target="_blank" href="http://www.nature.com/nbt/journal/v34/n11/full/nbt.3685.html">LFQBench study</a>
+        where quantitative benchmarking samples were created by mixing proteomes of 3 organisms in defined ratios (figure). 
+    </p>
+    <p>
+        Initially, you will set all the parameters in the Skyline session required to work with data-independent datasets and then you will proceed to
+        extract the quantification information from the raw data files. You will import DDA search results to create a spectral library in order to
+        generate peptide query parameters to analyze the DIA data.
+    </p>
+    <p>
+        <img src="s-pasef-label-free-proteome-quantification.png" />
+    </p>
+    <p>
+        [figure adapted from Navarro, P. et al. A multicenter study benchmarks software tools for label-free proteome quantification. <i>Nature
+            Biotech</i> 34, 1130–1136 (2016)]
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        There are two dataset options for this tutorial. The “full” dataset is ~19Gb. The “small” dataset is a 4-minute window extracted from the full
+        dataset (~5Gb). The tutorial should run considerably faster on it, and it is also more likely to run on a laptop. The screenshots will be from
+        the small dataset; because the results shown here are from a short 4-minute window, they look a bit sparse. The results from the full dataset
+        are much better. To start this tutorial, download one of the following datasets:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/DIA-PASEF-small.zip">https://skyline.ms/tutorials/DIA-PASEF-small.zip</a>
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/DIA-PASEF-full.zip">https://skyline.ms/tutorials/DIA-PASEF-full.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder (corresponding to the ZIP file name) like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\DIA-PASEF-small
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it’s a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking to save the current settings.</li>
+    </ul>
+    <p>
+        The settings in your current instance of Skyline have now been reset to the default. 
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, ensure that the user interface is set to the “Proteomics interface” 
+    </p>
+    <ul>
+        <li>Click the user interface button in the upper right hand corner on the Skyline toolbar and select <b>Proteomics Interface</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in Proteomics mode which is displayed by the protein icon <img src="../../shared/protein-icon.png" /> in the upper
+        right-hand corner of Skyline.
+    </p>
+    <p>
+        For DIA analysis, you will want to force Skyline to integrate peak areas for all extracted quantitative transitions. To do that:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Integrate all</b>.</li>
+    </ul>
+    <h1>Using the Import Peptide Search wizard</h1>
+    <p>
+        If you know where to look, you could perform all of the following steps through various menu options on Skyline. To simplify the normal
+        workflow for DIA, you will instead use a “wizard” which will step you through the critical choices required for Skyline to run the analysis.
+        You will start with building a spectral library from DDA peptide spectrum match results, followed by specifying a set of DIA runs to extract
+        chromatograms from, and then specifying various settings, and finally the targets themselves, which you are interested in querying.
+    </p>
+    <p>
+        You will build the library from the analysis of one DDA run each of the A and B samples. The DDA search has already been performed using the
+        MSFragger search engine and post processed using PeptideProphet – see this link for more DDA search engines supported by Skyline <a
+            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries"><u>https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries</u></a>.
+        You will start from the interact.pep.xml file which is the output of PeptideProphet and contains the database search results from both DDA
+        files.
+    </p>
+    <p>
+        To get started do the following: 
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b>, and click <b>Peptide Search</b>.</li>
+    </ul>
+    <p>
+        Skyline tells you that you need to save the current document so that it will know where you want to perform the analysis on your computer disk
+        drive.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Navigate to the DIA-PASEF-small folder created earlier.</li>
+        <li>In the <b>File name</b> field, type “DIA-PASEF-tutorial”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> wizard should appear looking like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Add Files</b> button.</li>
+        <li>Navigate to the DIA-PASEF-small folder created earlier and into its DDA_search subfolder.</li>
+        <li>Double-click on the “interact.pep.xml” file.</li>
+        <li>In the <b>iRT standard peptides</b> dropdown list, click “Automatic”.</li>
+        <li>In the <b>Workflow</b> box, click the <b>DIA</b> option.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Spectral Library</b> page of the wizard should now look like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        Note: 0.95 is the threshold applied to the PeptideProphet probability computed for every peptide spectrum match in the DDA database search – in
+        this particular data set this corresponds to a PSM false discovery rate of 0.2% but this will differ among data sets so a score threshold to
+        achieve the FDR you want to use should be entered here.
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        Skyline should begin building the library, showing progress in a form titled <b>Build Peptide Search Library</b>. When the library
+        build is complete, Skyline will attempt to find peptides consistently present in all runs to use as iRT landmark peptides. It will show a form
+        asking how many of these peptides to use for adjusting RTs for other peptides:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>In the <b>Peptide count</b> box, enter “15”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will then present a summary form like the one below:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Success</b> link (highlighted in blue) to see the linear regression.</li>
+    </ul>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Close</b> button.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Skyline will ask if you want to recalibrate the iRT standard values onto the regression line calculated and shown in the graph above.
+    </p>
+    <ul>
+        <li>Click the <b>No</b> button.</li>
+    </ul>
+    <p>
+        Skyline presents a long list of peptides with ambiguous matches. In other words, the only evidence for these peptides came from spectra which
+        were matched to multiple peptides, making those spectra and matching peptides not ideal for subsequent targeted analysis.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You are presented the <b>Extract Chromatograms</b> page which allows you to tell Skyline where to find the DIA data files it will use
+        for chromatogram extraction, peak detection and peak area calculation.
+    </p>
+    <ul>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>In the DIA-TTOF folder, double-click the DIA subfolder.</li>
+        <li>Select all 6 files in this folder.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Browse for Results Files</b> should look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        Skyline presents a form asking if you want to remove the common prefix and suffix which makes the replicate names shown in the Skyline
+        interface shorter and generally easier to work with.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        In the <b>Configure Transition Settings</b> page, make the following changes from the default values:
+    </p>
+    <ul>
+        <li>Set <b>Precursor charges</b> to “2, 3, 4”.</li>
+        <li>Set <b>Ion types</b> to “y, b”.</li>
+    </ul>
+    <table>
+        <tr>
+            <td>NOTE: You could leave the ion type “p” which stands for precursor, and Skyline would extract chromatograms covering the precursor
+                isotope distribution from the MS1 spectra in the DIA data files. However, to simplify this tutorial and reduce processing time and
+                output file size, the description below deals only with fragment ion chromatograms extracted from the DIA MS/MS spectra.</td>
+        </tr>
+    </table>
+    <ul>
+        <li>Check <b>Use DIA precursor window for exclusion</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> form should look like:
+    </p>
+    <p>
+        <img src="s-8.png" /> 
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        Skyline presents the <b>Configure Full-Scan Settings</b> page. 
+    </p>
+    <p>
+        <b>Note</b>: These extraction settings depend on the type and settings of the instrument used for data acquisition. The optimal
+        extraction settings may be slightly different for each dataset. PASEF data is always centroided so you should select ‘Centroided’ and specify
+        a ‘20’ ppm mass accuracy for extraction.
+    </p>
+    <p>
+        Make the following changes to the default values:
+    </p>
+    <ul>
+        <li>In both <b>Mass accuracy</b> fields, use “20” ppm.</li>
+    </ul>
+    <p>
+        Now you need to define a new isolation scheme according to the parameters defined on the instrument for data-independent acquisition.
+    </p>
+    <p>
+        <b>Note</b>: In this example, we used 24 fixed width (25 m/z) windows that covered the range from 400 to 1000 m/z.
+    </p>
+    <ul>
+        <li>In the <b>Isolation scheme</b> dropdown list, click “&lt;Add…&gt;”.</li>
+    </ul>
+    <p>
+        This brings up the <b>Edit Isolation Scheme</b> form in which you should do the following.
+    </p>
+    <ul>
+        <li>In the <b>Name</b> field, enter “diaPASEF (24 fixed)”.</li>
+        <li>Click the <b>Prespecified isolation windows</b> option.</li>
+        <li>Click the <b>Import</b> button.</li>
+        <li>Navigate to the DIA-PASEF-small folder created earlier and into its DIA subfolder.</li>
+        <li>Double-click the file “A210331_bcc_1180_lfqbA_17min_dia_200ng.d”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Isolation Scheme</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <p>
+        Skyline has worked out the <b>Start</b> and <b>End</b> <i>m/z</i> values for the DIA isolation ranges measured on the
+        mass spectrometer.
+    </p>
+    <p>
+        To visualize the isolation scheme:
+    </p>
+    <ul>
+        <li>Click the <b>Graph</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        You will see a form like the one below:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        You can click-and-drag a rectangle to zoom in or use the mouse scroll-wheel. There is no red for <b>Show gaps</b> or yellow for
+        <b>Show single cycle overlaps</b>, which are both errors in DIA isolation scheme design.
+    </p>
+    <ul>
+        <li>Click the <b>Close</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Isolation Scheme</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> wizard should now look like this:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        You will see the <b>Import FASTA</b> page, where you should do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the DIA-PASEF-small folder created earlier and into its DIA subfolder.</li>
+        <li>Double-click on the “target_protein_sequences.fasta” file.</li>
+    </ul>
+    <table>
+        <tr>
+            <td>NOTE: At this point, you could choose to perform a proteome-wide analysis by instead navigating to the DDA_search subfolder where you
+                found the “interact.pep.xml” file and double-clicking the full FASTA sequence file
+                “napedro_3mixed_human_yeast_ecoli_20140403_iRT_reverse.fasta” that was used in the peptide search. This would produce quite a lot more
+                targets and take more time to process, but is still feasible on most modern laptops.</td>
+        </tr>
+    </table>
+    <ul>
+        <li>In the <b>Decoy generation method</b> dropdown list, click “Shuffle Sequence”.</li>
+        <li>Check <b>Automatically train mProphet model</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Peptide Search</b> wizard should now look like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Finish</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        You should be presented with a form describing the targets calculated based on your settings and the FASTA sequence text
+        provided that looks like this:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <p>
+        Notice that with a <b>Min peptides per protein</b> filter of “1” the 12 proteins found in the FASTA file produce 10 “Mapped”
+        proteins. This is because 2 “Unmapped” proteins have no peptides found in the spectral library.
+    </p>
+    <table>
+        <tr>
+            <td>Note: The final document will include an “iRT standards” peptide list, for the iRT peptides, and a “Decoys” peptide list, for the
+                decoys you have specified. This will also add 15 iRT peptides and 30 decoy peptides. In the form above, the precursors and transitions
+                count reflect these additions while the proteins and peptides counts do not.</td>
+        </tr>
+    </table>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline begins extracting chromatograms which should look like this on a standard i7 4-core processor:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        With 6-cores and above all files will be processed in parallel, and on most laptops with 2-cores the import will process 2 files at a time.
+    </p>
+    <p class="keep-next">
+        After the import is completed, Skyline will show you the mProphet model you requested on the <b>Import FASTA</b>
+        page of the <b>Import Peptide Search</b> wizard. It should look like this:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        It has already been used to re-score the 10 best peaks Skyline found in each set of chromatograms, using its default score, and re-choose the
+        peaks to be the ones with the best mProphet scores. These mProphet scores (given the name <b>Detection Z Score</b> in Skyline) are
+        scaled such that 1.0 is 1 standard deviation from the mean mProphet score for the distribution of similar best peaks for the sequence shuffled
+        decoy peptides you requested. Each has also been assigned a q value (given the name <b>Detection Q Value</b> in Skyline).
+    </p>
+    <h1>Sample Annotation</h1>
+    <p>
+        Next you need to define which samples belong to which experimental group:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Document Settings</b>.</li>
+        <li>Click the <b>Annotations</b> tab if it is not active. </li>
+        <li>Click the <b>Add</b> button to see the <b>Define Annotation</b> window.</li>
+        <li>In the <b>Name</b> field, enter “Condition”. </li>
+        <li>In the <b>Type</b> field, choose “Value List”.</li>
+        <li>In the list under <b>Applies To</b>, check <b>Replicates</b>. </li>
+    </ul>
+    <p>
+        In this experiment there are two conditions: Condition A are samples that have a proteome composition of E.coli 20%, yeast 15% and human 65%,
+        and condition B have a composition of E.coli 5%, yeast 30% and human 65%.
+    </p>
+    <p class="keep-next">
+        The <b>Define Annotation</b> window should like this:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button. </li>
+        <li>Follow the steps above and create a second annotation named “BioReplicate.” </li>
+        <li>In the <b>Type</b> dropdown list select “Text” for the BioReplicate annotation. </li>
+        <li>In the list under <b>Applies To</b>, check <b>Replicates</b>. </li>
+        <li>Click the <b>OK</b> button. </li>
+    </ul>
+    <p>
+        This will return you to the <b>Document Settings</b> window. 
+    </p>
+    <ul>
+        <li>Make sure the checkboxes for <b>Condition</b> and <b>BioReplicate</b> are checked.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You are now ready to annotate the replicates you have imported:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Document Grid</b> (Alt-3).</li>
+    </ul>
+    <p>
+        This brings up the <b>Document Grid</b> window, which will show the <b>Proteins</b> report if you have never used it
+        before:
+    </p>
+    <ul>
+        <li>In the <b>Document Grid: Proteins</b> window, click the <b>Reports</b> menu and then click
+            <b>Replicates</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Annotate the samples as shown in the screen capture below using keyboard keys for A, B, 1, 2, 3, Enter and arrow keys to
+        navigate:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <ul>
+        <li>Close the <b>Document Grid: Replicates</b> window by clicking on the red X in the upper right hand corner of the form. </li>
+    </ul>
+    <p>
+        For easy viewing you can now split the data by condition into 2 panes in the Skyline window.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b>, and click <b>Grouped</b>.</li>
+        <li>In the <b>Arrange Graph Grouped</b> form, set <b>Group panes</b> to “2”.</li>
+        <li>Choose the option <b>Distribute graphs among groups</b>.</li>
+        <li>In the <b>Display</b> field, choose “Tiled”.</li>
+        <li>In the <b>Sort order</b> field, choose “Document”. </li>
+        <li> Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Note: If the data is still importing at this stage you will need to wait until this is finished to save the document.
+    </p>
+    <ul>
+        <li>Save your skyline document.</li>
+    </ul>
+    <h1>Inspect the data manually</h1>
+    <p>
+        Next you will manually inspect some of the chromatography and underlying spectra. To do that, you will want the <b>Retention
+            Times</b> and <b>Peak Areas</b> views are showing:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b>, and click <b>Replicate
+                Comparison</b> (F8).</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b>, and click <b>Replicate Comparison</b> (F7). </li>
+    </ul>
+    <p>
+        Now both views should be visible. You can configure them optimally on the screen by doing the following: 
+    </p>
+    <ul>
+        <li>If these new windows are floating you can dock them to the main window by clicking on the top border of the floating window, holding the
+            left mouse button down, and dragging this window. </li>
+    </ul>
+    <p>
+        You can perform the same operations shown below with the <b>Library Match</b> window.
+    </p>
+    <p>
+        Note: In order to dock a window like this, the mouse arrow cursor must be placed inside one of the docking icons, in this case, at the top.
+        Once you begin dragging with the left-mouse button held down, Skyline will show the docking icons and a transparent blue rectangle where the
+        window will be placed if you were to release the left-mouse button at that moment.
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig" style="padding: 10px;">
+              <img src="s-18.png" />
+            </td>
+            <td class="comp-fig" style="padding: 10px;">
+              <img src="s-19.png" /> 
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li>Similarly, dock the <b>Peak Area: Replicate Comparison</b> and <b>Library Match</b> windows so that all information is
+            easily viewable, as below: </li>
+    </ul>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click on the first E. coli protein: “sp|P63284|CLPB_ECOLI”.</li>
+    </ul>
+    <p>
+        You should see all of the peptides for this protein shown on the various plots (chromatogram, peak areas, and retention time replicate graphs).
+        The screenshot above is an example of when one protein is selected and all of the peptides for this protein are summarized in each of these
+        views (except library match window where nothing is shown).
+    </p>
+    <p>
+        Based on what you see in the <b>Peak Area - Replicate Comparison</b> plot, does this protein appear to be differentially regulated?
+        Recall that the expected fold-change ratio between A:B is 4:1 for E. coli.
+    </p>
+    <ul>
+        <li>Select the peptide LPQVEGTGGDVQPSQDLVR in this protein.</li>
+    </ul>
+    <p class="keep-next">
+        You get specific information for this peptide in all of the views, as shown below:
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        Examine the peak area patterns for the rest of the peptides belonging to this protein. Is the quantitative pattern for the peptides from this
+        protein consistent with the expected differential regulation pattern (4:1)?
+    </p>
+    <p>
+        <b>NOTE</b>: If there is more than one precursor charge state for a given peptide sequence these are extracted and scored separately.
+        You can look at these by clicking the <b>+</b> next to the peptide sequence and clicking on the individual charge states.
+    </p>
+    <ul>
+        <li>Click on some of the human proteins in the document.</li>
+    </ul>
+    <p>
+        Examine the replicate peak areas from the protein level view and the peptide level view. Are the peak areas consistent with the expected ratio
+        (1:1)? What about the yeast proteins (1:2)?
+    </p>
+    <ul>
+        <li>Click again on the LPQVEGTGGDVQPSQDLVR peptide in the first protein again.</li>
+        <li>On the <b>Views</b> menu, choose <b>Auto-Zoom</b>, and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p>
+        Notice that if you hover the cursor over a chromatogram curve a circle appears on the curve with the same color as the curve.
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <ul>
+        <li>Click the circle on a chromatogram point.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will open the <b>Full-Scan</b> view on the spectrum from which the chromatogram point was extracted zoomed
+        on the ion that you selected.
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <ul>
+        <li>Click the black spectrum button in the <b>Full-Scan</b> toolbar to view the mobility dimension.</li>
+    </ul>
+    <p>
+        Skyline will show the zoomed MS/MS spectrum with the mobility dimension on the y-axis:
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <ul>
+        <li>Click the magnifying glass button in the <b>Full-Scan</b> toolbar to view the full spectrum.</li>
+    </ul>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        Explore the data further manually (including some decoys).
+    </p>
+    <h1>Mass error and retention time deviation </h1>
+    <p>
+        You can examine the mass accuracy and retention time prediction accuracy to determine whether the optimal extraction parameters have been used
+        or whether some adjustment may improve the results.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Mass Errors</b>, and click <b>Histogram</b>.</li>
+        <li>Right-click the graph that appears, choose <b>Points</b>, and click <b>Targets at 1% FDR</b>.</li>
+    </ul>
+    <p>
+        This will show the distribution of mass errors over the data set. Could the extraction window (±20 ppm) have been further optimized? Generally,
+        the mean error +/- 3 standard deviations is sufficient. If the histogram appears cut off, however, with high counts at the extremes then you
+        may want to widen your extraction windows. 
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <p>
+        Note that the distribution appears to have two peaks, one around 3 and one around 6. To understand this better, it helps to know that these are
+        the mass error values across all 6 runs.
+    </p>
+    <ul>
+        <li>Right-click the graph, choose <b>Replicates</b>, and click <b>Single</b>.</li>
+        <li>Click in the <b>Replicates</b> dropdown list at the top of the <b>Targets</b> view.</li>
+        <li>Use the up and down arrow keys on your keyboard to review the mass error values in all 6 replicates.</li>
+    </ul>
+    <p>
+        You will see that the mean value ranges from 3.4 to 4.1, while the standard deviation value ranges from 1.8 to 3.4. Using the simple
+        calculation Mean + 3 * SD = 4.1 + 3 * 3.4 = 14.3 PPM at the most extreme, this seems to indicate that a 20 PPM tolerance is a pretty good
+        approximation of what these data require.
+    </p>
+    <p>
+        To view the mass errors for the decoys also:
+    </p>
+    <ul>
+        <li>Right-click the graph, choose <b>Points</b>, and click <b>Decoys</b>.</li>
+        <li>Right-click the graph, choose <b>Replicates</b>, and click <b>All</b>.<br />(and then switch back to
+            <b>Targets</b>)</li>
+    </ul>
+    <p>
+        To the see the linear regression used to predict the target peptide retention times based on the iRT peptides and library iRT values from the
+        target peptides:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b>, then <b>Regression</b>, and click <b>Score to
+                Run</b>. </li>
+    </ul>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <ul>
+        <li>Right-click the graph, choose <b>Plot</b>, and click <b>Residuals</b>.</li>
+    </ul>
+    <p>
+        This will show the deviations from the predicted retention times in this data set. Could the extraction window (± 5 minutes) have been further
+        optimized for this analysis? Check the decoys as well.
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        <b>Note</b>: As the spectral library for this analysis was constructed from a side-by-side analysis of the same samples. As such, the
+        accuracy of the retention time predictions are very good. Retention times from external spectral libraries acquired on different instruments,
+        at different times, from different samples would lead to larger errors in these predictions.
+    </p>
+    <h1>Quantitative comparison </h1>
+    <p>
+        You have performed some general validation that the data processing with Skyline has no serious flaws. All available features scores were
+        included in the mProphet scoring model, and the model achieved reasonable separation between the targets and the decoys, which are used to
+        simulate random undetectable targets. You may feel that the RT extraction range could be tightened from +/- 5 to 3. But, these settings will
+        clearly work and the resulting mProphet model looks acceptable.
+    </p>
+    <p>
+        This type of analysis of even hundreds of peptides generally makes manual analysis of every single target time consuming and even error prone
+        itself. The current analysis could be extended to the entire 3-organisms FASTA file, known as proteome-wide analysis, which would include tens
+        of thousands of peptides. Rather than consider each individually, researchers more typically perform some type of grouped comparison and then
+        follow up on peptides or proteins which appear to be changing in interesting ways.
+    </p>
+    <p>
+        To perform a simple pairwise group comparison inside Skyline do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Other Grids</b>, then <b>Group Comparison</b>, and click <b>Add</b>.</li>
+        <li>For the <b>Name</b> field, enter “By Condition”.</li>
+        <li>For the <b>Control group annotation</b> field, choose “Condition”.</li>
+        <li>For the <b>Control group value</b> field, choose “A”.</li>
+        <li>For the <b>Value to compare against</b> field, choose “B”.</li>
+        <li>Click the <b>Advanced</b> button.</li>
+        <li>For the <b>Q-value cutoff</b> field, enter “0.01”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Group Comparison</b> form should look like this.
+    </p>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        To see the group comparison you have just created:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Other Grids</b>, then <b>Group Comparison</b>, and click <b>By
+                Condition</b>.</li>
+    </ul>
+    <p>
+        A table should appear that shows the peptide level fold-change and adjusted p-value (an estimate of false discovery rate - FDR) for the
+        comparison between the A and B sample mixtures. 
+    </p>
+    <ul>
+        <li>Expand the width of the <b>Protein</b> column header so that you can see the full protein names – including the corresponding
+            species name. </li>
+        <li>Click on the header of the <b>Fold Change Result</b> column and click on <b>Sort Ascending</b>.</li>
+    </ul>
+    <p>
+        Inspect the fold changes estimated for some of the peptides in the table keeping in mind which species they are from and the expected ratios
+        (human 1:1, yeast 1:2, E. coli 4:1). Consider the adjusted p values and what you might expect of them.
+    </p>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Volcano Plot</b> button in the top left corner of the grid window.</li>
+    </ul>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <p>
+        You can already see clusters of points around the expected ratios and above the 5% FDR horizontal line for most of the changing peptides. To
+        get a better understanding of which points belong to which organism perform the following actions:
+    </p>
+    <ul>
+        <li>Right-click the <b>Volcano Plot</b>, and click <b>Formatting</b>.</li>
+        <li>Click the “…” button in the first row, after the <b>Expression</b> column.</li>
+        <li>In the <b>Create Match Expression</b> form, set the <b>Match</b> dropdown list to “Protein Name”.</li>
+        <li>In the <b>Regular Expression</b> field, enter “ECOLI”.</li>
+    </ul>
+    <p class="keep-next">
+        The form should show you the list of peptides with matching protein names like this:
+    </p>
+    <p>
+        <img src="s-32.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Click the “…” button in the first row, after the <b>RGB</b> column.</li>
+        <li>Choose a purple color and click the <b>OK</b> button.</li>
+        <li>Repeat the above process for “YEAS” with orange.</li>
+        <li>Repeat the above process for “HUMAN” with green.</li>
+    </ul>
+    <p class="keep-next">
+        Which should leave the <b>Volcano Plot Formatting</b> form looking like this:
+    </p>
+    <p>
+        <img src="s-33.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Which should leave the volcano plot looking like this:
+    </p>
+    <p>
+        <img src="s-34.png" />
+    </p>
+    <p>
+        Notice that there are still some gray dots. You can click on any of the dots to cause them to be selected in the <b>Targets</b> view
+        and have their display test shown on the graph in red. You can also hover the mouse cursor over any point to get more information on it. In
+        this way you can see that the gray dots belong to the iRT standard peptides. You can filter them from the grid and the plot at the same time
+        by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Protein</b> column header, and click <b>Filter</b>.</li>
+        <li>In the <b>Filter type</b> dropdown list, choose “Does Not Contain”.</li>
+        <li>Enter in the field below “standard”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This will remove the gray dots in the volcano plot. You might try limiting this plot to just one species using a different type of filter on
+        the protein names.
+    </p>
+    <p>
+        Skyline also provides a bar plot view on the fold-change values which incorporates error bars for the (unadjusted) confidence intervals.
+        Though, they are unadjusted for the multiple hypotheses tested, they still give you some insight into the variance in the measurements. Do the
+        following to review the fold-change values in the bar plot:
+    </p>
+    <ul>
+        <li>Click the <b>Bar Graph</b> button in the top left corner of the grid window.</li>
+    </ul>
+    <p>
+        The <b>Bar Graph</b> will appear on top of the <b>Volcano Plot</b>. To give it more space for viewing do the following:
+    </p>
+    <ul>
+        <li>Click in the <b>By Condition:Bar Graph</b> tab, hold, and drag to a new location and release.</li>
+        <li>Resize the now free-floating <b>By Condition:Bar Graph</b> window.</li>
+        <li>In the <b>By Condition:Grid</b>, click the <b>Fold Change Result</b> column header, and click <b>Sort
+                Ascending</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The graph should now look like this:
+    </p>
+    <p>
+        <img src="s-35.png" />
+    </p>
+    <p>
+        As with the volcano plot, you can click on the individual bars to select them in the <b>Targets</b> view (so that you can confirm
+        which species various peptides in the graph are from).
+    </p>
+    <p>
+        To view the fold-change results at the protein-level for the 11 targeted proteins (excluding iRT standards and decoys), do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Settings</b> button in the upper-right corner of the grid window to re-open the <b>Edit Group
+                Comparison</b> form.</li>
+        <li>Change the <b>Scope</b> option from <b>Peptide</b> to <b>Protein</b>.</li>
+    </ul>
+    <p>
+        Skyline should adjust the <b>Bar Graph</b> and <b>Volcano Plot</b> immediately. You will see in the <b>Bar
+            Graph</b> that there are just 9 bars and not the 10 you might have been expecting. This is because the current settings give Skyline
+        no way to deal with missing values (due to 0.01 q value cut-off) other than dropping targets without consistent enough measurement to support
+        a T-test. To fix this, do the following:
+    </p>
+    <ul>
+        <li>In the <b>Edit Group Comparison</b> form, change the <b>Summary method</b> to “Tukey’s Median Polish”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Bar Graph</b> should now show fold-change estimates for all 10 proteins that looks like this:
+    </p>
+    <p>
+        <img src="s-36.png" />
+    </p>
+    <ul>
+        <li>Close the <b>Edit Group Comparison</b> by clicking the X square in the upper-right corner.</li>
+        <li>Save the document.</li>
+    </ul>
+    <p>
+        You may also want to consider using a more sophisticated statistical tool like MSstats for your comparisons. To do this, you can install
+        MSstats from the Skyline Tool Store (using <b>Tools</b> &gt; <b>Store</b> in the Skyline menus or by clicking the Tool
+        Store button on the Skyline installation web page). Then you can either run MSstats directly from the Skyline <b>Tools</b> menu or
+        do the following to prepare to run MSstats in R or RStudio later:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Report</b>. </li>
+        <li>From the <b>External Tools</b> folder, select <b>MSstats Input</b>. </li>
+        <li>Save as “DIA_PASEF_ MSstats_Input.csv”.</li>
+    </ul>
+    <h1>Conclusion</h1>
+    <p>
+        Congratulations! You have completed your first differential proteomics comparison using Skyline with diaPASEF data. You have learned how to use
+        the <b>Import Peptide Search</b> wizard to streamline the initial data processing from building a spectral library out of ddaPASEF
+        peptide search data to chromatogram extraction from quantitative diaPASEF runs with IMS filtering, creating and applying an mProphet
+        statistical peak detection model to improve peak selection and assign q values which can be used to control the false discovery rate among the
+        peak areas you used in your group comparison. You learned to first assess the DIA data quality with the mass error and retention time
+        regression plots. And finally, you learned to perform a simple pairwise comparison between two groups of samples directly within Skyline,
+        which gave you the interactive group comparison grid, volcano plot and bar graph to help you understand and interact with the results. Having
+        exported the MSstats Input report, you could now use the MSstats external tool to perform further statistical tests.
+    </p>
+    <p>
+        Now consider retrying these steps with the proteome-wide FASTA file, the DIA-PASEF-full dataset, and/or including precursor ions to see how
+        this works with a broader target set and/or another dimension (precursor ions in MS1 spectra). Or move on to trying this with your own data.
+    </p>
+</body>
+
+</html>

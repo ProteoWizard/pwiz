@@ -1,0 +1,615 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Small Molecule Multidimensional Spectral Libraries</h1>
+    <p>
+        In this tutorial, you will learn how to utilize spectral libraries and drift time filtering for analysis of complex ion mobility
+        spectrometry-mass spectrometry (IMS-MS) small molecule data. The Skyline IMS-MS capabilities are compatible with platforms where collision
+        cross section (CCS) values are calculated such as DTIMS, TIMS, and TWIMS instruments. (Skyline also supports FAIMS ion mobility filtering,
+        though that is not covered here.) A spectral library containing <i>m/z</i>, retention time, fragmentation, and ion mobility information for
+        a set of lipids in fruit fly samples will be explored and added to a Skyline document. The CCS values for each molecule can then be used to
+        increase the selectivity of precursor and fragment extracted ion chromatograms above what can be realized by high mass resolution alone,
+        thereby reducing interference from other ions.
+    </p>
+    <p>
+        In this more advanced tutorial, some familiarity with Skyline is assumed. If you are not familiar with Skyline, you should first work through
+        some of the introductory tutorials at
+    </p>
+    <p>
+        <a href="http://skyline.ms/tutorial-index.url">http://skyline.ms/tutorial-index.url</a>
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/SmallMoleculeLibraries.zip">https://skyline.ms/tutorials/SmallMoleculeLibraries.zip</a>
+    </p>
+    <p>
+        There is a total of over 2 GB of data, so downloading may take a while.
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\bspratt\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\bspratt\Documents\SmallMoleculeLibraries
+    </p>
+    <p>
+        It will contain the Skyline files necessary for this tutorial. 
+    </p>
+    <p>
+        The .d folders contain data from a male (M) and female (F) fruit fly (<i>Drosophila melanogaster</i>) lipid extract.
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+    </ul>
+    <ul class="keep-next">
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a small molecule topic, you can choose the molecule interface by doing the following:
+    </p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Molecule interface</b> which
+            looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/molecule-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in molecule mode, as indicated by the molecule icon <img src="../../shared/molecule-icon.png" /> in the upper right-hand
+        corner of the Skyline window. Skyline’s proteomics-specific menus and controls are now hidden, allowing you to focus on small molecule
+        analysis.
+    </p>
+    <h1>Transition Settings</h1>
+    <p>
+        You will need to review the transition settings before adding the spectral library and results data.
+    </p>
+    <p>
+        To do this, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Filter</b> tab.</li>
+    </ul>
+    <p>
+        The transition filter settings are used to decide which library entries are suitable for inclusion in the Skyline document. Only entries with
+        adducts that match the filters will be selected for use.
+    </p>
+    <ul>
+        <li>In the <b>Precursor Adducts</b> field, enter “[M-H], [M+HCOO], [M+CH3COO]”.</li>
+        <li>In the <b>Fragment Adducts</b> field, enter “[M-]”.</li>
+        <li>This data was collected in negative ionization mode so [M+H] and [M+] can be removed from the <b>Precursor Adducts</b> and
+            <b>Fragment Adducts</b> fields if you see them there. However, they are harmless if left as is since the library that will be
+            used has only negative ion mode entries.</li>
+    </ul>
+    <p>
+        These adducts can also be added using the drop-down menus accessed by the arrow buttons. Navigate to the Adducts- menu, and select the
+        appropriate adducts.
+    </p>
+    <ul>
+        <li>In the <b>Ion Types</b> field, enter “f,p” to include both fragments and precursors in the filter.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Transition Settings</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Full-Scan</b> tab in the <b>Transition Settings</b> form.</li>
+        <li>In the <b>MS1 filtering</b> section, set the <b>Isotope peaks</b> included field to <b>Count</b>.</li>
+        <li>Set the <b>Precursor mass analyzer</b> field to <b>TOF</b>.</li>
+        <li>In the <b>Resolving power</b> field, enter “20,000”.</li>
+        <li>In the <b>MS/MS filtering</b> section, set the <b>Acquisition method</b> field to <b>DIA</b>.</li>
+        <li>Set the <b>Isolation scheme</b> field to <b>All Ions</b>.</li>
+        <li>In the <b>Resolving power</b> field, enter “20,000”.</li>
+        <li>Check <b>Use high-selectivity extraction</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Transition Settings</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        The <b>Transition Settings</b> form instructs Skyline to extract 3 precursor isotope peaks from MS1 (low-energy) spectra and fragment
+        ions from MS/MS (high-energy) spectra acquired at ~28,000 resolving power on a TOF instrument. Utilizing lower 20,000 resolving power accounts
+        for the difference in resolving power between ions of different concentrations. The acquisition method “DIA” and isolation scheme “All Ions”
+        indicate to Skyline that the spectra are alternating low- and high-energy without precursor isolation. When <b>Use high-selectivity
+            extraction</b> is checked, Skyline extracts a single resolution width around the target <i>m/z</i>, and when it is unchecked
+        Skyline extracts 2x the resolution width, which should increase the total number of ions included in the extraction but at the risk of
+        increasing interference. 
+    </p>
+    <p>
+        The <b>Prediction</b> tab does not apply to this tutorial and the <b>Library</b> and <b>Instrument</b> tabs have
+        acceptable defaults. The <b>Ion Mobility</b> tab will be revisited later in the tutorial.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <h1>Adding and Exploring a Spectral Library</h1>
+    <p>
+        Before you can explore the library, Skyline must be directed to its location by adding your library of interest to the global list of libraries
+        for document editing. The library used in this tutorial was created in Skyline from experimental data and a transition list generated by <a
+            href="https://skyline.ms/skyts/home/software/Skyline/tools/details.view?name=LipidCreator">LipidCreator</a>.
+    </p>
+    <p>
+        To get started with the small molecule library containing <i>Drosophila</i> lipids perform the following steps:
+    </p>
+    <ul>
+        <li>From the <b>Settings</b> menu, click <b>Molecule Settings</b>.</li>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Library</b> form, enter “Drosophila Lipids”.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the SmallMoleculeLibraries folder created earlier.</li>
+        <li>Select the “Drosophila_Lipids_Neg.blib” file.</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Library</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Libraries</b> form.</li>
+    </ul>
+    <p>
+        The <b>Libraries</b> list in the <b>Molecule Settings</b> form should now contain the Drosophila Lipids library you just
+        created.
+    </p>
+    <ul>
+        <li>Check the “Drosophila Lipids” checkbox to include this library in the current document.</li>
+        <li>If you have any other libraries in this list checked, uncheck them now.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Molecule Settings</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Molecule Settings</b> form.</li>
+    </ul>
+    <p>
+        To open the library explorer and view the contents of the library you just added, do the following: 
+    </p>
+    <ul>
+        <li>From the <b>View</b> menu, click <b>Spectral Libraries</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The library explorer should now look like this:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        On the left side of the explorer, the <b>Library</b> list illustrates that you are currently viewing the Drosophila_Lipids library.
+        The <b>Molecule</b> list below it shows the lipid common names and adducts which have been matched to the spectra in this library.
+        The <b>&lt;&lt;Previous</b> and <b>Next&gt;&gt;</b> buttons are disabled for this library, because all of its spectra can
+        be listed in a single page. At the very bottom, the library explorer reports that the page contains 1 through 38 of a total 38 molecule
+        spectrum matches.
+    </p>
+    <p>
+        Hover your cursor over any molecule, and Skyline will display the name, formula, and precursor <i>m/z</i>. 
+    </p>
+    <p>
+        To narrow the list of molecules with the molecule filter box, do the following:
+    </p>
+    <ul>
+        <li>Click in the text box above the <b>Molecule</b> list.</li>
+        <li>Enter “PG”.</li>
+    </ul>
+    <p>
+        The library explorer will display all phosphatidylglycerol (PG) lipids in the library. In this case, the list is reduced to four PG lipids.
+    </p>
+    <p>
+        Turning your attention to the right side of the library explorer, you will see a Skyline MS/MS spectrum similar to the one Skyline displays
+        during document editing, and in fact this chart supports most of the same features. To explore a few of these features, take note of the
+        following:
+    </p>
+    <ul>
+        <li>On the right-side toolbar, the <b>f</b> and <b>1</b> buttons should be pushed to show charge 1 fragment ions. In this
+            library, there are no charge 2 ions. </li>
+        <li>The retention time (RT), collision cross section (CCS) and the ion mobility spectrometry (IMS) drift time value are displayed underneath
+            each spectrum.</li>
+        <li>Notice that the toolbar also contains buttons to <b>Copy</b>, <b>Save</b>, and <b>Print</b> the current
+            chart, and as with most charts in Skyline, further options can be accessed through a right-click menu.</li>
+    </ul>
+    <p>
+        To add all the molecules in the library to your target list:
+    </p>
+    <ul>
+        <li>Click the <b>Add All</b> button.</li>
+    </ul>
+    <p>
+        A popup window will then notify you that this will add 34 molecules, 38 precursors, and 246 transitions to the document.
+    </p>
+    <ul>
+        <li>Click <b>Add All</b>.</li>
+        <li>Click the <b>Close</b> button on the <b>Spectral Library Explorer</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        Your Skyline window should now look like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <h1>Importing Results Data</h1>
+    <p>
+        In this section, you will import the <i>Drosophila</i> data without utilizing IMS filtering. This is an initial look at the data to see the
+        impact of interference among lipids and their shared fragments. To import the data, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b> (Ctrl+S).</li>
+        <li>Save this document in the tutorial folder you created.</li>
+        <li>From the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Set the <b>Files to import simultaneously</b> field to <b>Many</b>.</li>
+        <li>Check <b>Show chromatograms during import</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Results</b> form will appear as follows:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Results Files</b> form will now show the .d files you have extracted into the tutorial folder:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Select both .d files.</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>The <b>Import Results</b> window will ask if you would like to remove the common prefix and suffix to shorten the file names
+            used in Skyline. Click <b>OK</b> to accept the names “F_A_018” and “M_A_001”.</li>
+    </ul>
+    <p class="keep-next">
+        This should start the import and cause Skyline to show the <b>Importing Results</b> progress form:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <h1>Reviewing the Extracted Ion Chromatograms</h1>
+    <p>
+        Once the files are imported, you can examine the chromatograms to evaluate interference from peaks with retention times and <i>m/z</i> values
+        within the tolerance of your target list.
+    </p>
+    <ul>
+        <li>From the <b>Edit</b> menu, choose <b>Expand All</b> and click <b>Molecules</b> (Ctrl+D).</li>
+        <li>From the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Tiled</b> (Ctrl+T).</li>
+        <li>Right-click in a chromatogram graph and click <b>Synchronize Zooming</b> (leave if already checked).</li>
+        <li>Right-click in a chromatogram graph and click <b>Legend</b> to hide the legend.</li>
+        <li>Right-click in a chromatogram graph, choose <b>Transitions</b> and click <b>Split Graph</b> (leave if already
+            checked).</li>
+        <li>In the <b>Targets</b> view, select the molecule PC(16:0_18:1).</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p>
+        To see a bit more of the gradient time range, do the following:
+    </p>
+    <ul>
+        <li>Right-click in a chromatogram graph and click <b>Properties</b>.</li>
+        <li>Uncheck <b>Peak width relative</b>.</li>
+        <li>In the <b>Best peak time range</b> field, enter “7” minutes.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Your chromatogram graphs should appear as follows:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <p>
+        Note that while the precursor extracted ion chromatogram (XIC) is clean, the transitions for FA 16:0(+O) and FA 18:1(+O) are highly abundant
+        across a large portion of their XICs. This is due to the nature of lipid fragmentation, as most lipids with 16:0 or 18:1 fatty acyl chains
+        will share those same fragments. Similar results will be observed for each lipid you select, especially the other phospholipids (PC, PE, PG,
+        PI). 
+    </p>
+    <p>
+        Since there are only 38 precursors in this document, you may want to review all 38 to get an overall feel for how the XICs look prior to IMS
+        filtering. Before starting this review, do the following:
+    </p>
+    <ul>
+        <li>In the <b>Targets</b> view, select the first precursor Cer(d14:1/20:0) - 596.5259[M+CH3COO].</li>
+        <li>Double-click the <b>Library Match</b> title bar to float it above the main window.</li>
+        <li>Adjust the size of the floating <b>Library Match</b> window.</li>
+        <li>Click and drag in the <b>Library Match</b> spectrum graph region roughly from 100 to 400 <i>m/z</i>.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave the <b>Library Match</b> view showing an MS/MS spectrum like this:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Attach the <b>Library Match</b> view beneath the <b>Targets</b> view by clicking in the title bar and dragging over
+            the <b>Targets</b> view until the mouse cursor is inside the bottom docking icon. <img src="../../shared/bottom-side-docking-icon.png" /></li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
+        <li>Attach the <b>Retention Times</b> view to the right edge of the main window by clicking in the title bar and dragging until the
+            mouse cursor is inside the right-side docking icon. <img src="../../shared/right-side-docking-icon.png" /></li>
+        <li>Right-click in the <b>Retention Times</b> view and click <b>Legend</b> to hide the legend in this graph.</li>
+        <li>From the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Attach the <b>Peak Areas</b> view to the left of the <b>Retention Times</b> view by clicking in the title bar and
+            dragging over the <b>Retention Times</b> view until the` mouse cursor is inside the left side docking icon. <img
+                src="../../shared/left-side-docking-icon.png" /></li>
+        <li>Adjust the view sizing using the splitter bar regions between them.</li>
+    </ul>
+    <p class="keep-next">
+        You should end up with a similar layout to the one shown below:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        To adjust the zooming on the chromatogram graphs:
+    </p>
+    <ul>
+        <li>Click one of the chromatogram graphs and use the mouse or touchpad to scroll (using a scroll-wheel or two-fingers respectively).</li>
+    </ul>
+    <p>
+        Skyline often does a good job picking peaks and most integration boundaries do not need to be edited. However, there are a few isomer pairs
+        that require some manual adjustment to the default integration.
+    </p>
+    <p>
+        The first two cases are the lysophospholipids (LPC and LPE), which are phospholipids with one fatty acyl chain cleaved off. These molecules
+        chromatographically separate depending on the <i>sn</i>- position of the single fatty acyl chain. Here the “ID” annotations in the
+        chromatogram graphs (indicating matching spectra in the library) can be utilized to determine the elution order of the
+        LPC(0:0/18:2)/LPC(18:2/0:0) and LPE(0:0/16:0)/LPE(16:0/0:0) pairs. 
+    </p>
+    <ul>
+        <li>Drag the integration boundaries in the chromatogram graphs with your mouse to integrate the correct peaks. Or click and drag beneath the
+            x-axis.</li>
+    </ul>
+    <p>
+        Note that male and female fruit flies have vastly different lysophospholipid profiles, which was also observed across almost all
+        lysophospholipids in a larger <i>Drosophila</i> study.
+    </p>
+    <p>
+        The final isomer pair is near the bottom of the document. PG(16:0_18:3) and PG(16:1_18:2) have different fatty acyl compositions, but the same
+        total number of carbons and double bonds, causing them to share the same precursor formula and <i>m/z</i> value. 
+    </p>
+    <ul>
+        <li>Again, use the library match ID retention time markers to determine the correct peak for each lipid. </li>
+        <li>To integrate the correct peaks, either drag the integration boundaries with your mouse or click the retention time label above the peak
+            apex. </li>
+    </ul>
+    <p>
+        The product XIC may not be useful until IMS filtering is utilized.
+    </p>
+    <h1>Understanding and Utilizing the IMS Separation</h1>
+    <p>
+        To this point, the IMS dimension in this data has been ignored. To better understand the IMS separation, you need to look at the underlying
+        spectra from which these chromatograms were extracted by doing the following:
+    </p>
+    <ul>
+        <li>Right-click in a chromatogram graph and click <b>Properties</b>.</li>
+        <li>Check <b>Peak width relative</b>.</li>
+        <li>In the <b>Best peak time range</b> field, enter “3.4” widths.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Select the molecule PE(16:1_18:3) in the <b>Targets</b> view.</li>
+    </ul>
+    <ul class="keep-next">
+        <li>Hover the mouse cursor over the precursor chromatogram peak apex until a blue circle appears that tracks the mouse movement, and click on
+            it.</li>
+    </ul>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p class="keep-next">
+        This should bring up the <b>Full-Scan</b> view showing a familiar two-dimensional spectrum in profile mode:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul class="keep-next">
+        <li>Click the <b>Show 2D Spectrum</b> button <img src="../../shared/show-2d-spectrum-button.png" /> to change the plot to a three-dimensional spectrum with
+            drift time.</li>
+    </ul>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        You can see that there is a small interference above the most intense visible ion. 
+    </p>
+    <ul>
+        <li>Take a closer look by placing your cursor in the center of the plot and use the scroll-wheel (or two fingers on a trackpad) mouse-centered
+            zooming to zoom in. You can also place your cursor to the left of the y-axis or below the x-axis to zoom one axis only.</li>
+    </ul>
+    <p>
+        These two ions are well-separated by IMS with the most intense ion below 34 ms and the interference above 36 ms.
+    </p>
+    <ul class="keep-next">
+        <li>Click the <b>Zoom to Selection</b> button to see the entire 3D MS1 spectrum.</li>
+    </ul>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        This is a fairly typical MS1 spectrum for IMS-MS lipidomics data. You can get a better sense of the data by zooming into multiple areas on this
+        plot. You can also select other lipids and click on the blue circle at the apex of each precursor chromatogram peak to see how this plot can
+        differ with retention time. An interesting example is PE(O-18:0/16:1), which has distinct ion distributions showing correlations between
+        <i>m/z</i> and drift time for different lipid classes.
+    </p>
+    <p>
+        To inspect a relevant MS/MS spectrum:
+    </p>
+    <ul>
+        <li>Re-select the molecule PE(16:1_18:3) if you navigated away from it to view other MS1 spectra.</li>
+        <li>Click on the <b>Zoom to Selection</b> button to zoom back in.</li>
+        <li>Hover the mouse over the FA 18:3(+O) fragment chromatogram peak apex until a teal colored circle appears that tracks the mouse movement,
+            and click on it.</li>
+    </ul>
+    <p class="keep-next">
+        The Full-Scan graph should change to:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        You can see that at least three visible ions are contributing to the extracted intensities at 33, 37, and 44 ms. This goes back to the nature
+        of lipid fragmentation as previously discussed, where most lipids with an 18:3 fatty acyl chain will share this fragment. The complexity is
+        increased for fatty acyl chains fragments with fewer double bonds, such as 18:2 at <i>m/z</i> 279, which may have multiple ions as well as
+        isotopic overlap from the abundant 18:3 fragment at <i>m/z</i> 277 contributing to the extracted intensity. A similar observation can be
+        made with the FA 16:1(+O) fragment.
+    </p>
+    <ul class="keep-next">
+        <li>Click the <b>Zoom to Selection</b> button again to see the entire 3D MS/MS spectrum.</li>
+    </ul>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        This is also a typical IMS-MS/MS spectrum, where you can imagine each horizontal stripe as a top-down view of a normal 2D spectrum. Clearly,
+        there are many signals in this 3D space other than the one at 34 ms.
+    </p>
+    <h1>Reimporting Data with Drift Time Filtering</h1>
+    <p>
+        It should now be clear that the selectivity of chromatogram extraction in MS/MS and even MS1 can be improved by utilizing IMS and extracting
+        only a limited drift time range around the area of interest.
+    </p>
+    <p>
+        Skyline can learn and apply the IMS drift times directly from the results data, which is explained in detail in the Training a Drift Time
+        Predictor section of the <a href="https://skyline.ms/tutorial_ims.url">Skyline Ion Mobility Spectrum Filtering tutorial</a>. In this tutorial,
+        however, you may recall that the spectral library contains collision cross section (CCS) values for each molecule, which can now be use to
+        extract only limited drift time ranges for additional identification confidence and selectivity.
+    </p>
+    <p>
+        Prior to changing the settings and reimporting the data, you may want to save the current Skyline document and create a second file in order to
+        compare the data before and after IMS filtering. To do so:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b> (ctrl-S) to make sure any changes are saved to the original.</li>
+        <li>On the <b>File</b> menu, click <b>Save As</b>...</li>
+        <li>Save the file with a different name than your original Skyline document, such as “Drosophila_Lipids_Neg_IMS_Filtered”, in the tutorial
+            folder you created.</li>
+    </ul>
+    <p>
+        The data files have been <i>single field calibrated</i> using vendor software, meaning Skyline can easily convert between drift time and CCS.
+        CCS values are normalized and reproducible, allowing the use of previously determined CCS (from databases and standards) to filter the data.
+        To utilize the IMS information stored in the library, perform the following steps:
+    </p>
+    <ul>
+        <li>From the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Ion Mobility</b> tab.</li>
+        <li>Check <b>Use spectral library ion mobility values when present</b>.</li>
+        <li>Set the <b>Window Type</b> field to <b>Resolving power</b>.</li>
+        <li>In the <b>Resolving power</b> field, enter “50”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Transition Settings</b> should now look like this:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The results must now be reimported with the newly applied IMS settings as follows:
+    </p>
+    <ul>
+        <li>From the <b>Edit</b> menu, click <b>Manage Results</b>.</li>
+        <li>Use ctrl-click or click-and-shift-click to multiple select both replicates.</li>
+        <li>Click the <b>Re-import</b> button. “*” Should appear to the left of both names.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This should start the re-import and cause Skyline to show the <b>Importing Results</b> progress form. When the import has completed:
+    </p>
+    <ul>
+        <li>Click any other lipid in the Target list and re-select PE(16:1_18:3) to update the chromatograms.</li>
+    </ul>
+    <p>
+        To explore the filtered data, perform the following steps:
+    </p>
+    <ul>
+        <li>Click on the apex of the blue precursor chromatogram to show the <b>Full-Scan</b> graph.</li>
+        <li>Click the <b>Zoom to Selection</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Full-Scan</b> graph should now look something like this:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        The horizontal violet range showing the filter imposed by the CCS (261 Å<sup>2</sup>) is now visible and stored in the Skyline document. The
+        signal outside of this drift time range has been ignored by Skyline during chromatogram extraction. Therefore, the interference at 36 ms has
+        been removed. To view the filtered MS/MS data:
+    </p>
+    <ul>
+        <li>Click on the apex of the teal and orange fragment chromatograms.</li>
+    </ul>
+    <p>
+        You may notice that the fragment ions have slightly lower drift times than the precursor. This occurs because the voltage applied in the
+        collision cell causes the smaller fragment ions to have a higher velocity and arrive at the detector slightly faster than the larger precursor
+        ions. This is accounted for by adding high energy drift time offset values to the spectral library.
+    </p>
+    <p>
+        Select other targets to compare the current chromatograms to those observed prior to drift time filtering. To further investigate the filtering
+        of interferences, click on the apex of the precursor and fragment peaks.
+    </p>
+    <p>
+        Note that if you were interested in lipids that are not present in the current spectral library, you can add to it manually or using
+        LipidCreator. To access the LipidCreator plugin, do the following:
+    </p>
+    <ul>
+        <li>From the <b>Tools</b> menu, click <b>Tool Store</b>.</li>
+        <li>Select <b>LipidCreator</b> in the list of available tools.</li>
+    </ul>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Install</b> button.</li>
+    </ul>
+    <p>
+        A progress form should appear as <b>LipidCreator</b> is downloading. When it finishes, <b>LipidCreator</b> can be accessed
+        directly from the <b>Tools</b> menu.
+    </p>
+    <p>
+        The following steps can be taken to easily export an updated spectral library once you have an expanded set of results for new lipids of your
+        choosing:
+    </p>
+    <ul>
+        <li>From the <b>File</b> menu, choose <b>Export</b> and click <b>Spectral Library</b>.</li>
+        <li>Enter a file name and click <b>Save</b>.</li>
+    </ul>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you have learned how to work with small molecule spectral libraries and IMS data in Skyline. You now understand the settings
+        required for chromatogram extraction from this type of data. You can import, export, and inspect the contents of any small molecule spectral
+        library. You have learned to interpret the alternating MS1 and MS/MS three-dimensional spectra produced by an IMS enabled mass spectrometer
+        for complex lipidomics datasets. You can now use CCS values for drift time filtering to enhance the selectivity of chromatograms extracted by
+        Skyline. Having completed this tutorial, you should be ready to take full advantage of multidimensional spectral libraries to improve your
+        analysis of small molecules.
+    </p>
+</body>
+
+</html>

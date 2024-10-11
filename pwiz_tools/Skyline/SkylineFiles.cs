@@ -50,6 +50,7 @@ using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -814,9 +815,16 @@ namespace pwiz.Skyline
             string pathCache = ChromatogramCache.FinalPathForName(path, null);
             if (!document.Settings.HasResults)
             {
-                // On open, make sure a document with no results does not have a
-                // data cache file, since one may have been left behind on a Save As.
-                FileEx.SafeDelete(pathCache, true);
+                try
+                {
+                    // On open, make sure a document with no results does not have a
+                    // data cache file, since one may have been left behind on a Save As.
+                    FileEx.SafeDelete(pathCache);
+                }
+                catch (Exception e)
+                {
+                    MessageDlg.ShowException(this, e);
+                }
             }
             else if (!File.Exists(pathCache) &&
                 // For backward compatibility, check to see if any per-replicate
@@ -1714,9 +1722,10 @@ namespace pwiz.Skyline
             try
             {
                 long lineCount = Helpers.CountLinesInFile(fastaFile);
+                bool peptideList = IsPeptideList(fastaFile);
                 using (var readerFasta = new StreamReader(fastaFile))
                 {
-                    ImportFasta(readerFasta, lineCount, false, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
+                    ImportFasta(readerFasta, lineCount, peptideList, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
                 }
             }
             catch (Exception x)
@@ -1726,6 +1735,12 @@ namespace pwiz.Skyline
             }
         }
 
+        private bool IsPeptideList(string fastaFile)
+        {
+            using var reader = new StreamReader(fastaFile);
+            var line = reader.ReadLine();
+            return line != null && line.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX);
+        }
 
         public class ImportFastaInfo
         {
@@ -1748,28 +1763,40 @@ namespace pwiz.Skyline
             var docCurrent = DocumentUI;
 
             ModificationMatcher matcher = null;
-            if(peptideList)
+            if (peptideList)
             {
                 matcher = new ModificationMatcher();
-                List<string> sequences = new List<string>();
+                var sequences = new List<string>();
+                var lines = new List<string>();
                 string line;
                 var header = reader.ReadLine(); // Read past header
+                lines.Add(header);
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (line.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX))
+                    {
+                        lines.Add(line);
+                        continue;
+                    }
                     string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
+                    lines.Add(sequence);
+
+                    sequence = Transition.StripChargeIndicators(sequence, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
                     sequences.Add(sequence);
                 }
+
                 try
                 {
                     matcher.CreateMatches(docCurrent.Settings, sequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
                     var strNameMatches = matcher.FoundMatches;
                     if (!string.IsNullOrEmpty(strNameMatches))
                     {
-                        var message = TextUtil.LineSeparate(SkylineResources.SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
-                                                            string.Empty, strNameMatches);
+                        var message = TextUtil.LineSeparate(
+                            SkylineResources.SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
+                            string.Empty, strNameMatches);
                         if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
-                            this,
-                            message, SkylineResources.SkylineWindow_ImportFasta_OK))
+                                this,
+                                message, SkylineResources.SkylineWindow_ImportFasta_OK))
                         {
                             return;
                         }
@@ -1780,7 +1807,7 @@ namespace pwiz.Skyline
                     MessageDlg.ShowException(this, x);
                     return;
                 }
-                reader = new StringReader(TextUtil.LineSeparate(header, TextUtil.LineSeparate(sequences.ToArray())));
+                reader = new StringListReader(lines);
             }
 
             SrmDocument docNew = null;
@@ -2844,6 +2871,10 @@ namespace pwiz.Skyline
                 }
             }
 
+            if (!CheckForExistingResultsBeforeImporting())
+            {
+                return;
+            }
             using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -2915,6 +2946,44 @@ namespace pwiz.Skyline
                 // Training a peak scoring model does not work if Skyline did not do its own
                 // peak detection
                 return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Prompt the user to save the document if there are any cached results that are not
+        /// in the current document.
+        /// </summary>
+        private bool CheckForExistingResultsBeforeImporting()
+        {
+            var document = DocumentUI;
+            bool promptToSave;
+            if (document.Settings.HasResults)
+            {
+                var measuredResults = document.Settings.MeasuredResults;
+                var extraneousCachedFiles = measuredResults.CachedFilePaths.Select(path => path.GetLocation())
+                    .Except(measuredResults.MSDataFilePaths.Select(path => path.GetLocation())).ToList();
+                promptToSave = extraneousCachedFiles.Any();
+            }
+            else
+            {
+                var skydFilePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
+                promptToSave = File.Exists(skydFilePath);
+            }
+
+            if (!promptToSave)
+            {
+                return true;
+            }
+            switch (MultiButtonMsgDlg.Show(this,
+                        SkylineResources.SkylineWindow_SaveDocumentBeforeImportingResults,
+                        MessageBoxButtons.YesNoCancel))
+            {
+                case DialogResult.Yes:
+                    return SaveDocument();
+                case DialogResult.Cancel:
+                    return false;
             }
 
             return true;
@@ -3018,7 +3087,7 @@ namespace pwiz.Skyline
                     continue;
 
                 // Delete caches that will be overwritten
-                FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
+                FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
 
                 listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
@@ -3264,7 +3333,18 @@ namespace pwiz.Skyline
                     if (chromRemaining.Length > 0)
                     {
                         // Optimize the cache using this reduced set to remove their data from the cache
-                        resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager, longWaitBroker);
+                        try
+                        {
+                            resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager,
+                                longWaitBroker);
+                        }
+                        catch (Exception ex)
+                        {
+                            var message = string.Format(SkylineResources.SkylineWindow_ReimportChromatograms_Error_updating_file___0___,
+                                ChromatogramCache.FinalPathForName(DocumentFilePath, null));
+                            MessageDlg.ShowWithException(this, message, ex);
+                            return;
+                        }
                     }
                     else
                     {
@@ -3273,7 +3353,15 @@ namespace pwiz.Skyline
                             readStream.CloseStream();
 
                         string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
-                        FileEx.SafeDelete(cachePath, true);
+                        try
+                        {
+                            FileEx.SafeDelete(cachePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageDlg.ShowException(this, ex);
+                            return;
+                        }
                     }
                     // Restore the original set unchanged
                     resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
@@ -3369,7 +3457,11 @@ namespace pwiz.Skyline
 
         public void ShowEncyclopeDiaSearchDlg()
         {
-
+            KoinaUIHelpers.CheckKoinaSettings(this, this);
+            if (!KoinaHelpers.KoinaSettingsValid)
+            {
+                return;
+            }
             if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;

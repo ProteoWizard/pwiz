@@ -923,6 +923,12 @@
   <data name="peptideLogScaleContextMenuItem.Text" xml:space="preserve">
     <value>Log Scale</value>
   </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>Log Scale</value>
+  </data>
   <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -2965,6 +2971,12 @@
     <value>showDotProductToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;showDotProductToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;relativeAbundanceLogScaleContextMenuItem.Name" xml:space="preserve">
+    <value>relativeAbundanceLogScaleContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;relativeAbundanceLogScaleContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;peptideLogScaleContextMenuItem.Name" xml:space="preserve">

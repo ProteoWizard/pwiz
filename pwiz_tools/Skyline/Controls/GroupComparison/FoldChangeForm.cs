@@ -330,6 +330,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         }
                     }
 
+                    if (foldChangeForm is FoldChangeVolcanoPlot volcano)
+                    {
+                        if (parsed.Parts.Count >= 3)
+                            volcano.SetLayout(groupComparisonName, parsed.Parts[2]);
+                    }
+
                     return foldChangeForm;
                 }
             }

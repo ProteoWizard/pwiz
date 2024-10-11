@@ -331,7 +331,7 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
     <value>ディレクトリ{2}で{0}または{1}を見つけられません。 .groupファイルの処理を可能にするため、ProteinPilotソフトウェアを再インストールしてください。</value>
   </data>
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_" xml:space="preserve">
-    <value>明示的保持時間{1}が{2}と{3}の間でないため「{0}」 のクロマトグラムを破棄中</value>
+    <value>保持時間{1}が{2}と{3}の間でないため「{0}」 のクロマトグラムを破棄しています</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">

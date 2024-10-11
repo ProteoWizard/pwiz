@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -473,7 +472,7 @@ on one.SourceFile = two.SourceFile";
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(@"Exception loading cache: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }

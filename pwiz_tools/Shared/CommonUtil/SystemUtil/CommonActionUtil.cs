@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -53,7 +52,7 @@ namespace pwiz.Common.SystemUtil
             {
                 return;
             }
-            Trace.TraceWarning(@"Unhandled Exception: {0}", exception);
+            Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
         }
 
         public static bool SafeBeginInvoke(Control control, Action action)
