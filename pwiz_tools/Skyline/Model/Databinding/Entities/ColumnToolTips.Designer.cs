@@ -1585,6 +1585,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Comma separated list of the retention times for the peptide or molecule found in any spectral library..
+        /// </summary>
+        public static string LibraryRetentionTimes {
+            get {
+                return ResourceManager.GetString("LibraryRetentionTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Raw peptide library score that may or may not be used to rank among
         ///precursors of a protein..
         /// </summary>
@@ -1783,6 +1792,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum retention time for the peptide or molecule found in any spectral library.
+        /// </summary>
+        public static string MaxLibraryRetentionTime {
+            get {
+                return ResourceManager.GetString("MaxLibraryRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum of the transition RetentionTime values..
         /// </summary>
         public static string MaxRetentionTime {
@@ -1842,6 +1860,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MeanFwhm {
             get {
                 return ResourceManager.GetString("MeanFwhm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average of the retention times for the peptide or molecule found in any spectral library.
+        /// </summary>
+        public static string MeanLibraryRetentionTime {
+            get {
+                return ResourceManager.GetString("MeanLibraryRetentionTime", resourceCulture);
             }
         }
         
@@ -1971,6 +1998,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MinFoldChange {
             get {
                 return ResourceManager.GetString("MinFoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum retention time for the peptide or molecule found in any spectral library.
+        /// </summary>
+        public static string MinLibraryRetentionTime {
+            get {
+                return ResourceManager.GetString("MinLibraryRetentionTime", resourceCulture);
             }
         }
         
