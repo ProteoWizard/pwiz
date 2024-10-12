@@ -26,6 +26,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
@@ -1952,9 +1953,9 @@ namespace pwiz.Skyline.Model.Results
             return _medianTicArea;
         }
 
-        public ChromatogramTimeRanges GetChromatogramTimeRanges(CancellationToken cancellationToken, bool inferFromPoints)
+        public ChromatogramTimeRanges GetChromatogramTimeRanges(ProductionMonitor productionMonitor, bool inferFromPoints)
         {
-            return ChromatogramTimeRanges.ReadChromatogramTimeRanges(cancellationToken, Caches, inferFromPoints);
+            return ChromatogramTimeRanges.ReadChromatogramTimeRanges(productionMonitor, Caches, inferFromPoints);
         }
     }
 

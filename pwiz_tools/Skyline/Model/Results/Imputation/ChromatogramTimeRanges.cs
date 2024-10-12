@@ -18,16 +18,21 @@ namespace pwiz.Skyline.Model.Results.Imputation
             _timeRanges = timeRanges;
         }
 
-        public static ChromatogramTimeRanges ReadChromatogramTimeRanges(CancellationToken cancellationToken,
+        public static ChromatogramTimeRanges ReadChromatogramTimeRanges(ProductionMonitor productionMonitor,
             IEnumerable<ChromatogramCache> caches, bool inferFromPoints)
         {
             var timeRangeDicts = new Dictionary<Key, Dictionary<MsDataFileUri, TimeIntervals>>();
             var triggeredAcquisition = new TriggeredAcquisition();
-            foreach (var cache in caches)
+            var cachesList = caches.ToList();
+            var totalHeaderCount = cachesList.Sum(cache => cache.ChromGroupHeaderInfos.Count);
+            int processedHeaderCount = 0;
+            foreach (var cache in cachesList)
             {
                 for (int iHeader = 0; iHeader < cache.ChromGroupHeaderInfos.Count; iHeader++)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                    processedHeaderCount++;
+                    productionMonitor.SetProgress(processedHeaderCount * 100 / totalHeaderCount);
                     var header = cache.ChromGroupHeaderInfos[iHeader];
                     TimeIntervals timeIntervals = null;
                     if (inferFromPoints)
@@ -200,7 +205,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override ChromatogramTimeRanges ProduceResult(ProductionMonitor productionMonitor, Parameter parameter, IDictionary<WorkOrder, object> inputs)
             {
-                return parameter.MeasuredResults?.GetChromatogramTimeRanges(productionMonitor.CancellationToken, parameter.InferFromPoints);
+                return parameter.MeasuredResults?.GetChromatogramTimeRanges(productionMonitor, parameter.InferFromPoints);
             }
         }
     }
