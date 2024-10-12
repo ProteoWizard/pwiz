@@ -2829,7 +2829,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class LibraryDetails
     {
         private readonly IList<LibraryLink> _libLinks;
-        private IEnumerable<SpectrumSourceFileDetails> _dataFiles;
+        private ImmutableList<SpectrumSourceFileDetails> _dataFiles = ImmutableList<SpectrumSourceFileDetails>.EMPTY;
         
         public LibraryDetails()
         {
@@ -2856,8 +2856,8 @@ namespace pwiz.Skyline.Model.Lib
         public int TotalPsmCount { get; set; }
         public IEnumerable<SpectrumSourceFileDetails> DataFiles
         { 
-            get { return _dataFiles ?? (_dataFiles = new List<SpectrumSourceFileDetails>()); }
-            set { _dataFiles = value; }
+            get { return _dataFiles; }
+            set { _dataFiles = ImmutableList.ValueOfOrEmpty(value); }
         }
 
         public IEnumerable<LibraryLink> LibLinks
