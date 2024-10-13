@@ -11,10 +11,10 @@
     <p>
         Predicting peptide retention time has long been of interest in targeted proteomics. As early as version 0.2, Skyline integrated the SSRCalc
         hydrophobicity calculator<sup>1</sup> as one way to predict a peptide retention time given its unmodified sequence, as described in the “<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine_ja.url">Targeted Method
             Refinement</a>” tutorial. By version 0.5, Skyline supported what has become the state-of-the-art in scheduled acquisition for targeted
         experiments. This technique, also described in the “<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine_ja.url">Targeted Method
             Refinement</a>” tutorial, involves first measuring all targeted peptides unscheduled on the system you will use for your multi-replicate
         experiment. Retention times from the unscheduled injections are then used to schedule all subsequent acquisition, as long as no chromatography
         changes are necessary.
@@ -98,7 +98,7 @@
         The form looking like this:
     </p>
     <p>
-        <img src="image-0.png" />
+        <img src="s-1.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -114,7 +114,7 @@
         Skyline should present the <b>Retention Times</b> view showing a graph like the one below:
     </p>
     <p>
-        <img src="image-1.png" />
+        <img src="s-2.png" />
     </p>
     <p>
         This gives you a top level view of when each peptide eluted, on average, over the 30-minute gradient. Continue reviewing the data by doing the
@@ -131,7 +131,7 @@
         Skyline should now look something like this:
     </p>
     <p>
-        <img src="image-2.png" />
+        <img src="s-3.png" />
     </p>
     <p>
         Use the down-arrow key to review each of the 11 peptides in the Biognosys standard mix, making sure that the integration looks correct, and
@@ -148,7 +148,7 @@
     <ul>
         <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
         <li>Click the <b>Prediction</b> tab.</li>
-        <li>Click the <img src="image-3.png" /> (<b>Retention time calculators</b>) button, and click <b>Add</b> in the menu it
+        <li>Click the <img src="../../shared/calculator-button.png" /> (<b>Retention time calculators</b>) button, and click <b>Add</b> in the menu it
             shows.</li>
         <li>In the <b>Name</b> field of the <b>Edit iRT Calculator</b> form, enter ‘iRT-C18’.</li>
         <li>Click the <b>Create</b> button.</li>
@@ -164,7 +164,7 @@
         The <b>Calibrate iRT Calculator</b> form should now look something like:
     </p>
     <p>
-        <img src="image-4.png" />
+        <img src="s-4.png" />
     </p>
     <ul>
         <li>Click the <b>Graph</b> button to the right of the <b>Calculate from</b> dropdown list to see a plot of the line from
@@ -182,7 +182,7 @@
         The <b>Edit iRT Calculator</b> form should now look something like:
     </p>
     <p>
-        <img src="image-5.png" />
+        <img src="s-5.png" />
     </p>
     <p>
         That is it. You have calibrated a new set of iRT standards with measured data. In this case, however, the team at Biognosys has already
@@ -190,7 +190,7 @@
         calibration with the canonical one, but first to see how close the two are, do the following:
     </p>
     <ul>
-        <li>Move the mouse cursor below the <b>iRT standards</b> grid until you see a horizontal split cursor <img src="image-6.png" />.
+        <li>Move the mouse cursor below the <b>iRT standards</b> grid until you see a horizontal split cursor <img src="../../shared/horizontal-split-cursor-icon.png" />.
         </li>
         <li>Click and drag the splitter until you can see all 11 standard peptides in the grid.</li>
         <li>In the dropdown list above the grid switch between the two choices:<ul>
@@ -229,7 +229,7 @@
         Skyline should present a graph that looks like the one below:
     </p>
     <p>
-        <img src="image-7.png" />
+        <img src="s-6.png" />
     </p>
     <p>
         In the upper left corner of the graph, you will see a Pearson’s Correlation Coefficient of 0.9991. If you do not see iRT-C18 below the x-axis,
@@ -269,7 +269,7 @@
         The <b>Targets</b> view should look something like this:
     </p>
     <p>
-        <img src="image-8.png" />
+        <img src="s-7.png" />
     </p>
     <ul>
         <li>Save this document as ‘iRT Human+Standard.sky’.</li>
@@ -311,7 +311,7 @@
         The form should look like the following:
     </p>
     <p>
-        <img src="image-9.png" />
+        <img src="s-8.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -331,7 +331,7 @@
         The <b>Export Transition List</b> form should now look like:
     </p>
     <p>
-        <img src="image-10.png" />
+        <img src="s-9.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -385,7 +385,7 @@
         Once the data has finished importing, you should see a graph like:
     </p>
     <p>
-        <img src="image-11.png" />
+        <img src="s-10.png" />
     </p>
     <p>
         The cluster of purple points, on the left side of the graph indicates that these peptides do not yet have calibrated iRT values. Before
@@ -411,7 +411,7 @@
         The <b>Find</b> form should look like:
     </p>
     <p>
-        <img src="image-12.png" />
+        <img src="s-11.png" />
     </p>
     <ul>
         <li>Click the <b>Find All</b> button.</li>
@@ -422,7 +422,7 @@
         transitions:
     </p>
     <p>
-        <img src="image-13.png" />
+        <img src="s-12.png" />
     </p>
     <p>
         To review the peptides containing these peaks, do the following:
@@ -436,9 +436,16 @@
         You will see that several of these are transitions with interference, and have signal lower than 1% (by area) of the most
         intense transition:
     </p>
-    <p>
-        <img src="image-14.png" /><img src="image-15.png" /> 
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-13.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-14.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         Skyline excludes such transitions to help you in deciding which transitions to keep for your final quantitative method. If you have already
         made that decision, however, you hide this information by doing the following:
@@ -467,7 +474,7 @@
         Skyline will show you the following informational message:
     </p>
     <p>
-        <img src="image-16.png" />
+        <img src="s-15.png" />
     </p>
     <p>
         Note that in producing iRT values for the two runs, Skyline has performed a separate linear regression for each run. It uses the linear
@@ -489,7 +496,7 @@
         The <b>Edit iRT Calculator</b> form should now look like:
     </p>
     <p>
-        <img src="image-17.png" />
+        <img src="s-16.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -498,7 +505,7 @@
         The <b>Retention Times</b> view should change to look like this:
     </p>
     <p>
-        <img src="image-18.png" />
+        <img src="s-17.png" />
     </p>
     <p>
         You have just calibrated iRT-C18 values for 148 new human peptides, using data acquired on a 30-minute gradient.
@@ -549,7 +556,7 @@
         The <b>Peptide Settings</b> form should look like this:
     </p>
     <p>
-        <img src="image-19.png" />
+        <img src="s-18.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -562,7 +569,7 @@
         When the data has finished importing, the <b>Retention Times</b> regression graph will be shown as:
     </p>
     <p>
-        <img src="image-20.png" />
+        <img src="s-19.png" />
     </p>
     <p>
         You can see that the times for the standard peptides now range from about 15 to 65 minutes, and none of the target peptides were measured in
@@ -581,7 +588,7 @@
         below:
     </p>
     <p>
-        <img src="image-21.png" />
+        <img src="s-20.png" />
     </p>
     <p>
         If you do not see all three lines shown in the graph above, you can do the following:
@@ -597,7 +604,7 @@
         required to capture the entire peaks of a percentage of target peptides is approximated by the function below:
     </p>
     <p>
-        <img src="image-22.png" />
+        <img src="s-window-size-formula.png" />
     </p>
     <p>
         Where “z” is a critical value for the number of standard deviations within which the desired percentage fall in a normal distribution, e.g. 95%
@@ -622,7 +629,7 @@
         The <b>Export Transition List</b> form should look like:
     </p>
     <p>
-        <img src="image-23.png" />
+        <img src="s-21.png" />
     </p>
     <p>
         You could also simply click the <b>Single method</b> option, but the fact that the form shows “<b>Methods</b>: 1” confirms
@@ -670,7 +677,7 @@
         When the data has finished loading, the <b>Retention Times</b> view should present a graph like:
     </p>
     <p>
-        <img src="image-24.png" /> 
+        <img src="s-22.png" /> 
     </p>
     <p>
         From this graph, it is immediately obvious that there are 2 outlier peptides, which could be caused by miss-integrated peaks in the current
@@ -694,7 +701,7 @@
         The <b>Retention Times</b> graph should now look like:
     </p>
     <p>
-        <img src="image-25.png" />
+        <img src="s-23.png" />
     </p>
     <p>
         You can now click on each outlier point, causing Skyline to select it in the peptide view. Then, press Esc to give focus back to the main
@@ -730,7 +737,7 @@
         The <b>Retention Times</b> graph should now look like this:
     </p>
     <p>
-        <img src="image-26.png" />
+        <img src="s-24.png" />
     </p>
     <p>
         This gives you a clearer sense that measured times are varying within +/- 2 minutes of the predicted times. What retention time scheduling
@@ -745,7 +752,7 @@
         present graphs like the one below:
     </p>
     <p>
-        <img src="image-27.png" />
+        <img src="s-25.png" />
     </p>
     <p>
         You will see that all peptides, except the standards, now have light and heavy precursor pairs and generally more points across each peak than
@@ -779,7 +786,7 @@
         occurred anywhere on the peptide elution peak. Scan-based iRT values can, however, be used to transition directly from DDA discovery
         experiments to scheduled SRM, saving quite a bit of instrument time in the process. This has also become the most popular method of
         calibrating iRT values for use in querying chromatogram peaks within data independent acquisition (DIA) data, as described in the “<a
-            href="https://skyline.ms/tutorial_dia_swath.url">Analysis of DIA/SWATH Data</a>” tutorial.
+            href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a>” tutorial.
     </p>
     <p>
         In the iRT folder for this tutorial, you will find a sub-folder ‘Yeast+Standard’, which contains a spectral library
@@ -806,7 +813,7 @@
         The <b>Add Spectral Library</b> form should look like this:
     </p>
     <p>
-        <img src="image-28.png" />
+        <img src="s-26.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -815,7 +822,7 @@
         Skyline should present a form that looks like this:
     </p>
     <p>
-        <img src="image-29.png" />
+        <img src="s-27.png" />
     </p>
     <p>
         The form tells you that Skyline was able to calculate a single valid regressions for both DDA runs in the library. When possible, Skyline will
@@ -846,7 +853,7 @@
         You could now use the iRT values you just calculated based on MS/MS scan times to schedule SRM acquisition of these peptides, and then use the
         SRM data to get more accurate iRT values based on chromatogram peak times. However, by using Skyline MS1 Filtering, you can also extract
         chromatogram peak times directly from the original DDA runs. Complete details on how to set up and import data into a MS1 Filtering document
-        can be found in the <a href="https://skyline.ms/tutorial_ms1_filtering.url">MS1 Full-Scan Filtering</a> tutorial. In this tutorial, you can
+        can be found in the <a href="https://skyline.ms/tutorial_ms1_filtering_ja.url">MS1 Full-Scan Filtering</a> tutorial. In this tutorial, you can
         take a quick look at a document which has already been created and had data imported, covering the two DDA runs used to create the spectral
         library, by doing the following:
     </p>
@@ -860,7 +867,7 @@
         The Skyline window should look something like:
     </p>
     <p>
-        <img src="image-30.png" />
+        <img src="s-28.png" />
     </p>
     <p>
         You can double-click in the title bar of the <b>Retention Times</b> view to get a better look at the graph, and see that the
@@ -872,7 +879,7 @@
     <p>
         The chromatograms you see in this file were extracted from the MS1 scans of the DDA runs used to build the spectral library. You can also see
         the times at which identified MS/MS scans were recorded, as they are annotated with ‘ID’ in the chromatogram graphs. Again, you can learn more
-        about how to use this data processing method to your advantage in the <a href="https://skyline.ms/tutorial_ms1_filtering.url">MS1 Full-Scan
+        about how to use this data processing method to your advantage in the <a href="https://skyline.ms/tutorial_ms1_filtering_ja.url">MS1 Full-Scan
             Filtering</a> tutorial.
     </p>
     <p>
@@ -888,7 +895,7 @@
         Skyline presents a form that looks like this:
     </p>
     <p>
-        <img src="image-31.png" />
+        <img src="s-29.png" />
     </p>
     <p>
         To tell you that it will replace the 558 iRT values you added in the previous section. Now that you are using chromatogram peak times, you also

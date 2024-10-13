@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Optimization
             matcher.CreateMatches(newDoc.Settings, peptideList, Settings.Default.StaticModList, Settings.Default.HeavyModList);
             FastaImporter importer = new FastaImporter(newDoc, matcher);
             // ReSharper disable LocalizableElement
-            string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList));
+            string text = TextUtil.LineSeparate(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList));
             // ReSharper restore LocalizableElement
             PeptideGroupDocNode imported = importer.Import(new StringReader(text), null, Helpers.CountLinesInString(text)).First();
 

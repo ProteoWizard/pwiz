@@ -134,7 +134,7 @@
     <value>服务器 {0} 的JSON响应异常</value>
   </data>
   <data name="UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_" xml:space="preserve">
-    <value>用户名和密码无法采用 panorama 服务器验证。</value>
+    <value>用户名和密码无法通过 panorama 服务器验证。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
@@ -249,7 +249,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
-    <value>完成 {0}% 数据导入。</value>
+    <value>正在进行数据导入。已完成 {0}%</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_" xml:space="preserve">
