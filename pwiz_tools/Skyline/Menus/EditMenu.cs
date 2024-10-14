@@ -841,36 +841,24 @@ namespace pwiz.Skyline.Menus
                             continue;
                         }
 
-                        var auditLogProperty = PropertyName.ROOT.SubProperty(peptideGroupDocNode.AuditLogText)
-                            .SubProperty(peptideDocNode.AuditLogText);
-                        TransitionGroupDocNode transitionGroupDocNode = null;
+                        TransitionGroup transitionGroup = null;
                         if (currentTransitionGroupPath != null && Equals(currentPeptidePath, peptidePath))
                         {
-                            transitionGroupDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(currentTransitionGroupPath.Child);
+                            transitionGroup = (TransitionGroup)currentTransitionGroupPath.Child;
                         }
 
-                        if (transitionGroupDocNode != null)
-                        {
-                            auditLogProperty =
-                                auditLogProperty.SubProperty(transitionGroupDocNode.AuditLogText);
-                        }
-                        else
-                        {
-                            transitionGroupDocNode =
-                                PeakMatcher.PickTransitionGroup(document, peptideDocNode, resultsIndex);
-                        }
-
-                        if (transitionGroupDocNode == null)
+                        var peakMatcher = new PeakMatcher(document, peptidePath, transitionGroup, resultsIndex, 
+                            resultsFile);
+                        if (peakMatcher.TransitionGroupDocNode == null)
                         {
                             continue;
                         }
-
-                        var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
+                        var chromInfo = SkylineWindow.FindChromInfo(document, peakMatcher.TransitionGroupDocNode, chromSet.Name, filePath);
                         if (document.GetSynchronizeIntegrationChromatogramSets().Any())
                         {
                             // Apply peak with synchronized integration
 
-                            var nodeTranGroupPath = new IdentityPath(peptidePath, transitionGroupDocNode.TransitionGroup);
+                            var nodeTranGroupPath = new IdentityPath(peptidePath, peakMatcher.TransitionGroupDocNode.TransitionGroup);
 
                             var change = new ChangedPeakBoundsEventArgs(
                                 nodeTranGroupPath, null, chromSet.Name, filePath,
@@ -882,14 +870,12 @@ namespace pwiz.Skyline.Menus
                         }
                         else
                         {
-                            PeptideGroup peptideGroup = (PeptideGroup)peptidePath.GetIdentity(0);
-                            document = PeakMatcher.ApplyPeak(progressMonitor, progressStatus, document, peptideGroup,
-                                peptideDocNode, transitionGroupDocNode, resultsIndex, resultsFile, subsequent, groupBy, group);
+                            document = peakMatcher.ApplyPeak(progressMonitor, progressStatus, subsequent, groupBy, group);
                         }
 
                         if (!Equals(peptideDocNode, document.FindNode(peptidePath)))
                         {
-                            changedPaths.Add(auditLogProperty);
+                            changedPaths.Add(peakMatcher.AuditLogProperty);
                         }
                     }
                 });
