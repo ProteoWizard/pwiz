@@ -32,6 +32,8 @@ p.keep-next {
 p.bibliography {
     font-family: "Cambria";
     margin:0;
+    text-indent: -16px; 
+    padding-left: 16px;
 }
 p.subtitle {
     color: #5A5A5A;
@@ -59,4 +61,12 @@ p.subtitle {
 }
 .toc-h6 {
     text-indent: 1.25in;
+}
+.comp-fig {
+    text-align: center;
+    border: 0;
+    width: auto;
+}
+.fig-text {
+    font-size: 11px;
 }

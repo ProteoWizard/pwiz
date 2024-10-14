@@ -12,7 +12,7 @@ namespace SharedBatchTest
 {
     public abstract class AbstractBaseFunctionalTest
     {
-        private const int SLEEP_INTERVAL = 100;
+        protected const int SLEEP_INTERVAL = 100;
         public const int WAIT_TIME = 60 * 1000;    // 60 seconds
 
         private bool _testCompleted;
@@ -123,7 +123,7 @@ namespace SharedBatchTest
             ResetSettings();
         }
 
-        private static int GetWaitCycles(int millis = WAIT_TIME)
+        protected static int GetWaitCycles(int millis = WAIT_TIME)
         {
             int waitCycles = millis / SLEEP_INTERVAL;
 

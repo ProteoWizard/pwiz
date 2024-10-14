@@ -1016,11 +1016,11 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_digest_enzyme" xml:space="preserve">
-    <value>蛋白酶定义用于解析蛋白质序列（作为目标添加到文档）中的肽段序列。作为目标添加的肽段列表会忽略此设置，但会计算遗漏的酶解位点数。</value>
+    <value>蛋白酶定义用于解析蛋白质序列（作为目标添加到文档）中的肽段序列。作为目标添加的肽段列表会忽略此设置，但会计算酶解的漏切位点数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_missed_cleavages" xml:space="preserve">
-    <value>当考虑到蛋白质酶解时，肽段中允许的 最大遗漏的酶解位点数。</value>
+    <value>当考虑到蛋白质酶解时，肽段中允许最大的酶解漏切位点数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_unique_by" xml:space="preserve">

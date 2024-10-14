@@ -84,9 +84,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(reportErrorDlg2);
 
             // Add 50,000 peptides to the document so that its size will exceed ReportErrorDlg.MAX_ATTACHMENT_SIZE
+            var peptideSequences = RescoreInPlaceTest.PermuteString("ELVISLIVES").Distinct().Take(50_000);
             RunUI(() =>
             {
-                SkylineWindow.Paste(TextUtil.LineSeparate(Enumerable.Repeat("ELVISLIVES", 50000)));
+                SkylineWindow.Paste(TextUtil.LineSeparate(peptideSequences));
             });
 
             // Verify that the "Report Error" menu item on the Help menu is hidden unless the user holds down the shift key
