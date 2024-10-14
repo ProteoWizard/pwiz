@@ -24,6 +24,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -88,10 +89,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var chromSet = Document.Settings.MeasuredResults.Chromatograms[ResultsIndex];
-            if (!Document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, PeptideDocNode, nodeTranGroup, mzMatchTolerance, out var chromGroupInfos))
-                return;
-
-            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
+            var chromGroupInfo = GetChromatogramGroupInfo(ResultsIndex, chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath);
             if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return;
             if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
@@ -163,15 +161,15 @@ namespace pwiz.Skyline.Model
             var doc = Document;
             var annotationCalculator = new AnnotationCalculator(doc);
             var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
-            for (var i = 0; i < chromatograms.Count; i++)
+            for (var resultsIndex = 0; resultsIndex < chromatograms.Count; resultsIndex++)
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return null;
                 }
                 progressMonitor.UpdateProgress(progressStatus =
-                    progressStatus.ChangePercentComplete(i * 100 / chromatograms.Count));
-                var chromSet = chromatograms[i];
+                    progressStatus.ChangePercentComplete(resultsIndex * 100 / chromatograms.Count));
+                var chromSet = chromatograms[resultsIndex];
 
                 if (groupBy != null)
                 {
@@ -181,16 +179,20 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                for (var j = 0; j < chromSet.MSDataFileInfos.Count; j++)
+                foreach (var fileInfo in chromSet.MSDataFileInfos)
                 {
-                    var fileInfo = chromSet.MSDataFileInfos[j];
-                    if ((i == ResultsIndex && (ChromFileInfoId == null || ReferenceEquals(ChromFileInfoId, fileInfo.FileId))) ||
-                        (subsequent && runTime != null && fileInfo.RunStartTime < runTime))
+                    if (resultsIndex == ResultsIndex &&
+                        (ChromFileInfoId == null || ReferenceEquals(ChromFileInfoId, fileInfo.FileId)))
                     {
                         continue;
                     }
 
-                    var bestMatch = GetPeakMatch(chromSet, fileInfo, TransitionGroupDocNode, referenceTarget, referenceMatchData);
+                    if (subsequent && runTime != null && fileInfo.RunStartTime < runTime)
+                    {
+                        continue;
+                    }
+
+                    var bestMatch = GetPeakMatch(resultsIndex, fileInfo.FilePath, TransitionGroupDocNode, referenceTarget, referenceMatchData);
                     if (bestMatch != null)
                         doc = bestMatch.ChangePeak(doc, PeptideGroupDocNode.PeptideGroup, PeptideDocNode, TransitionGroupDocNode, chromSet.Name, fileInfo.FilePath);
                 }
@@ -229,7 +231,7 @@ namespace pwiz.Skyline.Model
                 if (!Document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, peptideDocNode, tranGroup, mzMatchTolerance, out chromGroupInfos))
                     continue;
 
-                float areaSum = chromGroupInfos.Where(info => info != null && info.TransitionPointSets != null)
+                float areaSum = chromGroupInfos.Where(info => info?.TransitionPointSets != null)
                     .Sum(chromGroupInfo => chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area)));
                 if (areaSum > highestAreaSum)
                 {
@@ -240,19 +242,17 @@ namespace pwiz.Skyline.Model
             return best;
         }
 
-        private PeakMatch GetPeakMatch(ChromatogramSet chromSet, IPathContainer fileInfo, TransitionGroupDocNode nodeTranGroup,
+        private PeakMatch GetPeakMatch(int resultsIndex, MsDataFileUri msDataFileUri, TransitionGroupDocNode nodeTranGroup,
             PeakMatchData referenceTarget, IEnumerable<PeakMatchData> referenceMatchData)
         {
             if (referenceTarget == null)
                 return new PeakMatch(0, 0);
 
             var mzMatchTolerance = (float) Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-
-            ChromatogramGroupInfo[] loadInfos;
-            if (!nodeTranGroup.HasResults || !Document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out loadInfos))
+            if (!nodeTranGroup.HasResults)
                 return null;
 
-            var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));
+            var chromGroupInfo = GetChromatogramGroupInfo(resultsIndex, msDataFileUri);
             if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return null;
             if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Model
             public void Add(TransitionDocNode nodeTran, float abundance)
             {
                 string ion = nodeTran.FragmentIonName;
-                float current = !_abundances.ContainsKey(ion) ? 0 : _abundances[ion];
+                _abundances.TryGetValue(ion, out var current);
                 _abundances[ion] = current + abundance;
             }
 
@@ -592,6 +592,41 @@ namespace pwiz.Skyline.Model
                 var statisticsOther = new Statistics(abundancesOther);
                 return statisticsThis.Angle(statisticsOther);
             }
+        }
+
+        private ChromatogramGroupInfo GetChromatogramGroupInfo(int resultsIndex, MsDataFileUri filePath)
+        {
+            var mzMatchTolerance = (float)Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var chromSet = Document.Settings.MeasuredResults.Chromatograms[resultsIndex];
+            if (!Document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, PeptideDocNode, TransitionGroupDocNode, mzMatchTolerance, out var chromGroupInfos))
+                return null;
+            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(filePath, info.FilePath));
+            return EnsureDetectedPeaks(resultsIndex, chromGroupInfo);
+        }
+
+        private ChromatogramGroupInfo EnsureDetectedPeaks(int resultsIndex, ChromatogramGroupInfo chromatogramGroupInfo)
+        {
+            if (chromatogramGroupInfo == null || chromatogramGroupInfo.NumPeaks >= 2)
+            {
+                return chromatogramGroupInfo;
+            }
+
+            var chromSet = Document.Settings.MeasuredResults.Chromatograms[resultsIndex];
+            var chromFileInfo = chromSet.GetFileInfo(chromatogramGroupInfo.FilePath);
+            var onDemandFeatureCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, Document.Settings,
+                PeptideDocNode, resultsIndex, chromFileInfo);
+            var peptideChromDataSets = onDemandFeatureCalculator.MakePeptideChromDataSets();
+            peptideChromDataSets.PickChromatogramPeaks(null);
+            var dataSets = peptideChromDataSets.DataSets.Where(dataSet => dataSet.NodeGroups.Any(tuple =>
+                ReferenceEquals(tuple.Item2.TransitionGroup, TransitionGroupDocNode.TransitionGroup)));
+            var rescoredChromatogramGroupInfo =
+                peptideChromDataSets.MakeChromatogramGroupInfos(dataSets).FirstOrDefault();
+            if (rescoredChromatogramGroupInfo == null || chromatogramGroupInfo.NumPeaks >= rescoredChromatogramGroupInfo.NumPeaks)
+            {
+                return chromatogramGroupInfo;
+            }
+
+            return rescoredChromatogramGroupInfo;
         }
     }
 }
