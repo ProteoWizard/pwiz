@@ -187,6 +187,16 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dot product (actually it is a normalized square root contrast angle) between the annotated peaks in the library and Koina spectra. 
+        ///    User controls which ion types are annotated, and hence included into the calculation. .
+        /// </summary>
+        internal static string Description_KoinaDotpMatch {
+            get {
+                return ResourceManager.GetString("Description_KoinaDotpMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name of the library containing this spectrum match.
         /// </summary>
         internal static string Description_LibraryName {
@@ -291,6 +301,15 @@ namespace pwiz.Skyline.Model {
         internal static string IonMobility {
             get {
                 return ResourceManager.GetString("IonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Koina dot product.
+        /// </summary>
+        internal static string KoinaDotpMatch {
+            get {
+                return ResourceManager.GetString("KoinaDotpMatch", resourceCulture);
             }
         }
         

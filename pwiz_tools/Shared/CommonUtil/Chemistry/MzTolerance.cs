@@ -85,6 +85,17 @@ namespace pwiz.Common.Chemistry
             return (a >= b - this) && (a <= b + this);
         }
 
+        public int CompareWithTolerance(double a, double b)
+        {
+            if (a < (b - this))
+                return -1;
+            if ((a >= b - this) && (a <= b + this))
+                return 0;
+            if (a > (b + this))
+                return 1;
+            return 0; // we should never reach this point
+        }
+
         /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
         public bool LessThanTolerance(double a, double b)
         {

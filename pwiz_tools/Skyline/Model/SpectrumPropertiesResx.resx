@@ -157,6 +157,10 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
   </data>
+  <data name="Description_KoinaDotpMatch" xml:space="preserve">
+    <value>Dot product (actually it is a normalized square root contrast angle) between the annotated peaks in the library and Koina spectra. 
+    User controls which ion types are annotated, and hence included into the calculation. </value>
+  </data>
   <data name="Adduct" xml:space="preserve">
     <value>Adduct</value>
   </data>
@@ -198,5 +202,8 @@
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>Spectrum Count</value>
+  </data>
+  <data name="KoinaDotpMatch" xml:space="preserve">
+    <value>Koina dot product</value>
   </data>
 </root>

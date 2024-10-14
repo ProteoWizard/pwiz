@@ -1340,8 +1340,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 ? TextUtil.LineSeparate(
                                     string.Format(KoinaResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                         GraphItem.LibraryName, mirrorSpectrum.Name),
-                                    SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
-                                    string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp))
+                                    SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName))
                                 : TextUtil.LineSeparate(
                                     mirrorSpectrum.Name,
                                     mirrorGraphItem.Title,
@@ -1372,6 +1371,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                     libInfo.SpectrumHeaderInfo)
                                 .ChangePeptideNode(selection.NodePep);
                             var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor, new LibKeyModificationMatcher());
+                            if (dotp.HasValue)
+                                props.KoinaDotpMatch = string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp);
                             msGraphExtension.SetPropertiesObject(props);
                         }
                     }

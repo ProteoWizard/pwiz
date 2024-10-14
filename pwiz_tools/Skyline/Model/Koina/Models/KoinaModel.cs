@@ -662,7 +662,7 @@ namespace pwiz.Skyline.Model.Koina.Models
 
         /// <summary>
         /// Calculates the normalized contrast angle of the square rooted
-        /// intensities of the two given spectra.
+        /// intensities of the two given spectra using matched peaks only.
         /// </summary>
         /// <param name="spectrum1">First spectrum</param>
         /// <param name="spectrum2">Second spectrum</param>
@@ -705,26 +705,68 @@ namespace pwiz.Skyline.Model.Koina.Models
                 new Statistics(intensities2All));
         }
 
-        /*public static double CalculateSpectrumDotpIonMatch(LibraryRankedSpectrumInfo spectrum1,
-            LibraryRankedSpectrumInfo spectrum2)
-        {
-            var matched1 = spectrum1.PeaksMatched.ToArray();
-            var matched2 = spectrum2.PeaksMatched.ToArray();
-            var intensities1All = new List<double>(matched1.Length + matched2.Length);
-            var intensities2All = new List<double>(matched1.Length + matched2.Length);
-
-            foreach (var match1 in matched1)
-            {
-                var other = matched2.Where(m => m.MatchedIons.Intersect())
-            }
-        }*/
-
         /// <summary>
-        /// ReLU activation for spectra
+        /// Calculates the normalized contrast angle of the square rooted
+        /// intensities of the two given spectra using all peaks in the first spectrum and
+        /// ignoring those peaks in spectrum2 that do not have a match.
         /// </summary>
-        /// <param name="f">float to apply ReLU to</param>
-        /// <returns>If f is positive, returns f, otherwise 0</returns>
-        public static float ReLU(float f)
+        /// <param name="spectrum1">First spectrum</param>
+        /// <param name="spectrum2">Second spectrum</param>
+        /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
+        public static double CalculateSpectrumMzFull(LibraryRankedSpectrumInfo spectrum1,
+            LibraryRankedSpectrumInfo spectrum2, MzTolerance mzTolerance)
+        {
+            var vectorLength = spectrum1.Intensities.Count() + spectrum2.Intensities.Count();
+            var s1 = Enumerable.Zip(spectrum1.MZs, spectrum1.Intensities,
+                (mz, i) => new SpectrumPeaksInfo.MI() { Mz = mz, Intensity = (float)i }).ToList();
+            var s2 = Enumerable.Zip(spectrum2.MZs, spectrum2.Intensities,
+                (mz, i) => new SpectrumPeaksInfo.MI() { Mz = mz, Intensity = (float)i }).ToList();
+
+            var intensities1All = new List<double>(vectorLength);
+            var intensities2All = new List<double>(vectorLength);
+            var matchIndex1 = 0;
+            var matchIndex2 = 0;
+            while (matchIndex1 < spectrum1.Intensities.Count() && matchIndex2 < spectrum2.Intensities.Count())
+            {
+                switch (mzTolerance.CompareWithTolerance(s1[matchIndex1].Mz, s2[matchIndex1].Mz))
+                {
+                    case -1:
+                        break;
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                }
+                {
+                    intensities1All.Add(s1[matchIndex1].Intensity);
+                    intensities2All.Add(s2[matchIndex1].Intensity);
+                    matchIndex1++;
+                    matchIndex2++;
+                }
+            }
+            return 0;
+        }
+
+            /*public static double CalculateSpectrumDotpIonMatch(LibraryRankedSpectrumInfo spectrum1,
+                LibraryRankedSpectrumInfo spectrum2)
+            {
+                var matched1 = spectrum1.PeaksMatched.ToArray();
+                var matched2 = spectrum2.PeaksMatched.ToArray();
+                var intensities1All = new List<double>(matched1.Length + matched2.Length);
+                var intensities2All = new List<double>(matched1.Length + matched2.Length);
+
+                foreach (var match1 in matched1)
+                {
+                    var other = matched2.Where(m => m.MatchedIons.Intersect())
+                }
+            }*/
+
+            /// <summary>
+            /// ReLU activation for spectra
+            /// </summary>
+            /// <param name="f">float to apply ReLU to</param>
+            /// <returns>If f is positive, returns f, otherwise 0</returns>
+            public static float ReLU(float f)
         {
             return Math.Max(f, 0.0f);
         }
