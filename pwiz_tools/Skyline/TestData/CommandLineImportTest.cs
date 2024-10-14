@@ -75,10 +75,37 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(doc.Settings.HasResults);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("CAexample"));
-            Assert.AreEqual(5, doc.PeptideGroupCount);
-            Assert.AreEqual(26, doc.PeptideCount);
-            Assert.AreEqual(26, doc.PeptideTransitionGroupCount);
-            Assert.AreEqual(78, doc.PeptideTransitionCount);
+            AssertEx.IsDocumentState(doc, null, 5, 26, 78);
+            Assert.IsTrue(doc.PeptideGroups.All(nodePepGroup => nodePepGroup.IsProtein));
+
+            // Repeat this with a peptide list, expecting the same numbers but peptide lists
+            // instead of proteins
+            var pepListPath = TestFilesDir.GetTestPath("bov-5-peplist.txt");
+            var outListPath = TestFilesDir.GetTestPath("import-search-list.sky");
+            WritePeptideList(pepListPath, doc, true);
+            var listArgs = args.ToList();
+            listArgs[1] = "--out=" + outListPath;
+            listArgs[listArgs.Count - 1] = "--import-pep-list=" + pepListPath;
+
+            output = RunCommand(listArgs.ToArray());
+
+            string lineLibrary = TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath));
+            string lineList = string.Format(Resources.CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____,
+                Path.GetFileName(pepListPath));
+            AssertEx.Contains(output, lineLibrary);
+            AssertEx.Contains(output, lineList);
+            Assert.IsTrue(output.IndexOf(lineLibrary, StringComparison.Ordinal) < output.IndexOf(lineList, StringComparison.Ordinal),
+                TextUtil.LineSeparate("Library building appears after peptide list import in the output:", output));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSearch_Adding__0__modifications_, 2));
+
+            var docList = ResultsUtil.DeserializeDocument(outListPath);
+            Assert.IsTrue(docList.Settings.HasResults);
+            Assert.AreEqual(1, docList.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(docList.Settings.MeasuredResults.ContainsChromatogram("CAexample"));
+            AssertEx.IsDocumentState(docList, null, 5, 26, 78);
+            Assert.IsTrue(docList.PeptideGroups.All(nodePepGroup => nodePepGroup.IsPeptideList));
+            Assert.IsTrue(docList.PeptideTransitionGroups.All(nodeGroup => nodeGroup.HasLibInfo));
 
             // without mods
             var outPath2 = TestFilesDir.GetTestPath("import-search2.sky");
