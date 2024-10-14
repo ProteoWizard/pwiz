@@ -20,11 +20,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public PeakImputationData(Parameters parameters, ChromatogramTimeRanges chromatogramTimeRanges, IList<MoleculePeaks> moleculePeaksList)
         {
             Params = parameters;
-            var sortedScores = ImmutableList.ValueOf(moleculePeaksList
-                .SelectMany(molecule => molecule.Peaks.Select(peak => peak.Score)).OfType<double>()
-                .Select(score => (float)score));
-
-            ScoreConversionData = new ScoreConversionData(sortedScores);
             ChromatogramTimeRanges = chromatogramTimeRanges;
 
             var ratedMoleculePeaks = new List<MoleculePeaks>();
@@ -39,22 +34,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public Parameters Params { get; }
         public ChromatogramTimeRanges ChromatogramTimeRanges { get; }
 
-        public ScoreConversionData ScoreConversionData { get; }
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
         public double? MeanRtStdDev { get; }
 
         public RatedPeak FillInScores(RatedPeak peak)
         {
-            if (peak.Score.HasValue)
-            {
-                peak = peak.ChangePercentile(ScoreConversionData.GetPercentileOfScore(peak.Score.Value));
-                // peak = peak.ChangeQValue(ScoringResults.ScoreQValueMap?.GetQValue(peak.Score));
-                if (!Equals(Params.ScoringModel, LegacyScoringModel.DEFAULT_MODEL))
-                {
-                    peak = peak.ChangePValue(CutoffScoreType.PVALUE.FromRawScore(ScoreConversionData, peak.Score.Value));
-                }
-            }
-
             return peak;
         }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -26,7 +25,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
@@ -38,7 +36,6 @@ namespace pwiz.Skyline.EditUI
         private Receiver<PeakImputationData.Parameters, PeakImputationData> _receiver;
         private SkylineDataSchema _dataSchema;
         private PeakImputationData _data;
-        private ScoreConversionData _scoreConversionData = ScoreConversionData.EMPTY;
         private SequenceTree _sequenceTree;
 
         public PeakImputationForm(SkylineWindow skylineWindow)
@@ -77,7 +74,6 @@ namespace pwiz.Skyline.EditUI
                 if (!Equals(_data, newData))
                 {
                     _data = newData;
-                    _scoreConversionData = _data.ScoreConversionData;
                     _rows.Clear();
                     _rows.AddRange(_data.MoleculePeaks.Select(peak => new Row(_dataSchema, peak)));
                     _rowsBindingList.ResetBindings();
@@ -191,7 +187,6 @@ namespace pwiz.Skyline.EditUI
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
                 .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null));
-            double? scoreCutoff;
             if (!DocumentWide)
             {
                 var peptideIdentityPaths =
