@@ -1061,12 +1061,17 @@ namespace TestRunnerLib
             }
         }
 
+        public string TeamCityTestName(TestInfo test)
+        {
+            return $@"{test.TestMethod.Module.Name}: {test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
+        }
+
         public void TeamCityStartTest(TestInfo test)
         {
             if (!TeamCityTestDecoration)
                 return;
 
-            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", TeamCityTestName(test));
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
@@ -1091,14 +1096,14 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", TeamCityTestName(test), tcMessage);
                 Console.WriteLine(failMsg);
                 if (IsParallelClient)
                     _log.WriteLine(failMsg);
                 // ReSharper restore LocalizableElement
             }
 
-            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", TeamCityTestName(test), LastTestDuration);
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
