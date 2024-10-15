@@ -374,5 +374,14 @@ namespace pwiz.Skyline.Model.DdaSearch {
                 return ResourceManager.GetString("MsconvertDdaConverter_Run_Starting_msconvert_conversion_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only MSFragger is currently supported for raw DIA searches. Enable DIA-Umpire to use other search engines..
+        /// </summary>
+        public static string SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported", resourceCulture);
+            }
+        }
     }
 }

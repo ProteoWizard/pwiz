@@ -209,6 +209,22 @@ namespace pwiz.Skyline.Model.DdaSearch
     }
 
     /// <summary>
+    /// An MsconvertDdaConverter with slightly different settings, for DIA search
+    /// </summary>
+    public class DiaConverter : MsconvertDdaConverter
+    {
+        public DiaConverter(ImportPeptideSearch importPeptideSearch) : base(importPeptideSearch)
+        {
+        }
+
+        public override string FilterMslevel()
+        {
+            return ""; // DIA needs both levels
+        }
+
+    }
+
+    /// <summary>
     /// Just an Msconvert caller with slightly different settings, for Hardklor purposes
     /// </summary>
     public class HardklorDdaConverter : MsconvertDdaConverter
