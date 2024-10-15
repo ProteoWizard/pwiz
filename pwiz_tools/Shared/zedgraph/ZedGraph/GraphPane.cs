@@ -1550,7 +1550,7 @@ namespace ZedGraph
                 if (!heights.Any(h => h > 0))
                     return; 
                 var minLabelHeight = heights.FindAll(h => h > 0).Min(); 
-                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight), parentControl);
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
                 var visiblePoints = new List<LabeledPoint>();
                 foreach (var labeledPoint in labPoints)
                 {
