@@ -592,7 +592,7 @@
     <value>8</value>
   </data>
   <data name="groupBoxUnifi.Text" xml:space="preserve">
-    <value>Advanced Unifi Settings</value>
+	  <value>Advanced Connection Settings</value>
   </data>
   <data name="&gt;&gt;groupBoxUnifi.Name" xml:space="preserve">
     <value>groupBoxUnifi</value>

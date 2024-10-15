@@ -21,6 +21,7 @@ using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -78,6 +79,10 @@ namespace pwiz.Skyline.Model.Results
             if (url.StartsWith(UnifiUrl.UrlPrefix))
             {
                 return new UnifiUrl(url);
+            }
+            if (url.StartsWith(WatersConnectUrl.UrlPrefix))
+            {
+                return new WatersConnectUrl(url);
             }
 
             return MsDataFilePath.ParseUri(url);

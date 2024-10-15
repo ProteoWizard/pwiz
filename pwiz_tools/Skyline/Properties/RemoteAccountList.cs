@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 
@@ -58,6 +59,7 @@ namespace pwiz.Skyline.Properties
             return new IXmlElementHelper<RemoteAccount>[]
             {
                 new XmlElementHelper<UnifiAccount>(),
+                new XmlElementHelper<WatersConnectAccount>(),
             };
         }
     }
