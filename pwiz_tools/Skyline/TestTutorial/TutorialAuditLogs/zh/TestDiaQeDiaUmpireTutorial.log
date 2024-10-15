@@ -63,8 +63,8 @@ All Info  :
 导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 "20" ppm
 导入肽段搜索 > DDA 搜索设置 > 每个肽段的最大可变修饰数 是 "3"
 导入肽段搜索 > DDA 搜索设置 > 碎片离子类型 是 "b, y"
-导入肽段搜索 > DDA 搜索设置 > Score type 是 "Max q-value"
-导入肽段搜索 > DDA 搜索设置 > Score threshold 是 "0.05"
+导入肽段搜索 > DDA 搜索设置 > 得分类型 是 "最大 Q 值"
+导入肽段搜索 > DDA 搜索设置 > 得分阈值 是 "0.05"
 导入肽段搜索 > DDA 转换器设置 > DDA 转换程序 是 "DIA-Umpire"
 导入肽段搜索 > DDA 转换器设置 > 仪器预设 是 "Q Exactive"
 导入肽段搜索 > DDA 转换器设置 > DDA 转换非默认设置 : 包含 EstimateBG = True
@@ -113,8 +113,8 @@ DDA 搜索设置 =
     片段耐受性 = "20" ppm,
     每个肽段的最大可变修饰数 = "3",
     碎片离子类型 = "b, y",
-    Score type = "Max q-value",
-    Score threshold = "0.05"
+    得分类型 = "最大 Q 值",
+    得分阈值 = "0.05"
 },
 DDA 转换器设置 = 
 {

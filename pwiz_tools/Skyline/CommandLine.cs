@@ -2814,7 +2814,7 @@ namespace pwiz.Skyline
 
             var matcher = new ModificationMatcher();
             var sequences = new List<string>();
-            foreach (var line in lineList)
+            foreach (var line in lineList.Where(l => !l.StartsWith(@">")))
             {
                 string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
                 sequences.Add(sequence);
