@@ -886,6 +886,6 @@
     </Setting>
     <Setting Name="RelativeAbundanceLogScale" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
-    </Setting>	
+    </Setting>
   </Settings>
 </SettingsFile>
