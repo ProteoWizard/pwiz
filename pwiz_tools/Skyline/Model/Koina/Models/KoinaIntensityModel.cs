@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using static Inference.ModelInferRequest.Types;
 
 namespace pwiz.Skyline.Model.Koina.Models
@@ -271,6 +273,12 @@ namespace pwiz.Skyline.Model.Koina.Models
                 public int PrecursorCharge { get; }
 
                 public float NormalizedCollisionEnergy { get; }
+
+                public override string ToString()
+                {
+                    return TextUtil.SpaceSeparate(PeptideSequence + Transition.GetChargeIndicator(PrecursorCharge),
+                        TextUtil.ColonSeparate(@"NCE", NormalizedCollisionEnergy.ToString(CultureInfo.CurrentCulture)));
+                }
             }
         }
 
