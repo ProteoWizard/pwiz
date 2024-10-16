@@ -1063,7 +1063,7 @@ namespace TestRunnerLib
 
         public string TeamCityTestName(TestInfo test)
         {
-            return $@"{test.TestMethod.Module.Name}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
+            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
         }
 
         public void TeamCityStartTest(TestInfo test)
