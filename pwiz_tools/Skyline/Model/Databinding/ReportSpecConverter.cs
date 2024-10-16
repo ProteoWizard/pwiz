@@ -19,10 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Databinding
                     oldCaption = null;
                     if (null == propertyPath)
                     {
-                        Trace.TraceWarning(@"Unable to parse ratio property {0}", part);
+                        Messages.WriteAsyncDebugMessage(@"Unable to parse ratio property {0}", part);
                         propertyPath = PropertyPath.Root.Property(part);
                     }
                 }
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.Databinding
                     PropertyInfo property = component.GetProperty(part);
                     if (null == property)
                     {
-                        Trace.TraceWarning(@"Could not find property {0}", part);
+                        Messages.WriteAsyncDebugMessage(@"Could not find property {0}", part);
                         continue;
                     }
                     propertyPath = PropertyPath.Root.Property(part);

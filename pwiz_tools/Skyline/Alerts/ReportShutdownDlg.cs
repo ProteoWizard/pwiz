@@ -18,12 +18,12 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Alerts
 
             if (!forced)
             {
-                Trace.TraceError(exceptionInfo);
+                Messages.WriteAsyncDebugMessage(exceptionInfo);
                 Console.WriteLine(exceptionInfo);
             }
 

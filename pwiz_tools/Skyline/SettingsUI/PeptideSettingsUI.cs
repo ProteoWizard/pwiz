@@ -1206,6 +1206,12 @@ namespace pwiz.Skyline.SettingsUI
             comboRetentionTime.SelectedItem = name;
         }
 
+        public string RetentionTimeRegressionName
+        {
+            get { return comboRetentionTime.SelectedItem.ToString(); }
+            set { comboRetentionTime.SelectedItem = value; }
+        }
+
         public void UseMeasuredRT(bool use)
         {
             cbUseMeasuredRT.Checked = use;
