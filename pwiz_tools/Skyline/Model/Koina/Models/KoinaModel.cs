@@ -27,7 +27,6 @@ using System.Threading;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using Inference;
-using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
