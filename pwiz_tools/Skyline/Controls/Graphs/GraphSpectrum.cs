@@ -1318,6 +1318,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _mirrorSpectrum = mirrorSpectrum;
 
                         double? dotp = null;
+                        double? fullDotp = null;
                         SpectrumGraphItem mirrorGraphItem = null;
                         if (mirrorSpectrum != null)
                         {
@@ -1330,8 +1331,14 @@ namespace pwiz.Skyline.Controls.Graphs
                             _graphHelper.AddSpectrum(mirrorGraphItem, false);
 
                             if (spectrum != null)
-                                dotp = KoinaHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo, mirrorGraphItem.SpectrumInfo,
+                            {
+                                dotp = KoinaHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo,
+                                    mirrorGraphItem.SpectrumInfo,
                                     settings.TransitionSettings.Libraries.IonMatchMzTolerance);
+                                fullDotp = KoinaHelpers.CalculateSpectrumDotpMzFull(GraphItem.SpectrumInfo,
+                                    mirrorGraphItem.SpectrumInfo,
+                                    settings.TransitionSettings.Libraries.IonMatchMzTolerance, true, false);
+                            }
                         }
 
                         if (mirrorSpectrum != null && mirrorGraphItem != null) // one implies the other, but resharper..
@@ -1373,6 +1380,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor, new LibKeyModificationMatcher());
                             if (dotp.HasValue)
                                 props.KoinaDotpMatch = string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp);
+                            if (fullDotp.HasValue)
+                                props.KoinaDotpMatchFull =
+                                    string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, fullDotp);
                             msGraphExtension.SetPropertiesObject(props);
                         }
                     }

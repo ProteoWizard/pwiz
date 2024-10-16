@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Model
         [Category("MatchInfo")] public string ScoreType { get; set; }
         [Category("MatchInfo")] public int? SpectrumCount { get; set; }
         [Category("MatchInfo")] public string KoinaDotpMatch { get; set; }
+        [Category("MatchInfo")] public string KoinaDotpMatchFull { get; set; }
 
         public void SetFileName(string fileName)
         {
