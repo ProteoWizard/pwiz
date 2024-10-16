@@ -322,7 +322,7 @@ namespace pwiz.SkylineTestUtil
             if (shotPic != null)
             {
                 processShot?.Invoke(shotPic);
-                CleanupBorder(shotPic); // Tidy up annoying variations in screen shot boarder due to underlying windows
+                CleanupBorder(shotPic); // Tidy up annoying variations in screenshot border due to underlying windows
 
                 if (scale.HasValue)
                 {
