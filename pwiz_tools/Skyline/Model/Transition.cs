@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Model
             return chargePos;
         }
 
-        public static string StripChargeIndicators(string text, int min, int max)
+        public static string StripChargeIndicators(string text, int min, int max, bool knownProteomic = false)
         {
             if (!MayHaveChargeIndicator(text))
                 return text;
@@ -332,15 +332,21 @@ namespace pwiz.Skyline.Model
                 }
                 // Allow any run of charge indicators no matter how long, because users guess this might work
                 int chargePos = FindChargeSymbolRepeatStart(line, min, max);
+                var chargeSepLocal = GetChargeSeparator(CultureInfo.CurrentCulture);
                 if (chargePos == -1)
                 {
                     // Or any formal protonated charge state indicator
-                    chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.CurrentCulture);
+                    if (line.Contains(chargeSepLocal))
+                        chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.CurrentCulture);
                     // Or the US/Invariant formatted version
-                    if (chargePos == -1 && GetChargeSeparator(CultureInfo.CurrentCulture) != GetChargeSeparator(CultureInfo.InvariantCulture))
-                        chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.InvariantCulture);
+                    if (chargePos == -1)
+                    {
+                        var chargeSepInvariant = GetChargeSeparator(CultureInfo.InvariantCulture);
+                        if (!Equals(chargeSepLocal, chargeSepInvariant) && line.Contains(chargeSepInvariant))
+                            chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.InvariantCulture);
+                    }
                 }
-                if (chargePos == -1)
+                if (chargePos == -1 && !knownProteomic)
                 {
                     // Check for adduct description
                     Adduct adduct;

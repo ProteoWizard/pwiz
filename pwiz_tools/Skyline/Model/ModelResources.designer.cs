@@ -1419,6 +1419,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to interpret modified sequence {0}.
+        /// </summary>
+        public static string PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_ {
+            get {
+                return ResourceManager.GetString("PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor..
         /// </summary>
         public static string PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor {

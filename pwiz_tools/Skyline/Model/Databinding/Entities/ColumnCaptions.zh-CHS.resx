@@ -999,11 +999,11 @@
     <value>母离子计算的浓度</value>
   </data>
   <data name="PrecursorCalculatedConcentrationMessage">
-    <value>母离子计算的浓度消息</value>
+    <value>由母离子计算的浓度消息</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationRaw">
-    <value>母离子计算的浓度原始值</value>
+    <value>由母离子计算的浓度原始值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationStrict">
