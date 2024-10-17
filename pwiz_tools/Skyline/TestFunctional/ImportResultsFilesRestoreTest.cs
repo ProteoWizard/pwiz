@@ -85,6 +85,11 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChangeLoaded(doc);
             WaitForConditionUI(() => SkylineWindow.ImportingResultsWindow.Finished);
 
+            // Make sure the settings are persisted and can be restored after saving
+            Settings.Default.Save();
+            Settings.Default.OpenDataSourceState = null;
+            Settings.Default.Reload();
+
             // Test that changes are restored when the form is next shown on the same path
             importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             importResultsFilesDlg = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
