@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             _dotpData = null;
-            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y))) 
+            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y)) && CanShowDotProduct) 
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
 
             if (ExpectedVisible != AreaExpectedValue.none &&
@@ -1198,19 +1198,34 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
                     }
+                }
 
-                    if (_expectedVisible != AreaExpectedValue.none)
+                if (_expectedVisible != AreaExpectedValue.none)
+                {
+                    var dotpData = new PointPairList();
+                    for (var replicateGroupIndex = 0;
+                         replicateGroupIndex < ReplicateGroups.Count;
+                         replicateGroupIndex++)
+                    {
+                        var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
+                        if (_docNode is TransitionGroupDocNode transitionGroupDocNode)
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(transitionGroupDocNode, replicateGroupIndex)));
+                        // Show dotp for a selected peptide only if it has only one precursor for which dotp can be calculated.
+                        else if (_docNode is PeptideDocNode pepDocNode && pepDocNode.TransitionGroups.Count(CanGetDotProductResults) == 1)
+                        {
+                            var replicate = replicateGroupIndex;
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(pepDocNode.TransitionGroups.First(CanGetDotProductResults), replicate)));
+                        }
+                    }
+
+                    if (dotpData.Count(pp => !double.IsNaN(pp.Y)) > 0)
                     {
                         _dotpData = new PointPairList();
-                        if(_expectedVisible.IsVisible())
+                        if (_expectedVisible.IsVisible())
                             _dotpData.Insert(0, 0, double.NaN);
-                        for (var replicateGroupIndex = 0;
-                            replicateGroupIndex < ReplicateGroups.Count;
-                            replicateGroupIndex++)
-                        {
-                            var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
-                            _dotpData.Insert(xValue, xValue, GetDotProductResults(nodeGroup, replicateGroupIndex));
-                        }
+                        _dotpData.Add(dotpData);
                     }
                 }
 
@@ -1234,6 +1249,38 @@ namespace pwiz.Skyline.Controls.Graphs
                         FixupForTotals();
                         break;
                 }
+            }
+            // this method is used to find the first node under a peptide for which the dotp line
+            // can be drawn.
+            private bool CanGetDotProductResults(TransitionGroupDocNode nodeGroup)
+            {
+                if (_expectedVisible == AreaExpectedValue.none)
+                    return false;
+                if (_expectedVisible == AreaExpectedValue.ratio_to_label)
+                {
+                    // if this is ratio to label normalization then we check if this precursor is not the label and it has a matching label precursor
+                    if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    {
+                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
+                        if (precursorNodePath.Peptide != null &&
+                            !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType) &&
+                            NormalizedValueCalculator.FindMatchingTransitionGroup(ratioToLabel, precursorNodePath.Peptide, nodeGroup) != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    // if this is a library dot product we see if it can be calculated for the first replicate (or if it has average)
+                    if (_expectedVisible == AreaExpectedValue.library &&
+                        nodeGroup.GetLibraryDotProduct(-1).HasValue)
+                        return true;
+                    if (_expectedVisible == AreaExpectedValue.isotope_dist &&
+                        nodeGroup.GetIsotopeDotProduct(-1).HasValue)
+                        return true;
+                }
+                return false;
             }
 
             private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)

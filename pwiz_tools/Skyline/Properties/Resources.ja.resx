@@ -3915,7 +3915,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
-    <value>エラー：ドキュメントには、mProphetフィーチャーをエクスポートするターゲットを含める必要があります。</value>
+    <value>エラー：ドキュメントには、mProphetフィーチャーをエクスポートするためのターゲットを含める必要があります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
@@ -3959,7 +3959,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
-    <value>エラー：{1}を通じて値リストを提供しなければ、{0}タイプの注釈は追加できません。</value>
+    <value>エラー：{1}を通じて数値リストを指定しなければ、{0}タイプの注釈は追加できません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
