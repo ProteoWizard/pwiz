@@ -3512,31 +3512,35 @@ namespace pwiz.Skyline.Properties {
                 this["FeatureFindingSignalToNoise"] = value;
             }
         }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool GroupComparisonAvoidLabelOverlap {
-            get {
+        public bool GroupComparisonAvoidLabelOverlap
+        {
+            get
+            {
                 return ((bool)(this["GroupComparisonAvoidLabelOverlap"]));
             }
-            set {
+            set
+            {
                 this["GroupComparisonAvoidLabelOverlap"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GroupComparisonSuspendLabelLayout {
-            get {
+        public bool GroupComparisonSuspendLabelLayout
+        {
+            get
+            {
                 return ((bool)(this["GroupComparisonSuspendLabelLayout"]));
             }
-            set {
+            set
+            {
                 this["GroupComparisonSuspendLabelLayout"] = value;
             }
         }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
@@ -3547,6 +3551,6 @@ namespace pwiz.Skyline.Properties {
             set {
                 this["RelativeAbundanceLogScale"] = value;
             }
-        }
+        }		
     }
 }
