@@ -226,16 +226,12 @@ namespace pwiz.Skyline.Alerts
             // Get list of all files that are currently missing
             var missingFiles = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
 
-            // Set initial directory to the one containing the document or default for results
-            var initialDir = Path.GetDirectoryName(_documentPath) ?? Settings.Default.SrmResultsDirectory;
-            if (string.IsNullOrEmpty(initialDir))
-                initialDir = null;
-
             using var openDataSource = new OpenDataSourceDialog(Settings.Default.RemoteAccountList, missingFiles);
-            openDataSource.InitialDirectory = new MsDataFilePath(initialDir);
-
+            openDataSource.RestoreState(_documentPath, Settings.Default.OpenDataSourceState);
             if (openDataSource.ShowDialog(this) == DialogResult.OK)
             {
+                Settings.Default.OpenDataSourceState = openDataSource.GetState(_documentPath);
+
                 var directory = openDataSource.CurrentDirectory; // Current directory from dialog selection
 
                 // Search through all selected files
@@ -275,8 +271,8 @@ namespace pwiz.Skyline.Alerts
         {
             Assume.IsTrue(listboxMissingFiles.Items.Count > 0); // Should only be in here with files to find
 
-            // Set initial directory to the one containing the document or default for results
-            var initialDir = Path.GetDirectoryName(_documentPath) ?? Settings.Default.SrmResultsDirectory;
+            // Set initial directory to the one containing the document
+            var initialDir = Path.GetDirectoryName(_documentPath);
             if (string.IsNullOrEmpty(initialDir))
                 initialDir = null;
 

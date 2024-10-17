@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="24.11" software_version="Skyline (64-bit : developer build) 24.1.1.289 (e45f46804)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="4" />
+      <peptide_filter start="2" min_length="8" max_length="20" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Thermo" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.034" intercept="3.314" />
+          <regression_ce charge="3" slope="0.044" intercept="3.314" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" precursor_adducts="[M-H],[M-],[M-2H],[M-3H],[M+],[M+H],[M+2H],[M+3H]" product_adducts="[M-],[M-2],[M-3],[M+],[M+2],[M+3]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="ion 3" fragment_range_last="last ion - 1" precursor_mz_window="0" auto_select="true" />
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="4" pick_from="none" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" max_transitions="320" />
+    </transition_settings>
+    <data_settings document_guid="f507ee4a-19d8-450f-9321-bffd2f98403d" />
+  </settings_summary>
+  <peptide_list label_name="peptides1" websearch_status="X#Upeptides1" auto_manage_children="false">
+    <peptide sequence="IGDYAGIK" modified_sequence="IGDYAGIK" calc_neutral_pep_mass="835.443969" num_missed_cleavages="0">
+      <precursor charge="2" calc_neutral_mass="835.443969" precursor_mz="418.72926" auto_manage_children="false" collision_energy="17.550795" modified_sequence="IGDYAGIK">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="722.359905" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>418.72926</precursor_mz>
+          <product_mz>723.367181</product_mz>
+          <collision_energy>17.550795</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="665.338441" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
+          <precursor_mz>418.72926</precursor_mz>
+          <product_mz>666.345717</product_mz>
+          <collision_energy>17.550795</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="AEFVEVTK" modified_sequence="AEFVEVTK" calc_neutral_pep_mass="921.480748" num_missed_cleavages="0">
+      <precursor charge="2" calc_neutral_mass="921.480748" precursor_mz="461.74765" auto_manage_children="false" collision_energy="19.01342" modified_sequence="AEFVEVTK">
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="721.401041" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
+          <precursor_mz>461.74765</precursor_mz>
+          <product_mz>722.408317</product_mz>
+          <collision_energy>19.01342</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="475.264213" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>461.74765</precursor_mz>
+          <product_mz>476.271489</product_mz>
+          <collision_energy>19.01342</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

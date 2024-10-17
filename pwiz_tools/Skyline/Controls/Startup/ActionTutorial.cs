@@ -213,7 +213,6 @@ namespace pwiz.Skyline.Controls.Startup
                             Settings.Default.ExportDirectory =
                                 Settings.Default.FastaDirectory =
                                     Settings.Default.LibraryResultsDirectory =
-                                        Settings.Default.SrmResultsDirectory =
                                             Settings.Default.ProteomeDbDirectory =
                                                 ExtractPath;
                 }
