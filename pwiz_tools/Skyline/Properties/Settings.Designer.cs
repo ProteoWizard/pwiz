@@ -550,18 +550,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SrmResultsDirectory {
-            get {
-                return ((string)(this["SrmResultsDirectory"]));
-            }
-            set {
-                this["SrmResultsDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("none")]
         public string AutoZoomChromatogram {
             get {
@@ -581,18 +569,6 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["TransformTypeChromatogram"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SrmResultsSourceType {
-            get {
-                return ((string)(this["SrmResultsSourceType"]));
-            }
-            set {
-                this["SrmResultsSourceType"] = value;
             }
         }
         

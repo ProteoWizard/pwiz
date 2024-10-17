@@ -119,6 +119,50 @@ namespace pwiz.Skyline.FileUI
             _specificDataSourceFilter = specificDataSourceFilter;
         }
 
+        public void RestoreState(string documentPath, OpenDataSourceState state)
+        {
+            if (state != null)
+                Size = state.WindowSize;
+
+            string initialDir = state?.InitialDirectory;
+            // If the saved initial directory is not for the same document, then start
+            // in the document folder. Always starting in the document folder is painful
+            // to watch, if the user is adding a single file at a time from a different
+            // directory.
+            if (string.IsNullOrEmpty(initialDir) || !Equals(state.DocumentPath, documentPath))
+            {
+                string docDir = Path.GetDirectoryName(documentPath);
+                if (!string.IsNullOrEmpty(docDir))
+                    initialDir = docDir;
+            }
+            // The dialog expects null to mean no directory was supplied, so don't assign
+            // an empty string.
+            if (string.IsNullOrEmpty(initialDir))
+                initialDir = null;
+            InitialDirectory = new MsDataFilePath(initialDir);
+            if (state != null)
+            {
+                if (SourceTypeName != null)
+                    SourceTypeName = state.SourceTypeName;
+                ListView = state.ListView;
+                SetListViewSort(state.ListSortColumnIndex, state.ListSortOrder);
+            }
+        }
+
+        public OpenDataSourceState GetState(string documentPath)
+        {
+            return new OpenDataSourceState
+            {
+                DocumentPath = documentPath,
+                InitialDirectory = CurrentDirectory.ToString(),
+                SourceTypeName = SourceTypeName,
+                ListView = ListView,
+                ListSortColumnIndex = ListSortColumnIndex,
+                ListSortOrder = ListSortOrder,
+                WindowSize = Size
+            };
+        }
+
         public new DialogResult ShowDialog(IWin32Window owner)
         {
             CurrentDirectory = InitialDirectory ?? new MsDataFilePath(Environment.CurrentDirectory);

@@ -335,47 +335,11 @@ namespace pwiz.Skyline.FileUI
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
                 dlgOpen.Text = FileUIResources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files;
-                var dlgState = Settings.Default.OpenDataSourceState;
-                if (dlgState != null)
-                    dlgOpen.Size = dlgState.WindowSize;
-
-                string initialDir = dlgState?.InitialDirectory;
-                // If the saved initial directory is not for the same document, then start
-                // in the document folder. Always starting in the document folder is painful
-                // to watch, if the user is adding a single file at a time from a different
-                // directory.
-                if (string.IsNullOrEmpty(initialDir) || !Equals(dlgState.DocumentPath, documentSavedPath))
-                {
-                    string docDir = Path.GetDirectoryName(documentSavedPath);
-                    if (!string.IsNullOrEmpty(docDir))
-                        initialDir = docDir;
-                }
-                // The dialog expects null to mean no directory was supplied, so don't assign
-                // an empty string.
-                if (string.IsNullOrEmpty(initialDir))
-                    initialDir = null;
-                dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
-                if (dlgState != null)
-                {
-                    if (dlgOpen.SourceTypeName != null)
-                        dlgOpen.SourceTypeName = dlgState.SourceTypeName;
-                    dlgOpen.ListView = dlgState.ListView;
-                    dlgOpen.SetListViewSort(dlgState.ListSortColumnIndex, dlgState.ListSortOrder);
-                }
-
+                dlgOpen.RestoreState(documentSavedPath, Settings.Default.OpenDataSourceState);
                 if (dlgOpen.ShowDialog(parent) != DialogResult.OK)
                     return null;
 
-                Settings.Default.OpenDataSourceState = new OpenDataSourceState
-                {
-                    DocumentPath = documentSavedPath,
-                    InitialDirectory = dlgOpen.CurrentDirectory.ToString(),
-                    SourceTypeName = dlgOpen.SourceTypeName,
-                    ListView = dlgOpen.ListView,
-                    ListSortColumnIndex = dlgOpen.ListSortColumnIndex,
-                    ListSortOrder = dlgOpen.ListSortOrder,
-                    WindowSize = dlgOpen.Size
-                };
+                Settings.Default.OpenDataSourceState = dlgOpen.GetState(documentSavedPath);
 
                 var dataSources = dlgOpen.DataSources;
 
@@ -481,6 +445,11 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
+            // A saved results folder for this document path supersedes the document directory
+            var dlgState = Settings.Default.OpenDataSourceState;
+            if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
+                initialDir = dlgState.InitialDirectory;
+
             using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
                 dlg.Description = FileUIResources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory;
@@ -491,7 +460,8 @@ namespace pwiz.Skyline.FileUI
 
                 string dirRoot = dlg.SelectedPath;
 
-                Settings.Default.SrmResultsDirectory = dirRoot;
+                if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
+                    dlgState.InitialDirectory = dirRoot;
 
                 KeyValuePair<string, MsDataFileUri[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
                 if (namedPaths.Length == 0)
