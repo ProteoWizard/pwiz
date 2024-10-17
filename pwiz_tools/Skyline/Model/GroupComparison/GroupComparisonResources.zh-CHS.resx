@@ -138,7 +138,7 @@ Needs Review:New resource</comment>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated" xml:space="preserve">
-    <value>所有 {0} 峰均被截短</value>
+    <value>所有 {0} 个峰均被截短</value>
     <comment>{0} is a number
 Needs Review:New resource</comment>
   </data>

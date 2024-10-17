@@ -41,6 +41,8 @@ namespace AutoQC
         private AnnotationsFileWatcher _annotationsFileWatcher;
         private bool _annotationsFileUpdated;
         readonly object _annotationsFileLock = new object();
+
+        public bool Waiting { get; private set; }
         public bool AnnotationsFileUpdated
         {
             get
@@ -319,7 +321,7 @@ namespace AutoQC
         private void ProcessNewFiles(DoWorkEventArgs e)
         {
             Log("Importing new files...");
-            var inWait = false;
+            Waiting = false;
             while (true)
             {
                 if (_worker.CancellationPending)
@@ -335,6 +337,8 @@ namespace AutoQC
                
                 if (filePath != null)
                 {
+                    Waiting = false;
+
                     var importContext = new ImportContext(filePath);
                     var success = ImportFile(e, importContext);
 
@@ -345,8 +349,6 @@ namespace AutoQC
                         // will be removed from the re-import queue.
                         TryReimportOldFiles(e, true);
                     }
-
-                    inWait = false;
                 }
                 else
                 {
@@ -381,11 +383,11 @@ namespace AutoQC
 
                 if (_fileWatcher.GetQueueCount() == 0)
                 {
-                    if (!inWait)
+                    if (!Waiting)
                     {
                         Log("Waiting for files...");
                     }
-                    inWait = true;
+                    Waiting = true;
                     Thread.Sleep(WAIT_FOR_NEW_FILE);
                 }
             }
@@ -751,7 +753,8 @@ namespace AutoQC
         {
             if (_annotationsFileWatcher != null)
             {
-                Log(logMessage ?? "Importing annotations file.");
+                Waiting = false;
+                Log(logMessage ?? Resources.ConfigRunner_ImportAnnotationsFileIfWatching_Importing_annotations_file_);
                 ImportAnnotationsFile(uploadToPanorama);
             }
         }
@@ -774,6 +777,10 @@ namespace AutoQC
             var status = RunProcess(procInfo);
             _annotationsImportError = status == ProcStatus.Error;
             _annotationsFirstImport = false;
+            Log(!_annotationsImportError
+                ? Resources.ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_
+                : Resources.ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_);
+
             if (!_annotationsImportError && Config.PanoramaSettings.PublishToPanorama && uploadToPanorama)
             {
                 // Upload to Panorama
