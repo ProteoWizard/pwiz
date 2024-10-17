@@ -304,7 +304,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
-    <value>ファイルがサーバーにアップロードされませんでした。もう一度試すか、mataもしくは問題が続くようであればPanoramaサーバー管理者に問い合わせてください。</value>
+    <value>ファイルがサーバーにアップロードされませんでした。もう一度試すか、あるいは問題が続くようであればPanoramaサーバー管理者に問い合わせてください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">

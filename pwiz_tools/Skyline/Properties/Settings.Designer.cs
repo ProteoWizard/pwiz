@@ -3479,7 +3479,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100.0")]
         public double FeatureFindingMinIntensityPPM {
             get {
                 return ((double)(this["FeatureFindingMinIntensityPPM"]));
@@ -3491,7 +3491,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.98")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
         public double FeatureFindingMinIdotP {
             get {
                 return ((double)(this["FeatureFindingMinIdotP"]));
@@ -3526,7 +3526,7 @@ namespace pwiz.Skyline.Properties {
                 this["GroupComparisonAvoidLabelOverlap"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -3539,6 +3539,17 @@ namespace pwiz.Skyline.Properties {
             set
             {
                 this["GroupComparisonSuspendLabelLayout"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RelativeAbundanceLogScale {
+            get {
+                return ((bool)(this["RelativeAbundanceLogScale"]));
+            }
+            set {
+                this["RelativeAbundanceLogScale"] = value;
             }
         }
     }

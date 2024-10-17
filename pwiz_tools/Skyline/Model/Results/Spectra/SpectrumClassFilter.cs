@@ -149,6 +149,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public string GetAbbreviatedText()
         {
+            return GetText(false);
+        }
+
+        /// <summary>
+        /// Returns a string representation of the filter.
+        /// </summary>
+        /// <param name="includeAll">Whether to include the word "All" when describing a clause that accepts all items</param>
+        public string GetText(bool includeAll)
+        {
             if (IsEmpty)
             {
                 return string.Empty;
@@ -159,16 +168,23 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 var page = filterPages.Pages[iPage];
                 var clause = filterPages.Clauses[iPage];
+                string clauseText;
                 if (clause.IsEmpty)
                 {
                     if (page.Discriminant.IsEmpty)
                     {
-                        return string.Empty;
+                        return includeAll ? SpectraResources.SpectrumClassFilter_GetText_All : string.Empty;
                     }
-                    continue;
+                    else
+                    {
+                        clauseText = SpectraResources.SpectrumClassFilter_GetText_All;
+                    }
+                }
+                else
+                {
+                    clauseText = GetAbbreviatedText(filterPages.Clauses[iPage]);
                 }
                 string caption = filterPages.Pages[iPage].Caption;
-                var clauseText = GetAbbreviatedText(filterPages.Clauses[iPage]);
                 if (caption != null)
                 {
                     parts.Add(TextUtil.ColonSeparate(caption, clauseText));

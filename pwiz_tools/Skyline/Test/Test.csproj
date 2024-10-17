@@ -106,6 +106,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
@@ -162,11 +165,16 @@
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
+    <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
+    <Compile Include="CalibrationCurveOptionsTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
+    <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
+    <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
     <Compile Include="MatchExpressionTest.cs" />
@@ -174,6 +182,7 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
     <Compile Include="ReferenceValueTest.cs" />
@@ -297,6 +306,10 @@
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
       <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>

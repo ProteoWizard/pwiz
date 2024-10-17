@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -571,7 +570,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception e)
             {
-                Trace.TraceWarning(ChromLibResources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
+                Messages.WriteAsyncUserMessage(ChromLibResources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
                 return false;
             }
         }
@@ -692,7 +691,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(ChromLibResources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
+                Messages.WriteAsyncUserMessage(ChromLibResources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
                 return false;
             }
         }

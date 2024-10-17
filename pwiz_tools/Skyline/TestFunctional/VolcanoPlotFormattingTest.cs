@@ -23,9 +23,11 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -35,6 +37,7 @@ namespace pwiz.SkylineTestFunctional
     public class VolcanoPlotFormattingTest : AbstractFunctionalTestEx
     {
         private static readonly string GROUP_COMPARISON_NAME = "Test_Group_Comparison";
+        private bool IsLayoutTest;
 
         #region Data
 
@@ -194,6 +197,16 @@ namespace pwiz.SkylineTestFunctional
             }
         };
 
+        private static PointF[] savedLabelPositions =
+        {
+            new PointF(0.5285394f, 1.7447474f),
+            new PointF(-5.375425f, 6.0f),
+            new PointF(-1.12300766f, 6f),
+            new PointF(-1.2205646f, 4.17426062f),
+            new PointF(-1.07151949f, 3.96921921f),
+            new PointF(-1.0508579f, 2.45434284f)
+        };
+ 
         #endregion
 
         [TestMethod]
@@ -210,9 +223,30 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestVolcanoPlotLayout()
+        {
+            TestFilesZip = "TestFunctional/VolcanoPlotLayoutTest.zip";
+            IsLayoutTest = true;
+            RunFunctionalTest();
+        }
+
         protected override void DoTest()
         {
             OpenDocument(@"Rat_plasma.sky");
+
+            if (IsLayoutTest)
+            {
+                var foldChangeForm = FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().FirstOrDefault();
+                var gridForm = FormUtil.OpenForms.OfType<FoldChangeGrid>().FirstOrDefault();
+                Assert.IsNotNull(foldChangeForm);
+                WaitForConditionUI(() => foldChangeForm.LabelLayout != null);
+                Assert.IsNotNull(foldChangeForm.LabelLayout);
+                var labels = foldChangeForm.LabelLayout.LabeledPoints.Values;
+                Assert.IsFalse(labels.Any(l => !savedLabelPositions.Any(s => s.Equals(l.LabelPosition))));
+
+                return;
+            }
 
             // Create new group comparison
             var def = CreateGroupComparison(GROUP_COMPARISON_NAME, "Condition", "Healthy", "Diseased");
@@ -434,7 +468,7 @@ namespace pwiz.SkylineTestFunctional
                 // Set the match option to "Protein Gene"
                 createExprDlg.matchComboBox.SelectedIndex = 4;
             });
-            var proteinList = "Aldoc" + '\n' + "Serpinc1";
+            var proteinList = TextUtil.LineSeparate("Aldoc", "Serpinc1");
             RunUI(() =>
             {
                 // Verify that typing into the list is parsed to a REGEX
@@ -443,11 +477,16 @@ namespace pwiz.SkylineTestFunctional
             });
             // Two proteins should match
             WaitForCreateRowsChange(createExprDlg, 2);
+
+            // Test empty text; expect matches everything
+            RunUI(()=>matchExprListDlg.proteinsTextBox.Text = string.Empty);
+            WaitForCreateRowsChange(createExprDlg, 48);
+
             RunUI(() =>
             {
                 // Test case insensitivity
                 matchExprListDlg.proteinsTextBox.Clear();
-                matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpperInvariant();
+                matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpper();
             });
             // Two proteins should match
             WaitForCreateRowsChange(createExprDlg, 2);

@@ -924,7 +924,7 @@ Waters</value>
     <value>単離スキームのインポート元となるpath/to/result-file</value>
   </data>
   <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
-    <value>その他のファイルタイプのエクスポート中</value>
+    <value>他のファイルタイプをエクスポート中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_speclib_file" xml:space="preserve">
@@ -932,7 +932,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
-    <value>エクスポートしたファイルから名前で特定のフィーチャースコアを除外するために使用します。名前はユーザーインターフェースで見つけられます。この引数を複数回使用すると、複数のフィーチャーを除外できます。--exp-mprophet-features引数が必要です。</value>
+    <value>エクスポートしたファイルから名前で特定のフィーチャースコアを除外するために使用します。名前はユーザーインターフェイスで見つけられます。この引数を複数回使用すると、複数のフィーチャーを除外できます。--exp-mprophet-features引数が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_features" xml:space="preserve">
@@ -948,7 +948,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations" xml:space="preserve">
-    <value>--import-annotationsで要求される形式のElementLocatorフィールドがあるテキストファイルに、ドキュメント内のすべての注釈をエクスポートします。--exp-annotations-include-propertiesを使用すると、プロパティも含まれます。</value>
+    <value>ElementLocatorフィールドがあるテキストファイルにドキュメント内のすべての注釈を--import-annotationsで要求される形式でエクスポートします。--exp-annotations-include-propertiesを使用すると、プロパティも含まれます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
@@ -968,7 +968,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
-    <value>切断部位の直前か直後にある切断部位によるペプチドを除外します。 例：トリプシンのRR、KK、RK、KR</value>
+    <value>切断部位の直前か直後に切断部位を持つペプチドを除外します。 例：トリプシンのRR、KK、RK、KR</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_length" xml:space="preserve">
@@ -984,7 +984,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_name" xml:space="preserve">
-    <value>指定した名前でドキュメントに注釈を追加します。同名の既存の注釈は上書きされます。</value>
+    <value>指定した名前でドキュメントに注釈を追加します。同一の名前を持つ既存の注釈は上書きされます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_targets" xml:space="preserve">
@@ -1008,11 +1008,11 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_file" xml:space="preserve">
-    <value>XML形式のファイルからドキュメントと環境に注釈を追加します。XML形式ファイルの例は、ユーザーインターフェースウィンドウの [ツール] &gt; [オプション] &gt; [その他] で指定されるuser.configファイルをご覧ください。同名の既存の注釈は上書きされます。</value>
+    <value>XML形式のファイルからドキュメントと環境に注釈を追加します。XML形式ファイルの例は、ユーザーインターフェイスウィンドウの [ツール] &gt; [オプション] &gt; [その他] で指定されるuser.configファイルをご覧ください。同一の名前を持つ既存の注釈は上書きされます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_file" xml:space="preserve">
-    <value>開いたドキュメントに適用するバックグラウンドプロテオーム（protdb）ファイルへのパス。この名前は、オプションで--background-proteome-nameを使って指定できます。指定しない場合、filenameがデフォルトとして使用されます。</value>
+    <value>開いたドキュメントに適用するバックグラウンドプロテオーム（protdb）ファイルへのパス。この名前は、オプションで--background-proteome-nameを使って指定できます。指定しない場合、ファイル名がデフォルトとして使用されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_name" xml:space="preserve">
@@ -1024,7 +1024,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_missed_cleavages" xml:space="preserve">
-    <value>タンパク質消化時にペプチドで許容される最大未切断数。</value>
+    <value>タンパク質消化時に許容される最大未切断数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_unique_by" xml:space="preserve">
@@ -1036,7 +1036,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
-    <value>タンパク質ではなく遺伝子（または遺伝子グループ）とペプチドを関連付け、その関連付けに倹約オプションを適用します。</value>
+    <value>タンパク質ではなく遺伝子（または遺伝子グループ）とペプチドを関連付け、その関連付けにパーシモニーオプションを適用します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
@@ -1048,7 +1048,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_integrate_all" xml:space="preserve">
-    <value>設定されると、積分領域間のシグナルに貢献するすべてのトランジションが検出されたと見なされます。設定されない場合、共溶出しているトランジションのみが検出されたと見なされます。設定にかかわらず、積分領域間の定量的トランジションからのシグナルはすべて合計され、プリカーサーのTotalAreaとなります。</value>
+    <value>設定すると、積分領域間のシグナルに寄与するすべてのトランジションが検出されたと見なされます。設定しない場合、共溶出しているトランジションのみが検出されたと見なされます。設定にかかわらず、積分領域間の定量的トランジションのシグナルはすべて合計され、プリカーサーの [総面積] となります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod" xml:space="preserve">
@@ -1072,7 +1072,7 @@ Waters</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_losses" xml:space="preserve">
-    <value>どのフラグメントインスタンスにおける組み合わせでも発生可能な 最大ニュートラルロスイベント数。</value>
+    <value>単一のフラグメントイオンから許可される最大ニュートラルロス数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_variable_mods" xml:space="preserve">
