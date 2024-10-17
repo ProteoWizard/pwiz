@@ -45,9 +45,9 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(const string& model)
 
 PWIZ_API_DECL CVID translatePolarity(const string& polarity)
 {
-    if (polarity == "Positive")
+    if (bal::iequals(polarity, "Positive"))
         return MS_positive_scan;
-    else if (polarity == "Negative")
+    if (bal::iequals(polarity, "Negative"))
         return MS_negative_scan;
     throw std::runtime_error("[Mobilion::translatePolarity] unknown polarity '" + polarity + "'");
 }

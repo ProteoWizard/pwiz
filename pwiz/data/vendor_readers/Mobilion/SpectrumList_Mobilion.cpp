@@ -24,6 +24,8 @@
 
 #include "SpectrumList_Mobilion.hpp"
 
+#include "pwiz_aux/msrc/utility/vendor_api/Mobilion/MBIWrapper.h"
+
 
 #ifdef PWIZ_READER_MOBILION
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
@@ -92,8 +94,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
     result->index = ie.index;
     result->id = ie.id;
 
-    if (lastFrame_ > -1 && !config_.combineIonMobilitySpectra && ie.frame != lastFrame_)
-        rawdata_->GetFrame(lastFrame_)->Unload();
+    //if (lastFrame_ > -1 && !config_.combineIonMobilitySpectra && ie.frame != lastFrame_)
+        //rawdata_->GetFrame(lastFrame_)->Unload();
 
     auto frame = rawdata_->GetFrame(ie.frame);
 
@@ -102,7 +104,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
-    int msLevel = frame->isFragmentationData() ? 2 : 1;
+    int msLevel = frame->GetCE(0) > 0 ? 2 : 1;
     CVID spectrumType = msLevel == 2 ? MS_MSn_spectrum : MS_MS1_spectrum;
 
     result->set(spectrumType);
@@ -217,59 +219,46 @@ PWIZ_API_DECL bool SpectrumList_Mobilion::hasCombinedIonMobility() const
 
 PWIZ_API_DECL bool SpectrumList_Mobilion::canConvertIonMobilityAndCCS() const
 {
-    return false; // TODO when API supplies it
+    try
+    {
+        rawdata_->GetEyeOnCCSCalibration().GetAtSurf();
+        return true;
+    }
+    catch (exception& e)
+    {
+        warn_once(("[SpectrumList_Mobilion::canConvertIonMobilityAndCCS] unable to convert between DT and CCS: " + string(e.what())).c_str());
+        return false;
+    }
 }
 
 PWIZ_API_DECL double SpectrumList_Mobilion::ionMobilityToCCS(double ionMobility, double mz, int charge) const
 {
-    return 0; // TODO when API supplies it
+    return rawdata_->GetEyeOnCCSCalibration().ArrivalTimeToCCS(ionMobility, fabs(mz*(double)charge));
 }
 
 PWIZ_API_DECL double SpectrumList_Mobilion::ccsToIonMobility(double ccs, double mz, int charge) const
 {
-    return 0; // TODO when API supplies it
+    return  rawdata_->GetEyeOnCCSCalibration().CCSToArrivalTime(ccs, fabs(mz * (double)charge));
 }
 
 PWIZ_API_DECL void SpectrumList_Mobilion::getCombinedSpectrumData(Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
 {
-    auto nonEmpty = frame.GetNonZeroScanIndices(); // List of indexes of non-empty scans
+    auto frameData = frame.GetFrameDataAsCOOArray();
+    const auto& intensities = frameData.data;
+    const auto& tofSampleIndices = frameData.columnIndices;
+    const auto& scanIndices = frameData.rowIndices;
+    auto tofCalibration = frame.GetCalibration();
 
-    std::vector<double> mzScan;
-    std::vector<size_t> intensityScan;
-    int totalPoints = 0;
-    for (int i : frame.GetNonZeroScanIndices())
-    {
-        frame.GetScanDataMzIndexedSparse(i, &mzScan, &intensityScan);
-        totalPoints += mzScan.size();
-    }
-
+    size_t totalPoints = intensities.size();
     mz.resize(totalPoints);
     intensity.resize(totalPoints);
     driftTime.resize(totalPoints);
-    auto mzItr = &mz[0], intensityItr = &intensity[0], driftTimeItr = &driftTime[0];
-    for (auto scanIndex : nonEmpty)
+    for (size_t i = 0; i < totalPoints; ++i)
     {
-        double driftTimeMs = frame.GetArrivalBinTimeOffset(scanIndex);
-
-        if (!chemistry::MzMobilityWindow::mobilityValueInBounds(config_.isolationMzAndMobilityFilter, driftTimeMs))
-            continue;
-
-        frame.GetScanDataMzIndexedSparse(scanIndex, &mzScan, &intensityScan);
-
-        auto intensityScanItr = intensityScan.begin();
-        for (const auto& mzScanItr : mzScan)
-        {
-            *mzItr++ = mzScanItr;
-            *intensityItr++ = *intensityScanItr++;
-            *driftTimeItr++ = driftTimeMs;
-        }
+        mz[i] = tofCalibration.IndexToMz(tofSampleIndices[i]);
+        intensity[i] = intensities[i];
+        driftTime[i] = frame.GetArrivalBinTimeOffset(scanIndices[i]);
     }
-    auto currentPoints = mzItr - &mz[0];
-    mz.resize(currentPoints);
-    intensity.resize(currentPoints);
-    driftTime.resize(currentPoints);
-
-    frame.Unload();
 }
 
 

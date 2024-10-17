@@ -44,8 +44,6 @@ rule vendor-api-requirements ( properties * )
        <address-model>64 in $(properties)
     {
         result += <source>Reader_Mobilion_Detail.cpp ;
-        result += <include>$(PWIZ_LIBRARIES_PATH)/hdf5-1.12.0/c++/src ;
-        result += <include>$(PWIZ_LIBRARIES_PATH)/hdf5-1.12.0/src ;
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
