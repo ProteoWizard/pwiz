@@ -273,7 +273,7 @@ namespace TestRunnerLib
 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
-            TeamCityStartTest(test);
+            TeamCityStartTest(test, pass);
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -550,7 +550,7 @@ namespace TestRunnerLib
                     Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
                 }
 
-                TeamCityFinishTest(test);
+                TeamCityFinishTest(test, pass);
 
                 return true;
             }
@@ -573,7 +573,7 @@ namespace TestRunnerLib
             else
                 ErrorCounts[failureInfo] = 1;
 
-            TeamCityFinishTest(test, message + '\n' + stackTrace);
+            TeamCityFinishTest(test, pass, message + '\n' + stackTrace);
 
             Log(ReportSystemHeaps
                     ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n"
@@ -1061,17 +1061,17 @@ namespace TestRunnerLib
             }
         }
 
-        public string TeamCityTestName(TestInfo test)
+        public string TeamCityTestName(TestInfo test, int pass)
         {
-            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
+            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.Pass{pass}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
         }
 
-        public void TeamCityStartTest(TestInfo test)
+        public void TeamCityStartTest(TestInfo test, int pass)
         {
             if (!TeamCityTestDecoration)
                 return;
 
-            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", TeamCityTestName(test));
+            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", TeamCityTestName(test, pass));
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
@@ -1081,7 +1081,7 @@ namespace TestRunnerLib
             }
         }
 
-        public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
+        public void TeamCityFinishTest(TestInfo test, int pass, string errorMessage = null)
         {
             if (!TeamCityTestDecoration)
                 return;
@@ -1096,14 +1096,14 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", TeamCityTestName(test), tcMessage);
+                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", TeamCityTestName(test, pass), tcMessage);
                 Console.WriteLine(failMsg);
                 if (IsParallelClient)
                     _log.WriteLine(failMsg);
                 // ReSharper restore LocalizableElement
             }
 
-            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", TeamCityTestName(test), LastTestDuration);
+            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", TeamCityTestName(test, pass), LastTestDuration);
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)

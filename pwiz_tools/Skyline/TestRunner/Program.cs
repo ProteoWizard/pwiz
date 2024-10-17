@@ -572,10 +572,19 @@ namespace TestRunner
 
                     string testName = msg.Split('/')[0];
                     string testLanguage = msg.Split('/')[1];
+                    int testPass = Convert.ToInt32(msg.Split('/')[2]);
+                    int[] passEnabled = { 0, 0, 0 };
+                    passEnabled[testPass] = 1;
                     var cargs = new CommandLineArgs(new[] { "test=" + testName }, commandLineOptions);
                     commandLineArgs.SetArg("language", testLanguage);
+                    for (var pass = 0; pass < passEnabled.Length; pass++)
+                    {
+                        var enabled = passEnabled[pass];
+                        commandLineArgs.SetArg("pass" + pass, enabled.ToString());
+                    }
+
                     var testList = LoadTestList(cargs);
-                    TeeLog($"Starting test {testName}-{testLanguage}");
+                    TeeLog($"Starting test {testName}-{testLanguage}-{testPass}");
                     using (var testLogStream = new MemoryStream())
                     using (var testLog = new StreamWriter(testLogStream, new UTF8Encoding(false)))
                     {
@@ -834,15 +843,17 @@ namespace TestRunner
 
         private class QueuedTestInfo
         {
-            public QueuedTestInfo(TestInfo testInfo, string language, int loopCount = 0)
+            public QueuedTestInfo(TestInfo testInfo, string language, int loopCount, int pass)
             {
                 TestInfo = testInfo;
                 Language = language;
                 LoopCount = loopCount;
+                Pass = pass;
             }
-            public TestInfo TestInfo { get; private set; }
-            public string Language { get; private set; }
+            public TestInfo TestInfo { get; }
+            public string Language { get; }
             public int LoopCount { get; private set; }
+            public int Pass { get; }
 
             public void IncrementLoopCount()
             {
@@ -875,6 +886,11 @@ namespace TestRunner
             var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
             int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", dockerTimeoutSecondsOverride ?? "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
+            bool[] passEnabled = {
+                commandLineArgs.ArgAsBool("pass0"),
+                commandLineArgs.ArgAsBool("pass1"),
+                commandLineArgs.ArgAsBool("pass2")
+            };
             var languages = GetLanguages(commandLineArgs);
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
@@ -892,14 +908,22 @@ namespace TestRunner
                 testLog.WriteLine(testOutput);
             };
 
-            // add tests to the queue (at least once, multiple times if loop > 1)
-            for (int i = 0; i < Math.Max(1, loop); ++i)
+            for (int pass=0; pass < passEnabled.Length; ++pass)
             {
-                foreach (var testInfo in testList)
+                if (!passEnabled[pass])
+                    continue;
+
+                // add tests to the queue (at least once, multiple times if loop > 1 and pass2)
+                int loopCount = pass == 2 ? Math.Max(1, loop) : 1;
+                var passLanguages = pass > 0 ? languages : new[] { "fr" };
+                for (int i = 0; i < loopCount; ++i)
                 {
-                    var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
-                    foreach (var language in languages)
-                        queue.Enqueue(new QueuedTestInfo(testInfo, language, i));
+                    foreach (var testInfo in testList)
+                    {
+                        var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
+                        foreach (var language in passLanguages)
+                            queue.Enqueue(new QueuedTestInfo(testInfo, language, i, pass));
+                    }
                 }
             }
 
@@ -935,8 +959,8 @@ namespace TestRunner
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
                 SetConsoleCtrlHandler(c =>
                 {
-                    cts.Cancel();
                     RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
+                    cts.Cancel();
                     Process.GetCurrentProcess().Kill();
                     return true;
                 }, true);
@@ -990,6 +1014,7 @@ namespace TestRunner
 
                 // fix this to get PID of TestRunner, not dotCover
                 HostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+                bool workersFinished = false;
 
                 // wait for workers to finish
                 void WaitForWorkersToFinish()
@@ -1002,6 +1027,8 @@ namespace TestRunner
                             Thread.Sleep(1000);
                             continue;
                         }
+
+                        workersFinished = true;
                         cts.Cancel();
                     }
                 }
@@ -1092,7 +1119,7 @@ namespace TestRunner
                                 try
                                 {
                                     //Console.WriteLine(testInfo.TestMethod.Name);
-                                    workerInfo.CurrentTest = testInfo.TestInfo.TestMethod.Name + "/" + testInfo.Language;
+                                    workerInfo.CurrentTest = testInfo.TestInfo.TestMethod.Name + "/" + testInfo.Language + "/" + testInfo.Pass;
                                     if (!workerSender.TrySendFrame(TimeSpan.FromSeconds(5), workerInfo.CurrentTest))
                                         continue;
                                     lock (timer) timer.Start();
@@ -1187,7 +1214,7 @@ namespace TestRunner
                     }, TaskCreationOptions.LongRunning);
                 }
 
-                if (cts.IsCancellationRequested)
+                if (!workersFinished && cts.IsCancellationRequested)
                     return false;
                 Console.WriteLine("Waiting for worker tasks to finish.");
                 foreach (var task in tasks)
@@ -1480,8 +1507,11 @@ namespace TestRunner
                 //         No internet access,
                 if (pass0)
                 {
-                    runTests.Log("\r\n");
-                    runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access.\r\n");
+                    if (!clientMode)
+                    {
+                        runTests.Log("\r\n");
+                        runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access.\r\n");
+                    }
 
                     runTests.Language = new CultureInfo("fr");
                     runTests.Skyline.Set("NoVendorReaders", true);
@@ -1521,8 +1551,12 @@ namespace TestRunner
                 // Pass 1: Look for cumulative leaks when test is run multiple times.
                 if (pass1)
                 {
-                    runTests.Log("\r\n");
-                    runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
+                    if (!clientMode)
+                    {
+                        runTests.Log("\r\n");
+                        runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
+                    }
+
                     bool warnedPass1PerfTest = false;
                     var maxDeltas = new LeakTracking();
                     int maxIterationCount = 0;
@@ -1646,7 +1680,7 @@ namespace TestRunner
                     languages = qualityLanguages;
 
                 // Run all test passes.
-                int pass = 1;
+                int pass = clientMode ? 2 : 1; // client mode should only be a single pass, so if it makes it here, it's pass 2
                 int passEnd = pass + (int)loopCount;
                 if (pass0 || pass1)
                 {
@@ -1661,7 +1695,7 @@ namespace TestRunner
                 if (!pass2)
                     return runTests.FailureCount == 0;
 
-                if (pass == 2 && pass < passEnd && testList.Count > 0)
+                if (pass == 2 && pass < passEnd && testList.Count > 0 && !clientMode)
                 {
                     runTests.Log("\r\n");
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
