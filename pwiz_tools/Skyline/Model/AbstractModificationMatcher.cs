@@ -18,11 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -498,7 +498,7 @@ namespace pwiz.Skyline.Model
                         }
                         catch (InvalidChemicalModificationException e)
                         {
-                            Trace.TraceWarning(e.Message); // Adduct makes no sense for target formula
+                            Messages.WriteAsyncUserMessage(e.Message); // Adduct makes no sense for target formula
                         }
                     }
                 }
