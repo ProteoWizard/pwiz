@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -98,6 +97,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 dlgOpen.Text = BrowseResultsDialogText;
                 dlgOpen.RestoreState(DocumentContainer.DocumentFilePath, Settings.Default.OpenDataSourceState);
+                // Passed in path overrides stored or document path
+                if (path != null)
+                    dlgOpen.InitialDirectory = new MsDataFilePath(path);
                 if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                     return;
 
