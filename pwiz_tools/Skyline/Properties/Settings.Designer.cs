@@ -3479,6 +3479,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100.0")]
+        public double FeatureFindingMinIntensityPPM {
+            get {
+                return ((double)(this["FeatureFindingMinIntensityPPM"]));
+            }
+            set {
+                this["FeatureFindingMinIntensityPPM"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
         public double FeatureFindingMinIdotP {
             get {
@@ -3538,18 +3550,6 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["RelativeAbundanceLogScale"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public double FeatureFindingMinIntensityPPM {
-            get {
-                return ((double)(this["FeatureFindingMinIntensityPPM"]));
-            }
-            set {
-                this["FeatureFindingMinIntensityPPM"] = value;
             }
         }
     }
