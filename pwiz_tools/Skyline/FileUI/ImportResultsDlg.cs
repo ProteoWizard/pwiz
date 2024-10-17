@@ -335,9 +335,23 @@ namespace pwiz.Skyline.FileUI
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
                 dlgOpen.Text = FileUIResources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files;
+                var dlgSize = Settings.Default.SrmResultsWindowSize;
+                if (!dlgSize.IsEmpty)
+                    dlgOpen.Size = dlgSize;
+
+                string initialDir = Settings.Default.SrmResultsDirectory;
+                // If the saved initial directory is not for the same document, then start
+                // in the document folder. Always starting in the document folder is painful
+                // to watch, if the user is adding a single file at a time from a different
+                // directory.
+                if (string.IsNullOrEmpty(initialDir) || !Equals(Settings.Default.SrmResultsSavedForPath, documentSavedPath))
+                {
+                    string docDir = Path.GetDirectoryName(documentSavedPath);
+                    if (!string.IsNullOrEmpty(docDir))
+                        initialDir = docDir;
+                }
                 // The dialog expects null to mean no directory was supplied, so don't assign
                 // an empty string.
-                string initialDir = Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
                 if (string.IsNullOrEmpty(initialDir))
                     initialDir = null;
                 dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
@@ -345,12 +359,20 @@ namespace pwiz.Skyline.FileUI
                 string sourceType = Settings.Default.SrmResultsSourceType;
                 if (!string.IsNullOrEmpty(sourceType))
                     dlgOpen.SourceTypeName = sourceType;
+                dlgOpen.ListView = (View)Settings.Default.SrmResultsListView;
+                dlgOpen.SetListViewSort(Settings.Default.SrmResultsListColumnSortIndex,
+                    (SortOrder) Settings.Default.SrmResultsListSortOrder);
 
                 if (dlgOpen.ShowDialog(parent) != DialogResult.OK)
                     return null;
 
+                Settings.Default.SrmResultsSavedForPath = documentSavedPath;
                 Settings.Default.SrmResultsDirectory = dlgOpen.CurrentDirectory.ToString();
                 Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
+                Settings.Default.SrmResultsListView = (int)dlgOpen.ListView;
+                Settings.Default.SrmResultsListColumnSortIndex = dlgOpen.ListSortColumnIndex;
+                Settings.Default.SrmResultsListSortOrder = (int)dlgOpen.ListSortOrder;
+                Settings.Default.SrmResultsWindowSize = dlgOpen.Size;
 
                 var dataSources = dlgOpen.DataSources;
 

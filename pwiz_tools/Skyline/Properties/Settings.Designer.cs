@@ -3479,7 +3479,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
         public double FeatureFindingMinIntensityPPM {
             get {
                 return ((double)(this["FeatureFindingMinIntensityPPM"]));
@@ -3491,7 +3491,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.98")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
         public double FeatureFindingMinIdotP {
             get {
                 return ((double)(this["FeatureFindingMinIdotP"]));
@@ -3512,35 +3512,31 @@ namespace pwiz.Skyline.Properties {
                 this["FeatureFindingSignalToNoise"] = value;
             }
         }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool GroupComparisonAvoidLabelOverlap
-        {
-            get
-            {
+        public bool GroupComparisonAvoidLabelOverlap {
+            get {
                 return ((bool)(this["GroupComparisonAvoidLabelOverlap"]));
             }
-            set
-            {
+            set {
                 this["GroupComparisonAvoidLabelOverlap"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GroupComparisonSuspendLabelLayout
-        {
-            get
-            {
+        public bool GroupComparisonSuspendLabelLayout {
+            get {
                 return ((bool)(this["GroupComparisonSuspendLabelLayout"]));
             }
-            set
-            {
+            set {
                 this["GroupComparisonSuspendLabelLayout"] = value;
             }
         }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
@@ -3551,6 +3547,90 @@ namespace pwiz.Skyline.Properties {
             set {
                 this["RelativeAbundanceLogScale"] = value;
             }
-        }		
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public string Prosit {
+            get {
+                return ((string)(this["Prosit"]));
+            }
+            set {
+                this["Prosit"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("27")]
+        public string PrositNCE {
+            get {
+                return ((string)(this["PrositNCE"]));
+            }
+            set {
+                this["PrositNCE"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SrmResultsSavedForPath {
+            get {
+                return ((string)(this["SrmResultsSavedForPath"]));
+            }
+            set {
+                this["SrmResultsSavedForPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int SrmResultsListView {
+            get {
+                return ((int)(this["SrmResultsListView"]));
+            }
+            set {
+                this["SrmResultsListView"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int SrmResultsListColumnSortIndex {
+            get {
+                return ((int)(this["SrmResultsListColumnSortIndex"]));
+            }
+            set {
+                this["SrmResultsListColumnSortIndex"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int SrmResultsListSortOrder {
+            get {
+                return ((int)(this["SrmResultsListSortOrder"]));
+            }
+            set {
+                this["SrmResultsListSortOrder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Size SrmResultsWindowSize {
+            get {
+                return ((global::System.Drawing.Size)(this["SrmResultsWindowSize"]));
+            }
+            set {
+                this["SrmResultsWindowSize"] = value;
+            }
+        }
     }
 }
