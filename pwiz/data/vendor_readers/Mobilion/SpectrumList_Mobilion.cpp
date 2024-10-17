@@ -24,9 +24,6 @@
 
 #include "SpectrumList_Mobilion.hpp"
 
-#include "pwiz_aux/msrc/utility/vendor_api/Mobilion/MBIWrapper.h"
-
-
 #ifdef PWIZ_READER_MOBILION
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
