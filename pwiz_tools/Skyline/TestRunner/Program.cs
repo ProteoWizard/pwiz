@@ -256,7 +256,7 @@ namespace TestRunner
             "runsmallmoleculeversions=off;" +
             "recordauditlogs=off;" +
             "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;verbose=off;listonly;showheader=on";
+            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;teamcitytestsuite=;verbose=off;listonly;showheader=on";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -1310,10 +1310,9 @@ namespace TestRunner
         private static void TeamCitySettings(CommandLineArgs commandLineArgs, out bool teamcityTestDecoration, out string testSpecification)
         {
             teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
-            if(commandLineArgs.HasArg("test"))
-                testSpecification = commandLineArgs.ArgAsString("test");
-            else
-                testSpecification = "all";
+            testSpecification = commandLineArgs.ArgAsStringOrDefault("teamcitytestsuite") ??
+                                commandLineArgs.ArgAsStringOrDefault("test") ??
+                                "all";
         }
 
         private static void TeamCityStartTestSuite(CommandLineArgs commandLineArgs)
