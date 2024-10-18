@@ -405,7 +405,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(0, missingResults.Length);
 
                 // Check exclude spectrum source files
-                Assert.IsTrue(importResultsControl.ExcluedSpectrumSourceFilesVisible);
+                Assert.IsTrue(importResultsControl.ExcludeSpectrumSourceFilesVisible);
                 importResultsControl.ExcludeSpectrumSourceFiles = true;
 
                 // The test files directory contains modless.raw, but no file with the same
