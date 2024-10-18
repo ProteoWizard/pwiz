@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestTutorial
             get { return !IsPauseForScreenShots; }  // So we can point out the UI mode control
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestSmallMoleculesTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestSmallMoleculesTutorialInferredLabels()
         {
             // Verify ability to infer labels from transition list
