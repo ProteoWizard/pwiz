@@ -441,6 +441,7 @@ struct PrecursorInfo
     string collisionEnergy;
     string activation;
     double windowWideness;
+    
 
     bool empty() const 
     {
@@ -514,7 +515,6 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
     return result;
 }
 
-
 void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precursorInfo)
 {
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
@@ -535,7 +535,7 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.add("activationMethod", it->activation);
         if (it->windowWideness != 0)
             attributes.add("windowWideness", it->windowWideness);
-
+        
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);
         xmlWriter.endElement();
