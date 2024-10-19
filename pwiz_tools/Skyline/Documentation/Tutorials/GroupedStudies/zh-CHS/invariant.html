@@ -63,7 +63,7 @@
     <p>
         In the “Heart Failure” subfolder of the “GroupedStudies1” folder you just created, the data were collected at the MacCoss lab while
         investigating the potential and limitations of the approach described in the <a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_refine">Targeted Method
+            href="https://skyline.ms/tutorial_method_refine_zh.url">Targeted Method
             Refinement</a> tutorial. The data were never published for a variety of reasons, some of which will become apparent when you use Skyline
         to understand the collected data. However, many of the ideas that came from this trial of targeted method refinement and other experiments
         like it were published separate from this dataset.<sup>1</sup>
@@ -74,7 +74,7 @@
             silico</i> tryptic digestion. Parameters were set in Skyline to include all peptides between 6 and 30 amino acids long with no missed
         cleavages. For other proteins, the <i>in silico</i> processing was performed outside Skyline. The resulting peptide lists from these
         proteins were pasted directly into a Skyline document (see <a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tutorial_method_edit">Targeted Method Editing</a>
+            href="https://skyline.ms/tutorial_method_edit_zh.url">Targeted Method Editing</a>
         tutorial). This created a document with 2,165 target peptides. For each doubly-charged precursor, singly-charged product ions corresponding to
         y<sub>3</sub> through y<sub>(n-1)</sub> were considered. This initial, exhaustive method covered 12,194 transitions and was measured with an
         unscheduled SRM method on a sample of pooled rat plasma. This initial analysis was only performed once and required 151 separate mass
@@ -96,7 +96,7 @@
         very much prior knowledge of the targeted proteins or peptides and without aid of stable isotope labeled reference peptides.
     </p>
     <p>
-        <img src="image-0.png" />
+        <img src="s-detection-and-differentiation-phases.png" />
     </p>
     <p>
         <b>Figure 1</b>: A schematic showing proposed “Detection” and “Differentiation” phases of targeted method refinement in a heart
@@ -113,7 +113,7 @@
         peptides and 789 transitions.
     </p>
     <p>
-        <img src="image-1.png" />
+        <img src="s-1.png" />
     </p>
     <p>
         This is not quite what is promised in the figure above (from a manuscript draft that was never published), but the document also contains one
@@ -123,8 +123,8 @@
     </p>
     <p>
         You will notice that some of the peptides have matching library spectra. You can see this in the <b>Targets</b> view. The peptide
-        icons with spectrum lines in the lower right corner (<img src="image-2.png" />) have matching spectra and those without these lines (<img
-            src="image-3.png" />) do not. The spectra come from two different public spectral libraries: one from NIST and one from the Global
+        icons with spectrum lines in the lower right corner (<img src="../../shared/peptide-with-spectrum-lines-icon.png" />) have matching spectra and those without these lines (<img
+            src="../../shared/peptide-without-spectrum-lines-icon.png" />) do not. The spectra come from two different public spectral libraries: one from NIST and one from the Global
         Proteome Machine (GPM). You can explore their coverage by doing the following:
     </p>
     <ul>
@@ -139,7 +139,7 @@
         (GPM) library (31). Note that the row number of the selected cell is shown in the toolbar above the grid.
     </p>
     <p>
-        <img src="image-4.png" />
+        <img src="s-2.png" />
     </p>
     <p>
         For the current example, this information gives you a sense of the sparse prior knowledge on which the experiment was based. Modern knowledge
@@ -164,7 +164,7 @@
         The files should begin loading, and Skyline will display progress in a window like the one shown below:
     </p>
     <p>
-        <img src="image-5.png" />
+        <img src="s-3.png" />
     </p>
     <p>
         To continue preparing for data processing while Skyline imports the SRM chromatograms, do the following:
@@ -179,7 +179,7 @@
         <li>Drag the cursor into the bottom docking indicator to see a blue rectangle fill the bottom edge of the Skyline window, as shown below.</li>
     </ul>
     <p>
-        <img src="image-6.png" />
+        <img src="s-4.png" />
     </p>
     <ul>
         <li>Release the left mouse button to dock the <b>Retention Times</b> view.</li>
@@ -188,7 +188,7 @@
             share the bottom edge with the <b>Peak Areas</b> view.</li>
     </ul>
     <p>
-        <img src="image-7.png" />
+        <img src="s-5.png" />
     </p>
     <ul>
         <li>Release the left mouse button to dock the <b>Peak Areas</b> view.</li>
@@ -196,7 +196,7 @@
             to the left edge of the Skyline window.</li>
     </ul>
     <p>
-        <img src="image-8.png" />
+        <img src="s-6.png" />
     </p>
     <ul>
         <li>Close any other windows left floating outside the main Skyline window.</li>
@@ -209,7 +209,7 @@
         The form should look like this:
     </p>
     <p>
-        <img src="image-9.png" />
+        <img src="s-7.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -220,7 +220,7 @@
         Your Skyline window should now look something like this:
     </p>
     <p>
-        <img src="image-10.png" />
+        <img src="s-8.png" />
     </p>
     <p>
         <b>Note</b>: This image was taken on a 24” monitor at 1920x1080. If you are viewing this tutorial digitally, you may want to zoom in
@@ -232,7 +232,7 @@
         not very consistent. Most of the chosen peaks elute around 19 minutes. However, nearly one third (12) elute closer to 22 minutes.
     </p>
     <p>
-        <img src="image-11.png" />
+        <img src="s-9.png" />
     </p>
     <p>
         The integration for this peptide is quite poor. While the peak at around 19 minutes appears to be the better peak, it is hard to have much
@@ -247,7 +247,7 @@
         Just by looking at the retention time plot for the second peptide, you can see that it is much more consistently integrated.
     </p>
     <p>
-        <img src="image-12.png" />
+        <img src="s-10.png" />
     </p>
     <p>
         However, you can still see that the peak apexes for all transitions (shown by the horizontal lines in the bars) are not very consistent. If you
@@ -270,13 +270,13 @@
         This changes the <b>Peak Areas</b> plot from:
     </p>
     <p>
-        <img src="image-13.png" />
+        <img src="s-11.png" />
     </p>
     <p class="keep-next">
         To:
     </p>
     <p>
-        <img src="image-14.png" />
+        <img src="s-12.png" />
     </p>
     <p>
         This makes it possible to see differences in relative ion abundance across multiple runs in a single glance and adds to the information you are
@@ -294,13 +294,13 @@
         This will activate the chromatogram graph for the peak, which looks like:
     </p>
     <p>
-        <img src="image-15.png" />
+        <img src="s-13.png" />
     </p>
     <p>
         While plots for the correctly integrated peaks look more like this:
     </p>
     <p>
-        <img src="image-16.png" />
+        <img src="s-14.png" />
     </p>
     <p>
         Since the scheduled acquisition window did not capture the entire elution profile for the peptide, Skyline has picked the wrong peak. However,
@@ -346,7 +346,7 @@
         The <b>Find</b> form should look like this:
     </p>
     <p>
-        <img src="image-17.png" />
+        <img src="s-15.png" />
     </p>
     <ul>
         <li>Click the <b>Find All</b> button.</li>
@@ -357,7 +357,7 @@
         any line to see the corresponding chromatogram graph activated.
     </p>
     <p>
-        <img src="image-18.png" />
+        <img src="s-16.png" />
     </p>
     <p>
         You can also use the <b>Document Grid</b> to create a list of all precursors with any peak truncation by doing the following:
@@ -368,7 +368,7 @@
         <li>On the <b>Reports</b> menu in the <b>Document Grid</b> view, click <b>Customize Report</b>.</li>
         <li>In the <b>Report name</b> field, enter “Truncated Precursors”.</li>
         <li>In the right side list, select all column names (using click and shift-click) after the first two (Precursor and Peptide).</li>
-        <li>Click the <img src="image-19.png" /> button near the right edge to delete all but the first two columns.</li>
+        <li>Click the <img src="../../shared/red-x-icon.png" /> button near the right edge to delete all but the first two columns.</li>
         <li>Check “Replicates” in the tree on the left side.</li>
         <li>Expand the tree to check Proteins &gt; Peptides &gt; Precursors &gt; PrecursorResults &gt; Count Truncated.</li>
     </ul>
@@ -376,7 +376,7 @@
         The <b>Customize Report</b> form should look something like this:
     </p>
     <p>
-        <img src="image-20.png" />
+        <img src="s-17.png" />
     </p>
     <ul>
         <li>In the right side list, double-click “Count Truncated”.</li>
@@ -389,7 +389,7 @@
         The <b>Customize Report</b> form should look something like this:
     </p>
     <p>
-        <img src="image-21.png" />
+        <img src="s-18.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -399,7 +399,7 @@
         The <b>Document Grid</b> will show 221 truncated peaks that Skyline has already chosen automatically:
     </p>
     <p>
-        <img src="image-22.png" />
+        <img src="s-19.png" />
     </p>
     <p>
         To view these peaks:
@@ -412,7 +412,7 @@
         Skyline will activate chromatogram graphs that look like the following:
     </p>
     <p>
-        <img src="image-23.png" />
+        <img src="s-20.png" />
     </p>
     <ul>
         <li>Close the <b>Document Grid</b>.</li>
@@ -425,7 +425,7 @@
         peak apex lines match up for almost all transitions in each replicate.
     </p>
     <p>
-        <img src="image-24.png" />
+        <img src="s-21.png" />
     </p>
     <p>
         The relative ion abundances shown in the <b>Peak Areas</b> view also appear relatively stable. You might notice that there is a
@@ -442,7 +442,7 @@
         measured peak areas ranging from 1 (best) to zero (worst).
     </p>
     <p>
-        <img src="image-25.png" />
+        <img src="s-22.png" />
     </p>
     <p>
         Return the <b>Peak Areas</b> view to its former state by doing the following:
@@ -463,13 +463,13 @@
         You might notice that some of the transitions show a signal around the edges of the main peak that is not well matched by the other peaks.
     </p>
     <p>
-        <img src="image-26.png" />
+        <img src="s-23.png" />
     </p>
     <p>
         There is frequently signal on y5 and y6 around 13.1 minutes, which is clearly not from the same peptide.
     </p>
     <p>
-        <img src="image-27.png" />
+        <img src="s-24.png" />
     </p>
     <p>
         When an interfering signal like this occurs inside the integration boundaries, it will add error to the quantitative measurements. For critical
@@ -479,13 +479,13 @@
         For the current tutorial, however, continue to the next peptide. There you will find strong, clean, and co-eluting peaks for all 7 transitions.
     </p>
     <p>
-        <img src="image-28.png" />
+        <img src="s-25.png" />
     </p>
     <p>
         Relative ion abundance is also extremely consistent.
     </p>
     <p>
-        <img src="image-29.png" />
+        <img src="s-26.png" />
     </p>
     <p>
         The peak area in y3 is stronger than what was seen for the library spectrum. This might be explained by secondary fragmentation occurring in a
@@ -508,14 +508,14 @@
         not coincide with the peptide of interest can add information to the chromatogram “landscape” you see.
     </p>
     <p>
-        <img src="image-30.png" />
+        <img src="s-27.png" />
     </p>
     <p class="keep-next">
         In D_103_REP3, you will see the integrated peak at 33.9 minutes with signal mostly on y4 and y5, but no other candidate peak
         to the left.
     </p>
     <p>
-        <img src="image-31.png" />
+        <img src="s-28.png" />
     </p>
     <p>
         In this case, the scheduling window has failed to capture any signal from the targeted peptide. To remove the incorrect peak do the following:
@@ -527,7 +527,7 @@
         This should leave a blank spot in the <b>Peak Areas</b> graph.
     </p>
     <p>
-        <img src="image-32.png" />
+        <img src="s-29.png" />
     </p>
     <p>
         Continuing through the chromatogram plots, you will see this pattern repeated several times. Keep removing the missing peaks. You will even
@@ -535,20 +535,20 @@
         where Skyline has chosen the peak at 33.9 minutes, but part of the correct peak is still visible.
     </p>
     <p>
-        <img src="image-33.png" />
+        <img src="s-30.png" />
     </p>
     <p>
         You can simply integrate this as a truncated peak, as you did above, by clicking and dragging beneath the x-axis. You should end up with a
         <b>Peak Areas</b> plot that looks like this:
     </p>
     <p>
-        <img src="image-34.png" />
+        <img src="s-31.png" />
     </p>
     <p class="keep-next">
         And a retention times plot that looks like this:
     </p>
     <p>
-        <img src="image-35.png" />
+        <img src="s-32.png" />
     </p>
     <ul>
         <li>Continue to the peptide R.DIPVNPM<b><u>C</u></b>IYR.S [46, 56].</li>
@@ -573,7 +573,7 @@
         like this:
     </p>
     <p>
-        <img src="image-36.png" />
+        <img src="s-33.png" />
     </p>
     <p>
         However, it may also be quite helpful to see the runs in the order they were acquired on the instrument. You can achieve this by doing the
@@ -586,7 +586,7 @@
         The graph will change to look like the following:
     </p>
     <p>
-        <img src="image-37.png" />
+        <img src="s-34.png" />
     </p>
     <p>
         This retention time pattern is now a little less erratic. If you now select through the next two peptides (LQPLDFK, SQLPGIIAEGR), you will see
@@ -598,9 +598,16 @@
         There are also some peaks where the chromatography looks very noisy. An example of this is on the right in the chromatograms below. This is
         because only the very right edge of the peptide peak was measured, and the higher intensity portion is missing.
     </p>
-    <p>
-        <img src="image-38.png" /><img src="image-39.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-35.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-36.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         In a case like this, you want to be very sure you avoid integrating some noise that Skyline fails to identify as a truncated peak. It may just
         be easier to remove the peaks for these replicates.
@@ -611,7 +618,7 @@
         poor consistency in relative ion abundance.
     </p>
     <p>
-        <img src="image-40.png" />
+        <img src="s-37.png" />
     </p>
     <p>
         If you examine a few of the chromatogram graphs, you will find it hard to imagine consistently integrating the signal at 18.8 minutes with any
@@ -634,17 +641,17 @@
         peptides from the two summary plots we have been examining. The retention times and peak areas are relatively consistent.
     </p>
     <p>
-        <img src="image-41.png" />
+        <img src="s-38.png" />
     </p>
     <p>
-        <img src="image-42.png" />
+        <img src="s-39.png" />
     </p>
     <p>
         Moving to the peptide HLNGFSVPR, you will observe consistent retention times. However, there is
         much more variance in the peak areas. The relative area for y4 and sometimes y3 seems to vary throughout the data set.
     </p>
     <p>
-        <img src="image-43.png" />
+        <img src="s-40.png" />
     </p>
     <p>
         If you click on some of the peak area bars where y4 is most abundant, you will see obvious interference on y4 and sometimes y3.
@@ -653,7 +660,7 @@
         <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
     </ul>
     <p>
-        <img src="image-44.png" />
+        <img src="s-41.png" />
     </p>
     <p>
         To gain an even clearer understanding of the performance of these injected peptides as potential normalization standards, you should do the
@@ -675,13 +682,13 @@
         To see where these peptides elute relative to each other do the following:
     </p>
     <ul>
-        <li>Select the “S” element preceded by the <img src="image-45.png" /> icon.</li>
+        <li>Select the “S” element preceded by the <img src="../../shared/protein-icon-2.png" /> icon.</li>
     </ul>
     <p>
         The chromatogram graphs will change to show all three peptides in the “S” list together.
     </p>
     <p>
-        <img src="image-46.png" />
+        <img src="s-42.png" />
     </p>
     <p>
         Now to see all the peptides in the document together:
@@ -690,7 +697,7 @@
         <li>On the <b>Edit</b> menu, click <b>Select All</b> (Ctrl-A).</li>
     </ul>
     <p>
-        <img src="image-47.png" />
+        <img src="s-43.png" />
     </p>
     <p>
         This makes it clear that the two problematic peptides are both hydrophilic and early eluting. In fact, they are the 3<sup>rd</sup> and
@@ -722,7 +729,7 @@
         more hydrophobic and later eluting, is 108<sup>th</sup> or in the 80<sup>th</sup> percentile with 18.6% CV.)
     </p>
     <p>
-        <img src="image-48.png" />
+        <img src="s-44.png" />
     </p>
     <p>
         If you do the following, you should be able to convince yourself that the LGP peptide has a problem very similar to the HLN peptide.
@@ -735,7 +742,7 @@
         Remember that there are supposed to be three cycles or technical replicates:
     </p>
     <p>
-        <img src="image-49.png" />
+        <img src="s-45.png" />
     </p>
     <p class="keep-next">
         To convince yourself that the peaks are correctly integrated, do the following:
@@ -749,7 +756,7 @@
         extremely stable.
     </p>
     <p>
-        <img src="image-50.png" />
+        <img src="s-46.png" />
     </p>
     <p>
         Although this one peptide seems to have similar issues, you should exclude a peptide like HLNGFSVPR from consideration as a global
@@ -776,7 +783,7 @@
         scheduling window. (You might need to turn off x-axis zooming – Shift-F11 – to see this.)
     </p>
     <p>
-        <img src="image-51.png" />
+        <img src="s-47.png" />
     </p>
     <p>
         As you did before, you can correct this by clicking and dragging beneath the x-axis to integrate the truncated peak, or by using the
@@ -787,7 +794,7 @@
         unusual differences in the ranges of time being integrated.
     </p>
     <p>
-        <img src="image-52.png" />
+        <img src="s-48.png" />
     </p>
     <p>
         If you review some of the chromatograms for this peptide, you will see that many show a single, very nice peak eluting over 0.2 minutes.
@@ -795,7 +802,7 @@
         distinct peaks.
     </p>
     <p>
-        <img src="image-53.png" />
+        <img src="s-49.png" />
     </p>
     <p>
         A peptide like this may be very difficult to use for quantification, especially without a matching SIL peptide. You should probably delete this
@@ -810,7 +817,7 @@
         <b>Peak Areas</b> graph.
     </p>
     <p>
-        <img src="image-54.png" />
+        <img src="s-50.png" />
     </p>
     <p>
         The total peak area for this peptide is dominated by the y7 ion. Although this is also reflected in the library spectrum (as shown at the far
@@ -818,7 +825,7 @@
         ion (see below).
     </p>
     <p>
-        <img src="image-55.png" />
+        <img src="s-51.png" />
     </p>
     <p>
         However, it is also clear that Skyline is, for the most part, integrating the same peak for the same molecule in each run. To convince yourself
@@ -833,20 +840,20 @@
         minutes does, in fact, cause the co-eluting signals on all 6 monitored transitions when peptide abundance is high enough.
     </p>
     <p>
-        <img src="image-56.png" />
+        <img src="s-52.png" />
     </p>
     <p>
         Rather than deleting this peptide, you will want to correct the one case where Skyline has chosen the wrong peak. You can see this in the
         <b>Retention Times</b> plot, as a narrower band occurring below 22.5 minutes.
     </p>
     <p>
-        <img src="image-57.png" />
+        <img src="s-53.png" />
     </p>
     <p class="keep-next">
         And also in the <b>Peak Areas</b> plot, as the run with no visible integrated signal.
     </p>
     <p>
-        <img src="image-58.png" />
+        <img src="s-54.png" />
     </p>
     <p>
         You can click on the bar in the <b>Retention Times</b> view to activate the chromatogram graph for this run. You will see that the
@@ -854,7 +861,7 @@
         knowledge you have gained from the surrounding runs.
     </p>
     <p>
-        <img src="image-59.png" />
+        <img src="s-55.png" />
     </p>
     <p>
         To correct the integration of this run, do the following:
@@ -897,7 +904,7 @@
         This gives you added confidence in the consistency of the integrated peak.
     </p>
     <p>
-        <img src="image-60.png" />
+        <img src="s-56.png" />
     </p>
     <p>
         Continuing up the <b>Targets</b> list, you will find several peptides (YANVIAYDHSR and
@@ -905,14 +912,14 @@
         the matching library spectrum is pronounced. You can see these differences in the <b>Peak Areas</b> graph:
     </p>
     <p>
-        <img src="image-61.png" />
+        <img src="s-57.png" />
     </p>
     <p>
         You can also observe this in the chromatogram graphs where Skyline displays the low dot product values “(dotp 0.28)” beneath the peak retention
         times.
     </p>
     <p>
-        <img src="image-62.png" />
+        <img src="s-58.png" />
     </p>
     <p>
         Skyline displays the “dotp” value like this when there is another peak on the graph with a higher dotp value. In the case above, you cannot see
@@ -946,7 +953,7 @@
         summary plots (see below), you may initially be tempted to delete this peptide and move on:
     </p>
     <p>
-        <img src="image-63.png" />
+        <img src="s-59.png" />
     </p>
     <p>
         However, if you look closely you will see that there are regions of consistency among the healthy subjects. To see this expressed more clearly,
@@ -959,10 +966,10 @@
         This will change the graphs to look like:
     </p>
     <p>
-        <img src="image-64.png" />
+        <img src="s-60.png" />
     </p>
     <p>
-        <img src="image-65.png" />
+        <img src="s-61.png" />
     </p>
     <p>
         Making it clearer that a consistent peak is being integrated for the healthy subjects but not for the diseased subjects. If you review the peak
@@ -974,12 +981,18 @@
         Looking at the chromatograms for the diseased subjects, you will sometimes find something that may be a peak around 21 minutes for the y6
         transition. However, often, it is difficult to observe any consistent elution pattern:
     </p>
-    <p class="keep-next">
-         D_102_REP3 D_108_REP1
-    </p>
-    <p>
-        <img src="image-66.png" /><img src="image-67.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                D_102_REP3<br />
+                <img src="s-62.png" />
+            </td>
+            <td class="comp-fig">
+                D_108_REP1<br />
+                <img src="s-63.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         There is, however, clearly no visible peak in the chromatograms for the diseased subjects that could produce a peak area like those peaks
         observed in the healthy subjects. With the experience you have now acquired with peak drift and truncation, you should feel confident that the
@@ -989,7 +1002,7 @@
         after runs of healthy subjects (D_102_REP2 and D_102_REP3). This observation might suggest a carryover effect.
     </p>
     <p>
-        <img src="image-68.png" />
+        <img src="s-64.png" />
     </p>
     <p>
         In the end, these transitions may represent one of the strongest biomarker candidates in this document. You could now order a synthetic peptide
@@ -1029,7 +1042,7 @@
         The form should look like this:
     </p>
     <p>
-        <img src="image-69.png" />
+        <img src="s-65.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button in the <b>Define Annotation</b> form.</li>
@@ -1040,7 +1053,7 @@
         The <b>Document Settings</b> form should look like:
     </p>
     <p>
-        <img src="image-70.png" />
+        <img src="s-66.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1059,7 +1072,7 @@
         The <b>Install from Tool Store</b> form should look like:
     </p>
     <p>
-        <img src="image-71.png" />
+        <img src="s-67.png" />
     </p>
     <ul>
         <li>Click the <b>Install</b> button and follow the prompts until MSstats installation is completed.</li>
@@ -1077,9 +1090,16 @@
     <p class="keep-next">
         These annotation definitions should look like:
     </p>
-    <p>
-        <img src="image-72.png" /> <img src="image-73.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig" style="padding: 5px;">
+                <img src="s-68.png" />
+            </td>
+            <td class="comp-fig" style="padding: 5px;">
+                <img src="s-69.png" />
+            </td>
+        </tr>
+    </table>
     <ul>
         <li>Click <b>OK</b> to return to the <b>Document Settings</b> form.</li>
         <li>Check the BioReplicate and Condition annotations to add them to your document.</li>
@@ -1088,7 +1108,7 @@
         The <b>Document Settings</b> form should look like this:
     </p>
     <p>
-        <img src="image-74.png" />
+        <img src="s-70.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1105,7 +1125,7 @@
         The <b>Document Grid</b> should look something like this:
     </p>
     <p>
-        <img src="image-75.png" />
+        <img src="s-71.png" />
     </p>
     <p>
         You can now manually enter the annotations for all 42 replicates into this grid. You can also paste values from a spreadsheet directly into
@@ -1125,7 +1145,7 @@
         The <b>Document Grid</b> should look like this:
     </p>
     <p>
-        <img src="image-76.png" />
+        <img src="s-72.png" />
     </p>
     <ul>
         <li>Press Ctrl-V to paste into the <b>Document Grid</b>.</li>
@@ -1134,7 +1154,7 @@
         Skyline should fill in the cells in the <b>Document Grid</b> with the values from the spreadsheet as follows:
     </p>
     <p>
-        <img src="image-77.png" />
+        <img src="s-73.png" />
     </p>
     <h2>Annotating Peptides with Problem Peaks</h2>
     <p>
@@ -1154,7 +1174,7 @@
         The <b>Define Annotation</b> form should look like:
     </p>
     <p>
-        <img src="image-78.png" />
+        <img src="s-74.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1165,7 +1185,7 @@
         The <b>Document Settings</b> form should look like:
     </p>
     <p>
-        <img src="image-79.png" />
+        <img src="s-75.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1184,7 +1204,7 @@
         The <b>Customize Report</b> form should look like this:
     </p>
     <p>
-        <img src="image-80.png" />
+        <img src="s-76.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1194,7 +1214,7 @@
         The <b>Document Grid</b> should look like this:
     </p>
     <p>
-        <img src="image-81.png" />
+        <img src="s-77.png" />
     </p>
     <p>
         Depending on how you processed the rest of your document, there may or may not be exactly 223 truncated precursor peak groups. You could check
@@ -1209,7 +1229,7 @@
         The <b>Document Grid</b> should now look like this:
     </p>
     <p>
-        <img src="image-82.png" />
+        <img src="s-78.png" />
     </p>
     <p>
         You can also use Excel and the <b>Document Grid</b> support for pasting values to set all 163 rows in a single paste as follows:
@@ -1233,7 +1253,7 @@
         marked with a small red triangle above and right of the peptide name.
     </p>
     <p>
-        <img src="image-83.png" />
+        <img src="s-79.png" />
     </p>
     <p>
         If you hover the mouse cursor over one of these triangles, you will see a tip appear with the text “<b>Missing Data</b> True”.
@@ -1247,7 +1267,7 @@
         <li>Select the “Truncated Precursors” report you have been using.</li>
         <li>Click the <b>Copy</b> button.</li>
         <li>In the <b>Report Name</b> field of the <b>Customize Report</b> form, enter “Missing Peaks”.</li>
-        <li>Remove the <b>Precursors</b> and <b>Count Truncated</b> columns using the <img src="image-84.png" /> button to the
+        <li>Remove the <b>Precursors</b> and <b>Count Truncated</b> columns using the <img src="../../shared/red-x-icon.png" /> button to the
             right of the columns list.</li>
         <li>Check the <b>Pivot Replicate Name</b> checkbox.</li>
     </ul>
@@ -1255,11 +1275,11 @@
         The <b>Customize Report</b> form should look like this:
     </p>
     <p>
-        <img src="image-85.png" />
+        <img src="s-80.png" />
     </p>
     <ul>
         <li>Click the <b>Filter</b> tab.</li>
-        <li>Click the <img src="image-86.png" /> button to remove the existing filter on <b>Count Truncated</b>.</li>
+        <li>Click the <img src="../../shared/red-x-icon.png" /> button to remove the existing filter on <b>Count Truncated</b>.</li>
         <li>Expand the columns tree to check Proteins &gt; Peptides &gt; Precursors &gt; Precursor Results, to add a filter for the <b>Total Area</b> column.</li>
         <li>In the <b>Operation</b> column, choose “Is Blank”.</li>
     </ul>
@@ -1267,7 +1287,7 @@
         The <b>Customize Report</b> form should look like this:
     </p>
     <p>
-        <img src="image-87.png" />
+        <img src="s-81.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1278,7 +1298,7 @@
         The <b>Document Grid</b> should look like the following:
     </p>
     <p>
-        <img src="image-88.png" />
+        <img src="s-82.png" />
     </p>
     <p>
         <b>NOTE</b>: If you did not fully process your document, you may instead see only one line for the peptide GSYNLQDLLAQ. The next note
@@ -1326,7 +1346,7 @@
         This should leave the <b>Peak Areas</b> graph looking something like:
     </p>
     <p>
-        <img src="image-89.png" />
+        <img src="s-83.png" />
     </p>
     <p>
         You can now select through several more peptides to review the coefficients of variation (CV) among the technical replicates for each subject.
@@ -1347,9 +1367,19 @@
     <p class="keep-next">
         You will see graphs in the <b>Peak Areas</b> view like the following for the peptides of the protein NP_872280:
     </p>
-    <p>
-        <img src="image-90.png" /> <img src="image-91.png" /> <img src="image-92.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-84.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-85.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-86.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         In these graphs, the bars represent the mean average value (in this case, peak area ratios to global standards) across all replicates and the
         whiskers show one standard deviation to either side of the mean. This gives you some idea of the sample distributions from which the means
@@ -1385,9 +1415,16 @@
         Continuing up the list of peptides / proteins, you will see that the protein immediately above, NP_036714, is a much stronger
         candidate for use as a biomarker:
     </p>
-    <p>
-        <img src="image-93.png" /> <img src="image-94.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-87.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-88.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         Many of the peptides in this experiment show statistically significant differences in the means between the two groups. This should not be
         surprising given the source of our target list was the literature on differential protein expression in heart disease. Far fewer, however,
@@ -1397,9 +1434,16 @@
         When you reach the protein NP_001007697, which contains the peptide <b><u>C</u></b>SSLLWAGAAWLR, you will observe a case where the
         peptides assigned to a single protein experience very different relative expression levels between healthy and diseased groups:
     </p>
-    <p>
-        <img src="image-95.png" /> <img src="image-96.png" />
-    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-89.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-90.png" />
+            </td>
+        </tr>
+    </table>
     <p>
         This should act as a reminder that while you can achieve some confidence in measuring the same peptide molecule over many samples, you will
         often be far less confident in assigning multiple peptide precursors to the same source protein form. The reasons for an observation of this
@@ -1432,7 +1476,7 @@
         The <b>Edit Group Comparison Form</b> should look like this:
     </p>
     <p>
-        <img src="image-97.png" />
+        <img src="s-91.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1441,7 +1485,7 @@
         The <b>Document Settings</b> form should look like this:
     </p>
     <p>
-        <img src="image-98.png" />
+        <img src="s-92.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -1456,7 +1500,7 @@
         Skyline will show a grid view that looks like this:
     </p>
     <p>
-        <img src="image-99.png" />
+        <img src="s-93.png" />
     </p>
     <p>
         If the “Fold Change Result” column does not show the full confidence interval, double-click the vertical line between the Fold Change Result
@@ -1472,7 +1516,7 @@
         Skyline adds a graph pane beside the <b>Healthy v. Diseased:Grid</b> view that looks like this:
     </p>
     <p>
-        <img src="image-100.png" />
+        <img src="s-94.png" />
     </p>
     <ul>
         <li>On the grid, click the “Fold Change Result” header, and click <b>Sort Ascending</b> in the menu that appears.</li>
@@ -1496,7 +1540,7 @@
         You will see the number of rows indicated in the grid toolbar drop from 48 to 11, and the graph should now look like this:
     </p>
     <p>
-        <img src="image-101.png" />
+        <img src="s-95.png" />
     </p>
     <p>
         Note that more of the proteins that displayed significant change have positive fold-change means, indicating they were more intense in the
@@ -1550,7 +1594,7 @@
         like this:
     </p>
     <p>
-        <img src="image-102.png" />
+        <img src="s-96.png" />
     </p>
     <p class="keep-next">
         To delete these peptides from the document do the following:
@@ -1565,20 +1609,20 @@
         The grid should look like this:
     </p>
     <p>
-        <img src="image-103.png" />
+        <img src="s-97.png" />
     </p>
     <p>
         Note that the VVLSGSDATLAYSAFK peptide has a fold-change of 1, with a 99% confidence interval of 1 to 1. This is the single peptide used as the
         Global Standard for normalization. You do not want to delete this peptide from the document. That is why you deselected it.
     </p>
     <ul>
-        <li>Click the <img src="image-104.png" /> button in the grid toolbar.</li>
+        <li>Click the <img src="../../shared/red-x-icon.png" /> button in the grid toolbar.</li>
     </ul>
     <p class="keep-next">
         Skyline will show the following message to confirm you really want to delete the selected rows:
     </p>
     <p>
-        <img src="image-105.png" />
+        <img src="s-98.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>

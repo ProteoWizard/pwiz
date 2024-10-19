@@ -35,6 +35,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -94,6 +95,26 @@ namespace pwiz.SkylineTest
                 @"^\s*PauseTest(UI)?\(", // Forbidden pattern (uncommented PauseTest or PauseTestUI)
                 true, // Pattern is a regular expression
                 @"This appears to be temporary debugging code that should not be checked in. Or perhaps you meant to use PauseForManualTutorialStep()?"); // Explanation for prohibition, appears in report
+
+            // Looking for forgotten SourceLevel.Information use that writes debug messages to console/ImmediateWindow
+            AddTextInspection(@"TraceWarningListener.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"SourceLevels.Information", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. Normally we don't want users to see this level of Trace messages."); // Explanation for prohibition, appears in report
+
+            // Looking for bare use of Trace calls that should be UserMessage or DebugMessage calls
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories().Append(@"Messages.cs").ToArray(), // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"Trace.Trace", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"Trace should not be used directly. The Messages class is the proper way to produce non-blocking user-facing messages, and permanent dev-facing messages."); // Explanation for prohibition, appears in report
 
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -377,6 +398,126 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        ///  Look for conflicts between settings.settings and app.config
+        /// </summary>
+        void InspectInconsistentSetting(string root, List<string> errors) 
+        {
+            var EMPTY_STRING_ARRAY = "</ArrayOfString>";
+
+            // Extract key-value pairs from settings.settings
+            var settingsValues = ExtractSettingsSettings();
+
+            // Extract key-value pairs from app.config
+            var configValues = ExtractAppConfigSettings();
+
+            // Find keys that exist in both but have different values
+            foreach (var key in settingsValues.Keys.Intersect(configValues.Keys).Where(k => (settingsValues[k] != configValues[k])))
+            {
+                var settingsValue = settingsValues[key];
+                var configValue = configValues[key];
+                // An empty string array in settings.settings is just empty text in app.config
+                if (!(settingsValue.Equals(EMPTY_STRING_ARRAY) && string.IsNullOrEmpty(configValue)))
+                {
+                    NoteMismatch(key, settingsValue, configValue);
+                }
+            }
+
+
+            // Find settings that exist only in one of the files
+            foreach (var key in settingsValues.Keys.Except(configValues.Keys))
+            {
+                var settingsValue = settingsValues[key];
+                // IDE seems to be OK with missing value in app.config if the setting is an empty string array
+                if (!settingsValue.Equals(EMPTY_STRING_ARRAY))
+                {
+                    NoteMismatch(key, settingsValue, null);
+                }
+            }
+            foreach (var key in configValues.Keys.Except(settingsValues.Keys))
+            {
+                NoteMismatch(key, null, configValues[key]);
+            }
+
+            return;
+
+
+            void NoteMismatch(string name, string settingsValue, string configValue)
+            {
+                errors.Add($"Settings mismatch for \"{name}\": {FormatValue(settingsValue)} in Settings.settings, {FormatValue(configValue)} in app.config.");
+                return;
+                string FormatValue(string s) => s == null ? "not found" : $"\"{s}\"";
+            }
+
+            string CheckStringArray(string value)
+            {
+                if (value.Contains("<ArrayOfString"))
+                {
+                    var result = string.Empty;
+                    foreach (var part in value.Split(new[] { "<string>" }, StringSplitOptions.None))
+                    {
+                        if (part.Contains("</string>"))
+                        {
+                            var val = part.Trim().Split(new[] { "</string>" }, StringSplitOptions.None).FirstOrDefault();
+                            if (!string.IsNullOrEmpty(val))
+                            {
+                                result += val.Trim();
+                            }
+                        }
+                    }
+                    return result;
+                }
+                else if (string.IsNullOrEmpty(value))
+                {
+                    // Special case - settings designer won't update app.config if the value is empty (that is, not even an empty description in XML - just blank text)
+                    value = EMPTY_STRING_ARRAY;
+                }
+
+                return value;
+            }
+
+            Dictionary<string, string> ExtractSettingsSettings()
+            {
+                var settingsPath = Path.Combine(root, @"Properties\Settings.settings");
+                var doc = XDocument.Load(settingsPath);
+                var settings = new Dictionary<string, string>();
+                XNamespace settingsNamespace = "http://schemas.microsoft.com/VisualStudio/2004/01/settings";
+                var settingsElements = doc.Descendants(settingsNamespace + "Settings")
+                    .Descendants(settingsNamespace + "Setting")
+                    .ToArray();
+                AssertEx.AreNotEqual(settingsElements.Length, 0, "trouble reading settings.settings");
+                foreach (var setting in settingsElements)
+                {
+                    var key = setting.Attribute("Name")?.Value;
+                    if (key != null)
+                    {
+                        var value = CheckStringArray(setting.Value);
+                        settings[key] = value;
+                    }
+                }
+                return settings;
+            }
+
+            Dictionary<string, string> ExtractAppConfigSettings()
+            {
+                var configPath = Path.Combine(root, @"app.config");
+                var doc = XDocument.Load(configPath);
+                var settings = new Dictionary<string, string>();
+                var appSettingsElements = doc.Descendants(@"setting").ToArray();
+                AssertEx.AreNotEqual(appSettingsElements.Length, 0, "trouble reading app.config");
+                foreach (var setting in appSettingsElements)
+                {
+                    var key = setting.Attribute("name")?.Value;
+                    if (key != null)
+                    {
+                        var value = setting.Value;
+                        settings[key] = value;
+                    }
+                }
+                return settings;
+            }
+        }
+
+        /// <summary>
         /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations 
         /// </summary>
         void InspectMisplacedResources(string root, List<string> errors) 
@@ -589,6 +730,8 @@ namespace pwiz.SkylineTest
             InspectTutorialAuditLogs(root, results);
 
             InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
+
+            InspectInconsistentSetting(root, results); // Look for conflicts between settings.settings and app.config
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 

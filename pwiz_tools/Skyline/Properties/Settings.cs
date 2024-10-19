@@ -1301,6 +1301,31 @@ namespace pwiz.Skyline.Properties
                 NormalizeOptionValue = value.PersistedName;
             }
         }
+
+        [UserScopedSetting]
+        public OpenDataSourceState OpenDataSourceState
+        {
+            get
+            {
+                return (OpenDataSourceState)this[nameof(OpenDataSourceState)];
+            }
+            set
+            {
+                this[nameof(OpenDataSourceState)] = value;
+            }
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenDataSourceState
+    {
+        public string DocumentPath { get; set; }
+        public string InitialDirectory { get; set; }
+        public string SourceTypeName { get; set; }
+        public View ListView { get; set; }
+        public int ListSortColumnIndex { get; set; }
+        public SortOrder ListSortOrder { get; set; }
+        public Size WindowSize { get; set; }
     }
 
     /// <summary>

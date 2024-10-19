@@ -162,6 +162,7 @@
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
+    <Compile Include="OptimizationSpacingTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
     <Compile Include="RefineTest.cs">
