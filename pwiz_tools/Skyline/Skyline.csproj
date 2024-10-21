@@ -558,6 +558,17 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectUrl.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -3684,6 +3695,19 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.ja.resx">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.zh-CHS.resx">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
     </EmbeddedResource>
@@ -4811,12 +4835,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.zh-CHS.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.ja.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
