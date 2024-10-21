@@ -314,9 +314,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return new DiaUmpireDdaConverter(ImportPeptideSearch, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
         }
 
-        public MsconvertDdaConverter GetMsconvertConverter()
+        public MsconvertDdaConverter GetDdaConverter()
         {
             return new MsconvertDdaConverter(ImportPeptideSearch);
+        }
+
+        public DiaConverter GetDiaConverter()
+        {
+            return new DiaConverter(ImportPeptideSearch);
         }
 
         public HardklorDdaConverter GetHardklorConverter()

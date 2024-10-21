@@ -349,6 +349,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gas phase fractionation.
+        /// </summary>
+        public static string BuildPeptideSearchLibrarySettings_IsGpf {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibrarySettings_IsGpf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search files.
         /// </summary>
         public static string BuildPeptideSearchLibrarySettings_SearchFileNames {
@@ -363,6 +372,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string BuildPeptideSearchLibrarySettings_Standard {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibrarySettings_Standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deconvolute spectra with DIA-Umpire.
+        /// </summary>
+        public static string BuildPeptideSearchLibrarySettings_UseDiaUmpire {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibrarySettings_UseDiaUmpire", resourceCulture);
             }
         }
         
