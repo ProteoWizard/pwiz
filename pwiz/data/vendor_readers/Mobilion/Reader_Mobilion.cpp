@@ -82,7 +82,7 @@ void fillInMetadata(const string& rawpath, MBIFile* rawdata, MSData& msd)
 
     bool hasMS1 = false, hasMS2 = false;
     for (size_t i = 1; i <= rawdata->NumFrames() && (!hasMS1 || !hasMS2); ++i)
-        if (rawdata->GetFrame(i)->isFragmentationData())
+        if (rawdata->GetFrame(i)->GetCE(0) > 0)
             hasMS2 = true;
         else
             hasMS1 = true;
@@ -100,8 +100,8 @@ void fillInMetadata(const string& rawpath, MBIFile* rawdata, MSData& msd)
     sourceFile->id = BFS_STRING(sourcePath.leaf());
     sourceFile->name = BFS_STRING(sourcePath.leaf());
     sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.branch_path()));
-    sourceFile->set(MS_Bruker_TDF_nativeID_format);
-    sourceFile->set(MS_file_format);
+    sourceFile->set(MS_Mobilion_MBI_nativeID_format);
+    sourceFile->set(MS_Mobilion_MBI_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = bfs::basename(sourcePath);
