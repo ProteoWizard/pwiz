@@ -46,6 +46,8 @@ searched-lib MBI_SDK
         <name>MBI_SDK
         <address-model>64
         <search>$(.dll-location)
+        <runtime-debugging>on:<build>no
+        <address-model>32:<build>no
     : # default-build
     : # usage-requirements
         <include>$(.dll-location)
@@ -76,6 +78,7 @@ lib pwiz_vendor_api_mbi
     : # requirements      
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
+        <runtime-debugging>on:<build>no
         <address-model>32:<build>no
     : # default-build
     : # usage-requirements

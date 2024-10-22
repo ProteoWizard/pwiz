@@ -37,19 +37,19 @@ namespace detail {
 namespace Mobilion {
 PWIZ_API_DECL class MBIFileWrapper
 {
-	public:
-	MBIFileWrapper(const std::string& filepath)
-		: file(filepath.c_str())
-	{
-		file.Init();
-	}
+    public:
+    MBIFileWrapper(const std::string& filepath)
+    : file(filepath.c_str())
+    {
+        file.Init();
+    }
 
-	~MBIFileWrapper()
-	{
-		file.Close();
-	}
+    ~MBIFileWrapper()
+    {
+        file.Close();
+    }
 
-	MBIFile file;
+    MBIFile file;
 };
 typedef boost::shared_ptr<MBIFileWrapper> MBIFilePtr;
 
