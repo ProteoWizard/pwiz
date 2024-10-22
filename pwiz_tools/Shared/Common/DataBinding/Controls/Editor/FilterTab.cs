@@ -18,11 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
@@ -301,7 +301,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void dataGridViewFilter_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            Trace.TraceError(@"DataGridViewFilterOnDataError:{0}", e.Exception);
+            Messages.WriteAsyncDebugMessage(@"DataGridViewFilterOnDataError:{0}", e.Exception);
         }
 
         protected override void OnLoad(EventArgs e)
