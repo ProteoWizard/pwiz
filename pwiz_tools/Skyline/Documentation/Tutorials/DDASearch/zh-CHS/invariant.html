@@ -1,0 +1,423 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline DDA Search for MS1 Filtering</h1>
+    <p>
+        The Skyline Targeted Mass Spectrometry Environment provides informative visual displays of the raw mass spectrometer data you import into your
+        Skyline documents. These displays allow you to manipulate the data by performing tasks such as refining the peptides and transitions you are
+        measuring, and tuning integration boundaries. Originally developed to analyze quantitative assays from selected reaction monitoring (SRM –
+        also referred to as multiple reaction monitoring or MRM) mass spectrometry, Skyline has been expanded to extract time-intensity chromatograms
+        from MS1 spectra for use in peptide quantification experiments involving mass spec runs with data dependent MS/MS.
+    </p>
+    <p>
+        The Skyline MS1 Full-Scan Filtering supports importing data sets from discovery-type proteomics experiments where mass spectrometers were
+        operated in data dependent acquisition (DDA) mode. After importing the raw data, new and previously existing Skyline features facilitate
+        quantifying peptide precursor MS1 signal across many replicate acquisitions. This mode may also be used for visualizing and better
+        understanding quantitative outputs from other “Label Free” quantitative tools, because of the exceptional data visualization plots in Skyline.
+    </p>
+    <p>
+        This tutorial will cover the following areas critical to making effective use of Skyline MS1 Filtering when you want Skyline to perform peptide
+        spectrum matching for the MS/MS spectra in your DDA data:
+    </p>
+    <ul>
+        <li>Setting up a Skyline document for MS1 filtering</li>
+        <li>Performing a DDA search on raw data to find potential quantitative targets</li>
+    </ul>
+    <p>
+        Skyline aims to provide a vendor-neutral platform for targeted mass spectrometry investigation. It can import raw data for MS1 filtering from
+        the instrument vendors Agilent, Bruker, SCIEX, Shimadzu, Thermo-Scientific and Waters, making the expertise you gain here transferrable to any
+        mass spectrometry lab with an instrument from one of these vendors.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/DdaSearchMS1Filtering.zip">https://skyline.ms/tutorials/DdaSearchMS1Filtering.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\DdaSearchMS1Filtering 
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+    </ul>
+    <ul class="keep-next">
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, you can choose the proteomics interface by doing the following:
+    </p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Proteomics interface</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in proteomics mode which is displayed by the protein icon <img src="../../shared/protein-icon.png" /> in the upper
+        right-hand corner of the Skyline window.
+    </p>
+    <p>
+        You could start editing this blank document in a number of ways, but for this tutorial you will use a sequential set of forms called a wizard
+        that will walk you through the steps of searching mass spectrometer data dependent acquisition (DDA) data files, setting up targets, and
+        importing chromatograms from those files.
+    </p>
+    <p>
+        Before starting the DDA search, you need to change the internal standard Skyline uses by default:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click on the <b>Modifications</b> tab.</li>
+        <li>Set the <b>Internal standard type</b> to “<b>none</b>”</li>
+    </ul>
+    <p class="keep-next">
+        The Peptide Settings form should now look like:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <h1>Searching DDA Files to Load Peptides into a Skyline Document</h1>
+    <p>
+        You can use the <b>Import Peptide Search</b> wizard to run a peptide search on the MS/MS spectra in DDA data files.
+    </p>
+    <p>
+        First, do the following to save your new document:
+    </p>
+    <ul>
+        <li>Click the <b>Save</b> button on the toolbar (Ctrl-S).</li>
+        <li>Navigate to the DdaSearchMS1Filtering folder you created for this tutorial.</li>
+        <li>In the <b>File name</b> field, enter ‘DdaSearchMS1FilteringTutorial.sky’.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        Now, initiate the <b>Import Peptide Search</b> wizard as follows:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Peptide Search</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should present a form that looks like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        The <b>Build</b> options works on the output from DDA search engines (e.g. pepXML files from Comet, .dat from Mascot) and the
+        <b>Perform DDA Search</b> option works on the raw data (e.g. RAW, WIFF, *.d, mzML, mzXML). The mz5 files for this tutorial are
+        centroided to make them faster to download than the original profile Thermo RAW files produced by the mass spectrometer.
+    </p>
+    <p>
+        Add the included DDA mz5 files to the search by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Perform DDA Search</b> radio option.</li>
+        <li>Click the <b>Add Files</b> button.</li>
+        <li>Select all the mz5 files in the DdaSearchMS1Filtering folder you created for this tutorial.</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The wizard form should now look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        A form should appear asking you how to handle the prefix shared by the three mz5 files: 
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The wizard will advance to the <b>Add Modifications</b> page, where it lists all of the amino acid modifications in the document that
+        you might want to include in the DDA search. It is important to distinguish here between fixed and variable modifications: fixed (sometimes
+        called static) modifications are always applied to the specified amino acids. For example, Carbamidomethyl C is usually treated as a fixed
+        modification because all cysteines in the data are expected to be alkylated. Oxidation M is almost always treated as a variable modification
+        because oxidation is hit-or-miss depending on sample handling. Skyline’s search always treats isotopic labels as variable, but you can change
+        whether other modifications are treated as fixed or variable by clicking on the <b>Edit modifications</b> button.
+    </p>
+    <p class="keep-next">
+        You can also add modifications to the document from this page. Since the document was reset to defaults, the list starts with
+        only Carbamidomethyl (C):
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        These data are SILAC labelled, so you will need to add heavy label modifications here. To add them, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Edit modifications</b> button.</li>
+        <li>Click the <b>Edit heavy modifications</b> menu option.</li>
+        <li>Click the <b>Edit List</b> button beside the <b>Isotope modifications</b> list.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Isotope Modifications</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Isotope Modification</b> form, enter “Label:13C(6)15N(2) (C-term K)”.</li>
+        <li>Click the down arrow at the right side of the <b>Name</b> field and click the item with the same name. This will populate the
+            specificity and composition fields from Unimod.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button</li>
+    </ul>
+    <p>
+        Add a second isotope modification by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Add</b> button on the <b>Edit Isotope Modifications</b> form.</li>
+        <li>From the <b>Name</b> dropdown list of the <b>Edit Isotope Modification</b> form, choose “Label:13C(6)15N(4) (C-term
+            R)”.</li>
+    </ul>
+    <p>
+        The <b>13C</b> and <b>15N</b> checkboxes are checked automatically to tell Skyline to use <sup>13</sup>C for all carbon
+        atoms and <sup>15</sup>N for all nitrogen atoms present in an Arginine molecule, for a total mass shift of 10 Daltons (6x <sup>13</sup>C + 4x
+        <sup>15</sup>N).
+    </p>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        Skyline automatically calculates both the monoisotopic and average masses, approximately 8 Daltons for Lysine (K) and 10 Daltons for Arginine
+        (R) that will result from using 13C and 15N in these amino acid residues. To finish adding the heavy modifications:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modification</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modifications</b> form.</li>
+        <li>Check the checkboxes in the <b>Add Modifications</b> list for the “Label:13C(6)15N(2) (C-term K)” and
+            <b>“</b>Label:13C(6)15N(4) (C-term R)<b>”</b> modifications you just created.</li>
+    </ul>
+    <p>
+        Now you will add Oxidation (M) as a structural modification:
+    </p>
+    <ul>
+        <li>Click the <b>Edit modifications</b> button.</li>
+        <li>Click the <b>Edit structural modifications</b> menu option.</li>
+        <li>Click the <b>Edit List</b> button beside the <b>Isotope modifications</b> list.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Structural Modifications</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Structural Modification</b> form, enter “Oxidation (M)”.</li>
+        <li>Click the down arrow at the right side of the <b>Name</b> field and click the item with the same name. This will populate the
+            specificity and composition fields from Unimod.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Structural Modification</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Structural Modifications</b> form.</li>
+        <li>Check the checkbox in the <b>Add Modifications</b> list for the “Oxidation (M)” modification you just created.</li>
+        <li>Also make sure the checkbox for “Carbamidomethyl (C)” is checked, as it should be because you chose the default settings.</li>
+    </ul>
+    <p class="keep-next">
+        At this point the <b>Add Modifications</b> page should look like:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        The wizard will advance to the <b>Configure Full-Scan Settings</b> page.
+    </p>
+    <ul>
+        <li>In the <b>Mass Accuracy</b> field, enter “20”.</li>
+    </ul>
+    <p class="keep-next">
+        The other fields on this page should default to values you can use for this tutorial, and the wizard should look like this:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <ul>
+        <li>See the <a href="https://skyline.ms/_webdav/home/software/Skyline/@files/tutorials/MS1Filtering-20_1.pdf#page=9">MS1 Full Scan Filtering
+                tutorial</a> (page 9) to learn more about these settings.</li>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        This should bring you to the <b>Import FASTA</b> page in the wizard. For this tutorial you will use a human protein FASTA with the
+        sequences from Sigma-Aldrich’s Universal Proteomics Standard (UPS) prepended at the top (so that Skyline uses those accession numbers for any
+        peptides that are shared between UPS and non-UPS proteins). To select the FASTA:
+    </p>
+    <ul>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Select the ‘2014_01_HUMAN_UPS.fasta’ file in the folder you created for this tutorial.</li>
+        <li>Click the <b>Open</b> button in the <b>Open FASTA</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The wizard should now look like this:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button.</li>
+    </ul>
+    <p>
+        The wizard will advance to the <b>Adjust Search Settings</b> page. Here you can set the most important parameters for the DDA search.
+        For this tutorial, do the following:
+    </p>
+    <ul>
+        <li>In the <b>MS1 tolerance</b> field, enter “5”. (Note that when you leave the text box the form will assume you mean ppm and set
+            the unit box accordingly.)</li>
+        <li>In the <b>MS2 tolerance</b> field, enter “10”.</li>
+    </ul>
+    <p class="keep-next">
+        The form should now look like this:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Next</b> button to start the search.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>DDA Search</b> page will show you the progress of the search. You may also cancel the search by clicking the
+        <b>Cancel Search</b> button on this page.
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        After the search is finished:
+    </p>
+    <ul>
+        <li>Click the <b>Finish</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will start to build a spectral library from the search results. After the library build is completed, a message box
+        will pop up to warn you that there were some spectra that could be interpreted as multiple different peptides with equal confidence, and that
+        those peptides will be ignored:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to dismiss the message.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will then start to import the library into your document. When that is finished it will ask you to set criteria for
+        including proteins in the document:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <ul>
+        <li>Check the <b>Remove repeated peptides</b> checkbox (i.e. keep first the occurrence for non-unique peptides).</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <h1>Configuring Skyline to View the Imported Data</h1>
+    <p>
+        After the proteins are imported into the document, you will see the main Skyline window with the UPS proteins at the top of the
+        <b>Targets</b> view. You should see <b>6,025</b> proteins there (counted in the status bar). Skyline will also begin
+        extracting chromatograms with progress displayed in an <b>Importing Results</b> form. You can wait several minutes for chromatogram
+        extraction to complete or you can continue with all but the last step below during the import.
+    </p>
+    <ul>
+        <li>Click on the [+] icon next to the third protein P01112ups|RASH_HUMAN_UPS.</li>
+        <li>Click on the [+] icon next to that protein’s third peptide R.TGEGFL<b><u>C</u></b>VFAINNTK.S.</li>
+        <li>Click on that peptide’s first precursor 835.9140++ and the chromatogram for that precursor and the MS/MS spectrum for that peptide will
+            appear. (Note that the bold, underlined residue “<b><u>C</u></b>” in the peptide sequence indicates a carbamidomethyl cysteine).
+        </li>
+        <li>If you do not see the MS/MS spectrum, on the <b>View</b> menu, click <b>Library Match</b>.</li>
+        <li>If you do not see as many annotated peaks in the <b>Library Match</b> view as in the image below, on the <b>View</b>
+            menu, choose <b>Ion Types</b> and check <b>B</b> and <b>Y</b>.</li>
+        <li>If you do not see the entire chromatogram for the peptide, on the <b>View</b> menu, choose <b>Auto-Zoom</b> and click
+            <b>None</b> (Shift-F11).</li>
+        <li>Right-click the chromatogram graph, choose <b>Peptide ID Times</b>, and click <b>Aligned</b> if it is unchecked.</li>
+    </ul>
+    <p class="keep-next">
+        Your Skyline window should look something like this:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        The document is now fully configured for MS1 Filtering with three DDA runs imported. You will see that the chromatogram in this view is
+        approximately 10 minutes in length (133 to 143 minutes), due to the <b>Use only scans within [5] minutes of MS/MS IDs</b> setting
+        chosen in the import wizard. Note that when the Skyline document is set up for MS1 Filtering, in the place where you would see product ion
+        transitions (e.g. y-ions) for triple quadrupole SRM experiments, you will now see the different precursor isotope peaks, such as for peptide
+        TGEGFL<b><u>C</u></b>VFAINNTK: precursor – 835.914++, precursor [M+1] - 836.4154++, and precursor [M+2] – 836.9164++.
+    </p>
+    <p>
+        To configure a few other features that will be helpful in general, especially to visualize certain MS1 Filtering data, perform the following
+        steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, make sure <b>Integrate All</b> is checked.</li>
+    </ul>
+    <p>
+        This tells Skyline to treat all chromatograms in a peak group (here precursor ions M, M+1 and M+2) as integrating together, regardless of
+        whether peaks appear to be co-eluting with the largest peak. It no longer impacts the integrated peak areas as it once did.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b>.</li>
+    </ul>
+    <p class="keep-next">
+        A window with a graph like this should appear:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        You can dock the <b>Peak Areas</b> window to your desired location by doing the following:
+    </p>
+    <ul>
+        <li>Click and hold down the left mouse button, and then drag it until the mouse cursor is above the <b>Library Match</b> view.</li>
+        <li>When a set of 5 icons in the shape of a cross appears, move the mouse into the lower icon and release the left mouse button to divide the
+            space on the right edge of the Skyline window between the <b>Peak Areas</b> and <b>Library Match</b> views.</li>
+        <li>Move the <b>Library Match</b> view below the <b>Targets</b> view by the same process.</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Column</b>.</li>
+        <li>Right-click a chromatogram graph, and click <b>Legend</b> to turn off the legend in the chromatogram graphs.</li>
+    </ul>
+    <p class="keep-next">
+        Now your Skyline window should look something like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        From this point you can learn more about working with DDA data by consulting the <a
+            href="https://skyline.ms/_webdav/home/software/Skyline/@files/tutorials/MS1Filtering-20_1.pdf">MS1 Full Scan Filtering tutorial</a>.
+    </p>
+</body>
+
+</html>

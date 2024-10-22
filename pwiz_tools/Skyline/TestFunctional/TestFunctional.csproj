@@ -195,6 +195,8 @@
     <Compile Include="FullScanPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
+    <Compile Include="ImportPromptToSaveTest.cs" />
+    <Compile Include="ImportResultsFilesRestoreTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />
@@ -546,7 +548,6 @@
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
-    <None Include="CrosslinkNeutralLossTest.zip" />
     <None Include="DdaPeakIntegrationTest.zip" />
     <None Include="DdaSearchTest.zip" />
     <None Include="DecoyTargetMatchTest.zip" />
@@ -652,7 +653,6 @@
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RemovePrefixSuffixTest.zip" />
     <None Include="RenameMoleculeTest.zip" />
-    <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RescoreImportDocumentTest.zip" />
@@ -695,6 +695,7 @@
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
+    <None Include="VolcanoPlotLayoutTest.zip" />
     <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>

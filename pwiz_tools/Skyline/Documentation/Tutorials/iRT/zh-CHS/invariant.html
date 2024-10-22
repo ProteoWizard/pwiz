@@ -1,0 +1,979 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline iRT Retention Time Prediction</h1>
+    <p>
+        Predicting peptide retention time has long been of interest in targeted proteomics. As early as version 0.2, Skyline integrated the SSRCalc
+        hydrophobicity calculator<sup>1</sup> as one way to predict a peptide retention time given its unmodified sequence, as described in the “<a
+            href="https://skyline.ms/tutorial_method_refine_zh.url">Targeted Method
+            Refinement</a>” tutorial. By version 0.5, Skyline supported what has become the state-of-the-art in scheduled acquisition for targeted
+        experiments. This technique, also described in the “<a
+            href="https://skyline.ms/tutorial_method_refine_zh.url">Targeted Method
+            Refinement</a>” tutorial, involves first measuring all targeted peptides unscheduled on the system you will use for your multi-replicate
+        experiment. Retention times from the unscheduled injections are then used to schedule all subsequent acquisition, as long as no chromatography
+        changes are necessary.
+    </p>
+    <p>
+        The unscheduled measurement technique has the drawback of requiring potentially many mass spec runs for each scheduled method any time a change
+        in chromatography is introduced, whether the change is due to inter-lab method sharing, using multiple instruments in a single lab or even a
+        column change on a single instrument mid-experiment. In one experiment at the MacCoss lab, 5 unscheduled runs were required to schedule 780
+        transitions for single-method acquisition over 45 replicates. In a study conducted by the Verification Working Group of NCI-CPTAC, 6
+        unscheduled runs were required to schedule 750 transitions for single-method acquisition over a 150-200 injection experiment. This study
+        involved 14 instruments across 11 labs, and enough injections to require column changes in some labs. Obviously a technique that allowed
+        previously measured peptide retention times to be stored for reuse across labs, instruments and even gradient changes requiring only a single
+        calibration run would greatly simplify producing scheduled methods for use in targeted experiments. 
+    </p>
+    <p>
+        More accurate retention time prediction also makes predicted retention time a more powerful tool for peak identity validation. For example,
+        when 2 standard deviations from the mean is 5 minutes, many more peak candidates become believable than when that number is 1 minute.
+    </p>
+    <p>
+        The market in retention time calibration standards for iRT has grown considerably since this tutorial was first written. Though, the original
+        Biognosys standard used in this tutorial is still quite popular. The iRT concept introduced here is now also widely used in proteomewide DIA
+        experiments to query peptides detected with DDA runs at a normalized retention time in DIA runs. It is also becoming more common in these
+        experiments to use endogenous peptides as the calibration anchors, entirely avoiding the expense and complexity of injecting standards.
+    </p>
+    <p>
+        In this tutorial, you will store empirically measured retention times made on a 30-minute gradient as iRT values, and then use those values to
+        schedule a targeted method for a 90-minute gradient. You will also see how the reduced error in retention time prediction with iRT can
+        increase peak identification confidence. And, you will convert peptide retention times in a spectral library built from a data dependent
+        acquisition (DDA) experiment to iRT values, which can be used to go straight from discovery experiments to schedule targeted experiments,
+        again with only one calibration injection or to query the peptides in DIA data with no scheduling at all.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/iRT.zip">https://skyline.ms/tutorials/iRT.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\iRT
+    </p>
+    <p>
+        It will contain all the files necessary for this tutorial. Open the file ‘iRT-C18 Standard.sky’ in this folder, either by double-clicking on it
+        in the Windows File Explorer, or by clicking <b>Open</b> in the <b>File</b> menu in Skyline.
+    </p>
+    <h1>Calibrating an iRT Calculator</h1>
+    <p>
+        Although, in this tutorial, you will be working with the iRT-C18 standard scale defined by Biognosys, using their “iRT Kit”, iRT itself is a
+        general concept that can be applied to any peptides using any set of anchor peptides (generally 10-20 are recommended) that can be easily
+        measured and covers most of your gradient. Before making any changes to the document you have opened:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu click <b>Save As</b>.</li>
+        <li>Save a new copy to the iRT folder you created by the name ‘iRT-C18 Calibration.sky’.</li>
+    </ul>
+    <p>
+        Now, to start this tutorial, prepare to calibrate a new iRT calculator as if you had measured the desired standard peptides on your own
+        instrument, by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button in the <b>Import Results</b> form.</li>
+        <li>Select the first two .raw files listed in the iRT folder you created for this tutorial:<ul>
+                <li>A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.raw</li>
+                <li>A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.raw</li>
+            </ul>
+        </li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>In the form that appears, delete “_30min” from the <b>Common suffix</b> field.</li>
+    </ul>
+    <p class="keep-next">
+        The form looking like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Back in the Skyline main window again, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Tiled</b> (Ctrl-T).</li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Peptide Comparison</b> (Ctrl-F8).</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should present the <b>Retention Times</b> view showing a graph like the one below:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        This gives you a top level view of when each peptide eluted, on average, over the 30-minute gradient. Continue reviewing the data by doing the
+        following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b>.</li>
+        <li>Dock the <b>Retention Times</b> view to the right edge of the Skyline window by clicking in its title bar, and dragging until
+            the mouse cursor is inside the icon, near the right edge, that looks like:<br /><img src="../../shared/right-side-docking-icon.png" />
+        </li>
+        <li>Select the first peptide LGGNEQVTR in the document.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should now look something like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        Use the down-arrow key to review each of the 11 peptides in the Biognosys standard mix, making sure that the integration looks correct, and
+        that both replicates show integrated peaks at similar retention times. The automatic integration is quite good for these peptides, and you
+        will not need to make any manual changes. In this tutorial, only two replicates are included. If you were actually calibrating a new iRT
+        calculator yourself, you would probably want to use a greater number to improve your estimate of the mean retention times for your peptides.
+        When you ask Skyline to <b>Use Results</b> to calibrate a retention time calculator, it will use the mean value of your measurements
+        for each peptide, and the precision of those values as estimates of the true retention time means for your peptides will be proportional to
+        the square root of the number of measurements.
+    </p>
+    <p>
+        Having verified the quality of your calibration data, perform the following steps to create your new iRT calculator and calibrate it:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>Click the <img src="../../shared/calculator-button.png" /> (<b>Retention time calculators</b>) button, and click <b>Add</b> in the menu it
+            shows.</li>
+        <li>In the <b>Name</b> field of the <b>Edit iRT Calculator</b> form, enter ‘iRT-C18’.</li>
+        <li>Click the <b>Create</b> button.</li>
+        <li>In the <b>Create iRT Database</b> form, navigate to the iRT folder you created for this tutorial, if necessary.</li>
+        <li>In the <b>File name</b> field, enter ‘iRT-C18’.</li>
+        <li>Click the <b>Save</b> button.</li>
+        <li>Click the <b>Calibrate</b> button in the <b>Edit iRT Calculator</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Calibrate iRT Calculator</b> form, enter ‘Biognosys (30 min cal)’.</li>
+        <li>Click the <b>Use Results</b> button in the <b>Calibrate iRT Calculator</b> form.</li>
+        <li>Select the peptide GAGSSEPVTGLDAK in the <b>Min fixed peptide</b> dropdown list.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Calibrate iRT Calculator</b> form should now look something like:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Graph</b> button to the right of the <b>Calculate from</b> dropdown list to see a plot of the line from
+            which the equation displayed below, “iRT = 6.7701 * RT – 105.6630” is derived.</li>
+        <li>Click the <b>Graph</b> button bellow the <b>Standard calibration peptides</b> grid to see the standards plotted on the
+            line defined by the equation.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Note: This is simply the way Biognosys defined the iRT-C18 scale. If you define your own scale, you are free to leave the fixed points as the
+        first and last eluting peptides, or use whichever other peptides you choose. The choice of fixed points and scale are somewhat arbitrary. You
+        are simply defining any time independent, relative retention time scale, into which you will then map the rest of your iRT values.
+    </p>
+    <p class="keep-next">
+        The <b>Edit iRT Calculator</b> form should now look something like:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        That is it. You have calibrated a new set of iRT standards with measured data. In this case, however, the team at Biognosys has already
+        calibrated their standard mix, presumably using more than two replicates. Therefore, in this tutorial, you will simply replace this
+        calibration with the canonical one, but first to see how close the two are, do the following:
+    </p>
+    <ul>
+        <li>Move the mouse cursor below the <b>iRT standards</b> grid until you see a horizontal split cursor <img src="../../shared/horizontal-split-cursor-icon.png" />.
+        </li>
+        <li>Click and drag the splitter until you can see all 11 standard peptides in the grid.</li>
+        <li>In the dropdown list above the grid switch between the two choices:<ul>
+                <li><b>Biognosys (30 min cal)</b> – which you just created</li>
+                <li><b>Biognosys-11 (iRT-C18)</b> – which Biognosys defined</li>
+            </ul>
+        </li>
+    </ul>
+    <p>
+        To compare more carefully, you can also take screenshots with Alt-PrtScn and past into an image editor or copy and paste the grid contents into
+        Excel where you can compare the values side-by-side.
+    </p>
+    <p>
+        You will see that the newly calculated iRT values are reasonably close to the definition values. In your experiments, you may get the best
+        results by recalibrating these values when all of your work will be on the same chromatography and you are using Skyline to calibrate all of
+        your iRT values. Otherwise, the defined values may introduce error between your chromatography and what was used to create the definition. For
+        using or creating broadly shared iRT values, you will want to stick to the definition.
+    </p>
+    <p>
+        In this tutorial, you will now switch to the definition values. To do this, perform the following steps:
+    </p>
+    <ul>
+        <li>From the <b>iRT standards</b> dropdown list, select <b>Biognosys-11 (iRT-C18)</b>.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit iRT Calculator</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <p>
+        To view the correlation between the definition values and the measured peptides, perform the following steps:
+    </p>
+    <ul>
+        <li>Double-click the title bar for the <b>Retention Times</b> view to undock it.</li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b>, then <b>Regression</b> and click <b>Score To
+                Run</b> (Shift-F8).</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should present a graph that looks like the one below:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <p>
+        In the upper left corner of the graph, you will see a Pearson’s Correlation Coefficient of 0.9991. If you do not see iRT-C18 below the x-axis,
+        you may need to do the following:
+    </p>
+    <ul>
+        <li>Right-click the <b>Retention Times</b> graph, choose <b>Calculators</b> and click <b>iRT-C18</b>.</li>
+    </ul>
+    <p>
+        If you wish to see this regression graphed separately for each of the two imported replicates, do the following:
+    </p>
+    <ul>
+        <li>Right-click the <b>Retention Times</b> graph, choose <b>Replicates</b> and click <b>Single</b>.</li>
+    </ul>
+    <p>
+        Now when you click on the tabs for the chromatogram graphs of the two replicates, you will see the intercept values change from 15.15 for
+        1_30min and 15.04 for 2_30min. The difference is very slight, but you may find you want to perform this kind of review with more complex data
+        sets.
+    </p>
+    <h1>Adding iRT Values for New Targeted Peptides</h1>
+    <p>
+        Now you have a fully calibrated iRT-C18 calculator, but without iRT values for any peptides other than the standards, it is of little use to
+        you. In this section, you will add the first target peptides to your calculator, based on experimental results from an SRM experiment. Before
+        getting started with the new peptides, save the current file, and then perform the following steps to create a document that will allow you to
+        calculate iRT values for new target peptides:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Open</b>.</li>
+        <li>Double-click the file ‘iRT Human.sky’ in the iRT folder you created.</li>
+        <li>Press the Home key to select the first element in the <b>Targets</b> view.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Document</b>.</li>
+        <li>Double-click the file ‘iRT-C18 Standard.sky’.</li>
+        <li>If you missed a step above, and saved results to this document, Skyline may ask what to do with these results. In this case, you should
+            choose <b>Remove results information</b> and click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Targets</b> view should look something like this:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Save this document as ‘iRT Human+Standard.sky’.</li>
+        <li>Save it again as ‘iRT Human+Standard Calibrate.sky’.</li>
+    </ul>
+    <h2>Creating an iRT Acquisition Method</h2>
+    <p>
+        If you were collecting data on your own instrument to calculate new iRT values, you would need an instrument method for acquiring that data. By
+        looking at the lower right corner of the Skyline window, you can see that this document currently contains 1231 transitions, measuring them
+        all unscheduled could take a few injections, but you can exploit the following two facts to make this more manageable:
+    </p>
+    <ol>
+        <li>The document is set up for measuring stable isotope labeled reference peptides.</li>
+        <li>You are only interested in retention time values and not quantitative measurement.</li>
+    </ol>
+    <p>
+        To cut the number of transitions almost in half, perform the following steps to remove the heavy precursors from this document: 
+    </p>
+    <ul>
+        <li>On the <b>Refine</b> menu, click <b>Advanced</b>.</li>
+        <li>In the <b>Remove label type</b> field, choose ‘heavy’.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You will see the transitions reduced to 632. Before you export a method to measure retention times for these new peptides, you will need to
+        specify you are using the new iRT-C18 calculator, so that Skyline will know to include transitions for the standard peptides in all instrument
+        methods it generates. You can do this by performing the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab, if it is not already active.</li>
+        <li>In the <b>Retention time predictor</b> field, choose ‘&lt;Add…&gt;’.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Retention Time Predictor</b> form, enter ‘iRT-C18’.</li>
+        <li>In the <b>Calculator</b> field, choose your new calculator ‘iRT-C18’.</li>
+        <li>Check the <b>Auto-calculate regression</b> check box.</li>
+        <li>In the <b>Time window</b> field, enter ‘5’.</li>
+    </ul>
+    <p class="keep-next">
+        The form should look like the following:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Make sure the <b>Retention time predictor</b> field contains your new predictor ‘iRT-C18’.</li>
+        <li>Click the <b>OK</b> button on the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <p>
+        To export unscheduled transition lists to measure the new target peptides, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Transition List</b>.</li>
+        <li>Click the <b>Multiple methods</b> choice.</li>
+        <li>Check the <b>Ignore proteins</b> checkbox.</li>
+        <li>In the <b>Max transitions per sample injection</b> field, enter ‘335’.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Export Transition List</b> form should now look like:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>File name</b> field of the <b>Export Transition List</b> save form, enter ‘iRT Human+Standard Calibrate’.
+        </li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        You have just generated two transition lists for measuring the new target peptides with the peptides from the Biognosys standard mix included
+        in both, in order to calculate new iRT values for the target peptides. It is important that the standards get measured with every injection,
+        and Skyline handles this for you automatically, even for scheduled methods involving multiple injections to measure all of the targets in a
+        document.
+    </p>
+    <p>
+        For your own experiments, you might choose to export directly to instrument methods to avoid having to load transition lists manually. You
+        might also want to choose a smaller maximum transition level. True, you are only seeking peaks recognizable enough to give you valid retention
+        time measurements, but a 335 count may be a lot for an older triple quadrupole. You might also be able to gain a lot more iRT calibration
+        information from DDA libraries, as you will at the end of this tutorial, or DIA runs. Even modern triple quadrupole instruments remain
+        relatively limited in the number of peptides they can detect in a single run.
+    </p>
+    <p>
+        Open the generated CSV files ‘iRT Human+Standard Calibrate_0001.csv’ and ‘iRT Human+Standard Calibrate_0002.csv’ in Excel, and you will see
+        normal transition lists for a Thermo TSQ instrument. At the bottom of each, you will see the transitions for measuring the standard peptides
+        listed in your iRT calculator.
+    </p>
+    <h2>Importing and Reviewing the Data</h2>
+    <p>
+        The tutorial folder includes files with acquired data for transition lists like the ones you just created. In fact, you imported them in the
+        iRT calibration section of the tutorial. You simply chose to ignore the chromatograms for the human peptides. To import the files into your
+        current document, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>Add one new replicate</b> choice.</li>
+        <li>Click the <b>OK</b> button in the <b>Import Results</b> form.</li>
+        <li>Select the first two .raw files listed in the iRT folder you created for this tutorial:<ul>
+                <li>A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.raw</li>
+                <li>A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.raw</li>
+            </ul>
+        </li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        To see how your iRT-C18 calculator scores these new peptides, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Retention Times</b> graph, which previously you undocked and set to show a linear regression, right-click, choose
+            <b>Calculator</b> and click <b>iRT-C18</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Once the data has finished importing, you should see a graph like:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        The cluster of purple points, on the left side of the graph indicates that these peptides do not yet have calibrated iRT values. Before
+        calculating the iRT values, however, it is probably a good idea to review the peak integration. If you are really calibrating your own iRT
+        values, you will want to do this very carefully for all peptides.
+    </p>
+    <p>
+        You might want to use these first unscheduled injections to create a scheduled method that you could measure in multiple replicates to improve
+        your estimate of the mean retention time before converting it to an iRT. With only a single measurement, basic statistics tell us that, on
+        average, 5% of the peptides will have times 2 standard deviations from their mean, which is what you are trying to predict.
+    </p>
+    <p>
+        In this tutorial, however, you will use only the single measurement, and perform only a cursory check of the integration. To review the
+        peptides where Skyline found issues with the integration, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Find</b> (Ctrl-F).</li>
+        <li>Make sure the <b>Find what</b> field is clear.</li>
+        <li>Click the <b>Show Advanced</b> button.</li>
+        <li>In the <b>Also search for</b> list, check the <b>Unintegrated transitions</b> check box.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Find</b> form should look like:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Find All</b> button.</li>
+        <li>Click the <b>Close</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        At the bottom of the Skyline window, you should see the <b>Find Results</b> view, showing 6 unintegrated
+        transitions:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        To review the peptides containing these peaks, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>All</b> (Shift-F10).</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+        <li>Double-click each row in the <b>Find Results</b> view.</li>
+    </ul>
+    <p class="keep-next">
+        You will see that several of these are transitions with interference, and have signal lower than 1% (by area) of the most
+        intense transition:
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-13.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-14.png" />
+            </td>
+        </tr>
+    </table>
+    <p>
+        Skyline excludes such transitions to help you in deciding which transitions to keep for your final quantitative method. If you have already
+        made that decision, however, you hide this information by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Integrate All</b>.</li>
+    </ul>
+    <table>
+        <tr>
+            <td>Note: This no longer has any impact on Skyline quantitatively. All quantitative transitions will always be included in the total area
+                calculation. To make a transition non-quantitative, you can right-click on it in the <b>Targets</b> view or use the
+                <b>Quantitative</b> property in the <b>Document Grid</b>.</td>
+        </tr>
+    </table>
+    <h2>Calculating iRT Values</h2>
+    <p>
+        To calculate iRT values for the target peptides in this document now, perform the following steps:
+    </p>
+    <ul>
+        <li>Right-click in the linear regression graph in the <b>Retention Times</b> view, choose <b>Calculator</b> and click
+            <b>Edit Current</b>.</li>
+        <li>In the <b>Edit iRT Calculator</b> form, now showing your iRT-C18 calculator, click the <b>Add</b> button, and
+            click <b>Add Results</b> in the menu presented below the button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will show you the following informational message:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        Note that in producing iRT values for the two runs, Skyline has performed a separate linear regression for each run. It uses the linear
+        regression for each run to calculate iRT values for the peptides in that run. If multiple runs contain the same peptide, Skyline will take the
+        mean average of these final calculated iRT values. This is very different from starting by averaging the physical retention times, and allows
+        for gradient changes across the runs. You can review regression graphs in both runs by clicking the hyperlinked text “Success” in the
+        <b>Result</b> column of the grid.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Skyline will ask whether you want to recalibrate your iRT standards relative to the peptides being added.
+    </p>
+    <ul>
+        <li>Click the <b>No</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit iRT Calculator</b> form should now look like:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Retention Times</b> view should change to look like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        You have just calibrated iRT-C18 values for 148 new human peptides, using data acquired on a 30-minute gradient.
+    </p>
+    <h1>Using iRT to Schedule New Acquisition</h1>
+    <p>
+        Next, you will explore how iRT allows you to take an existing method to a new chromatographic setting, even changing gradient length, and begin
+        scheduled acquisition with relatively small time windows after only one calibration run.
+    </p>
+    <table>
+        <tr>
+            <td>Note: Since this tutorial was first written, it has become clear that despite being this flexible, iRT library values function best on
+                chromatography matching as closely as possible to the collection state. A library from the exact same chromatography will function
+                better than one after a column change, or years prior on entirely different chromatography.</td>
+        </tr>
+    </table>
+    <p>
+        If you were doing this in your own lab, you would open the original ‘iRT Standard.sky’ file, export a method for it, and then acquire that
+        method on your fully prepared sample with the standard mix injected. The tutorial folder contains a raw data file created in exactly this way.
+        The same sample measured above was injected into a mass spectrometer with a new column and a 90 minute gradient, though only the standard
+        peptides were measured.
+    </p>
+    <p>
+        Before continuing, do the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b> (Ctrl-S).</li>
+        <li>Close the <b>Find Results</b> view.</li>
+    </ul>
+    <p>
+        To recalibrate the method you have created to the new column and 90-minute gradient, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click the ‘iRT Human+Standard.sky’ file you saved earlier (Alt-F, 2).</li>
+        <li>On the <b>Edit</b> menu, click <b>Find</b> (Ctrl-F).</li>
+        <li>Click the <b>Hide Advanced</b> button.</li>
+        <li>In the <b>Find what</b> field, enter ‘NSAQ’.</li>
+        <li>Click the <b>Find Next</b> button.</li>
+        <li>Click the <b>Close</b> button.</li>
+        <li>Press the Delete key to delete the peptide you deleted in the other document.</li>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>In the <b>Retention time predictor</b> dropdown list, choose the ‘iRT-C18’ predictor you created.</li>
+        <li>Check the <b>Use measured retention times when present</b> check box.</li>
+        <li>In the <b>Time window</b> field, enter ‘5’.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button in the <b>Import Results</b> form.</li>
+        <li>Double-click the file<br />‘A_D110913_SiRT_HELA_11_nsMRM_150selected_90min-5-40_TRID2215_01.raw’<br />in the iRT folder you created for
+            this tutorial.</li>
+    </ul>
+    <p class="keep-next">
+        When the data has finished importing, the <b>Retention Times</b> regression graph will be shown as:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        You can see that the times for the standard peptides now range from about 15 to 65 minutes, and none of the target peptides were measured in
+        this run. However, you are now ready to measure them on this new gradient.
+    </p>
+    <h1>Exporting a Scheduled Method Using an iRT Predictor</h1>
+    <p>
+        Before creating a scheduled method, you can gain a little better understanding of how the transitions will be measured under potential
+        scheduling parameters by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Scheduling</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Retention Times</b> view should gain a new <b>Scheduling</b> tab to show a graph like the one
+        below:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <p>
+        If you do not see all three lines shown in the graph above, you can do the following:
+    </p>
+    <ul>
+        <li>Right-click on the graph, and click <b>Properties</b>.</li>
+        <li>In the <b>Time windows</b> field of the <b>Scheduling Graph Properties</b> form, enter ‘2, 5, 10’.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        From this graph you can see the effect of window size on scheduling. A smaller time window allows fewer transitions to be measured concurrently
+        over a given time period, which allows more transitions to be measured in a single injection given a specific dwell time. The window size
+        required to capture the entire peaks of a percentage of target peptides is approximated by the function below:
+    </p>
+    <p>
+        <img src="s-window-size-formula.png" />
+    </p>
+    <p>
+        Where “z” is a critical value for the number of standard deviations within which the desired percentage fall in a normal distribution, e.g. 95%
+        = 1.96. With perfect prediction and no variance in peak width or retention time, the required window size is just the peak width. Even with
+        perfect prediction, variance in peak width and retention time expands the required window size. Finally, prediction error will expand it
+        further. It is worth noting that even the state-of-the-art method for predicting retention time, a single unscheduled measurement on the
+        target system prior to scheduled acquisition, is not perfect. Since, you are trying to predict the mean retention time; about 5% of all
+        peptides will be at least two standard deviations from their mean in that single measurement.
+    </p>
+    <p>
+        The iRT method should allow the target peptides for this tutorial to be measured on a 90-minute gradient, within a 5-minute window. The above
+        graph indicates that this can be done without exceeding about 265 transitions being measured in a single cycle. At a dwell time of 10ms, this
+        will yield a maximum 2.6-second cycle time. To create a single method that will measure the 1223 transitions in this document on this new
+        gradient using scheduled acquisition, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Transition List</b>.</li>
+        <li>In the <b>Method type</b> field, choose ‘Scheduled’ from the dropdown list.</li>
+        <li>In the <b>Max concurrent transitions</b> field, enter ‘265’.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Export Transition List</b> form should look like:
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        You could also simply click the <b>Single method</b> option, but the fact that the form shows “<b>Methods</b>: 1” confirms
+        that the transitions can be measured in a single injection with the 5-minute window and no more than 265 concurrent transitions measured at
+        any time. This may still be a little high for quantitative measurement, but it is better than the 335 you needed to measure half as many
+        transitions in 2 injections. If you preferred, you could lower the number to 135, and see that Skyline indicates this will take 2 injections,
+        or 90 in 3 injections. But, make sure you set it back to 265 before continuing.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>File name</b> field, enter ‘iRT Human+Standard’.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        In the Windows File Explorer, you can verify that this creates the file ‘iRT Human+Standard_0001.csv’ in the iRT folder for this tutorial. In
+        Excel, you can verify that this file contains all 1223 transitions, with scheduling start and end times 5 minutes apart.
+    </p>
+    <h1>Reviewing Scheduled Data</h1>
+    <p>
+        To review data acquired from a method like the one you just created, first remove the 90-minute gradient calibration data by doing the
+        following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Manage Results</b> (Ctrl-R).</li>
+        <li>Click the <b>Remove All</b> button.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        And now import the data acquired with a method scheduled using iRT by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button on the <b>Import Results</b> form.</li>
+        <li>Double-click on the file ‘A_D110913_SiRT_HELA_11_sMRM_150selected_90min-5-40_SIMPLE.raw’ in the iRT folder for this tutorial.</li>
+    </ul>
+    <p>
+        While the data is loading, you can switch the <b>Retention Times</b> view back to <b>Linear Regression</b> by doing the
+        following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b>, then <b>Regression</b> and click <b>Score To
+                Run</b> (Shift-F8).</li>
+    </ul>
+    <p class="keep-next">
+        When the data has finished loading, the <b>Retention Times</b> view should present a graph like:
+    </p>
+    <p>
+        <img src="s-22.png" /> 
+    </p>
+    <p>
+        From this graph, it is immediately obvious that there are 2 outlier peptides, which could be caused by miss-integrated peaks in the current
+        data or miss-integrated peaks in the calibration data from which the iRT values were calculated. In this case, the problem is with the peaks
+        that Skyline chose automatically during the iRT calibration on the 30-minute gradient. It is important to note that the data you are viewing
+        was not actually collected with the scheduled method you generated above. If it had been, the chromatograms for the outlier peptides would not
+        even include the peaks detected here. The data were collected with a schedule method created after more thorough review of the calibration
+        data, which you skipped for this tutorial.
+    </p>
+    <p>
+        If you wonder why neither of the points is the purple color previously designated for “Outliers” in the legend, it is because the correlation
+        coefficient threshold is not set well for a calculator with correlation this high. You can do the following to change the correlation
+        threshold:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Retention Times</b> graph, and click <b>Set Threshold</b>.</li>
+        <li>In the <b>Threshold</b> field, enter ‘0.998’.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Retention Times</b> graph should now look like:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <p>
+        You can now click on each outlier point, causing Skyline to select it in the peptide view. Then, press Esc to give focus back to the main
+        window, and Ctrl-C to copy the peptide label. You can either collect these in a separate editor for later review, or open a second instance of
+        Skyline on the ‘iRT Human+Standard Calibrate.sky’ file you created earlier. You can then use the <b>Find</b> form to review these 2
+        peptides:
+    </p>
+    <p>
+        EVVEEAENGR<br />LLADQAEAR
+    </p>
+    <p>
+        In both cases it is pretty hard to see anything you could confidently identify as the peptide of interest in the calibration data. This does
+        illustrate why you should be as careful as possible in your calibration runs.
+    </p>
+    <p>
+        You could now recalculate the iRT values for all of the peptides in this document based on this more accurate data, which used labeled
+        reference peptides to ensure correct peak picking. You would simply repeat the calibration steps outlined above, and when asked, choose to
+        <b>Replace existing values</b>. In this tutorial, however, you can get rid of the incorrectly calibrated peptides by doing the
+        following:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Retention Times</b> graph, and click <b>Remove Outliers</b>.</li>
+    </ul>
+    <p>
+        The 2 outliers should be removed from the graph, and the number of peptides should be reduced by 2 to 156. All of the points appear tightly
+        clustered around the regression line and the correlation coefficient R is actually 0.9989. But, to get a better sense of just how closely
+        measured times come to the linear predictions, do the following:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Retention Times</b> graph, choose <b>Plot</b> and click <b>Residuals</b>.</li>
+    </ul>
+    <p>
+        The <b>Retention Times</b> graph should now look like this:
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <p>
+        This gives you a clearer sense that measured times are varying within +/- 2 minutes of the predicted times. What retention time scheduling
+        window should you use in this case? What was used in the experiment?
+    </p>
+    <ul>
+        <li>Right-click on the <b>Retention Times</b> graph, choose <b>Plot</b> and click <b>Correlation</b>.</li>
+        <li>Close the <b>Retention Times</b> graph by clicking on the X in its upper right corner.</li>
+    </ul>
+    <p class="keep-next">
+        Now click in the <b>Targets</b> view, and use the down-arrow key to review the peptide chromatograms. Skyline will
+        present graphs like the one below:
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        You will see that all peptides, except the standards, now have light and heavy precursor pairs and generally more points across each peak than
+        the unscheduled data. You will also see that Skyline indicates the predicted time for the peak under an annotation labeled ‘Predicted’.
+    </p>
+    <p>
+        To answer the question above about the scheduling window, you can do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>None</b> (Shift-F11).</li>
+    </ul>
+    <p>
+        And after you have noted the 6-minute range of the chromatograms do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p>
+        In this experiment, the data come from a single injection, but because of the <b>Auto-calculate regression</b> setting, Skyline would
+        calculate a separate regression for each injection even for a document that required multiple scheduled injections to measure all of its
+        peptide, as this one might, if you wanted to ensure more accurate quantification. In exporting methods for such a document, Skyline will
+        include transitions for the standard peptides in every method. This auto-regression feature ensures more accurate retention time prediction
+        than calculating just one linear equation for all injections, and in so doing makes the ‘Predicted’ annotation a stronger peptide identity
+        validation tool.
+    </p>
+    <h1>Calculating iRT Values from MS/MS Spectra</h1>
+    <p>
+        If you collect data dependent acquisition (DDA) runs that include the standard peptides for your iRT calculator at a high enough concentration
+        that they are reliably sampled and identified from their MS/MS spectra, you can use the resulting data to calculate iRT values in much the
+        same way you did with SRM data. These iRT values will be less accurate, on average, because they are based on scan times which may have
+        occurred anywhere on the peptide elution peak. Scan-based iRT values can, however, be used to transition directly from DDA discovery
+        experiments to scheduled SRM, saving quite a bit of instrument time in the process. This has also become the most popular method of
+        calibrating iRT values for use in querying chromatogram peaks within data independent acquisition (DIA) data, as described in the “<a
+            href="https://skyline.ms/tutorial_dia_swath_zh.url">Analysis of DIA/SWATH Data</a>” tutorial.
+    </p>
+    <p>
+        In the iRT folder for this tutorial, you will find a sub-folder ‘Yeast+Standard’, which contains a spectral library
+        ‘Yeast_iRT_C18_0_00001.blib’. This spectral library was built from SEQUEST peptide search results on two DDA runs of a yeast lysate with the
+        Biognosys RT standard mix added. As you will see below, once you have enough peptides in your iRT database, you will not always need to have
+        the standard peptides included in the data you import. You will, however, need to use the BiblioSpec library format which Skyline builds.
+        Other formats, do not maintain separate retention times for separate mass spec runs, and so make it impossible to perform regression on sets
+        of retention times with identical chromatography.
+    </p>
+    <p>
+        You can add iRT values for the peptide spectrum matches in this library by doing the following:
+    </p>
+    <ul>
+        <li>Right-click in the <b>Retention Times</b> graph, choose <b>Calculator</b> and click <b>Edit Current</b>.
+        </li>
+        <li>Click the <b>Add</b> button in the <b>Edit iRT Calculator</b> form, and click <b>Add Spectral Library</b>.
+        </li>
+        <li>Click the <b>A spectral library file</b> choice in the <b>Add Spectral Library</b> form.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Double-click the ‘Yeast+Standard’ subfolder of the ‘iRT’ folder.</li>
+        <li>Double-click the ‘Yeast_iRT_C18_0_00001.blib’ file.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Add Spectral Library</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should present a form that looks like this:
+    </p>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <p>
+        The form tells you that Skyline was able to calculate a single valid regressions for both DDA runs in the library. When possible, Skyline will
+        perform internal run-to-run regression with all the peptides matching between runs, which has proven to work better than regression with only
+        standard peptides. Using this final calibration regression, Skyline has calculated iRT values for 558 new peptides. After internal alignment,
+        Skyline uses the median time for all MS/MS spectra matched to a peptide, which helps to avoid outlier matched MS/MS spectra from causing
+        nonsense iRT values. Skyline has also found 3 peptides for which you already have iRT values based on chromatogram peaks, which it will
+        therefore skip.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Skyline will ask whether you want to recalibrate your iRT standards relative to the peptides being added.
+    </p>
+    <ul>
+        <li>Click the <b>No</b> button.</li>
+    </ul>
+    <p>
+        The <b>Edit iRT Calculator</b> form should now show it has 706 peptides in the <b>Other iRT values</b> list.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <h1>Converting MS/MS Scan Times to Chromatogram Peak Times</h1>
+    <p>
+        You could now use the iRT values you just calculated based on MS/MS scan times to schedule SRM acquisition of these peptides, and then use the
+        SRM data to get more accurate iRT values based on chromatogram peak times. However, by using Skyline MS1 Filtering, you can also extract
+        chromatogram peak times directly from the original DDA runs. Complete details on how to set up and import data into a MS1 Filtering document
+        can be found in the <a href="https://skyline.ms/tutorial_ms1_filtering_zh.url">MS1 Full-Scan Filtering</a> tutorial. In this tutorial, you can
+        take a quick look at a document which has already been created and had data imported, covering the two DDA runs used to create the spectral
+        library, by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Open</b> (Ctrl-O).</li>
+        <li>Navigate to the ‘Yeast+Standard’ subfolder of the ‘iRT’ folder.</li>
+        <li>Double-click the file ‘Yeast+Standard (refined) - 2min.sky’.</li>
+        <li>Select the first peptide in the peptide view.</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline window should look something like:
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        You can double-click in the title bar of the <b>Retention Times</b> view to get a better look at the graph, and see that the
+        correlation coefficient for the regression of the measured time by the iRT values calculated from the library spectra is 0.9998. So, perhaps
+        there is less to gain from using chromatogram peaks versus using MS/MS scan times than one might hope. On the other hand, this data set has
+        been manually refined to retain only peptides detected in both runs with a clear peak in both runs. You may also want to impose some detection
+        criteria when using spectral library data to calculate initial canonical iRT values for peptides.
+    </p>
+    <p>
+        The chromatograms you see in this file were extracted from the MS1 scans of the DDA runs used to build the spectral library. You can also see
+        the times at which identified MS/MS scans were recorded, as they are annotated with ‘ID’ in the chromatogram graphs. Again, you can learn more
+        about how to use this data processing method to your advantage in the <a href="https://skyline.ms/tutorial_ms1_filtering_zh.url">MS1 Full-Scan
+            Filtering</a> tutorial.
+    </p>
+    <p>
+        To convert the iRT values calculated using MS/MS scan times to ones using the chromatogram peak times in this document, perform the following
+        steps:
+    </p>
+    <ul>
+        <li>Right-click in the <b>Retention Times</b> graph, choose <b>Calculator</b> and click <b>Edit Current</b>.
+        </li>
+        <li>Click the <b>Add</b> button in the <b>Edit iRT Calculator</b> form, and click <b>Add Results</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline presents a form that looks like this:
+    </p>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <p>
+        To tell you that it will replace the 558 iRT values you added in the previous section. Now that you are using chromatogram peak times, you also
+        have the option of replacing the 3 peptides shared by the yeast and human samples, or using the average of the two.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to accept the changes.</li>
+    </ul>
+    <p>
+        Skyline will ask whether you want to recalibrate your iRT standards relative to the peptides being added.
+    </p>
+    <ul>
+        <li>Click the <b>No</b> button.</li>
+    </ul>
+    <h1>More iRT Calculator Editing Options</h1>
+    <p>
+        You now have 706 peptides with reasonably good iRT values, though they have been calculated with no more than 2 replicates. In these initial
+        cases, you have used data sets that included the peptide standard mix specified in the iRT-C18 calculator definition. This is not required,
+        however. You can now go on to calculate new iRT values from any data set that has enough peptides in common with the iRT database you are
+        using. Skyline will use any common peptides that yield a regression with correlation of 0.99 or higher, as long as there are at least 20 of
+        these.
+    </p>
+    <p>
+        In testing the iRT support in Skyline, a spectral library and a Skyline document like the ones above were created from public data in the
+        PeptideAtlas<sup>3</sup>. This data set contained over 20 replicates, and yielded over 1000 more iRT values, but was obviously too large to
+        include in this tutorial.
+    </p>
+    <table>
+        <tr>
+            <td>Note: In recent years, since it was presented in Selevsek, MCP 2015, also for yeast, chemical fractionation with 10-30 DDA runs have
+                been used to create proteomewide spectral libraries with iRT values calibrated from MS/MS spectra. These libraries now often contain
+                iRT values for over 50,000 peptides.</td>
+        </tr>
+    </table>
+    <p>
+        You may have also noticed that the menu Skyline shows when you click the <b>Add</b> button in the <b>Edit iRT
+            Calculator</b> form contains the action <b>Add iRT Database</b>. This menu item can be used to merge an existing iRT
+        database into the current calculator. If the database uses the same standard peptides, then these are used to perform the regression for
+        conversion from one database to the other. Otherwise, as with other data sources, Skyline will use the peptides the two databases have in
+        common that yield a regression with correlation of 0.99 or higher, as long as there are at least 20 of these.
+    </p>
+    <p>
+        The <b>Open</b> button in the <b>Edit iRT Calculator</b> form, allows you to use an existing iRT database, perhaps one you
+        received from someone else.
+    </p>
+    <p>
+        You can also use the <b>Choose Standards</b> button in the <b>Edit iRT Calculator</b> form to change the standard peptides
+        to any set of peptides contained in the database, and you can use the <b>Recalibrate</b> button to change the iRT scale.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you have learned to use the Skyline support for iRT, a standard way of storing empirically measured peptide retention times
+        so that they may be used for scheduling targeted methods (SRM or PRM), targeted extraction from DIA data, and post-acquisition peptide
+        identity validation. A single calibration injection is frequently all that is necessary to schedule any number of peptide targets for SRM or
+        PRM acquisition, as long as you have stored iRT values for the peptides they measure. More accurate retention time prediction also makes an
+        iRT predictor a more powerful tool for peptide identity confirmation than sequence-based prediction. Skyline support makes the iRT method easy
+        to use and iRT values easy to produce. You can base your iRT values on any scale (though iRT-C18 has become the most popular by far) and any
+        set of standard peptides. You can even use a set of peptides endogenous to a particular experiment as your standard, as long as they can be
+        consistently measured and span most of the gradient range you are attempting to predict. And, Skyline makes it easy to merge iRT databases
+        when the databases have peptides in common. You have learned about iRT-C18, which is the standard iRT scale defined in the original paper. You
+        can use a kit in your own experiments. Skyline now offers a half dozen or so calibrated to iRT-C18. Skyline makes it easy to use the iRT-C18
+        scale, but change your standard peptides to any set of peptides that has been calibrated into that scale, as you have now done with hundreds
+        of common human and yeast peptides.
+    </p>
+    <h1>References</h1>
+    <p class="bibliography">
+        1. Krokhin, O. V. <i>et al</i>. An improved model for prediction of retention times of tryptic peptides in ion pair
+        reversed-phase HPLC: its application to protein peptide mapping by off-line HPLC-MALDI MS. <i>Mol. Cell Proteomics</i> <b>3</b>,
+        908-919 (2004).
+    </p>
+    <p class="bibliography">
+        2. Escher, C. <i>et al</i>. Using iRT, a normalized retention time for more targeted measurement of peptides.
+        <i>Proteomics (accepted)</i> (2012).
+    </p>
+    <p class="bibliography">
+        3. Deutsch, E. W., Lam, H. &amp; Aebersold, R. PeptideAtlas: a resource for target selection for emerging targeted
+        proteomics workflows. <i>EMBO Rep</i> <b>9</b>, 429-434 (2008).
+    </p>
+</body>
+
+</html>

@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return DocNode.CustomMolecule.Formula ?? string.Empty;
+                    return DocNode.CustomMolecule.HasChemicalFormula ? DocNode.CustomMolecule.Formula : string.Empty;
                 }
                 else
                 {

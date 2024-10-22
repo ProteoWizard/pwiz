@@ -2750,6 +2750,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error updating file &apos;{0}&apos;..
+        /// </summary>
+        public static string SkylineWindow_ReimportChromatograms_Error_updating_file___0___ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ReimportChromatograms_Error_updating_file___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reimporting chromatograms.
         /// </summary>
         public static string SkylineWindow_ReimportChromatograms_Reimporting_chromatograms {
@@ -2819,6 +2828,18 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_s" +
                         "aved_to_a_new_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are some results on disk which are not in the current document.
+        ///Saving the document now will remove those extra results and ensure that the current settings are used to import new results.
+        ///
+        ///Do you want to save the document now?.
+        /// </summary>
+        public static string SkylineWindow_SaveDocumentBeforeImportingResults {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SaveDocumentBeforeImportingResults", resourceCulture);
             }
         }
         

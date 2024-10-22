@@ -177,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 new Tuple<string, int>("FVEGLPINDFSR", 3),
                 new Tuple<string, int>("FVEGLPINDFSR", 2),
-                new Tuple<string, int>("FVEGLPINDFSR", 0),
+                new Tuple<string, int>("FVEGLPINDFSR", 0),  // Same as charge 2
                 new Tuple<string, int>("DLNELQALIEAHFENR", 0),
                 new Tuple<string, int>(string.Format("C[+{0:F01}]QPLELAGLGFAELQDLC[+{1:F01}]R", 57.0, 57.0), 3),
                 new Tuple<string, int>("PEPTIDER", 5),
@@ -196,16 +196,26 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Paste();
             });
             document = WaitForDocumentChange(document);
-            Assert.AreEqual(peptidePaste.Count, document.PeptideTransitionGroupCount);
+            Assert.AreEqual(peptidePaste.Select(t => t.Item1).Distinct().Count(), document.PeptideCount);
+            var unseenPasted = new List<Tuple<string, int>>(peptidePaste);
             for (int i = 0; i < document.PeptideTransitionGroupCount; i++)
             {
-                TransitionGroupDocNode transition = document.PeptideTransitionGroups.ElementAt(i);
-                string seq = transition.TransitionGroup.Peptide.Sequence;
-                var charge = transition.PrecursorAdduct.AdductCharge;
-                Assert.AreEqual(FastaSequence.StripModifications(peptidePaste[i].Item1), seq);
-                var pastedCharge = peptidePaste[i].Item2;
-                Assert.AreEqual(pastedCharge != 0 ? pastedCharge : precursorAdduct.AdductCharge, charge);
+                var nodeGroup = document.PeptideTransitionGroups.ElementAt(i);
+                string seq = nodeGroup.TransitionGroup.Peptide.Sequence;
+                var charge = nodeGroup.PrecursorAdduct.AdductCharge;
+                var unseenLeft = unseenPasted.Where(t =>
+                    !Equals(seq, FastaSequence.StripModifications(t.Item1)) || charge != (t.Item2 == 0 ? 2 : t.Item2)).ToList();
+                if (unseenPasted.Count == unseenLeft.Count)
+                {
+                    Assert.Fail("Unexpected precursor {0}{1} added to document",
+                        nodeGroup.TransitionGroup.Peptide.Sequence,
+                        Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge));
+                }
+
+                unseenPasted = unseenLeft;
             }
+            Assert.AreEqual(0, unseenPasted.Count);
+            AssertEx.IsDocumentState(document, null, 1, 4, 6, 21);
 
             // Undo paste
             RunUI(() => SkylineWindow.Undo());
@@ -217,34 +227,33 @@ namespace pwiz.SkylineTestFunctional
             // Re-paste in peptides
             RunUI(() => SkylineWindow.Paste());
             document = WaitForDocumentChange(document);
-            int curTransitionGroup = 0;
             foreach (var peptide in peptidePaste)
             {
                 if (peptide.Item2 > 0)
                 {
                     // Pasted peptides with a charge indicator should have a single precursor with the specified charge state
-                    TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
-                    string seq = group.TransitionGroup.Peptide.Sequence;
-                    var charge = group.PrecursorAdduct.AdductCharge;
-                    Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
-                    var pastedCharge = peptide.Item2;
-                    Assert.AreEqual(pastedCharge, charge);
+                    VerifyContainsPrecursor(document, peptide.Item1, peptide.Item2);
                 }
                 else
                 {
                     // Pasted peptides with no charge indicator should have a precursor for every charge state in transition filter settings
-                    for (int j = 0; j < precursorCharges.Length; j++)
-                    {
-                        TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
-                        string seq = group.TransitionGroup.Peptide.Sequence;
-                        var charge = group.PrecursorAdduct;
-                        Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
-                        Assert.AreEqual(precursorCharges[j], charge);
-                    }
+                    for (int i = 0; i < precursorCharges.Length; i++)
+                        VerifyContainsPrecursor(document, peptide.Item1, precursorCharges[i].AdductCharge);
                 }
             }
-            Assert.AreEqual(curTransitionGroup, document.PeptideTransitionGroupCount);
+            AssertEx.IsDocumentState(document, null, 1, 4, 9, 31);
         }
+
+        private static void VerifyContainsPrecursor(SrmDocument document, string modSequence, int charge)
+        {
+            if (!document.PeptideTransitionGroups.Contains(nodeGroup =>
+                    Equals(nodeGroup.Peptide.Sequence, FastaSequence.StripModifications(modSequence)) &&
+                    nodeGroup.PrecursorCharge == charge))
+            {
+                Assert.Fail("Precursor {0}{1} not found in the document after paste", modSequence, Transition.GetChargeIndicator(charge));
+            }
+        }
+
 
         // Check that actual clipboard text and HTML match the expected clipboard text and HTML.
         private static void CheckCopiedNodes(int shallowestLevel, int expectedLineBreaks)

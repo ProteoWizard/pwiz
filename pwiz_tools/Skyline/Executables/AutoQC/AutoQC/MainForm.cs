@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -94,7 +93,7 @@ namespace AutoQC
         private void btnAdd_Click(object sender, EventArgs e)
         {
             ProgramLog.Info("Creating a new configuration");
-            var initialState = _configManager.State;
+            var initialState = _configManager.AutoQcState;
             var configForm = new AutoQcConfigForm(this, (AutoQcConfig)initialState.BaseState.GetLastModified(), ConfigAction.Add, initialState.Copy());
             if (DialogResult.OK == configForm.ShowDialog())
                 _configManager.SetState(initialState, configForm.State);
@@ -102,7 +101,7 @@ namespace AutoQC
 
         private void HandleEditEvent(object sender, EventArgs e)
         {
-            var initialState = _configManager.State;
+            var initialState = _configManager.AutoQcState;
             var configRunner = initialState.GetSelectedConfigRunner();
             var config = configRunner.Config;
             if (!initialState.BaseState.IsSelectedConfigValid())
@@ -127,7 +126,7 @@ namespace AutoQC
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var initialState = _configManager.State;
+            var initialState = _configManager.AutoQcState;
             var configForm = new AutoQcConfigForm(this, initialState.GetSelectedConfig(), ConfigAction.Copy, initialState.Copy());
             configForm.ShowDialog();
             if (configForm.DialogResult == DialogResult.OK)
@@ -141,7 +140,7 @@ namespace AutoQC
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            var initialState = _configManager.State;
+            var initialState = _configManager.AutoQcState;
             var selectedConfig = initialState.GetSelectedConfig();
             if (selectedConfig == null)
             {
@@ -185,27 +184,21 @@ namespace AutoQC
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
-            DoImport(dialog.FileName);
+            DoImport(dialog.FileName, true);
         }
 
-        public void DoImport(string filePath)
+        public void DoImport(string filePath, bool setConfigsDisabled = false)
         {
-            _configManager.Import(filePath, ShowDownloadedFileForm);
+            // AutoQC Loader .qcfg files can be imported from the Downloads folder. Pass null for showDownloadedFileForm
+            // so that we don't see the dialog to "...specify a root folder for the configurations".
+            _configManager.Import(filePath, setConfigsDisabled);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
         }
 
-        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
-        {
-            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
-            var dialogResult = fileOpenedForm.ShowDialog(this);
-            newRootDirectory = fileOpenedForm.NewRootDirectory;
-            return dialogResult;
-        }
-
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var state = _configManager.State;
+            var state = _configManager.AutoQcState;
             var shareForm = new ShareConfigsForm(this, state.BaseState, Program.Icon());
             if (shareForm.ShowDialog(this) != DialogResult.OK)
                 return;
@@ -224,13 +217,22 @@ namespace AutoQC
                 UpdateUiConfigurations();
         }
 
-        public void DisableConfig(IConfig iconfig)
+        public void DisableConfig(IConfig iconfig, RunnerStatus runnerStatus = RunnerStatus.Stopped)
         {
-            var initialState = _configManager.State;
+            var initialState = _configManager.AutoQcState;
 
-            var state = initialState.Copy()
-                .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
-            _configManager.SetState(initialState, state);
+            var state = initialState.Copy().DisableConfig(initialState.BaseState.GetConfigIndex(iconfig.GetName()), this);
+            if (runnerStatus != RunnerStatus.Stopped && state.ConfigRunners.TryGetValue(iconfig.GetName(), out var configRunner))
+            {
+                ((ConfigRunner)configRunner).ChangeStatus(runnerStatus, false);
+            }
+            _configManager.SetState(initialState, state,
+                false); // Set updatedLogFiles to false.  We do not need to update the selected log file when a config is disabled.
+                        // Setting updatedLogFiles is set to true causes a UI freeze, because:
+                        // This method is called from a worker thread that will acquire a lock in SetState().
+                        // Calling MainForm.UpdateUiLogFiles() in SetState() will change the selected index in the logs combobox on the Main thread
+                        // triggering the event comboConfigs_SelectedIndexChanged. This will call AutoQcConfigManager.SelectLog() on the Main thread
+                        // and will attempt to acquire the same lock, causing a deadlock.
         }
 
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -267,7 +269,7 @@ namespace AutoQC
 
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
-            var config = _configManager.State.GetSelectedConfig();
+            var config = _configManager.AutoQcState.GetSelectedConfig();
             if (config != null && File.Exists(config.MainSettings.SkylineFilePath))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
@@ -281,8 +283,8 @@ namespace AutoQC
 
         private void btnOpenPanoramaFolder_Click(object sender, EventArgs e)
         {
-            var config = _configManager.State.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.State.BaseState.IsSelectedConfigValid(), 
+            var config = _configManager.AutoQcState.GetSelectedConfig();
+            if (MainFormUtils.CanOpen(config.Name, _configManager.AutoQcState.BaseState.IsSelectedConfigValid(), 
                 string.Empty, Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
                 var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
@@ -297,17 +299,17 @@ namespace AutoQC
 
         private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
-            var config = _configManager.State.GetSelectedConfig();
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.State.BaseState.IsSelectedConfigValid(),
+            var config = _configManager.AutoQcState.GetSelectedConfig();
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.AutoQcState.BaseState.IsSelectedConfigValid(),
                 config.MainSettings.FolderToWatch,
                 Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch, this);
         }
 
         private void toolStripLogFolder_Click(object sender, EventArgs e)
         {
-            var config = _configManager.State.GetSelectedConfig();
-            var logger = _configManager.State.GetLogger(config.Name);
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.State.BaseState.IsSelectedConfigValid(),
+            var config = _configManager.AutoQcState.GetSelectedConfig();
+            var logger = _configManager.AutoQcState.GetLogger(config.Name);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.AutoQcState.BaseState.IsSelectedConfigValid(),
                 logger.LogDirectory, 
                 Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
         }
@@ -337,13 +339,13 @@ namespace AutoQC
 
         public void UpdateButtonsEnabled()
         {
-            var configSelected = _configManager.State.BaseState.HasSelectedConfig();
-            var config = configSelected ? _configManager.State.GetSelectedConfig() : null;
+            var configSelected = _configManager.AutoQcState.BaseState.HasSelectedConfig();
+            var config = configSelected ? _configManager.AutoQcState.GetSelectedConfig() : null;
             RunUi(() =>
             {
                 btnDelete.Enabled = configSelected;
                 btnOpenResults.Enabled = configSelected;
-                btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
+                btnOpenPanoramaFolder.Enabled = configSelected && config != null && config.PanoramaSettings.PublishToPanorama;
                 btnOpenFolder.Enabled = configSelected;
                 
 
@@ -367,7 +369,7 @@ namespace AutoQC
 
         private void UpdateLabelVisibility()
         {
-            var hasConfigs = _configManager.State.BaseState.HasConfigs();
+            var hasConfigs = _configManager.AutoQcState.BaseState.HasConfigs();
             RunUi(() =>
             {
                 if (hasConfigs)
@@ -476,11 +478,6 @@ namespace AutoQC
             _outputLog.Tick += OutputLog;
         }
 
-        private void tabLog_Leave(object sender, EventArgs e)
-        {
-            _scrolling = _configManager.SelectedLog == 0;
-        }
-        
         private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboConfigs.SelectedIndex);
@@ -514,7 +511,7 @@ namespace AutoQC
             // Set the focus on the combobox.
             // If the focus is on the textbox we will see a lot of scrolling for big log files.
             comboConfigs.Focus();
-            var config = _configManager.State.GetSelectedConfig();
+            var config = _configManager.AutoQcState.GetSelectedConfig();
             // Switch the displayed log only if it is for a different configuration than the one already displayed
             if (config != null && !string.Equals(config.Name, _configManager.GetSelectedLogger()?.Name))
             {
@@ -852,6 +849,76 @@ namespace AutoQC
             {
                 form.ShowDialog(this);
             });
+        }
+
+        #endregion
+
+        #region Methods used for tests
+        public int ConfigCount()
+        {
+            return _configManager.GetAutoQcState().BaseState.ConfigList.Count;
+        }
+        public void ClickAdd() => btnAdd_Click(new object(), new EventArgs());
+        public void ClickEdit() => HandleEditEvent(new object(), new EventArgs());
+
+        public void SelectLogTab()
+        {
+            tabLog.Select();
+        }
+
+        public void SelectConfigsTab()
+        {
+            tabConfigs.Select();
+        }
+
+        public string GetSelectedLogName()
+        {
+            return comboConfigs.SelectedItem.ToString();
+        }
+
+        public void ClickConfig(int index) => SelectConfig(index);
+
+        private void SelectConfig(int index)
+        {
+            if (index < 0)
+            {
+                _configManager.DeselectConfig();
+                return;
+            }
+            _configManager.SelectConfig(index);
+        }
+
+        public void StartConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Checked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public void StopConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
+
+        public int GetConfigIndex(string configName)
+        {
+            return _configManager.AutoQcState.BaseState.GetConfigIndex(configName);
+        }
+
+        public AutoQcConfig GetConfig(int configIndex)
+        {
+            return (AutoQcConfig)_configManager.AutoQcState.BaseState.GetConfig(configIndex);
+        }
+
+        public ConfigRunner GetConfigRunner(IConfig config)
+        {
+            return _configManager.AutoQcState.GetConfigRunner(config);
+        }
+
+        public ConfigRunner GetConfigRunner(int configIndex)
+        {
+            var config = GetConfig(configIndex);
+            return config == null ? null : GetConfigRunner(config);
+        }
+
+        public string GetLogFilePath(int configIndex)
+        {
+            var configRunner = GetConfigRunner(configIndex);
+            return configRunner?.GetLogger()?.LogFile;
         }
 
         #endregion

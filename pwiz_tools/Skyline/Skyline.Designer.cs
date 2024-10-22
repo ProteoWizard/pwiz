@@ -171,6 +171,7 @@ namespace pwiz.Skyline
             this.showLibraryPeakAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDotProductToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.relativeAbundanceLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1145,6 +1146,7 @@ namespace pwiz.Skyline
             this.showLibraryPeakAreaContextMenuItem,
             this.showDotProductToolStripMenuItem,
             this.peptideLogScaleContextMenuItem,
+            this.relativeAbundanceLogScaleContextMenuItem,
             this.peptideCvsContextMenuItem,
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem,
@@ -1338,6 +1340,13 @@ namespace pwiz.Skyline
             this.peptideLogScaleContextMenuItem.Name = "peptideLogScaleContextMenuItem";
             resources.ApplyResources(this.peptideLogScaleContextMenuItem, "peptideLogScaleContextMenuItem");
             this.peptideLogScaleContextMenuItem.Click += new System.EventHandler(this.peptideLogScaleContextMenuItem_Click);
+            // 
+            // relativeAbundanceLogScaleContextMenuItem
+            // 
+            this.relativeAbundanceLogScaleContextMenuItem.CheckOnClick = true;
+            this.relativeAbundanceLogScaleContextMenuItem.Name = "relativeAbundanceLogScaleContextMenuItem";
+            resources.ApplyResources(this.relativeAbundanceLogScaleContextMenuItem, "relativeAbundanceLogScaleContextMenuItem");
+            this.relativeAbundanceLogScaleContextMenuItem.Click += new System.EventHandler(this.relativeAbundanceLogScaleContextMenuItem_Click);
             // 
             // peptideCvsContextMenuItem
             // 
@@ -2762,6 +2771,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideLogScaleContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem relativeAbundanceLogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderDocumentContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderRTContextMenuItem;

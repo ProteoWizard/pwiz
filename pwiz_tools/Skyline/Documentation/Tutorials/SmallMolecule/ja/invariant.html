@@ -1,0 +1,571 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Small Molecule Targets</h1>
+    <p>
+        The Skyline Targeted Mass Spectrometry Environment provides informative visual displays of the raw mass spectrometer data you import into your
+        Skyline documents. Originally developed for proteomics use, Skyline has been extended to work with generalized molecules. There are many
+        tutorials available that will help you use Skyline for various types of analysis (SRM, PRM, MS1 Filtering, DIA, etc). This tutorial
+        concentrates on the differences in using Skyline for targeting non-proteomic molecules.
+    </p>
+    <p>
+        In this tutorial, you will build an SRM assay for a group of Methionine-pathway compounds.
+    </p>
+    <p>
+        Skyline aims to provide a vendor-neutral platform for targeted quantitative mass spectrometry research. It can import raw data from the
+        instrument vendors Agilent, Bruker, SCIEX, Shimadzu, Thermo-Scientific and Waters. The ability to import data across various instrument
+        platforms greatly facilitates dissemination of reproducible methods, skill transfer across labs, cross-instrument comparisons and large
+        multi-site studies. This remains equally true in using Skyline to target generalized molecules, as it has been for years in the field of
+        proteomics.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/SmallMolecule_3_6.zip">https://skyline.ms/tutorials/SmallMolecule_3_6.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\bspratt\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\bspratt\Documents\SmallMolecule
+    </p>
+    <p>
+        It will contain all the files necessary for this tutorial.
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a small molecule topic, you can choose the molecule interface by doing the following:
+    </p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Molecule interface</b> which
+            looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/molecule-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in molecule mode which is displayed by the molecule icon <img src="../../shared/molecule-icon.png" /> in the upper
+        right-hand corner of the Skyline window. Its original proteomics menus and controls are now hidden, allowing you to focus on small molecule
+        analysis.
+    </p>
+    <h1>Importing a Molecule Transition List into a Skyline Document</h1>
+    <p>
+        The easiest way to get a molecule transition list into a Skyline document is to start with an empty document and use the <b>Edit &gt;
+            Insert &gt; Transition List</b> menu item. 
+    </p>
+    <p>
+        At a minimum, Skyline needs to know the charge state and either the ion formula or <i>m/z</i> for each precursor and product. If no product
+        ion information is present in a transition list, it is assumed to be a list of precursor targets. Repeated precursor information with
+        different product information is assumed to indicate multiple transitions of a single precursor, just as with peptides.
+    </p>
+    <h3>A note on ion formulas and adduct descriptions</h3>
+    <p>
+        In proteomics applications, Skyline can safely assume ionization by protonation. So, all that is needed to describe a charged peptide is its
+        sequence and charge state. For generalized molecules, however, ionization can be achieved in a variety of ways (sodium gain, hydrogen loss,
+        etc.). Such ionization modes can be specified in Skyline using adduct descriptions of the style described at <a target="_blank"
+            href="http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/">http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/</a>,
+        e.g “[M+Na]”, “[M-2H]”, “[2M+ACN+H]”, etc.
+    </p>
+    <p>
+        Adduct descriptions can also be used to indicate that a molecule is isotopically labeled. For example, the adduct “[M3Cl374H2-Na]” indicates
+        that the molecule has three Cl atoms replaced by 37Cl, and four H atoms replaced by deuterium, and the molecule is ionized by loss of Na.
+    </p>
+    <p>
+        For molecules where the formula is unknown, a mass shift can be indicated by adduct. For example, “[M(-1.23)+H]” indicates that the molecule’s
+        mass is 1.23 AMU less than its unaltered form, and the molecule is ionized by hydrogen gain.
+    </p>
+    <p>
+        For molecules where the means of ionization is unknown, an adduct can indicate just a charge. For example, “[M+3]” indicates charge state
+        three. The <i>m/z</i> value will be 1/3 of the molecule mass. While it is possible to describe your transition list completely in terms of
+        <i>m/z</i> values for both precursors and products, without a chemical formula Skyline cannot provide isotopic distributions. So chemical
+        formulas for both the neutral molecule and adduct descriptions are preferred.
+    </p>
+    <h2>Transition list insert</h2>
+    <p>
+        To begin creating your first Skyline document that targets non-proteomic molecules, do the following:
+    </p>
+    <ul>
+        <li>Locate the “SMTutorial_TransitionList.csv” file in the tutorial folder and open it in Excel. </li>
+    </ul>
+    <p class="keep-next">
+        You should find the following values:
+    </p>
+    <div style="margin-left : 5px;">
+        <table>
+            <tr>
+                <td>Molecule List Name</td>
+                <td>Precursor Name</td>
+                <td>Precursor Formula</td>
+                <td>Precursor Adduct</td>
+                <td>Precursor Charge</td>
+                <td>Precursor RT</td>
+                <td>Precursor CE</td>
+                <td>Product m/z</td>
+                <td>Product Charge</td>
+                <td>Label</td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Methionine</td>
+                <td>C5H11NO2S</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.5</td>
+                <td>15</td>
+                <td>104.07</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Methionine</td>
+                <td>C5H8H'3NO2S</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.5</td>
+                <td>15</td>
+                <td>107.09</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Isoleucine</td>
+                <td>C6H13NO2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.9</td>
+                <td>15</td>
+                <td>86.096</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Leucine</td>
+                <td>C6H13NO2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>3</td>
+                <td>15</td>
+                <td>86.096</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Leucine</td>
+                <td>C6H10H'3NO2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>3</td>
+                <td>15</td>
+                <td>89.1</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Phenylalanine</td>
+                <td>C9H11NO2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>3.1</td>
+                <td>15</td>
+                <td>120.08</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Phenylalanine</td>
+                <td>C9H11NO2</td>
+                <td>[M6C13+H]</td>
+                <td>1</td>
+                <td>3.1</td>
+                <td>15</td>
+                <td>126.11</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Arginine</td>
+                <td>C6H14N4O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.01</td>
+                <td>15</td>
+                <td>116.07</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Arginine</td>
+                <td>C1C'5H14N4O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.01</td>
+                <td>15</td>
+                <td>121.11</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Ornithine</td>
+                <td>C5H12N2O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>0.85</td>
+                <td>15</td>
+                <td>70.07</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Ornithine</td>
+                <td>C5H12N2O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>0.85</td>
+                <td>15</td>
+                <td>116.07</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Ornithine</td>
+                <td>C5H10H'2N2O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>0.85</td>
+                <td>15</td>
+                <td>72.07</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>Amino Acid</td>
+                <td>Ornithine</td>
+                <td>C5H10H'2N2O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>0.85</td>
+                <td>15</td>
+                <td>118.07</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>Organic Acid</td>
+                <td>creatine</td>
+                <td>C4H9N3O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>1.1</td>
+                <td>15</td>
+                <td>90.06</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Organic Acid</td>
+                <td>creatine</td>
+                <td>C4H6H'3N3O2</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>1.1</td>
+                <td>15</td>
+                <td>93.06</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>5'-methylthioadenosine</td>
+                <td>MTA</td>
+                <td>C11H15N5O3S</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>3.4</td>
+                <td>15</td>
+                <td>136.1</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>5'-methylthioadenosine</td>
+                <td>MTA</td>
+                <td>C11H12H'3N5O3S</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>3.4</td>
+                <td>15</td>
+                <td>136.1</td>
+                <td>1</td>
+                <td>heavy</td>
+            </tr>
+            <tr>
+                <td>S-adenosyl methionine</td>
+                <td>SAM</td>
+                <td>C15H22N6O5S</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.9</td>
+                <td>15</td>
+                <td>250.11</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>S-Adenosyl homocysteine</td>
+                <td>SAH</td>
+                <td>C14H20N6O5S</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>2.9</td>
+                <td>15</td>
+                <td>136.08</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Polyamine</td>
+                <td>Spermidine</td>
+                <td>C7H19N3[M+H]</td>
+                <td> </td>
+                <td>1</td>
+                <td>3.3</td>
+                <td>15</td>
+                <td>129.15</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+            <tr>
+                <td>Polyamine</td>
+                <td>Spermine</td>
+                <td>C10H26N4</td>
+                <td>[M+H]</td>
+                <td>1</td>
+                <td>3.5</td>
+                <td>15</td>
+                <td>112.112</td>
+                <td>1</td>
+                <td> </td>
+            </tr>
+        </table>
+    </div>
+    <ul>
+        <li>Select the transition list rows and columns in Excel, including the header row, and <b>Copy</b> (Ctrl-C).</li>
+        <li>On the Skyline <b>Edit</b> menu, choose <b>Insert</b> and click <b>Transition List</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will show the <b>Insert Transition List</b> form which should look like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Press <b>Ctrl-V</b> to paste the information you placed on the clipboard into Skyline.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will show <b>the Import Transition List: Identify Columns</b> form:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>Make sure the <b>Molecules</b> button is pressed.</li>
+    </ul>
+    <p>
+        Note that each column has a drop-down control where you can specify the type of column. In this case, Skyline successfully identifies all the
+        necessary columns.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <h2>Further notes on ion formulas and adduct descriptions</h2>
+    <p>
+        In this example, there are some light-heavy isotope label pairs, e.g. Methionine and d3-Methionine. In the transition list they are described
+        as <b>C5H11NO2S [M+H]</b> and <b>C5H8H'3NO2S [M+H]</b>, but using the language of adduct descriptions they could also have
+        been described as <b>C5H11NO2S [M+H]</b> and <b>C5H11NO2S [M3H2+H]</b>. You can see an example of this in the
+        Phenylalanine heavy-light pair: the formulas are the same but the heavy adduct description specifies that 6 carbons are replaced with C13.
+        Note that the Adduct column is optional: as in the example of Spermidine, the adduct can be given as part of the ion formula. Note also that
+        the Precursor Charge column is not actually needed: the charge states can be inferred from the adduct descriptions. The Label column is also
+        not strictly needed: the heavy label can be inferred from the precursor ion formula and/or adduct.
+    </p>
+    <table>
+        <tr>
+            <td>Note: You could also have used the <b>File &gt; Import &gt;Transition List</b> menu item to import the file directly,
+                without the need for opening it and copying and pasting its contents. </td>
+        </tr>
+    </table>
+    <p class="keep-next">
+        Your Skyline window should now look like this: 
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        At this point, either a native instrument method, precursor isolation list (for PRM) or transition list (for SRM) can be exported. For more
+        details on how to perform this step, please see the <a href="https://skyline.ms/tutorial_method_edit_ja.url"> Targeted Method Editing</a>, <a
+            href="https://skyline.ms/tutorial_existing_quant_ja.url">Existing and Quantitative Experiments</a> or <a
+            href="https://skyline.ms/tutorial_targeted_msms_ja.url">Targeted MS/MS (PRM)</a> tutorial.
+    </p>
+    <h1>Importing Mass Spectrometer Runs</h1>
+    <p>
+        In this tutorial, you will simply import raw data from a Waters Xevo TQS instrument acquired using a MassLynx instrument method exported by
+        Skyline. To do this now, perform the following steps.
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b>. (Ctrl-S)</li>
+        <li>Save this document as “Amino Acid Metabolism.sky” in the tutorial folder you created.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>In the <b>Import Results</b> form, choose <b>Import single-injection replicates in files</b>.</li>
+        <li>In the <b>Files to import simultaneously</b> dropdown list at the bottom of the form, click <b>Many</b> which will
+            provide the best import performance.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Select all 18 raw data folders in the tutorial folder by clicking the first listed and then holding down the Shift key and clicking the
+            last.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Import Results Files</b> form should look like this:
+    </p>
+    <p>
+         <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Open</b> button.</li>
+        <li>In the <b>Import Results</b> form, choose the <b>Do not remove</b> option when asked about removing the common prefix.
+        </li>
+        <li>Click the <b>OK</b> button. </li>
+    </ul>
+    <p>
+        The files are a metabolite extract of cancer cell lines under specific amino acid deprivation conditions, where cells were deprived of either
+        the amino acid Methionine, or Arginine, or both, for a period of 3 hours versus control (all amino acids).<sup>1</sup>
+    </p>
+    <p>
+        Filenames and Conditions:
+    </p>
+    <p>
+        ID15739_01_WAA263_3976_020415 – Double Blank
+    </p>
+    <p>
+        ID15740_01_WAA263_3976_020415 – Extraction Blank (contains SIL standards)
+    </p>
+    <p>
+        ID15740_02_WAA263_3976_020415 – Extraction Blank (contains SIL standards)
+    </p>
+    <p>
+        ID15740_04_WAA263_3976_020415 – Extraction Blank (contains SIL standards)
+    </p>
+    <p>
+        ID15655_01_WAA263_3976_020415 – All AA Sample 1
+    </p>
+    <p>
+        ID15656_01_WAA263_3976_020415 – All AA Sample 2
+    </p>
+    <p>
+        ID15657_01_WAA263_3976_020415 – All AA Sample 3
+    </p>
+    <p>
+        ID15658_01_WAA263_3976_020415 – Minus Met Sample 1
+    </p>
+    <p>
+        ID15659_01_WAA263_3976_020415 – Minus Met Sample 2
+    </p>
+    <p>
+        ID15660_01_WAA263_3976_020415 – Minus Met Sample 3
+    </p>
+    <p>
+        ID15661_01_WAA263_3976_020415 – Minus Arg Sample 1
+    </p>
+    <p>
+        ID15662_01_WAA263_3976_020415 – Minus Arg Sample 2
+    </p>
+    <p>
+        ID15663_01_WAA263_3976_020415 – Minus Arg Sample 3
+    </p>
+    <p>
+        ID15664_01_WAA263_3976_020415 – Minus Arg, Minus Met Sample 1
+    </p>
+    <p>
+        ID15665_01_WAA263_3976_020415 – Minus Arg, Minus Met Sample 2
+    </p>
+    <p>
+        ID15666_01_WAA263_3976_020415 – Minus Arg, Minus Met Sample 3
+    </p>
+    <p>
+        ID15741_01_WAA263_3976_020415 – Pooled QC Sample 1
+    </p>
+    <p>
+        ID15741_02_WAA263_3976_020415 – Pooled QC Sample 2
+    </p>
+    <p class="keep-next">
+        The files should import within a matter of seconds, leaving your Skyline window looking like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        To take advantage of the Skyline summary graphs for viewing individual targets, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b>. </li>
+        <li>Click and drag these views to dock them above the chromatogram graphs.</li>
+        <li>Select the first target “Methionine” in the <b>Targets</b> view.</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline window should now look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you have learned how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and
+        adducts, and product ion <i>m/z</i> values. You imported a multi-replicate data set collected by a metabolomics researcher, and saw how many
+        existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.
+    </p>
+    <h1>Bibliography</h1>
+    <p class="bibliography">
+        1. Tang, X. <i>et al</i>. Comprehensive Profiling of Amino Acid Response Uncovers Unique Methionine-Deprived Response
+        Dependent on Intact Creatine Biosynthesis. <i>PLoS Genet</i> <b>11</b>, e1005158 (2015).
+    </p>
+</body>
+
+</html>

@@ -1,0 +1,765 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Targeted Method Editing</h1>
+    <p>
+        This tutorial will cover many of the features available in the Skyline Targeted Mass Spec Environment for creating new target lists for
+        targeted analysis and instrument methods for Selected Reaction Monitoring (SRM also referred to as Multiple Reaction Monitoring - MRM) mass
+        spectrometers. The Skyline support for creating documents from existing transition lists is covered in a separate tutorial.
+    </p>
+    <p>
+        In developing Skyline we aim to create a vendor-neutral platform for targeted mass spectrometry investigation. From all Skyline documents, you
+        will be able to export transition lists for SRM instruments from Agilent, SCIEX, Shimadzu, Thermo-Scientific, and Waters. Skyline can also
+        export native methods for these instruments as well as methods and isolation lists for Parallel Reaction Monitoring (PRM) which are not
+        covered here.
+    </p>
+    <p>
+        One of the great benefits of exporting your methods from a Skyline document is that you are assured the instrument output will import
+        seamlessly for use in data analysis with Skyline, though this also is covered in other tutorials.
+    </p>
+    <p>
+        Understanding how to create a targeted proteomics method in Skyline is a critical starting point, however, a good reason to explore this
+        tutorial.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/MethodEdit.zip">https://skyline.ms/tutorials/MethodEdit.zip</a> 
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\MethodEdit
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, you can choose the proteomics interface by doing the following:
+    </p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Proteomics interface</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in proteomics mode which is displayed by the protein icon <img src="../../shared/protein-icon.png" /> in the upper
+        right-hand corner of the Skyline window.
+    </p>
+    <p>
+        You could start editing this blank document in a number of ways, but first you can give Skyline more information about the proteins you will be
+        working with. By giving Skyline this background information, you allow Skyline to help you create information rich methods more quickly.
+    </p>
+    <h1>Creating a MS/MS Spectral Library</h1>
+    <p>
+        Since the method you will create in this tutorial will be designed to measure yeast proteins, you will first create a MS/MS spectral library
+        from part of a yeast data set downloaded from the Peptide Atlas on-line data repository. You can do the same for any data set from Peptide
+        Atlas, or you can just use the full SpectraST libraries supplied by Peptide Atlas. There are 3 large public sources of spectral libraries all
+        supported by Skyline:
+    </p>
+    <ul>
+        <li>Peptide Atlas (<a target="_blank" href="http://www.peptideatlas.org/speclib/">http://www.peptideatlas.org/speclib/</a>)</li>
+        <li>National Institute of Standards and Technology (NIST) (<a target="_blank" href="http://peptide.nist.gov/">http://peptide.nist.gov/</a>)</li>
+        <li>The Global Proteome Machine (GPM) (<a target="_blank" href="ftp://ftp.thegpm.org/projects/xhunter/libs/">ftp://ftp.thegpm.org/projects/xhunter/libs/</a>)
+        </li>
+    </ul>
+    <p>
+        You can also create new spectral libraries in Skyline using other publicly available data, or peptide search results from your laboratory
+        experiments. Skyline currently supports building libraries from the following search result formats:
+    </p>
+    <ul>
+        <li>ByOnic (mzIdentML, MGF)</li>
+        <li>Comet (sqt / ms2, pepXML / mzXML)</li>
+        <li>Mascot (DAT files)</li>
+        <li>MaxQuant Andromeda (msms.txt and modifications.xml)</li>
+        <li>Morpheus (pepXML/mzML or mzXML)</li>
+        <li>MSFragger (pepXML and mzML)</li>
+        <li>MSGF+ (mzIdentML, mzML or pepXML and mzXML)</li>
+        <li>Myrimatch/IDPicker (ipdXML and mzXML)</li>
+        <li>OMSSA (pepXML and mzXML)</li>
+        <li>PEAKS (pepXML and mzXML)</li>
+        <li>PeptideShaker (mzIdentML)</li>
+        <li>PRIDE XML</li>
+        <li>Protein Pilot (group or group.xml files)</li>
+        <li>Protein Prospector (pepXML and mzXML)</li>
+        <li>Proteome Discoverer (MSF and pdResult)</li>
+        <li>Scaffold (exported mzIndentML and MGF)</li>
+        <li>Spectrum Mill (exported pepXML and mzXML)</li>
+        <li>Trans Proteomic Pipline (pepXML and mzXML)</li>
+        <li>Waters PLGS MS<sup>e</sup> (final_fragment CSV)</li>
+        <li>X! Tandem (BioML XML)</li>
+        <li>Custom (SSL) (<a href="https://skyline.ms/blib-formats.url">https://skyline.ms/blib-formats.url</a>)</li>
+    </ul>
+    <p>
+        To start this tutorial, you can build your first BiblioSpec spectral library with Skyline by performing the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click on the <b>Library</b> tab.</li>
+        <li>Click on the <b>Build</b> button.</li>
+        <li>In the <b>Name</b> field of the <b>Build Library</b> form, enter “Yeast (Atlas)”. </li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the Library subfolder under the MethodEdit folder created earlier.</li>
+        <li>Click the <b>Save</b> button.</li>
+        <li>In the <b>Cut-off score</b> field, enter “0.95”as the minimum PeptideProphet score.</li>
+        <li>Click the <b>Next</b> button.</li>
+        <li>Click the <b>Add Files</b> button.</li>
+        <li>Navigate to the “Yeast_atlas” subfolder under the MethodEdit folder.</li>
+        <li>Double-click the interact-prob.pep.xml file in this folder.</li>
+        <li>Click the <b>Finish</b> button.</li>
+    </ul>
+    <p>
+        You should see that Skyline has added the newly created “Yeast (Atlas)” library to the <b>Libraries</b> list in the
+        <b>Library</b> tab of the <b>Peptide Settings</b> form. The library build is performed as a background task, freeing you
+        to continue working. If you look at the Skyline status bar, you can see progress status for the library build. This is a small data set,
+        however, and the build will happen quickly. It may already have completed by the time you read this. When it does, you will see a notification
+        of completion slide up from the lower left corner of the Skyline window.
+    </p>
+    <ul>
+        <li>In the <b>Peptide Settings</b> form, check the checkbox for “Yeast (Atlas)” to tell Skyline to use this library in picking
+            peptides and transitions.</li>
+    </ul>
+    <p class="keep-next">
+        The Library tab should now look like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <h1>Creating a Background Proteome File:</h1>
+    <p>
+        You can also use FASTA sequence files to inform Skyline of the background matrix in which your experiment will take place. In Skyline, this is
+        called the Background Proteome. It can be as broad or as narrow as you like, e.g. the entire organism FASTA for one or multiple organisms to
+        18 specific proteins you plan to spike into an otherwise blank matrix, or anywhere in between.
+    </p>
+    <p>
+        For this tutorial, you will use the complete FASTA file for yeast, which you can do by performing the following steps before clicking the
+        <b>OK</b> button in the <b>Peptide Settings</b> form:
+    </p>
+    <ul>
+        <li>In the <b>Peptide Settings</b> form, click the <b>Digestion</b> tab.</li>
+        <li>From the <b>Background proteome</b> drop-list, choose <b>&lt;Add…&gt;</b>.</li>
+        <li>Click the <b>Create</b> button in the <b>Edit Background Proteome</b> form.</li>
+        <li>Navigate to the FASTA subfolder of the MethodEdit folder.</li>
+        <li>In the <b>File name</b> field, enter “Yeast”.</li>
+        <li>Click the <b>Save</b> button.</li>
+        <li>Click the <b>Add File</b> button.</li>
+        <li>Navigate to the FASTA subfolder of the MethodEdit folder.</li>
+        <li>Double-click the sgd_yeast.fasta file.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will scan the 5801 protein sequences in this file, create an index for peptide sequence lookup, and save this to the
+        file you created. The Background Proteome form should look like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This takes you back to the <b>Digestion</b> tab of the <b>Peptide Settings</b> form, which should now
+        look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        Skyline provides many editable lists like the two you just modified. The Enzyme list at the top of the <b>Digestion</b> tab is
+        another, and there are others on every tab of the Peptide Settings forms, which you can explore later. 
+    </p>
+    <ul>
+        <li>For now, click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This commits these changes and returns you to the document in the main Skyline window.
+    </p>
+    <p>
+        Next you can begin adding proteins to the document to better understand how the new spectral library impacts the peptide and transition choices
+        Skyline makes.
+    </p>
+    <h1>Pasting FASTA Sequences</h1>
+    <p>
+        The first method added to Skyline for specifying proteins of interest was the ability to paste full FASTA sequence text directly into the
+        document. To use this method, perform the following steps:
+    </p>
+    <ul>
+        <li>Use the Windows <b>Notepad</b> application to open the “Fasta.txt” file in the FASTA subfolder of the MethodEdit folder.</li>
+        <li>On the <b>Edit</b> menu in Notepad, click <b>Select All</b> (ctrl-A).</li>
+        <li>On the <b>Edit</b> menu in Notepad, click <b>Copy</b> (ctrl-C).</li>
+        <li>Switch back to Skyline.</li>
+        <li>On the <b>Edit</b> menu, click <b>Paste</b> (ctrl-V).</li>
+        <li>Press the down arrow key until the first pasted peptide is selected.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave Skyline looking something like this:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Ion Types</b>, and then click <b>B</b>.</li>
+    </ul>
+    <p>
+        This makes Skyline highlight the b-ions for this peptide in purple in the spectrum graph. Here are the steps to show precursor <i>m/z</i> and
+        product <i>m/z</i> transitions Skyline has picked to monitor for this peptide: 
+    </p>
+    <ul>
+        <li>Click on the <b>+</b> to the left of the peptide sequence displayed.</li>
+        <li>Press the <b>down-arrow key</b> to move the selection to the transition assigned “(rank 1)”. </li>
+    </ul>
+    <p class="keep-next">
+        Skyline highlights ions in the graph as you select the corresponding transitions to present the following view:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        By default, Skyline has only chosen the 3 most intense charge 1 product y-ions as the transitions it will measure for the charge 2 precursor.
+        All this may be adjusted, however. To change the settings from their default values, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Filter</b> tab.</li>
+        <li>In the <b>Precursor charges</b> field, change the “2” to “2, 3”.</li>
+        <li>In the <b>Ion charges</b> field, confirm the value is “1”.</li>
+        <li>In the <b>Ion types</b> field, change the “y” to “y, b”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Transition Settings</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>In the <b>Pick</b> field, change “3” to “5” <b>product ions</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Transition Settings</b> form should look like:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline document tree should update to look like the following:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <p>
+        Skyline has added the rank 4 and rank 5 ions for the VDIIANDQGNR peptide, including its b5 ion. A new peptide has been added as the first
+        peptide in the YAL005C protein. By expanding it, you can see that it is a peptide for which the new spectral library contains only a charge 3
+        peptide-spectrum match, while the library clearly does not contain a charge 3 spectrum for the VDIIANDQGNR peptide. The library peptide
+        settings still direct Skyline to choose only precursors for which the spectral library contains a matching spectrum. You can expand the
+        LIDVDGKPQIQVEFK peptide to see an example of a peptide where both charge 2 and charge 3 spectra were found in the spectral library.
+    </p>
+    <h1>Using a Public Spectral Library</h1>
+    <p>
+        The new spectral library contains a lot of matches for the YAL005C protein, but because it was built from such a small data set many proteins
+        show no peptides at all. Skyline is not, however, limited to using just a single spectral library. You can, for example, add the publicly
+        available library for Yeast from the GPM. The yeast library from NIST is more extensive, but the smaller GPM library was chosen for this
+        tutorial. To add the GPM library included in the tutorial ZIP file, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Library</b> form, enter “Yeast (GPM)”.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the Library subfolder of the MethodEdit folder.</li>
+        <li>Double-click the “yeast_cmp_20.hlf” file.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Library</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>In the <b>Libraries</b> list, check the newly created “Yeast (GPM)” item.</li>
+    </ul>
+    <p class="keep-next">
+        The Peptide Settings form should now look like the following:
+    </p>
+    <p>
+         <img src="s-9.png" />
+    </p>
+    <p>
+        Since Skyline can only choose a single spectrum to inform its product-ion decisions, and the value by which to rank these matches remains blank
+        in the Rank peptides by field, the libraries will be searched in the order they appear in the list. Skyline will use the first spectrum match
+        it finds. To see this in action: 
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Once the library is loaded, Skyline updates the document to include a lot of new peptides. If you select peptides and peptide precursors that
+        were already present before the GPM library was added, you can see that the spectrum chart title still attributes the spectra to the “Yeast
+        (Atlas)” library. The spectrum chart for new peptides and peptide precursors, however, displays “Yeast (GPM)” in the title.
+    </p>
+    <p>
+        NOTE: The GPM libraries unlike all other formats, store only the 20 most intense MS/MS peaks. You can make your own judgment of how well you
+        think the stored spectra actually match the spectra they claim to, but you should do so with full knowledge of why so few peaks are displayed,
+        compared with the unfiltered spectra in other libraries.
+    </p>
+    <h1>Limiting Peptides per Protein</h1>
+    <p>
+        Some of the peptides now have quite a lot of peptide precursors to measure. You might really want to measure them all before you start refining
+        your document, a process covered in another tutorial. In this tutorial, suppose you want to somehow limit the number of peptides you measure
+        for each protein.
+    </p>
+    <p>
+        In the future, we hope to add predictive algorithms to Skyline that will allow this type of peptide ranking without experimental data. At the
+        moment, however, the only way to limit peptides per protein without resorting to manually picking the peptides yourself is to use a ranking
+        value supplied by a spectral library. Unfortunately, the BiblioSpec library built in this tutorial and the public library from the GPM do not
+        share a comparable score. This means you will also have to uncheck one of the libraries to use a ranking score.
+    </p>
+    <p>
+        Perform the following steps to limit the peptides per protein in the current document:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Uncheck the “Yeast (Atlas)” library. (The <b>Library</b> tab should still be active.)</li>
+        <li>From the <b>Rank peptides by</b> drop-list, choose <b>Expect</b>.</li>
+        <li>Check the <b>Limit peptides per protein</b> checkbox.</li>
+        <li>In the <b>Peptides</b> field, enter the number “3”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You should have many fewer peptides now. You can now also get rid of the empty proteins:
+    </p>
+    <ul>
+        <li>On the <b>Refine</b>, click <b>Remove Empty Proteins</b>.</li>
+    </ul>
+    <p>
+        Now the tutorial returns to the background proteome file you created, and how it also can be used to add information to the peptides and
+        proteins you are working with as you edit your document.
+    </p>
+    <h1>Inserting a Protein List</h1>
+    <p>
+        Suppose you are working with a list of proteins. You may have the IDs used to identify the proteins in your FASTA file, but you do not want to
+        go through the FASTA file pasting each sequence one by one. Since you have set up a background proteome, all Skyline needs is a line-separated
+        list of protein IDs from the FASTA file you used to create the background proteome.
+    </p>
+    <p>
+        To add a list of new proteins to the current document perform the following steps:
+    </p>
+    <ul>
+        <li>Use the Windows <b>Notepad</b> application to open the “Protein List.txt” file in the FASTA subfolder of the MethodEdit folder.
+        </li>
+        <li>On the <b>Edit</b> menu in Notepad, click <b>Select All</b> (ctrl-A).</li>
+        <li>On the <b>Edit</b> menu in Notepad, click <b>Copy</b> (ctrl-C).</li>
+        <li>Switch back to Skyline.</li>
+        <li>Select the blank element at the end of the document.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Insert</b>, and then click <b>Proteins</b>.</li>
+        <li>Press ctrl-V to paste from the clipboard.</li>
+    </ul>
+    <p>
+        Skyline adds the list of proteins to the Protein List grid, and assigns the Description and Sequence field values found for the IDs in the
+        background proteome. Because the background proteome lacks accession numbers, preferred names, genes and species information, the columns will
+        be empty. To see more of the protein sequence, do the following:
+    </p>
+    <ul>
+        <li>Double-click the line between the “Sequence” and “Accession” column headers.</li>
+        <li>Click and drag the line between the “Description” and “Sequence” column headers.</li>
+    </ul>
+    <p class="keep-next">
+        So that the form looks like:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Insert</b> button.</li>
+    </ul>
+    <p>
+        This will add these proteins to the end of the document. Many of them have no peptides matching spectra in the GPM library, so follow these
+        steps to remove empty proteins: 
+    </p>
+    <ul>
+        <li>On the <b>Refine</b> menu, click <b>Remove Empty Proteins</b>. </li>
+    </ul>
+    <h1>Inserting a Peptide List</h1>
+    <p>
+        There are two ways to insert a list of peptides into a Skyline document, and they have the following results:
+    </p>
+    <ol>
+        <li>A list of peptides separate from any protein information</li>
+        <li>Each peptide associated with a specific protein</li>
+    </ol>
+    <p>
+        To achieve the first result, perform the following steps:
+    </p>
+    <ul>
+        <li>Use the Windows <b>Notepad</b> application to open the “Peptide List.txt” file in the FASTA subfolder of the MethodEdit folder.
+        </li>
+        <li>On the <b>Edit</b> menu in Notepad, click <b>Select All</b> (ctrl-A).</li>
+        <li>On the <b>Edit</b> menu in Notepad, click <b>Copy</b> (ctrl-C).</li>
+        <li>Switch back to Skyline.</li>
+        <li>Select the first protein in the document.</li>
+        <li>On the <b>Edit</b> menu, click <b>Paste</b> (ctrl-V).</li>
+    </ul>
+    <p>
+        Skyline adds the complete list of peptides to a single new peptide list element in the document, named “peptides1”. You can rename the list now
+        by simply typing the name you prefer.
+    </p>
+    <ul>
+        <li>Type “Primary Peptides” and press Enter.</li>
+    </ul>
+    <p>
+        The GPM library has spectra for all of the added peptides, which you can review by pressing the down-arrow key to select each of the pasted
+        peptides. The Skyline document should now look something like this:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        To insert the same list so that each peptide is associated with its respective protein in the background proteome, you need to use the
+        <b>Insert Peptide List</b> form. Perform the following steps to do this now:
+    </p>
+    <ul>
+        <li>First click the <b>Undo</b> button in the toolbar twice (ctrl-Z, ctrl-Z).</li>
+        <li>On the <b>Edit</b> menu, choose <b>Insert</b>, and click <b>Peptides</b>.</li>
+        <li>Press ctrl-V to paste from the clipboard.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline populates the protein fields for each peptide to present the form looking like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Insert</b> button to insert the peptides into the document.</li>
+    </ul>
+    <p>
+        The peptides have been added to the proteins by name instead of a single peptide list, as before.
+    </p>
+    <h1>Simple Refinement</h1>
+    <p>
+        At this point, you have added 70 peptides to the document without doing any confirmation further than that the GPM yeast library contains a
+        spectrum for each. To have a look at a peptide where the library spectrum seems like a particularly poor match for what this document is
+        trying to measure, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Find …</b> (ctrl-F).</li>
+        <li>Enter “IPEE” in the <b>Find what</b> field.</li>
+        <li>Click the <b>Find Next</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This spectrum shows only 1 matching y-ion and 1 matching b-ion, and looks like:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <p>
+        Measuring these two ions is unlikely to produce useful information about this peptide.
+    </p>
+    <p>
+        To remove all peptides for which the library spectrum failed to provide the desired 5 product ions, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Refine</b> menu, click <b>Advanced</b>.</li>
+        <li>In the <b>Min transitions per precursor</b> field, enter the number “5”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The status bar indicators at the bottom-right corner of the Skyline window show that the number of peptides has been reduced from 70 to 64:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <h1>Checking Peptide Uniqueness</h1>
+    <p>
+        Another thing you might want to check is how unique the chosen peptides are to the proteins you are trying to measure. Unfortunately, we have
+        found that FASTA sequence files are frequently redundant enough that it would be unwise to simply remove all peptides which are not unique to
+        a single sequence in the background proteome. Many peptides belong to multiple protein homologues of a single gene model.
+    </p>
+    <p>
+        Skyline does, however, offer a form for inspecting uniqueness of the peptides for each protein in the document. Perform the following steps to
+        review the last 2 proteins in the document you are editing:
+    </p>
+    <ul>
+        <li>Select the last protein in the document.</li>
+        <li>On the <b>Edit</b> menu, click <b>Unique Peptides</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline displays the <b>Unique Peptides</b> form with the following information:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        A close review of these 6 proteins shows that some are similar to each other, but there is certainly enough variation that this one peptide
+        gives little confidence of measuring the protein of interest. You can view the protein sequence for each protein by selecting its column in
+        the grid view.
+    </p>
+    <ul>
+        <li>Close the <b>Unique Peptides</b> form, and press the Delete key to remove this protein from the document.</li>
+        <li>Now repeat the same steps for the new last protein. </li>
+    </ul>
+    <p>
+        Skyline shows that the one peptide chosen for this protein also maps to multiple proteins, in this case 4, but they are much more similar. You
+        may want to keep this one. 
+    </p>
+    <ul>
+        <li>Click the <b>Cancel</b> button.</li>
+    </ul>
+    <p>
+        Note: Since this tutorial was originally written a setting for enforcing peptide uniqueness has been added to the <b>Peptide Settings</b> – <b>Digestion</b> tab, below the <b>Background proteome</b> field. It is labeled <b>Enforce peptide
+            uniqueness by</b>. You may want to explore how it impacts the peptides chosen in this document.
+    </p>
+    <h1>Direct Document Editing</h1>
+    <p>
+        You have already seen that it is possible to delete items in the document using the delete key, as well as to change the name of a peptide list
+        by typing over the existing name. In this section, you will be introduced to a few more direct document editing features that allow you to
+        quickly modify the proteins, peptides, precursors and transitions you wish to measure.
+    </p>
+    <h2>Protein Name Auto-Completion</h2>
+    <p>
+        With a background proteome defined, you can get help in adding proteins and peptides simply by typing on the blank element at the end of the
+        document. To add a protein by name, do the following:
+    </p>
+    <ul>
+        <li>Select the blank element at the end of the document.</li>
+        <li>Type “ybl087”</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will offer to complete this by adding a protein as shown below:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <ul>
+        <li>Press the Enter key to add the protein to your document.</li>
+    </ul>
+    <h2>Protein Description Auto-Completion</h2>
+    <p>
+        Skyline will also search the description text for the protein sequences from a FASTA file. To find and add a protein based on its description,
+        do the following:
+    </p>
+    <ul>
+        <li>Type “eft2”</li>
+    </ul>
+    <ul class="keep-next">
+        <li>Press the down-arrow key once to select the first protein listed, as shown:</li>
+    </ul>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <ul>
+        <li>Press the Enter key to add the protein to your document.</li>
+    </ul>
+    <h2>Peptide Sequence Auto-Completion</h2>
+    <p>
+        A third auto-completion option is to begin typing a peptide sequence, and Skyline will help identify the peptide and the protein or proteins
+        that contain it. To find and add a peptide by its sequence, do the following:
+    </p>
+    <ul>
+        <li>Press Caps-Lock.</li>
+        <li>Type “IQGP”.</li>
+        <li>When Skyline shows the peptide IQGPNYVPGK, press the down-arrow key to select it.</li>
+        <li>Press the Enter key.</li>
+    </ul>
+    <p>
+        The peptide is added to the document, but it is added to the existing protein YDR385W, just above the final blank element. The added proteins
+        should now look like:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <h2>Pop-up Pick-Lists</h2>
+    <p>
+        Once you have added proteins to your document, you can also use the Skyline pop-up pick-lists to modify the peptides, precursors and product
+        ions you will target. You can add another peptide to the YBL087C protein by doing the following:
+    </p>
+    <ul>
+        <li>Move the mouse cursor over the YBL087C protein until a drop-arrow appears beside the name.</li>
+        <li>Move the mouse cursor over the drop arrow until the cursor image changes to a hand.</li>
+        <li>Click the left mouse button.</li>
+    </ul>
+    <p>
+        Skyline will show a pop-up pick-list that is initially filtered, and shows only the set of peptides it has already added to the document. You
+        could uncheck any of these to have the same effect as using the Delete key to delete peptides from this protein. Instead, you can add a new
+        peptide by doing the following:
+    </p>
+    <ul>
+        <li>Click the button with the funnel image to get an unfiltered list.</li>
+        <li>Check the peptide with the suffix “(rank 6)”.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave the pick-list looking like:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <ul>
+        <li>Press the Enter key or click the button with the green check image to commit the change to your document.</li>
+    </ul>
+    <p>
+        All items in the document that support sub-lists will display the same kind of pick-list. To change the product ion transitions for a peptide
+        precursor, do the following:
+    </p>
+    <ul>
+        <li>Expand the first peptide in the YBL087C protein (ISLGLP…) by clicking the + to the left of the peptide sequence.</li>
+        <li>Move the mouse cursor over the 672.6716+++ precursor until a drop-arrow appears beside the name.</li>
+        <li>Move the mouse cursor over the drop arrow until the cursor image changes to a hand.</li>
+        <li>Click the left mouse button.</li>
+        <li>Click the funnel icon to get an unfiltered list of possible product ions. </li>
+    </ul>
+    <p>
+        Suppose you had some reason to believe this particular precursor would be better measured with only b-ions, and in fact you want to exchange
+        the current 2 y-ions for 2 doubly charged b-ions. To do this, perform the following steps:
+    </p>
+    <ul>
+        <li>Uncheck the two y-ions currently in view (y9 and y6).</li>
+        <li>Click on the button with the binoculars image to show the find field.</li>
+        <li>Type “b ++” (b-space-++) to filter the list to only items containing a b and ++.</li>
+        <li>Check the doubly charged b5 and b7 ions.<br />Note: This is just an example, and these ions were not found in the MS/MS spectrum.</li>
+    </ul>
+    <p class="keep-next">
+        The pick-list should now look like this:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Press the Enter key or click the button with the green check image to commit the change to your document.</li>
+    </ul>
+    <h2>Bigger Picture</h2>
+    <p>
+        Sometimes it helps to be able to see the information in your document in a broader context. You may have noticed this already, as you moved the
+        mouse over the document, but if not, hover the mouse cursor now over some of the elements in the document tree, and Skyline will present data
+        tips like the ones shown below. In these tips, the selected element is highlighted in red, elements in the document in blue, and bold is used
+        for elements which match the filter but are not included in the document.
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <h2>Drag and Drop</h2>
+    <p>
+        Finally, you can also use drag and drop to reorder certain elements in the document. In the document you have created for this tutorial, only
+        the proteins themselves may be reordered. The other elements have inherent ordering, and cannot be moved. If, however, you create a peptide
+        list with no protein information, as you did above by pasting the list directly into the document, then you could also use drag and drop to
+        reorder the peptides within that list. 
+    </p>
+    <ul>
+        <li>Use drag and drop now to reorder the proteins, and see that it works.</li>
+    </ul>
+    <h1>Preparing to Measure</h1>
+    <p>
+        Of course, the end goal of all this document editing is to attempt to measure the peptides in the document on a mass spectrometer. But, first
+        you need to decide which mass spectrometer. Skyline exports transition lists for triple quadrupole instruments from five manufacturers:
+        Agilent, SCIEX, Shimadzu, Thermo Scientific, and Waters. It can also now export native method files for all of these, but some require
+        instrument software and all require a method template to do this.
+    </p>
+    <p>
+        For this tutorial, you will export only one transition list for a SCIEX Q Trap. Before you do, you should change some settings. To prepare your
+        document for exporting a Q Trap transition list, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>From the <b>Collision energy</b> drop-list, choose “SCIEX”.</li>
+        <li>Prom the <b>Declustering potential</b> drop-list, choose “SCIEX”.</li>
+        <li>Click the <b>Instrument</b> tab.</li>
+        <li>Change the <b>Max m/z</b> field to “1800”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Before exporting your first transition list, first save your document to the MethodEdit folder by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b> (ctrl-S).</li>
+        <li>Navigate to the MethodEdit folder.</li>
+        <li>In the <b>File name</b> field, enter “MethodEditTutorial”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        Next, you should note that the document created in this tutorial contains 355 transitions. If you already had accurate measurements of when
+        these peptides elute with the column you will be using, you might be able to schedule them all in a single method, so that each is measured
+        for only a small window of time. Since you do not yet have these measurements, however, you will first need to measure over the entire
+        gradient, dividing the measurements into groups that can be measured throughout the entire gradient for a run. The appropriate number to use
+        will vary depending on the speed and sensitivity of the instrument. The number can be many hundreds with modern triple quadrupole instruments,
+        but this tutorial was originally written for a SCIEX 4000 Q Trap on which 75 was thought to be appropriate.
+    </p>
+    <p>
+        With this information, you are ready to export a transition list for the SCIEX 4000 Q Trap. To do so, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and then click <b>Transition List</b>.</li>
+        <li>Click the <b>Multiple methods</b> radio button.</li>
+        <li>Check the <b>Ignore proteins</b> checkbox.</li>
+        <li>In the <b>Max transitions per sample injection</b> field, enter “75”.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave the Export Transition List form looking like:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>File name</b> field, enter “Yeast_list”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Switch to a Windows Explorer window, and navigate to the MethodEdit folder to see the transition list files you just created.
+        The contents of the MethodEdit folder should now look like:
+    </p>
+    <p>
+        <img src="s-method-edit-file-explorer.png" />
+    </p>
+    <p class="keep-next">
+        Open the first of the five new files, and you should find a transition list that looks like:
+    </p>
+    <p>
+        <img src="s-transition-list-spreadsheet.png" />
+    </p>
+    <p>
+        The columns are in the order: precursor <i>m/z</i>, product <i>m/z</i>, dwell time, extended peptide, declustering potential, and collision
+        energy. This should be enough to paste into the Analyst software method creation user interface and create a method that you could use to run
+        the instrument on a yeast sample to attempt measuring these peptides.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        There is certainly a lot more to learn about using the Skyline application for your targeted proteomics experiments. You should, however, feel
+        confident enough to begin creating your own real Skyline documents. Hopefully these documents will help you get set up to measure peptides
+        that test new hypotheses quicker than you have before. Then you will want to import your instrument output files back into Skyline for peak
+        integration and results analysis. We think you will find that the context you create in a Skyline document greatly simplifies understanding
+        the instrument output. Just how to perform these next steps, however, is covered in other instructional materials you can find on the Skyline
+        website. 
+    </p>
+</body>
+
+</html>

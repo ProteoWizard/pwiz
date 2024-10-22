@@ -411,6 +411,8 @@ namespace pwiz.SkylineTestTutorial
                 mResults.OkDialog();
             });
 
+            RunUI(()=>SkylineWindow.SaveDocument());
+
             var importResultsDlg0 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
             {
@@ -528,6 +530,7 @@ namespace pwiz.SkylineTestTutorial
                 manageResultsDlg.RemoveAllReplicates();
                 manageResultsDlg.OkDialog();
             });
+            RunUI(()=>SkylineWindow.SaveDocument());
             var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets = importResultsDlg1.GetDataSourcePathsFile(null),
                 openDataSourceDialog =>
