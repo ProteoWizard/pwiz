@@ -216,7 +216,7 @@ namespace SkylineTester
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses {3} nolog",
+                commandShell.Add("{0} {1} {2} variant=release debug-symbols=on --i-agree-to-the-vendor-licenses {3} nolog",
                     Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
                     architecture,
                     runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe",
