@@ -401,7 +401,8 @@ namespace pwiz.Skyline.Model
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
-                        if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
+                        if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0 &&
+                            precursor.Adduct.IsotopeLabels.Equals(tranGroup.PrecursorAdduct.IsotopeLabels)) // Same m/z, but isotope envelope might vary e.g. M2C13-H vs M1C131N15-H
                         {
                             tranGroupFound = true;
                             var tranFound = false;
@@ -1000,6 +1001,11 @@ namespace pwiz.Skyline.Model
                 return Formula.IsMassOnly ?
                     new CustomMolecule(MonoMass, AverageMass, MoleculeID.Name ?? string.Empty, MoleculeID.AccessionNumbers) :
                     new CustomMolecule(Formula, MoleculeID.Name ?? string.Empty, MoleculeID.AccessionNumbers);
+            }
+
+            public override string ToString()
+            {
+                return base.ToString() + Adduct.ToString();
             }
         }
 
