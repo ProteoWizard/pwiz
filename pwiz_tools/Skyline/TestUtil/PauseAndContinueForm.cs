@@ -18,16 +18,15 @@
  */
 
 using System;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -35,39 +34,22 @@ namespace pwiz.SkylineTestUtil
 {
     public partial class PauseAndContinueForm : Form
     {
-        private static bool _saveScreenShotChecked = false;
+        private static bool _saveScreenShotChecked = true;
+        private static ScreenshotPreviewForm screenshotPreviewForm = new ScreenshotPreviewForm();
         private readonly string _linkUrl;
         private readonly bool _showMatchingPage;
         private readonly string _fileToSave;
-        private Form _screenshotForm;
+        private Control _screenshotForm;
         private ScreenshotManager _screenshotManager;
+        private Func<Bitmap, Bitmap> _processShot;
 
-        public PauseAndContinueForm(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, Form screenshotForm = null, ScreenshotManager screenshotManager = null)
+        public PauseAndContinueForm(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, Control screenshotForm = null, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
         {
             InitializeComponent();
             _screenshotForm = screenshotForm;
             _screenshotManager = screenshotManager;
             _fileToSave = fileToSave;
-
-            if (_screenshotForm != null && _screenshotManager != null)
-            {
-                if (_screenshotForm is DockableForm dockableForm && dockableForm.DockState != DockState.Floating) 
-                {
-                    // If this dockable window isn't a floating window, then caller meant to screenshot the Skyline window
-                    var parent = _screenshotForm.ParentForm;
-                    if (parent != null)
-                    {
-                        _screenshotForm = parent;
-                    }
-                }
-                // Show the copy buttons
-                btnCopyToClipBoard.Visible = btnCopyToClipBoard.Enabled = true;
-                if ((_screenshotForm is GraphSummary zgControl) && zgControl.GraphControl != null)
-                {
-                    btnCopyMetafileToClipboard.Visible = btnCopyMetafileToClipboard.Enabled = true; // Control is a metafile provider
-                }
-            }
-
+            _processShot = processShot;
             saveScreenshotCheckbox.Checked = _saveScreenShotChecked;
 
             _linkUrl = link;
@@ -102,10 +84,17 @@ namespace pwiz.SkylineTestUtil
 
             // Finally make sure the button is fully visible
             Height += Math.Max(0, (btnContinue.Bottom + btnContinue.Left) - ClientRectangle.Bottom);
+
+            setScreenshotButtonLabels();
         }
 
         private void btnContinue_Click(object sender, EventArgs e)
         {
+            if (screenshotPreviewForm.Visible)
+            {
+                screenshotPreviewForm.Hide();
+            }
+
             Close();
 
             // Start the tests again
@@ -122,7 +111,7 @@ namespace pwiz.SkylineTestUtil
 
         private static readonly object _pauseLock = new object();
 
-        public static void Show(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null, Form screenshotForm = null, ScreenshotManager screenshotManager = null)
+        public static void Show(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null, Control screenshotForm = null, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
         {
             ClipboardEx.UseInternalClipboard(false);
 
@@ -134,7 +123,7 @@ namespace pwiz.SkylineTestUtil
 
             RunUI(parentWindow, () =>
             {
-                var dlg = new PauseAndContinueForm(description, fileToSave, link, showMatchingPages, screenshotForm, screenshotManager) { Left = parentWindow.Left };
+                var dlg = new PauseAndContinueForm(description, fileToSave, link, showMatchingPages, screenshotForm, screenshotManager, processShot) { Left = parentWindow.Left };
                 const int spacing = 15;
                 var screen = Screen.FromControl(parentWindow);
                 if (parentWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
@@ -224,33 +213,38 @@ namespace pwiz.SkylineTestUtil
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
 
-        private void btnCopyToClipboard_Click(object sender, EventArgs e)
+        private void btnScreenshot_Click(object sender, EventArgs e)
         {
             // Copy current window image to clipboard, with clean edges
             _screenshotForm.Focus();
-            _screenshotManager.TakeNextShot(_screenshotForm);
-            if (saveScreenshotCheckbox.Checked)
-            {
-                _screenshotManager.TakeNextShot(_screenshotForm, _fileToSave);
-            }
-
+            _screenshotManager.TakeShot(_screenshotForm, saveScreenshotCheckbox.Checked ? _fileToSave : null, _processShot);
         }
 
-        private void btnCopyMetaFileToClipboard_Click(object sender, EventArgs e)
-        {
-            _screenshotForm.Focus();
-            if (_screenshotForm is GraphSummary zgControl)
-            {
-                CopyEmfToolStripMenuItem.CopyEmf(zgControl.GraphControl);
-            }
-            if (saveScreenshotCheckbox.Checked)
-            {
-                _screenshotManager.TakeNextShot(_screenshotForm, _fileToSave);
-            }
-        }
         private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             _saveScreenShotChecked = saveScreenshotCheckbox.Checked;
+            setScreenshotButtonLabels();
+        }
+
+        private void btnScreenshotAndContinue_Click(object sender, EventArgs e)
+        {
+            btnScreenshot_Click(sender, e);
+            btnContinue_Click(sender, e);
+        }
+        private void btnPreview_Click(object sender, EventArgs e)
+        {
+            _screenshotForm.Focus();
+            Bitmap screenshot = _screenshotManager.TakeShot(_screenshotForm, null, _processShot);
+
+            var existingImageBytes = File.ReadAllBytes(_fileToSave);
+            var existingImageMemoryStream = new MemoryStream(existingImageBytes);
+            screenshotPreviewForm.ShowScreenshotPreview(screenshot, new Bitmap(existingImageMemoryStream));
+        }
+
+        private void setScreenshotButtonLabels()
+        {
+            btnScreenshot.Text = saveScreenshotCheckbox.Checked ? "Save Screenshot" : "Take Screenshot";
+            btnScreenshotAndContinue.Text = saveScreenshotCheckbox.Checked ? "Save and Continue" : "Take and Continue";
         }
     }
 }

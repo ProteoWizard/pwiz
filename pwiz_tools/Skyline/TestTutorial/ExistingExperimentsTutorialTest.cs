@@ -73,11 +73,12 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        protected override void ProcessCoverShot(Bitmap bmp)
+        protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
             var excelBmp = new Bitmap(TestContext.GetProjectDirectory(@"TestTutorial\ExistingQuant_excel.png"));
             var graph = Graphics.FromImage(bmp);
             graph.DrawImageUnscaled(excelBmp, bmp.Width - excelBmp.Width, bmp.Height - excelBmp.Height);
+            return bmp;
         }
 
         // Not L10N

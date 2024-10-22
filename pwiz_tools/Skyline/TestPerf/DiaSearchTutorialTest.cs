@@ -197,10 +197,11 @@ namespace TestPerf
 
         private Image _searchLogImage;
 
-        protected override void ProcessCoverShot(Bitmap bmp)
+        protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
             var graph = Graphics.FromImage(bmp);
             graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
+            return bmp;
         }
 
         /// <summary>
@@ -429,7 +430,7 @@ namespace TestPerf
             if (IsCoverShotMode)
             {
                 RunUI(() => importPeptideSearchDlg.Width = 404);
-                _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
+                _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }
 
