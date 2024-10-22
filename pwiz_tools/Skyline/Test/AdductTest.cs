@@ -539,22 +539,66 @@ namespace pwiz.SkylineTest
             TestAdductCharge("[M+Ag]", 1, coverage);
 
             // From Baker Lab Multidimensional RPLC-IMS-MS PFAS Database
-            TestAdductCharge("[M+CH3O]", -1, coverage);
-            TestAdductCharge("[M-CH2-COOH]", -1, coverage);
-            TestAdductCharge("[M1C13-H-CO2]", -1, coverage);
-            TestAdductCharge("[M4C13-H]", -1, coverage);
-            TestAdductCharge("[M-H-CO2]", -1, coverage);
-            TestAdductCharge("[M-2H+Na]", -1, coverage);
-            TestAdductCharge("[M-2H+K]", -1, coverage);
-            TestAdductCharge("[M-3H+2Na]", -1, coverage);
-            TestAdductCharge("[M-3H+Na+K]", -1, coverage);
-            TestAdductCharge("[M-4H+3Na]", -1, coverage);
-            TestAdductCharge("[M-4H+2Na+K]", -1, coverage);
-            TestAdductCharge("[M-4H+Na+2K]", -1, coverage);
-            TestAdductCharge("[M-5H+4Na]", -1, coverage);
-            TestAdductCharge("[M-5H+3Na+K]", -1, coverage);
-            TestAdductCharge("[M-COOH-HF]", -1, coverage);
-            TestAdductCharge("[M-C2H4-OH]", -1, coverage);
+            foreach (var kvp in new[] {
+                         ("[M4C13+H]",1), 
+                         ("[M4C13+NH4]",1),
+                         ("[M4C13+H]",1),
+                         ("[M+H]",1),
+                         ("[M+NH4]",1),
+                         ("[M+Na]",1),
+                         ("[M+K]",1),
+                         ("[M4C13+Na]",1),
+                         ("[M2C13-H]",-1),
+                         ("[M4C13-H]",-1),
+                         ("[M-H]",-1),
+                         ("[M-2H+Na]",-1),
+                         ("[M+CH3O]",-1),
+                         ("[M+Cl]",-1),
+                         ("[M-C2H4-OH]",-1),
+                         ("[M-H] ",-1),
+                         ("[M-CH2-COOH]",-1),
+                         ("[M8C13-H]",-1),
+                         ("[M3C13-H]",-1),
+                         ("[M1C13-H-CO2]",-1),
+                         ("[M6C13-H-CO2]",-1),
+                         ("[M7C13-H]",-1),
+                         ("[M6C13-H]",-1),
+                         ("[M5C13-H-CO2]",-1),
+                         ("[M9C13-H]",-1),
+                         ("[M8C13-H-CO2]",-1),
+                         ("[M7C13-H-CO2]",-1),
+                         ("[M4C13-H-CO2]",-1),
+                         ("[M3C13-H-CO2]",-1),
+                         ("[M2C13-H-CO2]",-1),
+                         ("[M-H-CO2]",-1),
+                         ("[M-2H+K]",-1),
+                         ("[M-3H+2Na]",-1),
+                         ("[M-3H+Na+K]",-1),
+                         ("[M-4H+3Na]",-1),
+                         ("[M-4H+2Na+K]",-1),
+                         ("[M-4H+Na+2K]",-1),
+                         ("[M-5H+4Na]",-1),
+                         ("[M-5H+3Na+K]",-1),
+                         ("[M-COOH-HF]",-1),
+                         ("[M+CH3O]", -1),
+                         ("[M-CH2-COOH]", -1),
+                         ("[M1C13-H-CO2]", -1),
+                         ("[M4C13-H]", -1),
+                         ("[M-H-CO2]", -1),
+                         ("[M-2H+Na]", -1),
+                         ("[M-2H+K]", -1),
+                         ("[M-3H+2Na]", -1),
+                         ("[M-3H+Na+K]", -1),
+                         ("[M-4H+3Na]", -1),
+                         ("[M-4H+2Na+K]", -1),
+                         ("[M-4H+Na+2K]", -1),
+                         ("[M-5H+4Na]", -1),
+                         ("[M-5H+3Na+K]", -1),
+                         ("[M-COOH-HF]", -1),
+                         ("[M-C2H4-OH]", -1)})
+            {
+                TestAdductCharge(kvp.Item1, kvp.Item2, coverage);
+            }
 
             // Did we test all the adducts we claim to support?
             foreach (var adducts in AllSupportedAdducts)
