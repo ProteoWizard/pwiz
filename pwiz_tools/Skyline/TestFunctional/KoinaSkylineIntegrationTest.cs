@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1771,6 +1772,28 @@ namespace pwiz.SkylineTestFunctional
 
         public void TestLiveKoinaMirrorPlots()
         {
+            var expectedPropertiesDict = new[]{
+                new Dictionary<string, object>
+                {
+                    { "LibraryName", "Rat (NIST) (Rat_plasma2) (Rat_plasma)" },
+                    { "PrecursorMz", 574.7844.ToString( CultureInfo.CurrentCulture) },
+                    { "Charge", "2" },
+                    { "Label", "light" },
+                    { "SpectrumCount", "93" },
+                    { "KoinaDotpMatch", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.3923) },
+                    { "KoinaDotpMatchFull", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.3904) }
+                },
+                new Dictionary<string, object> {
+                    {"LibraryName","Rat (NIST) (Rat_plasma2) (Rat_plasma)"},
+                    {"PrecursorMz",710.8752.ToString( CultureInfo.CurrentCulture)},
+                    {"Charge","2"},
+                    {"Label","light"},
+                    {"SpectrumCount","4"},
+                    {"KoinaDotpMatch",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.3720)},
+                    {"KoinaDotpMatchFull",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.3570)}
+                }
+            };
+
             var client = (FakeKoinaPredictionClient) KoinaPredictionClient.Current;
 
             // Enable mirror plots
@@ -1793,6 +1816,17 @@ namespace pwiz.SkylineTestFunctional
 
                 if (!RecordData)
                     AssertIntensityAndIRTSpectrumCorrect((KoinaIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
+
+                RunUI(() => { SkylineWindow.GraphSpectrum.ShowPropertiesSheet = true; });
+                var graphExtension = SkylineWindow.GraphSpectrum.MsGraphExtension;
+                WaitForConditionUI(() => graphExtension.PropertiesVisible);
+                var currentProperties = graphExtension.PropertiesSheet.SelectedObject as SpectrumProperties;
+                Assert.IsNotNull(currentProperties);
+                // if property values change use the statement below to generate a new set.
+                // Trace.Write(currentProperties.Serialize());
+                var expectedProperties = new SpectrumProperties();
+                expectedProperties.Deserialize(expectedPropertiesDict[i-1]);
+                Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             }
         }
     }
