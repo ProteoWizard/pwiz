@@ -358,7 +358,13 @@ namespace pwiz.Skyline.Menus
             char separator;
 
             // Check for a FASTA header
-            if (text.StartsWith(@">"))
+            if (text.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX))
+            {
+                // This is multi-peptide-list text. Let the text be what it is and
+                // let the importer try to import it.
+                peptideList = true;
+            }
+            else if (text.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX))
             {
                 // Make sure there is sequence information
                 string[] lines = text.Split('\n');
@@ -366,7 +372,7 @@ namespace pwiz.Skyline.Menus
                 for (int i = 0; i < lines.Length; i++)
                 {
                     string line = lines[i];
-                    if (line.StartsWith(@">"))
+                    if (line.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX))
                     {
                         if (i > 0 && aa == 0)
                         {
@@ -467,12 +473,12 @@ namespace pwiz.Skyline.Menus
                     // First make sure it looks like a sequence.
                     List<double> lineLengths = new List<double>();
                     int lineLen = 0;
-                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                    var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true));
                     foreach (char c in textNoMods)
                     {
                         if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
                         {
-                        MessageDlg.Show(SkylineWindow, string.Format(MenusResources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
+                            MessageDlg.Show(SkylineWindow, string.Format(MenusResources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
                             return;
                         }
                         if (c == '\n')
@@ -527,7 +533,7 @@ namespace pwiz.Skyline.Menus
                     string seqId = Document.GetPeptideGroupId(peptideList);
 
                     // Construct valid FASTA format (with >> to indicate custom name)
-                    text = @">>" + TextUtil.LineSeparate(seqId, text);
+                    text = PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + TextUtil.LineSeparate(seqId, text);
                 }
             }
 
@@ -551,7 +557,7 @@ namespace pwiz.Skyline.Menus
             for (int i = 0; i < pepSequences.Length; i++)
             {
                 var charge = Transition.GetChargeFromIndicator(pepSequences[i].Trim(), TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                string pepSeqMod = CleanPeptideSequence(Transition.StripChargeIndicators(pepSequences[i], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                string pepSeqMod = CleanPeptideSequence(Transition.StripChargeIndicators(pepSequences[i], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true));
                 string pepSeqClean = FastaSequence.StripModifications(pepSeqMod);
                 if (!charge.IsEmpty)
                     pepSeqMod += Transition.GetChargeIndicator(charge);

@@ -1,0 +1,843 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Custom Reports</h1>
+    <p>
+        The Skyline Targeted Proteomics Environment provides informative visual displays of the raw mass spectrometer data you import into your Skyline
+        documents. It allows you to work with this data, to refine the peptides and transitions you are measuring and to tune integration boundaries.
+        A rich variety of calculated values and statistics may be exported from your Skyline document to a tabular comma separated value (CSV) file
+        perfect for further analysis in tools like Excel and R. The Skyline Results and Document Grids provide access to many of these values and
+        allow you to edit custom annotations and native properties as you work with your data.
+    </p>
+    <p>
+        The first part of this tutorial will focus on Skyline custom reports. You will learn how they can be designed, shared and used to export raw
+        values and summary statistics from your Skyline documents. Exported reports can be used in the following ways:
+    </p>
+    <ul>
+        <li>Deeper statistical analysis in tools like Excel or R</li>
+        <li>Broader statistical analysis across multiple experiments and/or laboratories</li>
+        <li>Enforcing instrument quality control with summary statistics</li>
+        <li>Providing an input format for other custom built software tools</li>
+        <li>Providing an import format suited to relational data repositories</li>
+    </ul>
+    <p>
+        In developing Skyline we aim to create a vendor-neutral platform for targeted mass spectrometry investigation. Skyline can export similar
+        custom reports for documents populated with the data from Agilent, Bruker, SCIEX, Shimadzu, Thermo-Scientific and Waters instruments. The
+        ability to create consistent reports across instrument platforms greatly facilitates cross-instrument comparisons and large multi-site
+        studies.
+    </p>
+    <p>
+        Understanding how to create custom reports, tailored to your own experiments, is critical and described in detail in this Skyline custom
+        reports tutorial.
+    </p>
+    <p>
+        The second part of this tutorial will focus on the Results and Document Grid views in Skyline, which provide real-time access to many of the
+        data fields available in the custom reports. You will learn to customize columns in the Results and Document Grids for immediate access to
+        important values, as you inspect and refine your mass spectrometer output in Skyline. You will also learn to work with custom annotations to
+        provide a controlled vocabulary for further interpretation of and human interaction with your results, which can also be exported in custom
+        reports.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/CustomReports.zip">https://skyline.ms/tutorials/CustomReports.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\CustomReports
+    </p>
+    <p>
+        Now open the Study7_example.sky file in this new folder by double-clicking, or by using <b>Open</b> on the <b>File</b> menu
+        in a running instance of Skyline.
+    </p>
+    <h1>Data Overview</h1>
+    <p>
+        The dataset in Study7_example.sky is a subset of a study that was performed by the Clinical Proteomics Technology Assessment for Cancer (CPTAC)
+        consortium (T. Addona et al “Multi-site assessment of the precision and reproducibility of multiple reaction monitoring–based measurements of
+        proteins in plasma”, <i>Nature Biotechnology</i>, <b>2009</b>, 27, 633 - 641). This particular study describes a calibration curve
+        at different concentrations of analyte peptides and a constant spike in level of their corresponding isotope labeled internal standards. 
+    </p>
+    <p>
+        The Skyline file displays data from a subset of CPTAC Study 7.2 data (in the paper referred to as “Study II”) acquired at one CPTAC site. The
+        Skyline file shows data for 10 different peptide sequences monitored by LC-MRM-MS with concentrations for the analyte proteins (see light
+        peptides) ranging from concentrations at 500 fmol to 2.92 fmol (replicates J: 500 fmol; I: 275 fmol; H: 151 fmol; G: 83 fmol; F: 46 fmol; E:
+        25 fmol; and D: 8.55 fmol – lower concentration points although acquired are not included in this tutorial). Heavy internal standard (IS)
+        peptides are each spiked in at a concentration of 50 fmol.
+    </p>
+    <p>
+        To get a first impression of what this dataset looks like perform the following steps:
+    </p>
+    <ul>
+        <li>Click on the ‘HGFLPR’ peptide in the <b>Targets</b> view to select it.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b>, and click <b>Replicate Comparison</b>
+            (F8).</li>
+    </ul>
+    <p>
+        A new window appears that shows a bar graph of peak area for each replicate. The blue bars represent the heavy labeled version of this peptide
+        (always spiked in at 50 fmol), and the red bars represent the light analyte at varying concentrations (each concentration point was acquired
+        in technical quadruplicate).
+    </p>
+    <p>
+        Other tutorials describe how you can view and edit documents like this one. For the purposes of this tutorial, however, the Study7_example.sky
+        document has received an initial integration review, fully preparing if for reports to be exported and used in deeper statistical analysis.
+        Before continuing with the rest of the tutorial:
+    </p>
+    <ul>
+        <li>Close the <b>Peak Areas</b> view.</li>
+    </ul>
+    <h1>Creating a Simple Custom Report</h1>
+    <p>
+        To create your first Skyline custom report template, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and click <b>Report</b></li>
+    </ul>
+    <p class="keep-next">
+        An <b>Export Report</b> form will appear that will probably list at least the Skyline default report templates
+        shown below:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <p>
+        Continue creating a new Skyline custom report template by performing the following steps:
+    </p>
+    <ul>
+        <li>Click the <b>Edit list</b> button. </li>
+        <li>In the <b>Manage Reports</b> form, click the <b>Add</b> button.</li>
+        <li>In <b>Edit Report</b> form, enter ‘Overview’ in the <b>Report Name</b> field.</li>
+    </ul>
+    <p class="keep-next">
+        The form should now look like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>Expand the field groups <b>Peptides</b> and <b>Replicates</b> by clicking on the <b>‘+’</b> button to see
+            many more fields that can be exported.</li>
+        <li>From the expanded <b>Peptides</b> group click the checkbox next to the <b>Peptide Sequence</b> field.</li>
+    </ul>
+    <p class="keep-next">
+        The form should now look like this: 
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        Note that the fields in the <b>Edit Report</b> form, shown above, have a distinct hierarchical structure. At the highest level are
+        the <i>protein specific</i> fields which are shown at the bottom of the left box (<b>Protein Name</b>, <b>Protein
+            Description</b>, <b>Protein Sequence</b>, <b>Protein Note</b>), and the expanded <b>Replicates</b>
+        group below these that contains the general field <b>Replicate Name</b> among others. Skyline custom reports also provide
+        <i>peptide specific</i> fields, contained in the expanded <b>Peptides</b> group at the top of the left box, such as
+        <b>Peptide Sequence</b> and <b>Average Measured Retention Time</b> among others. The peptide specific fields include a
+        <b>Peptide Results</b> group, which is not expanded yet. Also unexpanded is the <b>Precursors</b> group, which contains
+        <i>precursor specific</i> fields, a <b>Precursors Results</b> group, and finally a <b>Transitions</b> field group. The
+        <b>Transitions</b> group, in turn, contains the <i>transition specific</i> fields and a corresponding <b>Transition
+            Results</b> group, containing the most detailed results values, such as <b>Retention Time, Fwhm, Start Time, End Time,
+            Area</b> and <b>Background</b>, from which many of the higher level results field values are derived.
+    </p>
+    <p>
+        In the Edit Report form continue to add fields to your first custom report template by performing the following steps:
+    </p>
+    <ul>
+        <li>Expand the <b>Precursors</b> group (located directly below the expanded <b>Peptides</b> group at the very top) by
+            clicking on the ’+’ icon.</li>
+        <li>Expand the <b>Precursor Results</b> group field now visible in the expanded <b>Precursor</b> group.</li>
+        <li>Click the checkbox next to the <b>Isotope Label Type</b> field from the expanded <b>Precursors</b> group. (If
+            necessary, scroll down or resize the form.)</li>
+        <li>Repeat this procedure to add the following additional fields from the precursor <b>Precursor Results</b> group to the report
+            template column list:<ul>
+                <li><b>Best Retention Time -</b> the <b>RetentionTime</b> value of the transition with the highest maximum
+                    intensity for the particular precursor</li>
+                <li><b>Total Area</b> - the summed <b>Area</b> values of all individual transitions for the particular precursor
+                    (for more information about these field values, click the “?” button on the tool strip at the top of the <b>Edit
+                        Report</b> form)</li>
+            </ul>
+        </li>
+        <li>Check the <b>Pivot Replicate Name</b> check box in the lower left corner of the <b>Edit Report</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave the <b>Edit Report</b> form looking like:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Preview</b> button in the upper right corner of the <b>Edit Report</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Preview</b> form should appear looking like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        The <b>Preview</b> function is quite helpful when designing report templates. At times it may even serve as a quick substitute for
+        exporting a report to a file. The copy button (<img src="../../shared/copy-button.png" />) on the toolbar will copy all of the data including the column
+        headers. You can also select all of the values in the <b>Preview</b> form by clicking the upper-left rectangle to the left of the
+        column headers. Pressing Ctrl-C, then copies the full report, excluding the column headers. After copying the data using either method, it can
+        be pasted into another tool, such as Excel.
+    </p>
+    <p>
+        The report preview displayed in part above, for replicates 7_2_D_01, and 7_2_D_02, shows precursor <b>Best Retention Time</b> and
+        <b>Total Area</b> for all 10 peptides in both their light and heavy form across all LC-MRM-MS acquisitions/experiments in the
+        columns to the right. By scrolling to the right, you can see columns for all 28 LC-MRM-MS acquisitions. Maximize the <b>Preview</b> form by clicking on the square in its upper right corner to see more columns. In this example 7_2_D_01, and 7_2_D_02 are taken from
+        samples at the same light analyte concentration. Therefore, <b>Total Area</b> values are expected to be similar. Each letter D
+        through J indicates a different light analyte concentration. Each concentration was acquired in technical quadruplicate, indicated by numbers
+        01 through 04. The heavy peptide concentrations were held constant at 50 fmol in all samples.
+    </p>
+    <p>
+        Close the <b>Preview</b> form by clicking the ‘x’ in the upper right corner to return to the <b>Edit Report</b> form again.
+        To save this report template:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        You will see the new <b>Overview</b> report template appear in the <b>Report</b> template list, as shown
+        below:
+    </p>
+    <p class="keep-next">
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button again to return to the <b>Export Report</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The new <b>Overview</b> report template is now added to the Skyline report template list. The <b>Export
+            Report</b> form should now look like:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        From the <b>Export Report</b> form you could now export your new report by selecting ‘Overview’ in the <b>Report</b> list
+        and clicking the <b>Export</b> button. For now, dismissing the form, in order to start the process from the original Skyline
+        document view.
+    </p>
+    <ul>
+        <li>Click the <b>Cancel</b> button.</li>
+    </ul>
+    <h1>Exporting Report Data to a File</h1>
+    <p>
+        To export the report you created and previewed above to a CSV file, do the following: 
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and click <b>Report</b>.</li>
+        <li>In the <b>Report</b> list select ’Overview’.</li>
+        <li>Click the <b>Export</b> button.</li>
+        <li>In the <b>File name</b> field of the <b>Export Report</b> form enter ‘Overview_Study7_example.csv’.</li>
+        <li>Click the <b>Save</b> button. </li>
+    </ul>
+    <p>
+        If you switch to a Windows File Explorer window, showing the CustomReports folder you created for this tutorial, you will see the
+        Overview_Study7_example.csv file you just created. Open it now with Excel and confirm that its contents are quite similar to the preview you
+        displayed earlier. Note that the file contains the column header names, which you cannot get by simply copying and pasting from the
+        <b>Preview</b> form. 
+    </p>
+    <h1>Sharing Report Templates</h1>
+    <p>
+        Report templates in Skyline are very flexible, easy to manage and modify, and share with collaborators. 
+    </p>
+    <p>
+        There are many reasons you might want to share a custom report template, whether you are participating in a large multi-laboratory study or
+        working with a single collaborator, whether you are providing the proteomics community with your own custom tool that depends on particular
+        fields from Skyline documents or providing supplementary information with a manuscript to allow others to repeat your protocols. The Skyline
+        support for instruments from multiple vendors means your shared report templates can be used to gather data from multiple sites with different
+        instrumentation.
+    </p>
+    <p>
+        To share the Skyline report template you created in this tutorial, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b>, and click <b>Report</b>.</li>
+        <li>Click the <b>Edit list</b> button in the <b>Export Report</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will present the <b>Manage Reports</b> form, as shown below:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <ul>
+        <li>Click on ‘Overview’ in the list to select it.</li>
+        <li>Click the <b>Share</b> button.</li>
+        <li>In the <b>File name</b> field of the <b>Save As</b> form enter ‘Overview’.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        The report template is saved to the file “Overview.skyr” in the CustomReports folder created for this tutorial. You could now share it with
+        your collaborators, with your own analysis tool or as supplementary data for a manuscript.
+    </p>
+    <h1>Managing Report Templates in Skyline</h1>
+    <p>
+        To gain an understanding of how others would use the custom report template you have shared, you need to first delete it from your system. Then
+        you can add it back using the shared report file “Overview.skyr” that you created in the previous section, as if you had acquired this shared
+        template from someone else.
+    </p>
+    <p>
+        The <b>Export Report</b> form should still be open after the steps performed in the previous section. To delete the ‘Overview’ report
+        template from your Skyline settings, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Select the ‘Overview’ item in the list of the <b>Manage Reports</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Manage Reports</b> form should now look like this: 
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <p>
+        To remove the ‘Overview’ item from the list, do the following: 
+    </p>
+    <ul>
+        <li>Click the <b>Remove</b> button.</li>
+        <li>Click the OK button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Export Report</b> form should now look like this: 
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        Just as when you first brought it up in this tutorial. 
+    </p>
+    <p>
+        To demonstrate how your collaborators would import a new report template into Skyline follow the steps below: 
+    </p>
+    <ul>
+        <li>Click the <b>Edit List</b> button to bring up the <b>Manage Reports</b> form.</li>
+        <li>Click the <b>Import</b> button </li>
+        <li>Select the ‘Overview.skyr’ file you created earlier in the <b>Open</b> form (which should still be showing the contents of the
+            ‘CustomReports’ folder for this tutorial).</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>Click the <b>OK</b> button on the <b>Manage Reports</b> form.</li>
+    </ul>
+    <p>
+        These actions should add an ‘Overview’ item back to the <b>Report</b> list in the <b>Export Report</b> form. To verify that
+        this is indeed the report you saved, perform the following steps: 
+    </p>
+    <ul>
+        <li>Select the ‘Overview’ item in the <b>Report</b> list.</li>
+        <li>Click the <b>Preview</b> button.</li>
+    </ul>
+    <p>
+        Skyline will present a <b>Preview</b> form containing the same values you saw earlier in this tutorial.
+    </p>
+    <h1>Modifying Existing Report Templates</h1>
+    <p>
+        You can, of course, create much more data rich reports than the simple ‘Overview’ report. You can do this by creating another new report
+        template, by editing your existing ‘Overview’ report, or, as shown below, by making a copy of the ‘Overview’ report and editing the copy. To
+        create a new, more complex report from a copy of the ‘Overview’ report template, perform the following steps: 
+    </p>
+    <ul>
+        <li>Click on <b>Edit List</b> button in the <b>Export Report</b> form.</li>
+        <li>Select the ‘Overview’ item in the <b>Report</b> list.</li>
+        <li>Click the <b>Copy</b> button and click <b>Open View Editor</b> on the menu that appears.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will present the <b>Edit Report</b> form with the fields from the ‘Overview’ report template already added,
+        as shown below: 
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        The report name for this new report template has not yet been assigned. To assign it now: 
+    </p>
+    <ul>
+        <li>In the <b>Report Name</b> field, enter ’Study 7’.</li>
+    </ul>
+    <p>
+        Continue to add more fields as described below by clicking the checkbox next to each field to add it to the column list for your report
+        template, on the right side of the <b>Edit Report</b> form: 
+    </p>
+    <ul>
+        <li>Expand the field groups <b>Peptides</b> and <b>Replicates</b> by clicking the <b>‘+’</b> icons to their
+            left.</li>
+        <li>From the expanded <b>Replicates</b> group, add the following fields:<ul>
+                <li><b>File Name</b> – the name of the file from which the data was imported</li>
+                <li><b>Sample Name</b> – the sample name, if the data was imported from a multi-sample WIFF file, or the file name again, if
+                    not</li>
+                <li><b>Replicate Name</b> – the replicate name assigned to the data during import</li>
+            </ul>
+        </li>
+        <li>From the top level add <b>Protein Name</b>.</li>
+        <li>From the expanded <b>Peptide</b> group, add the <b>Average Measured Retention Time</b> field – the average retention
+            time over all replicates.</li>
+        <li>Expand the <b>Peptide Results</b> group in the expanded <b>Peptide</b> group.</li>
+        <li>From the expanded <b>Peptide Results</b> group, add the following fields:<ul>
+                <li><b>Peptide Retention Time</b> – peptide RT for each replicate run</li>
+                <li><b>Ratio To Standard</b> – area ratio of light to heavy</li>
+            </ul>
+        </li>
+        <li>Expand the <b>Precursors</b> group.</li>
+        <li>From the expanded <b>Precursors</b> group, add the following fields:<ul>
+                <li><b>Charge</b> (displayed in the column list as <b>PrecursorCharge</b>)</li>
+                <li><b>Mz</b> (displayed in the column list as <b>PrecursorMz</b>)</li>
+            </ul>
+        </li>
+        <li>Expand the <b>Transitions</b> group.</li>
+        <li>From the expanded <b>Transitions</b> group, add the following fields:<ul>
+                <li><b>Product Charge</b></li>
+                <li><b>Product Mz</b></li>
+                <li><b>Fragment Ion</b> – the fragment ion name (e.g. y8, y10, b7, etc.)</li>
+            </ul>
+        </li>
+        <li>Expand the <b>Precursor Results</b> group in the <b>Precursors</b> group.</li>
+        <li>From the expanded precursor <b>Precursor Results</b> group, add the following fields:<ul>
+                <li><b>Max Fhwm</b> - the maximum full width at half max (FWHM) of the transitions for the particular precursor</li>
+                <li><b>Min Start Time</b> - elution time start at the baseline of a peak, which will be the same for all transitions (Q1/Q3)
+                    from the same precursor</li>
+                <li><b>Max End Time</b> - elution time end at the baseline of a peak, which will be the same for all transitions (Q1/Q3)
+                    from the same precursor</li>
+            </ul>
+        </li>
+        <li>Expand the <b>Transition Results</b> group in the <b>Transitions</b> group.</li>
+        <li>From the expanded <b>Transition Results</b> group, add the following fields:<ul>
+                <li><b>Retention Time</b> – retention time at the maximum intensity for a transition peak</li>
+                <li><b>Fwhm</b> – full width at half max for the transition peak</li>
+                <li><b>Start Time</b> – retention time at the starting transition peak integration boundary</li>
+                <li><b>End Time</b> – retention time at the ending transition peak integration boundary</li>
+                <li><b>Area</b> – area under the curve (AUC), minus background, for the transition peak</li>
+                <li><b>Height</b> – maximum intensity, minus background, for the transition peak</li>
+                <li><b>User Set Peak</b> - indicates whether the peak is unchanged from when Skyline first extracted chromatograms (FALSE)
+                    or changed by the user (TRUE). Other values are possible for peaks that may have been change by importing a peak boundaries file,
+                    or reintegrating with a trained model (both beyond the scope of this tutorial).</li>
+            </ul>
+        </li>
+        <li>Also, uncheck the <b>Pivot Replicate Name</b> checkbox, at the bottom of the form.</li>
+    </ul>
+    <p class="keep-next">
+        The report template should now contain a lot more detail than the original ‘Overview’ report template, and the <b>Edit
+            Report</b> form should look like this: 
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        To reorder some fields in this new report template, do the following: 
+    </p>
+    <ul>
+        <li>Select <b>Protein Name</b> in the column list on the right.</li>
+        <li>Click the up arrow on the far right until the <b>Protein Name</b> field is at the top of the list.</li>
+    </ul>
+    <p>
+        You can achieve whatever ordering suits you best, in this way, using the up and down arrow buttons on the far right, and you can remove fields
+        you may have added by mistake with the ‘X’ button above the arrow buttons, or by unchecking them in the list to the left. This tutorial,
+        however, will continue without making any further changes to the column list.
+    </p>
+    <p>
+        To preview the values for the current document in the report template you have created, do the following:
+    </p>
+    <ul>
+        <li>Click on the <b>Preview</b> button.</li>
+        <li>When you have reviewed the data, close the <b>Preview</b> form.</li>
+    </ul>
+    <p>
+        With data like this, where each peptide has both a light analyte and a matching heavy isotope labeled internal standard, it may be more
+        convenient to work with the data for these paired precursors all in a single row to allow you to compare matching transition values more
+        easily.
+    </p>
+    <p>
+        To make this change to the ‘Study 7’ report template, do the following:
+    </p>
+    <ul>
+        <li>Check the <b>Pivot Isotope Label</b> check box. </li>
+        <li>Click on the <b>Preview</b> button again to see how the report preview has changed.</li>
+    </ul>
+    <p>
+        All of the values for matching light and heavy transitions have been added to the same row. New columns have been added to achieve this, and
+        columns specific to an isotope label type have been given the prefixes ‘light’ and ‘heavy’.
+    </p>
+    <p class="keep-next">
+        The <b>Preview</b> form is shown below, scrolled to show both ‘light’ and ‘heavy’ column names:
+    </p>
+    <p>
+        <img src="s-13.png" /> 
+    </p>
+    <p>
+        You might notice that the column ‘heavy Isotope Label Type’ shows ‘heavy’ on every row, and that there is also a column ‘light Isotope Label
+        Type’ which shows ‘light’ on every column. When you are pivoting on a column, it does not add much to include it in your column list. Close
+        the <b>Preview</b> form, and do the following to remove the ‘Isotope Label Type’ field from this report:
+    </p>
+    <ul>
+        <li>Select ‘Isotope Label Type’ in the column list on the right. </li>
+        <li>Click the ‘<b>X</b>’ button on the far-right edge of the column list.</li>
+    </ul>
+    <p>
+        You can click the <b>Preview</b> button again to verify that both the ‘light Isotope Label Type’ and the ‘heavy Isotope Label Type’
+        columns have been removed. The next step in this tutorial, however, is to save your work by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Edit Report</b> form. </li>
+        <li>Click the <b>OK</b> button in the <b>Manage Reports</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        This will return you to the <b>Export Report</b> form, which should now look like this:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        From here, you could now continue to export the new ‘Study 7’ report to a CSV file by selecting it and clicking the <b>Export</b>
+        button, or click <b>Share</b> button to create file for sharing this new report. For this tutorial, however:
+    </p>
+    <ul>
+        <li>Click the <b>Cancel</b> button to return to the ‘Study7_example’ document.</li>
+    </ul>
+    <h1>Quality Control Summary Reports</h1>
+    <p>
+        So far you have created reports based on the values Skyline offers for each imported replicate of the peptides and transitions specified in a
+        document. Skyline also provides report fields with summary statistics across all imported replicates. These summary fields are particularly
+        suited to quality control by ensuring that replicate QC runs show good reproducibility and coefficients of variation (CV). Skyline report
+        templates can be designed with mean values and CV over all replicates for key parameters, such as peak area, FWHM and retention time.
+    </p>
+    <p>
+        This tutorial provides a summary report template that you will import into Skyline, but it also describes how to design such a summary report
+        template in the <b>Edit Report</b> form.
+    </p>
+    <p>
+        To get started, first open a new document by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Open</b>.</li>
+        <li>Navigate to the ‘CustomReports’ folder you created for this tutorial. (if necessary)</li>
+        <li>Select the ‘Study9S.sky’ file.</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        This file contains data acquired by two CPTAC sites over 10 LC-MRM-MS runs, injecting 22 analyte peptides at a constant concentration of 50
+        fmol over all 5 runs. Such a dataset could potentially be used to assess reproducibility of replicate injections. In this part of the tutorial
+        you will begin working with Live Reports, using the report to navigate around the document. To do this you will use the <b>Document
+            Grid</b> functionality instead of <b>Export Report</b>.
+    </p>
+    <p>
+        To view the data for key quality control metrics follow the steps below: 
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Document Grid</b>.</li>
+        <li>At the top of the <b>Document Grid</b> form, click the <b>Reports</b> button. A dropdown list will appear.</li>
+        <li>Choose <b>Manage Reports</b> from the dropdown list.</li>
+        <li>Click the import button in the <b>Manage Reports</b> form.</li>
+        <li>Select the Summary_stats.skyr file from the ‘CustomReports’ folder in the <b>Open</b> form. </li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        A new report named ‘Summary Statistics’ should have been added to the list of reports, and the <b>Manage
+            Reports</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <ul>
+        <li>Click <b>OK</b> to dismiss the <b>Manage Reports</b> form.</li>
+        <li>On the <b>Document Grid</b> form, click the <b>Reports</b> button and choose <b><i>Summary
+                    Statistics</i></b>.</li>
+    </ul>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p class="keep-next">
+        After you choose <b><i>Summary Statistics</i></b>, the <b>Document Grid</b> should look like the
+        following:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        This report shows that the data in Study9pilot.sky, taken from 5 replicate injections of the same sample, produce peptide CV values for
+        <b>FWHM</b> mostly below 5% and <b>Total Area</b> in most cases under 10% as indicated for the corresponding columns with
+        red boxes. In addition, the column called <b>Range Best Retention Time</b> (red box) lists the RT drift in minutes for any specific
+        peptide over the 5 replicate injections. In this case there is only minimal RT drift (&lt; 0.15 min, &lt; 10 sec).
+    </p>
+    <p>
+        These summary reports can be used to flag quality control issues early, before they impact data acquired on important samples. In this
+        particular dataset, HPLC and MS seem to behave acceptably. In one case, however, for the peptide INDISHTQSVSAK (from protein LEP), the CV
+        value for <b>Total Area</b> is 59.2% and for <b>FWHM</b> is 23.5% (circled in red), significantly differing from the CV
+        values of all the other peptides.
+    </p>
+    <p>
+        You can add a filter to this report so that only rows matching specific criteria are shown by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>Document Grid</b> form, click the <b>Reports</b> button and choose <b>Edit Report</b>.</li>
+        <li>In order to find the <b>Cv Total Area</b> column in the tree view on the left, double-click on that column name in the list on
+            the right.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Customize Report</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        To define a new filter on this report:
+    </p>
+    <ul>
+        <li>Click the <b>Filter</b> tab. The <b>Cv Total Area</b> column will still be selected in the tree view on the left.</li>
+        <li>Click the <b>Add &gt;&gt;</b> button to add that column to the list of filters.</li>
+        <li>Set the <b>Operation</b> to <b>Is Greater Than</b></li>
+        <li>In the <b>Value</b> column, enter ‘0.2’.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Customize Report</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        Note that even though the <b>Cv Total Area</b> column is displayed as a percentage in the <b>Document Grid</b>, on the
+        filter tab, the number “20%” is represented as “0.2”.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Customize Report</b> form to see the rows matching this filter.</li>
+    </ul>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <p>
+        To inspect the INDISHTQSVSAK peptide more closely, do the following: 
+    </p>
+    <ul>
+        <li>Close the <b>Document Grid</b> by clicking the red X in the upper right corner.</li>
+        <li>Select the peptide ‘INDISHTQSVSAK’ in the peptide tree view.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b>, and click <b>Replicate Comparison</b> (F7).</li>
+    </ul>
+    <p>
+        The <b>Peak Areas</b> view, showing the total peak area and the contribution of each transition for all 5 replicates, helps clarify
+        the problem that was indicated in the CV values of the summary report preview. For comparison, select several of the other peptides. The
+        <b>Peak Areas</b> view will show much better peak area reproducibility, as indicated by their much lower <b>Cv Total
+            Area</b> values in the summary report preview, where the majority of the peptides had CV values &lt; 10%.
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        Skyline summary reports can be used with quality control data to flag issues early, while Skyline itself provides powerful visual displays to
+        help get to the root of the problem quickly.
+    </p>
+    <h1>Results Grid View</h1>
+    <p>
+        In some cases, you may want to see some of the values presented in reports while you are editing the data, for immediate access to raw values
+        displayed in the Skyline charts. The Skyline <b>Results Grid</b> view provides real-time access to many of the data fields available
+        in the custom reports. In this sections of this tutorial, you will learn to use the <b>Results Grid</b> to gain immediate access to
+        important values and to annotate your data to capture important human insights, as you inspect and refine your mass spectrometer output in
+        Skyline.
+    </p>
+    <p>
+        To get started using the <b>Results Grid</b> view, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Other Grids</b>, and click <b>Results Grid</b> (Alt-F2).</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should now look something like this:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <p>
+        Now rearrange the windows for better viewing, by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Results Grid</b> caption and drag it to the bottom edge of the main window to dock it. </li>
+        <li>Click the <b>Peak Areas</b> caption and drag it to the right edge of the main window to dock it.</li>
+        <li>Click and drag the splitters between the various window panes to adjust the space allocation.</li>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b>, and click <b>Best Peak</b> (F11), if it is not already
+            selected.</li>
+        <li>In the <b>Targets</b> view, select the precursor ‘467.2440+++’ below the currently selected peptide.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave Skyline looking something like:
+    </p>
+    <p>
+        <img src="s-23.png" /> 
+    </p>
+    <p>
+        Skyline keeps its charts and the <b>Results Grid</b> in synch as you navigate the data. If you click on one of the other rows in the
+        <b>Results Grid</b>, Skyline changes the active chromatogram replicate tab. It also changes which bar in the <b>Peak
+            Areas</b> graph has the selection rectangle around it, as well as the selection in the <b>Replicates</b> list at the top of
+        the <b>Targets</b> view.
+    </p>
+    <ul>
+        <li>Now click on a different bar in the <b>Peak Areas</b> plot, or change the selection in the <b>Replicates</b> list.
+        </li>
+    </ul>
+    <p>
+        The other views will update, including the selected row in the <b>Results Grid</b>. 
+    </p>
+    <p>
+        The first column to the right of the <b>Replicate</b> column in the <b>Results Grid</b> is the <b>Precursor Replicate
+            Note</b>. This column allows you to associate a free text note with the <b>PrecursorResults</b> field group for the
+        selected precursor and replicate.
+    </p>
+    <ul>
+        <li>Type ‘Low signal’ in the first row with replicate name ‘Rep1’ for the currently selected precursor.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Results Grid</b> should now look like this:
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <p>
+        All of the other columns in the current <b>Results Grid</b> display are calculated by Skyline and cannot be edited, but you can
+        change which columns get displayed and in what order. Several of the columns are scrolled out of view in the image above. To reduce the number
+        of precursor results columns being displayed, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Reports</b> button at the top of the <b>Results Grid</b>, and choose <b>Customize Report</b>.
+        </li>
+        <li>In the <b>Report Name</b> field, enter “NewResultsGridView”.</li>
+        <li>On the <b>Customize Report</b> form, for each of the columns <b>Min Start Time</b>, <b>Max End Time</b>, and
+            <b>Library Dot Product</b>, click on the column name in the list box, and then click on the X button to the right of the list
+            box.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You can now review the results for other precursors by doing the following:
+    </p>
+    <ul>
+        <li>In the <b>Targets</b> view, click on a precursor element.</li>
+        <li>Use the arrow keys to change the <b>Targets</b> view selection to other precursor elements.</li>
+    </ul>
+    <p>
+        Finally, expand a precursor and review its transitions. You could apply the same technique to customize the columns being displayed for
+        transitions. Instead, continue now to the final section in this tutorial to learn how to add a custom annotation that you can control with the
+        <b>Results Grid</b>, and later export in a Skyline report.
+    </p>
+    <h1>Custom Annotations</h1>
+    <p>
+        Skyline supports three types of custom annotations:
+    </p>
+    <ol>
+        <li>Free text (similar to the <b>Note</b> which is available by default on all types)</li>
+        <li>Number</li>
+        <li>True/False</li>
+        <li>Value list</li>
+    </ol>
+    <p>
+        The last two types can be used to collect information in a controlled vocabulary, as you process your data, which can later be exported in a
+        Skyline report and used as input for statistical analysis with other tools.
+    </p>
+    <p>
+        To define a simple new True/False annotation, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Document Settings</b>.</li>
+        <li>Click the <b>Edit List</b> button on the <b>Annotations</b> tab of the <b>Document Settings</b> form.</li>
+        <li>Click the <b>Add</b> button on the <b>Define Annotations</b> form.</li>
+        <li>In the <b>Name</b> field on the <b>Define Annotation</b> form, enter ‘Tailing’.</li>
+        <li>In the <b>Type</b> field, select ‘True/False’.</li>
+        <li>In the <b>Applies To</b> list, check the <b>Precursor Results</b> checkbox.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Define Annotation</b> from should now look like this:
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        Now save the annotation and add it to your document by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Define Annotation</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Define Annotations</b> form.</li>
+        <li>Check the checkbox for the new ‘Tailing’ annotation.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Document Settings</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>Targets</b> view, select the precursor element ‘564.7746++’ for the peptide ‘ESDTSYVSLK’.</li>
+    </ul>
+    <p>
+        The new Tailing column will not appear in the custom report in the <b>Results Grid</b>, but you can add it:
+    </p>
+    <ul>
+        <li>Click the <b>Reports</b> dropdown at the top of the <b>Results Grid</b>, and choose <b>Edit Report</b>.</li>
+        <li>In the list view on the right, click on the third column down (“<b>Precursor Peak Found Ratio</b>”). New columns will be added
+            above this element.</li>
+        <li>Click the checkbox next to <b>Tailing</b> at the bottom of the tree view on the left.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Customize Report</b> form should now look like the following:
+    </p>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You should see the new <b>Tailing</b> column added to the <b>Results Grid</b> between <b>Precursor Replicate
+            Note</b> and <b>Precursor Peak Found Ratio</b>
+    </p>
+    <p class="keep-next">
+        The Skyline window should now look something like this:
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        The peaks in this document do not have a lot of issues, but this one does have some peak tailing. Check the checkbox in the new
+        <b>Tailing</b> column for the ‘Rep1’ row. Change selection to each of the other 5 rows. Decide whether you think the tailing is
+        worth noting and check the checkbox, if you think it is. Change the selected item in the precursor tree and then return to the ‘564.7746++’
+        precursor to verify that your changes were recorded.
+    </p>
+    <p>
+        You can now export the new <b>Tailing</b> annotation in a Skyline custom report. It will appear in the <b>Precursor
+            Results</b> field group.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        This tutorial has introduced you to the flexible custom reports Skyline offers for accessing the rich set of values associated with your
+        Skyline targeted mass spectrometry documents. These reports offer a smooth path from data analysis within Skyline to more complex statistical
+        analysis with Excel or custom programs coded in R, Matlab, Java or C++. You have learned about summary statistics available through these
+        report templates, which can provide quick indicators of data quality. You can share your custom report templates with collaborators or as
+        supplementary material in your publications, helping others to repeat your analyses with new data sets even from different instrumentation,
+        taking full advantage of the Skyline multi-vendor support. Finally, you learned how to use the Skyline <b>Results Grid</b> to gain
+        immediate access to many of the values available in Skyline reports and to work with custom annotations to add rich new information to your
+        documents. If you were not aware of these features before, they will certainly increase the scope of experiment you can achieve with Skyline.
+    </p>
+    <h1>Further Study</h1>
+    <p>
+        Descriptions of the available columns can be found in Skyline itself. If you hover the mouse over a column in the <b>Document
+            Grid</b> or the <b>Results Grid</b>, a tooltip will appear with a description of the column. Also, in the <b>Customize
+            Report</b> form, there is a “?” button on the toolbar which brings up a page with a description of every column that is available,
+        which can also be reached through <b>Help</b> &gt; <b>Documentation</b> &gt; <b>Reports</b>.
+    </p>
+    <p>
+        It is possible to group rows together and perform statistics on them. For some examples of using this feature, see this page:
+    </p>
+    <p>
+        <a href="https://skyline.ms/pivotedit.url">https://skyline.ms/pivotedit.url</a>
+    </p>
+</body>
+
+</html>

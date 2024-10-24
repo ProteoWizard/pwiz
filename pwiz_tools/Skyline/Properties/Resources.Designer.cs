@@ -6982,6 +6982,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule List Note.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_MoleculeListNote {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_MoleculeListNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Note.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_MoleculeNote {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_MoleculeNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Note.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Note {
@@ -7024,6 +7042,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Precursor_Name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Note.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_PrecursorNote {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_PrecursorNote", resourceCulture);
             }
         }
         

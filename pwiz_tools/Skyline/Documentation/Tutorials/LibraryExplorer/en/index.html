@@ -1,0 +1,601 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Spectral Library Explorer</h1>
+    <p>
+        Skyline has had the ability to build BiblioSpec spectral libraries<sup>1</sup> from experimental peptide search results for a long time.
+        Skyline also allows you to use any of the major publicly available spectral libraries in from the <a target="_blank"
+            href="ftp://ftp.thegpm.org/projects/xhunter/libs/">Global Proteome Machine</a> (GPM), <a target="_blank" href="http://peptide.nist.gov/">National
+            Institute of Standards</a> (NIST), and the <a target="_blank" href="http://www.peptideatlas.org/speclib/">Institute for Systems Biology</a> (ISB). These
+        features have been available since version 0.2, and are well documented in the <a
+            href="https://skyline.ms/tutorial_method_edit.url">Skyline Targeted Method
+            Editing</a> tutorial and <a href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=video_0-2">Skyline
+            Video 1: Method Building</a>.
+    </p>
+    <p>
+        This tutorial presents the Spectral Library Explorer. It will allow you to browse the contents of any library that can be used with Skyline,
+        whether you built it from your experimental results or downloaded it from a public repository. You can also use the library explorer to add
+        peptides to your Skyline document, either one at a time or all at once. By providing a background proteome and appropriate modification
+        settings, you can help Skyline interpret a raw spectral library in the context of your experiments, to create more information rich documents.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/LibraryExplorer.zip">https://skyline.ms/tutorials/LibraryExplorer.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like: 
+    </p>
+    <p>
+        C:\Users\brendanx\Documents 
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\LibraryExplorer
+    </p>
+    <p>
+        If you inspect the contents of this new folder, you will find that it contains only 3 files:
+    </p>
+    <ul>
+        <li>labeled_15N.blib – a spectral library containing spectra for unlabeled and 15N labeled peptides from the protein Adolase</li>
+        <li>phospho.blib – a spectral library containing spectra from a phosphorylation experiment</li>
+        <li>human.protdb – a small background proteome file built from part of a FASTA file for human proteins</li>
+    </ul>
+    <p>
+        Now start Skyline to learn more about what it can do with these files. 
+    </p>
+    <h1>Exploring a Library</h1>
+    <p>
+        Before you can explore a library, you need to tell Skyline where to find it. Since it is assumed that you will eventually use these libraries
+        as part of your Skyline editing environment, you achieve this by adding your library of interest to the global list of libraries for document
+        editing. If your objective is really just to browse through an existing library, as we will start out doing in this tutorial, you can probably
+        imagine a simpler implementation, but in practice, if you are using or building libraries for editing documents in Skyline, you will see that
+        the library explorer gives you quick access to your libraries.
+    </p>
+    <p>
+        To get started with the library containing 15N labeled peptides perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Library</b> form, enter ‘Experiment 15N’.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the LibraryExplorer folder created earlier.</li>
+        <li>Select the ‘labeled_15N.blib’ file.</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Library</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Libraries</b> form. </li>
+    </ul>
+    <p>
+        The <b>Libraries</b> list in the <b>Peptide Settings</b> form should now contain the ‘Experiment 15N’ library you just
+        created.
+    </p>
+    <ul>
+        <li>Check the ‘Experiment 15N’ checkbox to tell Skyline to use this library in the current document. </li>
+        <li>If you have any other libraries in this list checked, uncheck them now.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should now look something like this:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <p>
+        Next, ensure that peptide modifications are set to the default values:
+    </p>
+    <ul>
+        <li>Click the <b>Modifications</b> tab.</li>
+    </ul>
+    <p class="keep-next">
+        The form should look like this: 
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>If you have other modifications that do not appear here, uncheck all but the ‘Carbamidomethyl (C)’ modification shown above.</li>
+        <li>Click the <b>OK</b> button to close the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <p>
+        To open the library explorer and view the contents of the library you just added, do the following: 
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Spectral Libraries</b>. </li>
+    </ul>
+    <p>
+        A message is presented about the modifications Skyline has detected in the Experiment 15N library. In your own work, you will often want to
+        accept these automatically detected peptide modifications, but for this tutorial:
+    </p>
+    <ul>
+        <li>Click the <b>No</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The library explorer should look something like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        On the left side of the explorer, the <b>Library</b> list should show that you are currently viewing the Experiment 15N library. The
+        <b>Peptide</b> list below it shows the peptide sequences and charge states which have been matched to the spectra in this library.
+        Above the peptide list is a filter box and below it are paging controls. The <b>&lt;&lt;Previous</b> and
+        <b>Next&gt;&gt;</b> buttons are disabled for this library, because all of its spectra can be listed in a single page. At the very
+        bottom, the library explorer reports the page contains 1 through 43 of a total 43 peptide spectrum matches.
+    </p>
+    <p>
+        As in the Skyline peptide document view, modified amino acid residues appear bold and underlined in the library explorer peptide list. Hover
+        your cursor over any modified peptide, and Skyline will display a tip with the modification masses listed after each modified amino acid
+        residue.
+    </p>
+    <p>
+        Some of the listed peptides show a peptide icon to the left of the sequence, while others do not. The icon indicates that the current document
+        modification settings match the modified state of the peptide in the library. None of the peptides where the entire sequence is bold and
+        underlined show the icon. This means that the current document settings do not explain 15N isotope modification of all amino acid residues.
+        The modified peptide <b><u>C</u></b>PLPRPWALTFSYGR+++ does show an icon, however, because the current document specifies the
+        ‘Carbamidomethyl (C)’ modification. If you hover over the peptide, you can see that the modification on the Cysteine is listed C[+57.0] as
+        expected.
+    </p>
+    <p>
+        To narrow the list of peptides with the peptide filter box, do the following:
+    </p>
+    <ul>
+        <li>Click in the text box above the <b>Peptide</b> list.</li>
+        <li>Type ‘Q’.</li>
+    </ul>
+    <p>
+        The library explorer will display all peptides with the sequence prefix you type in this text box. In this case, the library is small enough
+        that the single Q is enough to reduce the list to the various modified states for the two peptides QVLFSADDR++ and QVLFSADDRVK+++.
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        Hover the cursor over the one displayed as <b><u>Q</u></b>VLFSADDR++, and you will see that the glutamine modification is displayed
+        in the tip as Q[+17.0] for a Gln-&gt;pyro-Glu modification. To understand why Skyline displays both <b><u>QVLFSADDR</u></b>++ and
+        <b><u>QVLFSADDRVK</u></b>+++ twice, you can hover the cursor over these peptides as well. You will find that they represent all 15N
+        modified peptides with and without the Gln-&gt;pyro-Glu modification.
+    </p>
+    <p>
+        Turning your attention to the right side of the library explorer, you will see a Skyline MS/MS spectrum chart similar to the one Skyline
+        displays during document editing, and in fact this chart supports most of the same features. To explore a few of these features, perform the
+        following steps:
+    </p>
+    <ul>
+        <li>Backspace over the ‘Q’ and type ‘I’.</li>
+        <li>On the right-side toolbar, if not already pushed, click the <b>B</b> button to show b-ions. </li>
+        <li>If not already pushed, click the <b>2</b> button to show charge 2 product ions. </li>
+    </ul>
+    <p>
+        Notice that the toolbar also contains buttons to copy, save and print the current chart, and as with most charts in Skyline, further options
+        can be accessed through a right-click menu.
+    </p>
+    <ul>
+        <li>Right- click on the spectrum chart, and click <b>Observed m/z Values</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The library explorer should now look something like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        The chart is pretty crowded in a window small enough to paste into this document. Hopefully you are using a larger window, but you can also
+        zoom and navigate in this graph as you would graphs in the main Skyline window.
+    </p>
+    <ul>
+        <li>Use the mouse scroll-wheel to zoom into the current chart.</li>
+        <li>Holding the Ctrl key down, click and drag to pan from side to side in the zoomed chart.</li>
+        <li>Right-click on the chart, and click <b>Undo All Zoom/Pan</b>.</li>
+    </ul>
+    <p>
+        Now clear the filter box above the <b>Peptide</b> list, so that all peptides are again displayed. 
+    </p>
+    <h1>Matching Modifications</h1>
+    <p>
+        As noted, many of the peptides in the library do not match the current peptide modification settings for your document. To address this issue,
+        perform the following steps, without closing the <b>Spectral Library Explorer</b>:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>. </li>
+        <li>Click the <b>Modifications</b> tab. </li>
+    </ul>
+    <p>
+        To add the Gln-&gt;pyro-Glu modification: 
+    </p>
+    <ul>
+        <li>Click the <b>Edit List</b> button next to the <b>Structural Modifications</b> list. </li>
+        <li>Click the <b>Add</b> button.</li>
+        <li>In the <b>Name</b> field, enter “Gln” and press the down-arrow key.</li>
+        <li>Check the <b>Variable</b> checkbox.</li>
+    </ul>
+    <p class="keep-next">
+        This should select the modification “Gln-&gt;pyro-Glu (N-term Q)” and the <b>Edit Structural Modification</b> form
+        should look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Edit Structural Modification</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Edit Structural Modifications</b> form.</li>
+        <li>Check the checkbox for the “Gln-&gt;pyro-Glu (N-term Q)” modification you just created.</li>
+    </ul>
+    <p>
+        To add a 15N isotopic modification on all amino acid residues: 
+    </p>
+    <ul>
+        <li>Uncheck any entries in the <b>Isotope modifications</b> list which you may have checked.</li>
+        <li>Click the <b>Edit List</b> button next to <b>Isotope modifications</b>. </li>
+        <li>Click the <b>Add Button</b>.</li>
+        <li>In the <b>Name</b> field, choose “Label:15N”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should look like this:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Edit Isotope Modification</b> form. </li>
+        <li>Click the <b>OK</b> button on the <b>Edit Isotope Modifications</b> form. </li>
+        <li>Check the checkbox for the “Label:15N” modification you just created. </li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button for the <b>Peptide Settings</b> form. </li>
+        <li>Return to the <b>Spectral Library Explorer</b>.</li>
+        <li>Scroll down to the peptides beginning with Q.</li>
+    </ul>
+    <p class="keep-next">
+        You should find the peptide list looking like this:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <p>
+        All of the peptides now display icons to the left, indicating your document modifications match those found in the library, and modifications
+        are now visually displayed on the peptide sequence text just as they would be in the document peptide view. Isotope modifications are
+        highlighted in blue, and it is now possible to distinguish visually between the 15N labeled <b><span
+                class="blue">QVLFSADDR</span></b> and its pyro-Glu modified form <b><u><span class="blue">Q</span></u><span
+                class="blue">VLFSADDR</span></b>.
+    </p>
+    <h1>Adding Library Peptides to the Document</h1>
+    <p>
+        The Spectral Library Explorer makes it simple to add library peptides to your document.
+    </p>
+    <ul>
+        <li>Select the first peptide (<b><span class="blue">AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY</span></b><span class="blue">) </span>in the
+            peptide list.</li>
+        <li>Click the <b>Add</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The following form may appear: 
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        This form appears because the peptide <b><span class="blue">AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY</span></b> contains a missed cleavage,
+        and the default document settings filter for only peptides with no missed cleavages. The maximum number of missed cleavages allowed can be
+        changed in the <b>Digestion</b> tab of the <b>Peptide Settings</b> form, but for now do the following:
+    </p>
+    <ul>
+        <li>Choose <b>Include all peptides</b> and click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The peptide <b><span class="blue">AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY</span></b> is added to the document in a peptide list named
+        “Library Peptides”. Notice also that the peptide has been matched to the library and that the <b>Library Match</b> graph is
+        displayed in the Skyline main window. 
+    </p>
+    <p>
+        To add more peptides from the <b>Spectral Library Explorer</b>, do the following:
+    </p>
+    <ul>
+        <li>In the <b>Peptide</b> filter box, enter “DNA” to select the peptide Select “DNAGAATEEFIK++”.</li>
+        <li>Click the <b>Add</b> button.</li>
+        <li>If the light and heavy precursors are not showing in the peptide tree view, on the <b>Edit</b> menu, choose <b>Expand
+                All</b> and click <b>Peptides</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Notice the toolbar that has been added above the <b>MS/MS Spectrum</b> graph in the main Skyline window, with the
+        <b>Spectrum</b> dropdown list.
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        By default, Skyline uses the light spectrum if both the heavy and light spectra are available. You can still view the heavy spectrum by
+        choosing “Experiment 15N (heavy)” from the <b>Spectrum</b> list. You can switch between the “Experiment 15N” and “Experiment 15N
+        (heavy)” selection and see how the displayed “observed <i>m/z</i> values” of the fragment ion masses change accordingly.
+    </p>
+    <p>
+        Add peptides for the other spectra in the filtered list by doing the following: 
+    </p>
+    <ul>
+        <li>Select the third peptide “DNAGAATEEFIKR++”.</li>
+        <li>Click the <b>Add</b> button. </li>
+        <li>Click the <b>OK</b> button to confirm adding this missed cleavage peptide, if asked.</li>
+        <li>Select the fourth peptide “<b><span class="blue">DNAGAATEEFIKR</span></b>+++”.</li>
+        <li>Click the <b>Add</b> button.</li>
+        <li>Click the <b>OK</b> button to confirm adding this missed cleavage peptide, if asked. </li>
+    </ul>
+    <p>
+        Note that the final addition simply adds a new charge state to the peptide you added previously.
+    </p>
+    <p>
+        To prepare for the next section of this tutorial, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Close</b> button in <b>Spectral Library Explorer</b> form.</li>
+        <li>Save the current document as “15N_library_peptides.sky”.</li>
+        <li>Click the new document button on the toolbar.</li>
+    </ul>
+    <h1>Neutral Losses</h1>
+    <p>
+        The other library included with this tutorial contains a number of peptides with phosphorylated serines (Ser + HPO<sub>3</sub> = Ser + 80 Da),
+        which means the MS/MS spectra often contain high intensity peaks for fragment ions with a neutral loss of H<sub>3</sub>PO<sub>4</sub> (-98
+        Da). By correctly matching your document modifications to your spectral library modifications, as you learned to do in the section on Matching
+        Modifications, the Spectral Library Explorer can correctly label peaks in the MS/MS spectra with neutral loss ions.
+    </p>
+    <p>
+        To prepare for the second library of this tutorial, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Modifications</b> tab, if it is not already showing.</li>
+        <li>Uncheck the checkboxes for the “Gln-&gt;pyro-Glu (N-term Q)” and “Label:15N” modifications. </li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should now something look like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        To add the second library, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>Uncheck the “Experiment 15N” library checkbox.</li>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>In the <b>Name</b> field, enter “Human Phospho”.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the LibraryExplorer folder for this tutorial.</li>
+        <li>Double-click on “phospho.blib”.</li>
+        <li>Click the <b>OK</b> button on the <b>Edit Library</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Edit Libraries</b> form.</li>
+        <li>Check the “Human Phospho” library checkbox.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should now look something like this:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <p>
+        You are now ready to explore the Human Phospho library.
+    </p>
+    <ul>
+        <li>Click the <b>Explore</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will present the following message:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Yes</b> button, to save the new settings and open the <b>Spectral Library Explorer</b>.</li>
+    </ul>
+    <p>
+        Again a message will be presented with a list of the peptide modifications that Skyline has detected in the library, and again for this
+        tutorial simply
+    </p>
+    <ul>
+        <li>Click the <b>No</b> button.</li>
+    </ul>
+    <p>
+        You can see that most of peptides in the library do not yet match the current document settings by noting that they lack peptide icons to the
+        left of the peptide sequence.
+    </p>
+    <ul>
+        <li>In the <b>Peptide</b> field enter “AISS”.</li>
+    </ul>
+    <p class="keep-next">
+        This will narrow the list of peptides to just two with spectrum charts containing several large unidentified MS/MS peaks, as
+        shown below.
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-15.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-16.png" />
+            </td>
+        </tr>
+    </table>
+    <p>
+        You can improve this situation by doing the following, without closing the library explorer:
+    </p>
+    <ul>
+        <li>On the <b>Settings Menu</b>, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Modifications</b> tab.</li>
+        <li>Click the <b>Edit List</b> button next to <b>Structural Modifications</b>.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Structural Modifications</b> form.</li>
+        <li>Enter “Phospho (ST)” in the <b>Name</b> field of the <b>Edit Structural Modification</b> form.</li>
+        <li>In the <b>Amino Acid</b> field, enter “S, T”.</li>
+        <li>Check the <b>Variable</b> checkbox.</li>
+        <li>In the <b>Chemical Formula</b> field, enter “HO3P”.</li>
+        <li>Click the <b>Loss &gt;&gt;</b> button.</li>
+        <li>Click the blue “<b>+</b>” button.</li>
+        <li>Enter “H3O4P” in the <b>Neutral Loss Chemical Formula</b> field of the <b>Edit Neutral Loss</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Edit Neutral Loss</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Structural Modification</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        Note: You could have also simply chosen the “Phospho (ST)” modification from the <b>Name</b> dropdown list to get the same end
+        result. The full steps were included to give you some idea of how to work with neutral loss modifications yourself.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Edit Structural Modification</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Edit Structural Modifications</b> form.</li>
+        <li>Check the checkbox next to the new “Phospho (ST)” modification.</li>
+        <li>Click the <b>Ok</b> button the <b>Peptide Settings Form</b>.</li>
+        <li>Return to the <b>Spectral Library Explorer</b>.</li>
+        <li>Right-click the spectrum graph, and click <b>Precursor</b> to show precursor ions.</li>
+    </ul>
+    <p class="keep-next">
+        The two filtered peptides should both now have peptide icons to the right of their peptide sequences, and their spectrum
+        charts should look like:
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-18.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-19.png" />
+            </td>
+        </tr>
+    </table>
+    <p>
+        Note the ions which have been added with “-98” losses specified, including both “precursor -98” ions. In order to correctly identify loss ions,
+        Skyline must have a matching modification in its settings with a neutral loss specified. You can click the <b>Undo</b> and
+        <b>Redo</b> buttons in the Skyline toolbar to review the difference in ion labeling between having a matching modification and not
+        having one.
+    </p>
+    <p>
+        You may notice that the AI<b><u>S</u></b>SANLLVR spectrum has two large peaks which remain unassigned to product ions of the peptide.
+        This should give you pause in using it further in your targeted experiments. More experience with spectral libraries will likely show you that
+        almost regardless of your peptide search settings and score cut-off in building your library, there will be questionable spectra. In this
+        case, to gain more confidence in the spectra, you could consult Swissprot, where you would find that both of the peptides
+        AI<b><u>S</u></b>SANLLVR and AI<b><u>S</u></b>SDMFFGR are listed as being phosphorylated exactly as assigned by this
+        search engine. Clearly, the rich access Skyline provides to the contents of your spectral libraries is a great advantage in working with them.
+    </p>
+    <h1>Matching Library Peptides to Proteins</h1>
+    <p>
+        You can use the Spectral Library Explorer to match library peptides to protein sequences in a background proteome, and add peptides to a
+        document with the correct protein associations. To learn more about background proteome files and how to create them yourself, consult the <a
+            href="https://skyline.ms/tutorial_method_edit.url">Targeted Method
+            Editing</a> tutorial.
+    </p>
+    <p>
+        To add the background proteome supplied with this tutorial to your current document, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Digestion</b> tab.</li>
+        <li>From the <b>Background proteome</b> dropdown list, choose <b>&lt;Add…&gt;</b>.</li>
+        <li>Enter “Human (mini)” in the <b>Name</b> field of the <b>Edit Background Proteome</b> form.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the LibraryExplorer folder for this tutorial.</li>
+        <li>Double-click the “human.protdb” file.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Background Proteome</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Edit Background Proteome</b> form.</li>
+        <li>In the <b>Max missed cleavages</b> dropdown list, choose “2” to allow missed cleavages.</li>
+        <li>Click the <b>OK</b> button on the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <p>
+        Return to the library explorer and clear the filter box in the <b>Peptide</b> field so that all peptides are again showing. If you
+        scroll through the list of peptides, you will see that most of them now show a peptide icon to the right of the peptide sequence. Some do not,
+        however, and you can explore their tips to determine that you would still have to add modifications for oxidation on Methionine and N-terminal
+        acetylation to cover all of the modifications in this library.
+    </p>
+    <p>
+        Instead, perform the following steps to add to your document all of the peptides for which Skyline understands the modifications:
+    </p>
+    <ul>
+        <li>Check the <b>Associate Proteins</b> checkbox in the <b>Spectral Library Explorer</b>.</li>
+        <li>Click the <b>Add All</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This should bring up a form that looks like this:
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <ul>
+        <li>For the <b>163 peptides matching multiple proteins</b>, choose/change to <b>Add to only the first matching
+                protein</b>.</li>
+        <li>For the <b>2 peptides without matching proteins</b>, choose <b>Add to a peptide list</b>.</li>
+        <li>For the <b>199 peptides not matching the current filter settings</b>, choose <b>Include all peptides</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will display a message that looks like this:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <p>
+        This form gives you a preview of the changes that will be made to your document. The 40 unmatched library entries refer to the spectra for
+        which Skyline is still unable to identify the peptide modifications.
+    </p>
+    <ul>
+        <li>Click the <b>Add All</b> button to confirm the operation.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave the main Skyline window looking something like this:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <p>
+        As you can see from inspecting the status bar at the bottom-right of the window, Skyline has added all of the proteins, peptides, precursors
+        and transitions it promised. The peptides with no matching proteins in the background proteome have been added to a ‘Library Peptides’ list,
+        but all of the others have been correctly associated with and grouped by proteins in which they can be found in the background proteome.
+        Though, as mentioned in the first message, many of these peptides belong to multiple proteins. It may be worth using other features in Skyline
+        to explore whether these are merely protein homologues for the same gene, or whether these peptides do not uniquely identify a protein of
+        interest.
+    </p>
+    <p>
+        Of course, this document is just a start, to show you how quickly Skyline allows you to move from the peptide search results of your shotgun
+        proteomics experiments to an initial unrefined, targeted method. Other tutorials cover how to edit and refine a method like this further.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        With the addition of the Spectral Library Explorer, Skyline now provides rich access to the contents of spectral libraries built from peptide
+        search results. You can inspect the contents of any spectral library, and questions about which peptides, charge states and modification
+        states it contains are now easily answered. The Spectral Library Explorer and Skyline itself provide a powerful bridge between exploratory
+        peptide search experiments and targeted investigation. Having completed this tutorial, you should be ready to take full advantage of these
+        features in your own experiments.
+    </p>
+    <h1>Reference List</h1>
+    <p>
+         1. Frewen,B. &amp; MacCoss,M.J. Using BiblioSpec for creating and searching tandem MS peptide libraries. <i>Curr. Protoc.
+            Bioinformatics</i>. <b>Chapter 13</b>, Unit (2007).
+    </p>
+</body>
+
+</html>

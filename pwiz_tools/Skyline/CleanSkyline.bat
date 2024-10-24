@@ -50,6 +50,8 @@ IF EXIST Executables\Installer\FileList64.txt del /q Executables\Installer\FileL
 IF EXIST Executables\Hardklor\obj rmdir /s /q Executables\Hardklor\obj
 IF EXIST Executables\Hardklor\x64 rmdir /s /q Executables\Hardklor\x64
 IF EXIST Executables\SkylineBatch\SkylineBatch\Properties\AssemblyInfo.cs del /q Executables\SkylineBatch\SkylineBatch\Properties\AssemblyInfo.cs
+IF EXIST Executables\DevTools\TutorialLocalizer\obj rmdir /s /q Executables\DevTools\TutorialLocalizer\obj 
+IF EXIST Executables\DevTools\TutorialLocalizer\bin rmdir /s /q Executables\DevTools\TutorialLocalizer\bin
 IF EXIST Properties\AssemblyInfo.cs del /q Properties\AssemblyInfo.cs
 IF EXIST SkylineCmd\Properties\AssemblyInfo.cs del /q SkylineCmd\Properties\AssemblyInfo.cs
 IF EXIST SkylineNightly\Properties\AssemblyInfo.cs del /q SkylineNightly\Properties\AssemblyInfo.cs

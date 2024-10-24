@@ -70,7 +70,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>AutoQC.ico</ApplicationIcon>
@@ -123,6 +123,7 @@
   <ItemGroup>
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcConfigManager.cs" />
+    <Compile Include="AnnotationsFileWatcher.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -197,15 +198,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="AutoQC.ico" />
-    <EmbeddedResource Include="AutoQCConfigForm.ja.resx">
-      <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="AutoQCConfigForm.zh-Hans.resx">
-      <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.ja.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -214,23 +206,12 @@
       <DependentUpon>AutoQCConfigForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.zh-Hans.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="PanoramaControl.resx">
       <DependentUpon>PanoramaControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.ja.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

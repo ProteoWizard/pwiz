@@ -61,6 +61,8 @@ namespace pwiz.Skyline.Model
             var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
             if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return;
+            if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
+                return;
 
             runTime = chromGroupInfo.RunStartTime;
 
@@ -221,6 +223,8 @@ namespace pwiz.Skyline.Model
             var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));
             if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return null;
+            if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
+                return null;
 
             var matchData = new List<PeakMatchData>();
             double totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
@@ -263,7 +267,8 @@ namespace pwiz.Skyline.Model
 
                     float scale = (chromGroupMaxTime - chromGroupMinTime)/(referenceTarget.MaxTime - referenceTarget.MinTime);
                     manualMatch = MakePeakMatchBetween(scale, referenceTarget, prev, next);
-                    if (chromGroupMinTime >= manualMatch.EndTime || manualMatch.StartTime >= chromGroupMaxTime)
+                    if (chromGroupMinTime >= manualMatch.EndTime || manualMatch.StartTime >= chromGroupMaxTime ||
+                        manualMatch.EndTime <= manualMatch.StartTime)
                         manualMatch = null;
 
                     float curMinTime = prev == null ? chromGroupMinTime : prev.AlignedPeak.RetentionTime;
@@ -305,16 +310,21 @@ namespace pwiz.Skyline.Model
             ChromatogramGroupInfo chromGroupInfo, int peakIndex, float mzMatchTolerance)
         {
             ChromPeak? largestPeak = null;
-            foreach (var peak in
-                     from transitionDocNode in nodeTranGroup.Transitions
-                     select chromGroupInfo.GetTransitionInfo(transitionDocNode, mzMatchTolerance)
-                     into chromInfo where chromInfo != null
-                     select chromInfo.GetPeak(peakIndex))
+            foreach (var peak in GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance)
+                         .Select(chromInfo => chromInfo.GetPeak(peakIndex)))
             {
                 if (largestPeak == null || peak.Height > largestPeak.Value.Height)
                     largestPeak = peak;
             }
             return largestPeak;
+        }
+
+        private static IEnumerable<ChromatogramInfo> GetTransitionChromatogramInfos(TransitionGroupDocNode nodeTranGroup,
+            ChromatogramGroupInfo chromGroupInfo, float mzMatchTolerance)
+        {
+            return nodeTranGroup.Transitions
+                .Select(transition => chromGroupInfo.GetTransitionInfo(transition, mzMatchTolerance))
+                .Where(chromatogramInfo => chromatogramInfo != null);
         }
 
         private static PeakMatch MakePeakMatchBetween(float scale, PeakMatchData referenceTarget, PeakAlignment prev, PeakAlignment next)

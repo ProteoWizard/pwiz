@@ -1,0 +1,474 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline 绝对定量</h1>
+    <h1>简介</h1>
+    <p>
+        本教程介绍如何使用“选择性反应监测”（SRM）质谱法确定目标蛋白质的绝对丰度。具体而言，我们将演示如何使用带有重肽内标的外部校准曲线进行归一化。
+    </p>
+    <p>
+        肽段的绝对丰度测量值可以使用单点或多点校准来获取。单点内标测量绝对丰度的方法是将已知丰度的目标肽段的“标准”重肽版本加入到目标样品后，计算样品中目标轻肽与“标准”目标重肽的相对丰度来得到“样品”中目标肽段的绝对丰度<sup>1</sup>。该方法的缺点之一是，假设轻重比为
+        2，意味着轻肽的丰度实际上是重肽的两倍 – 这是认为肽段响应的斜率为 1。此外，使用单点内部校准的方法时基于这样一种假设：轻肽和重肽在质谱检测仪中的响应均在线性范围内。然而，这些假设并不总是正确的<sup>2,3,4,5</sup>。
+    </p>
+    <p>
+        多点外部校准实验可纠正肽段响应斜率不为 1 的情况。测量多个已知丰度的“标准”肽段校准点的信号强度并生成校准曲线，可完成校准。对于样品中此肽段的信号强度，可使用该校准曲线来计算目标肽段在样品中的浓度<sup>3</sup>。该方法的缺点之一是需要多次进样质谱仪来生成校准曲线。 
+    </p>
+    <p>
+        为了使用外部校准曲线时提高绝对丰度测量的精度，往往使用稳定同位素标记的内标<sup>6</sup>。肽段离子强度的测量不精确的问题，通常源自样品制备、自动进样器或色谱的不规则性。通过向每个校准物和样品中添加相同量的标准重肽，可以测量校准物与标准重肽比值或样品与标准重肽比值，即归一化。由于该比值不受样品制备、自动进样器或色谱不规则性的影响，因此这种方法更好。所以，通过使用外部校准曲线进行肽段的绝对定量及对内标重肽进行归一化，可获得最准确、最精密的测量结果，同时最大程度减少宝贵样品的必须使用量。
+    </p>
+    <h1>实验概述</h1>
+    <p>
+        本教程将结合 Stergachis 等人发表的数据<sup>7</sup>，使用 GST 标签中具有“蛋白特征性”的肽段来测量含 GST 标签的蛋白质的绝对丰度（<b>教程图
+            1A</b>）。对于任何绝对定量的实验，必须先确定一种或多种用于定量目标蛋白质的“蛋白特征性”肽段。由于肽段 IEAIPQIDK相对于其他含 GST
+        标签的胰蛋白酶肽段有较强的信号强度（未发表），因而被确定具有“蛋白特征性”。而且，与其他人类谷胱甘肽的结合蛋白不同，该肽段能独特地识别血吸虫 的GST 标签。 
+    </p>
+    <p>
+        在该实验中，使用体外转录/翻译产生了包含框内 GST 标签的 FOXN1 蛋白，并使用谷胱甘肽树脂纯化全长蛋白（<b>教程图 1B</b>）。然后将重肽 IEAIPQIDK 加标到洗脱缓冲液中，酶解后在 Thermo TSQ Vantage
+        三重四极杆质谱仪上使用选择性反应监测 (SRM)分析样品。使用不同数量的轻肽 IEAIPQIDK（生成的纯度 &gt; 97％）生成外部校准曲线，并通过氨基酸分析确定浓度。重肽 IEAIPQIDK 也按照与 FOXN1-GST
+        样品中相同的浓度加标到这些校准物中（<b>教程图 1C</b>）。务必注意的是，只要每个样品中的重肽浓度相同，那么浓度的高低便毫无关系。不过，样品中的重肽量与源自 FOXN1-GST 的轻肽量相似时最佳。同样，使源自 FOXN1-GST
+        的轻肽浓度处于使用不同校准物测试的浓度范围中间时最佳。
+    </p>
+    <p>
+        <img src="s-experimental-overview.png" />
+    </p>
+    <p>
+        <b>教程图 1. 实验概述</b>
+    </p>
+    <p>
+        (<b>A</b>) 血吸虫 GST 标签的蛋白序列。红色表示用于定量用途的胰蛋白酶肽段。
+    </p>
+    <p>
+        (<b>B</b>) 标记蛋白的合成、富集、酶解和分析示意图。
+    </p>
+    <p>
+        (<b>C</b>) 监测样品及每个样品中 IEAIPQIDK 轻肽/重肽的丰度。
+    </p>
+    <h1>入门指南</h1>
+    <p>
+        开始本教程之前，请下载下列 ZIP 文件：
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/AbsoluteQuant.zip">https://skyline.ms/tutorials/AbsoluteQuant.zip</a>
+    </p>
+    <p>
+        将文件解压到您电脑上的某个文件夹，比如：
+    </p>
+    <p>
+        C:\Users\absterga\Documents
+    </p>
+    <p>
+        该操作将创建一个新文件夹：
+    </p>
+    <p>
+        C:\Users\absterga\Documents\AbsoluteQuant
+    </p>
+    <p>
+        如果您在开始学习本教程之前就一直在用 Skyline，最好将 Skyline 恢复为默认设置，操作如下： 
+    </p>
+    <ul>
+        <li>启动 Skyline。</li>
+        <li>在<b>起始页</b>上单击<b>空白文档</b>，显示如下： </li>
+    </ul>
+    <p>
+        <img src="../../shared/zh-CHS/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>在<b>设置</b>菜单中单击<b>默认值。</b></li>
+        <li>在询问您是否保存当前设置时，单击表单上的<b>否</b>。</li>
+    </ul>
+    <p>
+        该 Skyline 实例中的文档设置现已重置为默认值。
+    </p>
+    <p>
+        由于本教程涉及蛋白质组主题，因此您可以执行以下操作来选择蛋白质组界面：
+    </p>
+    <ul class="keep-next">
+        <li>单击 Skyline 窗口右上角的用户界面控件，然后单击如下的<b>蛋白质组学界面</b>： </li>
+    </ul>
+    <p>
+        <img src="../../shared/zh-CHS/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline 将在蛋白质组模式下运行，Skyline 窗口的右上角随之显示蛋白质图标<img src="../../shared/protein-icon.png" />。
+    </p>
+    <p>
+        现在，您应当会看到 Skyline 中出现的新空白文档。
+    </p>
+    <h1>生成离子对列表</h1>
+    <p>
+        在向 Skyline 中插入肽段序列前，务必要为此实验正确配置所有肽段和离子对设置。下述设置是针对标记为 <sup>13</sup>C<sub>6</sub><sup>15</sup>N<sub>2</sub>
+        L-赖氨酸的内标肽段而设计的。如果您使用其他同位素，请在“肽段设置”配置中选择相应的同位素修饰。 
+    </p>
+    <h2>配置离子对设置：</h2>
+    <ul>
+        <li>在<b>设置</b>菜单中单击<b>离子对设置</b> 。</li>
+        <li>单击<b>预测</b>选项卡。 </li>
+        <li>从<b>碰撞能量</b>下拉列表中，选择将用于测量的仪器。本实验将使用 <b>Thermo TSQ Vantage</b> 进行所有测量。 </li>
+    </ul>
+    <p class="keep-next">
+        该表单现在应显示如下：
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>单击<b>过滤器</b>选项卡。 </li>
+        <li>此处可以使用离子电荷和离子类型的默认设置。 </li>
+        <li>在<b>特殊离子</b>列表中，取消选中 "N-terminal to Proline" 选项。</li>
+        <li>在<b>子离子选择</b> – <b>从</b>字段中，选择“离子 3”。</li>
+        <li>在<b>子离子选择</b> – <b>至</b>字段中，选择“最后一个离子 - 1”。</li>
+    </ul>
+    <div style="margin-left : 40px;">
+        <table>
+            <tr>
+                <td>注意：通常需要选择与 y<sub>n-1</sub>（对于本实验中使用的 IEAIPQIDK 等 9 氨基酸肽段，则选择 y8）等效的“最后一个离子”。不过，鉴于它与 "n-1" 之间容易混淆，本实验使用了“最后一个离子 - 1”。</td>
+            </tr>
+        </table>
+    </div>
+    <p class="keep-next">
+        <b>离子对设置</b>表单现在应显示如下： 
+    </p>
+    <p>
+         <img src="s-2.png" />
+    </p>
+    <ul>
+        <li>单击<b>确定</b>按钮。</li>
+    </ul>
+    <h2>配置肽段设置：</h2>
+    <ul>
+        <li>在<b>设置</b>菜单中单击<b>肽段设置</b>。</li>
+        <li>单击<b>修饰</b>选项卡。 </li>
+        <li>单击<b>同位素修饰</b>列表右边的<b>编辑列表</b>按钮。</li>
+        <li>单击出现的<b>编辑同位素修饰</b>表单中的<b>添加</b>按钮。</li>
+        <li>在<b>名称</b>下拉列表中，选择 "Label:13C(6)15N(2) (C-term K)"。</li>
+    </ul>
+    <p class="keep-next">
+        此时<b>编辑同位素修饰</b>表单应显示如下：
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>单击<b>确定</b>按钮。</li>
+        <li>在<b>同位素修饰</b>列表中，选中新的 "Label:13C(6)15N(2) (C-term K)" 修饰。</li>
+    </ul>
+    <p class="keep-next">
+        <b>肽段设置</b>表单现在应显示如下：
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>单击<b>确定</b>按钮。 </li>
+    </ul>
+    <p>
+        由于实验使用的是内标重肽，因此<b>内部标准类型</b>下拉列表可以保留默认的 <b>heavy</b>。 
+    </p>
+    <h2>插入肽段序列：</h2>
+    <ul>
+        <li>在<b>编辑</b>菜单中选择<b>插入</b>，然后单击<b>肽段</b>。</li>
+        <li>将 "IEAIPQIDK" 粘贴到<b>肽段序列</b>单元，将 "GST-tag" 粘贴到<b>蛋白质名称</b>单元。</li>
+    </ul>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>单击<b>插入</b>按钮。</li>
+    </ul>
+    <p class="keep-next">
+        完成上述步骤后，Skyline 主页面现在应显示如下：
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <p>
+        在导出您的第一个离子对列表前，先将您的文档保存至 AbsoluteQuant 文件夹，操作如下:
+    </p>
+    <ul>
+        <li>在<b>文件</b>菜单中，单击<b>保存</b> (Ctrl-S)。</li>
+        <li>导航到 AbsoluteQuant 文件夹。</li>
+        <li>在<b>文件名</b>字段中输入 "AbsoluteQuantTutorial"。</li>
+        <li>单击<b>保存</b>按钮。</li>
+    </ul>
+    <h2>导出离子对列表</h2>
+    <p>
+        如果您是自己在质谱仪上进行此实验，则需要采用相应的仪器方法。利用模板的方法，Skyline 可直接导出生成仪器方法，但这里是将导出离子对列表，您可在其他时间将此表导入到仪器方法的模板里。为此，请执行以下操作：
+    </p>
+    <ul>
+        <li>在<b>文件</b>菜单中选择<b>导出</b>，然后单击<b>离子对列表</b>。</li>
+    </ul>
+    <p>
+        随即显示如下所示的<b>导出离子对列表</b>表单，基于您从<b>离子对设置</b>–<b>预测</b>选项卡中的<b>碰撞能量</b>下拉列表中选择的 "Thermo TSQ Vantage"
+        值，<b>仪器类型</b>列表中自动选择了 "Thermo"。
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        您还可看到其他所有设置都适合于这个非常简单的目标列表。
+    </p>
+    <ul>
+        <li>单击<b>确定</b>按钮。</li>
+        <li>在<b>文件名</b>字段中输入 "GST-tag"。</li>
+        <li>单击<b>保存</b>按钮。 </li>
+    </ul>
+    <p>
+        生成的离子对列表已导入 Thermo TSQ Vantage 三重四极杆质谱仪的模板方法文件。现在，您可以在 Excel 或文本编辑器中打开生成的 GST-tag.csv 文件，以查看它的情况。
+    </p>
+    <h1>分析来自校准物的 SRM 数据</h1>
+    <p>
+        在这一节中，您将处理<b>教程图 1C</b> 中指示的九个样品。您将向 Skyline 中导入 .RAW 文件以查看数据。数据将导入到上一节中生成且已保存的 Skyline 文档中。所需导入的文件已包含在为本教程创建的 AbsoluteQuant
+        文件夹中，且命名为：
+    </p>
+    <ul>
+        <li>Standard_1.RAW</li>
+        <li>Standard_2.RAW</li>
+        <li>Standard_3.RAW</li>
+        <li>Standard_4.RAW</li>
+        <li>Standard_5.RAW</li>
+        <li>Standard_6.RAW</li>
+        <li>Standard_7.RAW</li>
+        <li>Standard_8.RAW</li>
+        <li>FOXN1-GST.RAW</li>
+    </ul>
+    <p>
+        这些 RAW 文件以随机顺序收集，并分散在大量的数据采集中。在原始论文 (<a
+            href="http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip">http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip</a>)
+        的<b>补充数据 2</b> 中可以找到使用 Skyline 进行完整处理的结果。 
+    </p>
+    <p>
+        在查看 FOXN1-GST 样品前，应先熟悉这些标准。
+    </p>
+    <h2>将 RAW 文件导入 Skyline：</h2>
+    <ul>
+        <li>在<b>文件</b>菜单中选择<b>导入</b>，然后单击<b>结果</b>。</li>
+        <li>使用<b>在文件中添加单次注射重复测定</b>的默认选项。</li>
+    </ul>
+    <p class="keep-next">
+        <b>导入结果</b>表单应显示如下：
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <ul>
+        <li>单击<b>确定</b>按钮。</li>
+    </ul>
+    <ul class="keep-next">
+        <li>在<b>导入结果文件</b>表单中，找到这八个“Standard” RAW 文件并全部选中，如下所示。</li>
+    </ul>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <ul>
+        <li>单击<b>打开</b>以导入文件。</li>
+        <li>在显示创建重复测定名称是否移除 "Standard_" 前缀的选项时，请选择<b>不移除</b>选项。</li>
+        <li>单击<b>确定</b>按钮。</li>
+    </ul>
+    <p>
+        Skyline 可能需要一些时间才能导入所有 RAW 文件。
+    </p>
+    <p>
+        为确保每种标准都获得良好的色谱峰，最好在平铺视图中查看彼此相邻的所有色谱图。为获取这种布局，请执行以下操作：
+    </p>
+    <ul>
+        <li>在<b>视图</b>菜单中选择<b>排列图形</b>，然后单击<b>平铺</b> (Ctrl-T)。 </li>
+        <li>在<b>目标</b>视图中选择 IEAIPQIDK 肽段。</li>
+    </ul>
+    <p class="keep-next">
+        对于每个标准，您会在界面中同时看到轻（红色）重（蓝色）总色谱图，如下所示：
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        查看标准的色谱痕量时所要检查的内容：
+    </p>
+    <ul>
+        <li>确保为每个标准的轻重痕量选择正确的峰。</li>
+        <li>确保峰形呈高斯形状，并且不会出现过大的锯齿状外观。如果出现这种情况，最好重新测量样品。</li>
+        <li>确保标准峰有相似的保留时间。保留时间差异很大时往往表明色谱欠佳。</li>
+    </ul>
+    <h1>分析来自于 FOXN1-GST 样品的 SRM 数据</h1>
+    <p>
+        接下来，您需按照与上述相同的说明将 FOXN1-GST.RAW 文件导入当前的 Skyline 文档。
+    </p>
+    <ul>
+        <li>在<b>文件</b>菜单中选择<b>导入</b>，然后单击<b>结果</b>。</li>
+        <li>单击<b>确定</b>按钮。</li>
+        <li>选择 FOXN1-GST.RAW 文件。</li>
+        <li>单击<b>打开</b>按钮。</li>
+    </ul>
+    <p>
+        为确保被测样品看起来良好，请检查色谱痕量、碎断图式以及重峰和轻峰的保留时间。为此，您需要显示汇总图，如下所示：
+    </p>
+    <ul>
+        <li>在<b>视图</b>菜单中选择<b>保留时间</b>，然后单击<b>重复测定比较</b> (F8)。</li>
+        <li>在<b>视图</b>菜单中选择<b>峰面积</b>，并单击<b>重复测定比较</b> (F7)。</li>
+        <li>右键单击<b>峰面积</b>图，选择<b>归一化至</b>，然后单击<b>总计</b>以查看每个离子对对总信号强度的相对贡献。</li>
+        <li>在<b>设置</b>菜单中单击<b>全部集成</b>，以告知 Skyline 这是一种经过优化的方法，在该方法中所有离子对都会具有可测量的信号。</li>
+    </ul>
+    <p>
+        为便于查看，按如下方式排列窗口：
+    </p>
+    <ul>
+        <li>在<b>视图</b>菜单中选择<b>排列图形</b>，然后单击<b>选项卡式</b> (Ctrl-Shift-T)。 </li>
+        <li>单击<b>重复测定比较</b>图的标题栏，然后将其拖至 Skyline 主窗口的右边。</li>
+    </ul>
+    <p class="keep-next">
+        然后，您可以选择任何一种轻母离子：
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p class="keep-next">
+        或是选择重母离子：
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        验证以下项：
+    </p>
+    <ul>
+        <li>峰形呈高斯形状，且没有出现过大的锯齿状外观。</li>
+        <li>标准和 FOXN1-GST 样品的保留时间相似。</li>
+        <li>每个样品的每个离子对对总信号的相对贡献相似。 </li>
+    </ul>
+    <p>
+        如果情况并非如此，可能是为其中一个样品选择了错误的峰，或者离子对可能受到明显干扰。 
+    </p>
+    <p>
+        查看数据的另一种方法如下： 
+    </p>
+    <ul>
+        <li>在<b>目标</b>视图中再次选择 IEAIPQIDK 肽段。 </li>
+        <li>右键单击<b>峰面积</b>图，选择<b>归一化至</b>，然后单击 <b>Heavy</b> 以查看每个标准样品和 FOXN1-GST 样品的轻重比。</li>
+    </ul>
+    <p>
+        <b>峰面积</b>图中显示的值就是稍后在校准曲线中使用的值。从该图很容易看出，FOXN1-GST 样品的轻重比居于校准点比率的中间位置。这是理想的状态，因为校准曲线中的这一部分最适合定量的用途。 
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <h1>生成校准曲线</h1>
+    <p>
+        在本教程中，您将在 Skyline 中创建一条校准曲线。 
+    </p>
+    <h2>配置定量设置：</h2>
+    <ul>
+        <li>在<b>设置</b>菜单中单击<b>肽段设置</b>。</li>
+        <li>单击<b>修饰</b>选项卡。</li>
+        <li>在<b>回归拟合</b>下拉列表中选择“线性”。</li>
+        <li>在<b>归一化方法</b>下拉列表中，选择“相对于Heavy的比率”。</li>
+        <li>在<b>单位</b>字段中输入 "fmol/ul"。</li>
+    </ul>
+    <p class="keep-next">
+        <b>肽段设置</b>表单应显示如下：
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <ul>
+        <li>单击<b>确定</b>按钮。</li>
+    </ul>
+    <h2>指定外部标准的分析物浓度：</h2>
+    <ul>
+        <li>在<b>视图</b>菜单上，单击<b>文档网格</b>。</li>
+        <li>在<b>文档网格</b>的左上角中单击<b>报告</b>下拉列表，然后选择<b>重复测定</b>。</li>
+        <li>复制以下数据并将其粘贴到<b>文档网格</b>，以将每个 "Standard_#" 重复测定<b>样品类型</b>设置为“标准”，并将<b>分析物浓度</b>设为以下值。</li>
+    </ul>
+    <div style="margin-left : 20px;">
+        <table>
+            <tr>
+                <td>标准</td>
+                <td>40</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>12.5</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>2.5</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>0.5</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>0.25</td>
+            </tr>
+            <tr>
+                <td>标准</td>
+                <td>0.1</td>
+            </tr>
+        </table>
+    </div>
+    <ul>
+        <li>在 FOXN1-GST 行中，将其<b>样品类型</b>设置为“未知”。</li>
+    </ul>
+    <p class="keep-next">
+        <b>文档网格：重复测定</b>表单应显示如下：
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <h2>查看校准曲线</h2>
+    <ul>
+        <li>在<b>视图</b>菜单中，单击<b>校准曲线</b>。</li>
+        <li>在<b>文档网格</b>中，单击<b>重复测定</b>列中的 FOXN1-GST 链接。</li>
+    </ul>
+    <p class="keep-next">
+        您应当看到如下所示的图：
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        斜率和截距显示在校准曲线上。使用标准的 <b>y = m * x + b</b> 方程式可以在峰面积比和浓度之间进行转换 
+    </p>
+    <p>
+        <i>（浓度 = 斜率 * 比率 + 截距）</i>
+    </p>
+    <p>
+        另外，当前选择的重复测定样本的计算浓度也显示在校准表上。此处得到未知样品的浓度为 1.8554 fmol/ul。
+    </p>
+    <h1>结语</h1>
+    <p>
+        本教程介绍了不同绝对丰度实验方法的优点，演示了如何使用带有内标重肽的外部校准曲线来确定绝对丰度，以便在分析物丰度极低的情况下也能定位到正确的积分范围并进行归一化。该方法可提供精准的绝对测量值，同时最大程度减少实验期间必须使用的宝贵样品量。 
+    </p>
+    <h1>参考文献列表</h1>
+    <ol>
+        <li>Gerber, S.A., Rush, J., Stemman, O., Kirschner, M.W. &amp; Gygi, S.P. Absolute quantification of proteins and phosphoproteins from cell
+            lysates by tandem MS. <i>Proceedings of the National Academy of Sciences of the United States of America</i> <b>100</b>,
+            6940-6945 (2003).</li>
+        <li>MacCoss, M.J., Wu, C.C., Matthews, D.E. &amp; Yates, J.R. Measurement of the isotope enrichment of stable isotope-labeled proteins using
+            high-resolution mass spectra of peptides. <i>Analytical Chemistry</i> <b>77</b>, 7646-53 (2005).</li>
+        <li>Lavagnini, I. &amp; Magno, F. A statistical overview on univariate calibration, inverse regression, and detection limits: Application to
+            gas chromatography/mass spectrometry technique. <i>Mass spectrometry reviews</i> <b>26</b>, 1-18 </li>
+        <li>Watson, J.T. Mass Spectrometry. <i>Methods in Enzymology</i> <b>193</b>, 86–106 (1990).</li>
+        <li>Patterson, B.W. &amp; Wolfe, R.R. Concentration dependence of methyl palmitate isotope ratios by electron impact ionization gas
+            chromatography/mass spectrometry. <i>Biological mass spectrometry</i> <b>22</b>, 481-6 (1993). </li>
+        <li>MacCoss, M.J., Toth, M.J. &amp; Matthews, D.E. Evaluation and optimization of ion-current ratio measurements by selected-ion-monitoring
+            mass spectrometry. <i>Analytical chemistry</i> <b>73</b>, 2976-84 (2001).</li>
+        <li>Stergachis, A., MacLean, B., Lee, K., Stamatoyannopoulos, J. A., &amp; MacCoss, M. J., Rapid empirical discovery of optimal peptides for
+            targeted proteomics <i>Nature Methods</i> In press</li>
+    </ol>
+</body>
+
+</html>

@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressPercent = progressNew));
                 }
 
-                if (line.StartsWith(@">"))
+                if (line.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX))
                 {
                     if (!requireLibraryMatch && progressMonitor == null)
                     {
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Model
                     }
                     catch (Exception x)
                     {
-                        throw new InvalidDataException(string.Format(ModelResources.FastaImporter_Import_Error_at_or_around_line__0____1_, linesRead, x.Message), x);
+                        throw new LineColNumberedIoException(x.Message, linesRead, -1, x);
                     }
 
                     if (progressMonitor != null)
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    seqBuilder.AppendSequence(line);
+                    seqBuilder.AppendSequence(line, linesRead);
                 }
             }
             // Add last sequence.
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model
             ICollection<FastaSequence> set,
             PeptideGroupBuilder builder)
         {
-            PeptideGroupDocNode nodeGroup = builder.ToDocNode();
+            PeptideGroupDocNode nodeGroup = builder.ToDocNode().Merge();
             FastaSequence fastaSeq = nodeGroup.Id as FastaSequence;
             if (fastaSeq != null && set.Contains(fastaSeq))
                 return;
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model
                     throw new LineColNumberedIoException(
                         ModelResources.FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence, lineNum,
                         fastaCol);
-                sb.Append(@">").Append(columns[0].Trim().Replace(@" ", @"_")); // ID
+                sb.Append(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX).Append(columns[0].Trim().Replace(@" ", @"_")); // ID
                 for (int i = 1; i < fastaCol; i++)
                     sb.Append(@" ").Append(columns[i].Trim()); // Description
                 sb.AppendLine();
@@ -788,6 +788,9 @@ namespace pwiz.Skyline.Model
             var libraryIntensity = rowReader.LibraryIntensity;
             var productMz = rowReader.ProductMz;
             var note = rowReader.Note;
+            var precursorNote = rowReader.PrecursorNote;
+            var moleculeNote = rowReader.MoleculeNote;
+            var moleculeListNote = rowReader.MoleculeListNote;
             if (irt == null && rowReader.IrtColumn != -1)
             {
                 var error = new TransitionImportErrorInfo(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
@@ -825,7 +828,8 @@ namespace pwiz.Skyline.Model
                     string safeName = name != null ?
                         Helpers.GetUniqueName(name, dictNameSeq.Keys) :
                         Document.GetPeptideGroupId(true);
-                    seqBuilder = new PeptideGroupBuilder(@">>" + safeName, true, Document.Settings, sourceFile, null) {BaseName = name};
+                    seqBuilder = new PeptideGroupBuilder(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + safeName,
+                        true, Document.Settings, sourceFile, null) {BaseName = name};
                 }
             }
             try
@@ -970,6 +974,9 @@ namespace pwiz.Skyline.Model
             }
 
             public string Note { get { return ColumnString(Fields, Indices.NoteColumn); } }
+            public string PrecursorNote { get { return ColumnString(Fields, Indices.PrecursorNoteColumn); } }
+            public string MoleculeNote { get { return ColumnString(Fields, Indices.MoleculeNoteColumn); } }
+            public string MoleculeListNote { get { return ColumnString(Fields, Indices.MoleculeListNoteColumn); } }
 
             public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
             {
@@ -2449,6 +2456,12 @@ namespace pwiz.Skyline.Model
 
         public int NoteColumn { get; set; }
 
+        public int PrecursorNoteColumn { get; set; }
+
+        public int MoleculeNoteColumn { get; set; }
+
+        public int MoleculeListNoteColumn { get; set; }
+
         public int SLensColumn { get; set; }
 
         public int ConeVoltageColumn { get; set; }
@@ -2590,7 +2603,10 @@ namespace pwiz.Skyline.Model
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.coneVoltage, header, nameof(ConeVoltageColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, header, nameof(ExplicitCompensationVoltageColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, header, nameof(ExplicitDeclusteringPotentialColumn));
-                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.note, header, nameof(NoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.transitionNote, header, nameof(NoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.precursorNote, header, nameof(PrecursorNoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeNote, header, nameof(MoleculeNoteColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeListNote, header, nameof(MoleculeListNoteColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header, nameof(LabelTypeColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, header, nameof(PrecursorAdductColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header, nameof(ProductAdductColumn));
@@ -2867,6 +2883,8 @@ namespace pwiz.Skyline.Model
     {
         // filename to use if no file has been specified
         public const string CLIPBOARD_FILENAME = @"Clipboard";
+        public const string PEPTIDE_LIST_PREFIX = @">>";
+        public const string PROTEIN_SPEC_PREFIX = @">";
         private readonly StringBuilder _sequence = new StringBuilder();
         private readonly List<PeptideDocNode> _peptides;
         private readonly Dictionary<int, Adduct> _charges;
@@ -2952,6 +2970,8 @@ namespace pwiz.Skyline.Model
             : this(line, true, settings, sourceFile, irtTargets)
         {
             _modMatcher = modMatcher;
+            if (modMatcher != null)
+                _autoManageChildren = !modMatcher.HasSeenMods;   // Any specified matches turns off auto-manage
         }
 
         /// <summary>
@@ -2982,10 +3002,10 @@ namespace pwiz.Skyline.Model
         }
         public bool PeptideList { get; private set; }
 
-        public void AppendSequence(string seqMod)
+        public void AppendSequence(string seqMod, long lineNum)
         {
             var charge = Transition.GetChargeFromIndicator(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-            seqMod = Transition.StripChargeIndicators(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            seqMod = Transition.StripChargeIndicators(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
             var seq = FastaSequence.StripModifications(seqMod);
             // Auto manage the children unless there is at least one modified sequence in the fasta
             _autoManageChildren = _autoManageChildren && Equals(seq, seqMod);
@@ -3002,7 +3022,11 @@ namespace pwiz.Skyline.Model
                 // If there is a ModificationMatcher, use it to create the DocNode.
                 PeptideDocNode nodePep;
                 if (_modMatcher != null)
+                {
                     nodePep = _modMatcher.GetModifiedNode(seqMod);
+                    if (nodePep == null)
+                        throw new LineColNumberedIoException(string.Format(ModelResources.PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_, seqMod), lineNum, -1);
+                }
                 else
                 {
                     Peptide peptide = new Peptide(null, seq, null, null, _enzyme.CountCleavagePoints(seq));
@@ -3593,7 +3617,7 @@ namespace pwiz.Skyline.Model
                             ModelResources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_,
                             lineNum, line[i], i));
                     
-                if (line.StartsWith(@">"))
+                if (line.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX))
                 {
                     if (!string.IsNullOrEmpty(fastaDescriptionLine))
                     {
@@ -3615,7 +3639,7 @@ namespace pwiz.Skyline.Model
 
         public static FastaSequence MakeFastaSequence(string fastaDescriptionLine, string sequence)
         {
-            int start = fastaDescriptionLine.StartsWith(@">") ? 1 : 0;
+            int start = fastaDescriptionLine.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX) ? 1 : 0;
             int split = IndexEndId(fastaDescriptionLine);
             string name;
             string description;
