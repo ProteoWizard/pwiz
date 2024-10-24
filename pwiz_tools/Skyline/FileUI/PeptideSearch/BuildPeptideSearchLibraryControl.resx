@@ -522,7 +522,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>5</value>
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
-    <value>Choose a set of know iRT standard peptides to use for retention time normalization.</value>
+    <value>Choose a set of known iRT standard peptides to use for retention time normalization.</value>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
