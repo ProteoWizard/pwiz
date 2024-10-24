@@ -21,28 +21,49 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
+namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
 {
-    public class UnifiUrl : RemoteUrl
+    public class WatersConnectUrl : RemoteUrl
     {
-        public static readonly UnifiUrl Empty = new UnifiUrl(UrlPrefix);
-        public static string UrlPrefix { get { return RemoteAccountType.UNIFI.Name + @":"; } }
+        public static readonly WatersConnectUrl Empty = new WatersConnectUrl(UrlPrefix);
+        public static string UrlPrefix { get { return RemoteAccountType.WATERS_CONNECT.Name + @":"; } }
 
-        public UnifiUrl(string unifiUrl) : base(unifiUrl)
+        public WatersConnectUrl(string watersConnectUrl) : base(watersConnectUrl)
         {
+        }
+
+        public enum ItemType
+        {
+            folder,
+            folder_without_sample_sets,
+            sample_set, // a collection of related injections
+            injection   // like a .raw file
         }
 
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
-            Id = nameValueParameters.GetValue(@"id");
+            InjectionId = nameValueParameters.GetValue(@"injectionId");
+            SampleSetId = nameValueParameters.GetValue(@"sampleSetId");
+            Type = (ItemType?) nameValueParameters.GetLongValue(@"type") ?? ItemType.folder;
+        }
+        public string InjectionId { get; private set; }
+        public string SampleSetId { get; private set; }
+        public ItemType Type { get; private set; }
+
+        public WatersConnectUrl ChangeInjectionId(string id)
+        {
+            return ChangeProp(ImClone(this), im => im.InjectionId = id);
         }
 
-        public string Id { get; private set; }
-
-        public UnifiUrl ChangeId(string id)
+        public WatersConnectUrl ChangeSampleSetId(string id)
         {
-            return ChangeProp(ImClone(this), im => im.Id = id);
+            return ChangeProp(ImClone(this), im => im.SampleSetId = id);
+        }
+
+        public WatersConnectUrl ChangeType(ItemType type)
+        {
+            return ChangeProp(ImClone(this), im => im.Type = type);
         }
         
         public override bool IsWatersLockmassCorrectionCandidate()
@@ -52,29 +73,31 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         public override RemoteAccountType AccountType
         {
-            get { return RemoteAccountType.UNIFI; }
+            get { return RemoteAccountType.WATERS_CONNECT; }
         }
 
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
-            result.SetValue(@"id", Id);
+            result.SetValue(@"injectionId", InjectionId);
+            result.SetValue(@"sampleSetId", SampleSetId);
+            result.SetLongValue(@"type", (long) Type);
             return result;
         }
 
         public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, bool preferOnlyMs1,
             bool centroidMs1, bool centroidMs2, bool ignoreZeroIntensityPoints)
         {
-            var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as UnifiAccount;
+            var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as WatersConnectAccount;
             if (account == null)
             {
-                throw new RemoteServerException(string.Format(UnifiResources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
+                throw new RemoteServerException(string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
                     Username, ServerUrl));
             }
             // ReSharper disable LocalizableElement
             string serverUrl = ServerUrl.Replace("://", "://" + account.Username + ":" + account.Password + "@");
-            serverUrl += "/unifi/v1/sampleresults(" + Id + ")?";
-            serverUrl += "identity=" + Uri.EscapeDataString(account.IdentityServer) + "&scope=" +
+            serverUrl += $@"/?sampleSetId={SampleSetId}&injectionId={InjectionId}";
+            serverUrl += "&identity=" + Uri.EscapeDataString(account.IdentityServer) + "&scope=" +
                          Uri.EscapeDataString(account.ClientScope) + "&secret=" +
                          Uri.EscapeDataString(account.ClientSecret);
             // ReSharper restore LocalizableElement

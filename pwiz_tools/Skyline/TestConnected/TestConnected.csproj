@@ -214,7 +214,7 @@
     <Compile Include="KoinaBuildLibraryTest.cs" />
     <Compile Include="KoinaConnectionTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
-    <Compile Include="Results\RemoteApi\UnifiTest.cs" />
+    <Compile Include="Results\RemoteApi\RemoteApiTest.cs" />
     <Compile Include="KoinaBuildLibraryFromCsvTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

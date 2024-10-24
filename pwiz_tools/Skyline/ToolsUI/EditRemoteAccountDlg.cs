@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -52,12 +53,17 @@ namespace pwiz.Skyline.ToolsUI
             textUsername.Text = remoteAccount.Username;
             textPassword.Text = remoteAccount.Password;
             textServerURL.Text = remoteAccount.ServerUrl;
-            var unifiAccount = remoteAccount as UnifiAccount;
-            if (unifiAccount != null)
+            if (remoteAccount is UnifiAccount unifiAccount)
             {
                 tbxIdentityServer.Text = unifiAccount.IdentityServer;
                 tbxClientScope.Text = unifiAccount.ClientScope;
                 tbxClientSecret.Text = unifiAccount.ClientSecret;
+            }
+            else if (remoteAccount is WatersConnectAccount wcAccount)
+            {
+                tbxIdentityServer.Text = wcAccount.IdentityServer;
+                tbxClientScope.Text = wcAccount.ClientScope;
+                tbxClientSecret.Text = wcAccount.ClientSecret;
             }
         }
 
@@ -73,6 +79,14 @@ namespace pwiz.Skyline.ToolsUI
                     .ChangeClientScope(tbxClientScope.Text)
                     .ChangeClientSecret(tbxClientSecret.Text);
                 remoteAccount = unifiAccount;
+            }
+            else if (accountType == RemoteAccountType.WATERS_CONNECT)
+            {
+                var wcAccount = (WatersConnectAccount) remoteAccount;
+                wcAccount = wcAccount.ChangeIdentityServer(tbxIdentityServer.Text)
+                    .ChangeClientScope(tbxClientScope.Text)
+                    .ChangeClientSecret(tbxClientSecret.Text);
+                remoteAccount = wcAccount;
             }
             return remoteAccount;
         }
@@ -103,10 +117,13 @@ namespace pwiz.Skyline.ToolsUI
                 return false;
             }
             var account = GetRemoteAccount();
-            var unifiAccount = account as UnifiAccount;
-            if (unifiAccount != null)
+            if (account is UnifiAccount unifiAccount)
             {
                 return TestUnifiAccount(unifiAccount);
+            }
+            else if (account is WatersConnectAccount wcAccount)
+            {
+                return TestWatersConnectAccount(wcAccount);
             }
             return true;
         }
@@ -204,6 +221,99 @@ namespace pwiz.Skyline.ToolsUI
             return true;
         }
 
+        private bool TestWatersConnectAccount(WatersConnectAccount WatersConnectAccount)
+        {
+            using (var WatersConnectSession = new WatersConnectSession(WatersConnectAccount))
+            {
+                try
+                {
+                    var tokenResponse = WatersConnectAccount.Authenticate();
+                    if (tokenResponse.IsError)
+                    {
+                        string error = tokenResponse.ErrorDescription ?? tokenResponse.Error;
+                        MessageDlg.Show(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                        if (tokenResponse.Error == @"invalid_scope")
+                        {
+                            tbxClientScope.Focus();
+                        }
+                        else if (tokenResponse.Error == @"invalid_client")
+                        {
+                            tbxClientSecret.Focus();
+                        }
+                        else if (tokenResponse.HttpStatusCode == HttpStatusCode.NotFound)
+                        {
+                            tbxIdentityServer.Focus();
+                        }
+                        else
+                        {
+                            textPassword.Focus();
+                        }
+                        return false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
+                    tbxIdentityServer.Focus();
+                    return false;
+                }
+                bool[] contentsAvailable = new bool[1];
+                WatersConnectSession.ContentsAvailable += () =>
+                {
+                    lock (contentsAvailable)
+                    {
+                        contentsAvailable[0] = true;
+                        Monitor.Pulse(contentsAvailable);
+                    }
+                };
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    try
+                    {
+                        longWaitDlg.PerformWork(this, 1000, (ILongWaitBroker broker) =>
+                        {
+                            while (!broker.IsCanceled)
+                            {
+                                RemoteServerException remoteServerException;
+                                if (WatersConnectSession.AsyncFetchContents(WatersConnectAccount.GetRootUrl(),
+                                    out remoteServerException))
+                                {
+                                    if (remoteServerException != null)
+                                    {
+                                        throw remoteServerException;
+                                    }
+                                    break;
+                                }
+                                lock (contentsAvailable)
+                                {
+                                    while (!contentsAvailable[0] && !broker.IsCanceled)
+                                    {
+                                        Monitor.Wait(contentsAvailable, 10);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return false;
+                    }
+                    catch (Exception e)
+                    {
+                        MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_, e);
+                        textServerURL.Focus();
+                        return false;
+                    }
+                    if (longWaitDlg.IsCanceled)
+                    {
+                        return false;
+                    }
+                }
+            }
+            MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct);
+            return true;
+        }
+
         private bool ValidateValues()
         {
             var remoteAccount = GetRemoteAccount();
@@ -256,7 +366,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType);
+            groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType);
         }
     }
 }
