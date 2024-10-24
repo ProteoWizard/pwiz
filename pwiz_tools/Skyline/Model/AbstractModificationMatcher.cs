@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -473,24 +474,31 @@ namespace pwiz.Skyline.Model
                     SpectrumHeaderInfo libInfo;
                     if (nodePep != null && Settings.PeptideSettings.Libraries.TryGetLibInfo(key, out libInfo))
                     {
-                        var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
-                        var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
-                        nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
-                        SpectrumPeaksInfo spectrum;
-                        if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
+                        try
                         {
-                            // Add fragment and precursor transitions as needed
-                            var transitionDocNodes =
-                                Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
-                                    ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
-                                    : new List<DocNode>();
-
-                            if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
+                            var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
+                            var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
+                            nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                            SpectrumPeaksInfo spectrum;
+                            if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
                             {
-                                GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
+                                // Add fragment and precursor transitions as needed
+                                var transitionDocNodes =
+                                    Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
+                                        ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
+                                        : new List<DocNode>();
+
+                                if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
+                                {
+                                    GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
+                                }
+                                nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
+                                return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
                             }
-                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
-                            return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
+                        }
+                        catch (InvalidChemicalModificationException e)
+                        {
+                            Messages.WriteAsyncUserMessage(e.Message); // Adduct makes no sense for target formula
                         }
                     }
                 }
