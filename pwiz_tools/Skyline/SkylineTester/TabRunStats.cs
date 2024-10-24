@@ -19,6 +19,7 @@
 
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -48,6 +49,8 @@ namespace SkylineTester
         private class TestData
         {
             public int Iterations => _durations.Count;
+            public int AppearanceOrder => _firstAppearance;
+            public string DetectedLeak => _detectedLeak ?? string.Empty;
             public int TotalDuration => _durations.Sum();
             public int MinDuration => _durations.Min();
             public int MaxDuration => _durations.Max();
@@ -74,10 +77,14 @@ namespace SkylineTester
                 }
             }
             public List<int> _durations;
+            public int _firstAppearance; // Order of first appearance (sorting aid)
+            public string _detectedLeak;
 
             public TestData()
             {
                 _durations = new List<int>();
+                _firstAppearance = -1;
+                _detectedLeak = null;
             }
         }
 
@@ -104,6 +111,15 @@ namespace SkylineTester
             columns.Add(valA.HasValue && valB.HasValue ? (valA - valB).ToString() : string.Empty);
         }
 
+        private void AddColumnPair(string valA, string valB, List<string> columns)
+        {
+            columns.Add(valA ?? string.Empty);
+            columns.Add(valB ?? string.Empty);
+            var leakA = string.IsNullOrEmpty(valA) ? 0 : double.Parse(valA.Split(' ')[0]);
+            var leakB = string.IsNullOrEmpty(valB) ? 0 : double.Parse(valB.Split(' ')[0]);
+            columns.Add((leakA - leakB).ToString(CultureInfo.InvariantCulture));
+        }
+
         private void AddColumns(Dictionary<string, TestData> tests, Dictionary<string, TestData> testsCompare, string testName, List<string> columns)
         {
             if (!tests.TryGetValue(testName, out var testData))
@@ -113,6 +129,8 @@ namespace SkylineTester
 
             if (testsCompare == null)
             {
+                columns.Add(testData?.AppearanceOrder.ToString()); // "AppearanceOrder"
+                columns.Add(testData?.DetectedLeak); // "DetectedLeak"
                 columns.Add(testData?.Iterations.ToString()); // "Iterations"
                 columns.Add(testData?.TotalDuration.ToString()); // "TotalTime"
                 columns.Add(testData?.MinDuration.ToString()); // "MinTime"
@@ -128,6 +146,8 @@ namespace SkylineTester
                     testDataCompare = null;
                 }
 
+                AddColumnPair(testData?.AppearanceOrder, testDataCompare?.AppearanceOrder, columns); // "AppearanceOrder"
+                AddColumnPair(testData?.DetectedLeak, testDataCompare?.DetectedLeak, columns); // "DetectedLeak"
                 AddColumnPair(testData?.Iterations, testDataCompare?.Iterations, columns); // "Iterations"
                 AddColumnPair(testData?.TotalDuration, testDataCompare?.TotalDuration, columns); // "TotalTime"
                 AddColumnPair(testData?.MinDuration, testDataCompare?.MinDuration, columns); // "MinTime"
@@ -154,6 +174,8 @@ namespace SkylineTester
                     var compared = (TestLogCompare == null) ? string.Empty : $@" vs {Path.GetFileNameWithoutExtension(TestLogCompare)}";
                     var header = new List<string>() { $@"Test ({Path.GetFileNameWithoutExtension(TestLog)}{compared})" };
                     var paired = !string.IsNullOrEmpty(compared);
+                    AddHeaderPair(paired, header, $@"AppearanceOrder");
+                    AddHeaderPair(paired, header, $@"DetectedLeak");
                     AddHeaderPair(paired, header, $@"Iterations");
                     AddHeaderPair(paired, header, $@"TotalTime");
                     AddHeaderPair(paired, header, $@"MinTime");
@@ -204,7 +226,7 @@ namespace SkylineTester
                 if (TestSummariesCompare == null)
                 {
                     var value = TestSummaries[key];
-                    MainWindow.DataGridRunStats.Rows.Add(key, value.Iterations, value.TotalDuration, value.TotalDuration / value.Iterations, "N/A");
+                    MainWindow.DataGridRunStats.Rows.Add(key, value.AppearanceOrder, value.DetectedLeak, value.Iterations, value.TotalDuration, value.TotalDuration / value.Iterations, "N/A");
                 }
                 else
                 {
@@ -218,7 +240,14 @@ namespace SkylineTester
                     var durRightTotal = valRight == null ? 0 : valRight.TotalDuration;
                     var durLeftD = valLeft == null ? 0 : valLeft.TotalDuration / (double)valLeft.Iterations;
                     var durRightD = valRight == null ? 0 : valRight.TotalDuration / (double)valRight.Iterations;
+                    var leakLeft = valLeft?.DetectedLeak ?? string.Empty;
+                    var leakRight = valRight?.DetectedLeak ?? string.Empty;
+                    var leaks = (string.IsNullOrEmpty(leakLeft) && string.IsNullOrEmpty(leakRight))
+                        ? string.Empty
+                        : string.Format("{0}/{1}", string.IsNullOrEmpty(leakLeft) ? "N/A" : leakLeft, string.IsNullOrEmpty(leakRight) ? "N/A" : leakRight);
                     MainWindow.DataGridRunStats.Rows.Add(key,
+                        string.Format("{0}/{1}", valLeft?.AppearanceOrder,valRight?.AppearanceOrder),
+                        leaks,
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.Iterations, valRight == null ? 0 : valRight.Iterations),
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.TotalDuration, valRight == null ? 0 : valRight.TotalDuration),
                         string.Format("{0}/{1}", durLeftI, durRightI),
@@ -237,23 +266,34 @@ namespace SkylineTester
             var log = File.ReadAllText(logFile);
             var testDictionary = new Dictionary<string, TestData>();
 
-            var startTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
+            var startTest = new Regex(@"\r\n\[(\d\d):(\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) |\!\!\! +(\S+) LEAKED (.*)", RegexOptions.Compiled);
             var endTest = new Regex(@" \d+ failures, .* (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
             {
-                var name = startMatch.Groups[3].Value;
+                var testTime = int.TryParse(startMatch.Groups[1].Value, out var minutes) &&
+                               int.TryParse(startMatch.Groups[2].Value, out var seconds)
+                    ? (minutes * 60 + seconds) : (int?)null;
+                if (testTime.HasValue)
+                {
+                    var name = startMatch.Groups[5].Value;
                 var endMatch = endTest.Match(log, startMatch.Index);
                 var duration = endMatch.Groups[1].Value;
-
-                TestData testData;
-                if (!testDictionary.TryGetValue(name, out testData))
+                    if (!testDictionary.TryGetValue(name, out var testData))
                 {
                     testData = new TestData();
+                        testData._firstAppearance = testDictionary.Count + 1;
                     testDictionary.Add(name, testData);
                 }
                 int.TryParse(duration, out var durationSeconds);
                 testData._durations.Add(durationSeconds);
+                }
+                else
+                {
+                    var name = startMatch.Groups[7].Value;
+                    var testData = testDictionary[name];
+                    testData._detectedLeak = startMatch.Groups[8].Value.Trim();
+                }
             }
             return testDictionary;
         }

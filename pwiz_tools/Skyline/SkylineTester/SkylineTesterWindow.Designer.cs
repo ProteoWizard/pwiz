@@ -277,11 +277,13 @@ namespace SkylineTester
             this.label1 = new System.Windows.Forms.Label();
             this.dataGridRunStats = new SkylineTester.SafeDataGridView();
             this.TestName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.FirstAppearance = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Iterations = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AverageDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RelDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DeltaTotalDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DetectedLeak = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2983,6 +2985,8 @@ namespace SkylineTester
             this.dataGridRunStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridRunStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.TestName,
+            this.FirstAppearance,
+            this.DetectedLeak,
             this.Iterations,
             this.Duration,
             this.AverageDuration,
@@ -3002,6 +3006,12 @@ namespace SkylineTester
             this.TestName.HeaderText = "Test";
             this.TestName.Name = "TestName";
             this.TestName.ReadOnly = true;
+            // 
+            // FirstAppearance
+            // 
+            this.FirstAppearance.HeaderText = "First Appearance";
+            this.FirstAppearance.Name = "FirstAppearance";
+            this.FirstAppearance.ReadOnly = true;
             // 
             // Iterations
             // 
@@ -3032,6 +3042,12 @@ namespace SkylineTester
             this.DeltaTotalDuration.HeaderText = "Delta total duration";
             this.DeltaTotalDuration.Name = "DeltaTotalDuration";
             this.DeltaTotalDuration.ReadOnly = true;
+            // 
+            // DetectedLeak
+            // 
+            this.DetectedLeak.HeaderText = "Detected Leak";
+            this.DetectedLeak.Name = "DetectedLeak";
+            this.DetectedLeak.ReadOnly = true;
             // 
             // menuStrip1
             // 
@@ -3607,11 +3623,13 @@ namespace SkylineTester
         private Label label1;
         private ComboBox comboBoxRunStats;
         private DataGridViewTextBoxColumn TestName;
+        private DataGridViewTextBoxColumn FirstAppearance;
         private DataGridViewTextBoxColumn Iterations;
         private DataGridViewTextBoxColumn Duration;
         private DataGridViewTextBoxColumn AverageDuration;
         private DataGridViewTextBoxColumn RelDuration;
         private DataGridViewTextBoxColumn DeltaTotalDuration;
+        private DataGridViewTextBoxColumn DetectedLeak;
         private Label label6;
         private Label label3;
         private CheckBox randomize;
