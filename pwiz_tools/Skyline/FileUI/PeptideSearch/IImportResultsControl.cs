@@ -29,18 +29,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public class ImportResultsSettings
     {
         public static readonly ImportResultsSettings DEFAULT = new ImportResultsSettings(false,
-            MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, null, null, null);
+            MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, null, null, null, false);
 
         public ImportResultsSettings(bool excludeSpectrumSourceFiles, IImportResultsControl control) : this(
             excludeSpectrumSourceFiles,
             (MultiFileLoader.ImportResultsSimultaneousFileOptions) control.SimultaneousFiles, control.DoAutoRetry,
-            control.Prefix, control.Suffix, control.FoundResultsFiles.Select(file => file.Path).ToList())
+            control.Prefix, control.Suffix, control.FoundResultsFiles.Select(file => file.Path).ToList(),
+            (control as ImportResultsDIAControl)?.IsGpf ?? false)
         {
         }
 
         public ImportResultsSettings(bool excludeSpectrumSourceFiles,
             MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, bool retryAfterImportFailure,
-            string prefix, string suffix, List<string> foundResultsFiles)
+            string prefix, string suffix, List<string> foundResultsFiles, bool isGpf)
         {
             ExcludeSpectrumSourceFiles = excludeSpectrumSourceFiles;
             FileImportOption = fileImportOption;
@@ -50,10 +51,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             FoundResultsFiles = foundResultsFiles != null
                 ? foundResultsFiles.Select(AuditLogPath.Create).ToList()
                 : null;
+            IsGpf = isGpf;
         }
 
         [Track]
         public List<AuditLogPath> FoundResultsFiles { get; private set; }
+
+        [Track(defaultValues:typeof(DefaultValuesFalse))]
+        public bool IsGpf { get; private set; }
 
         [Track]
         public bool ExcludeSpectrumSourceFiles { get; private set; }

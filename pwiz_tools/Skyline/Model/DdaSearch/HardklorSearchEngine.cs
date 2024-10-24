@@ -785,6 +785,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 DeleteIntermediateFiles();
             }
+            base.Dispose();
         }
 
         public void DeleteIntermediateFiles()

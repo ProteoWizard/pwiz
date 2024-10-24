@@ -339,9 +339,5 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
         public bool HasUI => false;
-
-        public override void Dispose()
-        {
-        }
     }
 }

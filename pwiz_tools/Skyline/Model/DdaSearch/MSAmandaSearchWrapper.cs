@@ -119,6 +119,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             amandaInputParser?.Dispose();
             _baseDir.Dispose();
             //AvailableSettings = new SettingsFile(null, Settings, mzID);
+            base.Dispose();
         }
 
         private void Helper_SearchProgressChanged(string message)

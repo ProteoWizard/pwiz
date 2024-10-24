@@ -62,6 +62,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbAutoRetry.Checked = value; }
         }
 
+        public bool IsGpf
+        {
+            get => cbGpf.Checked;
+            set => cbGpf.Checked = value;
+        }
+
+        public bool HideFileAddRemoveButtons
+        {
+            get => btnBrowse.Visible;
+            set => btnBrowse.Visible = btnRemove.Visible = value;
+        }
+
         public string Prefix { get; set; }
         public string Suffix { get; set; }
 

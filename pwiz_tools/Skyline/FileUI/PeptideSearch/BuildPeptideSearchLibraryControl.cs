@@ -72,9 +72,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (_isRunPeptideSearch)
             {
                 panel1.Hide();
-                radioDIA.Text = SkylineResources.BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire;
-                helpTip.SetToolTip(radioDIA, SkylineResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs);
-                InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
+                if (ImportPeptideSearch.IsDIASearch)
+                    InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+                else
+                    InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
             }
             else
             {
@@ -115,7 +116,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
                 bool includeAmbiguousMatches, bool filterForDocumentPeptides,
-                ImportPeptideSearchDlg.Workflow workFlow, ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
+                ImportPeptideSearchDlg.Workflow workFlow,
+                ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
             {
                 SearchFileNames = files?.ToArray() ?? Array.Empty<BuildLibraryGridView.File>();
                 Standard = standard;
@@ -668,8 +670,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return InputFileType != ImportPeptideSearchDlg.InputFile.search_result; }
         }
-
-        public bool DIAConversionNeeded => InputFileType == ImportPeptideSearchDlg.InputFile.dia_raw;
 
         private void OnGridChange(object sender, EventArgs e)
         {

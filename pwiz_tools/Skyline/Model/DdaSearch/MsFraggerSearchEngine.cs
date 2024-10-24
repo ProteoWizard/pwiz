@@ -54,23 +54,29 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private const string KEEP_INTERMEDIATE_FILES = "keep-intermediate-files";
 
-        private bool DataIsDIA { get; }
-
-        public MsFraggerSearchEngine(double percolatorQvalueCutoff, bool dataIsDIA)
+        public enum DataType
         {
-            DataIsDIA = dataIsDIA;
+            dda = 0,
+            dia = 1,
+            dia_gpf = 2
+        }
 
+        private bool DataIsDIA => (DataType) AdditionalSettings[@"data_type"].Value != DataType.dda;
+        private string PepXmlSuffix => DataIsDIA ? @"_rank1.pepXML" : @".pepXML";
+
+        public MsFraggerSearchEngine(DataType dataType)
+        {
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {CHECK_SPECTRAL_FILES, new Setting(CHECK_SPECTRAL_FILES, 1, 0, 1)},
                 {CALIBRATE_MASS, new Setting(CALIBRATE_MASS, 0, 0, 2)},
-                {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, percolatorQvalueCutoff, 0, 1)},
+                {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, 0.01, 0, 1)},
                 {PERCOLATOR_TRAIN_QVALUE_CUTOFF, new Setting(PERCOLATOR_TRAIN_QVALUE_CUTOFF, 0.01, 0, 1)},
                 {KEEP_INTERMEDIATE_FILES, new Setting(KEEP_INTERMEDIATE_FILES, false)},
             };
 
             // ReSharper disable LocalizableElement
-            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting(@"data_type", DataIsDIA ? 1 : 0, 0, 3)); // Data type (0 for DDA, 1 for DIA, 2 for gas-phase fractionation DIA, 3 for DDA+).
+            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting(@"data_type", (int) dataType, 0, 3)); // Data type (0 for DDA, 1 for DIA, 2 for gas-phase fractionation DIA, 3 for DDA+).
 
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("precursor_true_tolerance", 20.0)); //  True precursor mass tolerance (window is +/- this value).
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("precursor_true_units", 1, 0, 1)); //  True precursor mass tolerance units (0 for Da, 1 for ppm).
@@ -286,7 +292,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var spectrumFilename in SpectrumFileNames)
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                            spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                         string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
                         _intermediateFiles.Add(cruxInputFilepath);
@@ -318,7 +324,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var spectrumFilename in SpectrumFileNames)
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                            spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
                         _intermediateFiles.Add(msfraggerPepXmlFilepath);
                         FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId, this);
@@ -1036,6 +1042,7 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
             {
                 DeleteIntermediateFiles(); // In case cancel came at an awkward time
             }
+            base.Dispose();
         }
     }
 }
