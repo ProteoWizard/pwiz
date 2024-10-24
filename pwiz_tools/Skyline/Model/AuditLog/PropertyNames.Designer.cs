@@ -349,15 +349,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Gas phase fractionation.
-        /// </summary>
-        public static string BuildPeptideSearchLibrarySettings_IsGpf {
-            get {
-                return ResourceManager.GetString("BuildPeptideSearchLibrarySettings_IsGpf", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Search files.
         /// </summary>
         public static string BuildPeptideSearchLibrarySettings_SearchFileNames {
@@ -1965,6 +1956,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportResultsSettings_FoundResultsFiles {
             get {
                 return ResourceManager.GetString("ImportResultsSettings_FoundResultsFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gas phase fractionation.
+        /// </summary>
+        public static string ImportResultsSettings_IsGpf {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_IsGpf", resourceCulture);
             }
         }
         

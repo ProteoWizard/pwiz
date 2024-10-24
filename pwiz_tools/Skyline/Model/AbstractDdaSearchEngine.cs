@@ -224,6 +224,11 @@ namespace pwiz.Skyline.Model
 
         public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_);
 
-        public abstract void Dispose();
+        public bool IsDisposed;
+
+        public virtual void Dispose()
+        {
+            IsDisposed = true;
+        }
     }
 }

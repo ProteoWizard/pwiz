@@ -1808,7 +1808,7 @@
   <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
     <value>Spectrum Filter</value>
   </data>
-  <data name="BuildPeptideSearchLibrarySettings_IsGpf" xml:space="preserve">
+  <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
     <value>Gas phase fractionation</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">

@@ -97,7 +97,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             private SrmDocument.DOCUMENT_TYPE _docType;
 
             public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(null, null, false,
-                false, ImportPeptideSearchDlg.Workflow.dda, false, false, ImportPeptideSearchDlg.InputFile.search_result, SrmDocument.DOCUMENT_TYPE.proteomic);
+                false, ImportPeptideSearchDlg.Workflow.dda, ImportPeptideSearchDlg.InputFile.search_result, SrmDocument.DOCUMENT_TYPE.proteomic);
 
             public override MessageInfo MessageInfo
             {
@@ -110,13 +110,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(
                 control.Grid.Files, control.IrtStandards, control.IncludeAmbiguousMatches,
-                control.FilterForDocumentPeptides, control.WorkflowType, control.UseDiaUmpire, control.IsGpf, control.InputFileType, control.ModeUI)
+                control.FilterForDocumentPeptides, control.WorkflowType, control.InputFileType, control.ModeUI)
             {
             }
 
             public BuildPeptideSearchLibrarySettings(IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
                 bool includeAmbiguousMatches, bool filterForDocumentPeptides,
-                ImportPeptideSearchDlg.Workflow workFlow, bool useDiaUmpire, bool isGpf,
+                ImportPeptideSearchDlg.Workflow workFlow,
                 ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
             {
                 SearchFileNames = files?.ToArray() ?? Array.Empty<BuildLibraryGridView.File>();
@@ -124,8 +124,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
                 FilterForDocumentPeptides = filterForDocumentPeptides;
                 WorkFlow = workFlow;
-                UseDiaUmpire = useDiaUmpire;
-                IsGpf = isGpf;
                 InputFileType = inputFileType;
                 _docType = docType;
             }
@@ -140,10 +138,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public bool FilterForDocumentPeptides { get; private set; }
             [Track(ignoreDefaultParent: true)]
             public ImportPeptideSearchDlg.Workflow WorkFlow { get; private set; }
-            [Track(defaultValues: typeof(DefaultValuesFalse))]
-            public bool UseDiaUmpire { get; private set; }
-            [Track(defaultValues: typeof(DefaultValuesFalse))]
-            public bool IsGpf { get; private set; }
             [Track(ignoreDefaultParent: true)]
             public ImportPeptideSearchDlg.InputFile InputFileType { get; private set; }
 
@@ -226,26 +220,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         radioDDA.Checked = true;
                         break;
                 }
-
-                cbDiaUmpire.Enabled = cbGpf.Enabled = radioDIA.Checked;
             }
         }
-
-        public bool UseDiaUmpire
-        {
-            get => cbDiaUmpire.Checked;
-            set => cbDiaUmpire.Checked = value;
-        }
-
-        public bool IsGpf
-        {
-            get => cbGpf.Checked;
-            set => cbGpf.Checked = value;
-        }
-
-        // for testing
-        public bool IsGpfEnabled => cbGpf.Enabled;
-        public bool IsDiaUmpireEnabled => cbDiaUmpire.Enabled;
 
         public ImportPeptideSearchDlg.InputFile InputFileType
         {
@@ -694,8 +670,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return InputFileType != ImportPeptideSearchDlg.InputFile.search_result; }
         }
-
-        public bool DIAConversionNeeded => InputFileType == ImportPeptideSearchDlg.InputFile.dia_raw && UseDiaUmpire;
 
         private void OnGridChange(object sender, EventArgs e)
         {

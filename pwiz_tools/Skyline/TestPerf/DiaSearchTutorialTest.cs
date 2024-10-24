@@ -243,41 +243,19 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = false;
-                Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IsGpfEnabled);
-                Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IsDiaUmpireEnabled);
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IsGpfEnabled);
-                Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IsDiaUmpireEnabled);
-                importPeptideSearchDlg.BuildPepSearchLibControl.IsGpf = _analysisValues.IsGpfData;
             });
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DIA Files page", tutorialPage++);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                importPeptideSearchDlg.ImportResultsDIAControl.IsGpf = _analysisValues.IsGpfData;
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Extract Chromatograms page", tutorialPage++);
 
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
-
-            // SearchEngine changed to MSFragger automatically due to changing to DIA workflow: handle download dialogs if necessary
-            if (RedownloadTools || HasMissingDependencies)
-            {
-                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                if (msfraggerDownloaderDlg != null)
-                {
-                    PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger",
-                        tutorialPage++); // Maybe someday
-                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)",
-                        "matt.chambers42@gmail.com", "UW"));
-                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
-                }
-
-                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                if (downloaderDlg != null)
-                {
-                    PauseForScreenShot<MultiButtonMsgDlg>("Import Peptide Search - Download Java and Crux",
-                        tutorialPage++); // Maybe someday
-                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                    WaitForClosedForm(waitDlg);
-                }
-            }
-
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DIA Files page", tutorialPage++);
 
             if (SearchFiles.Count() > 1)
             {
@@ -397,6 +375,16 @@ namespace TestPerf
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", tutorialPage++);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
+            // We're on the DIA-Umpire settings page
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
+                Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - DIA-Umpire Settings page", tutorialPage++);
+
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page));
@@ -418,11 +406,37 @@ namespace TestPerf
             });
             PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - Search Settings page", tutorialPage++);
 
+            WaitForConditionUI(() => MzTolerance.Units.ppm == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
 
             // Run the search
+            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+
+            // SearchEngine changed to MSFragger automatically due to changing to DIA workflow: handle download dialogs if necessary
+            if (RedownloadTools || HasMissingDependencies)
+            {
+                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                if (msfraggerDownloaderDlg != null)
+                {
+                    PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger",
+                        tutorialPage++); // Maybe someday
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)",
+                        "matt.chambers42@gmail.com", "UW"));
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                }
+
+                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                if (downloaderDlg != null)
+                {
+                    PauseForScreenShot<MultiButtonMsgDlg>("Import Peptide Search - Download Java and Crux",
+                        tutorialPage++); // Maybe someday
+                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                    WaitForClosedForm(waitDlg);
+                }
+            }
+
             try
             {
-                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
                 PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - Search Progress page", tutorialPage++);

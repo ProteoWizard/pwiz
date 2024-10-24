@@ -31,8 +31,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildPeptideSearchLibraryControl));
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
-            this.cbGpf = new System.Windows.Forms.CheckBox();
-            this.cbDiaUmpire = new System.Windows.Forms.CheckBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
             this.radioPRM = new System.Windows.Forms.RadioButton();
             this.radioDDA = new System.Windows.Forms.RadioButton();
@@ -44,7 +42,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBrowse = new System.Windows.Forms.Button();
             this.lblLibraryPath = new System.Windows.Forms.Label();
             this.panelPeptideSearch = new System.Windows.Forms.Panel();
-            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.lblStandardPeptides = new System.Windows.Forms.Label();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
@@ -53,6 +50,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblFileCaption = new System.Windows.Forms.Label();
             this.btnAddFile = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -66,28 +64,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // grpWorkflow
             // 
-            this.grpWorkflow.Controls.Add(this.cbGpf);
-            this.grpWorkflow.Controls.Add(this.cbDiaUmpire);
             this.grpWorkflow.Controls.Add(this.radioDIA);
             this.grpWorkflow.Controls.Add(this.radioPRM);
             this.grpWorkflow.Controls.Add(this.radioDDA);
             resources.ApplyResources(this.grpWorkflow, "grpWorkflow");
             this.grpWorkflow.Name = "grpWorkflow";
             this.grpWorkflow.TabStop = false;
-            // 
-            // cbGpf
-            // 
-            resources.ApplyResources(this.cbGpf, "cbGpf");
-            this.cbGpf.Name = "cbGpf";
-            this.helpTip.SetToolTip(this.cbGpf, resources.GetString("cbGpf.ToolTip"));
-            this.cbGpf.UseVisualStyleBackColor = true;
-            // 
-            // cbDiaUmpire
-            // 
-            resources.ApplyResources(this.cbDiaUmpire, "cbDiaUmpire");
-            this.cbDiaUmpire.Name = "cbDiaUmpire";
-            this.helpTip.SetToolTip(this.cbDiaUmpire, resources.GetString("cbDiaUmpire.ToolTip"));
-            this.cbDiaUmpire.UseVisualStyleBackColor = true;
             // 
             // radioDIA
             // 
@@ -179,14 +161,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.panelPeptideSearch, "panelPeptideSearch");
             this.panelPeptideSearch.Name = "panelPeptideSearch";
             // 
-            // gridSearchFiles
-            // 
-            this.gridSearchFiles.AllowUserToAddRows = false;
-            resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
-            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridSearchFiles.Name = "gridSearchFiles";
-            this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
-            // 
             // lblStandardPeptides
             // 
             resources.ApplyResources(this.lblStandardPeptides, "lblStandardPeptides");
@@ -234,6 +208,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnAddFile.UseVisualStyleBackColor = true;
             this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
+            // gridSearchFiles
+            // 
+            this.gridSearchFiles.AllowUserToAddRows = false;
+            resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
+            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridSearchFiles.Name = "gridSearchFiles";
+            this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
+            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.Frozen = true;
@@ -274,7 +256,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.panel1);
             this.Name = "BuildPeptideSearchLibraryControl";
             this.grpWorkflow.ResumeLayout(false);
-            this.grpWorkflow.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.panelChooseFile.ResumeLayout(false);
@@ -312,7 +293,5 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
         private System.Windows.Forms.ToolTip helpTip;
-        private System.Windows.Forms.CheckBox cbDiaUmpire;
-        private System.Windows.Forms.CheckBox cbGpf;
     }
 }

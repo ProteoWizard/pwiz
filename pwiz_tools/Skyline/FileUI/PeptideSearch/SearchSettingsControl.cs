@@ -99,7 +99,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_searchEngine == SelectedSearchEngine)
+            if (_searchEngine == SelectedSearchEngine && ImportPeptideSearch.SearchEngine?.IsDisposed != true)
                 return; // nothing to do
 
             if (ImportPeptideSearch.IsDIASearch && SelectedSearchEngine != SearchEngine.MSFragger) // currently only supported by MSFragger
@@ -203,6 +203,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
 
+        private bool EnsureRequiredFilesDownloaded()
+        {
+            switch (_searchEngine)
+            {
+                case SearchEngine.MSGFPlus:
+                    return EnsureRequiredFilesDownloaded(MsgfPlusSearchEngine.FilesToDownload);
+                case SearchEngine.MSFragger:
+                    return EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog);
+                case SearchEngine.Hardklor:
+                case SearchEngine.MSAmanda:
+                    return true;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
         {
             FileDownloadInfo[] fileDownloadInfo;
@@ -232,12 +248,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case SearchEngine.MSAmanda:
                     return new MSAmandaSearchWrapper();
                 case SearchEngine.MSGFPlus:
-                    if (!EnsureRequiredFilesDownloaded(MsgfPlusSearchEngine.FilesToDownload))
-                        SelectedSearchEngine = SearchEngine.MSAmanda;
                     return new MsgfPlusSearchEngine();
                 case SearchEngine.MSFragger:
-                    if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
-                        SelectedSearchEngine = SearchEngine.MSAmanda;
                     MsFraggerSearchEngine.DataType dataType;
                     if (!ImportPeptideSearch.IsDIASearch)
                         dataType = MsFraggerSearchEngine.DataType.dda;
@@ -432,6 +444,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             bool valid = ValidateEntries(interactive);
             if (!valid)
+                return false;
+
+            if (!EnsureRequiredFilesDownloaded())
                 return false;
 
             var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;

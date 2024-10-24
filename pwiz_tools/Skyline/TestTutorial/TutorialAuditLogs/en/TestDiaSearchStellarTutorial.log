@@ -14,7 +14,6 @@ Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
-Build Spectral Library > Gas phase fractionation is True
 Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Extra Info: Search files = 
 [
@@ -33,7 +32,6 @@ iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = False,
 Workflow = "DIA",
-Gas phase fractionation = True,
 Input File Type = "DIA raw (search and build library)"
 
 Undo Redo : Imported a peptide search
@@ -42,6 +40,7 @@ All Info  :
 Imported a peptide search
 Import Peptide Search > Extract Chromatograms > Found results files : contains "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML"
+Import Peptide Search > Extract Chromatograms > Gas phase fractionation is True
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
@@ -72,6 +71,7 @@ Extra Info: Extract Chromatograms =
         "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML",
         "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML"
     ],
+    Gas phase fractionation = True,
     Files to import simultaneously = "Many",
     Removed prefix = "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 },

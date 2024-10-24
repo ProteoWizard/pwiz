@@ -355,8 +355,28 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = TestSettings.SearchEngine));
 
+
+            // delete the FASTA to cause the error
+            if (errorExpected)
+                File.Delete(GetTestPath(TestSettings.FastaFilename));
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = TestSettings.SearchEngine;
+                foreach (var setting in TestSettings.AdditionalSettings)
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(setting.Key, setting.Value);
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = TestSettings.PrecursorTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
+                importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
+
+                // Run the search
+                //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
                 if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
@@ -381,23 +401,6 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            // delete the FASTA to cause the error
-            if (errorExpected)
-                File.Delete(GetTestPath(TestSettings.FastaFilename));
-
-            RunUI(() =>
-            {
-                foreach (var setting in TestSettings.AdditionalSettings)
-                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(setting.Key, setting.Value);
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = TestSettings.PrecursorTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
-                importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
-                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
-
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
             RunUI(() =>
             {

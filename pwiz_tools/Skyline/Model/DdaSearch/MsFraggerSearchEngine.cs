@@ -1031,6 +1031,7 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
             {
                 DeleteIntermediateFiles(); // In case cancel came at an awkward time
             }
+            base.Dispose();
         }
     }
 }

@@ -394,18 +394,28 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                importPeptideSearchDlg.BuildPepSearchLibControl.UseDiaUmpire = true;
                 // Check default settings shown in the tutorial
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            //WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Import Peptide Search - Extract chromatograms page", 4);
 
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton()); // now on remove prefix/suffix dialog
-            PauseForScreenShot<ImportResultsNameDlg>("Import Peptide Search - Remove shared prefix/suffix page", 5);
-            OkDialog(removeSuffix, () => removeSuffix.YesDialog()); // now on modifications
-            WaitForDocumentLoaded();
+            // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
+            if (searchFiles.Length > 1)
+            {
+                var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton()); // now on remove prefix/suffix dialog
+                PauseForScreenShot<ImportResultsNameDlg>("Import Peptide Search - Remove shared prefix/suffix page", 5);
+                OkDialog(removeSuffix, () => removeSuffix.YesDialog()); // now on modifications
+                WaitForDocumentLoaded();
+            }
+            else
+                RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page));
 
@@ -533,6 +543,7 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
                 //importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;

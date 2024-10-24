@@ -44,26 +44,15 @@ namespace pwiz.SkylineTestFunctional
     {
         private class TestDetails
         {
-            private SearchSettingsControl.SearchEngine _searchEngine;
             public string DocumentPath { get; set; }
             public IEnumerable<string> SearchFiles { get; set; }
             public string FastaPath { get; set; }
-
-            public SearchSettingsControl.SearchEngine SearchEngine
-            {
-                get => _searchEngine;
-                set
-                {
-                    _searchEngine = value;
-                    HasMissingDependencies = !SearchSettingsControl.HasRequiredFilesDownloaded(value);
-                }
-            }
-
+            public SearchSettingsControl.SearchEngine SearchEngine { get; set; }
             public MzTolerance PrecursorMzTolerance { get; set; }
             public MzTolerance FragmentMzTolerance { get; set; }
             public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
 
-            public bool HasMissingDependencies { get; private set; }
+            public bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine);
 
             public class DocumentCounts
             {
@@ -309,9 +298,6 @@ namespace pwiz.SkylineTestFunctional
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
-            // Add the test xml file to the search files list and try to 
-            // build the document library.
-
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
@@ -319,7 +305,12 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles
                     .Select(o => (MsDataFileUri) new MsDataFilePath(GetTestPath(o))).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                importPeptideSearchDlg.BuildPepSearchLibControl.UseDiaUmpire = true;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            RunUI(() =>
+            {
+                Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -426,7 +417,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
-
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = false;
                 importPeptideSearchDlg.ConverterSettingsControl.UseMzMlSpillFile = true; // mz5 spill file leaks
@@ -450,7 +441,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = testDetails.SearchEngine));
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = testDetails.SearchEngine;
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = testDetails.PrecursorMzTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = testDetails.FragmentMzTolerance;
+                if (_testDetails.AdditionalSettings != null)
+                    foreach(var additionalSetting in  testDetails.AdditionalSettings)
+                        importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(additionalSetting.Key, additionalSetting.Value);
+                //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+            });
+
+            WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
+
+            // Run the search
+            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
 
             if (testDetails.HasMissingDependencies)
             {
@@ -476,24 +481,9 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = testDetails.PrecursorMzTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = testDetails.FragmentMzTolerance;
-                if (_testDetails.AdditionalSettings != null)
-                    foreach(var additionalSetting in  testDetails.AdditionalSettings)
-                        importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(additionalSetting.Key, additionalSetting.Value);
-                //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
-            });
-
-            WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
-
             bool? searchSucceeded = null;
             RunUI(() =>
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
@@ -515,10 +505,13 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on modifications
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on extract chromatograms
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on input files
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles.Select(o => (MsDataFileUri) new MsDataFilePath(GetTestPath(o))).ToArray();
+
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on extract chromatograms
             });
 
 
@@ -608,31 +601,12 @@ namespace pwiz.SkylineTestFunctional
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
-
-            if (testDetails.HasMissingDependencies)
+            RunUI(() =>
             {
-                if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
-                {
-                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                    if (msfraggerDownloaderDlg != null)
-                    {
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
-                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
-                    }
-                }
-
-                if (testDetails.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
-                {
-                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                    if (downloaderDlg != null)
-                    {
-                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                        WaitForClosedForm(waitDlg);
-                    }
-                }
-            }
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
 
             // With only 1 source, no add/remove prefix/suffix dialog
 
@@ -733,6 +707,15 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
+            // We're on the DIA-Umpire settings page
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
+                Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+
             // We're on the Adjust search settings page
             RunUI(() =>
             {
@@ -741,8 +724,6 @@ namespace pwiz.SkylineTestFunctional
                 // MSFragger should be selected by default
                 Assert.AreEqual(SearchSettingsControl.SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
             });
-            //SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = testDetails.SearchEngine));
-
 
             // selecting something other than MSFragger should show an error
             RunDlg<MessageDlg>(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSAmanda,
@@ -765,12 +746,36 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
 
+            // Run the search
+            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+
+            if (testDetails.HasMissingDependencies)
+            {
+                if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                {
+                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                    if (msfraggerDownloaderDlg != null)
+                    {
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                    }
+                }
+
+                if (testDetails.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                {
+                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                    if (downloaderDlg != null)
+                    {
+                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                        WaitForClosedForm(waitDlg);
+                    }
+                }
+            }
+
             bool? searchSucceeded = null;
             RunUI(() =>
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
@@ -787,14 +792,18 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on search settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on import FASTA
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on modifications
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on extract chromatograms
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on input files
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.AreEqual(ImportPeptideSearchDlg.Pages.spectra_page, importPeptideSearchDlg.CurrentPage);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(GetTestPath(o))).ToArray();
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on extract chromatograms
+                Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
             });
 
 
@@ -829,6 +838,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
             });
