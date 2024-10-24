@@ -403,6 +403,29 @@ namespace pwiz.Skyline.Model
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
                         if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
                         {
+                            // Special case for mz-only, charge-only transitions - may need to derive an isotope mass
+                            var labeledAdduct = adduct;
+                            if (adduct.IsChargeOnly && !tranGroup.CustomMolecule.HasChemicalFormula)
+                            {
+                                var mzCalc = adduct.ApplyToMass(pep.CustomMolecule.MonoisotopicMass);
+                                if (!Equals(precursorMonoMz, mzCalc.Value))
+                                {
+                                    // Some kind of undescribed isotope labeling going on
+                                    // No formula for label, describe as mass
+                                    var massCalc = adduct.MassFromMz(precursorMonoMz, MassType.Monoisotopic);
+                                    var labelMass = massCalc - pep.CustomMolecule.MonoisotopicMass;
+                                    if (labelMass > 0)
+                                    {
+                                        labeledAdduct = adduct.ChangeIsotopeLabels(labelMass); // Isostopes add weight
+                                    }
+                                }
+                            }
+
+                            if (!labeledAdduct.SameEffect(tranGroup.PrecursorAdduct)) // Similar m/z, but isotope envelope might vary e.g. M2C13-H vs M1C131N15-H
+                            {
+                                continue;
+                            }
+
                             tranGroupFound = true;
                             var tranFound = false;
                             string errmsg = null;
@@ -1000,6 +1023,11 @@ namespace pwiz.Skyline.Model
                 return Formula.IsMassOnly ?
                     new CustomMolecule(MonoMass, AverageMass, MoleculeID.Name ?? string.Empty, MoleculeID.AccessionNumbers) :
                     new CustomMolecule(Formula, MoleculeID.Name ?? string.Empty, MoleculeID.AccessionNumbers);
+            }
+
+            public override string ToString()
+            {
+                return base.ToString() + Adduct.ToString();
             }
         }
 
