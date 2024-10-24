@@ -2121,14 +2121,19 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool IsProgrammingDefect(Exception exception)
         {
+            if (exception is FileModifiedException)
+            {
+                return true; // Unexpected change to file, we'd like to hear about that
+            }
+
             if (exception is InvalidDataException 
                 || exception is IOException 
                 || exception is UnauthorizedAccessException)
             {
-                return false;
+                return false;  // Presumably something like bad data format, or write access violation etc, that user can deal with
             }
 
-            return true;
+            return true; // Something that we'd like to hear about 
         }
 
         /// <summary>
