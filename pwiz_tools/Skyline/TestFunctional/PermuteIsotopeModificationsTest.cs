@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     /// https://skyline.ms/announcements/home/support/thread.view?rowId=52220
     /// </summary>
     [TestClass]
-    public class PermuteIsotopeModificationsTest : AbstractFunctionalTest
+    public class PermuteIsotopeModificationsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestPermuteIsotopeModifications()
@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("PermuteIsotopeModificationsTest.sky")));
+            OpenDocument(TestFilesDir.GetTestPath("PermuteIsotopeModificationsTest.sky"));
             // This document contains two peptides
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeCount);
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeTransitionGroupCount);

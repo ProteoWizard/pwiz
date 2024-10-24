@@ -30,15 +30,9 @@ if "%ALL_ARGS: REGISTER=%" neq "%ALL_ARGS%" (
 )
 if "%ALL_ARGS: debug=%" neq "%ALL_ARGS%" (
     set OPTIMIZATION=debug
-    if "%ALL_ARGS: debug-symbols=%" == "%ALL_ARGS%" (
-        set ALL_ARGS=%ALL_ARGS: debug=%
-    )
 )
 if "%ALL_ARGS: DEBUG=%" neq "%ALL_ARGS%" (
     set OPTIMIZATION=debug
-    if "%ALL_ARGS: DEBUG-SYMBOLS=%" == "%ALL_ARGS%" (
-        set ALL_ARGS=%ALL_ARGS: DEBUG=%
-    )
 )
 if "%ALL_ARGS: nolog=%" neq "%ALL_ARGS%" (
     set NOLOG=1
