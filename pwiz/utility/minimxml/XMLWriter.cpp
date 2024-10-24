@@ -340,7 +340,7 @@ namespace {
 //       but here we'll just encode any non-ASCII value.
 bool isNCNameStartChar(char& c)
 {
-    return std::isalpha(c, std::locale::classic()) || c == '_';
+    return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) || c == '_';
 }
 
 bool isNCNameChar(char& c)
