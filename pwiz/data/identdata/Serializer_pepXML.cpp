@@ -2016,10 +2016,10 @@ PWIZ_API_DECL void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, I
 
 
 namespace {
-  
-const string allResidues = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
+
 string& invertResidueSet(string& residues)
 {
+    static const string allResidues = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
     set<char> allResidueSet;
     allResidueSet.insert(allResidues.begin(), allResidues.end());
 

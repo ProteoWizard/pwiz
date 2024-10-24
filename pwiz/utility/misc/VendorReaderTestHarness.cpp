@@ -312,9 +312,16 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
         // test ion mobility conversion
         auto imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(msd.run.spectrumListPtr);
+        if (imsl == nullptr)
+        {
+            auto wrapper = boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr);
+            if (wrapper != nullptr)
+                imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(wrapper->innermost());
+        }
+
         if (imsl != nullptr && imsl->canConvertIonMobilityAndCCS())
         {
-            double imTestValue = 0.832;
+            double imTestValue = 400;
             double ccs = imsl->ionMobilityToCCS(imTestValue, 678.9, 2);
             double imValue = imsl->ccsToIonMobility(ccs, 678.9, 2);
             unit_assert_equal(imValue, imTestValue, 1e-5); // some vendors use 32-bit float so accuracy can't be too stringent

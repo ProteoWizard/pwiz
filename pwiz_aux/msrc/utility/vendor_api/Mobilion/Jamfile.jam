@@ -2,9 +2,9 @@
 # $Id$
 #
 #
-# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+# Original author: Matt Chambers <matt.chambers42 .@. gmail.com>
 #
-# Copyright 2021 Vanderbilt University - Nashville, TN 37232
+# Copyright 2024 University of Washington
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); 
 # you may not use this file except in compliance with the License. 
@@ -36,19 +36,18 @@ if $(.dll-location)
 }
 
 constant dll-files :
-    hdf5.dll
-    hdf5_cpp.dll
-    MBICore.dll
-    python37.dll
+    MBI_SDK.dll
     ;
 
-searched-lib MBICore
+searched-lib MBI_SDK
     : # sources
     : # requirements
         <link>shared:<define>PWIZ_DYN_LINK
-        <name>MBICore
+        <name>MBI_SDK
         <address-model>64
         <search>$(.dll-location)
+        <runtime-debugging>on:<build>no
+        <address-model>32:<build>no
     : # default-build
     : # usage-requirements
         <include>$(.dll-location)
@@ -56,12 +55,7 @@ searched-lib MBICore
 
 rule vendor-api-requirements ( properties * )
 {
-    local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
-    {
-        #result += <source>UIMFReader.cpp ;
-    }
-    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+    return [ vendor-api-usage-requirements $(properties) ] ;
 }
 
 rule vendor-api-usage-requirements ( properties * )
@@ -74,9 +68,7 @@ rule vendor-api-usage-requirements ( properties * )
             result += <assembly-dependency>$(.dll-location)/$(file) ;
         }
         result += <include>$(.dll_location) ;
-        result += <include>$(PWIZ_LIBRARIES_PATH)/hdf5-1.12.0/c++/src ;
-        result += <include>$(PWIZ_LIBRARIES_PATH)/hdf5-1.12.0/src ;
-        result += <library>MBICore ;
+        result += <library>MBI_SDK ;
     }
     return $(result) ;
 }
@@ -86,6 +78,7 @@ lib pwiz_vendor_api_mbi
     : # requirements      
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
+        <runtime-debugging>on:<build>no
         <address-model>32:<build>no
     : # default-build
     : # usage-requirements
