@@ -212,6 +212,11 @@ namespace pwiz.Skyline.Controls
             get { return _nodeTip.Visible; }
         }
 
+        public Rectangle TipRect
+        {
+            get { return _nodeTip.Visible ? _nodeTip.Bounds : Rectangle.Empty; }
+        }
+
         [Browsable(true)]
         public event EventHandler<PickedChildrenEventArgs> PickedChildrenEvent;
 

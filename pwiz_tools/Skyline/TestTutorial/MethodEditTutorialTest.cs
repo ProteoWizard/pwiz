@@ -29,7 +29,6 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -204,7 +203,8 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 10); // Not L10N
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
-            PauseForScreenShot("Targets tree clipped from main window", 11); // Not L10N
+            // TODO: Crop the screenshot to get rid of the title and scrollbars
+            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 11); // Not L10N
 
             if (IsCoverShotMode)
             {
@@ -287,6 +287,11 @@ namespace pwiz.SkylineTestTutorial
                         pasteProteinsDlg.SelectedPath = SkylineWindow.SequenceTree.SelectedPath;
                         pasteProteinsDlg.PasteProteins();
                     });
+                RunUI(() =>
+                {
+                    pasteProteinsDlg.SelectCell(17, 0);
+                    pasteProteinsDlg.SetColumnWidths(-1, 220, 500, 0, 0, 0, 0);
+                });
                 PauseForScreenShot<PasteDlg.ProteinListTab>("Insert Protein List - For Screenshot, select last (empty) item in list", 14); // Not L10N
                 OkDialog(pasteProteinsDlg, pasteProteinsDlg.OkDialog);
             }
@@ -324,6 +329,11 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.Undo());
                 PasteDlg pastePeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(pastePeptidesDlg.PastePeptides);
+                RunUI(() =>
+                {
+                    pastePeptidesDlg.SelectCell(12, 0);
+                    pastePeptidesDlg.Height = 437;
+                });
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List -  For screenshot, select last (empty) line in list", 17); // Not L10N
                 OkDialog(pastePeptidesDlg, pastePeptidesDlg.OkDialog);
             }
@@ -336,7 +346,7 @@ namespace pwiz.SkylineTestTutorial
                                              findPeptideDlg.FindNext();
                                              findPeptideDlg.Close();
                                          });
-            PauseForScreenShot<GraphSpectrum>("Library Match graph metafile", 18); // Not L10N
+            PauseForGraphScreenShot("Library Match graph metafile", SkylineWindow.GraphSpectrum, 18); // Not L10N
 
             using (new CheckDocumentState(35, 64, 64, 320, null, true))
             {
@@ -344,7 +354,8 @@ namespace pwiz.SkylineTestTutorial
                 PauseForForm(typeof(RefineDlg.DocumentTab));
                 RunUI(() => refineDlg.MinTransitions = 5);
                 OkDialog(refineDlg, refineDlg.OkDialog);
-                PauseForScreenShot("29/35 prot 50/64 pep 50/64 prec 246/320 tran", 18); // Not L10N
+                PauseForScreenShot("29/35 prot 50/64 pep 50/64 prec 246/320 tran", 18, null,
+                    ClipSelectionStatus); // Not L10N
             }
 
             // Checking Peptide Uniqueness, p. 18
@@ -362,6 +373,9 @@ namespace pwiz.SkylineTestTutorial
                     {
                         Assert.AreEqual(1, uniquePeptidesDlg.GetDataGridView().RowCount);
                         Assert.AreEqual(7, uniquePeptidesDlg.GetDataGridView().ColumnCount);
+
+                        uniquePeptidesDlg.SplitHeight = 58;
+                        uniquePeptidesDlg.Height = 292;
                     });
                 PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form", 19); // Not L10N
                 var oldDoc = SkylineWindow.Document;
@@ -371,14 +385,12 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Protein Name Auto-Completion
-            PauseForScreenShot("(fig. 1): For screenshot, click at bottom of document tree, type 'ybl087' and see the autocomplete text.  Make sure to undo this new entry before proceeding.", 20); // Not L10N
-            TestAutoComplete("ybl087", 0); // Not L10N
+            TestAutoComplete("ybl087", 0, 20); // Not L10N
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YBL087C", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
             // Protein Description Auto-Completion
-            PauseForScreenShot("(fig. 2): For screenshot, click at bottom of document tree, type 'eft2' and see the autocomplete text, then down-arrow twice. Make sure to undo this new entry before proceeding.", 20); // Not L10N
-            TestAutoComplete("eft2", 0); // Sorting logic puts this at the 0th entry in the list - Not L10N
+            TestAutoComplete("eft2", 0, 20); // Sorting logic puts this at the 0th entry in the list - Not L10N
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
@@ -386,7 +398,9 @@ namespace pwiz.SkylineTestTutorial
             TestAutoComplete("IQGP", 0); // Not L10N
             var peptides = new List<PeptideDocNode>(Program.ActiveDocument.Peptides);
             Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [770, 785]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
-            PauseForScreenShot("(fig. 1) - For screenshot, click at the bottom of the document tree", 21); // Not L10N
+            RestoreViewOnScreen(21);
+            PauseForScreenShot<SequenceTreeForm>("(fig. 1) - Added targets", 21, null,
+                bmp => ClipBitmap(bmp, new Rectangle(5, bmp.Height - 178, 355, 165))); // Not L10N
 
             // Pop-up Pick-Lists, p. 21
             using (new CheckDocumentState(36, 71, 71, 355, null, true))
@@ -444,10 +458,9 @@ namespace pwiz.SkylineTestTutorial
             });
 
             FindNode(string.Format("L [b5] - {0:F04}+", 484.3130)); // Not L10N - may be localized " (rank 3)"
-            ShowNodeTip("YBL087C");
-            ShowNodeTip(string.Format("{0:F04}+++", 672.6716));
+            ShowNodeTip("YBL087C", 23);
+            ShowNodeTip(string.Format("{0:F04}+++", 672.6716), 23);
             ShowNodeTip(null);
-            PauseForScreenShot("For Screenshots, First hover over YBL087C, then over 672.671+++", 23); // Not L10N
 
             // Preparing to Measure, p. 25
             RunDlg<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.Prediction), transitionSettingsUI =>
@@ -500,7 +513,7 @@ namespace pwiz.SkylineTestTutorial
             });
         }
 
-        private void ShowNodeTip(string nodeText)
+        private void ShowNodeTip(string nodeText, int? pageNumPause = null)
         {
             RunUI(() =>
             {
@@ -519,6 +532,20 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.MoveMouse(pt);
             });
             WaitForConditionUI(NodeTip.TipDelayMs * 10, () => SkylineWindow.SequenceTree.IsTipVisible);
+
+            if (pageNumPause != null)
+            {
+                PauseForScreenShot<ScreenForm>("Tip for " + nodeText, pageNumPause.Value, null,
+                    bmp =>
+                    {
+                        var cropRect = SkylineWindow.SequenceTree.TipRect;
+                        // Remove lower-right shadow
+                        cropRect.Width -= 4;
+                        cropRect.Height -= 4;
+                        return ClipBitmap(bmp, cropRect);
+                    });
+            }
+
             SkylineWindow.SequenceTree.IgnoreFocus = false;
             // If someone is watching let them at least see the tips, if not take screenshots of them
             int delayMultiplier = IsPauseForScreenShots ? 4 : 1;
@@ -548,7 +575,7 @@ namespace pwiz.SkylineTestTutorial
             SetClipboardTextUI(File.ReadAllText(TestFilesDirs[0].GetTestPath(filepath)));
         }
 
-        private static void TestAutoComplete(string text, int index)
+        private void TestAutoComplete(string text, int index, int? pageNum = null)
         {
             var doc = WaitForDocumentLoaded();
             RunUI(() =>
@@ -560,6 +587,8 @@ namespace pwiz.SkylineTestTutorial
             });
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);
+            if (pageNum != null)
+                PauseForScreenShot("Auto-complete " + text, pageNum.Value);
             RunUI(() => SkylineWindow.SequenceTree.StatementCompletionEditBox.OnSelectionMade(
                             (StatementCompletionItem)statementCompletionForm.ListView.Items[index].Tag));
             WaitForDocumentChangeLoaded(doc);

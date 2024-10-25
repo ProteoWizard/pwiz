@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -390,7 +389,14 @@ namespace pwiz.SkylineTestTutorial
             ChangePeakBounds("Pit01", 65.36, 66.7);
             ChangePeakBounds("Pit02", 64.89, 66.2);
 
-            Func<Bitmap, Bitmap> clipChromAndPeakAreas = ClipSkylineWindowShotWithForms(new List<DockableForm>() { SkylineWindow.GetGraphChrom("Pit01"), SkylineWindow.GetGraphChrom("Pit02"), FindGraphSummaryByGraphType<AreaReplicateGraphPane>() });
+            Func<Bitmap, Bitmap> clipChromAndPeakAreas = bmp => 
+                ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
+                {
+                    SkylineWindow.GetGraphChrom("Pit01"),
+                    SkylineWindow.GetGraphChrom("Pit02"),
+                    FindGraphSummaryByGraphType<AreaReplicateGraphPane>()
+                });
+
             PauseForScreenShot("Chromatograms and peak areas", 34, null, clipChromAndPeakAreas);
 
             SelectNode(SrmDocument.Level.TransitionGroups, 13);

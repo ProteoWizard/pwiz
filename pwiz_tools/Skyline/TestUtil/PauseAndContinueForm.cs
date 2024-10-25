@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
@@ -34,23 +35,25 @@ namespace pwiz.SkylineTestUtil
 {
     public partial class PauseAndContinueForm : Form
     {
-        private static bool _saveScreenShotChecked = true;
         private static ScreenshotPreviewForm screenshotPreviewForm = new ScreenshotPreviewForm();
         private readonly string _linkUrl;
         private readonly bool _showMatchingPage;
         private readonly string _fileToSave;
         private Control _screenshotForm;
+        private bool _fullScreen;
         private ScreenshotManager _screenshotManager;
         private Func<Bitmap, Bitmap> _processShot;
 
-        public PauseAndContinueForm(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, Control screenshotForm = null, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
+        public PauseAndContinueForm(string description, string fileToSave, string link, bool showMatchingPages,
+            Control screenshotForm, bool fullScreen, ScreenshotManager screenshotManager, Func<Bitmap, Bitmap> processShot)
         {
             InitializeComponent();
             _screenshotForm = screenshotForm;
+            _fullScreen = fullScreen;
             _screenshotManager = screenshotManager;
             _fileToSave = fileToSave;
             _processShot = processShot;
-            saveScreenshotCheckbox.Checked = _saveScreenShotChecked;
+            saveScreenshotCheckbox.Checked = true;
 
             _linkUrl = link;
             if (!string.IsNullOrEmpty(link))
@@ -85,7 +88,7 @@ namespace pwiz.SkylineTestUtil
             // Finally make sure the button is fully visible
             Height += Math.Max(0, (btnContinue.Bottom + btnContinue.Left) - ClientRectangle.Bottom);
 
-            setScreenshotButtonLabels();
+            UpdateScreenshotButtonLabels();
         }
 
         private void btnContinue_Click(object sender, EventArgs e)
@@ -111,7 +114,8 @@ namespace pwiz.SkylineTestUtil
 
         private static readonly object _pauseLock = new object();
 
-        public static void Show(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null, Control screenshotForm = null, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
+        public static void Show(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
+            Control screenshotForm = null, bool fullScreen = false, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
         {
             ClipboardEx.UseInternalClipboard(false);
 
@@ -123,7 +127,8 @@ namespace pwiz.SkylineTestUtil
 
             RunUI(parentWindow, () =>
             {
-                var dlg = new PauseAndContinueForm(description, fileToSave, link, showMatchingPages, screenshotForm, screenshotManager, processShot) { Left = parentWindow.Left };
+                var dlg = new PauseAndContinueForm(description, fileToSave, link, showMatchingPages,
+                    screenshotForm, fullScreen, screenshotManager, processShot) { Left = parentWindow.Left };
                 const int spacing = 15;
                 var screen = Screen.FromControl(parentWindow);
                 if (parentWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
@@ -212,18 +217,9 @@ namespace pwiz.SkylineTestUtil
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
-
-        private void btnScreenshot_Click(object sender, EventArgs e)
+        private async void btnScreenshot_Click(object sender, EventArgs e)
         {
-            // Copy current window image to clipboard, with clean edges
-            _screenshotForm.Focus();
-            _screenshotManager.TakeShot(_screenshotForm, saveScreenshotCheckbox.Checked ? _fileToSave : null, _processShot);
-        }
-
-        private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
-            _saveScreenShotChecked = saveScreenshotCheckbox.Checked;
-            setScreenshotButtonLabels();
+            await CaptureScreenShot(saveScreenshotCheckbox.Checked);
         }
 
         private void btnScreenshotAndContinue_Click(object sender, EventArgs e)
@@ -231,17 +227,47 @@ namespace pwiz.SkylineTestUtil
             btnScreenshot_Click(sender, e);
             btnContinue_Click(sender, e);
         }
-        private void btnPreview_Click(object sender, EventArgs e)
+        private async void btnPreview_Click(object sender, EventArgs e)
         {
-            _screenshotForm.Focus();
-            Bitmap screenshot = _screenshotManager.TakeShot(_screenshotForm, null, _processShot);
-
-            var existingImageBytes = File.ReadAllBytes(_fileToSave);
-            var existingImageMemoryStream = new MemoryStream(existingImageBytes);
-            screenshotPreviewForm.ShowScreenshotPreview(screenshot, new Bitmap(existingImageMemoryStream));
+            await CaptureScreenShot(false, true);
         }
 
-        private void setScreenshotButtonLabels()
+        private async Task CaptureScreenShot(bool save, bool showPreview = false)
+        {
+            ActivateScreenshotForm();
+
+            await Task.Delay(200);
+
+            var screenshot = _screenshotManager.TakeShot(_screenshotForm, _fullScreen, save ? _fileToSave: null, _processShot);
+
+            if (showPreview)
+            {
+                var existingImageBytes = File.ReadAllBytes(_fileToSave);
+                var existingImageMemoryStream = new MemoryStream(existingImageBytes);
+                screenshotPreviewForm.ShowScreenshotPreview(screenshot, new Bitmap(existingImageMemoryStream));
+            }
+        }
+
+        private void ActivateScreenshotForm()
+        {
+            // If it is a form, try not to change the focus within the form.
+            var form = (_screenshotForm as Form)?.ParentForm;
+            if (form != null)
+            {
+                form.Activate();
+            }
+            else
+            {
+                _screenshotForm.Focus();
+            }
+        }
+
+        private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateScreenshotButtonLabels();
+        }
+
+        private void UpdateScreenshotButtonLabels()
         {
             btnScreenshot.Text = saveScreenshotCheckbox.Checked ? "Save Screenshot" : "Take Screenshot";
             btnScreenshotAndContinue.Text = saveScreenshotCheckbox.Checked ? "Save and Continue" : "Take and Continue";

@@ -40,11 +40,11 @@ namespace pwiz.SkylineTestUtil
             public static implicit operator Point(PointAdditive add) => add._add;
         }
 
-        public static Rectangle GetWindowRectangle(Control ctrl)
+        public static Rectangle GetWindowRectangle(Control ctrl, bool fullScreen = false)
         {
-            Rectangle snapshotBounds = Rectangle.Empty;
+            var snapshotBounds = Rectangle.Empty;
 
-            DockState[] dockedStates = new DockState[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
+            var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
             var form = ctrl as DockableForm;
             if (form != null && dockedStates.Any((state) => form.DockState == state))
             {
@@ -52,18 +52,32 @@ namespace pwiz.SkylineTestUtil
                 ctrl.Invoke(new Action(() => { origin = form.Pane.PointToScreen(new Point(0, 0)); }));
                 snapshotBounds = new Rectangle(origin, form.Pane.Size);
             }
+            else if (fullScreen)
+            {
+                snapshotBounds = Screen.FromControl(ctrl).Bounds;
+            }
             else
             {
-                //TODO BEFORE MERGE: figure out what to do when it is not a form
-                if (ctrl is Form && (ctrl as Form).ParentForm is FloatingWindow)
-                    ctrl = (ctrl as Form).ParentForm;
-                int frameWidth = ((ctrl as Form).DesktopBounds.Width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
+                ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
+                int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
+                int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
                 Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
                 Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
                 snapshotBounds = new Rectangle(sourcePoint, imageSize);
-
             }
             return snapshotBounds * GetScalingFactor();
+        }
+
+        public static Control FindParent<TParent>(Control ctrl)
+        {
+            while (ctrl != null)
+            {
+                if (ctrl is TParent)
+                    return ctrl;
+                ctrl = ctrl.Parent;
+            }
+
+            return null;
         }
 
         [DllImport("gdi32.dll")]
@@ -91,7 +105,7 @@ namespace pwiz.SkylineTestUtil
             /**
              * Factory method
              */
-            public static SkylineScreenshot CreateScreenshot(Control control)
+            public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false)
             {
                 SkylineScreenshot newShot;
                 if (control is ZedGraphControl zedGraphControl)
@@ -100,7 +114,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 else
                 {
-                    newShot = new ActiveWindowShot(control);
+                    newShot = new ActiveWindowShot(control, fullScreen);
                 }
 
                 return newShot;
@@ -111,15 +125,17 @@ namespace pwiz.SkylineTestUtil
         private class ActiveWindowShot : SkylineScreenshot
         {
             private readonly Control _activeWindow;
-            public ActiveWindowShot(Control activeWindow)
+            private readonly bool _fullscreen;
+            public ActiveWindowShot(Control activeWindow, bool fullscreen)
             {
                 _activeWindow = activeWindow;
+                _fullscreen = fullscreen;
             }
 
             [NotNull]
             public override Bitmap Take()
             {
-                Rectangle shotFrame = GetWindowRectangle(_activeWindow);
+                Rectangle shotFrame = GetWindowRectangle(_activeWindow, _fullscreen);
                 Bitmap bmCapture = new Bitmap(shotFrame.Width, shotFrame.Height, PixelFormat.Format32bppArgb);
                 Graphics graphCapture = Graphics.FromImage(bmCapture);
                 bool captured = false;
@@ -167,13 +183,13 @@ namespace pwiz.SkylineTestUtil
         }
 
 
-        public Bitmap TakeShot(Control activeWindow, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
+        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
         {
             if (activeWindow == null)
                 activeWindow = _skylineWindow;
 
             //check UI and create a blank shot according to the user selection
-            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow);
+            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
 
             Bitmap shotPic = newShot.Take();
             shotPic = processShot != null ? processShot.Invoke(shotPic) : shotPic;

@@ -39,7 +39,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
-using pwiz.MSGraph;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
@@ -65,7 +64,6 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
 using ZedGraph;
-using static alglib;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTestUtil
@@ -696,6 +694,8 @@ namespace pwiz.SkylineTestUtil
             return result;
         }
 
+        private static FormLookup _formLookup;
+
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
             int waitCycles = GetWaitCycles(millis);
@@ -719,8 +719,7 @@ namespace pwiz.SkylineTestUtil
                         });
                     }
 
-                    if (_formLookup == null)
-                        _formLookup = new FormLookup();
+                    _formLookup ??= new FormLookup();
                     Assert.IsNotNull(_formLookup.GetTest(formType),
                         formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
 
@@ -765,8 +764,7 @@ namespace pwiz.SkylineTestUtil
                         });
                     }
 
-                    if (_formLookup == null)
-                        _formLookup = new FormLookup();
+                    _formLookup ??= new FormLookup();
                     Assert.IsNotNull(_formLookup.GetTest(formTypeName),
                         formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
 
@@ -1283,6 +1281,8 @@ namespace pwiz.SkylineTestUtil
 
         private int ScreenShotCounter = 1;
 
+        protected virtual int[] NonScreenShotFigures => Array.Empty<int>();
+
         public virtual bool AuditLogCompareLogs
         {
             get { return IsTutorial && !IsFullData; }   // Logs were recorded with partial data and not in Pass0
@@ -1310,25 +1310,21 @@ namespace pwiz.SkylineTestUtil
 
         private string LinkPage(int? pageNum)
         {
-            return pageNum.HasValue ? LinkPdf + "#page=" + pageNum : null;
+            if (string.IsNullOrEmpty(TutorialPath))
+                return null;
+            int figureNum = ScreenShotCounter + NonScreenShotFigures.Count(n => n <= ScreenShotCounter);
+            var fileUri = new Uri(Path.Combine(TutorialPath, "index.html")).AbsoluteUri + "#figure" + figureNum;
+            const string tutorialSearch = "/Tutorials/";
+            int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
+            return "https://skyline.ms/tutorials/24-1/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
         }
 
-        private static FormLookup _formLookup;
-        protected Func<Bitmap, Bitmap> ClipSkylineWindowShotWithForms(List<DockableForm> dockableForms)
+        protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            return (originalShot) =>
-            {
-                Rectangle cropArea = ComputeDockableFormInclusiveRectangle(dockableForms);
-                Bitmap croppedShot = new Bitmap(cropArea.Width, cropArea.Height);
-                using (Graphics g = Graphics.FromImage(croppedShot))
-                {
-                    g.DrawImage(originalShot, new Rectangle(0, 0, cropArea.Width, cropArea.Height), cropArea, GraphicsUnit.Pixel);
-                }
-
-                return croppedShot;
-            };
+            return ClipBitmap(skylineWindowBmp, ComputeDockableFormInclusiveRectangle(dockableForms));
         }
-        private Rectangle ComputeDockableFormInclusiveRectangle(List<DockableForm> dockableForms)
+
+        private Rectangle ComputeDockableFormInclusiveRectangle(IList<DockableForm> dockableForms)
         {
             return dockableForms
                 .Select(ComputeDockableFormScreenRectangle)
@@ -1337,10 +1333,28 @@ namespace pwiz.SkylineTestUtil
 
         private Rectangle ComputeDockableFormScreenRectangle(DockableForm dockableForm)
         {
-            Rectangle formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm);
-            Point skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y) * ScreenshotManager.GetScalingFactor();
-            Point skylineRelativeOrigin = new Point(formRectangle.X - skylineWindowPoint.X, formRectangle.Y - skylineWindowPoint.Y);
+            var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm);
+            var skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y) * ScreenshotManager.GetScalingFactor();
+            var skylineRelativeOrigin = new Point(formRectangle.X - skylineWindowPoint.X, formRectangle.Y - skylineWindowPoint.Y);
             return new Rectangle(skylineRelativeOrigin, formRectangle.Size);
+        }
+
+        protected Bitmap ClipSelectionStatus(Bitmap skylineWindowBmp)
+        {
+            int clipWidth = SkylineWindow.StatusSelectionWidth;
+            int clipHeight = SkylineWindow.StatusBarHeight;
+            var cropRect = new Rectangle(skylineWindowBmp.Width - clipWidth, skylineWindowBmp.Height - clipHeight, clipWidth, clipHeight);
+            return ClipBitmap(skylineWindowBmp, cropRect);
+        }
+
+        protected static Bitmap ClipBitmap(Image bmp, Rectangle rect)
+        {
+            var croppedShot = new Bitmap(rect.Width, rect.Height);
+            using var g = Graphics.FromImage(croppedShot);
+
+            g.DrawImage(bmp, new Rectangle(0, 0, rect.Width, rect.Height), rect, GraphicsUnit.Pixel);
+
+            return croppedShot;
         }
 
         protected GraphSummary FindGraphSummaryByGraphType<TGraphPane>() where TGraphPane : SummaryGraphPane
@@ -1358,16 +1372,16 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShot(description, pageNum, null, screenshotForm, timeout);
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null)
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TView : IFormView
         {
-            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout);
+            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout, processShot);
         }
 
         public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null)
         {
             var zedGraph = FindZedGraph(graphContainer);
-            Assert.IsNotNull(zedGraph, "Control was not or did not contain graph");
+            Assert.IsNotNull(zedGraph, "Control was not or did not contain a graph.");
             PauseForScreenShot(description, pageNum, null, zedGraph, timeout);
         }
 
@@ -1385,11 +1399,21 @@ namespace pwiz.SkylineTestUtil
 
             return null;
         }
-        private void PauseForScreenShot(string description, int? pageNum, Type formType = null, Control screenshotForm = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+
+        /// <summary>
+        /// Type that indicates a full-screen screenshot should be taken
+        /// </summary>
+        public class ScreenForm : IFormView
         {
+        }
+
+        private void PauseForScreenShot(string description, int? pageNum, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            bool fullScreen = formType == typeof(ScreenForm);
+
             if (formType != null)
             {
-                var form = TryWaitForOpenForm(formType);
+                var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
             if (Program.SkylineOffscreen)
@@ -1403,36 +1427,38 @@ namespace pwiz.SkylineTestUtil
             {
                 if (screenshotForm == null)
                 {
-                    if (formType != null)
+                    if (!fullScreen && formType != null)
                     {
-                        screenshotForm = TryWaitForOpenForm(formType) ?? SkylineWindow;
+                        screenshotForm = TryWaitForOpenForm(formType);
                     }
-                    else
-                        screenshotForm = SkylineWindow;
-                    RunUI(() => screenshotForm?.Update());
+                    screenshotForm ??= SkylineWindow;
+
+                    RunUI(() => screenshotForm.Update());
                 }
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                var fileToSave = !String.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, "s-" +ScreenShotCounter++)}.png" : null;
+                var fileToSave = !string.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, "s-" + ScreenShotCounter)}.png" : null;
 
                 if (IsAutoScreenShotMode)
                 {
                     Thread.Sleep(3000);
                     screenshotForm.Focus();
-                    _shotManager.TakeShot(screenshotForm, fileToSave, processShot);
+                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), fileToSave, LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager, processShot);
+                    PauseAndContinueForm.Show(description + string.Format(" - fig. {0}", ScreenShotCounter), fileToSave, LinkPage(pageNum), showMatchingPages, timeout,
+                        screenshotForm, fullScreen, _shotManager, processShot);
                 }
-
             }
             else
             {
                 PauseForForm(formType);
             }
+
+            ScreenShotCounter++;
         }
 
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
@@ -1451,13 +1477,13 @@ namespace pwiz.SkylineTestUtil
                     "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
             });
             var coverSavePath = GetCoverShotPath();
-            ScreenshotManager.TakeShot(SkylineWindow, coverSavePath, ProcessCoverShot);
+            ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)
             {
                 // Screenshot for the StartPage
                 coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeShot(SkylineWindow, coverSavePath2, ProcessCoverShot, 0.20);
+                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
             {
@@ -2522,7 +2548,7 @@ namespace pwiz.SkylineTestUtil
             RunUI(() => addStaticModDlg.Modification = mod);
 
             if (pauseText != null || pausePage.HasValue)
-                PauseForScreenShot(pauseText, pausePage, viewType, null);
+                PauseForScreenShot(pauseText, pausePage, viewType);
 
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
             OkDialog(editModsDlg, editModsDlg.OkDialog);

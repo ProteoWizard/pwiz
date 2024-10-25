@@ -4161,7 +4161,15 @@ namespace pwiz.Skyline
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
 
-        public int StatusBarHeight { get { return statusGeneral.Height; } }
+        public int StatusBarHeight { get { return statusStrip.Height; } }
+
+        public int StatusSelectionWidth
+        {
+            get
+            {
+                return statusSequences.Width + statusPeptides.Width + statusPrecursors.Width + statusIons.Width + 20;
+            }
+        }
 
         #endregion
 
