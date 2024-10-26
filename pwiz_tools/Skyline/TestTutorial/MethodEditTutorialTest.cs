@@ -204,7 +204,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
             // TODO: Crop the screenshot to get rid of the title and scrollbars
-            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 11); // Not L10N
+            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 11, null,
+                bmp => ClipTargets(bmp)); // Not L10N
 
             if (IsCoverShotMode)
             {
@@ -385,12 +386,12 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Protein Name Auto-Completion
-            TestAutoComplete("ybl087", 0, 20); // Not L10N
+            TestAutoComplete("ybl087", 0, 20, 51); // Not L10N
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YBL087C", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
             // Protein Description Auto-Completion
-            TestAutoComplete("eft2", 0, 20); // Sorting logic puts this at the 0th entry in the list - Not L10N
+            TestAutoComplete("eft2", 0, 20, 83); // Sorting logic puts this at the 0th entry in the list - Not L10N
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
@@ -400,7 +401,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [770, 785]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
             RestoreViewOnScreen(21);
             PauseForScreenShot<SequenceTreeForm>("(fig. 1) - Added targets", 21, null,
-                bmp => ClipBitmap(bmp, new Rectangle(5, bmp.Height - 178, 355, 165))); // Not L10N
+                bmp => ClipTargets(bmp, 10, true, true)); // Not L10N
 
             // Pop-up Pick-Lists, p. 21
             using (new CheckDocumentState(36, 71, 71, 355, null, true))
@@ -575,7 +576,7 @@ namespace pwiz.SkylineTestTutorial
             SetClipboardTextUI(File.ReadAllText(TestFilesDirs[0].GetTestPath(filepath)));
         }
 
-        private void TestAutoComplete(string text, int index, int? pageNum = null)
+        private void TestAutoComplete(string text, int index, int? pageNum = null, int aboveAutoComplete = 0)
         {
             var doc = WaitForDocumentLoaded();
             RunUI(() =>
@@ -588,9 +589,22 @@ namespace pwiz.SkylineTestTutorial
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);
             if (pageNum != null)
-                PauseForScreenShot("Auto-complete " + text, pageNum.Value);
+            {
+                RunUI(() => SkylineWindow.SequenceTree.StatementCompletionEditBox.SelectWithoutChoosing(0));
+                PauseForScreenShot<ScreenForm>("Auto-complete " + text, pageNum.Value, null,
+                    bmp =>
+                    {
+                        var completeRect = FindOpenForm<StatementCompletionForm>().Bounds;
+                        var skylineRect = SkylineWindow.Bounds;
+                        int top = completeRect.Top - aboveAutoComplete;
+                        int bottom = Math.Max(skylineRect.Bottom - 7, completeRect.Bottom);
+                        var cropRect = new Rectangle(skylineRect.Left + 7, top, 735,  bottom - top);
+                        return ClipBitmap(bmp, cropRect);
+                    });
+            }
+
             RunUI(() => SkylineWindow.SequenceTree.StatementCompletionEditBox.OnSelectionMade(
-                            (StatementCompletionItem)statementCompletionForm.ListView.Items[index].Tag));
+                (StatementCompletionItem)statementCompletionForm.ListView.Items[index].Tag));
             WaitForDocumentChangeLoaded(doc);
         }
 

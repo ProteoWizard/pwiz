@@ -1347,6 +1347,71 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(skylineWindowBmp, cropRect);
         }
 
+        [DllImport("user32.dll")]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
+        {
+            var sequenceTree = SkylineWindow.SequenceTree;
+            var sequenceTreeRect = sequenceTree.Bounds;
+
+            sequenceTreeRect.Inflate(-1, -1);   // Borders outside parent rect
+
+            const int GWL_STYLE = -16;
+            const int WS_VSCROLL = 0x00200000;
+            const int WS_HSCROLL = 0x00100000;
+            int style = GetWindowLong(sequenceTree.Handle, GWL_STYLE);
+            if ((style & WS_VSCROLL) != 0)
+                sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
+            if ((style & WS_HSCROLL) != 0)
+                sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
+
+            if (countTargets != null)
+            {
+                int targetsRange = sequenceTree.ItemHeight * countTargets.Value;
+                if (!fromBottom)
+                    sequenceTreeRect.Height = targetsRange;
+                else
+                {
+                    // Find the bottom node
+                    var topNode = sequenceTree.TopNode;
+                    int aboveRange = sequenceTree.ItemHeight;
+                    while (topNode.NextVisibleNode != null && aboveRange < sequenceTreeRect.Height)
+                    {
+                        topNode = topNode.NextVisibleNode;
+                        aboveRange += sequenceTree.ItemHeight;
+                    }
+
+                    // Skip last node if requested
+                    int bottomPadding = 0;
+                    if (!includeNewItem && topNode.NextVisibleNode == null)
+                        topNode = topNode.PrevVisibleNode;
+                    else
+                        bottomPadding = 5;  // A little extra space below the new node
+
+                    var lastNode = topNode;
+
+                    // Find the top of the range
+                    for (int i = 0; i < countTargets.Value - 1; i++)
+                    {
+                        if (ReferenceEquals(topNode, sequenceTree.TopNode))
+                            break;
+                        topNode = topNode.PrevVisibleNode;
+                    }
+
+                    sequenceTreeRect.Y = topNode.Bounds.Top;
+                    int bottom = Math.Min(lastNode.Bounds.Bottom + bottomPadding, sequenceTreeRect.Bottom);
+                    sequenceTreeRect.Height = bottom - sequenceTreeRect.Y;
+                }
+            }
+
+            var targetsForm = FindOpenForm<SequenceTreeForm>().Pane;    // Bitmap is taken of the Pane
+            sequenceTreeRect = sequenceTree.RectToScreen(sequenceTreeRect);
+            sequenceTreeRect = targetsForm.RectangleToClient(sequenceTreeRect);
+
+            return ClipBitmap(targetsBmp, sequenceTreeRect);
+        }
+
         protected static Bitmap ClipBitmap(Image bmp, Rectangle rect)
         {
             var croppedShot = new Bitmap(rect.Width, rect.Height);

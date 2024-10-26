@@ -185,15 +185,22 @@ namespace pwiz.SkylineTestUtil
 
         public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
         {
-            if (activeWindow == null)
-                activeWindow = _skylineWindow;
+            activeWindow ??= _skylineWindow;
 
             //check UI and create a blank shot according to the user selection
             SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
 
             Bitmap shotPic = newShot.Take();
-            shotPic = processShot != null ? processShot.Invoke(shotPic) : shotPic;
-            CleanupBorder(shotPic); // Tidy up annoying variations in screenshot border due to underlying windows
+            if (processShot != null)
+            {
+                shotPic = processShot(shotPic);
+            }
+            else
+            {
+                // Tidy up annoying variations in screenshot border due to underlying windows
+                // Only for unprocessed window screenshots
+                CleanupBorder(shotPic); 
+            }
 
             if (scale.HasValue)
             {
@@ -208,7 +215,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             //Have to do it this way because of the limitation on OLE access from background threads.
-            Thread clipThread = new Thread(() => Clipboard.SetImage(shotPic));
+            var clipThread = new Thread(() => Clipboard.SetImage(shotPic));
             clipThread.SetApartmentState(ApartmentState.STA);
             clipThread.Start();
             clipThread.Join();

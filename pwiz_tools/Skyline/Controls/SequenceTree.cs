@@ -1252,7 +1252,7 @@ namespace pwiz.Skyline.Controls
                     disableCompletion = false;
                 }
             }
-            _editTextBox = new StatementCompletionTextBox(DocumentContainer)
+            _editTextBox = new StatementCompletionTextBox(DocumentContainer, commitOnLoseFocus)
                 {AutoSizeWidth = true, DisableCompletion = disableCompletion};
             _editTextBox.Attach(textBox);
             textBox.KeyDown += textBox_KeyDown;
