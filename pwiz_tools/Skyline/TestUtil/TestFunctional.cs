@@ -1342,7 +1342,7 @@ namespace pwiz.SkylineTestUtil
         protected Bitmap ClipSelectionStatus(Bitmap skylineWindowBmp)
         {
             int clipWidth = SkylineWindow.StatusSelectionWidth;
-            int clipHeight = SkylineWindow.StatusBarHeight;
+            int clipHeight = SkylineWindow.StatusBarHeight + 1;
             var cropRect = new Rectangle(skylineWindowBmp.Width - clipWidth, skylineWindowBmp.Height - clipHeight, clipWidth, clipHeight);
             return ClipBitmap(skylineWindowBmp, cropRect);
         }
