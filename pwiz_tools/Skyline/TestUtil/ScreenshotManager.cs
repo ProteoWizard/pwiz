@@ -183,6 +183,20 @@ namespace pwiz.SkylineTestUtil
         }
 
 
+        public static void ActivateScreenshotForm(Control screenshotControl)
+        {
+            // If it is a form, try not to change the focus within the form.
+            var form = (screenshotControl as Form)?.ParentForm;
+            if (form != null)
+            {
+                form.Activate();
+            }
+            else
+            {
+                screenshotControl.Focus();
+            }
+        }
+
         public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
         {
             activeWindow ??= _skylineWindow;

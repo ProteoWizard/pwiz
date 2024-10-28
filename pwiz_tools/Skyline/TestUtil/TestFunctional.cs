@@ -1308,12 +1308,13 @@ namespace pwiz.SkylineTestUtil
 
         public string LinkPdf { get; set; }
 
-        private string LinkPage(int? pageNum)
+        private int FigueNum => ScreenShotCounter + NonScreenShotFigures.Count(n => n <= ScreenShotCounter);
+
+        private string LinkScreenShotFigure()
         {
             if (string.IsNullOrEmpty(TutorialPath))
                 return null;
-            int figureNum = ScreenShotCounter + NonScreenShotFigures.Count(n => n <= ScreenShotCounter);
-            var fileUri = new Uri(Path.Combine(TutorialPath, "index.html")).AbsoluteUri + "#figure" + figureNum;
+            var fileUri = new Uri(Path.Combine(TutorialPath, "index.html")).AbsoluteUri + "#figure" + FigueNum;
             const string tutorialSearch = "/Tutorials/";
             int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
             return "https://skyline.ms/tutorials/24-1/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
@@ -1414,10 +1415,12 @@ namespace pwiz.SkylineTestUtil
 
         protected static Bitmap ClipBitmap(Image bmp, Rectangle rect)
         {
-            var croppedShot = new Bitmap(rect.Width, rect.Height);
+            var scaledRect = rect * ScreenshotManager.GetScalingFactor();
+            var croppedShot = new Bitmap(scaledRect.Width, scaledRect.Height);
             using var g = Graphics.FromImage(croppedShot);
 
-            g.DrawImage(bmp, new Rectangle(0, 0, rect.Width, rect.Height), rect, GraphicsUnit.Pixel);
+            g.DrawImage(bmp, new Rectangle(0, 0, scaledRect.Width, scaledRect.Height),
+                scaledRect, GraphicsUnit.Pixel);
 
             return croppedShot;
         }
@@ -1430,24 +1433,24 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForScreenShot(description, pageNum, null, null, timeout, processShot);
+            PauseForScreenShotInternal(description, null, null, timeout, processShot);
         }
         public void PauseForScreenShot(Control screenshotForm, string description = null, int? pageNum = null, int ? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null, screenshotForm, timeout);
+            PauseForScreenShotInternal(description, null, screenshotForm, timeout);
         }
 
         public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TView : IFormView
         {
-            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout, processShot);
+            PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
         }
 
         public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null)
         {
             var zedGraph = FindZedGraph(graphContainer);
             Assert.IsNotNull(zedGraph, "Control was not or did not contain a graph.");
-            PauseForScreenShot(description, pageNum, null, zedGraph, timeout);
+            PauseForScreenShotInternal(description, null, zedGraph, timeout);
         }
 
         private ZedGraphControl FindZedGraph(Control graphContainer)
@@ -1472,7 +1475,7 @@ namespace pwiz.SkylineTestUtil
         {
         }
 
-        private void PauseForScreenShot(string description, int? pageNum, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        private void PauseForScreenShotInternal(string description, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             bool fullScreen = formType == typeof(ScreenForm);
 
@@ -1488,7 +1491,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
+            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= FigueNum)
             {
                 if (screenshotForm == null)
                 {
@@ -1507,14 +1510,15 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(3000);
-                    screenshotForm.Focus();
+                    Thread.Sleep(3000); // Wait for UI to settle down - Necessary?
+                    RunUI(() => ScreenshotManager.ActivateScreenshotForm(screenshotForm));
+                    Thread.Sleep(200);  // Wait for activation to complete
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueForm.Show(description + string.Format(" - fig. {0}", ScreenShotCounter), fileToSave, LinkPage(pageNum), showMatchingPages, timeout,
+                    PauseAndContinueForm.Show(string.Format("fig. {0}: {1}", ScreenShotCounter, description), fileToSave, LinkScreenShotFigure(), showMatchingPages, timeout,
                         screenshotForm, fullScreen, _shotManager, processShot);
                 }
             }
@@ -2613,7 +2617,7 @@ namespace pwiz.SkylineTestUtil
             RunUI(() => addStaticModDlg.Modification = mod);
 
             if (pauseText != null || pausePage.HasValue)
-                PauseForScreenShot(pauseText, pausePage, viewType);
+                PauseForScreenShotInternal(pauseText, viewType);
 
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
             OkDialog(editModsDlg, editModsDlg.OkDialog);

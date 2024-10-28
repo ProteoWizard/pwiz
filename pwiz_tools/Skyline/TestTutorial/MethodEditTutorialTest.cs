@@ -203,7 +203,6 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 10); // Not L10N
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
-            // TODO: Crop the screenshot to get rid of the title and scrollbars
             PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 11, null,
                 bmp => ClipTargets(bmp)); // Not L10N
 

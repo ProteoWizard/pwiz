@@ -25,6 +25,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Startup;
@@ -48,12 +49,26 @@ namespace pwiz.SkylineTestUtil
             Control screenshotForm, bool fullScreen, ScreenshotManager screenshotManager, Func<Bitmap, Bitmap> processShot)
         {
             InitializeComponent();
+            // A strange ordering bug in calculating the size of the boarder makes it necessary to remove
+            // the ControlBox after the FormBorderStyle is set.
+            ControlBox = false;
+
             _screenshotForm = screenshotForm;
             _fullScreen = fullScreen;
             _screenshotManager = screenshotManager;
             _fileToSave = fileToSave;
             _processShot = processShot;
-            saveScreenshotCheckbox.Checked = true;
+
+            if (_screenshotForm == null || _screenshotManager == null)
+            {
+                // Show the screenshot buttons
+                btnPreview.Visible =
+                    btnScreenshot.Visible =
+                        btnScreenshotAndContinue.Visible = 
+                            saveScreenshotCheckbox.Visible = false;
+
+                Height -= saveScreenshotCheckbox.Bottom - btnContinue.Bottom;
+            }
 
             _linkUrl = link;
             if (!string.IsNullOrEmpty(link))
@@ -65,12 +80,19 @@ namespace pwiz.SkylineTestUtil
                 if (string.IsNullOrEmpty(description))
                     description = "Show screenshot";
             }
-            if (description != null)
+            if (!string.IsNullOrEmpty(description))
             {
-                if (link == null)
+                if (string.IsNullOrEmpty(link))
+                {
                     lblDescription.Text = description;
+                    toolTip1.SetToolTip(lblDescription, description);
+                }
                 else
+                {
                     lblDescriptionLink.Text = description;
+                    toolTip1.SetToolTip(lblDescriptionLink, description);
+                    lblDescriptionLink.TabStop = false;
+                }
             }
             else
             {
@@ -80,10 +102,11 @@ namespace pwiz.SkylineTestUtil
                 lblDescription.Visible = false;
             }
 
-            int descriptionWidth = link == null ? lblDescription.Width : lblDescriptionLink.Width;
+            // int descriptionWidth = link == null ? lblDescription.Width : lblDescriptionLink.Width;
             // Adjust dialog width to accommodate description.
-            if (descriptionWidth > btnContinue.Width)
-                Width = descriptionWidth + lblDescription.Left*2;
+            // Rely on the tooltip instead as making this form wider can get in the way of screenshots
+            // if (descriptionWidth > btnContinue.Width)
+            //     Width = descriptionWidth + lblDescription.Left*2;
 
             // Finally make sure the button is fully visible
             Height += Math.Max(0, (btnContinue.Bottom + btnContinue.Left) - ClientRectangle.Bottom);
@@ -92,6 +115,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         private void btnContinue_Click(object sender, EventArgs e)
+        {
+            Continue();
+        }
+
+        private void Continue()
         {
             if (screenshotPreviewForm.Visible)
             {
@@ -222,11 +250,12 @@ namespace pwiz.SkylineTestUtil
             await CaptureScreenShot(saveScreenshotCheckbox.Checked);
         }
 
-        private void btnScreenshotAndContinue_Click(object sender, EventArgs e)
+        private async void btnScreenshotAndContinue_Click(object sender, EventArgs e)
         {
-            btnScreenshot_Click(sender, e);
-            btnContinue_Click(sender, e);
+            await CaptureScreenShot(saveScreenshotCheckbox.Checked);
+            Continue();
         }
+
         private async void btnPreview_Click(object sender, EventArgs e)
         {
             await CaptureScreenShot(false, true);
@@ -234,7 +263,7 @@ namespace pwiz.SkylineTestUtil
 
         private async Task CaptureScreenShot(bool save, bool showPreview = false)
         {
-            ActivateScreenshotForm();
+            ScreenshotManager.ActivateScreenshotForm(_screenshotForm);
 
             await Task.Delay(200);
 
@@ -248,20 +277,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private void ActivateScreenshotForm()
-        {
-            // If it is a form, try not to change the focus within the form.
-            var form = (_screenshotForm as Form)?.ParentForm;
-            if (form != null)
-            {
-                form.Activate();
-            }
-            else
-            {
-                _screenshotForm.Focus();
-            }
-        }
-
         private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             UpdateScreenshotButtonLabels();
@@ -269,8 +284,8 @@ namespace pwiz.SkylineTestUtil
 
         private void UpdateScreenshotButtonLabels()
         {
-            btnScreenshot.Text = saveScreenshotCheckbox.Checked ? "Save Screenshot" : "Take Screenshot";
-            btnScreenshotAndContinue.Text = saveScreenshotCheckbox.Checked ? "Save and Continue" : "Take and Continue";
+            btnScreenshot.Text = saveScreenshotCheckbox.Checked ? "Save &Screenshot" : "Take &Screenshot";
+            btnScreenshotAndContinue.Text = saveScreenshotCheckbox.Checked ? "Save and C&ontinue" : "Take and C&ontinue";
         }
     }
 }

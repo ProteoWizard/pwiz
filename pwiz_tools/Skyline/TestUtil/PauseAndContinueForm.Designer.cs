@@ -42,11 +42,12 @@
             // 
             // btnContinue
             // 
-            this.btnContinue.Location = new System.Drawing.Point(18, 54);
+            this.btnContinue.Location = new System.Drawing.Point(12, 35);
+            this.btnContinue.Margin = new System.Windows.Forms.Padding(2);
             this.btnContinue.Name = "btnContinue";
-            this.btnContinue.Size = new System.Drawing.Size(208, 35);
-            this.btnContinue.TabIndex = 0;
-            this.btnContinue.Text = "Continue";
+            this.btnContinue.Size = new System.Drawing.Size(112, 23);
+            this.btnContinue.TabIndex = 2;
+            this.btnContinue.Text = "&Continue";
             this.btnContinue.UseVisualStyleBackColor = true;
             this.btnContinue.Click += new System.EventHandler(this.btnContinue_Click);
             // 
@@ -54,33 +55,32 @@
             // 
             this.lblDescription.AutoEllipsis = true;
             this.lblDescription.AutoSize = true;
-            this.lblDescription.Location = new System.Drawing.Point(20, 20);
-            this.lblDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblDescription.Location = new System.Drawing.Point(13, 13);
             this.lblDescription.Name = "lblDescription";
-            this.lblDescription.Size = new System.Drawing.Size(89, 20);
-            this.lblDescription.TabIndex = 1;
+            this.lblDescription.Size = new System.Drawing.Size(60, 13);
+            this.lblDescription.TabIndex = 0;
             this.lblDescription.Text = "Description";
             // 
             // lblDescriptionLink
             // 
+            this.lblDescriptionLink.AutoEllipsis = true;
             this.lblDescriptionLink.AutoSize = true;
-            this.lblDescriptionLink.Location = new System.Drawing.Point(48, 20);
-            this.lblDescriptionLink.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblDescriptionLink.Location = new System.Drawing.Point(32, 13);
             this.lblDescriptionLink.Name = "lblDescriptionLink";
-            this.lblDescriptionLink.Size = new System.Drawing.Size(89, 20);
-            this.lblDescriptionLink.TabIndex = 2;
-            this.lblDescriptionLink.TabStop = true;
+            this.lblDescriptionLink.Size = new System.Drawing.Size(60, 13);
+            this.lblDescriptionLink.TabIndex = 1;
             this.lblDescriptionLink.Text = "Description";
             this.lblDescriptionLink.Visible = false;
             this.lblDescriptionLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblDescriptionLink_LinkClicked);
             // 
             // btnScreenshot
             // 
-            this.btnScreenshot.Location = new System.Drawing.Point(18, 136);
+            this.btnScreenshot.Location = new System.Drawing.Point(12, 88);
+            this.btnScreenshot.Margin = new System.Windows.Forms.Padding(2);
             this.btnScreenshot.Name = "btnScreenshot";
-            this.btnScreenshot.Size = new System.Drawing.Size(208, 35);
-            this.btnScreenshot.TabIndex = 3;
-            this.btnScreenshot.Text = "Save Screenshot";
+            this.btnScreenshot.Size = new System.Drawing.Size(112, 23);
+            this.btnScreenshot.TabIndex = 4;
+            this.btnScreenshot.Text = "Save &Screenshot";
             this.toolTip1.SetToolTip(this.btnScreenshot, resources.GetString("btnScreenshot.ToolTip"));
             this.btnScreenshot.UseVisualStyleBackColor = true;
             this.btnScreenshot.Click += new System.EventHandler(this.btnScreenshot_Click);
@@ -90,43 +90,42 @@
             this.saveScreenshotCheckbox.AutoSize = true;
             this.saveScreenshotCheckbox.Checked = true;
             this.saveScreenshotCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.saveScreenshotCheckbox.Location = new System.Drawing.Point(46, 222);
-            this.saveScreenshotCheckbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.saveScreenshotCheckbox.Location = new System.Drawing.Point(15, 143);
             this.saveScreenshotCheckbox.Name = "saveScreenshotCheckbox";
-            this.saveScreenshotCheckbox.Size = new System.Drawing.Size(157, 24);
+            this.saveScreenshotCheckbox.Size = new System.Drawing.Size(106, 17);
             this.saveScreenshotCheckbox.TabIndex = 6;
-            this.saveScreenshotCheckbox.Text = "Save Screenshot";
+            this.saveScreenshotCheckbox.Text = "Sa&ve screenshot";
             this.saveScreenshotCheckbox.UseVisualStyleBackColor = true;
             this.saveScreenshotCheckbox.CheckedChanged += new System.EventHandler(this.saveScreenshotCheckbox_CheckedChanged);
             // 
             // btnScreenshotAndContinue
             // 
-            this.btnScreenshotAndContinue.Location = new System.Drawing.Point(18, 177);
+            this.btnScreenshotAndContinue.Location = new System.Drawing.Point(12, 115);
+            this.btnScreenshotAndContinue.Margin = new System.Windows.Forms.Padding(2);
             this.btnScreenshotAndContinue.Name = "btnScreenshotAndContinue";
-            this.btnScreenshotAndContinue.Size = new System.Drawing.Size(208, 35);
-            this.btnScreenshotAndContinue.TabIndex = 7;
-            this.btnScreenshotAndContinue.Text = "Save and Continue";
+            this.btnScreenshotAndContinue.Size = new System.Drawing.Size(112, 23);
+            this.btnScreenshotAndContinue.TabIndex = 5;
+            this.btnScreenshotAndContinue.Text = "Save and C&ontinue";
             this.btnScreenshotAndContinue.UseVisualStyleBackColor = true;
             this.btnScreenshotAndContinue.Click += new System.EventHandler(this.btnScreenshotAndContinue_Click);
             // 
             // btnPreview
             // 
-            this.btnPreview.Location = new System.Drawing.Point(18, 95);
+            this.btnPreview.Location = new System.Drawing.Point(12, 62);
+            this.btnPreview.Margin = new System.Windows.Forms.Padding(2);
             this.btnPreview.Name = "btnPreview";
-            this.btnPreview.Size = new System.Drawing.Size(208, 35);
-            this.btnPreview.TabIndex = 8;
-            this.btnPreview.Text = "Preview";
+            this.btnPreview.Size = new System.Drawing.Size(112, 23);
+            this.btnPreview.TabIndex = 3;
+            this.btnPreview.Text = "&Preview";
             this.btnPreview.UseVisualStyleBackColor = true;
             this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
             // 
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(304, 273);
-            this.ControlBox = false;
+            this.ClientSize = new System.Drawing.Size(139, 172);
             this.Controls.Add(this.btnPreview);
             this.Controls.Add(this.btnScreenshotAndContinue);
             this.Controls.Add(this.saveScreenshotCheckbox);
@@ -136,7 +135,6 @@
             this.Controls.Add(this.btnContinue);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.KeyPreview = true;
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PauseAndContinueForm";
