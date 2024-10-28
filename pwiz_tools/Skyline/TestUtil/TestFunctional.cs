@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestUtil
         protected bool ForceMzml
         {
             get { return _forceMzml; }
-            set { _forceMzml = value && !IsPauseForScreenShots && !IsCoverShotMode;  }    // Don't force mzML during screenshots
+            set { _forceMzml = value && !IsRecordingScreenShots;  }    // Don't force mzML during screenshots
         }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
@@ -273,7 +273,7 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            if (IsPauseForScreenShots && dlg.ShowIcon)
+            if (IsRecordingScreenShots && dlg.ShowIcon)
             {
                 if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
                     RunUI(() => dlg.Icon = Resources.Skyline_Release1);
@@ -1191,6 +1191,8 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
+        public static bool IsRecordingScreenShots => IsPauseForScreenShots || IsAutoScreenShotMode || IsCoverShotMode;
+
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
@@ -1211,24 +1213,9 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static bool _isCoverShotMode;
-
-        public bool IsCoverShotMode
-        {
-            get { return _isCoverShotMode || Program.PauseSeconds == -2; } // -2 is the magic number SkylineTester uses to indicate cover shot mode
-            set
-            {
-                _isCoverShotMode = value;
-                if (_isCoverShotMode)
-                {
-                    Program.PauseSeconds = -2; // -2 is the magic number SkylineTester uses to indicate cover shot mode
-                }
-            }
-        }
-
         private static bool _isAutoScreenShotMode;
 
-        public bool IsAutoScreenShotMode
+        public static bool IsAutoScreenShotMode
         {
             get { return _isAutoScreenShotMode || Program.PauseSeconds == -3; } // -3 is the magic number SkylineTester uses to indicate cover shot mode
             set
@@ -1237,6 +1224,21 @@ namespace pwiz.SkylineTestUtil
                 if (_isAutoScreenShotMode)
                 {
                     Program.PauseSeconds = -3; // -3 is the magic number SkylineTester uses to indicate cover shot mode
+                }
+            }
+        }
+
+        private static bool _isCoverShotMode;
+
+        public static bool IsCoverShotMode
+        {
+            get { return _isCoverShotMode || Program.PauseSeconds == -2; } // -2 is the magic number SkylineTester uses to indicate cover shot mode
+            set
+            {
+                _isCoverShotMode = value;
+                if (_isCoverShotMode)
+                {
+                    Program.PauseSeconds = -2; // -2 is the magic number SkylineTester uses to indicate cover shot mode
                 }
             }
         }
@@ -1304,7 +1306,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
 
-        public bool IsFullData { get { return IsPauseForScreenShots || IsCoverShotMode || IsDemoMode || IsPass0; } }
+        public bool IsFullData { get { return IsRecordingScreenShots || IsDemoMode || IsPass0; } }
 
         public string LinkPdf { get; set; }
 
@@ -2067,7 +2069,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     SkylineWindow.UseKeysOverride = true;
                     SkylineWindow.AssumeNonNullModificationAuditLogging = true;
-                    if (IsPauseForScreenShots || IsCoverShotMode)
+                    if (IsRecordingScreenShots)
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title
                         SkylineWindow.Icon = Resources.Skyline_Release1;
