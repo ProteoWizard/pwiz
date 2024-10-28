@@ -284,6 +284,8 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
+                SkylineWindow.ShowGraphSpectrum(false);
+                SkylineWindow.SequenceTree.Focus();
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 0);
                 SkylineWindow.SelectedNode.Expand();
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
