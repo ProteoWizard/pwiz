@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
         }
 
         // test CWT centroiding
-        /* {
+        {
             auto newConfig = config;
 
             // CWT should work with ion mobility
@@ -73,10 +73,19 @@ int main(int argc, char* argv[])
             newConfig.combineIonMobilitySpectra = true;
             newConfig.indexRange.reset();
             result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile({ "ExampleTuneMix_binned5.mbi" }), newConfig);
-        }*/
+        }
 
         config.combineIonMobilitySpectra = true;
-        result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsMbiFile(), config);
+        result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile({ "2024-02-16-16.02.20-CCS Calibration_02.mbi" }), config);
+
+        // test combined without zero bounding
+        config.ignoreZeroIntensityPoints = true;
+        result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile({ "2024-02-16-16.02.20-CCS Calibration_02.mbi" }), config);
+
+        // test uncombined without zero bounding
+        config.combineIonMobilitySpectra = false;
+        config.indexRange = make_pair(0, 100);
+        result += testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile({ "2024-02-16-16.02.20-CCS Calibration_02.mbi" }), config);
 
         result.check();
     }

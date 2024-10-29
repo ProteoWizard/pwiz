@@ -178,25 +178,79 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
     }
     else
     {
+        std::vector<size_t> intensities;
 
-        std::vector<double> mz;
-        std::vector<size_t> intensity;
-        if (!frame->GetScanDataMzIndexedSparse(ie.scan, &mz, &intensity))
-            throw runtime_error("[SpectrumList_MBI::spectrum] error getting scan data");
-
-        result->defaultArrayLength = mz.size();
-        if (detailLevel == DetailLevel_FullMetadata)
-            return result;
-
-        mzArray.resize(mz.size());
-        intensityArray.resize(mz.size());
-        auto mzArrayItr = mzArray.begin();
-        auto intensityArrayItr = intensityArray.begin();
-        auto intensityItr = intensity.begin();
-        for (const auto& mzItr : mz)
+        if (config_.ignoreZeroIntensityPoints)
         {
-            *mzArrayItr++ = mzItr;
-            *intensityArrayItr++ = *intensityItr++;
+            std::vector<double> mz;
+            if (!frame->GetScanDataMzIndexedSparse(ie.scan, &mz, &intensities))
+                throw runtime_error("[SpectrumList_MBI::spectrum] error getting scan data");
+            swap(mz, mzArray);
+
+            result->defaultArrayLength = mzArray.size();
+            if (detailLevel == DetailLevel_FullMetadata)
+                return result;
+
+            intensityArray.resize(mzArray.size());
+            auto intensityArrayItr = intensityArray.begin();
+            for (const auto& intensity : intensities)
+            {
+                *intensityArrayItr++ = intensity;
+            }
+        }
+        else
+        {
+            std::vector<int64_t> tofSampleIndices;
+            auto tofCalibration = frame->GetCalibration();
+            frame->GetScanDataToFIndexedSparse(ie.scan, &tofSampleIndices, &intensities);
+
+            const size_t totalPoints = intensities.size() * 3;
+            if (totalPoints == 0)
+                return result;
+
+            mzArray.resize(totalPoints);
+            intensityArray.resize(totalPoints);
+            auto mzItr = mzArray.begin();
+            auto intensityItr = intensityArray.begin();
+
+            // add first bounding zero and first data point
+            *mzItr = tofCalibration.IndexToMz(tofSampleIndices[0] - 1);
+            *intensityItr = 0;
+            ++mzItr, ++intensityItr;
+            *mzItr = tofCalibration.IndexToMz(tofSampleIndices[0]);
+            *intensityItr = intensities[0];
+            ++mzItr, ++intensityItr;
+
+            size_t actualPoints = 3;
+            for (size_t i = 1; i < intensities.size(); ++i)
+            {
+                // add bounding zeros if current TOF sample is more than one away from the last TOF sample
+                if (tofSampleIndices[i] - tofSampleIndices[i - 1] > 1)
+                {
+                    *mzItr = tofCalibration.IndexToMz(tofSampleIndices[i - 1] + 1);
+                    *intensityItr = 0;
+                    ++mzItr, ++intensityItr, ++actualPoints;
+
+                    *mzItr = tofCalibration.IndexToMz(tofSampleIndices[i] - 1);
+                    *intensityItr = 0;
+                    ++mzItr, ++intensityItr, ++actualPoints;
+                }
+
+                *mzItr = tofCalibration.IndexToMz(tofSampleIndices[i]);
+                *intensityItr = intensities[i];
+                ++mzItr, ++intensityItr, ++actualPoints;
+            }
+
+            // add final bounding zero
+            *mzItr = tofCalibration.IndexToMz(tofSampleIndices.back() + 1);
+            *intensityItr = 0;
+
+            mzArray.resize(actualPoints);
+            intensityArray.resize(actualPoints);
+
+            result->defaultArrayLength = actualPoints;
+            if (detailLevel == DetailLevel_FullMetadata)
+                return result;
         }
         result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
     }
@@ -246,15 +300,73 @@ PWIZ_API_DECL void SpectrumList_Mobilion::getCombinedSpectrumData(Frame& frame, 
     const auto& scanIndices = frameData.rowIndices;
     auto tofCalibration = frame.GetCalibration();
 
-    size_t totalPoints = intensities.size();
-    mz.resize(totalPoints);
-    intensity.resize(totalPoints);
-    driftTime.resize(totalPoints);
-    for (size_t i = 0; i < totalPoints; ++i)
+    if (config_.ignoreZeroIntensityPoints)
     {
-        mz[i] = tofCalibration.IndexToMz(tofSampleIndices[i]);
-        intensity[i] = intensities[i];
-        driftTime[i] = frame.GetArrivalBinTimeOffset(scanIndices[i]);
+        const size_t totalPoints = intensities.size();
+        mz.resize(totalPoints);
+        intensity.resize(totalPoints);
+        driftTime.resize(totalPoints);
+        for (size_t i = 0; i < totalPoints; ++i)
+        {
+            mz[i] = tofCalibration.IndexToMz(tofSampleIndices[i]);
+            intensity[i] = intensities[i];
+            driftTime[i] = frame.GetArrivalBinTimeOffset(scanIndices[i]);
+        }
+    }
+    else
+    {
+        const size_t totalPoints = intensities.size() * 3;
+        if (totalPoints == 0)
+            return;
+
+        mz.resize(totalPoints);
+        intensity.resize(totalPoints);
+        driftTime.resize(totalPoints);
+        auto mzItr = mz.begin();
+        auto intensityItr = intensity.begin();
+        auto driftTimeItr = driftTime.begin();
+
+        // add first bounding zero and first data point
+        *mzItr = tofCalibration.IndexToMz(tofSampleIndices[0] - 1);
+        *intensityItr = 0;
+        *driftTimeItr = frame.GetArrivalBinTimeOffset(scanIndices[0]);
+        ++mzItr, ++intensityItr, ++driftTimeItr;
+        *mzItr = tofCalibration.IndexToMz(tofSampleIndices[0]);
+        *intensityItr = intensities[0];
+        *driftTimeItr = frame.GetArrivalBinTimeOffset(scanIndices[0]);
+        ++mzItr, ++intensityItr, ++driftTimeItr;
+
+        size_t actualPoints = 3;
+        for (size_t i = 1; i < intensities.size(); ++i)
+        {
+            // add bounding zeros if current TOF sample is more than one away from the last TOF sample
+            if (tofSampleIndices[i] - tofSampleIndices[i - 1] > 1)
+            {
+                *mzItr = tofCalibration.IndexToMz(tofSampleIndices[i - 1] + 1);
+                *intensityItr = 0;
+                *driftTimeItr = frame.GetArrivalBinTimeOffset(scanIndices[i - 1]);
+                ++mzItr, ++intensityItr, ++driftTimeItr, ++actualPoints;
+
+                *mzItr = tofCalibration.IndexToMz(tofSampleIndices[i] - 1);
+                *intensityItr = 0;
+                *driftTimeItr = frame.GetArrivalBinTimeOffset(scanIndices[i]);
+                ++mzItr, ++intensityItr, ++driftTimeItr, ++actualPoints;
+            }
+
+            *mzItr = tofCalibration.IndexToMz(tofSampleIndices[i]);
+            *intensityItr = intensities[i];
+            *driftTimeItr = frame.GetArrivalBinTimeOffset(scanIndices[i]);
+            ++mzItr, ++intensityItr, ++driftTimeItr, ++actualPoints;
+        }
+
+        // add final bounding zero
+        *mzItr = tofCalibration.IndexToMz(tofSampleIndices.back() + 1);
+        *intensityItr = 0;
+        *driftTimeItr = frame.GetArrivalBinTimeOffset(scanIndices.back());
+
+        mz.resize(actualPoints);
+        intensity.resize(actualPoints);
+        driftTime.resize(actualPoints);
     }
 }
 
