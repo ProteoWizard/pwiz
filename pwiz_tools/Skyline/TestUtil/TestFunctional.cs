@@ -1350,6 +1350,19 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(skylineWindowBmp, cropRect);
         }
 
+        protected Bitmap ClipGridToolbarSelection(Bitmap documentGridBmp)
+        {
+            var gridForm = FindOpenForm<DocumentGridForm>();
+            var gridFormRect = ScreenshotManager.GetWindowRectangle(gridForm);
+
+            var gridToolbar = gridForm.NavBar;
+            int toolsRight = gridToolbar.Separator2Position + 1;
+            var toolbarLocation = gridToolbar.PointToScreen(new Point(0, -1)) * ScreenshotManager.GetScalingFactor();
+            var sizeCrop = new Size(toolsRight, gridToolbar.Height + 2) * ScreenshotManager.GetScalingFactor();
+            var cropRect = new Rectangle(0, toolbarLocation.Y - gridFormRect.Y, sizeCrop.Width, sizeCrop.Height);
+            return ClipBitmap(documentGridBmp, cropRect);
+        }
+
         [DllImport("user32.dll")]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
@@ -1453,6 +1466,26 @@ namespace pwiz.SkylineTestUtil
             var zedGraph = FindZedGraph(graphContainer);
             Assert.IsNotNull(zedGraph, "Control was not or did not contain a graph.");
             PauseForScreenShotInternal(description, null, zedGraph, timeout);
+        }
+
+        public void PauseForPeakAreaGraphScreenShot(string description, int? pageNum = null, int? timeout = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphPeakArea, pageNum, timeout);
+        }
+
+        public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphRetentionTime, pageNum, timeout);
+        }
+
+        public void PauseForMassErrorGraphScreenShot(string description, int? pageNum = null, int? timeout = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout);
+        }
+
+        public void PauseForChromGraphScreenShot(string description, string replicateName, int? pageNum = null, int? timeout = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout);
         }
 
         private ZedGraphControl FindZedGraph(Control graphContainer)
