@@ -71,35 +71,35 @@ namespace pwiz.Skyline.EditUI
         {
             if (_receiver.TryGetCurrentProduct(out var newData))
             {
-                if (!Equals(_data, newData))
+                progressBar1.Visible = false;
+                if (Equals(_data, newData))
                 {
-                    _data = newData;
-                    _rows.Clear();
-                    _rows.AddRange(_data.MoleculePeaks.Select(peak => new Row(_dataSchema, peak)));
-                    _rowsBindingList.ResetBindings();
-                    tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
-                        .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
-                    tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
-                    tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
-                    var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
-                        .Where(peak => peak.ShiftFromBestPeak.HasValue)
-                        .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
-                    if (rtShifts.Count == 0)
-                    {
-                        tbxMeanRtStdDev.Text = "";
-                    }
-                    else
-                    {
-                        tbxMeanRtStdDev.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
-                    }
+                    return;
                 }
-
+                _data = newData;
+                _rows.Clear();
+                _rows.AddRange(_data.MoleculePeaks.Select(peak => new Row(_dataSchema, peak)));
+                _rowsBindingList.ResetBindings();
+                tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
+                    .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
+                tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
+                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
+                var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
+                    .Where(peak => peak.ShiftFromBestPeak.HasValue)
+                    .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
+                if (rtShifts.Count == 0)
+                {
+                    tbxMeanRtStdDev.Text = "";
+                }
+                else
+                {
+                    tbxMeanRtStdDev.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
+                }
                 var document = _data.Params.Document;
                 tbxUnalignedDocRtStdDev.Text =
                     PeakImputationData.GetMeanRtStandardDeviation(document)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
 
-                progressBar1.Visible = false;
             }
             else
             {

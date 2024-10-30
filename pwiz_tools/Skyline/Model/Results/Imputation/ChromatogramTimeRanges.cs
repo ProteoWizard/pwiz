@@ -26,13 +26,19 @@ namespace pwiz.Skyline.Model.Results.Imputation
             var cachesList = caches.ToList();
             var totalHeaderCount = cachesList.Sum(cache => cache.ChromGroupHeaderInfos.Count);
             int processedHeaderCount = 0;
+            int progressValue = -1;
             foreach (var cache in cachesList)
             {
                 for (int iHeader = 0; iHeader < cache.ChromGroupHeaderInfos.Count; iHeader++)
                 {
                     productionMonitor.CancellationToken.ThrowIfCancellationRequested();
                     processedHeaderCount++;
-                    productionMonitor.SetProgress(processedHeaderCount * 100 / totalHeaderCount);
+                    int newProgressValue = processedHeaderCount * 100 / totalHeaderCount;
+                    if (newProgressValue != progressValue)
+                    {
+                        progressValue = newProgressValue;
+                        productionMonitor.SetProgress(newProgressValue);
+                    }
                     var header = cache.ChromGroupHeaderInfos[iHeader];
                     TimeIntervals timeIntervals = null;
                     if (inferFromPoints)

@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
 
                 yield return ChromatogramTimeRanges.PRODUCER.MakeWorkOrder(
-                    new ChromatogramTimeRanges.Parameter(document.MeasuredResults, true));
+                    new ChromatogramTimeRanges.Parameter(document.MeasuredResults, false));
             }
 
             private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, ChromatogramTimeRanges chromatogramTimeRanges)
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         parameters.AllowableRtShift, exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
             }
 
-            if (!peak.TimeIntervals.ContainsTime((float) exemplaryPeakBounds.MidTime))
+            if (false == peak.TimeIntervals?.ContainsTime((float) exemplaryPeakBounds.MidTime))
             {
                 var opinion = string.Format("Imputed retention time {0} is outside the chromatogram.", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME));
                 if (peak.RawPeakBounds == null)
@@ -434,39 +434,44 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public static double? GetMeanRtStandardDeviation(SrmDocument document)
         {
             var standardDeviations = new List<double>();
-            foreach (var molecule in document.Molecules)
+            ParallelEx.ForEach(document.Molecules, molecule =>
             {
-                if (!molecule.HasResults)
                 {
-                    continue;
-                }
-
-                var times = new List<double>();
-                for (int i = 0; i < molecule.Results.Count; i++)
-                {
-                    foreach (var fileGroup in molecule.GetSafeChromInfo(i)
-                                 .GroupBy(peptideChromInfo => ReferenceValue.Of(peptideChromInfo.FileId)))
+                    if (!molecule.HasResults)
                     {
-                        AlignmentFunction alignmentFunction = AlignmentFunction.IDENTITY;
-                        var fileTimes = fileGroup.Select(peptideChromInfo => 
-                                (double?)peptideChromInfo.RetentionTime)
-                            .OfType<double>().Select(alignmentFunction.GetY).ToList();
-                        if (fileTimes.Count > 0)
+                        return;
+                    }
+
+                    var times = new List<double>();
+                    for (int i = 0; i < molecule.Results.Count; i++)
+                    {
+                        foreach (var fileGroup in molecule.GetSafeChromInfo(i)
+                                     .GroupBy(peptideChromInfo => ReferenceValue.Of(peptideChromInfo.FileId)))
                         {
-                            times.Add(fileTimes.Average());
+                            AlignmentFunction alignmentFunction = AlignmentFunction.IDENTITY;
+                            var fileTimes = fileGroup.Select(peptideChromInfo =>
+                                    (double?)peptideChromInfo.RetentionTime)
+                                .OfType<double>().Select(alignmentFunction.GetY).ToList();
+                            if (fileTimes.Count > 0)
+                            {
+                                times.Add(fileTimes.Average());
+                            }
+                        }
+                    }
+
+                    if (times.Count > 1)
+                    {
+                        var standardDeviation = times.StandardDeviation();
+                        if (!double.IsNaN(standardDeviation))
+                        {
+                            lock (standardDeviations)
+                            {
+                                standardDeviations.Add(standardDeviation);
+                            }
                         }
                     }
                 }
-
-                if (times.Count > 1)
-                {
-                    var standardDeviation = times.StandardDeviation();
-                    if (!double.IsNaN(standardDeviation))
-                    {
-                        standardDeviations.Add(standardDeviation);
-                    }
-                }
-            }
+            });
 
             if (standardDeviations.Count == 0)
             {
