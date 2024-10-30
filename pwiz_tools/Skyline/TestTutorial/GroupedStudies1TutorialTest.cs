@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -215,22 +216,18 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(6);
-            RunUI(() =>
-            {
-                var floatingTargets = ScreenshotManager.FindParent<FloatingWindow>(SkylineWindow.SequenceTree);
-                var chromGraph = SkylineWindow.GraphChromatograms.First();
-                floatingTargets.Location = chromGraph.PointToScreen(chromGraph.Location) + new Size(10, 10);
-                var floatingRts = ScreenshotManager.FindParent<FloatingWindow>(SkylineWindow.GraphRetentionTime);
-                floatingRts.Location = SkylineWindow.Location + new Size(0, SkylineWindow.Width + 10);
-            });
+            PlaceTargetsAndGraph(SkylineWindow.GraphRetentionTime);
+
             // TODO: Handle docking window drag-drop display
             PauseForScreenShot("Docking Retention Times view", _pageNum++);
 
             RestoreViewOnScreen(7);
             RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
+            PlaceTargetsAndGraph(SkylineWindow.GraphPeakArea);
             PauseForScreenShot("Docking Peak Areas view", _pageNum++);
 
             RestoreViewOnScreen(8);
+            PlaceTargetsAndGraph(null);
             PauseForScreenShot("Docking Targets view", _pageNum++);
 
             RestoreViewOnScreen(9);
@@ -266,6 +263,25 @@ namespace pwiz.SkylineTestTutorial
 
             if (IsPauseForScreenShots)
                 RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
+        }
+
+        private static void PlaceTargetsAndGraph(Control graphForm)
+        {
+            if (!IsRecordingScreenShots)
+                return;
+
+            RunUI(() =>
+            {
+                var floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(SkylineWindow.SequenceTree);
+                var chromGraph = SkylineWindow.GraphChromatograms.First();
+                floatingWindow.Location = chromGraph.PointToScreen(new Point(0, 0)) + new Size(25, 15);
+                if (graphForm != null)
+                {
+                    floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(graphForm);
+                    floatingWindow.Location = SkylineWindow.Location + new Size(SkylineWindow.Width + 10, 0);
+                }
+                floatingWindow.Activate();
+            });
         }
 
         private void ExploreTopPeptides()
@@ -550,6 +566,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.FilterTab.AddSelectedColumn();
                 viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_GREATER_THAN);
                 viewEditor.FilterTab.SetFilterOperand(iFilter, 0.ToString());
+                TreeViewStateRestorer.RestoreHScrollPos(viewEditor.FilterTab.AvailableFieldsTree, 25);
             });
 
             if (initialTestExecution)
@@ -734,7 +751,13 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Size = new Size(1380, 744);
                 });
 
-                PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", _pageNum++);
+                PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", _pageNum++, null,
+                    bmp => ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
+                    {
+                        SkylineWindow.GetGraphChrom("H_161_REP1"),
+                        SkylineWindow.GetGraphChrom("H_148_REP2"),
+                        SkylineWindow.GetGraphChrom("D_102_REP3"),
+                    }));
 
                 RunUI(() => SkylineWindow.Size = new Size(974, 640));
                 RestoreViewOnScreen(12); // Same layout for Peak Areas graph as on page 12
@@ -764,7 +787,12 @@ namespace pwiz.SkylineTestTutorial
                 ActivateReplicate("H_148_REP2");
                 ActivateReplicate("H_148_REP3");
 
-                PauseForScreenShot("Chromatogram graphs - showing coelution", _pageNum);
+                PauseForScreenShot("Chromatogram graphs - showing coelution", _pageNum, null, bmp => ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
+                {
+                    SkylineWindow.GetGraphChrom("H_148_REP1"),
+                    SkylineWindow.GetGraphChrom("H_148_REP2"),
+                    SkylineWindow.GetGraphChrom("H_148_REP3"),
+                }));
 
                 RunUI(() => SkylineWindow.Size = new Size(898, 615));
 
@@ -1098,9 +1126,13 @@ namespace pwiz.SkylineTestTutorial
 
                 FindNode("SQLPGIIAEGR");
 
-                RunUI(() => SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR));
+                RunUI(() =>
+                {
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.TopNode.NextVisibleNode;
+                });
 
-                PauseForScreenShot("Targets NP_036870 and peptides", _pageNum++);
+                PauseForScreenShot<SequenceTreeForm>("Targets NP_036870 and peptides", _pageNum++, null, bmp => ClipTargets(bmp, 3));
             }
 
             {
@@ -1223,7 +1255,7 @@ namespace pwiz.SkylineTestTutorial
             ActivateReplicate("D_102_REP1");
 
             _pageNum++; // Page without figures
-            PauseForScreenShot("By SubjectId CV peak area ratio to global standard", _pageNum++);
+            PauseForPeakAreaGraphScreenShot("By SubjectId CV peak area ratio to global standard", _pageNum++);
 
             RestoreViewOnScreen(60);
 
@@ -1235,31 +1267,31 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode("IAELFSDLEER");
 
-            PauseForScreenShot("IAELFSDLEER mean peak area ratio to global standard by condition", _pageNum);
+            PauseForPeakAreaGraphScreenShot("IAELFSDLEER mean peak area ratio to global standard by condition", _pageNum);
 
             FindNode("FSISTDYSLK");
 
-            PauseForScreenShot("FSISTDYSLK mean peak area ratio to global standard by condition", _pageNum);
+            PauseForPeakAreaGraphScreenShot("FSISTDYSLK mean peak area ratio to global standard by condition", _pageNum);
 
             FindNode("EVLPELGIK");
 
-            PauseForScreenShot("EVLPELGIK mean peak area ratio to global standard by condition", _pageNum++);
+            PauseForPeakAreaGraphScreenShot("EVLPELGIK mean peak area ratio to global standard by condition", _pageNum++);
 
             FindNode("SVVDIGLIK");
 
-            PauseForScreenShot("SVVDIGLIK mean peak area ratio to global standard by condition", _pageNum);
+            PauseForPeakAreaGraphScreenShot("SVVDIGLIK mean peak area ratio to global standard by condition", _pageNum);
 
             FindNode("LQTEGDGIYTLNSEK");
 
-            PauseForScreenShot("LQTEGDGIYTLNSEK mean peak area ratio to global standard by condition", _pageNum);
+            PauseForPeakAreaGraphScreenShot("LQTEGDGIYTLNSEK mean peak area ratio to global standard by condition", _pageNum);
 
             FindNode("CSSLLWAGAAWLR");
 
-            PauseForScreenShot("CSSLLWAGAAWLR mean peak area ratio to global standard by condition", _pageNum);
+            PauseForPeakAreaGraphScreenShot("CSSLLWAGAAWLR mean peak area ratio to global standard by condition", _pageNum);
 
             FindNode("NLGVVVAPHALR");
 
-            PauseForScreenShot("NLGVVVAPHALR mean peak area ratio to global standard by condition", _pageNum++);
+            PauseForPeakAreaGraphScreenShot("NLGVVVAPHALR mean peak area ratio to global standard by condition", _pageNum++);
         }
 
         private static int SelectPeptidesUpUntil(string sequence)
@@ -1434,7 +1466,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
-            PauseForScreenShot<FoldChangeBarGraph>("Copy protein bar graph metafile", _pageNum++);
+            PauseForGraphScreenShot("Copy protein bar graph metafile", FindOpenForm<FoldChangeBarGraph>(), _pageNum++);
 
             if (IsCoverShotMode)
             {
@@ -1496,7 +1528,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }
             WaitForConditionUI(() => 92 == foldChangeGrid.DataboundGridControl.RowCount);
-            PauseForScreenShot<FoldChangeBarGraph>("Copy peptide bar graph metafile", _pageNum++);
+            PauseForGraphScreenShot("Copy peptide bar graph metafile", FindOpenForm<FoldChangeBarGraph>(), _pageNum++);
 
             RunUI(() =>
             {
