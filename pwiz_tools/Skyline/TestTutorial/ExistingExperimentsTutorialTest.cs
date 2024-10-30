@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.GraphSpectrumSettings.ShowCharge2 = true;
             });
             RestoreViewOnScreen(10);
-            PauseForScreenShot<GraphSpectrum>("Main window with spectral library graph showing", 11);
+            PauseForScreenShot("Main window with spectral library graph showing");
 
             // Importing Data, p. 10.
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"MRMer\MRMer.sky"))); // Not L10N
@@ -366,11 +366,13 @@ namespace pwiz.SkylineTestTutorial
             });
             PasteTransitionListSkipColumnSelect();
             RunUI(SkylineWindow.CollapsePeptides);
-            PauseForScreenShot("Targets tree (selected from main window)", 21);
+            PauseForScreenShot<SequenceTreeForm>("Targets tree (selected from main window)", 21, null, 
+                bmp => ClipTargets(bmp));
 
             // Adjusting Modifications Manually, p. 19.
             AdjustModifications("AGLCQTFVYGGCR", true, 'V', 747.348);
-            PauseForScreenShot("Target tree clipped from main window", 24);
+            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 24, null,
+                bmp => ClipTargets(bmp));
 
             AdjustModifications("IVGGWECEK", true, 'V', 541.763);
             AdjustModifications("YEVQGEVFTKPQLWP", false, 'L', 913.974);
@@ -453,7 +455,7 @@ namespace pwiz.SkylineTestTutorial
                 FindNode("YEVQGEVFTKPQLWP");
             }
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 27);
+            PauseForScreenShot("Main window with peaks and retention times showing", 27);
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
 
@@ -502,23 +504,21 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(28);
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(NormalizeGraphToHeavy);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
-
-
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 32);
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
 
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 34);
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph normalized metafile");
 
             RunUI(() =>
             {
@@ -526,7 +526,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ActivateReplicate("E_03");
                 SkylineWindow.Size = new Size(757, 655);
             });
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile with interference", 35);
+            PauseForChromGraphScreenShot("Chromatogram graph metafile with interference", "E_03");
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
             RunUI(() =>
@@ -536,7 +536,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowCVValues(true);
                 SkylineWindow.ShowPeptideOrder(SummaryPeptideOrder.document);
             });
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Peptide Comparison graph metafile", 36);
+            PauseForPeakAreaGraphScreenShot("Peak Areas Peptide Comparison graph metafile");
 
             float[] concentrations = { 0f, 60, 175, 513, 1500, 2760, 4980, 9060, 16500, 30000 };
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
@@ -592,11 +592,11 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.GroupByReplicateValue(valConcentration);
                 NormalizeGraphToHeavy();
             });
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with CVs metafile", 37);
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph with CVs metafile");
             
             RunUI(() => SkylineWindow.ShowCVValues(false));
             RunUI(() => SkylineWindow.SaveDocument());
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph grouped by concentration metafile", 38);
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph grouped by concentration metafile");
             PauseForAuditLog();
             // Further Exploration, p. 33.
             RunUI(() =>
@@ -607,7 +607,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             RestoreViewOnScreen(38);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas peptide comparison graph metafile", 39);
+            PauseForPeakAreaGraphScreenShot("Peak Areas peptide comparison graph metafile");
             FindNode("LSEPAELTDAVK");
             RunUI(() =>
             {
@@ -615,11 +615,11 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Width = 920;
                 SkylineWindow.ShowRTReplicateGraph();
             });
-            PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times replicate graph metafile", 39);
+            PauseForRetentionTimeGraphScreenShot("Retention Times replicate graph metafile");
 
             FindNode("INDISHTQSVSAK");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas normalized to heave graph metafile", 40);
+            PauseForPeakAreaGraphScreenShot("Peak Areas normalized to heave graph metafile");
 
             if (IsCoverShotMode)
             {
@@ -641,7 +641,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas no normalization graph metafile", 41);
+            PauseForPeakAreaGraphScreenShot("Peak Areas no normalization graph metafile");
 
             FindNode(hgflprLight);
             RunUI(() =>
@@ -650,12 +650,12 @@ namespace pwiz.SkylineTestTutorial
                 NormalizeGraphToHeavy();
             });
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 42);
+            PauseForPeakAreaGraphScreenShot("Area Ratio to Heavy graph showing interference metafile");
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
             WaitForGraphs();
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile showing slight interference", 42);
+            PauseForChromGraphScreenShot("Chromatogram graph metafile showing slight interference", "E_ 03");
         }
 
         private static void NormalizeGraphToHeavy()
