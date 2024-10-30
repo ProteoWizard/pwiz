@@ -68,12 +68,12 @@ namespace pwiz.SkylineTestUtil
             return snapshotBounds * GetScalingFactor();
         }
 
-        public static Control FindParent<TParent>(Control ctrl)
+        public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
         {
             while (ctrl != null)
             {
-                if (ctrl is TParent)
-                    return ctrl;
+                if (ctrl is TParent parent)
+                    return parent;
                 ctrl = ctrl.Parent;
             }
 
