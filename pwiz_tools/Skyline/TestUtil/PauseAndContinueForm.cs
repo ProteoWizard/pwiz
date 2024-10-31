@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestUtil
         {
             _currentMode = PauseAndContinueMode.PREVIEW_SCREENSHOT;
             Hide();
-            _screenshotPreviewForm.UpdateViewState(_screenshotForm, _fileToSave, _fullScreen, _processShot);
+            _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
             _screenshotPreviewForm.Show(_ownerForm);
         }
 
@@ -243,7 +243,7 @@ namespace pwiz.SkylineTestUtil
                 Show(_ownerForm);
             } else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
             {
-                _screenshotPreviewForm.UpdateViewState(_screenshotForm, _fileToSave, _fullScreen, _processShot);
+                _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
                 _screenshotPreviewForm.Show(_ownerForm);
             }
 

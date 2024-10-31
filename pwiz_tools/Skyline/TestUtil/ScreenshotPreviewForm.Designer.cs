@@ -42,6 +42,7 @@
             this.saveScreenshotAndContinueBtn = new System.Windows.Forms.Button();
             this.refreshBtn = new System.Windows.Forms.Button();
             this.closePreviewBtn = new System.Windows.Forms.Button();
+            this.autoSizeWindowCheckbox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).BeginInit();
@@ -167,9 +168,10 @@
             this.previewFlowLayoutControlPanel.Controls.Add(this.saveScreenshotAndContinueBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.refreshBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.closePreviewBtn);
-            this.previewFlowLayoutControlPanel.Location = new System.Drawing.Point(398, 3);
+            this.previewFlowLayoutControlPanel.Controls.Add(this.autoSizeWindowCheckbox);
+            this.previewFlowLayoutControlPanel.Location = new System.Drawing.Point(317, 3);
             this.previewFlowLayoutControlPanel.Name = "previewFlowLayoutControlPanel";
-            this.previewFlowLayoutControlPanel.Size = new System.Drawing.Size(667, 53);
+            this.previewFlowLayoutControlPanel.Size = new System.Drawing.Size(830, 53);
             this.previewFlowLayoutControlPanel.TabIndex = 4;
             // 
             // continueBtn
@@ -224,6 +226,19 @@
             this.closePreviewBtn.UseVisualStyleBackColor = true;
             this.closePreviewBtn.Click += new System.EventHandler(this.closePreviewBtn_Click);
             // 
+            // autoSizeWindowCheckbox
+            // 
+            this.autoSizeWindowCheckbox.AutoSize = true;
+            this.autoSizeWindowCheckbox.Checked = true;
+            this.autoSizeWindowCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autoSizeWindowCheckbox.Location = new System.Drawing.Point(670, 3);
+            this.autoSizeWindowCheckbox.Name = "autoSizeWindowCheckbox";
+            this.autoSizeWindowCheckbox.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.autoSizeWindowCheckbox.Size = new System.Drawing.Size(105, 20);
+            this.autoSizeWindowCheckbox.TabIndex = 5;
+            this.autoSizeWindowCheckbox.Text = "Auto Size Window";
+            this.autoSizeWindowCheckbox.UseVisualStyleBackColor = true;
+            // 
             // ScreenshotPreviewForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -244,6 +259,7 @@
             this.previewTableLayoutControlPanel.ResumeLayout(false);
             this.previewTableLayoutControlPanel.PerformLayout();
             this.previewFlowLayoutControlPanel.ResumeLayout(false);
+            this.previewFlowLayoutControlPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -264,5 +280,6 @@
         private System.Windows.Forms.FlowLayoutPanel previewFlowLayoutControlPanel;
         private System.Windows.Forms.TableLayoutPanel previewTableLayoutControlPanel;
         private System.Windows.Forms.Button closePreviewBtn;
+        private System.Windows.Forms.CheckBox autoSizeWindowCheckbox;
     }
 }

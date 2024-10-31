@@ -183,6 +183,8 @@ namespace pwiz.SkylineTestUtil
 
         public static void ActivateScreenshotForm(Control screenshotControl)
         {
+            SetForegroundWindow(screenshotControl.Handle);
+
             // If it is a form, try not to change the focus within the form.
             var form = (screenshotControl as Form)?.ParentForm;
             if (form != null)
@@ -234,6 +236,10 @@ namespace pwiz.SkylineTestUtil
 
             return shotPic;
         }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private static void CleanupBorder(Bitmap shotPic)
         {

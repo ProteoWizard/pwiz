@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -30,17 +31,20 @@ namespace pwiz.SkylineTestUtil
             _pauseLock = pauseLock;
         }
 
-        public void UpdateViewState(Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
+        public void UpdateViewState(string description, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
         {
             _screenshotControl = screenshotControl;
             _fileToSave = fileToSave;
             _fullScreen = fullScreen;
             _processShot = processShot;
+
+            Text = description;
             RefreshScreenshots();
         }
 
         private async void RefreshScreenshots()
         {
+            Opacity = 0;
             ScreenshotManager.ActivateScreenshotForm(_screenshotControl);
 
             await Task.Delay(200);
@@ -50,6 +54,8 @@ namespace pwiz.SkylineTestUtil
             var existingImageMemoryStream = new MemoryStream(existingImageBytes);
             _storedOldScreenshot = new Bitmap(existingImageMemoryStream);
             SetPreviewImages(_storedNewScreenshot, _storedOldScreenshot);
+            Opacity = 1;
+            SetForegroundWindow(Handle);
         }
 
         private void SetPreviewImages(Bitmap newScreenshot, Bitmap oldScreenShot)
@@ -66,7 +72,7 @@ namespace pwiz.SkylineTestUtil
 
             var minFormWidth = newScreenshot.Width + oldScreenShot.Width;
             var minFormHeight = Math.Max(newScreenshot.Height, oldScreenShot.Height);
-            if (ClientSize.Width < minFormWidth || ClientSize.Height < minFormHeight)
+            if (autoSizeWindowCheckbox.Checked && (ClientSize.Width < minFormWidth || ClientSize.Height < minFormHeight))
             {
                 ClientSize = new Size(minFormWidth, minFormHeight);
             }
@@ -87,6 +93,10 @@ namespace pwiz.SkylineTestUtil
             var scale = Math.Min(scaledHeight, scaledWidth);
             return new Size((int)(startingSize.Width * scale), (int)(startingSize.Height * scale));
         }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private void Continue()
         {
