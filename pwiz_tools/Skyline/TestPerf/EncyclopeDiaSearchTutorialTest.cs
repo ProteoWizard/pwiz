@@ -387,8 +387,8 @@ namespace TestPerf
             {
                 if (!IsRecordMode)
                     throw;
-                PauseAndContinueForm.Show($"Clicking the peptide ({peptideToSelect}) failed.\r\n" +
-                                          "Pick a new peptide to select.");
+                pauseAndContinueForm.Pause($"Clicking the peptide ({peptideToSelect}) failed.\r\n" +
+                                           "Pick a new peptide to select.");
             }
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
@@ -405,8 +405,8 @@ namespace TestPerf
             {
                 if (!IsRecordMode)
                     throw;
-                PauseAndContinueForm.Show($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
-                                          "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
+                pauseAndContinueForm.Pause($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
+                                           "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
             }
 
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);

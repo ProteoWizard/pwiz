@@ -45,12 +45,12 @@ namespace pwiz.SkylineTestUtil
             var snapshotBounds = Rectangle.Empty;
 
             var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
-            var form = ctrl as DockableForm;
-            if (form != null && dockedStates.Any((state) => form.DockState == state))
+            var dockableForm = ctrl as DockableForm;
+            if (dockableForm != null && dockedStates.Any((state) => dockableForm.DockState == state))
             {
                 Point origin = Point.Empty;
-                ctrl.Invoke(new Action(() => { origin = form.Pane.PointToScreen(new Point(0, 0)); }));
-                snapshotBounds = new Rectangle(origin, form.Pane.Size);
+                dockableForm.Invoke(new Action(() => { origin = dockableForm.Pane.PointToScreen(new Point(0, 0)); }));
+                snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
             }
             else if (fullScreen)
             {
@@ -107,17 +107,14 @@ namespace pwiz.SkylineTestUtil
              */
             public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false)
             {
-                SkylineScreenshot newShot;
                 if (control is ZedGraphControl zedGraphControl)
                 {
-                    newShot = new ZedGraphShot(zedGraphControl);
+                    return new ZedGraphShot(zedGraphControl);
                 }
                 else
                 {
-                    newShot = new ActiveWindowShot(control, fullScreen);
+                    return new ActiveWindowShot(control, fullScreen);
                 }
-
-                return newShot;
             }
             public abstract Bitmap Take();
         }
@@ -126,6 +123,7 @@ namespace pwiz.SkylineTestUtil
         {
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
+            
             public ActiveWindowShot(Control activeWindow, bool fullscreen)
             {
                 _activeWindow = activeWindow;
@@ -189,11 +187,11 @@ namespace pwiz.SkylineTestUtil
             var form = (screenshotControl as Form)?.ParentForm;
             if (form != null)
             {
-                form.Activate();
+                form.Invoke((Action)(() => form.Activate()));
             }
             else
             {
-                screenshotControl.Focus();
+                screenshotControl.Invoke((Action)(() => screenshotControl.Focus()));
             }
         }
 
