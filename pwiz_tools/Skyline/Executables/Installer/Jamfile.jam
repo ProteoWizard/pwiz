@@ -151,7 +151,7 @@ rule test_msi ( targets + : sources * : properties * )
 actions test_msi
 {
     set "SUITE=Skyline admin installer test"
-    set name=%SUITE%TestSkylineInstall
+    set name=%SUITE%: TestSkylineInstall
     $(TEST_PRECOMMAND)
 
     $(MSVC_CURRENT_SETUP_SCRIPT)
@@ -177,13 +177,12 @@ actions test_msi
     copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)" >nul
     copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)" >nul
     copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)" >nul
-    set name="%SUITE%TestData.dll,TestDdaSearch"
     $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" log=TestDataInstalled.log teamcitytestsuite="%SUITE%" test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
     set TEST_EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
     set PATH=%PATH_TMP%
     
-    set name=%SUITE%TestSkylineUninstall
+    set name=%SUITE%: TestSkylineUninstall
     $(TEST_PRECOMMAND)
 
     echo Uninstalling $(ARTIFACT_NAME)...
