@@ -150,7 +150,7 @@ rule test_msi ( targets + : sources * : properties * )
 
 actions test_msi
 {
-    set "SUITE=Skyline admin installer test: "
+    set "SUITE=Skyline admin installer test"
     set name=%SUITE%TestSkylineInstall
     $(TEST_PRECOMMAND)
 
