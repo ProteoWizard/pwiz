@@ -273,10 +273,15 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            if (IsRecordingScreenShots && dlg.ShowIcon)
+            if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
-                    RunUI(() => dlg.Icon = Resources.Skyline_Release1);
+                var ico = dlg.Icon.Handle;
+                if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
+                    ico == Resources.Skyline_Daily.Handle)
+                {
+                    if (ico != SkylineWindow.Icon.Handle)
+                        RunUI(() => dlg.Icon = SkylineWindow.Icon);
+                }
             }
             return dlg;
         }
@@ -1388,13 +1393,14 @@ namespace pwiz.SkylineTestUtil
 
             if (countTargets != null)
             {
+                var topNode = sequenceTree.TopNode;
+
                 int targetsRange = sequenceTree.ItemHeight * countTargets.Value;
                 if (!fromBottom)
                     sequenceTreeRect.Height = targetsRange;
                 else
                 {
                     // Find the bottom node
-                    var topNode = sequenceTree.TopNode;
                     int aboveRange = sequenceTree.ItemHeight;
                     while (topNode.NextVisibleNode != null && aboveRange < sequenceTreeRect.Height)
                     {
@@ -1423,6 +1429,15 @@ namespace pwiz.SkylineTestUtil
                     int bottom = Math.Min(lastNode.Bounds.Bottom + bottomPadding, sequenceTreeRect.Bottom);
                     sequenceTreeRect.Height = bottom - sequenceTreeRect.Y;
                 }
+
+                var maxNodeWidth = 0;
+                for (var i = 0; topNode != null && i < countTargets; i++)
+                {
+                    maxNodeWidth = Math.Max(maxNodeWidth, topNode.Bounds.X + topNode.Bounds.Width);
+                    topNode = topNode.NextVisibleNode;
+                }
+
+                sequenceTreeRect.Width = Math.Min(sequenceTreeRect.Width, maxNodeWidth);
             }
 
             var targetsForm = FindOpenForm<SequenceTreeForm>().Pane;    // Bitmap is taken of the Pane

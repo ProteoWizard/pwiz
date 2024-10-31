@@ -9,6 +9,7 @@ using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using ZedGraph;
 
@@ -207,7 +208,9 @@ namespace pwiz.SkylineTestUtil
             Bitmap shotPic = newShot.Take();
             if (processShot != null)
             {
-                shotPic = processShot(shotPic);
+                // execute on window's thread in case delegate accesses UI controls
+                shotPic = activeWindow.Invoke(processShot, shotPic) as Bitmap;
+                Assert.IsNotNull(shotPic);
             }
             else
             {
