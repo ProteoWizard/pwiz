@@ -192,12 +192,12 @@ namespace pwiz.Skyline.Model.Koina {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modifcation &apos;{0}&apos; at index &apos;{1}&apos; in &apos;{2}&apos; is not supported by Koina.
+        ///   Looks up a localized string similar to Modification &apos;{0}&apos; at index &apos;{1}&apos; in &apos;{2}&apos; is not supported by Koina.
         /// </summary>
-        internal static string KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina {
+        internal static string KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina {
             get {
                 return ResourceManager.GetString("KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modif" +
-                        "cation___0___at_index___1___in___2___is_not_supported_by_Koina", resourceCulture);
+                        "ication___0___at_index___1___in___2___is_not_supported_by_Koina", resourceCulture);
             }
         }
         

@@ -335,7 +335,7 @@ namespace pwiz.SkylineTestTutorial
             const string phosphoModName = "Phospho (ST)"; // Not L10N 
             var phosphoSt = new StaticMod(phosphoModName, "S, T", null, true, "HPO3", LabelAtoms.None, // Not L10N
                                           RelativeRT.Unknown, null, null, new[] { new FragmentLoss("H3PO4"), }); // Not L10N
-            AddStaticMod(phosphoSt, peptideSettingsUI2, "Edit Structural Modifcation form", 17);
+            AddStaticMod(phosphoSt, peptideSettingsUI2, "Edit Structural Modification form", 17);
 
             // Check Phospho (ST) and Carbamidomethyl Cysteine
             RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, carbamidoName }); // Not L10N
