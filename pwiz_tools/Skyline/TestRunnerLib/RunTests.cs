@@ -1065,9 +1065,9 @@ namespace TestRunnerLib
         {
             return pass switch
             {
-                0 => "Pass0 (French, mzML, no internet)",
-                1 => "Pass1 (leak detection)",
-                _ => "Pass2 (general)"
+                0 => "Pass0_french_mzML_no_internet",
+                1 => "Pass1_leak_detection",
+                _ => "Pass2_general"
             };
         }
 
