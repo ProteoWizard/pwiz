@@ -1491,6 +1491,7 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null)
         {
+            WaitForGraphs();
             var zedGraph = FindZedGraph(graphContainer);
             Assert.IsNotNull(zedGraph, "Control was not or did not contain a graph.");
             PauseForScreenShotInternal(description, null, zedGraph, timeout);

@@ -49,6 +49,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -540,6 +541,9 @@ namespace pwiz.SkylineTestTutorial
 
         private static void JiggleSelection()
         {
+            if (!IsPauseForScreenShots)
+                return;
+
             // Node change apparently required to get x-axis labels in peak areas view the way they should be
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
             WaitForGraphs();
@@ -669,10 +673,12 @@ namespace pwiz.SkylineTestTutorial
 
             SelectNode(SrmDocument.Level.MoleculeGroups, SkylineWindow.Document.PeptideGroupCount - 1);
             ActivateReplicate("D_102_REP1");
+            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1").GraphControl, 12, 29));
 
             PauseForChromGraphScreenShot("Multi-peptide chromatogram graph for S", "D_102_REP1", _pageNum);
 
             RunUI(SkylineWindow.SelectAll);
+            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1").GraphControl, 10, 45));
 
             PauseForChromGraphScreenShot("All multi-peptide chromatogram graph", "D_102_REP1", _pageNum++);
 
@@ -691,7 +697,10 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaPeptideGraph();
                 SkylineWindow.ShowTotalTransitions();
                 SkylineWindow.ShowCVValues(true);
+                SetXScale(SkylineWindow.GraphPeakArea.GraphControl, null, 15.5);
             });
+
+            SelectNode(SrmDocument.Level.Molecules, peptideCount - 3);
 
             PauseForPeakAreaGraphScreenShot("Peak areas peptide comparison graph with CV values", _pageNum++);
 
@@ -710,6 +719,15 @@ namespace pwiz.SkylineTestTutorial
             });
 
             PauseForPeakAreaGraphScreenShot("Peak area graph for LGPLVEDQR normalized", _pageNum++);
+        }
+
+        private static void SetXScale(ZedGraphControl graphControl, double? min, double? max)
+        {
+            var scale = graphControl.GraphPane.XAxis.Scale;
+            if (min.HasValue)
+                scale.Min = min.Value;
+            if (max.HasValue)
+                scale.Max = max.Value;
         }
 
         private void ExploreBottomPeptides()
@@ -765,13 +783,18 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Size = new Size(1385, 744);
                 });
 
+                var chromGraphs = new DockableForm[]
+                {
+                    SkylineWindow.GetGraphChrom("H_161_REP1"),
+                    SkylineWindow.GetGraphChrom("H_148_REP2"),
+                    SkylineWindow.GetGraphChrom("D_102_REP3"),
+                };
+                foreach (GraphChromatogram chromGraph in chromGraphs)
+                {
+                    SetXScale(chromGraph.GraphControl, 13.2, 15.8);
+                }
                 PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", _pageNum++, null,
-                    bmp => ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
-                    {
-                        SkylineWindow.GetGraphChrom("H_161_REP1"),
-                        SkylineWindow.GetGraphChrom("H_148_REP2"),
-                        SkylineWindow.GetGraphChrom("D_102_REP3"),
-                    }));
+                    bmp => ClipSkylineWindowShotWithForms(bmp, chromGraphs));
 
                 RunUI(() => SkylineWindow.Size = new Size(974, 640));
                 RestoreViewOnScreen(12); // Same layout for Peak Areas graph as on page 12
