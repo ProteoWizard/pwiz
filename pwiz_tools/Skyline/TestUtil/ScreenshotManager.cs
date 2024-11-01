@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void ActivateScreenshotForm(Control screenshotControl)
         {
-            SetForegroundWindow(screenshotControl.Handle);
+            screenshotControl.Invoke((Action)(() => SetForegroundWindow(screenshotControl.Handle)));
 
             // If it is a form, try not to change the focus within the form.
             var form = (screenshotControl as Form)?.ParentForm;

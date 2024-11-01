@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestUtil
             _pauseLock = pauseLock;
         }
 
-        public void UpdateViewState(string description, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
+        public async Task UpdateViewState(string description, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
         {
             _screenshotControl = screenshotControl;
             _fileToSave = fileToSave;
@@ -39,12 +39,11 @@ namespace pwiz.SkylineTestUtil
             _processShot = processShot;
 
             Text = description;
-            RefreshScreenshots();
+            await RefreshScreenshots();
         }
 
-        private async void RefreshScreenshots()
+        private async Task RefreshScreenshots()
         {
-            Opacity = 0;
             ScreenshotManager.ActivateScreenshotForm(_screenshotControl);
 
             await Task.Delay(200);
@@ -54,7 +53,7 @@ namespace pwiz.SkylineTestUtil
             var existingImageMemoryStream = new MemoryStream(existingImageBytes);
             _storedOldScreenshot = new Bitmap(existingImageMemoryStream);
             SetPreviewImages(_storedNewScreenshot, _storedOldScreenshot);
-            Opacity = 1;
+
             SetForegroundWindow(Handle);
         }
 

@@ -130,13 +130,14 @@ namespace pwiz.SkylineTestUtil
             _currentMode = PauseAndContinueMode.PAUSE_AND_CONTINUE;
             _screenshotPreviewForm.Hide();
             Show(_ownerForm);
+            FocusForm();
         }
 
-        private void SwitchToPreview()
+        private async Task SwitchToPreview()
         {
             _currentMode = PauseAndContinueMode.PREVIEW_SCREENSHOT;
             Hide();
-            _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
+            await _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
             _screenshotPreviewForm.Show(_ownerForm);
         }
 
@@ -158,16 +159,17 @@ namespace pwiz.SkylineTestUtil
             ActionUtil.RunAsync(() =>
             {
                 Thread.Sleep(1000);
-
-                if (IsHandleCreated)
-                {
-                    Invoke(new Action(() =>
-                    {
-                        SetForegroundWindow(Handle);
-                        btnContinue.Focus();
-                    }));
-                }
+                FocusForm();
             });
+        }
+
+        private void FocusForm()
+        {
+            if (IsHandleCreated)
+            {
+                SetForegroundWindow(Handle);
+                btnContinue.Focus();
+            }
         }
 
         [DllImport("user32.dll")]
@@ -181,6 +183,7 @@ namespace pwiz.SkylineTestUtil
             await Task.Delay(200);
 
             _screenshotManager.TakeShot(_screenshotForm, _fullScreen, save ? _fileToSave: null, _processShot);
+            FocusForm();
         }
 
         private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
@@ -238,9 +241,11 @@ namespace pwiz.SkylineTestUtil
             UpdateScreenshotButtonLabels();
             PlaceForm();
 
-            if (_currentMode == PauseAndContinueMode.PAUSE_AND_CONTINUE && !Visible)
+            if (_currentMode == PauseAndContinueMode.PAUSE_AND_CONTINUE)
             {
-                Show(_ownerForm);
+                if(!Visible) Show(_ownerForm);
+                FocusForm();
+
             } else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
             {
                 _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
@@ -328,7 +333,7 @@ namespace pwiz.SkylineTestUtil
 
         private async void btnPreview_Click(object sender, EventArgs e)
         {
-            SwitchToPreview();
+            await SwitchToPreview();
         }
 
     }
