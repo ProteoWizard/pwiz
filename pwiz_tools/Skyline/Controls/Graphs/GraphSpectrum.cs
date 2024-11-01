@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -31,6 +32,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Models;
@@ -78,7 +80,7 @@ namespace pwiz.Skyline.Controls.Graphs
         MzRange GetMzRange(SpectrumControlType controlType);
     }
     
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot, IMenuControlImplementer
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot, IMenuControlImplementer, ITipDisplayer
     {
 
         private static readonly double YMAX_SCALE = 1.25;
@@ -131,6 +133,47 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private class ToolTipImplementation : ITipProvider
+        {
+            LibraryRankedSpectrumInfo.RankedMI _peakRMI;
+            public ToolTipImplementation(LibraryRankedSpectrumInfo.RankedMI peakRMI)
+            {
+                _peakRMI = peakRMI;
+            }
+            public bool HasTip => _peakRMI != null;
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                if (HasTip)
+                {
+                    var table = new TableDesc();
+                    using(var rt = new RenderTools())
+                    {
+                        table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_mz,
+                              _peakRMI.ObservedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture), rt);
+                        table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Intensity,
+                            _peakRMI.Intensity.ToString(@"##.###", CultureInfo.CurrentCulture), rt);
+                        if (_peakRMI.Rank > 0)
+                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Rank, 
+                                string.Format(@"{0}",  _peakRMI.Rank), rt);
+                        if (_peakRMI.MatchedIons != null && _peakRMI.MatchedIons.Count > 0)
+                        {
+                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons, "", rt);
+                            foreach (var mfi in _peakRMI.MatchedIons)
+                                table.AddDetailRow(AbstractSpectrumGraphItem.GetLabel(mfi, _peakRMI.Rank, true, false),
+                                    AbstractSpectrumGraphItem.GetMassErrorString(_peakRMI, mfi), rt);
+                        }
+                        
+                        var size = table.CalcDimensions(g);
+                        if (draw)
+                            table.Draw(g);
+                        return new Size((int)size.Width + 2, (int)size.Height + 2);
+                    }
+                }
+                return Size.Empty;
+            }
+        }
+
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
         private readonly UpdateManager _updateManager;
@@ -141,6 +184,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
+        private NodeTip _toolTip;
                 
 
         private bool _inToolbarUpdate;
@@ -153,6 +197,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
+            graphControl.MouseMove += GraphControl_MouseMove;
             msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
@@ -182,6 +227,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private SpectrumGraphItem GraphItem { get; set; }
+        private SpectrumGraphItem MirrorGraphItem { get; set; }
 
         public Exception GraphException
         {
@@ -1096,6 +1142,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
             GraphItem = null;
+            AllowDisplayTip = false;
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane, Settings.Default.SpectrumFontSize);
@@ -1292,7 +1339,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         chromatogramData = spectrum?.LoadChromatogramData();
 
                     if (spectrum != null)
+                    {
                         GraphItem = MakeGraphItem(spectrum, selection, settings);
+                        AllowDisplayTip = true;
+                    }
 
                     if (null == chromatogramData)
                     {
@@ -1312,29 +1362,30 @@ namespace pwiz.Skyline.Controls.Graphs
                         else
                         {
                             mirrorSpectrum = null;
+                            MirrorGraphItem = null;
                         }
 
                         spectrumChanged |= !Equals(_mirrorSpectrum?.SpectrumInfo, mirrorSpectrum?.SpectrumInfo);
                         _mirrorSpectrum = mirrorSpectrum;
 
                         double? dotp = null;
-                        SpectrumGraphItem mirrorGraphItem = null;
+                        // need to keep it at the class level to be able to extract tooltip info.
                         if (mirrorSpectrum != null)
                         {
                             var peaksInfo = spectrum != null
                                 ? RescaleMirrorSpectrum(mirrorSpectrum, spectrum)
                                 : mirrorSpectrum.SpectrumPeaksInfo;
-                            mirrorGraphItem = MakeGraphItem(mirrorSpectrum, selection, settings, peaksInfo);
-                            mirrorGraphItem.Invert = true;
+                            MirrorGraphItem = MakeGraphItem(mirrorSpectrum, selection, settings, peaksInfo);
+                            MirrorGraphItem.Invert = true;
 
-                            _graphHelper.AddSpectrum(mirrorGraphItem, false);
+                            _graphHelper.AddSpectrum(MirrorGraphItem, false);
 
                             if (spectrum != null)
-                                dotp = KoinaHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo, mirrorGraphItem.SpectrumInfo,
+                                dotp = KoinaHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo, MirrorGraphItem.SpectrumInfo,
                                     settings.TransitionSettings.Libraries.IonMatchMzTolerance);
                         }
 
-                        if (mirrorSpectrum != null && mirrorGraphItem != null) // one implies the other, but resharper..
+                        if (mirrorSpectrum != null && MirrorGraphItem != null) // one implies the other, but resharper..
                         {
                             GraphPane.Title.Text = dotp != null
                                 ? TextUtil.LineSeparate(
@@ -1344,7 +1395,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp))
                                 : TextUtil.LineSeparate(
                                     mirrorSpectrum.Name,
-                                    mirrorGraphItem.Title,
+                                    MirrorGraphItem.Title,
                                     KoinaResources.GraphSpectrum_UpdateUI_No_spectral_library_match);
                         }
                         else if (koinaEx != null)
@@ -1372,6 +1423,21 @@ namespace pwiz.Skyline.Controls.Graphs
                                     libInfo.SpectrumHeaderInfo)
                                 .ChangePeptideNode(selection.NodePep);
                             var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor, new LibKeyModificationMatcher());
+                            if (GraphItem != null)
+                            {
+                                props.PeakCount = GraphItem.SpectrumInfo.Peaks.Count(mi => mi.Intensity > 0)
+                                    .ToString(Formats.PEAK_AREA);
+                                props.TotalIC = GraphItem.SpectrumInfo.Peaks.Sum(mi => mi.Intensity)
+                                    .ToString(@"0.0000E+0", CultureInfo.CurrentCulture);
+                            }
+                            if (MirrorGraphItem != null)
+                            {
+                                props.MirrorPeakCount = MirrorGraphItem.SpectrumInfo.Peaks.Count(mi => mi.Intensity > 0)
+                                    .ToString(Formats.PEAK_AREA);
+                                props.MirrorTotalIC = MirrorGraphItem.SpectrumInfo.Peaks.Sum(mi => mi.Intensity)
+                                    .ToString(@"0.0000E+0", CultureInfo.CurrentCulture);
+                            }
+
                             msGraphExtension.SetPropertiesObject(props);
                         }
                     }
@@ -1425,7 +1491,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 msGraphExtension.SetPropertiesObject(null);
             }
         }
-
+        
         public bool ShowPropertiesSheet 
         {
             set
@@ -1696,6 +1762,50 @@ namespace pwiz.Skyline.Controls.Graphs
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
+
+        public void DisplayTooltip(MouseEventArgs e)
+        {
+            if (GraphPane.FindNearestStick(e.Location, out var nearestCurve, out var nearestIndex))
+            {
+                if (nearestCurve is StickItem sticks)
+                {
+                    if (nearestIndex >= 0 && nearestIndex < sticks.NPts)
+                    {
+                        if (_toolTip == null)
+                            _toolTip = new NodeTip(this) { Parent = graphControl };
+                        var hasNegativePeaks = Enumerable.Range(0, nearestCurve.NPts)
+                            .Select(i => nearestCurve.Points[i]).Any(pt => pt.Y < 0);
+                        SpectrumGraphItem gItem = null;
+                        if (hasNegativePeaks)
+                            gItem = MirrorGraphItem;
+                        else
+                            gItem = GraphItem;
+                        // nearestIndex is in graph points. Need to convert it into the ranked spectrum index
+                        var spectrumIndex = Enumerable.Range(0, gItem.SpectrumInfo.Peaks.Count).FirstOrDefault(i =>
+                            gItem.SpectrumInfo.Peaks[i].ObservedMz == sticks.Points[nearestIndex].X);
+                        _toolTip.SetTipProvider(new ToolTipImplementation(gItem.SpectrumInfo.Peaks[spectrumIndex]), new Rectangle(e.Location, new Size()), e.Location);
+                    }
+                    return;
+                }
+            }
+            _toolTip?.HideTip();
+            _toolTip = null;
+            graphControl.Invalidate();
+        }
+
+        public void GraphControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            DisplayTooltip(e);
+        }
+        public Rectangle RectToScreen(Rectangle r)
+        {
+            return RectangleToScreen(r);
+        }
+
+        public Rectangle ScreenRect => Screen.GetBounds(this);
+
+        public bool AllowDisplayTip { get; private set; }
+
 
         #region Test support
 

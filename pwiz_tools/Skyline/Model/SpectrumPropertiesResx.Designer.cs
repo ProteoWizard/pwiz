@@ -106,6 +106,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Statistics.
+        /// </summary>
+        internal static string Category_SpectrumInfo {
+            get {
+                return ResourceManager.GetString("Category_SpectrumInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CCS.
         /// </summary>
         internal static string CCS {
@@ -196,6 +205,33 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of non-zero peaks in the mirror spectrum.
+        /// </summary>
+        internal static string Description_MirrorPeakCount {
+            get {
+                return ResourceManager.GetString("Description_MirrorPeakCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of all peak intensities in the mirror spectrum.
+        /// </summary>
+        internal static string Description_MirrorTotalIC {
+            get {
+                return ResourceManager.GetString("Description_MirrorTotalIC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of non-zero peaks in the library spectrum.
+        /// </summary>
+        internal static string Description_PeakCount {
+            get {
+                return ResourceManager.GetString("Description_PeakCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor m/z used to select the ion.
         /// </summary>
         internal static string Description_PrecursorMz {
@@ -246,6 +282,15 @@ namespace pwiz.Skyline.Model {
         internal static string Description_SpectrumCount {
             get {
                 return ResourceManager.GetString("Description_SpectrumCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of all peak intensities in the library spectrum.
+        /// </summary>
+        internal static string Description_TotalIC {
+            get {
+                return ResourceManager.GetString("Description_TotalIC", resourceCulture);
             }
         }
         
@@ -313,6 +358,33 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mirror Peak Count.
+        /// </summary>
+        internal static string MirrorPeakCount {
+            get {
+                return ResourceManager.GetString("MirrorPeakCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mirror Total Ion Current.
+        /// </summary>
+        internal static string MirrorTotalIC {
+            get {
+                return ResourceManager.GetString("MirrorTotalIC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Count.
+        /// </summary>
+        internal static string PeakCount {
+            get {
+                return ResourceManager.GetString("PeakCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor m/z.
         /// </summary>
         internal static string PrecursorMz {
@@ -363,6 +435,15 @@ namespace pwiz.Skyline.Model {
         internal static string SpectrumCount {
             get {
                 return ResourceManager.GetString("SpectrumCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current.
+        /// </summary>
+        internal static string TotalIC {
+            get {
+                return ResourceManager.GetString("TotalIC", resourceCulture);
             }
         }
     }

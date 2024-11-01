@@ -306,7 +306,7 @@ namespace ZedGraph
 		/// <seealso cref="Default.IsIgnoreInitial"/>
 		[Bindable( true ), Browsable( true ), Category( "Display" ), NotifyParentProperty( true )]
 		[Description("Determines whether the auto-ranged scale will include all data points" +
-			" or just the visible data points")]
+                     " or just the visible data points")]
 		public bool IsIgnoreInitial
 		{
 			get { return _isIgnoreInitial; }
@@ -551,7 +551,7 @@ namespace ZedGraph
 		/// </summary>
 		/// <param name="info">A <see cref="SerializationInfo"/> instance that defines the serialized data</param>
 		/// <param name="context">A <see cref="StreamingContext"/> instance that contains the serialized data</param>
-		[SecurityPermissionAttribute( SecurityAction.Demand, SerializationFormatter = true )]
+		[SecurityPermission( SecurityAction.Demand, SerializationFormatter = true )]
 		public override void GetObjectData( SerializationInfo info, StreamingContext context )
 		{
 			base.GetObjectData( info, context );
@@ -2377,7 +2377,128 @@ namespace ZedGraph
 				return false;
 		}
 
-		private double LogScalePixelDistance(double positionA, double positionB, double totalDistance)
+        public bool FindNearestStick(PointF mousePt, out StickItem nearestStick, out int iNearestIndex)
+        {
+            nearestStick = null;
+            iNearestIndex = -1;
+            if (!_chart._rect.Contains(mousePt))
+                return false;
+            double x, x2;
+            double[] y;
+            double[] y2;
+            ReverseTransform(mousePt, out x, out x2, out y, out y2);
+
+            if (!AxisRangesValid())
+                return false;
+
+            double yPixPerUnitAct, yAct, yMinAct, yMaxAct, xAct;
+            double minDist = 1e20;
+            double xVal, yVal, dist = 99999, distX, distY;
+            double tolSquared = Default.NearestTol * Default.NearestTol;
+
+            foreach (var stickItem in CurveList.OfType<StickItem>())
+            {
+                if (stickItem.IsVisible)
+                {
+                    int yIndex = stickItem.GetYAxisIndex(this);
+                    Axis yAxis = stickItem.GetYAxis(this);
+                    Axis xAxis = stickItem.GetXAxis(this);
+
+                    if (stickItem.IsY2Axis)
+                    {
+                        yAct = y2[yIndex];
+                        yMinAct = _y2AxisList[yIndex]._scale._min;
+                        yMaxAct = _y2AxisList[yIndex]._scale._max;
+                    }
+                    else
+                    {
+                        yAct = y[yIndex];
+                        yMinAct = _yAxisList[yIndex]._scale._min;
+                        yMaxAct = _yAxisList[yIndex]._scale._max;
+                    }
+
+                    yPixPerUnitAct = _chart._rect.Height / (yMaxAct - yMinAct);
+
+                    double xPixPerUnit = _chart._rect.Width / (xAxis._scale._max - xAxis._scale._min);
+                    xAct = xAxis is XAxis ? x : x2;
+                    IPointList points = stickItem.Points;
+                    float barWidth = stickItem.GetBarWidth(this);
+                    double barWidthUserHalf;
+                    Axis baseAxis = stickItem.BaseAxis(this);
+                    bool isXBaseAxis = (baseAxis is XAxis || baseAxis is X2Axis);
+                    if (isXBaseAxis)
+                        barWidthUserHalf = barWidth / xPixPerUnit / 2.0;
+                    else
+                        barWidthUserHalf = barWidth / yPixPerUnitAct / 2.0;
+                    if (points != null)
+                    {
+                        for (int iPt = 0; iPt < stickItem.NPts; iPt++)
+                        {
+                            // xVal is the user scale X value of the current point
+                            if (xAxis._scale.IsAnyOrdinal && !stickItem.IsOverrideOrdinal)
+                                xVal = (double)iPt + 1.0;
+                            else
+                                xVal = points[iPt].X;
+
+                            // yVal is the user scale Y value of the current point
+                            if (yAxis._scale.IsAnyOrdinal && !stickItem.IsOverrideOrdinal)
+                                yVal = (double)iPt + 1.0;
+                            else
+                                yVal = points[iPt].Y;
+
+                            if (xVal != PointPair.Missing &&
+                                yVal != PointPair.Missing)
+                            {
+                                if (Between(yAct, 0, yVal) != 0)
+                                    continue;
+                                if (nearestStick == null)
+                                {
+                                    nearestStick = stickItem;
+									iNearestIndex = iPt;
+                                }
+
+                                var xDist = Math.Abs(AxisType.Log == XAxis.Type ? LogScalePixelDistance(xVal, xAct, _chart._rect.Width) :  xVal - xAct);
+                                if (xDist < minDist)
+                                {
+									minDist = xDist;
+                                    nearestStick = stickItem;
+                                    iNearestIndex = iPt;
+                                }
+                            }
+                        }
+                        if (nearestStick != null && minDist <= Default.NearestTol)
+                        {
+                            return true;
+                        }
+                    }
+                } 
+            }
+            return false;
+        }
+
+        public static int Between<T>(T x, T low, T high) where T : IComparable<T>
+        {
+            if (low.CompareTo(high) <= 0)
+            {
+                if (low.CompareTo(x) > 0)
+                    return -1;
+                if (high.CompareTo(x) < 0)
+                    return 1;
+                return 0;
+            }
+
+            if (low.CompareTo(high) > 0)
+            {
+                if (high.CompareTo(x) > 0)
+                    return -1;
+                if (low.CompareTo(x) < 0)
+                    return 1;
+                return 0;
+            }
+            return 0;
+        }
+
+        private double LogScalePixelDistance(double positionA, double positionB, double totalDistance)
 		{
 			var fractionOfDistance = (Math.Log(positionA) - Math.Log(positionB)) / Math.Log(totalDistance);
 			return fractionOfDistance * totalDistance;
@@ -2488,7 +2609,6 @@ namespace ZedGraph
 		}
 
 	#endregion
-
-	}
+    }
 }
 
