@@ -17304,7 +17304,7 @@ struct PWIZ_API_DECL CVTermInfo
     std::vector<std::string> exactSynonyms;
     std::multimap<std::string, std::string> propertyValues;
 
-    CVTermInfo() : cvid((CVID)-1) {}
+    CVTermInfo() : cvid((CVID)-1), isObsolete(false) {}
     const std::string& shortName() const;
     std::string prefix() const;
 };

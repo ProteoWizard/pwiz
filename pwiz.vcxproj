@@ -835,17 +835,20 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\ABI\WiffFile2.ipp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\ABI\WiffFileTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MassHunterData.cpp">
-      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">$(ProjectDir)pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86</AdditionalUsingDirectories>
-      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">$(ProjectDir)pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x64</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">pwiz_aux\msrc\utility\vendor_api\Agilent\x86</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">pwiz_aux\msrc\utility\vendor_api\Agilent\x64</AdditionalUsingDirectories>
       <CompileAsManaged>true</CompileAsManaged>
       <ForcedUsingFiles>MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll;MIDAC.dll</ForcedUsingFiles>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAccess.dll;MIDAC.dll</ForcedUsingFiles>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAccess.dll;MIDAC.dll</ForcedUsingFiles>
     </ClCompile>
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MassHunterDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.cpp">
-      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll;MIDAC.dll</ForcedUsingFiles>
-      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll;MIDAC.dll</ForcedUsingFiles>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAccess.dll;MIDAC.dll</ForcedUsingFiles>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAccess.dll;MIDAC.dll</ForcedUsingFiles>
       <CompileAsManaged>true</CompileAsManaged>
-      <ForcedUsingFiles>MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll;MIDAC.dll</ForcedUsingFiles>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">pwiz_aux\msrc\utility\vendor_api\Agilent\x86</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">pwiz_aux\msrc\utility\vendor_api\Agilent\x64</AdditionalUsingDirectories>
     </ClCompile>
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.cpp" />

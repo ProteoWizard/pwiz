@@ -340,7 +340,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             {
                 map<double, vector<size_t>> duplicateIndicesByMz;
                 auto s = sl.spectrum(i, true);
-                auto mzArray = s->getMZArray()->data;
+                const auto& mzArray = s->getMZArray()->data;
                 for (size_t j=0; j < mzArray.size(); ++j)
                     duplicateIndicesByMz[mzArray[j]].push_back(j);
 
@@ -562,7 +562,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L"-试验"));
     bfs::path rawpathPath(rawpath);
     bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
-    auto oldExtension = newRawPath.extension().native();
+    const auto& oldExtension = newRawPath.extension().native();
     newRawPath = newRawPath.replace_extension().native() + unicodeTestString + newRawPath.extension().native();
     if (bfs::exists(newRawPath))
         bfs::remove_all(newRawPath);

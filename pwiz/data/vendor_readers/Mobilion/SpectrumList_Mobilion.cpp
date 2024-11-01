@@ -173,7 +173,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLe
 
         result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
 
-        mobilityArray->set(MS_raw_ion_mobility_array);
+        mobilityArray->set(MS_raw_ion_mobility_array, "", UO_millisecond);
         result->binaryDataArrayPtrs.push_back(mobilityArray);
     }
     else
