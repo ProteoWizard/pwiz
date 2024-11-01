@@ -521,7 +521,7 @@ namespace TestPerf
             {
                 if (!IsRecordMode)
                     throw;
-                PauseAndContinueForm.Show($"Clicking the peptide ({peptideToSelect}) failed.\r\n" +
+                pauseAndContinueForm.Pause($"Clicking the peptide ({peptideToSelect}) failed.\r\n" +
                                           "Pick a new peptide to select.");
             }
 

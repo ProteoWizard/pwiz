@@ -965,8 +965,8 @@ namespace TestPerf
             {
                 if (!IsRecordMode)
                     throw;
-                PauseAndContinueForm.Show($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
-                                          "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
+                pauseAndContinueForm.Pause($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
+                                           "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
             }
 
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);

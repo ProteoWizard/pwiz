@@ -281,10 +281,15 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            if (IsRecordingScreenShots && dlg.ShowIcon)
+            if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
-                    RunUI(() => dlg.Icon = Resources.Skyline_Release1);
+                var ico = dlg.Icon.Handle;
+                if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
+                    ico == Resources.Skyline_Daily.Handle)
+                {
+                    if (ico != SkylineWindow.Icon.Handle)
+                        RunUI(() => dlg.Icon = SkylineWindow.Icon);
+                }
             }
             return dlg;
         }
@@ -735,7 +740,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         var formSeen = new FormSeen();
                         formSeen.Saw(formType);
-                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
+                        PauseAndContinueForm.Pause(string.Format("Pausing for {0}", formType));
                     }
 
                     return tForm;
@@ -780,7 +785,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         var formSeen = new FormSeen();
                         formSeen.Saw(formType);
-                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
+                        PauseAndContinueForm.Pause(string.Format("Pausing for {0}", formType));
                     }
 
                     return tForm;
@@ -815,7 +820,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(viewTypeName);
-                PauseAndContinueForm.Show(string.Format("Pausing for {0}", viewTypeName));
+                pauseAndContinueForm.Pause(string.Format("Pausing for {0}", viewTypeName));
             }
         }
 
@@ -1175,15 +1180,15 @@ namespace pwiz.SkylineTestUtil
         }
 
         // Pause a test so we can play with the UI manually.
-        public static void PauseTest(string description = null)
+        public void PauseTest(string description = null)
         {
             if (!Program.SkylineOffscreen)
-                PauseAndContinueForm.Show(description);
+                pauseAndContinueForm.Pause(description);
         }
 
         // We don't normally leave PauseTest() in checked in code, but there are times
         // when that's actually what's needed. For those, use this instead.
-        public static void PauseForManualTutorialStep(string description = null)
+        public void PauseForManualTutorialStep(string description = null)
         {
             PauseTest(description);
         }
@@ -1321,6 +1326,10 @@ namespace pwiz.SkylineTestUtil
 
         private int FigueNum => ScreenShotCounter + NonScreenShotFigures.Count(n => n <= ScreenShotCounter);
 
+        protected PauseAndContinueForm pauseAndContinueForm;
+
+        private Thread pauseAndContinueThread;
+
         private string LinkScreenShotFigure()
         {
             if (string.IsNullOrEmpty(TutorialPath))
@@ -1393,13 +1402,14 @@ namespace pwiz.SkylineTestUtil
 
             if (countTargets != null)
             {
+                var topNode = sequenceTree.TopNode;
+
                 int targetsRange = sequenceTree.ItemHeight * countTargets.Value;
                 if (!fromBottom)
                     sequenceTreeRect.Height = targetsRange;
                 else
                 {
                     // Find the bottom node
-                    var topNode = sequenceTree.TopNode;
                     int aboveRange = sequenceTree.ItemHeight;
                     while (topNode.NextVisibleNode != null && aboveRange < sequenceTreeRect.Height)
                     {
@@ -1428,6 +1438,15 @@ namespace pwiz.SkylineTestUtil
                     int bottom = Math.Min(lastNode.Bounds.Bottom + bottomPadding, sequenceTreeRect.Bottom);
                     sequenceTreeRect.Height = bottom - sequenceTreeRect.Y;
                 }
+
+                var maxNodeWidth = 0;
+                for (var i = 0; topNode != null && i < countTargets; i++)
+                {
+                    maxNodeWidth = Math.Max(maxNodeWidth, topNode.Bounds.X + topNode.Bounds.Width);
+                    topNode = topNode.NextVisibleNode;
+                }
+
+                sequenceTreeRect.Width = Math.Min(sequenceTreeRect.Width, maxNodeWidth);
             }
 
             var targetsForm = FindOpenForm<SequenceTreeForm>().Pane;    // Bitmap is taken of the Pane
@@ -1562,8 +1581,7 @@ namespace pwiz.SkylineTestUtil
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueForm.Show(string.Format("fig. {0}: {1}", ScreenShotCounter, description), fileToSave, LinkScreenShotFigure(), showMatchingPages, timeout,
-                        screenshotForm, fullScreen, _shotManager, processShot);
+                    pauseAndContinueForm.Pause(string.Format("fig. {0}: {1}", ScreenShotCounter, description), fileToSave, LinkScreenShotFigure(), showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else
@@ -1748,6 +1766,11 @@ namespace pwiz.SkylineTestUtil
 
             _shotManager = new ScreenshotManager(SkylineWindow);
 
+            // Run PauseAndContinue ui thread
+            pauseAndContinueThread = new Thread(StartPauseAndContinueForm);
+            pauseAndContinueThread.SetApartmentState(ApartmentState.STA);
+            pauseAndContinueThread.Start();
+
             // Run test in new thread (Skyline on main thread).
             Program.Init();
             InitializeSkylineSettings();
@@ -1760,10 +1783,17 @@ namespace pwiz.SkylineTestUtil
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
             Program.Main();
+            pauseAndContinueThread.Join();
             threadTest.Join();
 
             // Were all windows disposed?
             CommonFormEx.CheckAllFormsDisposed();
+        }
+
+        private void StartPauseAndContinueForm()
+        {
+            pauseAndContinueForm = new PauseAndContinueForm(_shotManager);
+            Application.Run(pauseAndContinueForm);
         }
 
         /// <summary>
@@ -2157,6 +2187,7 @@ namespace pwiz.SkylineTestUtil
 
         private void EndTest()
         {
+            pauseAndContinueForm.Invoke((Action)(() => pauseAndContinueForm.Close()));
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {

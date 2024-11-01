@@ -9,6 +9,7 @@ using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using ZedGraph;
 
@@ -45,12 +46,12 @@ namespace pwiz.SkylineTestUtil
             var snapshotBounds = Rectangle.Empty;
 
             var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
-            var form = ctrl as DockableForm;
-            if (form != null && dockedStates.Any((state) => form.DockState == state))
+            var dockableForm = ctrl as DockableForm;
+            if (dockableForm != null && dockedStates.Any((state) => dockableForm.DockState == state))
             {
                 Point origin = Point.Empty;
-                ctrl.Invoke(new Action(() => { origin = form.Pane.PointToScreen(new Point(0, 0)); }));
-                snapshotBounds = new Rectangle(origin, form.Pane.Size);
+                dockableForm.Invoke(new Action(() => { origin = dockableForm.Pane.PointToScreen(new Point(0, 0)); }));
+                snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
             }
             else if (fullScreen)
             {
@@ -107,17 +108,14 @@ namespace pwiz.SkylineTestUtil
              */
             public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false)
             {
-                SkylineScreenshot newShot;
                 if (control is ZedGraphControl zedGraphControl)
                 {
-                    newShot = new ZedGraphShot(zedGraphControl);
+                    return new ZedGraphShot(zedGraphControl);
                 }
                 else
                 {
-                    newShot = new ActiveWindowShot(control, fullScreen);
+                    return new ActiveWindowShot(control, fullScreen);
                 }
-
-                return newShot;
             }
             public abstract Bitmap Take();
         }
@@ -126,6 +124,7 @@ namespace pwiz.SkylineTestUtil
         {
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
+            
             public ActiveWindowShot(Control activeWindow, bool fullscreen)
             {
                 _activeWindow = activeWindow;
@@ -185,15 +184,17 @@ namespace pwiz.SkylineTestUtil
 
         public static void ActivateScreenshotForm(Control screenshotControl)
         {
+            screenshotControl.Invoke((Action)(() => SetForegroundWindow(screenshotControl.Handle)));
+
             // If it is a form, try not to change the focus within the form.
             var form = (screenshotControl as Form)?.ParentForm;
             if (form != null)
             {
-                form.Activate();
+                form.Invoke((Action)(() => form.Activate()));
             }
             else
             {
-                screenshotControl.Focus();
+                screenshotControl.Invoke((Action)(() => screenshotControl.Focus()));
             }
         }
 
@@ -207,7 +208,9 @@ namespace pwiz.SkylineTestUtil
             Bitmap shotPic = newShot.Take();
             if (processShot != null)
             {
-                shotPic = processShot(shotPic);
+                // execute on window's thread in case delegate accesses UI controls
+                shotPic = activeWindow.Invoke(processShot, shotPic) as Bitmap;
+                Assert.IsNotNull(shotPic);
             }
             else
             {
@@ -236,6 +239,10 @@ namespace pwiz.SkylineTestUtil
 
             return shotPic;
         }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private static void CleanupBorder(Bitmap shotPic)
         {

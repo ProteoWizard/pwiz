@@ -366,13 +366,13 @@ namespace pwiz.SkylineTestTutorial
             });
             PasteTransitionListSkipColumnSelect();
             RunUI(SkylineWindow.CollapsePeptides);
-            PauseForScreenShot<SequenceTreeForm>("Targets tree (selected from main window)", 21, null, 
-                bmp => ClipTargets(bmp));
+            PauseForScreenShot<SequenceTreeForm>("Targets tree (selected from main window)", 21, null,
+                bmp => ClipTargets(bmp, 19));
 
             // Adjusting Modifications Manually, p. 19.
             AdjustModifications("AGLCQTFVYGGCR", true, 'V', 747.348);
             PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 24, null,
-                bmp => ClipTargets(bmp));
+                bmp => ClipTargets(bmp, 21));
 
             AdjustModifications("IVGGWECEK", true, 'V', 541.763);
             AdjustModifications("YEVQGEVFTKPQLWP", false, 'L', 913.974);
@@ -393,7 +393,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form", 25);
 
                 RunUI(() =>
-                          {
+                           {
                               if (IsFullData)
                               {
                                   importResultsSamplesDlg.CheckAll(true);
