@@ -898,11 +898,11 @@ namespace TestRunner
                 languages = new[] { "en" };
             }
 
-            Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, loopCount) =>
+            Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
             {
                 testOutput = testOutput.Trim(' ', '\t', '\r', '\n');
                 testOutput = Regex.Replace(testOutput, @"\d+ failures", $"{testsFailed} failures");
-                testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {loopCount}.{testsResultsReturned} ", RegexOptions.Multiline);
+                testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {pass}.{testsResultsReturned} ", RegexOptions.Multiline);
 
                 Console.WriteLine(testOutput);
                 testLog.WriteLine(testOutput);
@@ -1132,9 +1132,10 @@ namespace TestRunner
                                     if (!testPassed)
                                         Interlocked.Increment(ref testsFailed);
                                     string testOutput = Encoding.UTF8.GetString(result, 1, result.Length - 1);
-                                    LogTestOutput(testOutput, log, testInfo.LoopCount);
+                                    LogTestOutput(testOutput, log, testInfo.Pass + testInfo.LoopCount);
                                     Interlocked.Increment(ref testsResultsReturned);
-                                    testInfo.IncrementLoopCount();
+                                    if (testInfo.Pass == 2)
+                                        testInfo.IncrementLoopCount();
                                     if (loop == 0)
                                         testQueue.Enqueue(testInfo);
                                 }
@@ -1679,13 +1680,8 @@ namespace TestRunner
                     languages = qualityLanguages;
 
                 // Run all test passes.
-                int pass = clientMode ? 2 : 1; // client mode should only be a single pass, so if it makes it here, it's pass 2
+                int pass = 2; // at this point we always start at pass 2 (pass0 and pass1 will have run already, optionally)
                 int passEnd = pass + (int)loopCount;
-                if (pass0 || pass1)
-                {
-                    pass++;
-                    passEnd++;
-                }
                 if (loopCount <= 0)
                 {
                     passEnd = int.MaxValue;
@@ -1694,7 +1690,7 @@ namespace TestRunner
                 if (!pass2)
                     return runTests.FailureCount == 0;
 
-                if (pass == 2 && pass < passEnd && testList.Count > 0 && !clientMode)
+                if (pass < passEnd && testList.Count > 0 && !clientMode)
                 {
                     runTests.Log("\r\n");
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");

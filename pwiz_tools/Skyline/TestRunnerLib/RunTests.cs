@@ -1061,9 +1061,19 @@ namespace TestRunnerLib
             }
         }
 
+        public string TeamCityPassName(int pass)
+        {
+            return pass switch
+            {
+                0 => "Pass0 (French, mzML, no internet)",
+                1 => "Pass1 (leak detection)",
+                _ => "Pass2 (general)"
+            };
+        }
+
         public string TeamCityTestName(TestInfo test, int pass)
         {
-            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.Pass{pass}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
+            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.{TeamCityPassName(pass)}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
         }
 
         public void TeamCityStartTest(TestInfo test, int pass)
