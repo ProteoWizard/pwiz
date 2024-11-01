@@ -535,7 +535,7 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.add("activationMethod", it->activation);
         if (it->windowWideness != 0)
             attributes.add("windowWideness", it->windowWideness);
-        
+
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);
         xmlWriter.endElement();
