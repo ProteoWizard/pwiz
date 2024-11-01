@@ -251,15 +251,15 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        private const int TVM_SCROLL = 0x1100 + 20; // TVM_SCROLL message
-        private const int SB_HORZ = 0; // Horizontal scroll
+        private const int SB_HORZ = 0; // Horizontal scroll bar
+        private const int SB_VERT = 1; // Vertical scroll bar
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern int SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
         public static void RestoreHScrollPos(TreeView treeView, int pos)
         {
-            SendMessage(treeView.Handle, TVM_SCROLL, pos, 0);
+            SetScrollPos(treeView.Handle, SB_HORZ, pos, true);
         }
     }
 }

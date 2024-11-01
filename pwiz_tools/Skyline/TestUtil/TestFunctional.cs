@@ -199,8 +199,16 @@ namespace pwiz.SkylineTestUtil
         protected bool ForceMzml
         {
             get { return _forceMzml; }
-            set { _forceMzml = value && !IsRecordingScreenShots;  }    // Don't force mzML during screenshots
+            set
+            {
+                // Don't force mzML during screenshots
+                _forceMzml = value && !IsRecordingScreenShots;
+                // Unless specifically requested to force mzML even during screenshots
+                _forceMzml = _forceMzml || ForceMzmlInScreenShots;
+            }
         }
+
+        protected bool ForceMzmlInScreenShots { get; set; }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
@@ -1191,7 +1199,7 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
-        public static bool IsRecordingScreenShots => IsPauseForScreenShots || IsAutoScreenShotMode || IsCoverShotMode;
+        public static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
 
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
@@ -1202,7 +1210,8 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots || Program.PauseSeconds == -1; }
+            // Code written to depend on IsPauseForScreenShots also applies to IsAutoScreenShotMode.
+            get { return _isPauseForScreenShots || Program.PauseSeconds == -1 || IsAutoScreenShotMode; }
             set
             {
                 _isPauseForScreenShots = value;

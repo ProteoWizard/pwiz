@@ -219,6 +219,8 @@ namespace pwiz.SkylineTestTutorial
             PlaceTargetsAndGraph(SkylineWindow.GraphRetentionTime);
 
             // TODO: Handle docking window drag-drop display
+            if (IsPauseForScreenShots)
+                WaitForDocumentLoaded();    // Screenshots should be taken with a fully loaded document.
             PauseForScreenShot("Docking Retention Times view", _pageNum++);
 
             RestoreViewOnScreen(7);
@@ -267,7 +269,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void PlaceTargetsAndGraph(Control graphForm)
         {
-            if (!IsRecordingScreenShots)
+            if (!IsPauseForScreenShots)
                 return;
 
             RunUI(() =>
@@ -300,11 +302,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForRetentionTimeGraphScreenShot("Retention Times graph for second peptide", _pageNum);
 
             RestoreViewOnScreen(12);
-
+            JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak Areas graph", _pageNum++);
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
-
+            JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak Areas graph (normalized to total)", _pageNum++);
 
             RestoreViewOnScreen(13);
@@ -353,7 +355,11 @@ namespace pwiz.SkylineTestTutorial
                 {
                     RunUI(() => Assert.AreEqual(expectedItems, findView.ItemCount));
                 }
-
+                RunUI(() =>
+                {
+                    findView.ListView.Focus();
+                    findView.ListView.Items[0].Selected = true;
+                });
                 PauseForScreenShot<FindResultsForm>("Find Results view", _pageNum++);
             }
 
@@ -532,6 +538,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.EditDelete);
         }
 
+        private static void JiggleSelection()
+        {
+            // Node change apparently required to get x-axis labels in peak areas view the way they should be
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            WaitForGraphs();
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
+        }
+
         private void AddTruncatedPrecursorsView(DocumentGridForm documentGrid, bool initialTestExecution)
         {
             RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
@@ -566,7 +580,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.FilterTab.AddSelectedColumn();
                 viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_GREATER_THAN);
                 viewEditor.FilterTab.SetFilterOperand(iFilter, 0.ToString());
-                TreeViewStateRestorer.RestoreHScrollPos(viewEditor.FilterTab.AvailableFieldsTree, 25);
+                TreeViewStateRestorer.RestoreHScrollPos(viewEditor.FilterTab.AvailableFieldsTree, 60);
             });
 
             if (initialTestExecution)
@@ -686,7 +700,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode("LGPLVEQGR");
 
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
-
+            JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak area replicate comparison graph for LGPLVEDQGR", _pageNum);
 
             RunUI(() =>
@@ -748,7 +762,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     SkylineWindow.SynchronizeZooming(true);
-                    SkylineWindow.Size = new Size(1380, 744);
+                    SkylineWindow.Size = new Size(1385, 744);
                 });
 
                 PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", _pageNum++, null,
@@ -972,7 +986,7 @@ namespace pwiz.SkylineTestTutorial
                 var toolStoreDlg = ShowDialog<ToolStoreDlg>(SkylineWindow.ShowToolStoreDlg);
 
                 RunUI(() => toolStoreDlg.SelectTool("MSstats"));
-
+                WaitForConditionUI(() => !toolStoreDlg.IsIconDownloading);
                 PauseForScreenShot<ToolStoreDlg>("Tool Store form - showing MSstats tool details", _pageNum++);
 
                 OkDialog(toolStoreDlg, toolStoreDlg.CancelButton.PerformClick);
@@ -1163,6 +1177,7 @@ namespace pwiz.SkylineTestTutorial
                     int iFilter = viewEditor.ViewInfo.Filters.Count;
                     viewEditor.FilterTab.AddSelectedColumn();
                     viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_BLANK);
+                    TreeViewStateRestorer.RestoreHScrollPos(viewEditor.FilterTab.AvailableFieldsTree, 60);
                 });
 
                 PauseForScreenShot<ViewEditor.FilterView>("Filter tab of column editor", _pageNum);
@@ -1280,6 +1295,11 @@ namespace pwiz.SkylineTestTutorial
             FindNode("SVVDIGLIK");
 
             PauseForPeakAreaGraphScreenShot("SVVDIGLIK mean peak area ratio to global standard by condition", _pageNum);
+
+            RunUI(() =>
+            {
+                ScreenshotManager.FindParent<FloatingWindow>(SkylineWindow.GraphPeakArea).Width += 50;
+            });
 
             FindNode("LQTEGDGIYTLNSEK");
 
@@ -1538,7 +1558,11 @@ namespace pwiz.SkylineTestTutorial
                     foldChangeGrid.DataboundGridControl.DataGridView.Rows.OfType<DataGridViewRow>()
                         .First(row => (string) row.Cells[colPeptide.Index].FormattedValue ==  "VVLSGSDATLAYSAFK");
                 rowToDeselect.Selected = false;
+                foldChangeGrid.DataboundGridControl.DataGridView.FirstDisplayedScrollingRowIndex =
+                    rowToDeselect.Index - 4;
             });
+            OkDialog(settingsForm, () => settingsForm.Close());
+
             PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", _pageNum);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(foldChangeGrid.FoldChangeBindingSource.ViewContext.Delete);
             PauseForScreenShot<MultiButtonMsgDlg>("Are you sure you want to delete...", _pageNum++);
@@ -1546,7 +1570,6 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(messageDlg, messageDlg.BtnYesClick);
             WaitForDocumentChange(docBefore);   // Avoid tearing down the test before the deletion is complete
 
-            OkDialog(settingsForm, () => settingsForm.Close());
             OkDialog(foldChangeGrid, () => foldChangeGrid.Close());
             OkDialog(foldChangeGraph, () => foldChangeGraph.Close());
         }
