@@ -836,13 +836,23 @@ namespace pwiz.SkylineTestTutorial
                 RestoreViewOnScreen(10); // Same layout for RT graph as on page 10
 
                 SelectNode(SrmDocument.Level.Molecules, i);
-
-                PauseForRetentionTimeGraphScreenShot("Retention Times graph - misintegrated peaks", _pageNum++);
+                PauseForRetentionTimeGraphScreenShot("Retention Times graph - misintegrated peaks", _pageNum++, null, bmp =>
+                {
+                    DrawArrowOnBitmap(bmp, new Point((int)(bmp.Width * 0.85), (int)(bmp.Height * 0.8)),
+                        new Point((int)(bmp.Width * 0.78), (int)(bmp.Height * 0.65)));
+                    return bmp; 
+                });
 
                 RestoreViewOnScreen(12); // Same layout for Peak Areas graph as on page 12
                 SelectNode(SrmDocument.Level.Molecules, i);
 
-                PauseForPeakAreaGraphScreenShot("Peak Areas graph - no normalization", _pageNum);
+                PauseForPeakAreaGraphScreenShot("Peak Areas graph - no normalization", _pageNum, null, bmp =>
+                {
+                    int xPos = (int)(bmp.Width * 0.735);
+                    DrawArrowOnBitmap(bmp, new Point(xPos, (int)(bmp.Height * 0.42)),
+                        new Point(xPos, (int)(bmp.Height * 0.6)));
+                    return bmp;
+                });
 
                 if (IsFullData)
                 {
@@ -953,8 +963,16 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
                     SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
                 });
-
-                PauseForPeakAreaGraphScreenShot("Peak Areas graph - no normalization", _pageNum++);
+                PauseForPeakAreaGraphScreenShot("Peak Areas graph - no normalization", _pageNum++, null, bmp =>
+                {
+                    int xFirst = (int)(bmp.Width * 0.398);
+                    var ptTail = new Point(xFirst, (int)(bmp.Height * 0.3));
+                    var ptHead = new Point(xFirst, (int)(bmp.Height * 0.6));
+                    DrawArrowOnBitmap(bmp, ptTail, ptHead);
+                    ptTail.X = ptHead.X = (int)(bmp.Width * 0.692);
+                    DrawArrowOnBitmap(bmp, ptTail, ptHead);
+                    return bmp;
+                });
 
                 RunUI(() =>
                 {

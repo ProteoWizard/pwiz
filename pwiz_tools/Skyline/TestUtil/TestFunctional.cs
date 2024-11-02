@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1468,6 +1469,54 @@ namespace pwiz.SkylineTestUtil
             return croppedShot;
         }
 
+        public static void DrawArrowOnBitmap(Bitmap bitmap, Point startPoint, Point endPoint, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
+        {
+            using Graphics graphics = Graphics.FromImage(bitmap);
+
+            // Set high quality for smoother drawing
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // Define direction vector for the arrow head
+            double angle = Math.Atan2(endPoint.Y - startPoint.Y, endPoint.X - startPoint.X);
+            double sinAngle = Math.Sin(angle);
+            double cosAngle = Math.Cos(angle);
+
+            // Create a pen for the arrow tail with specified tail width
+            using Pen pen = new Pen(Color.FromArgb(192, 0, 0), tailWidth);
+
+            pen.StartCap = LineCap.Flat;
+            pen.EndCap = LineCap.Flat;
+
+            // Calculate the point where the tail should end (start of the arrowhead)
+            Point tailEndPoint = new Point(
+                (int)(endPoint.X - arrowHeadWidth * cosAngle),
+                (int)(endPoint.Y - arrowHeadWidth * sinAngle)
+            );
+
+            // Draw the tail of the arrow
+            graphics.DrawLine(pen, startPoint, tailEndPoint);
+
+            // Calculate arrowhead points
+            using SolidBrush brush = new SolidBrush(Color.FromArgb(192, 0, 0));
+
+            Point[] arrowHead = new Point[]
+            {
+                endPoint, // Tip of the arrow
+                new Point(
+                    (int)(endPoint.X - arrowHeadWidth * cosAngle + arrowHeadHeight * sinAngle / 2),
+                    (int)(endPoint.Y - arrowHeadWidth * sinAngle - arrowHeadHeight * cosAngle / 2)
+                ),
+                new Point(
+                    (int)(endPoint.X - arrowHeadWidth * cosAngle - arrowHeadHeight * sinAngle / 2),
+                    (int)(endPoint.Y - arrowHeadWidth * sinAngle + arrowHeadHeight * cosAngle / 2)
+                )
+            };
+
+            // Draw the arrow head
+            graphics.FillPolygon(brush, arrowHead);
+        }
+
+
         protected GraphSummary FindGraphSummaryByGraphType<TGraphPane>() where TGraphPane : SummaryGraphPane
         {
             return FormUtil.OpenForms.OfType<GraphSummary>()
@@ -1489,32 +1538,32 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
         }
 
-        public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null)
+        public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             WaitForGraphs();
             var zedGraph = FindZedGraph(graphContainer);
             Assert.IsNotNull(zedGraph, "Control was not or did not contain a graph.");
-            PauseForScreenShotInternal(description, null, zedGraph, timeout);
+            PauseForScreenShotInternal(description, null, zedGraph, timeout, processShot);
         }
 
-        public void PauseForPeakAreaGraphScreenShot(string description, int? pageNum = null, int? timeout = null)
+        public void PauseForPeakAreaGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphPeakArea, pageNum, timeout);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphPeakArea, pageNum, timeout, processShot);
         }
 
-        public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null)
+        public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphRetentionTime, pageNum, timeout);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphRetentionTime, pageNum, timeout, processShot);
         }
 
-        public void PauseForMassErrorGraphScreenShot(string description, int? pageNum = null, int? timeout = null)
+        public void PauseForMassErrorGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout, processShot);
         }
 
-        public void PauseForChromGraphScreenShot(string description, string replicateName, int? pageNum = null, int? timeout = null)
+        public void PauseForChromGraphScreenShot(string description, string replicateName, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout);
+            PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout, processShot);
         }
 
         private ZedGraphControl FindZedGraph(Control graphContainer)
