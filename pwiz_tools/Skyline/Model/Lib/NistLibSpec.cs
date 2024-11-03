@@ -787,7 +787,8 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
-        private static readonly char[] MAJOR_SEP = {'/'};
+        private static readonly char[] MODS_MAJOR_SEP = { '/' }; 
+        private static readonly char[] MODS_ALTERNATE_MAJOR_SEP = { ')','(' };
         private static readonly char[] MINOR_SEP = {','};
         // Small molecule items
         private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name:\s*(.*)", NOCASE); // small molecule names can be anything
@@ -1640,7 +1641,9 @@ namespace pwiz.Skyline.Model.Lib
                 return sequence;
 
             // Parse the modification spec, and insert [+/-00.0] modifiers
-            string[] mods = mod.Split(MAJOR_SEP);
+            string[] mods = mod.Split(MODS_MAJOR_SEP);
+            if (mods.Length == 1)
+                mods = mod.Split(MODS_ALTERNATE_MAJOR_SEP, StringSplitOptions.RemoveEmptyEntries); // e.g. " Mods=2(10,S,Phospho)(14,C,CAM) " instead of " Mods=2/10,S,Phospho/14,C,CAM "
 
             StringBuilder sb = new StringBuilder(sequence.Length);
             bool inMod = false;
