@@ -633,6 +633,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public FloatingWindow FindFloatingWindow(Control control)
+        {
+            return ScreenshotManager.FindParent<FloatingWindow>(control);
+        }
+
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
             foreach (var form in OpenForms)

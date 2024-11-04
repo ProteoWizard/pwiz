@@ -218,21 +218,25 @@ namespace pwiz.SkylineTestTutorial
 
             RestoreViewOnScreen(6);
             PlaceTargetsAndGraph(SkylineWindow.GraphRetentionTime);
-
-            // TODO: Handle docking window drag-drop display
             if (IsPauseForScreenShots)
                 WaitForDocumentLoaded();    // Screenshots should be taken with a fully loaded document.
+            BeginDragDisplay(SkylineWindow.GraphRetentionTime, 0.5, 0.9);
             PauseForScreenShot("Docking Retention Times view", _pageNum++);
+            EndDragDisplay();
 
             RestoreViewOnScreen(7);
             RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
             JiggleSelection();
             PlaceTargetsAndGraph(SkylineWindow.GraphPeakArea);
+            BeginDragDisplay(SkylineWindow.GraphPeakArea, 0.53, 0.83);
             PauseForScreenShot("Docking Peak Areas view", _pageNum++);
+            EndDragDisplay();
 
             RestoreViewOnScreen(8);
             PlaceTargetsAndGraph(null);
+            BeginDragDisplay(SkylineWindow.SequenceTree, 0.03, 0.42);
             PauseForScreenShot("Docking Targets view", _pageNum++);
+            EndDragDisplay();
 
             RestoreViewOnScreen(9);
             var arrangeGraphsDlg = ShowDialog<ArrangeGraphsGroupedDlg>(SkylineWindow.ArrangeGraphsGrouped);
@@ -269,19 +273,37 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
         }
 
-        private static void PlaceTargetsAndGraph(Control graphForm)
+        private void BeginDragDisplay(Control dockableForm, double xProportion, double yProportion)
         {
             if (!IsPauseForScreenShots)
+                return;
+            RunUI(() =>
+            {
+                var rect = SkylineWindow.Bounds;
+                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
+                SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
+            });
+        }
+
+        private void EndDragDisplay()
+        {
+            if (IsPauseForScreenShots)
+                RunUI(() => SkylineWindow.DockPanel.EndDragDisplay());
+        }
+
+        private void PlaceTargetsAndGraph(Control graphForm)
+        {
+            if (!IsRecordingScreenShots)
                 return;
 
             RunUI(() =>
             {
-                var floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(SkylineWindow.SequenceTree);
+                var floatingWindow = FindFloatingWindow(SkylineWindow.SequenceTree);
                 var chromGraph = SkylineWindow.GraphChromatograms.First();
                 floatingWindow.Location = chromGraph.PointToScreen(new Point(0, 0)) + new Size(25, 15);
                 if (graphForm != null)
                 {
-                    floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(graphForm);
+                    floatingWindow = FindFloatingWindow(graphForm);
                     floatingWindow.Location = SkylineWindow.Location + new Size(SkylineWindow.Width + 10, 0);
                 }
                 floatingWindow.Activate();
