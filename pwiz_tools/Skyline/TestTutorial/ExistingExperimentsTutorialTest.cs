@@ -128,6 +128,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 peptideSettingsUI.PickedLibraries = new[] { "Yeast_mini" }; // Not L10N
                 peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+                peptideSettingsUI.SetSelectedLibrary("Yeast_mini");
             });
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 4);
 
