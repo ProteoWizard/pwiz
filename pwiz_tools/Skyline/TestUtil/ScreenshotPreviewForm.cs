@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -108,9 +110,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private void SaveScreenshot()
+        private bool SaveScreenshot()
         {
-            _storedNewScreenshot.Save(_fileToSave);
+            if (FileEx.IsWriteLocked(_fileToSave))
+            {
+                MessageBox.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
+                    "Check that it is not open in another program such as TortoiseIDiff."));
+                return false;
+            }
+            try
+            {
+                _storedNewScreenshot.Save(_fileToSave);
+                return true;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(this, e.ToString());
+                return false;
+            }
         }
 
         protected override bool ShowWithoutActivation
@@ -130,13 +147,13 @@ namespace pwiz.SkylineTestUtil
 
         private void saveScreenshotAndContinueBtn_Click(object sender, EventArgs e)
         {
-            SaveScreenshot();
-            Continue();
+            if (SaveScreenshot())
+                Continue();
         }
 
-        private void refreshBtn_Click(object sender, EventArgs e)
+        private async void refreshBtn_Click(object sender, EventArgs e)
         {
-            RefreshScreenshots();
+            await RefreshScreenshots();
         }
 
         private void closePreviewBtn_Click(object sender, EventArgs e)

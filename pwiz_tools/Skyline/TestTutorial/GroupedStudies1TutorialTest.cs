@@ -226,6 +226,7 @@ namespace pwiz.SkylineTestTutorial
 
             RestoreViewOnScreen(7);
             RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
+            JiggleSelection();
             PlaceTargetsAndGraph(SkylineWindow.GraphPeakArea);
             PauseForScreenShot("Docking Peak Areas view", _pageNum++);
 
@@ -1527,6 +1528,15 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
+            RunUI(() =>
+            {
+                var barGraph = FindOpenForm<FoldChangeBarGraph>();
+                var scale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
+                scale.Min = -6.5;
+                scale.Max = 6.5;
+                scale.MajorStep = 2;
+                scale.MinorStep = 0.5;
+            });
             PauseForGraphScreenShot("Copy protein bar graph metafile", FindOpenForm<FoldChangeBarGraph>(), _pageNum++);
 
             if (IsCoverShotMode)

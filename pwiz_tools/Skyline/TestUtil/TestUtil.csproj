@@ -150,6 +150,11 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="ScreenshotPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -239,6 +244,10 @@
       <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="ScreenshotPreviewForm.resx">
       <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -256,6 +265,9 @@
     <EmbeddedResource Include="Schemas\AuditLog\Skyl_4.21.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\larrow-cur.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

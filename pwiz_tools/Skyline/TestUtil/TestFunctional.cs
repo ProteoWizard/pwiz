@@ -1403,7 +1403,7 @@ namespace pwiz.SkylineTestUtil
 
             if (countTargets != null)
             {
-                var topNode = sequenceTree.TopNode;
+                var topNode = (TreeNodeMS)sequenceTree.TopNode;
 
                 int targetsRange = sequenceTree.ItemHeight * countTargets.Value;
                 if (!fromBottom)
@@ -1414,14 +1414,14 @@ namespace pwiz.SkylineTestUtil
                     int aboveRange = sequenceTree.ItemHeight;
                     while (topNode.NextVisibleNode != null && aboveRange < sequenceTreeRect.Height)
                     {
-                        topNode = topNode.NextVisibleNode;
+                        topNode = (TreeNodeMS)topNode.NextVisibleNode;
                         aboveRange += sequenceTree.ItemHeight;
                     }
 
                     // Skip last node if requested
                     int bottomPadding = 0;
                     if (!includeNewItem && topNode.NextVisibleNode == null)
-                        topNode = topNode.PrevVisibleNode;
+                        topNode = (TreeNodeMS)topNode.PrevVisibleNode;
                     else
                         bottomPadding = 5;  // A little extra space below the new node
 
@@ -1432,7 +1432,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         if (ReferenceEquals(topNode, sequenceTree.TopNode))
                             break;
-                        topNode = topNode.PrevVisibleNode;
+                        topNode = (TreeNodeMS)topNode.PrevVisibleNode;
                     }
 
                     sequenceTreeRect.Y = topNode.Bounds.Top;
@@ -1440,14 +1440,14 @@ namespace pwiz.SkylineTestUtil
                     sequenceTreeRect.Height = bottom - sequenceTreeRect.Y;
                 }
 
-                var maxNodeWidth = 0;
+                int maxNodeRight = 0;
                 for (var i = 0; topNode != null && i < countTargets; i++)
                 {
-                    maxNodeWidth = Math.Max(maxNodeWidth, topNode.Bounds.X + topNode.Bounds.Width);
-                    topNode = topNode.NextVisibleNode;
+                    maxNodeRight = Math.Max(maxNodeRight, topNode.BoundsMS.Right + 5);
+                    topNode = (TreeNodeMS)topNode.NextVisibleNode;
                 }
 
-                sequenceTreeRect.Width = Math.Min(sequenceTreeRect.Width, maxNodeWidth);
+                sequenceTreeRect.Width = Math.Min(sequenceTreeRect.Width, maxNodeRight);
             }
 
             var targetsForm = FindOpenForm<SequenceTreeForm>().Pane;    // Bitmap is taken of the Pane
@@ -1469,9 +1469,25 @@ namespace pwiz.SkylineTestUtil
             return croppedShot;
         }
 
-        public static void DrawArrowOnBitmap(Bitmap bitmap, Point startPoint, Point endPoint, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
+        public static Bitmap DrawLArrowCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
         {
-            using Graphics graphics = Graphics.FromImage(bitmap);
+            using Graphics graphics = Graphics.FromImage(bmp);
+            int x = (int)(bmp.Width * xRelative);
+            int y = (int)(bmp.Height * yRelative);
+
+            var arrowCurBmp = Properties.Resources.larrow_cur;
+            arrowCurBmp.MakeTransparent(Color.Red);
+
+            // TODO: Deal with scaling the cursor bitmap
+
+            graphics.DrawImage(arrowCurBmp, x, y);
+
+            return bmp;
+        }
+
+        public static void DrawArrowOnBitmap(Bitmap bmp, Point startPoint, Point endPoint, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
+        {
+            using Graphics graphics = Graphics.FromImage(bmp);
 
             // Set high quality for smoother drawing
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
