@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Koina
     public class KoinaUnsupportedModificationException : KoinaException
     {
         public KoinaUnsupportedModificationException(Target target, StaticMod mod, int index)
-            : base(string.Format(KoinaResources.KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina, mod.Name,
+            : base(string.Format(KoinaResources.KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina, mod.Name,
                 index, target.Sequence))
         {
         }

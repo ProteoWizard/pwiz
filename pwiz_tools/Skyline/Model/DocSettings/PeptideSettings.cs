@@ -785,7 +785,7 @@ namespace pwiz.Skyline.Model.DocSettings
         bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
 
         /// <summary>
-        /// Returns a potential override to the maximum number of variable modifcations in the SrmSettings.
+        /// Returns a potential override to the maximum number of variable modifications in the SrmSettings.
         /// </summary>
         int? MaxVariableMods { get; }
     }
