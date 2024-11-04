@@ -109,7 +109,7 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
     // this list is for Windows; it's a superset of the POSIX list
     string illegalFilename = "\\/*:?<>|\"";
     for(char& c : runId)
-        if (c < 0x20 || c == 0x7F || illegalFilename.find(c) != string::npos)
+        if ((c >= 0 && c < 0x20) || c == 0x7F || illegalFilename.find(c) != string::npos)
             c = '_';
 
     bfs::path newFilename = runId + extension;
