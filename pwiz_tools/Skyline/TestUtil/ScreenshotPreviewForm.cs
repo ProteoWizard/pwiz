@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -114,7 +115,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (FileEx.IsWriteLocked(_fileToSave))
             {
-                MessageBox.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
+                MessageDlg.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
                     "Check that it is not open in another program such as TortoiseIDiff."));
                 return false;
             }
@@ -125,7 +126,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception e)
             {
-                MessageBox.Show(this, e.ToString());
+                MessageDlg.ShowException(this, e);
                 return false;
             }
         }

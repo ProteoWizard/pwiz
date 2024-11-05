@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -176,14 +177,29 @@ namespace pwiz.SkylineTestUtil
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        private async Task CaptureScreenShot(bool save)
+        private async Task<bool> CaptureScreenShot(bool save)
         {
             ScreenshotManager.ActivateScreenshotForm(_screenshotForm);
 
             await Task.Delay(200);
 
-            _screenshotManager.TakeShot(_screenshotForm, _fullScreen, save ? _fileToSave: null, _processShot);
+            if (save && FileEx.IsWriteLocked(_fileToSave))
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
+                    "Check that it is not open in another program such as TortoiseIDiff."));
+                return false;
+            }
+            try
+            {
+                _screenshotManager.TakeShot(_screenshotForm, _fullScreen, save ? _fileToSave : null, _processShot);
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+                return false;
+            }
             FocusForm();
+            return true;
         }
 
         private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
@@ -191,7 +207,7 @@ namespace pwiz.SkylineTestUtil
             UpdateScreenshotButtonLabels();
         }
 
-        private void RefreshViewState()
+        private async void RefreshViewState()
         {
 
             if (!string.IsNullOrEmpty(_linkUrl))
@@ -248,7 +264,7 @@ namespace pwiz.SkylineTestUtil
 
             } else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
             {
-                _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
+                await _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
                 _screenshotPreviewForm.Show(_ownerForm);
             }
 
@@ -327,8 +343,8 @@ namespace pwiz.SkylineTestUtil
 
         private async void btnScreenshotAndContinue_Click(object sender, EventArgs e)
         {
-            await CaptureScreenShot(saveScreenshotCheckbox.Checked);
-            Continue();
+            if (await CaptureScreenShot(saveScreenshotCheckbox.Checked))
+                Continue();
         }
 
         private async void btnPreview_Click(object sender, EventArgs e)

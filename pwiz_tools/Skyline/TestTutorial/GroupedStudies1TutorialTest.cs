@@ -293,7 +293,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void PlaceTargetsAndGraph(Control graphForm)
         {
-            if (!IsRecordingScreenShots)
+            if (!IsPauseForScreenShots)
                 return;
 
             RunUI(() =>

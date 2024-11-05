@@ -1032,8 +1032,11 @@ namespace pwiz.Skyline
 
         private void SkylineWindow_Activated(object sender, EventArgs e)
         {
-            if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating && !Program.FunctionalTest)  // Avoid doing this during screenshots
-                FocusDocument();
+            if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
+            {
+                if (!Program.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
+                    FocusDocument();
+            }
         }
 
         protected override void OnGotFocus(EventArgs e)
