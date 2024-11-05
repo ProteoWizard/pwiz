@@ -1767,9 +1767,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (GraphPane.FindNearestStick(e.Location, out var nearestCurve, out var nearestIndex))
             {
-                if (nearestCurve is StickItem sticks)
+                if (nearestCurve != null)
                 {
-                    if (nearestIndex >= 0 && nearestIndex < sticks.NPts)
+                    if (nearestIndex >= 0 && nearestIndex < nearestCurve.NPts)
                     {
                         if (_toolTip == null)
                             _toolTip = new NodeTip(this) { Parent = graphControl };
@@ -1782,7 +1782,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             gItem = GraphItem;
                         // nearestIndex is in graph points. Need to convert it into the ranked spectrum index
                         var spectrumIndex = Enumerable.Range(0, gItem.SpectrumInfo.Peaks.Count).FirstOrDefault(i =>
-                            gItem.SpectrumInfo.Peaks[i].ObservedMz == sticks.Points[nearestIndex].X);
+                            gItem.SpectrumInfo.Peaks[i].ObservedMz == nearestCurve.Points[nearestIndex].X);
                         _toolTip.SetTipProvider(new ToolTipImplementation(gItem.SpectrumInfo.Peaks[spectrumIndex]), new Rectangle(e.Location, new Size()), e.Location);
                     }
                     return;
