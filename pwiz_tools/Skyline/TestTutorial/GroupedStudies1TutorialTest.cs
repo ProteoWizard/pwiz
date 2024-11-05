@@ -696,12 +696,14 @@ namespace pwiz.SkylineTestTutorial
 
             SelectNode(SrmDocument.Level.MoleculeGroups, SkylineWindow.Document.PeptideGroupCount - 1);
             ActivateReplicate("D_102_REP1");
-            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1").GraphControl, 12, 29));
+            WaitForGraphs();
+            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1")?.GraphControl, 12, 29));
 
             PauseForChromGraphScreenShot("Multi-peptide chromatogram graph for S", "D_102_REP1", _pageNum);
 
             RunUI(SkylineWindow.SelectAll);
-            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1").GraphControl, 10, 45));
+            WaitForGraphs();
+            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1")?.GraphControl, 10, 45));
 
             PauseForChromGraphScreenShot("All multi-peptide chromatogram graph", "D_102_REP1", _pageNum++);
 
@@ -746,6 +748,9 @@ namespace pwiz.SkylineTestTutorial
 
         private static void SetXScale(ZedGraphControl graphControl, double? min, double? max)
         {
+            if (graphControl == null)   // Not full data
+                return;
+
             var scale = graphControl.GraphPane.XAxis.Scale;
             if (min.HasValue)
                 scale.Min = min.Value;
@@ -814,7 +819,7 @@ namespace pwiz.SkylineTestTutorial
                 };
                 foreach (GraphChromatogram chromGraph in chromGraphs)
                 {
-                    SetXScale(chromGraph.GraphControl, 13.2, 15.8);
+                    SetXScale(chromGraph?.GraphControl, 13.2, 15.8);
                 }
                 PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", _pageNum++, null,
                     bmp => ClipSkylineWindowShotWithForms(bmp, chromGraphs));
@@ -1360,10 +1365,8 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForPeakAreaGraphScreenShot("SVVDIGLIK mean peak area ratio to global standard by condition", _pageNum);
 
-            RunUI(() =>
-            {
-                ScreenshotManager.FindParent<FloatingWindow>(SkylineWindow.GraphPeakArea).Width += 50;
-            });
+            if (IsPauseForScreenShots)
+                RunUI(() => FindFloatingWindow(SkylineWindow.GraphPeakArea).Width += 50);
 
             FindNode("LQTEGDGIYTLNSEK");
 
@@ -1582,7 +1585,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     ZoomYAxis(foldChangeGraph.ZedGraphControl, -6, 6);
-                    var gcFloatingWindow = foldChangeGraph.Parent.Parent;
+                    var gcFloatingWindow = FindFloatingWindow(foldChangeGraph);
                     gcFloatingWindow.Top = SkylineWindow.Top + 5;
                     gcFloatingWindow.Height = SkylineWindow.Height - 10;
                     gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
