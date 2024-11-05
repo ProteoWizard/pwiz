@@ -3,5 +3,9 @@
 # Don't change line endings on potentially indexed mass spec data
 *.mzml binary
 *.mzxml binary
+# Text file types for Skyline
+*.view text
+*.sky text
+*.skyl text
 
 *.sh text eol=lf
