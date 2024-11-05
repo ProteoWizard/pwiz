@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -1545,10 +1545,12 @@ namespace ZedGraph
             YAxis.Scale.SetupScaleData(this, YAxis);
 
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
-            {
-                var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
+            { 
+                var heights = labPoints.Select(p => GetRectScreen(p.Label, g).Height).ToList();
+                if (!heights.Any(h => h > 0))
+                    return; 
+                var minLabelHeight = heights.FindAll(h => h > 0).Min(); 
                 _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
-
                 var visiblePoints = new List<LabeledPoint>();
                 foreach (var labeledPoint in labPoints)
                 {
