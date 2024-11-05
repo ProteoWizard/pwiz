@@ -1689,7 +1689,17 @@ namespace pwiz.Skyline.Model.Lib
             // are rare, and can be viewed by placing a breakpoint on the
             // line where if is true.
             if (!MODIFICATION_MASSES.TryGetValue(parts[2], out massDiff))
-                massDiff = @"[?]"; 
+            {
+                var unimod = UniMod.GetModification(parts[2], out _);
+                if (unimod?.MonoisotopicMass != null)
+                {
+                    massDiff = SequenceMassCalc.GetModDiffDescription(unimod.MonoisotopicMass.Value);
+                }
+                else
+                {
+                    massDiff = @"[?]"; 
+                }
+            }
             return index;
         }
 
