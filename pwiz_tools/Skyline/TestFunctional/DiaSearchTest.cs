@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestFunctional
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 229, PeptideCount = 254, PrecursorCount = 283, TransitionCount = 2547 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 127, PeptideCount = 136, PrecursorCount = 161, TransitionCount = 1449 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0"),

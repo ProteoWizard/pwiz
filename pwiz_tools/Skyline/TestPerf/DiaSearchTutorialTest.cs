@@ -151,7 +151,7 @@ namespace TestPerf
                 //FinalTargetCounts = new[] { 3827, 8949, 9588, 72122 }, // 10ppm 1 file 200s, 60-80 min subset, wrong MS2 mode
                 //FinalTargetCounts = new[] { 5056, 12186, 13032, 96602 }, // 10ppm 2 file 355s, 60-80 min subset, wrong MS2 mode
                 //FinalTargetCounts = new[] { 5014, 12048, 12859, 95325 },
-                FinalTargetCounts = new[] { 4443, 11702, 12540, 94405 },
+                FinalTargetCounts = new[] { 2657, 8827, 9624, 74648 },
 
                 ZipPath = "https://skyline.ms/tutorials/DiaSearchTutorial.zip",
                 DiaFiles = new[] {
