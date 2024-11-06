@@ -221,6 +221,13 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 if (scanTimeMin > 0)
                                     scan.set(MS_scan_start_time, scanTimeMin * 60, UO_second);
 
+                                double ccs = getCCSFromTitle(value);
+
+                                if (ccs >= 0)
+                                {
+                                    scan.cvParams.push_back(CVParam(MS_collisional_cross_sectional_area, ccs, UO_square_angstrom));
+                                }
+
                                 spectrum.set(MS_spectrum_title, value);
                             }
                             else if (name == "PEPMASS")
@@ -235,15 +242,12 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 else
                                     selectedIon.set(MS_selected_ion_m_z, value, MS_m_z);
                             }
-                            else if (name == "INVREION")
+                            else if (name == "ION_MOBILITY")
                             {
                                 bal::trim(value);
-                                scan.cvParams.push_back(CVParam(MS_inverse_reduced_ion_mobility, value, MS_volt_second_per_square_centimeter));
-                            }
-                            else if (name == "COLLCROSSSA")
-                            {
-                                bal::trim(value);
-                                scan.cvParams.push_back(CVParam(MS_collisional_cross_sectional_area, value, UO_square_angstrom));
+                                size_t delim = value.find_last_of(' ');
+
+                                scan.cvParams.push_back(CVParam(MS_inverse_reduced_ion_mobility, value.substr(delim + 1, value.size() - delim - 1), MS_volt_second_per_square_centimeter));
                             }
                             else if (name == "CHARGE")
                             {
@@ -341,6 +345,51 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
     }
 
     /**
+     * Parse the spectrum title to look for CCS.
+     */
+    static double getCCSFromTitle(const string& title)
+    {
+        // text to search for preceeding and following ccs
+        return getCCS(title, "ccs=");
+    }
+
+    /**
+     * Helper function to parse a double from the given string
+     * found between the two tags.  Search for number after position
+     * Update position to the end of the parsed double.
+     */
+    static double getCCS(const string& title, const char* startTag)
+    {
+        size_t start = title.find(startTag, 0);
+        if (start == string::npos)
+            return -1; // not found
+
+        start += strlen(startTag);
+        const string endTags[] = { "", " ", ",",";","\n","\r","\t" };
+        string ccsStr;
+
+        for(int i=0; i< std::size(endTags); i++)
+        {
+	        const size_t end = title.find(endTags[i], start);
+
+            if(end != string::npos)
+            {
+                ccsStr = title.substr(start, end - start);
+                break;
+            }
+        }
+
+        try
+        {
+            return boost::lexical_cast<double>(ccsStr);
+        }
+        catch (...)
+        {
+            return 0;
+        }
+    }
+
+    /**
      * Parse the spectrum title to look for retention times.  If there are
      * two times, return the center of the range.  Possible formats to look
      * for are "Elution:<time> min", "RT:<time>min" and "rt=<time>,".
@@ -386,7 +435,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
      * Update position to the end of the parsed double.
      */
     double getTime(const string& title, const char* startTag,
-                   const char* endTag, size_t position) const
+                   const char* endTag, size_t& position) const
     {
         size_t start = title.find(startTag, position);
         if( start == string::npos )

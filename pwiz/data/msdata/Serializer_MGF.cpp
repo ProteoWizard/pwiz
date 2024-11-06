@@ -110,14 +110,24 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
             CVParam spectrumTitle = s->cvParam(MS_spectrum_title);
             if (!spectrumTitle.empty())
-                os << "TITLE=" << spectrumTitle.value << '\n';
+                os << "TITLE=" << spectrumTitle.value;
             else if (titleIsThermoDTA)
             {
                 string scan_string = id::value(s->id, "scan");
-                os << "TITLE=" << thermoBasename << '.' << scan_string << '.' << scan_string << '.' << chargeParam.value << '\n';
+                os << "TITLE=" << thermoBasename << '.' << scan_string << '.' << scan_string << '.' << chargeParam.value;
             }
             else
-                os << "TITLE=" << s->id << '\n';
+                os << "TITLE=" << s->id;
+
+            CVParam collisionalCrossSectionalArea = scan.cvParam(MS_collisional_cross_sectional_area);
+            if (!collisionalCrossSectionalArea.empty())
+            {
+                os << "," << "ccs=" << collisionalCrossSectionalArea.valueFixedNotation() << '\n';
+            }
+            else
+            {
+                os << '\n';
+            }
 
             if (!scanTimeParam.empty())
                 os << "RTINSECONDS=" << scanTimeParam.timeInSeconds() << '\n';
@@ -134,12 +144,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
             CVParam inverseReduceIonMobility = scan.cvParam(MS_inverse_reduced_ion_mobility);
             if (!inverseReduceIonMobility.empty())
-                os << "INVREION=" << inverseReduceIonMobility.valueFixedNotation();
-            os << '\n';
-
-            CVParam collisionalCrossSectionalArea = scan.cvParam(MS_collisional_cross_sectional_area);
-            if (!collisionalCrossSectionalArea.empty())
-                os << "COLLCROSSSA=" << collisionalCrossSectionalArea.valueFixedNotation();
+                os << "ION_MOBILITY=" << si.cvParam(MS_selected_ion_m_z).valueFixedNotation() << " " << inverseReduceIonMobility.valueFixedNotation();
             os << '\n';
 
             if (chargeParam.empty())
