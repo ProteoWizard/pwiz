@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -210,12 +211,9 @@ namespace pwiz.Skyline.Controls
             TreeStateRestorer.UpdateTopNode();
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        public static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
-
         public void ScrollLeft()
         {
-            SetScrollPos(Handle, 0, 0, true);
+            this.SetScrollPos(ScrollDirection.horz, 0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

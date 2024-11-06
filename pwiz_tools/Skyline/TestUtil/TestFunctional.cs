@@ -1647,9 +1647,8 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(3000); // Wait for UI to settle down - Necessary?
-                    RunUI(() => ScreenshotManager.ActivateScreenshotForm(screenshotForm));
-                    Thread.Sleep(200);  // Wait for activation to complete
+                    Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
+                    ScreenshotManager.ActivateScreenshotForm(screenshotForm);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else

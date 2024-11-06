@@ -1,13 +1,15 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil.Properties;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -34,7 +36,13 @@ namespace pwiz.SkylineTestUtil
             _pauseLock = pauseLock;
         }
 
-        public async Task UpdateViewState(string description, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            e.Cancel = true;    // This form doesn't close, it just switches to the PauseAndContinue form
+            _pauseAndContinueForm.SwitchToPauseAndContinue();
+        }
+
+        public void UpdateViewState(string description, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
         {
             _screenshotControl = screenshotControl;
             _fileToSave = fileToSave;
@@ -42,22 +50,27 @@ namespace pwiz.SkylineTestUtil
             _processShot = processShot;
 
             Text = description;
-            await RefreshScreenshots();
+            RefreshScreenshots();
         }
 
-        private async Task RefreshScreenshots()
+        private void RefreshScreenshots()
         {
             ScreenshotManager.ActivateScreenshotForm(_screenshotControl);
 
-            await Task.Delay(200);
-
             _storedNewScreenshot = _screenshotManager.TakeShot(_screenshotControl, _fullScreen,null, _processShot);
-            var existingImageBytes = File.ReadAllBytes(_fileToSave);
-            var existingImageMemoryStream = new MemoryStream(existingImageBytes);
-            _storedOldScreenshot = new Bitmap(existingImageMemoryStream);
+            try
+            {
+                var existingImageBytes = File.ReadAllBytes(_fileToSave);
+                var existingImageMemoryStream = new MemoryStream(existingImageBytes);
+                _storedOldScreenshot = new Bitmap(existingImageMemoryStream);
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+                _storedOldScreenshot = Resources.DiskFailure;
+            }
             SetPreviewImages(_storedNewScreenshot, _storedOldScreenshot);
-
-            SetForegroundWindow(Handle);
+            this.SetForegroundWindow();
         }
 
         private void SetPreviewImages(Bitmap newScreenshot, Bitmap oldScreenShot)
@@ -95,10 +108,6 @@ namespace pwiz.SkylineTestUtil
             var scale = Math.Min(scaledHeight, scaledWidth);
             return new Size((int)(startingSize.Width * scale), (int)(startingSize.Height * scale));
         }
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private void Continue()
         {
@@ -152,9 +161,9 @@ namespace pwiz.SkylineTestUtil
                 Continue();
         }
 
-        private async void refreshBtn_Click(object sender, EventArgs e)
+        private void refreshBtn_Click(object sender, EventArgs e)
         {
-            await RefreshScreenshots();
+            RefreshScreenshots();
         }
 
         private void closePreviewBtn_Click(object sender, EventArgs e)

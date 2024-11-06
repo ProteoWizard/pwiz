@@ -63,6 +63,16 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap DiskFailure {
+            get {
+                object obj = ResourceManager.GetObject("DiskFailure", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap larrow_cur {
             get {
                 object obj = ResourceManager.GetObject("larrow_cur", resourceCulture);

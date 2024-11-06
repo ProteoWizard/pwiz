@@ -21,7 +21,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -249,17 +248,6 @@ namespace pwiz.Common.SystemUtil
                 for (TreeNode node = Tree.Nodes.Count > 0 ? Tree.Nodes[0] : null; node != null; node = node.NextVisibleNode)
                     yield return node;
             }
-        }
-
-        private const int SB_HORZ = 0; // Horizontal scroll bar
-        private const int SB_VERT = 1; // Vertical scroll bar
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
-
-        public static void RestoreHScrollPos(TreeView treeView, int pos)
-        {
-            SetScrollPos(treeView.Handle, SB_HORZ, pos, true);
         }
     }
 }

@@ -10,7 +10,9 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
@@ -181,21 +183,42 @@ namespace pwiz.SkylineTestUtil
             _skylineWindow = pSkylineWindow;
         }
 
-
         public static void ActivateScreenshotForm(Control screenshotControl)
         {
-            screenshotControl.Invoke((Action)(() => SetForegroundWindow(screenshotControl.Handle)));
+            Assume.IsTrue(screenshotControl.InvokeRequired);    // Use ActionUtil.RunAsync() to call this method from the UI thread
+
+            // Bring to the front
+            RunUI(screenshotControl, screenshotControl.SetForegroundWindow);
 
             // If it is a form, try not to change the focus within the form.
-            var form = (screenshotControl as Form)?.ParentForm;
+            var form = FormUtil.FindParentOfType<Form>(screenshotControl)?.ParentForm;
             if (form != null)
             {
-                form.Invoke((Action)(() => form.Activate()));
+                RunUI(form, () => form.Activate());
             }
             else
             {
-                screenshotControl.Invoke((Action)(() => screenshotControl.Focus()));
+                RunUI(screenshotControl,() => screenshotControl.Focus());
             }
+
+            Thread.Sleep(200);  // Allow activation message processing on the UI thread
+
+            RunUI(screenshotControl, () =>
+            {
+                var focusText = screenshotControl.GetFocus() as TextBox;
+                if (focusText != null)
+                {
+                    focusText.Select(focusText.Text.Length, 0);
+                    focusText.HideCaret();
+                }
+            });
+
+            Thread.Sleep(10);   // Allow selection to repaint on the UI thread
+        }
+
+        private static void RunUI(Control control, Action action)
+        {
+            control.Invoke(action);
         }
 
         public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
@@ -239,10 +262,6 @@ namespace pwiz.SkylineTestUtil
 
             return shotPic;
         }
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private static void CleanupBorder(Bitmap shotPic)
         {
