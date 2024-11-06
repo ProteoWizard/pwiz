@@ -368,7 +368,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         const string endTags[] = { "", " ", ",",";","\n","\r","\t" };
         string ccsStr;
 
-        for(int i=0; i< std::size(endTags); i++)
+        for(int i=0; i< sizeof(endTags)/sizeof(endTags[0]); i++)
         {
 	        const size_t end = title.find(endTags[i], start);
 
