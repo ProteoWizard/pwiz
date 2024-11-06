@@ -67,6 +67,8 @@ namespace TestPerf
             public string ProteinToSelect;
             public string PeptideToSelect;
 
+            public MzTolerance PrecursorMzTolerance;
+            public MzTolerance FragmentMzTolerance;
             public Dictionary<string, string> AdditionalSettings;
         }
 
@@ -90,7 +92,7 @@ namespace TestPerf
                 IsolationSchemeHasGaps = true,
                 IsolationSchemeHasOverlaps = false,
 
-                FinalTargetCounts = new[] { 3801, 4730, 4730, 30353 },
+                FinalTargetCounts = new[] { 107, 145, 145, 910 },
 
                 ZipPath = "https://skyline.ms/tutorials/DiaSearchTutorial.zip",
                 DiaFiles = new[] {
@@ -99,9 +101,11 @@ namespace TestPerf
                 },
                 IsGpfData = true,
 
-                ProteinToSelect = "sp|P01591|IGJ_HUMAN",
-                PeptideToSelect = "ENISDPTSPLR",
+                ProteinToSelect = "sp|O15240|VGF_HUMAN",
+                PeptideToSelect = "LADLASDLLLQYLLQGGAR",
 
+                PrecursorMzTolerance = new MzTolerance(3.0),
+                FragmentMzTolerance = new MzTolerance(0.2),
                 AdditionalSettings = new Dictionary<string, string>
                 {
                     //{ "data_type", "2" } // set MSFragger to GPF mode
@@ -157,6 +161,9 @@ namespace TestPerf
 
                 ProteinToSelect = "sp|P21333|FLNA_HUMAN",
                 PeptideToSelect = "IANLQTDLSDGLR",
+
+                PrecursorMzTolerance = new MzTolerance(10, MzTolerance.Units.ppm),
+                FragmentMzTolerance = new MzTolerance(10, MzTolerance.Units.ppm),
             };
 
             TestFilesZipPaths = new[]
@@ -391,8 +398,8 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _analysisValues.PrecursorMzTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _analysisValues.FragmentMzTolerance;
                 // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
                 // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
@@ -406,7 +413,7 @@ namespace TestPerf
             });
             PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - Search Settings page", tutorialPage++);
 
-            WaitForConditionUI(() => MzTolerance.Units.ppm == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
+            WaitForConditionUI(() => _analysisValues.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
 
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));

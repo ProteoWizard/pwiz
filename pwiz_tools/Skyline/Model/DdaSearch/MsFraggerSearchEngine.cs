@@ -61,11 +61,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             dia_gpf = 2
         }
 
-        private bool DataIsDIA => (DataType) AdditionalSettings[@"data_type"].Value != DataType.dda;
-        private string PepXmlSuffix => DataIsDIA ? @"_rank1.pepXML" : @".pepXML";
+        private readonly DataType _initialDataType;
+        private bool DataIsDIA => _initialDataType != DataType.dda;
+        private string PepXmlSuffix => (DataType) AdditionalSettings[@"data_type"].Value != DataType.dda ? @"_rank1.pepXML" : @".pepXML";
 
         public MsFraggerSearchEngine(DataType dataType)
         {
+            _initialDataType = dataType;
+
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {CHECK_SPECTRAL_FILES, new Setting(CHECK_SPECTRAL_FILES, 1, 0, 1)},
@@ -146,6 +149,23 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             settingNameList.Add(setting.Name);
             AdditionalSettings[setting.Name] = setting;
+        }
+
+        private Dictionary<string, Setting> _replacedAdditionalSettings = new Dictionary<string, Setting>();
+        private void ReplaceAdditionalSettingIfDefault(string settingName, object newValue)
+        {
+            if (!AdditionalSettings[settingName].IsDefault)
+                return;
+            _replacedAdditionalSettings[settingName] = AdditionalSettings[settingName];
+            AdditionalSettings[settingName] = new Setting(AdditionalSettings[settingName], newValue);
+        }
+
+        private void RestoreAdditionalSettingIfDefault(string settingName)
+        {
+            if (!AdditionalSettings[settingName].IsDefault)
+                return;
+            AdditionalSettings[settingName] = _replacedAdditionalSettings[settingName];
+            _replacedAdditionalSettings.Remove(settingName);
         }
 
         private static readonly string[] FRAGMENTATION_METHODS =
@@ -465,7 +485,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<string, double> qvalueByPsmId, IProgressMonitor monitor)
         {
             bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
-            var lastPsmIdRegex = new Regex(@".* spectrum=""([^""]+?)"" .*",RegexOptions.Compiled);
+            var lastPsmIdRegex = new Regex(@".* assumed_charge=""(\d+)"" spectrum=""([^""]+?)\.\d+"" .*", RegexOptions.Compiled);
 
             // This looks for an ampersand that is NOT followed by:
             // - "amp;", "lt;", "gt;", "quot;", "apos;" (predefined XML entities)
@@ -486,14 +506,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                         line = unescapedAmpersandRegex.Replace(line, @"&amp;");
                     }
                     if (line.Contains(@"<spectrum_query"))
-                        lastPsmId = lastPsmIdRegex.Replace(line, "$1");
+                        lastPsmId = lastPsmIdRegex.Replace(line, "$2.$1");
                     else if (line.Contains(@"<search_score name=""hyperscore"""))
                     {
                         if (qvalueByPsmId.ContainsKey(lastPsmId))
                             fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""{0}"" />", qvalueByPsmId[lastPsmId].ToString(CultureInfo.InvariantCulture));
                         // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
-                        //else
-                        //    Console.WriteLine($"{lastPsmId} not found in percolator scores.");
+                        else
+                        {
+                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""1"" />");
+                            //Console.WriteLine($"{lastPsmId} not found in percolator scores.");
+                        }
                     }
                     else if (line.Contains(@"</search_summary>"))
                     {
@@ -1000,9 +1023,57 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
             // not used by MSFragger
         }
 
+        private static bool IsLowRes(MzTolerance mzTolerance)
+        {
+            if (mzTolerance == null || mzTolerance.Value == 0)
+                return false;
+            return mzTolerance.Unit == MzTolerance.Units.ppm
+                ? mzTolerance.Value > 50
+                : mzTolerance.Value > 0.05 /* Da */;
+        }
+
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
+            bool wasLowRes = IsLowRes(_precursorMzTolerance);
+
             _precursorMzTolerance = mzTolerance;
+
+            if (!DataIsDIA)
+                return;
+
+            // Use DDA settings for DIA if precursor tolerance is not high resolution:
+            // From Alexey: running as DDA data, with +- 3 Da window, 0.2 Da, 100 peaks per spectrum, charge state 1 fragments for scoring only
+            bool nowLowRes = IsLowRes(mzTolerance);
+            bool lowResChanged = wasLowRes != nowLowRes;
+            if (!lowResChanged)
+                return;
+
+            if (nowLowRes)
+            {
+                ReplaceAdditionalSettingIfDefault(@"data_type", (int) DataType.dda);
+                ReplaceAdditionalSettingIfDefault(@"calibrate_mass", 0);
+                ReplaceAdditionalSettingIfDefault(@"deisotope", 0);
+                ReplaceAdditionalSettingIfDefault(@"deneutralloss", 0);
+                ReplaceAdditionalSettingIfDefault(@"intensity_transform", 0);
+                //ReplaceAdditionalSettingIfDefault(@"output_report_topN", 1);
+                ReplaceAdditionalSettingIfDefault(@"precursor_charge", @"1 4");
+                ReplaceAdditionalSettingIfDefault(@"max_fragment_charge", 1);
+                ReplaceAdditionalSettingIfDefault(@"use_topN_peaks", 100);
+                ReplaceAdditionalSettingIfDefault(@"minimum_ratio", 0.01);
+            }
+            else
+            {
+                RestoreAdditionalSettingIfDefault(@"data_type");
+                RestoreAdditionalSettingIfDefault(@"calibrate_mass");
+                RestoreAdditionalSettingIfDefault(@"deisotope");
+                RestoreAdditionalSettingIfDefault(@"deneutralloss");
+                RestoreAdditionalSettingIfDefault(@"intensity_transform");
+                //RestoreAdditionalSettingIfDefault(@"output_report_topN");
+                RestoreAdditionalSettingIfDefault(@"precursor_charge");
+                RestoreAdditionalSettingIfDefault(@"max_fragment_charge");
+                RestoreAdditionalSettingIfDefault(@"use_topN_peaks");
+                RestoreAdditionalSettingIfDefault(@"minimum_ratio");
+            }
         }
 
         public override void SetCutoffScore(double cutoffScore)
