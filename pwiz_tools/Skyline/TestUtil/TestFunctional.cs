@@ -1549,6 +1549,28 @@ namespace pwiz.SkylineTestUtil
             graphics.FillPolygon(brush, arrowHead);
         }
 
+        // Display a placeholder message on a tutorial screenshot. Use when screenshots aren't correct yet and need to be updated.
+        public static Bitmap MarkBitmapAsPlaceholder(Bitmap bmp)
+        {
+            // TODO: support wrapping text on narrow images
+            var g = Graphics.FromImage(bmp);
+            var font = new Font("Tahoma", 12);
+            var text = "Placeholder screenshot, see test for more info";
+            var size = TextRenderer.MeasureText(g, text, font);
+
+            TextRenderer.DrawText(g,
+                text,
+                font,
+                new Rectangle(25, 25, size.Width, size.Height),
+                Color.Black,
+                Color.Yellow,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+                TextFormatFlags.GlyphOverhangPadding);
+            g.Flush();
+
+            return bmp;
+
+        }
 
         protected GraphSummary FindGraphSummaryByGraphType<TGraphPane>() where TGraphPane : SummaryGraphPane
         {
