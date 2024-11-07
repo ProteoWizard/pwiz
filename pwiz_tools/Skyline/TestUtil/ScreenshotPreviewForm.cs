@@ -1,14 +1,17 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Properties;
+using pwiz.Skyline;
+using static System.String;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -20,76 +23,87 @@ namespace pwiz.SkylineTestUtil
         private readonly object _pauseLock;
         private readonly PauseAndContinueForm _pauseAndContinueForm;
 
+        private string _description;
+        private string _link;
         private Control _screenshotControl;
         private string _fileToSave;
         private bool _fullScreen;
         private Func<Bitmap, Bitmap> _processShot;
-        private Bitmap _storedOldScreenshot;
-        private Bitmap _storedNewScreenshot;
-        
+        private Bitmap _newScreenshot;
+
         public ScreenshotPreviewForm(PauseAndContinueForm pauseAndContinueForm, ScreenshotManager screenshotManager, object pauseLock)
         {
             InitializeComponent();
             _pauseAndContinueForm = pauseAndContinueForm;
             _screenshotManager = screenshotManager;
             _pauseLock = pauseLock;
+
+            //subscribe to paint events to resize components when needed
+            oldScreenshotPictureBox.Paint += (sender, e) => ResizeComponents();
+            newScreenshotPictureBox.Paint += (sender, e) => ResizeComponents();
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        //To be called by the pause and continue form when switching modes or entering new pause
+        public void Show(string description, string link, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot, bool delayForScreenshot)
         {
-            e.Cancel = true;    // This form doesn't close, it just switches to the PauseAndContinue form
-            _pauseAndContinueForm.SwitchToPauseAndContinue();
-        }
-
-        public void UpdateViewState(string description, Control screenshotControl, string fileToSave, bool fullScreen, Func<Bitmap, Bitmap> processShot)
-        {
+            _description = description;
+            _link = link;
             _screenshotControl = screenshotControl;
             _fileToSave = fileToSave;
             _fullScreen = fullScreen;
             _processShot = processShot;
 
-            Text = description;
-            RefreshScreenshots();
+            //This cannot block until the command is finished as it would block the caller's thread
+            BeginInvoke((Action)(() => RefreshAndShow(delayForScreenshot)));
         }
 
-        private void RefreshScreenshots()
+        private async void RefreshAndShow(bool delayForScreenshot)
         {
-            ScreenshotManager.ActivateScreenshotForm(_screenshotControl);
+            RefreshOldScreenshot();
+            await RefreshNewScreenshot(delayForScreenshot);
+            UpdateDescriptionLabel();
+            EnableControls();
 
-            _storedNewScreenshot = _screenshotManager.TakeShot(_screenshotControl, _fullScreen,null, _processShot);
+            if (!Visible) Show();
+            this.SetForegroundWindow();
+        }
+
+        private void RefreshOldScreenshot()
+        {
+            Bitmap oldScreenshot = LoadScreenshot(_fileToSave);
+            SetPreviewImage(oldScreenshot, oldScreenshotPictureBox);
+        }
+
+        private Bitmap LoadScreenshot(string file)
+        {
             try
             {
                 var existingImageBytes = File.ReadAllBytes(_fileToSave);
                 var existingImageMemoryStream = new MemoryStream(existingImageBytes);
-                _storedOldScreenshot = new Bitmap(existingImageMemoryStream);
+                return new Bitmap(existingImageMemoryStream);
             }
             catch (Exception e)
             {
                 MessageDlg.ShowException(this, e);
-                _storedOldScreenshot = Resources.DiskFailure;
+                return Resources.DiskFailure;
             }
-            SetPreviewImages(_storedNewScreenshot, _storedOldScreenshot);
-            this.SetForegroundWindow();
         }
 
-        private void SetPreviewImages(Bitmap newScreenshot, Bitmap oldScreenShot)
+        private async Task RefreshNewScreenshot(bool delay)
         {
-            var newScreenshotSize = CalculateBitmapSize(newScreenshot);
-            var oldScreenshotSize = CalculateBitmapSize(oldScreenShot);
-            var newScreenshotBitmap = new Bitmap(newScreenshot, newScreenshotSize);
-            var oldScreenshotBitmap = new Bitmap(oldScreenShot, oldScreenshotSize);
+            if(delay) await Task.Delay(1000);
+            ScreenshotManager.ActivateScreenshotForm(_screenshotControl);
 
-            oldScreenshotPictureBox.Image = oldScreenshotBitmap;
-            newScreenshotPictureBox.Image = newScreenshotBitmap;
+            _newScreenshot = _screenshotManager.TakeShot(_screenshotControl, _fullScreen, null, _processShot);
+            SetPreviewImage(_newScreenshot, newScreenshotPictureBox);
+        }
 
-            previewSplitContainer.SplitterDistance = previewSplitContainer.Width / 2;
+        private void SetPreviewImage(Bitmap screenshot, PictureBox previewBox)
+        {
+            var screenshotSize = CalculateBitmapSize(screenshot);
+            var resizedScreenshot = new Bitmap(screenshot, screenshotSize);
 
-            var minFormWidth = newScreenshot.Width + oldScreenShot.Width;
-            var minFormHeight = Math.Max(newScreenshot.Height, oldScreenShot.Height);
-            if (autoSizeWindowCheckbox.Checked && (ClientSize.Width < minFormWidth || ClientSize.Height < minFormHeight))
-            {
-                ClientSize = new Size(minFormWidth, minFormHeight);
-            }
+            previewBox.Image = resizedScreenshot;
         }
 
         private static Size CalculateBitmapSize(Bitmap bitmap)
@@ -108,9 +122,94 @@ namespace pwiz.SkylineTestUtil
             return new Size((int)(startingSize.Width * scale), (int)(startingSize.Height * scale));
         }
 
+        private void LoadUpcomingOldScreenshot()
+        {
+            string pattern = @"(?<=s-)(\d+)";
+            var regex = new Regex(pattern);
+
+            var match = regex.Match(_fileToSave);
+            if (match.Success)
+            {
+                int screenshotCount = int.Parse(match.Value);
+                int incrementedCount = screenshotCount + 1;
+                string nextOldScreenshotFile = regex.Replace(_fileToSave, incrementedCount.ToString());
+
+                if (File.Exists(nextOldScreenshotFile))
+                {
+                    Bitmap nextOldScreenshot = LoadScreenshot(nextOldScreenshotFile);
+                    SetPreviewImage(nextOldScreenshot, oldScreenshotPictureBox);
+                }
+            }
+        }
+
+        private bool IsSharingSkylineScreen()
+        {
+            var skylineWindow = Program.MainWindow;
+            var skylineScreen = skylineWindow.Invoke((Func<Screen>)(() => Screen.FromControl(skylineWindow)));
+            return Screen.FromControl(this).Equals(skylineScreen);
+        }
+
+        private void ResizeComponents()
+        {
+            previewSplitContainer.SplitterDistance = previewSplitContainer.Width / 2;
+
+            if (autoSizeWindowCheckbox.Checked && oldScreenshotPictureBox.Image != null)
+            {
+                var newScreenshotImage = newScreenshotPictureBox.Image != null ? newScreenshotPictureBox.Image : oldScreenshotPictureBox.Image;
+                var minFormWidth = newScreenshotImage.Width + newScreenshotImage.Width;
+                var minFormHeight = Math.Max(newScreenshotImage.Height, oldScreenshotPictureBox.Image.Height) + previewFlowLayoutControlPanel.Height + oldScreenshotLabelPanel.Height;
+                if (ClientSize.Width < minFormWidth || ClientSize.Height < minFormHeight)
+                {
+                    ClientSize = new Size(minFormWidth, minFormHeight);
+                }
+            }
+        }
+
+        private void DisableControls()
+        {
+            continueBtn.Enabled = false;
+            saveScreenshotBtn.Enabled = false;
+            saveScreenshotAndContinueBtn.Enabled = false;
+            refreshBtn.Enabled = false;
+            autoSizeWindowCheckbox.Enabled = false;
+        }
+
+        private void EnableControls()
+        {
+            continueBtn.Enabled = true;
+            saveScreenshotBtn.Enabled = true;
+            saveScreenshotAndContinueBtn.Enabled = true;
+            refreshBtn.Enabled = true;
+            autoSizeWindowCheckbox.Enabled = true;
+        }
+        private void UpdateDescriptionLabel()
+        {
+            descriptionLinkLabel.Text = _description;
+            descriptionLinkLabel.LinkColor = Color.Blue;
+            descriptionLinkLabel.LinkBehavior = LinkBehavior.AlwaysUnderline;
+        }
+
+        private void UpdateWaitingDescriptionLabel()
+        {
+            descriptionLinkLabel.Text = "Waiting on Skyline for next screenshot...";
+            descriptionLinkLabel.LinkColor = descriptionLinkLabel.ForeColor;
+            descriptionLinkLabel.LinkBehavior = LinkBehavior.NeverUnderline;
+        }
+
         private void Continue()
         {
-            Hide();
+            if (Visible && IsSharingSkylineScreen())
+            {
+                Hide();
+            }
+            else
+            {
+                DisableControls();
+                UpdateWaitingDescriptionLabel();
+                newScreenshotPictureBox.Image = null;
+                oldScreenshotPictureBox.Image = null;
+                LoadUpcomingOldScreenshot();
+            }
 
             // Start the tests again
             lock (_pauseLock)
@@ -129,7 +228,7 @@ namespace pwiz.SkylineTestUtil
             }
             try
             {
-                _storedNewScreenshot.Save(_fileToSave);
+                _newScreenshot.Save(_fileToSave);
                 return true;
             }
             catch (Exception e)
@@ -139,9 +238,26 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private void GotoLink()
+        {
+            if (!IsNullOrEmpty(_link))
+            {
+                WebHelpers.OpenLink(_link);
+            }
+        }
+
         protected override bool ShowWithoutActivation
         {
             get { return true; }    // Don't take activation away from SkylineWindow
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                _pauseAndContinueForm.SwitchToPauseAndContinue();
+            }
         }
 
         private void continueBtn_Click(object sender, EventArgs e)
@@ -160,14 +276,15 @@ namespace pwiz.SkylineTestUtil
                 Continue();
         }
 
-        private void refreshBtn_Click(object sender, EventArgs e)
+        private async void refreshBtn_Click(object sender, EventArgs e)
         {
-            RefreshScreenshots();
+            await RefreshNewScreenshot(false);
+            this.SetForegroundWindow();
         }
 
-        private void closePreviewBtn_Click(object sender, EventArgs e)
+        private void descriptionLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            _pauseAndContinueForm.SwitchToPauseAndContinue();
+            GotoLink();
         }
     }
 }

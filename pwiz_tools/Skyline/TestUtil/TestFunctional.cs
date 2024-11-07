@@ -746,7 +746,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         var formSeen = new FormSeen();
                         formSeen.Saw(formType);
-                        PauseAndContinueForm.Pause(string.Format("Pausing for {0}", formType));
+                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
                     }
 
                     return tForm;
@@ -791,7 +791,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         var formSeen = new FormSeen();
                         formSeen.Saw(formType);
-                        PauseAndContinueForm.Pause(string.Format("Pausing for {0}", formType));
+                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
                     }
 
                     return tForm;
@@ -826,7 +826,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(viewTypeName);
-                pauseAndContinueForm.Pause(string.Format("Pausing for {0}", viewTypeName));
+                pauseAndContinueForm.Show(string.Format("Pausing for {0}", viewTypeName));
             }
         }
 
@@ -1189,7 +1189,7 @@ namespace pwiz.SkylineTestUtil
         public void PauseTest(string description = null)
         {
             if (!Program.SkylineOffscreen)
-                pauseAndContinueForm.Pause(description);
+                pauseAndContinueForm.Show(description);
         }
 
         // We don't normally leave PauseTest() in checked in code, but there are times
@@ -1332,9 +1332,21 @@ namespace pwiz.SkylineTestUtil
 
         private int FigueNum => ScreenShotCounter + NonScreenShotFigures.Count(n => n <= ScreenShotCounter);
 
-        protected PauseAndContinueForm pauseAndContinueForm;
 
-        private Thread pauseAndContinueThread;
+        private PauseAndContinueForm _pauseAndContinueForm;
+
+        protected PauseAndContinueForm pauseAndContinueForm
+        {
+            get
+            {
+                if (_pauseAndContinueForm == null)
+                {
+                    _pauseAndContinueForm = new PauseAndContinueForm(ScreenshotManager);
+                }
+
+                return _pauseAndContinueForm;
+            }
+        }
 
         private string LinkScreenShotFigure()
         {
@@ -1654,7 +1666,7 @@ namespace pwiz.SkylineTestUtil
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    pauseAndContinueForm.Pause(string.Format("fig. {0}: {1}", ScreenShotCounter, description), fileToSave, LinkScreenShotFigure(), showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                    pauseAndContinueForm.Show(string.Format("fig. {0}: {1}", ScreenShotCounter, description), fileToSave, LinkScreenShotFigure(), showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else
@@ -1839,11 +1851,6 @@ namespace pwiz.SkylineTestUtil
 
             _shotManager = new ScreenshotManager(SkylineWindow);
 
-            // Run PauseAndContinue ui thread
-            pauseAndContinueThread = new Thread(StartPauseAndContinueForm);
-            pauseAndContinueThread.SetApartmentState(ApartmentState.STA);
-            pauseAndContinueThread.Start();
-
             // Run test in new thread (Skyline on main thread).
             Program.Init();
             InitializeSkylineSettings();
@@ -1856,18 +1863,12 @@ namespace pwiz.SkylineTestUtil
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
             Program.Main();
-            pauseAndContinueThread.Join();
             threadTest.Join();
 
             // Were all windows disposed?
             CommonFormEx.CheckAllFormsDisposed();
         }
 
-        private void StartPauseAndContinueForm()
-        {
-            pauseAndContinueForm = new PauseAndContinueForm(_shotManager);
-            Application.Run(pauseAndContinueForm);
-        }
 
         /// <summary>
         /// Reset the settings for the Skyline application before starting a test.
@@ -2260,7 +2261,11 @@ namespace pwiz.SkylineTestUtil
 
         private void EndTest()
         {
-            pauseAndContinueForm.Invoke((Action)(() => pauseAndContinueForm.Close()));
+            if (_pauseAndContinueForm != null && !_pauseAndContinueForm.IsDisposed)
+            {
+                _pauseAndContinueForm.Invoke((Action)(() => _pauseAndContinueForm.Close()));
+            }
+
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {

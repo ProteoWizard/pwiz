@@ -37,11 +37,11 @@
             this.newScreenshotLabel = new System.Windows.Forms.Label();
             this.previewTableLayoutControlPanel = new System.Windows.Forms.TableLayoutPanel();
             this.previewFlowLayoutControlPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.descriptionLinkLabel = new System.Windows.Forms.LinkLabel();
             this.continueBtn = new System.Windows.Forms.Button();
             this.saveScreenshotBtn = new System.Windows.Forms.Button();
             this.saveScreenshotAndContinueBtn = new System.Windows.Forms.Button();
             this.refreshBtn = new System.Windows.Forms.Button();
-            this.closePreviewBtn = new System.Windows.Forms.Button();
             this.autoSizeWindowCheckbox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
@@ -163,20 +163,32 @@
             this.previewFlowLayoutControlPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.previewFlowLayoutControlPanel.AutoSize = true;
             this.previewFlowLayoutControlPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.previewFlowLayoutControlPanel.Controls.Add(this.descriptionLinkLabel);
             this.previewFlowLayoutControlPanel.Controls.Add(this.continueBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.saveScreenshotBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.saveScreenshotAndContinueBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.refreshBtn);
-            this.previewFlowLayoutControlPanel.Controls.Add(this.closePreviewBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.autoSizeWindowCheckbox);
-            this.previewFlowLayoutControlPanel.Location = new System.Drawing.Point(317, 3);
+            this.previewFlowLayoutControlPanel.Location = new System.Drawing.Point(325, 3);
             this.previewFlowLayoutControlPanel.Name = "previewFlowLayoutControlPanel";
-            this.previewFlowLayoutControlPanel.Size = new System.Drawing.Size(830, 53);
+            this.previewFlowLayoutControlPanel.Size = new System.Drawing.Size(814, 53);
             this.previewFlowLayoutControlPanel.TabIndex = 4;
+            // 
+            // descriptionLinkLabel
+            // 
+            this.descriptionLinkLabel.AutoSize = true;
+            this.descriptionLinkLabel.Location = new System.Drawing.Point(3, 9);
+            this.descriptionLinkLabel.Margin = new System.Windows.Forms.Padding(3, 9, 3, 0);
+            this.descriptionLinkLabel.Name = "descriptionLinkLabel";
+            this.descriptionLinkLabel.Size = new System.Drawing.Size(116, 20);
+            this.descriptionLinkLabel.TabIndex = 6;
+            this.descriptionLinkLabel.TabStop = true;
+            this.descriptionLinkLabel.Text = "Description link";
+            this.descriptionLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.descriptionLinkLabel_LinkClicked);
             // 
             // continueBtn
             // 
-            this.continueBtn.Location = new System.Drawing.Point(3, 3);
+            this.continueBtn.Location = new System.Drawing.Point(125, 3);
             this.continueBtn.Name = "continueBtn";
             this.continueBtn.Size = new System.Drawing.Size(100, 36);
             this.continueBtn.TabIndex = 0;
@@ -186,7 +198,7 @@
             // 
             // saveScreenshotBtn
             // 
-            this.saveScreenshotBtn.Location = new System.Drawing.Point(109, 3);
+            this.saveScreenshotBtn.Location = new System.Drawing.Point(231, 3);
             this.saveScreenshotBtn.Name = "saveScreenshotBtn";
             this.saveScreenshotBtn.Size = new System.Drawing.Size(149, 36);
             this.saveScreenshotBtn.TabIndex = 1;
@@ -196,7 +208,7 @@
             // 
             // saveScreenshotAndContinueBtn
             // 
-            this.saveScreenshotAndContinueBtn.Location = new System.Drawing.Point(264, 3);
+            this.saveScreenshotAndContinueBtn.Location = new System.Drawing.Point(386, 3);
             this.saveScreenshotAndContinueBtn.Name = "saveScreenshotAndContinueBtn";
             this.saveScreenshotAndContinueBtn.Size = new System.Drawing.Size(181, 36);
             this.saveScreenshotAndContinueBtn.TabIndex = 2;
@@ -207,7 +219,7 @@
             // refreshBtn
             // 
             this.refreshBtn.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.refreshBtn.Location = new System.Drawing.Point(451, 3);
+            this.refreshBtn.Location = new System.Drawing.Point(573, 3);
             this.refreshBtn.Name = "refreshBtn";
             this.refreshBtn.Size = new System.Drawing.Size(82, 36);
             this.refreshBtn.TabIndex = 3;
@@ -215,28 +227,17 @@
             this.refreshBtn.UseVisualStyleBackColor = true;
             this.refreshBtn.Click += new System.EventHandler(this.refreshBtn_Click);
             // 
-            // closePreviewBtn
-            // 
-            this.closePreviewBtn.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.closePreviewBtn.Location = new System.Drawing.Point(539, 3);
-            this.closePreviewBtn.Name = "closePreviewBtn";
-            this.closePreviewBtn.Size = new System.Drawing.Size(125, 36);
-            this.closePreviewBtn.TabIndex = 4;
-            this.closePreviewBtn.Text = "Close Preview";
-            this.closePreviewBtn.UseVisualStyleBackColor = true;
-            this.closePreviewBtn.Click += new System.EventHandler(this.closePreviewBtn_Click);
-            // 
             // autoSizeWindowCheckbox
             // 
             this.autoSizeWindowCheckbox.AutoSize = true;
             this.autoSizeWindowCheckbox.Checked = true;
             this.autoSizeWindowCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoSizeWindowCheckbox.Location = new System.Drawing.Point(670, 3);
+            this.autoSizeWindowCheckbox.Location = new System.Drawing.Point(661, 3);
             this.autoSizeWindowCheckbox.Name = "autoSizeWindowCheckbox";
             this.autoSizeWindowCheckbox.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.autoSizeWindowCheckbox.Size = new System.Drawing.Size(105, 20);
+            this.autoSizeWindowCheckbox.Size = new System.Drawing.Size(150, 30);
             this.autoSizeWindowCheckbox.TabIndex = 5;
-            this.autoSizeWindowCheckbox.Text = "Auto Size Window";
+            this.autoSizeWindowCheckbox.Text = "Auto size window";
             this.autoSizeWindowCheckbox.UseVisualStyleBackColor = true;
             // 
             // ScreenshotPreviewForm
@@ -247,7 +248,7 @@
             this.Controls.Add(this.previewSplitContainer);
             this.Controls.Add(this.previewTableLayoutControlPanel);
             this.Name = "ScreenshotPreviewForm";
-            this.Text = "ScreenshotPreviewForm";
+            this.Text = "Preview";
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).EndInit();
             this.previewSplitContainer.Panel1.ResumeLayout(false);
@@ -279,7 +280,7 @@
         private System.Windows.Forms.Button saveScreenshotBtn;
         private System.Windows.Forms.FlowLayoutPanel previewFlowLayoutControlPanel;
         private System.Windows.Forms.TableLayoutPanel previewTableLayoutControlPanel;
-        private System.Windows.Forms.Button closePreviewBtn;
         private System.Windows.Forms.CheckBox autoSizeWindowCheckbox;
+        private System.Windows.Forms.LinkLabel descriptionLinkLabel;
     }
 }

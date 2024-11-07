@@ -23,7 +23,6 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -32,10 +31,12 @@ namespace pwiz.SkylineTestUtil
 {
     public partial class PauseAndContinueForm : Form
     {
+        private readonly Thread _screenshotPreviewThread;
         private readonly ScreenshotPreviewForm _screenshotPreviewForm;
         private readonly ScreenshotManager _screenshotManager;
-        private readonly object _pauseLock = new object();
         private readonly Form _ownerForm;
+        private readonly object _pauseLock = new object();
+        private readonly ManualResetEvent _screenshotPreviewHandleReadyEvent = new ManualResetEvent(false);
 
         private string _linkUrl;
         private bool _showMatchingPage;
@@ -45,32 +46,28 @@ namespace pwiz.SkylineTestUtil
         private bool _fullScreen;
         private Func<Bitmap, Bitmap> _processShot;
         private PauseAndContinueMode _currentMode = PauseAndContinueMode.PAUSE_AND_CONTINUE;
-
+         
         private enum PauseAndContinueMode
         {
             PAUSE_AND_CONTINUE,
             PREVIEW_SCREENSHOT
         }
 
-        public PauseAndContinueForm(ScreenshotManager screenshotManager, Form ownerForm = null)
+        public PauseAndContinueForm(ScreenshotManager screenshotManager)
         {
             InitializeComponent();
-            // Form is not ready to be shown until we have initialized its state.
-            // This is needed when form is created from Application.Run(form) which
-            // automatically displays the form. 
-            Opacity = 0;
             // A strange ordering bug in calculating the size of the boarder makes it necessary to remove
             // the ControlBox after the FormBorderStyle is set.
             ControlBox = false;
 
             _screenshotManager = screenshotManager;
-            _ownerForm = ownerForm;
+            _ownerForm = FindOwnerForm();
             _screenshotPreviewForm = new ScreenshotPreviewForm(this, _screenshotManager, _pauseLock);
-
+            _screenshotPreviewThread = new Thread(StartApplicationThread);
         }
 
         //To be called from the test thread, will block until Continue is pressed
-        public void Pause(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
+        public void Show(string description, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
             Control screenshotForm = null, bool fullScreen = false, Func<Bitmap, Bitmap> processShot = null)
         {
             _screenshotForm = screenshotForm;
@@ -81,43 +78,34 @@ namespace pwiz.SkylineTestUtil
             _showMatchingPage = showMatchingPages;
             _description = description;
 
-            RunUI(this, RefreshViewState);
+            //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = false); //determine if this is needed
+            RunUI(_ownerForm, RefreshAndShow);
             lock (_pauseLock)
             {
                 Monitor.Wait(_pauseLock, timeout ?? -1);
             }
+            //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);
         }
 
-        //Allows for static creation of the form which uses the SkylineWindow as its parent and closes after continue
-        public static void Pause(string description = null, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
+        //Allows for static creation of the form for one time use
+        public static void Show(string description, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
             Control screenshotForm = null, bool fullScreen = false, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            ClipboardEx.UseInternalClipboard(false);
-            if (SkylineWindow != null)
-                RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = false);
-
-            Form parentWindow = FindSkylineWindow();
-            RunUI(parentWindow, () =>
-            {
-                var pauseAndContinueForm = new PauseAndContinueForm(screenshotManager);
-                pauseAndContinueForm.Pause(description, fileToSave, link, showMatchingPages, timeout,
-                    screenshotForm, fullScreen, processShot);
-                pauseAndContinueForm.Close();
-            });
-
-            ClipboardEx.UseInternalClipboard();
-            if (SkylineWindow != null)
-                RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);
+            var pauseAndContinueForm = new PauseAndContinueForm(screenshotManager);
+            pauseAndContinueForm.Show(description, fileToSave, link, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+            RunUI(pauseAndContinueForm, () => pauseAndContinueForm.Close());
         }
 
-        private static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
-
-        private static Form FindSkylineWindow()
+        private static Form FindOwnerForm()
         {
-            Form parentWindow = SkylineWindow;
-            if (SkylineWindow == null)
-                parentWindow = AbstractFunctionalTest.FindOpenForm<StartPage>();
-            return parentWindow;
+            Form skylineWindow = Program.MainWindow;
+            return skylineWindow != null ? skylineWindow : AbstractFunctionalTest.FindOpenForm<StartPage>();
+        }
+
+        private void StartApplicationThread()
+        {
+            _screenshotPreviewForm.HandleCreated += (sender, args) => _screenshotPreviewHandleReadyEvent.Set();
+            Application.Run(_screenshotPreviewForm);
         }
 
         private static void RunUI(Form form, Action act)
@@ -128,7 +116,7 @@ namespace pwiz.SkylineTestUtil
         public void SwitchToPauseAndContinue()
         {
             _currentMode = PauseAndContinueMode.PAUSE_AND_CONTINUE;
-            _screenshotPreviewForm.Hide();
+            _screenshotPreviewForm.Invoke((Action) (() => _screenshotPreviewForm.Hide()));
             Show(_ownerForm);
             FocusForm();
         }
@@ -136,9 +124,15 @@ namespace pwiz.SkylineTestUtil
         private void SwitchToPreview()
         {
             _currentMode = PauseAndContinueMode.PREVIEW_SCREENSHOT;
+            if (!_screenshotPreviewThread.IsAlive)
+            {
+                _screenshotPreviewThread.SetApartmentState(ApartmentState.STA);
+                _screenshotPreviewThread.Start();
+                _screenshotPreviewHandleReadyEvent.WaitOne(); //blocks momentarily for the screenshot preview handle to be ready
+            }
+
             Hide();
-            _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
-            _screenshotPreviewForm.Show(_ownerForm);
+            _screenshotPreviewForm.Show(_description, _linkUrl, _screenshotForm, _fileToSave, _fullScreen, _processShot, false);
         }
 
         private void Continue()
@@ -172,37 +166,37 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private bool CaptureScreenShot(bool save)
+        private void RefreshAndShow()
         {
-            ScreenshotManager.ActivateScreenshotForm(_screenshotForm);
+            UpdateDescriptionLabels();
+            UpdateButtonVisibility();
+            PlaceForm();
 
-            if (save && FileEx.IsWriteLocked(_fileToSave))
+            if (_currentMode == PauseAndContinueMode.PAUSE_AND_CONTINUE)
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
-                    "Check that it is not open in another program such as TortoiseIDiff."));
-                return false;
+                if(!Visible) Show(_ownerForm);
+                FocusForm();
+
+            } else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
+            { 
+                _screenshotPreviewForm.Show(_description, _linkUrl, _screenshotForm, _fileToSave, _fullScreen, _processShot, true);
             }
-            try
-            {
-                _screenshotManager.TakeShot(_screenshotForm, _fullScreen, save ? _fileToSave : null, _processShot);
-            }
-            catch (Exception e)
-            {
-                MessageDlg.ShowException(this, e);
-                return false;
-            }
-            FocusForm();
-            return true;
+
+            if (_showMatchingPage) GotoLink();
         }
 
-        private void saveScreenshotCheckbox_CheckedChanged(object sender, EventArgs e)
+        private void UpdateButtonVisibility()
         {
-            UpdateScreenshotButtonLabels();
+            if (_screenshotForm == null || _screenshotManager == null)
+            {
+                // Hide the preview button
+                btnPreview.Visible =  false;
+                Height -=  btnContinue.Bottom;
+            }
         }
 
-        private void RefreshViewState()
+        private void UpdateDescriptionLabels()
         {
-
             if (!string.IsNullOrEmpty(_linkUrl))
             {
                 lblDescriptionLink.Left = lblDescription.Left;
@@ -235,54 +229,25 @@ namespace pwiz.SkylineTestUtil
 
             // Finally make sure the button is fully visible
             Height += Math.Max(0, (btnContinue.Bottom + btnContinue.Left) - ClientRectangle.Bottom);
-
-            if (_screenshotForm == null || _screenshotManager == null)
-            {
-                // Hide the screenshot buttons
-                btnPreview.Visible =
-                    btnScreenshot.Visible =
-                        btnScreenshotAndContinue.Visible =
-                            saveScreenshotCheckbox.Visible = false;
-
-                Height -= saveScreenshotCheckbox.Bottom - btnContinue.Bottom;
-            }
-
-            UpdateScreenshotButtonLabels();
-            PlaceForm();
-
-            if (_currentMode == PauseAndContinueMode.PAUSE_AND_CONTINUE)
-            {
-                if(!Visible) Show(_ownerForm);
-                FocusForm();
-
-            } else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
-            {
-                _screenshotPreviewForm.UpdateViewState(_description, _screenshotForm, _fileToSave, _fullScreen, _processShot);
-                _screenshotPreviewForm.Show(_ownerForm);
-            }
-
-            //Opacity was set to 0 in constructor
-            Opacity = 1;
-            if (_showMatchingPage) GotoLink();
         }
 
         private void PlaceForm()
         {
             const int spacing = 15;
-            Form skylineWindow = FindSkylineWindow();
-            var screen = (Screen)skylineWindow.Invoke(new Func<Screen>(() => Screen.FromControl(skylineWindow)));
-            Left = skylineWindow.Left;
-            if (skylineWindow.Top > screen.WorkingArea.Top + Height + spacing)
-                Top = skylineWindow.Top - Height - spacing;
-            else if (skylineWindow.Bottom + Height + spacing < screen.WorkingArea.Bottom)
-                Top = skylineWindow.Bottom + spacing;
+            Form targetWindow = _ownerForm;
+            var screen = (Screen)targetWindow.Invoke(new Func<Screen>(() => Screen.FromControl(targetWindow)));
+            Left = targetWindow.Left;
+            if (targetWindow.Top > screen.WorkingArea.Top + Height + spacing)
+                Top = targetWindow.Top - Height - spacing;
+            else if (targetWindow.Bottom + Height + spacing < screen.WorkingArea.Bottom)
+                Top = targetWindow.Bottom + spacing;
             else
             {
-                Top = skylineWindow.Top;
-                if (skylineWindow.Left > screen.WorkingArea.Top + Width + spacing)
-                    Left = skylineWindow.Left - Width - spacing;
-                else if (skylineWindow.Right + Width + spacing < screen.WorkingArea.Right)
-                    Left = skylineWindow.Right + spacing;
+                Top = targetWindow.Top;
+                if (targetWindow.Left > screen.WorkingArea.Top + Width + spacing)
+                    Left = targetWindow.Left - Width - spacing;
+                else if (targetWindow.Right + Width + spacing < screen.WorkingArea.Right)
+                    Left = targetWindow.Right + spacing;
                 else
                 {
                     // Can't fit on screen without overlap, so put in upper left of screen
@@ -291,12 +256,6 @@ namespace pwiz.SkylineTestUtil
                     Left = screen.WorkingArea.Left;
                 }
             }
-        }
-
-        private void UpdateScreenshotButtonLabels()
-        {
-            btnScreenshot.Text = saveScreenshotCheckbox.Checked ? "Save &Screenshot" : "Take &Screenshot";
-            btnScreenshotAndContinue.Text = saveScreenshotCheckbox.Checked ? "Save and C&ontinue" : "Take and C&ontinue";
         }
 
         protected override bool ShowWithoutActivation
@@ -308,10 +267,17 @@ namespace pwiz.SkylineTestUtil
         {
             if (_screenshotPreviewForm != null && !_screenshotPreviewForm.IsDisposed)
             {
-                _screenshotPreviewForm.Dispose();
+                _screenshotPreviewForm.Invoke((Action) (() => _screenshotPreviewForm.Dispose()));
             }
+
+            if (_screenshotPreviewThread.IsAlive)
+            {
+                _screenshotPreviewThread.Join();
+            }
+
             base.OnFormClosed(e);
         }
+
 
         private void btnContinue_Click(object sender, EventArgs e)
         {
@@ -327,17 +293,6 @@ namespace pwiz.SkylineTestUtil
         {
             if (e.KeyCode == Keys.F1)
                 GotoLink();
-        }
-
-        private void btnScreenshot_Click(object sender, EventArgs e)
-        {
-            CaptureScreenShot(saveScreenshotCheckbox.Checked);
-        }
-
-        private void btnScreenshotAndContinue_Click(object sender, EventArgs e)
-        {
-            if (CaptureScreenShot(saveScreenshotCheckbox.Checked))
-                Continue();
         }
 
         private void btnPreview_Click(object sender, EventArgs e)

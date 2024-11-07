@@ -965,7 +965,7 @@ namespace TestPerf
             {
                 if (!IsRecordMode)
                     throw;
-                pauseAndContinueForm.Pause($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
+                pauseAndContinueForm.Show($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
                                            "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
             }
 
