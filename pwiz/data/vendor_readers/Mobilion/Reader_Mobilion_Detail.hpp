@@ -25,6 +25,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "boost/thread/thread.hpp"
 #include <vector>
 
 #ifdef PWIZ_READER_MOBILION
@@ -64,6 +65,7 @@ PWIZ_API_DECL CVID translatePolarity(const std::string& polarity);
 PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(ActivationType activationType);*/
 
+extern boost::mutex processWideHdf5Mutex; // HDF5 library isn't thread-safe
 } // Mobilion
 
 using namespace Mobilion;

@@ -379,12 +379,12 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (findUnicodeBytes(rawpath) == rawpath.end())
         {
             if (os_) (*os_) << "MZ5 serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
-            string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
             {
+                TemporaryFile targetResultFilename_mz5(targetResultFilename.filename().replace_extension().string(), ".mz5");
                 MSData msd_mz5;
                 Serializer_mz5 serializer_mz5;
-                serializer_mz5.write(targetResultFilename_mz5, vendorMsd);
-                serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
+                serializer_mz5.write(targetResultFilename_mz5.path().string(), vendorMsd);
+                serializer_mz5.read(targetResultFilename_mz5.path().string(), msd_mz5);
 
                 DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
@@ -392,7 +392,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                 unit_assert(!diff_mz5);
             }
-            bfs::remove(targetResultFilename_mz5);
         }
 #endif
 
@@ -401,13 +400,13 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (findUnicodeBytes(rawpath) == rawpath.end())
         {
             if (os_) (*os_) << "mzMLb serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
-            string targetResultFilename_mzMLb = bfs::change_extension(targetResultFilename, ".mzMLb").string();
             {
+                TemporaryFile targetResultFilename_mzMLb(targetResultFilename.filename().replace_extension().string(), ".mzMLb");
                 MSDataFile::WriteConfig config_mzMLb(MSDataFile::Format_mzMLb);
                 config_mzMLb.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
                 {
-                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
-                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb.path().string(), config_mzMLb);
+                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb.path().string());
                     msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
 
                     DiffConfig diffConfig_mzMLb(diffConfig);
@@ -430,8 +429,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     else
                         config_mzMLb.binaryDataEncoderConfig.numpress = numpress;
 
-                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
-                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb.path().string(), config_mzMLb);
+                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb.path().string());
                     msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
 
                     DiffConfig diffConfig_mzMLb(diffConfig);
@@ -445,7 +444,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     unit_assert(!diff_mzMLb);
                 }
             }
-            bfs::remove(targetResultFilename_mzMLb);
         }
 #endif
 
@@ -943,10 +941,10 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                     ++result.failedTests;
                 }
 
-                /* TODO: there are issues to be resolved here but not just simple crashes
-                testThreadSafety(1, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
-                testThreadSafety(2, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
-                testThreadSafety(4, reader, testAcceptOnly, requireUnicodeSupport, rawpath);*/
+                /* TODO: there are issues to be resolved here but not just simple crashes*/
+                //testThreadSafety(1, reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
+                //testThreadSafety(2, reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
+                //testThreadSafety(4, reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
 
                 if (bfs::exists(rawpath))
                 {

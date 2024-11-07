@@ -78,8 +78,6 @@ class PWIZ_API_DECL SpectrumList_Mobilion : public SpectrumListIonMobilityBase
 
     void getCombinedSpectrumData(MBISDK::Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const;
 
-    mutable boost::mutex readMutex;
-
     void createIndex();
 #endif // PWIZ_READER_MOBILION
 };

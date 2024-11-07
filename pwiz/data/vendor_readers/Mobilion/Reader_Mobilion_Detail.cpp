@@ -52,6 +52,7 @@ PWIZ_API_DECL CVID translatePolarity(const string& polarity)
     throw std::runtime_error("[Mobilion::translatePolarity] unknown polarity '" + polarity + "'");
 }
 
+boost::mutex processWideHdf5Mutex; // HDF5 library isn't thread-safe
 
 } // Mobilion
 } // detail

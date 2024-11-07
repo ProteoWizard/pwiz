@@ -92,13 +92,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t ind
         throw runtime_error(("[ChromatogramList_Mobilion::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
-    
     // allocate a new Chromatogram
     IndexEntry& ie = index_[index];
     ChromatogramPtr result = ChromatogramPtr(new Chromatogram);
     if (!result.get())
         throw std::runtime_error("[ChromatogramList_Mobilion::chromatogram()] Allocation error.");
 
+    boost::lock_guard<boost::mutex> lock(processWideHdf5Mutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     result->index = index;
     result->id = ie.id;
     result->set(ie.chromatogramType);
@@ -144,7 +144,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t ind
                 auto frame = rawdata_->GetFrame(i);
                 *mzItr = frame->Time();
                 *intItr = frame->GetFrameTotalIntensity();
-                *msLevelItr = frame->isFragmentationData() ? 2 : 1;
+                *msLevelItr = frame->GetCE(0) > 0 ? 2 : 1;
             }
         }
         break;

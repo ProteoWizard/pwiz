@@ -41,8 +41,8 @@ class PWIZ_API_DECL Reader_Mobilion : public Reader
 {
     public:
 
-	virtual std::string identify(const std::string& filename,
-                        const std::string& head) const;
+    virtual std::string identify(const std::string& filename,
+                                 const std::string& head) const;
 
     virtual void read(const std::string& filename,
                       const std::string& head,
