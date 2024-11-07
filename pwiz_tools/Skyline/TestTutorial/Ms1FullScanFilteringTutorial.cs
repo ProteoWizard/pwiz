@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -130,6 +131,14 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
         {
             return TextUtil.LineSeparate(message, TextUtil.LineSeparate(paths));
         }
+
+        // TODO revert this debug stuff if this ever merges to master
+static void MFSTLog(string message,
+    [CallerFilePath] string file = null,
+    [CallerLineNumber] int line = 0)
+{
+    Console.WriteLine(@"at {0} ({1}): {2}", Path.GetFileName(file), line, message);
+}
 
         protected override void DoTest()
         {
@@ -532,6 +541,7 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
 
             if (PreferWiff)
             {
+                MFSTLog("PreferWiff");
                 RunUI(() =>
                 {
                     int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
@@ -550,6 +560,7 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
             TestFullScanProperties();
 
             RunUI(() => SkylineWindow.HideFullScanGraph());
+            MFSTLog("ArrangeGraphs");
 
             RunUI(() =>
             {
@@ -968,6 +979,7 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
 
         private void TestFullScanProperties()
         {
+            MFSTLog("TestFullScanProperties begin");
             var expectedPropertiesDict = new Dictionary<string, object> {
                 {"FileName",PreferWiff ? "100803_0005b_MCF7_TiTip3.wiff" : "100803_0005b_MCF7_TiTip3.mzML"},
                 {"ReplicateName","5b_MCF7_TiTip3"},
@@ -1004,13 +1016,17 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
 
             var propertiesButton = SkylineWindow.GraphFullScan.PropertyButton;
             Assert.IsFalse(propertiesButton.Checked);
-            RunUI(() =>
+MFSTLog("TestFullScanProperties");
+
+           RunUI(() =>
             {
                 propertiesButton.PerformClick();
 
             });
             WaitForConditionUI(() => msGraph.PropertiesVisible);
+            MFSTLog("TestFullScanProperties");
             WaitForGraphs();
+            MFSTLog("TestFullScanProperties");
             FullScanProperties currentProperties = null;
             RunUI(() =>
             {
@@ -1027,8 +1043,11 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
             {
                 SkylineWindow.GraphFullScan.LeftButton?.PerformClick();
             });
+            MFSTLog("TestFullScanProperties");
             WaitForGraphs();
+            MFSTLog("TestFullScanProperties");
             WaitForConditionUI(() => SkylineWindow.GraphFullScan.IsLoaded);
+            MFSTLog("TestFullScanProperties");
             RunUI(() =>
             {
                 currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
@@ -1040,9 +1059,13 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
                 propertiesButton.PerformClick();
 
             });
+            MFSTLog("TestFullScanProperties");
             WaitForConditionUI(() => !msGraph.PropertiesVisible);
+            MFSTLog("TestFullScanProperties");
             WaitForGraphs();
+            MFSTLog("TestFullScanProperties");
             Assert.IsFalse(propertiesButton.Checked);
+            MFSTLog("TestFullScanProperties done");
 
         }
     }
