@@ -100,17 +100,24 @@ namespace pwiz.SkylineTestUtil
 
         private void SetPreviewImage(Bitmap screenshot, PictureBox previewBox)
         {
-            var screenshotSize = CalculateBitmapSize(screenshot);
+            var screenshotSize = CalculateBitmapSize(screenshot, previewBox);
             var resizedScreenshot = new Bitmap(screenshot, screenshotSize);
 
             previewBox.Image = resizedScreenshot;
         }
 
-        private static Size CalculateBitmapSize(Bitmap bitmap)
+        private Size CalculateBitmapSize(Bitmap bitmap, PictureBox previewBox)
         {
             var startingSize = bitmap.Size;
             var scaledHeight = (double)SCREENSHOT_MAX_HEIGHT / startingSize.Height;
             var scaledWidth = (double)SCREENSHOT_MAX_WIDTH / startingSize.Width;
+
+            //if auto size is disabled we will size the images to fit the current window
+            if (!autoSizeWindowCheckbox.Checked)
+            {
+                scaledHeight = (double)previewBox.Height / startingSize.Height;
+                scaledWidth = (double)previewBox.Width / startingSize.Width;
+            }
 
             //If  constraints are not breached then use existing size
             if (scaledHeight >= 1 && scaledWidth >= 1)
@@ -278,6 +285,7 @@ namespace pwiz.SkylineTestUtil
 
         private async void refreshBtn_Click(object sender, EventArgs e)
         {
+            RefreshOldScreenshot();
             await RefreshNewScreenshot(false);
             this.SetForegroundWindow();
         }
