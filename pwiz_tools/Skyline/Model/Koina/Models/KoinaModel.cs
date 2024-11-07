@@ -411,15 +411,39 @@ namespace pwiz.Skyline.Model.Koina.Models
             var koinaOutput = new List<TKoinaOut>();
             for (int i = 0; i < inputsList.Count; ++i)
                 koinaOutput.Add(null);
-
+            int retryCount = Settings.Default.KoinaRetryCount;
             ParallelEx.For(0, inputsList.Count, batchIndex =>
             {
                 var koinaIn = inputsList[batchIndex];
 
                 if (progressMonitor.UpdateProgress(localProgressStatus) == UpdateProgressResponse.cancel)
                     return;
-
-                koinaOutput[batchIndex] = Predict(predictionClient, koinaIn, token);
+                var koinaExceptions = new List<KoinaException>();
+                for (int attempt = 0;; attempt++)
+                {
+                    try
+                    {
+                        koinaOutput[batchIndex] = Predict(predictionClient, koinaIn, token);
+                        break;
+                    }
+                    catch (KoinaException koinaException)
+                    {
+                        koinaExceptions.Add(koinaException);
+                        if (attempt >= retryCount)
+                        {
+                            throw new AggregateException(koinaExceptions);
+                        }
+                        lock (progressMonitor)
+                        {
+                            string message = string.Format(
+                                KoinaResources.KoinaModel_PredictBatches_Error___0__retrying__1_____2__,
+                                koinaException.Message,
+                                attempt + 1, retryCount);
+                            localProgressStatus = localProgressStatus.ChangeMessage(message);
+                            progressMonitor.UpdateProgress(localProgressStatus);
+                        }
+                    }
+                }
 
                 lock(progressMonitor)
                 {
@@ -752,7 +776,7 @@ namespace pwiz.Skyline.Model.Koina.Models
             while (dataIndex < data.Count)
             {
                 var size = Math.Min(data.Count - dataIndex, batchSize);
-                yield return data.Skip(dataIndex).Take(size);
+                yield return Enumerable.Range(dataIndex, size).Select(i => data[i]);
                 dataIndex += size;
             }
         }
