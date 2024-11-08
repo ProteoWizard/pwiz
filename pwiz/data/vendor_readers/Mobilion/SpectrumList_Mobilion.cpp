@@ -289,7 +289,10 @@ PWIZ_API_DECL double SpectrumList_Mobilion::ionMobilityToCCS(double ionMobility,
 
 PWIZ_API_DECL double SpectrumList_Mobilion::ccsToIonMobility(double ccs, double mz, int charge) const
 {
-    return  rawdata_->GetEyeOnCCSCalibration().CCSToArrivalTime(ccs, fabs(mz * (double)charge));
+    auto calibration = rawdata_->GetEyeOnCCSCalibration();
+    if (ccs < calibration.GetCCSMinimum() || ccs > calibration.GetCCSMaximum())
+        return numeric_limits<double>::quiet_NaN();
+    return  calibration.CCSToArrivalTime(ccs, fabs(mz * (double)charge));
 }
 
 PWIZ_API_DECL void SpectrumList_Mobilion::getCombinedSpectrumData(Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
