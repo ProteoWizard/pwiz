@@ -132,7 +132,7 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
             return TextUtil.LineSeparate(message, TextUtil.LineSeparate(paths));
         }
 
-        // TODO revert this debug stuff if this ever merges to master
+ // TODO revert this debug stuff if this ever merges to master
 static void MFSTLog(string message,
     [CallerFilePath] string file = null,
     [CallerLineNumber] int line = 0)
@@ -1035,15 +1035,17 @@ MFSTLog("TestFullScanProperties");
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
+            MFSTLog("TestFullScanProperties");
             Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
 
+            MFSTLog("TestFullScanProperties about to SkylineWindow.GraphFullScan.LeftButton?.PerformClick()");
             // make sure the properties are updated when the spectrum changes
             RunUI(() =>
             {
                 SkylineWindow.GraphFullScan.LeftButton?.PerformClick();
             });
-            MFSTLog("TestFullScanProperties");
+            MFSTLog("TestFullScanProperties about to wait for graphs");
             WaitForGraphs();
             MFSTLog("TestFullScanProperties");
             WaitForConditionUI(() => SkylineWindow.GraphFullScan.IsLoaded);
@@ -1054,6 +1056,7 @@ MFSTLog("TestFullScanProperties");
             });
 
             Assert.IsFalse(currentProperties.IsSameAs(expectedProperties));
+            MFSTLog("TestFullScanProperties about to propertiesButton.PerformClick()");
             RunUI(() =>
             {
                 propertiesButton.PerformClick();
