@@ -547,6 +547,25 @@ void diff(const Spectrum& a,
         }
     }
 
+    if (config.ignoreSpectrumTitle)
+    {
+        vector<CVParam>::const_iterator it =
+            find_if(a_b.cvParams.begin(), a_b.cvParams.end(), CVParamIs(MS_spectrum_title));
+
+        if (it != a_b.cvParams.end())
+        {
+            a_b.cvParams.erase(it);
+        }
+
+        it =
+            find_if(b_a.cvParams.begin(), b_a.cvParams.end(), CVParamIs(MS_spectrum_title));
+
+        if (it != b_a.cvParams.end())
+        {
+            b_a.cvParams.erase(it);
+        }
+    }
+
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
     {

@@ -365,9 +365,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             return -1; // not found
 
         start += strlen(startTag);
-        const string endTags[] = { "", " ", ",",";","\n","\r","\t" };
+        const string endTags[] = { " ", ",",";","\t" };
         string ccsStr;
-
+        
         for(int i=0; i< sizeof(endTags)/sizeof(endTags[0]); i++)
         {
 	        const size_t end = title.find(endTags[i], start);
@@ -378,6 +378,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 break;
             }
         }
+
+        if(ccsStr.empty())
+            ccsStr = title.substr(start,  title.length() - start);
 
         try
         {

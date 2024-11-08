@@ -228,6 +228,8 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
 
     bool ignoreDataProcessing;
 
+    bool ignoreSpectrumTitle;
+
     DiffConfig()
     :   pwiz::data::BaseDiffConfig(),
         ignoreIdentity(false),
@@ -235,7 +237,8 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
         ignoreExtraBinaryDataArrays(false),
         ignoreSpectra(false),
         ignoreChromatograms(false),
-        ignoreDataProcessing(false)
+        ignoreDataProcessing(false),
+        ignoreSpectrumTitle(false)
     {}
 };
 
