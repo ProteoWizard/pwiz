@@ -19,10 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -261,7 +261,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     else
                     {
-                        Trace.TraceWarning(@"Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath);
+                        Messages.WriteAsyncDebugMessage(@"Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath); // N.B. see TraceWarningListener for output details
                     }
                 }
                 var pivotOnKey = PivotKey.GetPivotKey(allPivotKeys, pivotOnKeyValues);

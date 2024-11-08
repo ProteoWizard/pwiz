@@ -18,13 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NHibernate;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+
 namespace pwiz.ProteomeDatabase.API
 {
     /// <summary>
@@ -252,7 +253,7 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     return;
                 }
-                Trace.TraceError(@"Unhandled exception: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Unhandled exception: {0}", exception);
             }
         }
 
