@@ -571,7 +571,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
             });
             // Graph p.23
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile", 23);
+            PauseForPeakAreaGraphScreenShot("Peak Areas Replicate Comparison graph metafile");
             if (!AsSmallMoleculeMasses)
                 VerifyDotProducts(0.99, 0.98);
 
@@ -601,7 +601,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForGraphs();
                 // Select the precursor to cause graphs to re-layout
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
-                PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile with split graphs", 25);
+                PauseForPeakAreaGraphScreenShot("Peak Areas Replicate Comparison graph metafile with split graphs");
             }
 
             if (IsCoverShotMode)
