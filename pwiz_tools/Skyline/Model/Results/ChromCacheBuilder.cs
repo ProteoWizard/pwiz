@@ -58,7 +58,6 @@ namespace pwiz.Skyline.Model.Results
 
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
-        private readonly Dictionary<Target, int> _dictSequenceToByteIndex = new Dictionary<Target, int>();
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -362,6 +361,14 @@ namespace pwiz.Skyline.Model.Results
         private void ExitRead(Exception x)
         {
             Complete(x);
+        }
+
+        private void DoFirstPass(IList<PeptideChromDataSets> listChromData)
+        {
+            var listProviderIds = new List<IList<int>>(listChromData.Where(IsFirstPassPeptide).Select(c => c.ProviderIds.ToArray()));
+            var doSecondPass = true;
+            listProviderIds.AddRange(listChromData.Where(c => !IsFirstPassPeptide(c)).Select(c => c.ProviderIds.ToArray()));
+
         }
 
         private void Read(ChromDataProvider provider)
