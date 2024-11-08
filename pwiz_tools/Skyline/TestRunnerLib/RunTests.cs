@@ -52,6 +52,7 @@ namespace TestRunnerLib
         public readonly bool DoNotRunInNightly;
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
+        public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -73,6 +74,9 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
+
+            var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
+            SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -269,7 +273,7 @@ namespace TestRunnerLib
 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
-            TeamCityStartTest(test);
+            TeamCityStartTest(test, pass);
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -371,27 +375,37 @@ namespace TestRunnerLib
                     CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 }
 
-                // Run the test and time it.
-                if (test.TestInitialize != null)
-                    test.TestInitialize.Invoke(testObject, null);
-
-                if (CheckCrtLeaks > 0)
+                if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
                 {
-                    // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                    // If we ever want to enable this functionality again, we need to find another .dll
-                    // to put this in.
-                    //CrtDebugHeap.Checkpoint();
-                }
-                test.TestMethod.Invoke(testObject, null);
-                if (CheckCrtLeaks > 0)
-                {
-                    //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
-                }
+                    if (test.SkipTestUntil != null)
+                        Log("Note: SkipTestUntil attribute is present, but the skip date has been reached so the test will run.");
 
-                // Need to set the test outcome to passed or it won't get set which impacts cleanup
-                TestContext.HasPassed = true;
-                if (test.TestCleanup != null)
-                    test.TestCleanup.Invoke(testObject, null);
+                    // Run the test and time it.
+                    if (test.TestInitialize != null)
+                        test.TestInitialize.Invoke(testObject, null);
+
+                    if (CheckCrtLeaks > 0)
+                    {
+                        // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
+                        // If we ever want to enable this functionality again, we need to find another .dll
+                        // to put this in.
+                        //CrtDebugHeap.Checkpoint();
+                    }
+                    test.TestMethod.Invoke(testObject, null);
+                    if (CheckCrtLeaks > 0)
+                    {
+                        //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
+                    }
+
+                    // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                    TestContext.HasPassed = true;
+                    if (test.TestCleanup != null)
+                        test.TestCleanup.Invoke(testObject, null);
+                }
+                else if (test.SkipTestUntil != null)
+                {
+                    Log("Skipping due to SkipTestUntil attribute (until {0})", test.SkipTestUntil.Value.ToShortDateString());
+                }
 
                 // Check for any left over files
                 var allEntries = CleanUpTestDir(tmpTestDir, true);
@@ -536,7 +550,7 @@ namespace TestRunnerLib
                     Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
                 }
 
-                TeamCityFinishTest(test);
+                TeamCityFinishTest(test, pass);
 
                 return true;
             }
@@ -559,7 +573,7 @@ namespace TestRunnerLib
             else
                 ErrorCounts[failureInfo] = 1;
 
-            TeamCityFinishTest(test, message + '\n' + stackTrace);
+            TeamCityFinishTest(test, pass, message + '\n' + stackTrace);
 
             Log(ReportSystemHeaps
                     ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n"
@@ -1047,12 +1061,27 @@ namespace TestRunnerLib
             }
         }
 
-        public void TeamCityStartTest(TestInfo test)
+        public string TeamCityPassName(int pass)
+        {
+            return pass switch
+            {
+                0 => "Pass0_french_mzML_no_internet",
+                1 => "Pass1_leak_detection",
+                _ => "Pass2_general"
+            };
+        }
+
+        public string TeamCityTestName(TestInfo test, int pass)
+        {
+            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.{TeamCityPassName(pass)}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
+        }
+
+        public void TeamCityStartTest(TestInfo test, int pass)
         {
             if (!TeamCityTestDecoration)
                 return;
 
-            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", TeamCityTestName(test, pass));
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
@@ -1062,7 +1091,7 @@ namespace TestRunnerLib
             }
         }
 
-        public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
+        public void TeamCityFinishTest(TestInfo test, int pass, string errorMessage = null)
         {
             if (!TeamCityTestDecoration)
                 return;
@@ -1077,14 +1106,14 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", TeamCityTestName(test, pass), tcMessage);
                 Console.WriteLine(failMsg);
                 if (IsParallelClient)
                     _log.WriteLine(failMsg);
                 // ReSharper restore LocalizableElement
             }
 
-            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", TeamCityTestName(test, pass), LastTestDuration);
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
@@ -1200,16 +1229,26 @@ namespace TestRunnerLib
                 yield return dockerWorkerName;
         }
 
-        public static void SendDockerKill(string workerNames = null)
+        public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
         {
             workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            try
+            {
+                if (hostWorkerPid > 0)
+                    Process.GetProcessById(hostWorkerPid).Kill();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
+            }
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
             Console.WriteLine(@$"docker kill {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
-            Process.Start(psi);
+            Process.Start(psi)?.WaitForExit();
         }
     }
 }

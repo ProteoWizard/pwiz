@@ -1103,6 +1103,25 @@
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-レンズ</value>
   </data>
+  <data name="HardklorSettings_Charges" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
+    <value>最小強度PPM</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="HardklorSettings_MinIdotP" xml:space="preserve">
+    <value>最小同位体内積</value>
+  </data>
+  <data name="HardklorSettings_Instrument" xml:space="preserve">
+    <value>装置</value>
+  </data>
+  <data name="HardklorSettings_Resolution" xml:space="preserve">
+    <value>分解能</value>
+  </data>
+  <data name="HardklorSettings_SignalToNoise" xml:space="preserve">
+    <value>信号対ノイズ比</value>
+  </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
     <value>mProphetのモデルを自動的にトレーニングする</value>
   </data>
@@ -1129,6 +1148,10 @@
   </data>
   <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
     <value>フルスキャン設定を行う</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
+    <value>Hardklor検索設定</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
     <value>FASTAをインポート</value>
@@ -1733,34 +1756,55 @@
   <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
     <value>狭いウィンドウ結果</value>
   </data>
-  <data name="EncyclopeDiaSettings_PrositSettings" xml:space="preserve">
-    <value>Prosit設定</value>
+  <data name="EncyclopeDiaSettings_KoinaSettings" xml:space="preserve">
+    <value>Koina設定</value>
   </data>
   <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
     <value>広いウィンドウ結果</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_DefaultCharge" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_DefaultCharge" xml:space="preserve">
     <value>デフォルト電荷</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_DefaultNCE" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_DefaultNCE" xml:space="preserve">
     <value>デフォルトNCE</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MaxCharge" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MaxCharge" xml:space="preserve">
     <value>最大電荷</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
     <value>最大未切断数</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MinCharge" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MinCharge" xml:space="preserve">
     <value>最小電荷</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_Enzyme" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_Enzyme" xml:space="preserve">
     <value>酵素</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MaxMz" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MaxMz" xml:space="preserve">
     <value>最大m/z</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
     <value>最小m/z</value>
+  </data>
+  <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
+    <value>遺伝子レベルでグループ化</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
+    <value>相対的存在量のフォーマット</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
+    <value>フォーマット行</value>
+  </data>
+  <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
+    <value>最大q値</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">
+    <value>スコアの閾値</value>
+  </data>
+  <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
+    <value>スコアタイプ</value>
   </data>
 </root>

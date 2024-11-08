@@ -1,0 +1,297 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Importing Assay Libraries</h1>
+    <p>
+        With some other SRM and DIA tools an extended transition list format called an “assay library” has become popular. The assay library format
+        adds relative ion abundance, extracted from spectral libraries, and iRT (normalized retention time) information to other common transition
+        list information (e.g. protein name, peptide sequence, precursor m/z and product m/z). As with a transition list, an assay library usually
+        contains information for a subset of peptide fragment ions (e.g. 6-10), interpreted as the best ions to measure for a peptide of interest on a
+        particular system. The assay library format is usually tabular text (.csv/.txt/.tsv), like a transition list, but they can also be specified
+        using TraML. Prior to version 2.6, importing a full assay library into Skyline involved several steps: the transition list and iRT values
+        needed to be imported separately, and transition intensities could not be imported at all (instead the user needed to find the original
+        SpectraST, BiblioSpec, or NIST spectral library file containing the raw spectra).
+    </p>
+    <p>
+        It is now possible to import or paste a full assay library into Skyline with a few clicks, meaning that an assay library can easily be
+        integrated into a Skyline document (complete with iRT’s and pseudo reference spectra containing relative transition intensities for all
+        peptides). An assay library produced outside of Skyline can now be quickly and easily “ported” into Skyline without losing information
+        important to targeted analysis.
+    </p>
+    <p>
+        In this tutorial, you will learn how to import assay libraries in tab-separated values [.tsv] format. Skyline can also read comma-separated
+        values [.csv]. Currently, Skyline cannot read an assay library in TraML format, though this may change in the future. 
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a
+            href="https://skyline.gs.washington.edu/tutorials/ImportingAssayLibraries.zip">https://skyline.gs.washington.edu/tutorials/ImportingAssayLibraries.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\damodei\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\damodei\Documents\ImportingAssayLibraries
+    </p>
+    <p>
+        It will contain all the files necessary for this tutorial. Open the file AQUA4_Human_Blank.sky in this folder, either by double-clicking on it
+        in Windows Explorer, or by choosing <b>Open</b> from the <b>File</b> menu (Ctrl-O) in a running instance of Skyline.
+    </p>
+    <h1>Setting Up the Document</h1>
+    <p>
+        You will be starting with an empty Skyline document which you are going to populate with all important information contained in an assay
+        library. The document you have opened is blank, aside from some peptide and transition settings. The peptide settings include heavy labeled
+        modifications that will be present in the assay library you paste in, and the transition settings tell Skyline which fragment ions from the
+        assay library to accept. If you were doing this on you own, you would need to ensure these settings match your assay library before you import
+        or paste it into a document. For a more detailed treatment of setting up a document for transition list import, consult the <a
+            href="https://skyline.ms/tutorial_existing_quant.url">Existing and
+            Quantitative Experiments</a> tutorial.
+    </p>
+    <h1>Transition List Format</h1>
+    <p>
+        Find the two files ExperimentAssayLibrary.csv and IrtStandardAssayLibrary.csv in the ImportingAssayLibraries folder you created. The first file
+        contains the assay library for the 345 measured peptides in the OpenSWATH Gold Standard data set<sup>1</sup>. The second file contains the
+        assay library for 10 iRT standard peptides, which can be used to calibrate the retention times of all 345 peptides accordingly.
+    </p>
+    <ul>
+        <li>Open the first file, ExperimentAssayLibrary.tsv, in Excel.</li>
+        <li>When Excel shows the <b>Text Import Wizard</b>, click the <b>Finish</b> button.</li>
+    </ul>
+    <p>
+        The file should look like this:
+    </p>
+    <p>
+        <img src="s-experiment-assay-library.png" />
+    </p>
+    <p>
+        Notice that the file has columns for precursor m/z, product m/z, peptide sequence, protein name, iRT value (“Tr_recalibrated”), and spectral
+        library intensity (“LibraryIntensity”) (as well as several other columns which Skyline will ignore). More generally, Skyline is able to read
+        the following columns in a transition list:
+    </p>
+    <table>
+        <tr>
+            <td><b>Column</b></td>
+            <td><b>Acceptable Names</b></td>
+            <td><b>Meaning</b></td>
+            <td><b>Optional or Required?</b></td>
+        </tr>
+        <tr>
+            <td>Library intensity for transition</td>
+            <td>LibraryIntensity</td>
+            <td>Relative intensity of the transition</td>
+            <td>Optional</td>
+        </tr>
+        <tr>
+            <td>iRT value</td>
+            <td>Tr_recalibrated </td>
+            <td>iRT value of the peptide corresponding to this transition</td>
+            <td>Optional</td>
+        </tr>
+        <tr>
+            <td>Protein</td>
+            <td>[Any](Skyline can infer from entries)</td>
+            <td>Protein name (in this example the protein name indicates which batch the peptides are belonging to rather than an actual protein name)
+            </td>
+            <td>Optional</td>
+        </tr>
+        <tr>
+            <td>Peptide</td>
+            <td>[Any](Skyline can infer from entries)</td>
+            <td>Modified sequence of the peptide. Modifications can be indicated in name, mass, or UniMod notation (see last page of tutorial for
+                details).</td>
+            <td>Required</td>
+        </tr>
+        <tr>
+            <td>Precursor m/z</td>
+            <td>[Any](Skyline can infer from entries)</td>
+            <td>Which precursor(s) for each peptide should be included in the document. </td>
+            <td>Required</td>
+        </tr>
+        <tr>
+            <td>Product m/z</td>
+            <td>[Any](Skyline can infer from entries)</td>
+            <td>Mass to charge ratio of the product ion</td>
+            <td>Required</td>
+        </tr>
+        <tr>
+            <td>Is transition a decoy?</td>
+            <td>decoy</td>
+            <td>For documents where the same peptide occurs as a target and as a decoy peptide. 0/False means decoy, 1/True means non-decoy.</td>
+            <td>Optional</td>
+        </tr>
+    </table>
+    <p>
+        Any or all of the optional columns can be missing. If the “decoy”, “LibraryIntensity”, or “iRT”/“Tr_recalibrated” column is present, then the
+        table must have a title row in order for Skyline to identify these columns; if none of these columns are present, the title row can be
+        missing.
+    </p>
+    <p>
+        <b>Note</b>: This file contains two columns with the peptide sequence “PeptideSequence” and “FullUniModPeptideName”. Often Skyline
+        can guess modifications from the precursor and product m/z values, but it can become confused when a file contains peptide-isoforms, or two
+        instances of the same peptide sequence differing only by the location of a modification. Providing Skyline with peptide sequence column that
+        explicitly specifies all modifications and their locations can alleviate this problem. However, Skyline may choose a bare peptide sequence
+        column, if it appears before the modified sequence column, and Skyline can match the bare sequence to the precursor m/z. To avoid this
+        potential pitfall with the current file, do the following:
+    </p>
+    <ul>
+        <li>Right-click the “I” column in Excel, containing “PeptideSequence”, and click <b>Delete</b>.</li>
+    </ul>
+    <p>
+        This is not actually necessary for this file, because it contains no peptide-isoforms, but knowing about this import issue can save a lot of
+        confusion.
+    </p>
+    <h1>Pasting or Importing the Assay Library</h1>
+    <p>
+        We will now add both the experiment assay library and the iRT assay library to the Skyline document.
+    </p>
+    <ul>
+        <li>In Excel, press <b>Ctrl-A</b> to select all of the rows and columns for ExperimentAssayLibrary.tsv.</li>
+        <li>Press <b>Ctrl-C</b> to copy the cells.</li>
+        <li>In Skyline, click on the (empty) document tree and then press <b>Ctrl-V</b> to paste in the assay library.</li>
+    </ul>
+    <p>
+        You should see the following window, which informs you that Skyline has detected iRT values for the transitions you have pasted in:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Create</b> button.</li>
+    </ul>
+    <p>
+        You should now see the following window:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        The empty document you opened does not yet have an iRT calculator or iRT standard peptides specified. Therefore, the iRT values in the assay
+        library cannot be stored or used. Skyline offers you the opportunity to either choose an existing iRT calculator containing the standards for
+        this transition list, or specify iRT standard peptides and import iRT values of all target peptides to create a new iRT calculator. If you
+        choose to create a new iRT caclutor, you can either use standards in a separate list, or in the peptides of a single protein of the transition
+        list you are importing. In this tutorial, you will create a new iRT calculator using a separate list by doing the following:
+    </p>
+    <ul>
+        <li>In the name field, type any name, like “New Calculator”.</li>
+        <li>Click the <b>Create new iRT calculator from iRT standards in transition list</b> radio button. Click the <b>Browse</b> button to the right of the <b>Transition list</b> field.</li>
+        <li>Select the file “IrtStandardAssayLibrary.csv<i>”</i> and click the <b>Open</b> button. This transition list will be read to
+            create the iRT standards.</li>
+        <li>Click the <b>Browse</b> button to the right of the <b>iRT database</b> field.</li>
+        <li>Type any name, like for example “NewIrtDatabase”, and click the <b>Save</b> button. This will be the name of the file that
+            stores the iRT standards you are importing (the extension will be “.irtdb”).</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        You should now see the following window:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <p>
+        This informs you that Skyline has detected transition intensities in the assay library you have pasted in. 
+    </p>
+    <ul>
+        <li>Click the <b>Create</b> button to create a pseudo spectral library for the document to store these transition intensities.</li>
+    </ul>
+    <p>
+        The operation should finish, and the Skyline document should now contain transition nodes, iRT values, and spectral library intensities for all
+        345 of the experiment peptides and also all 10 of the iRT standard peptides. The document tree should look as follows:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        Click on the first peptide (ADSTGTLVITDPT<b><span class="blue">R</span></b>) in the document tree. The newly created library spectrum
+        for this peptide should appear in the <b>Library Match</b> view, with four peaks from the ions y7-y10:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <p>
+        You can also browse this newly generated spectral library in the Spectral Library Explorer by doing the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Spectral Libraries</b>.</li>
+    </ul>
+    <p>
+        The spectral library was named the same as your current Skyline document, “AQUA4_Human_Blank-assay”. 
+    </p>
+    <ul>
+        <li>Click the <b>Close</b> button to dismiss the Spectral Library Explorer.</li>
+    </ul>
+    <p>
+        Now do the following to check the iRT values of the experiment peptides and the standard peptides. 
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, select <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab.</li>
+        <li>Click the calculator button to the right of the <b>Retention time predictor</b> dropdown list, and select <b>Edit
+                Current</b>.</li>
+    </ul>
+    <p>
+        Skyline should show the <b>Edit iRT Calculator</b> form like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <p>
+        As you can see, the 10 standard peptides and the 345 experiment peptides have both been added to the iRT database.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to close the <b>Edit iRT Calculator</b> dialog.</li>
+        <li>Click the <b>OK</b> button to close the <b>Peptide Settings</b> dialog.</li>
+    </ul>
+    <p>
+        You now have a Skyline document containing all the transitions, their relative intensities in form of pseudo spectra, and their iRT’s that were
+        in the original assay library. Now your Skyline document is ready to import and analyze your data.
+    </p>
+    <h1>Limitations</h1>
+    <p>
+        Assay library import is a new feature in Skyline and still has some situations it doesn’t handle well. We are working on fixing these
+        limitations, but in the meantime all of them luckily have an easy workaround:
+    </p>
+    <ol>
+        <li>As mentioned before, if your assay library has both an unmodified sequence column and a modified sequence column, Skyline may choose the
+            unmodified column over the modified column and have difficulty interpreting peptide-isomers. We will fix this in the future, but for now
+            it is safest to delete the unmodified sequence column.</li>
+        <li>Skyline will sometimes report an error if modified forms of a peptide alternate with unmodified forms in a list. To prevent this problem,
+            you can simply sort the assay library by modified peptide sequence in Excel.</li>
+        <li>If you give Skyline a peptide sequence with a modification that is not in the document settings, it may report an error. If you get an
+            error related to a modified peptide, the first thing you should do is check your Settings -&gt; Peptide Settings -&gt; Modifications. In
+            the future, Skyline will be able to automatically recognize any modifications and add them to the document settings for you, as it does
+            for peptide lists.</li>
+    </ol>
+    <p>
+        These problems can be frustrating if you are not expecting them, but once you know about them, a minute or two of work in Excel is all it takes
+        to fix them.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this brief tutorial you have learned how to quickly import an assay library into a blank Skyline document, producing a Skyline document with
+        all the information from the assay library. Assay library data can also be imported in some ways not described in this tutorial, including
+        adding to existing iRT databases rather than creating new ones. However, you have seen the basics of how to turn an assay library into a
+        Skyline document.
+    </p>
+    <h1>Bibliography</h1>
+    <p class="bibliography">
+        1. Hannes L. Röst <i>et al</i>. OpenSWATH: A tool for the automated, targeted analysis of data-independent acquisition
+        (DIA) MS-data. <i>Nat. Biotechnol</i>. doi:accepted
+    </p>
+</body>
+
+</html>

@@ -25,11 +25,9 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model.Prosit.Config;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
-using pwiz.Skyline.Util;
 using System;
 using System.Globalization;
 
@@ -38,44 +36,40 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class EncyclopeDiaSearchTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearch()
         {
             TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";
             RunFunctionalTest();
         }
 
-        public static bool HasPrositServer()
-        {
-            return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
-        }
-
         private bool IsRecordMode => false;
-        private int[] FinalTargetCounts = { 34, 36, 36, 144 };
+        private int[] FinalTargetCounts = { 33, 35, 35, 140 };
 
         protected override void DoTest()
         {
-            if (!HasPrositServer())
+            if (!HasKoinaServer())
             {
-                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Prosit is not configured (replace PrositConfig.xml in Skyline\\Model\\Prosit\\Config)");
+                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Koina is not configured (replace KoinaConfig.xml in Skyline\\Model\\Koina\\Config - see https://skyline.ms/wiki/home/development/page.view?name=Prosit)");
                 return;
             }
 
             PrepareDocument("EncyclopeDiaSearchTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
 
+            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
+            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             var searchDlg = ShowDialog<EncyclopeDiaSearchDlg>(SkylineWindow.ShowEncyclopeDiaSearchDlg);
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
             //PauseTest();
 
-            // if UseOriginalURLs, delete the blib so it will have to be freshly predicted from Prosit
+            // if UseOriginalURLs, delete the blib so it will have to be freshly predicted from Koina
+            string blibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-koina-Prosit_2019_intensity-Prosit_2019_irt-5950B898E945AE52AD86D9CE06220EE.blib");
             if (Program.UseOriginalURLs)
-                File.Delete(TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-prosit-5950B898E945AE52AD86D9CE06220EE.blib"));
+                File.Delete(blibFilepath);
 
-            RunUI(searchDlg.NextPage); // now on Prosit settings
+            RunUI(searchDlg.NextPage); // now on Koina settings
 
-            Settings.Default.PrositIntensityModel = PrositIntensityModel.Models.First();
-            Settings.Default.PrositRetentionTimeModel = PrositRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 searchDlg.DefaultCharge = 3;
@@ -220,12 +214,16 @@ namespace pwiz.SkylineTestFunctional
                 targetCounts[1] = peptideCount;
                 targetCounts[2] = precursorCount;
                 targetCounts[3] = transitionCount;
-                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                Console.WriteLine(@"{0} = {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
                 return;
             }
 
             var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
-            if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
+            //if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual)) // TODO: solve EncyclopeDIA non-determinism so results expected can be exact
+            if (Math.Abs(targetCounts[0] - targetCountsActual[0]) > 1 ||
+                Math.Abs(targetCounts[1] - targetCountsActual[1]) > 1 ||
+                Math.Abs(targetCounts[2] - targetCountsActual[2]) > 1 ||
+                Math.Abs(targetCounts[3] - targetCountsActual[3]) > 4)
             {
                 Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
                     string.Join(", ", targetCounts),

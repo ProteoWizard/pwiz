@@ -530,6 +530,7 @@ namespace pwiz.Skyline.Controls.Graphs
             
             int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
+            ToolTip.TargetCurves.Clear();
             for (int i = 0; i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
@@ -596,6 +597,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && dataScalingOption == DataScalingOption.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
+                        ToolTip.TargetCurves.Add(curveItem);
                     }
                     else 
                     {
@@ -606,6 +608,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         else
                         {
                             curveItem = new BarItem(label, pointPairList, color);
+                            ToolTip.TargetCurves.Add(curveItem);
                         }
                     }
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
@@ -655,7 +658,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             _dotpData = null;
-            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y))) 
+            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y)) && CanShowDotProduct) 
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
 
             if (ExpectedVisible != AreaExpectedValue.none &&
@@ -672,7 +675,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 dotpLine.Tag = selectedTreeNode.Path;
                 CurveList.Insert(0, dotpLine);                  // Add dotp graph line
-                ToolTip.TargetCurves.ClearAndAdd(dotpLine);
+                ToolTip.TargetCurves.Add(dotpLine);
             }
             else
             {
@@ -724,16 +727,64 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public override ImmutableList<float> GetToolTipDataSeries()
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
-            return _dotpData;
-        }
-        public override void PopulateTooltip(int index)
-        {
-            ToolTip.ClearData();
-            ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
-            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
-                string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+            if (targetCurve is LineItem line)
+            {
+                ToolTip.ClearData();
+                ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                ToolTip.AddLine(
+                    string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText),
+                    string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+                ToolTip.YPosition = null;
+            }
+            if (targetCurve is BarItem)
+            {
+                NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(GraphSummary.DocumentUIContainer.DocumentUI.Settings);
+
+                ToolTip.ClearData();
+                ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
+
+                var dataFormat = @"0.###";
+                if (Settings.Default.UsePowerOfTen)
+                    dataFormat += @"e0";
+                var percentageFormat = @"0.#%";
+                var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+
+
+                foreach (var ion in CurveList.OfType<BarItem>())
+                {
+                    var dataPoint = "";
+                    if (NormalizeOption.DEFAULT.Equals(normalizeOption) || NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizeOption.NormalizationMethod))
+                    {
+                        if (index== 0)
+                            dataPoint = (ion.Points[index].Y / total ).ToString(percentageFormat, CultureInfo.CurrentCulture);
+                        else
+                            dataPoint = ion.Points[index].Y.ToString(dataFormat, CultureInfo.CurrentCulture);
+                    }
+                    else if (NormalizeOption.MAXIMUM.Equals(normalizeOption)
+                             || NormalizationMethod.TIC.Equals(normalizeOption.NormalizationMethod) 
+                             || NormalizeOption.TOTAL.Equals(normalizeOption))
+                    {
+                        if(!(selectedTreeNode is PeptideTreeNode))
+                            dataFormat = percentageFormat;
+                        dataPoint = (ion.Points[index].Y/(NormalizeOption.TOTAL.Equals(normalizeOption) ? 100:1))
+                            .ToString(dataFormat, CultureInfo.CurrentCulture);
+                    }
+                    else if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel || NormalizationMethod.NONE.Equals(normalizeOption.NormalizationMethod))
+                        dataPoint = (ion.Points[index].Y).ToString(dataFormat, CultureInfo.CurrentCulture);
+
+                    ToolTip.AddLine(ion.Label.Text,dataPoint);
+                }
+                if (!(normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel) && !NormalizeOption.TOTAL.Equals(normalizeOption))
+                    ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Total, total.ToString(dataFormat, CultureInfo.CurrentCulture));
+                
+                if (BarSettings.Type == BarType.Stack || BarSettings.Type == BarType.PercentStack)
+                    ToolTip.YPosition = total;
+                else
+                    ToolTip.YPosition = CurveList.OfType<BarItem>().Max(curve => curve.Points[index].Y);
+            }
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -1147,19 +1198,34 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
                     }
+                }
 
-                    if (_expectedVisible != AreaExpectedValue.none)
+                if (_expectedVisible != AreaExpectedValue.none)
+                {
+                    var dotpData = new PointPairList();
+                    for (var replicateGroupIndex = 0;
+                         replicateGroupIndex < ReplicateGroups.Count;
+                         replicateGroupIndex++)
+                    {
+                        var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
+                        if (_docNode is TransitionGroupDocNode transitionGroupDocNode)
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(transitionGroupDocNode, replicateGroupIndex)));
+                        // Show dotp for a selected peptide only if it has only one precursor for which dotp can be calculated.
+                        else if (_docNode is PeptideDocNode pepDocNode && pepDocNode.TransitionGroups.Count(CanGetDotProductResults) == 1)
+                        {
+                            var replicate = replicateGroupIndex;
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(pepDocNode.TransitionGroups.First(CanGetDotProductResults), replicate)));
+                        }
+                    }
+
+                    if (dotpData.Count(pp => !double.IsNaN(pp.Y)) > 0)
                     {
                         _dotpData = new PointPairList();
-                        if(_expectedVisible.IsVisible())
+                        if (_expectedVisible.IsVisible())
                             _dotpData.Insert(0, 0, double.NaN);
-                        for (var replicateGroupIndex = 0;
-                            replicateGroupIndex < ReplicateGroups.Count;
-                            replicateGroupIndex++)
-                        {
-                            var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
-                            _dotpData.Insert(xValue, xValue, GetDotProductResults(nodeGroup, replicateGroupIndex));
-                        }
+                        _dotpData.Add(dotpData);
                     }
                 }
 
@@ -1183,6 +1249,38 @@ namespace pwiz.Skyline.Controls.Graphs
                         FixupForTotals();
                         break;
                 }
+            }
+            // this method is used to find the first node under a peptide for which the dotp line
+            // can be drawn.
+            private bool CanGetDotProductResults(TransitionGroupDocNode nodeGroup)
+            {
+                if (_expectedVisible == AreaExpectedValue.none)
+                    return false;
+                if (_expectedVisible == AreaExpectedValue.ratio_to_label)
+                {
+                    // if this is ratio to label normalization then we check if this precursor is not the label and it has a matching label precursor
+                    if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    {
+                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
+                        if (precursorNodePath.Peptide != null &&
+                            !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType) &&
+                            NormalizedValueCalculator.FindMatchingTransitionGroup(ratioToLabel, precursorNodePath.Peptide, nodeGroup) != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    // if this is a library dot product we see if it can be calculated for the first replicate (or if it has average)
+                    if (_expectedVisible == AreaExpectedValue.library &&
+                        nodeGroup.GetLibraryDotProduct(-1).HasValue)
+                        return true;
+                    if (_expectedVisible == AreaExpectedValue.isotope_dist &&
+                        nodeGroup.GetIsotopeDotProduct(-1).HasValue)
+                        return true;
+                }
+                return false;
             }
 
             private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)

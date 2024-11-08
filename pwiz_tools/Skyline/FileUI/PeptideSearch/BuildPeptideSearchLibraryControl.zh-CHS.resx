@@ -138,6 +138,13 @@
   <data name="radioDIA.Text" xml:space="preserve">
     <value>&amp;DIA（数据非依赖性采集）</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="radioDIA.ToolTip" xml:space="preserve">
+    <value>来自 DDA MS/MS 的库谱图与来自单独 DIA 运行的色谱图</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
     <value>radioDIA</value>
   </data>
@@ -167,6 +174,10 @@
   </data>
   <data name="radioPRM.Text" xml:space="preserve">
     <value>&amp;PRM</value>
+  </data>
+  <data name="radioPRM.ToolTip" xml:space="preserve">
+    <value>来自相同 PRM 运行的库谱图和色谱图</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioPRM.Name" xml:space="preserve">
     <value>radioPRM</value>
@@ -198,6 +209,10 @@
   <data name="radioDDA.Text" xml:space="preserve">
     <value>含有 MS&amp;1 筛选器的 DDA</value>
   </data>
+  <data name="radioDDA.ToolTip" xml:space="preserve">
+    <value>来自 DDA MS/MS 的库谱图与来自 MS1 的色谱图</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">
     <value>radioDDA</value>
   </data>
@@ -214,13 +229,13 @@
     <value>Bottom</value>
   </data>
   <data name="grpWorkflow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 529</value>
+    <value>0, 561</value>
   </data>
   <data name="grpWorkflow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 93</value>
+    <value>381, 91</value>
   </data>
   <data name="grpWorkflow.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="grpWorkflow.Text" xml:space="preserve">
     <value>工作流程</value>
@@ -235,7 +250,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;grpWorkflow.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="radioButtonNewLibrary.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -254,6 +269,11 @@
   </data>
   <data name="radioButtonNewLibrary.Text" xml:space="preserve">
     <value>构建(&amp;B)</value>
+  </data>
+  <data name="radioButtonNewLibrary.ToolTip" xml:space="preserve">
+    <value>从搜索到的
+TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioButtonNewLibrary.Name" xml:space="preserve">
     <value>radioButtonNewLibrary</value>
@@ -319,19 +339,23 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tbxLibraryPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxLibraryPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 39</value>
+    <value>11, 39</value>
   </data>
   <data name="tbxLibraryPath.Size" type="System.Drawing.Size, System.Drawing">
     <value>275, 20</value>
   </data>
   <data name="tbxLibraryPath.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="tbxLibraryPath.ToolTip" xml:space="preserve">
+    <value>以可识别的格式提供的现有库的路径，如 BiblioSpec .blib、EncyclopeDIA .elib、SpectraST .sqt</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
     <value>tbxLibraryPath</value>
@@ -382,7 +406,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblLibraryPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 20</value>
+    <value>11, 23</value>
   </data>
   <data name="lblLibraryPath.Size" type="System.Drawing.Size, System.Drawing">
     <value>32, 13</value>
@@ -430,19 +454,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelChooseFile.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="gridSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="gridSearchFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 70</value>
+    <value>11, 26</value>
   </data>
   <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>261, 147</value>
+    <value>261, 270</value>
   </data>
   <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Name" xml:space="preserve">
     <value>gridSearchFiles</value>
@@ -456,57 +480,6 @@
   <data name="&gt;&gt;gridSearchFiles.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 3</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>开始(&amp;M)：</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>panelPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="comboInputFileType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 19</value>
-  </data>
-  <data name="comboInputFileType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>265, 21</value>
-  </data>
-  <data name="comboInputFileType.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboInputFileType.Name" xml:space="preserve">
-    <value>comboInputFileType</value>
-  </data>
-  <data name="&gt;&gt;comboInputFileType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboInputFileType.Parent" xml:space="preserve">
-    <value>panelPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;comboInputFileType.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="lblStandardPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -517,13 +490,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblStandardPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 242</value>
+    <value>11, 321</value>
   </data>
   <data name="lblStandardPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
   </data>
   <data name="lblStandardPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="lblStandardPeptides.Text" xml:space="preserve">
     <value>iRT 标准肽段(&amp;T)：</value>
@@ -538,19 +511,23 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;lblStandardPeptides.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="comboStandards.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 258</value>
+    <value>11, 337</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 21</value>
   </data>
   <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>5</value>
+  </data>
+  <data name="comboStandards.ToolTip" xml:space="preserve">
+    <value>选择一组已知的 iRT 标准肽段，用于保留时间归一化。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
@@ -562,7 +539,7 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -574,16 +551,20 @@
     <value>NoControl</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 285</value>
+    <value>11, 364</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>包含模糊的匹配项(&amp;I)</value>
+  </data>
+  <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
+    <value>选中将保留与多个肽段匹配的谱图。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -595,7 +576,7 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>3</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -607,16 +588,20 @@
     <value>NoControl</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 308</value>
+    <value>11, 387</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 17</value>
   </data>
   <data name="cbFilterForDocumentPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
     <value>文档中肽段的筛选器(&amp;E)</value>
+  </data>
+  <data name="cbFilterForDocumentPeptides.ToolTip" xml:space="preserve">
+    <value>选中将仅过滤文档中的肽段。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
@@ -628,7 +613,7 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>4</value>
   </data>
   <data name="btnRemFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -640,13 +625,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnRemFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>278, 99</value>
+    <value>278, 55</value>
   </data>
   <data name="btnRemFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
   </data>
   <data name="btnRemFile.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="btnRemFile.Text" xml:space="preserve">
     <value>删除文件(&amp;O)</value>
@@ -661,7 +646,7 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;btnRemFile.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>5</value>
   </data>
   <data name="lblFileCaption.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -670,13 +655,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblFileCaption.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 52</value>
+    <value>11, 8</value>
   </data>
   <data name="lblFileCaption.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 13</value>
   </data>
   <data name="lblFileCaption.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="lblFileCaption.Text" xml:space="preserve">
     <value>结果文件(&amp;R)：</value>
@@ -691,7 +676,7 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;lblFileCaption.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -700,13 +685,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>278, 70</value>
+    <value>278, 26</value>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>添加文件(&amp;A)…</value>
@@ -721,94 +706,7 @@
     <value>panelPeptideSearch</value>
   </data>
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="panelSearchThreshold.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="panelSearchThreshold.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="panelSearchThreshold.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 6</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>截止得分(&amp;C)：</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="textCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>79, 3</value>
-  </data>
-  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>40, 20</value>
-  </data>
-  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
-    <value>textCutoff</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelSearchThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>160, 46</value>
-  </data>
-  <data name="panelSearchThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 26</value>
-  </data>
-  <data name="panelSearchThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Name" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Parent" xml:space="preserve">
-    <value>panelPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="panelPeptideSearch.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -817,10 +715,10 @@
     <value>0, 140</value>
   </data>
   <data name="panelPeptideSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 389</value>
+    <value>381, 512</value>
   </data>
   <data name="panelPeptideSearch.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;panelPeptideSearch.Name" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -832,7 +730,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelPeptideSearch.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
     <value>文件</value>
@@ -849,11 +747,20 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>140</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 622</value>
+    <value>381, 652</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>

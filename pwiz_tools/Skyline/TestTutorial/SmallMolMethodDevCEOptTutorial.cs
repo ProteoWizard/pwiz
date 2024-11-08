@@ -89,9 +89,12 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
 
                 SetCsvFileClipboardText(GetTestPath("Energy_TransitionList.csv"));
+                var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers", 5);
+                OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
+
                 RunUI(() =>
                 {
-                    SkylineWindow.Paste();
                     AdjustSequenceTreePanelWidth();
                 });
 
@@ -426,6 +429,8 @@ namespace pwiz.SkylineTestTutorial
                     PauseForScreenShot<SchedulingOptionsDlg>("Scheduling", 29);
                     OkDialog(scheduleDlg, scheduleDlg.OkDialog);
                 }
+
+                RunUI(() => SkylineWindow.SaveDocument());
 
                 // Import CE optimization runs
                 using (new WaitDocumentChange(1, true))

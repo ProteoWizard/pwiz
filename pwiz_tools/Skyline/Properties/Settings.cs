@@ -1229,8 +1229,7 @@ namespace pwiz.Skyline.Properties
                 var calibrationCurveOptions = (CalibrationCurveOptions) this[@"CalibrationCurveOptions"];
                 if (calibrationCurveOptions == null)
                 {
-                    calibrationCurveOptions = new CalibrationCurveOptions();
-                    CalibrationCurveOptions = calibrationCurveOptions;
+                    CalibrationCurveOptions = calibrationCurveOptions = CalibrationCurveOptions.DEFAULT;
                 }
                 return calibrationCurveOptions;
             }
@@ -1302,6 +1301,31 @@ namespace pwiz.Skyline.Properties
                 NormalizeOptionValue = value.PersistedName;
             }
         }
+
+        [UserScopedSetting]
+        public OpenDataSourceState OpenDataSourceState
+        {
+            get
+            {
+                return (OpenDataSourceState)this[nameof(OpenDataSourceState)];
+            }
+            set
+            {
+                this[nameof(OpenDataSourceState)] = value;
+            }
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenDataSourceState
+    {
+        public string DocumentPath { get; set; }
+        public string InitialDirectory { get; set; }
+        public string SourceTypeName { get; set; }
+        public View ListView { get; set; }
+        public int ListSortColumnIndex { get; set; }
+        public SortOrder ListSortOrder { get; set; }
+        public Size WindowSize { get; set; }
     }
 
     /// <summary>
@@ -2164,7 +2188,7 @@ namespace pwiz.Skyline.Properties
         {
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A),
-            // new RetentionScoreCalculator(RetentionTimeRegression.PROSITRTCALC)
+            // new RetentionScoreCalculator(RetentionTimeRegression.KOINARTCALC)
         };
 
         /// <summary>
@@ -2358,12 +2382,14 @@ namespace pwiz.Skyline.Properties
         public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,
             IEnumerable<IonMobilityLibrary> existing, object tag)
         {
-            using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing))
+            var ionMobilityFilteringUserControl = (owner as IonMobilityFilteringUserControl) ??
+                                                  ((owner as TransitionSettingsUI)?.IonMobilityControl) ??  // Accessed via Settings>TransitionSettings>IonMobility>Add
+                                                  ((owner as Form)?.Owner as TransitionSettingsUI)?.IonMobilityControl; // Accessed via Settings>TransitionSettings>IonMobility>EditList>Add|EditCurrent
+            var ionMobilityWindowWidthCalculator = ionMobilityFilteringUserControl!.IonMobilityWindowWidthCalculator;
+            using var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing, ionMobilityWindowWidthCalculator);
+            if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
             {
-                if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
-                {
-                    return editIonMobilityLibraryDlg.IonMobilityLibrary;
-                }
+                return editIonMobilityLibraryDlg.IonMobilityLibrary;
             }
 
             return null;
@@ -2430,16 +2456,8 @@ namespace pwiz.Skyline.Properties
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)
         {
-            using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
-            {
-                if (editModel.SetScoringModel(owner, item, tag as IFeatureScoreProvider))
-                {
-                    if (editModel.ShowDialog(owner) == DialogResult.OK)
-                        return (PeakScoringModelSpec)editModel.PeakScoringModel;
-                }
-
-                return null;
-            }
+            return EditPeakScoringModelDlg.ShowEditPeakScoringModelDlg(owner, item, existing ?? this,
+                tag as IFeatureScoreProvider);
         }
 
         public void EnsureDefault()
@@ -3142,6 +3160,35 @@ namespace pwiz.Skyline.Properties
         {
             return new SrmSettingsList();
         }
+
+        /// <summary>
+        /// Returns default settings for a new document based on the current
+        /// default settings.
+        /// </summary>
+        public static SrmSettings GetNewDocumentSettings(SrmSettings newSettings)
+        {
+            // In the current internal standards contain anything but "heavy"
+            var newMods = newSettings.PeptideSettings.Modifications;
+            if (newMods.InternalStandardTypes.Any(it => !it.Equals(IsotopeLabelType.heavy)))
+            {
+                // Remove all modifications from all existing non-light types
+                // This preserves the types but avoids adding any precursors for
+                // them until modifications are added.
+                foreach (var typedMods in newMods.HeavyModifications)
+                {
+                    if (!typedMods.Modifications.Any())
+                        continue;
+                    newSettings = newSettings.ChangePeptideModifications(pm =>
+                        pm.ChangeModifications(typedMods.LabelType, Array.Empty<StaticMod>()));
+                }
+                // Reset standard type to "heavy" which will be a no-op without any
+                // isotope modifications in that label type.
+                newSettings = newSettings.ChangePeptideModifications(pm =>
+                    pm.ChangeInternalStandardTypes(GetDefault().PeptideSettings.Modifications.InternalStandardTypes));
+            }
+            return newSettings;
+        }
+
     }
 
     /// <summary>

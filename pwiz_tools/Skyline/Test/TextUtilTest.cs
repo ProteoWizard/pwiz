@@ -64,7 +64,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(garbageString, TextUtil.DecryptString(TextUtil.EncryptString(garbageString)));
         }
 
-        [TestMethod]
+         [TestMethod]
         public void TestCommonPrefixAndSuffix()
         {
             string[] baseStrings = {"mediummer", "much, much longer", string.Empty, "short"};
@@ -130,6 +130,8 @@ namespace pwiz.SkylineTest
                 "vscw3","W2ffg","waINu","wAYVn","wcnac","wgnCt","Whe2M","WHs9b","wj-Sy","woie2","WOrKF",
                 "XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
             };
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalStringComparer.Compare), orderedSample);
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalFilenameComparer.Compare), orderedSample);
             var orderedSampleFilename = orderedSample.Select(s => s.Replace("30561n", "356n")).ToList(); // Make it amenable to windows filename sort tradtiion
 
             // Run test 12 time to ensure consistency 
@@ -169,6 +171,72 @@ namespace pwiz.SkylineTest
                 }
                 return misOrdered;
             }
+        }
+
+        [TestMethod]
+        public void TestNaturalStringComparerWellBehaved()
+        {
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalStringComparer.Compare), new[]
+            {
+                "01234",
+                "1234",
+                "1112222222222222222222222222222222222",
+                "01112222222222222222222222222222222222",
+                "/",
+                ".",
+                ","
+            });
+        }
+
+        [TestMethod]
+        public void TestEnforceMaxWordLength()
+        {
+            Assert.AreEqual(6, GetMaxWordLength("Hello, world"));
+            Assert.AreEqual(6, GetMaxWordLength("Hello world!"));
+            Assert.AreEqual(5, GetMaxWordLength("Hello-world"));
+            foreach (var input in new[]
+                     {
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                         "The quick brown fox jumps over a lazy dog",
+                     })
+            {
+                int inputMaxWordLength = GetMaxWordLength(input);
+                var inputWithoutSpaces = input.Replace(" ", "");
+                for (int enforcedMaxWordLength = 1; enforcedMaxWordLength <= input.Length; enforcedMaxWordLength++)
+                {
+                    var result = TextUtil.EnforceMaxWordLength(input, enforcedMaxWordLength);
+                    if (inputMaxWordLength <= enforcedMaxWordLength)
+                    {
+                        Assert.AreEqual(input, result);
+                    }
+                    else
+                    {
+                        Assert.AreNotEqual(input, result);
+                        Assert.AreEqual(enforcedMaxWordLength, GetMaxWordLength(result));
+                        var resultWithoutSpaces = result.Replace(" ", "");
+                        Assert.AreEqual(inputWithoutSpaces, resultWithoutSpaces);
+                    }
+                }
+            }
+        }
+
+        private int GetMaxWordLength(string str)
+        {
+            int maxWordLength = 0;
+            int currentWordLength = 0;
+            foreach (var ch in str)
+            {
+                if (char.IsWhiteSpace(ch) || ch == '-')
+                {
+                    maxWordLength = Math.Max(maxWordLength, currentWordLength);
+                    currentWordLength = 0;
+                }
+                else
+                {
+                    currentWordLength++;
+                }
+            }
+            return Math.Max(maxWordLength, currentWordLength);
         }
     }
 }

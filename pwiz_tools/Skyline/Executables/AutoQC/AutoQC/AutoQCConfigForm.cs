@@ -35,7 +35,8 @@ namespace AutoQC
         private readonly DateTime _initialCreated;
 
         private SkylineTypeControl _skylineTypeControl;
-        private string _lastEnteredPath;
+        private string _lastEnteredPath; // last entered path to Skyline .sky file
+        private string _lastEnteredAnnotationsFilePath;
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
 
@@ -130,6 +131,10 @@ namespace AutoQC
             textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
             comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
             comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
+            if (mainSettings.HasAnnotationsFile())
+            {
+                textAnnotationsFilePath.Text = mainSettings.AnnotationsFilePath;
+            }
         }
 
         private void SetDefaultMainSettings()
@@ -153,7 +158,8 @@ namespace AutoQC
             var resultsWindow = textResultsTimeWindow.Text;
             var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
             var acquisitionTime = textAquisitionTime.Text;
-            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
+            var annotationsFilePath = textAnnotationsFilePath.Text;
+            var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, annotationsFilePath);
             return mainSettings;
         }
 
@@ -179,6 +185,20 @@ namespace AutoQC
             {
                 textFolderToWatchPath.Text = dialog.SelectedPath;
                 _lastEnteredPath = dialog.SelectedPath;
+            }
+        }
+
+        private void btnAnnotationsFilePath_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = TextUtil.FileDialogFilter("CSV (Comma delimited)", TextUtil.EXT_CSV),
+                InitialDirectory = FileUtil.GetInitialDirectory(_lastEnteredAnnotationsFilePath, textSkylinePath.Text)
+            };
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                textAnnotationsFilePath.Text = dialog.FileName;
+                _lastEnteredAnnotationsFilePath = dialog.FileName;
             }
         }
 
@@ -317,7 +337,7 @@ namespace AutoQC
                 State.BaseState.AssertUniqueName(newConfig.Name, _action == ConfigAction.Edit);
                 newConfig.Validate(true);
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
                 AlertDlg.ShowError(this, e.Message);
                 return;
@@ -334,6 +354,94 @@ namespace AutoQC
         private void btnOkConfig_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        #endregion
+
+        #region Methods used for tests
+        public void SetConfigName(string name)
+        {
+            textConfigName.Text = name;
+        }
+
+        public void SetSkylineDocPath(string skyDocPath)
+        {
+            textSkylinePath.Text = skyDocPath;
+        }
+
+        public void SetFolderToWatch(string folderToWatch)
+        {
+            textFolderToWatchPath.Text = folderToWatch;
+        }
+
+        public void UncheckRemoveResults()
+        {
+            checkBoxRemoveResults.Checked = false;
+        }
+
+        public void CheckRemoveResults()
+        {
+            checkBoxRemoveResults.Checked = true;
+        }
+
+        public void SetAnnotationsFilePath(string annotationsFilePath)
+        {
+            textAnnotationsFilePath.Text = annotationsFilePath;
+        }
+
+        public void ClickSave()
+        {
+            btnSaveConfig.PerformClick();
+        }
+
+        public void ClickCancel()
+        {
+            btnCancelConfig.PerformClick();
+        }
+
+        public void ClickOk()
+        {
+            btnOkConfig.PerformClick();
+        }
+
+        public bool SaveButtonVisible()
+        {
+            return btnSaveConfig.Visible;
+        }
+
+        public bool ConfigNotEditableLabelVisible()
+        {
+            return lblConfigRunning.Visible;
+        }
+
+        public void SelectPanoramaTab()
+        {
+            tabPanoramaSettings.Select();
+        }
+
+        public void CheckUploadToPanorama()
+        {
+            cbPublishToPanorama.Checked = true;
+        }
+
+        public void SetPanoramaServer(string serverUri)
+        {
+            textPanoramaUrl.Text = serverUri;
+        }
+
+        public void SetPanoramaUser(string username)
+        {
+            textPanoramaEmail.Text = username;
+        }
+
+        public void SetPanoramaPassword(string password)
+        {
+            textPanoramaPasswd.Text = password;
+        }
+
+        public void SetPanoramaFolder(string folder)
+        {
+            textPanoramaFolder.Text = folder;
         }
 
         #endregion

@@ -1295,7 +1295,7 @@ CVID Pep2MzIdent::Impl::mapToNearestSoftware(const string& softwareName,
 {
     // TODO clean this up and move the patterns into a separate class
     // as we get more patterns.
-    static bxp::sregex X_TandemMod = bxp::sregex::compile("[xX][\\!]?[ ]*[Tt]andem[ ]*[\\(]?([^\\)]*)[\\)]?");
+    const bxp::sregex X_TandemMod = bxp::sregex::compile("[xX][\\!]?[ ]*[Tt]andem[ ]*[\\(]?([^\\)]*)[\\)]?");
     
     CVID cvid = getCVID(softwareName);
 

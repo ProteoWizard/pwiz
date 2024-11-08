@@ -1,0 +1,820 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Advanced Peak Picking Models</h1>
+    <p>
+        Skyline now supports the ability to create custom advanced peak picking and scoring models for both selected reaction monitoring (SRM) and
+        data-independent acquisition (DIA). This new feature aims to improve the accuracy and confidence of identifications in SRM-acquired data, and
+        to enable large-scale automated processing of DIA datasets. This functionality can be applied to data collected on any instrument supported by
+        Skyline (including QQQ, TOF and ion trap instruments from AB SCIEX, Agilent, Bruker, Thermo and Waters) provided the data was acquired through
+        SRM, PRM or DIA.
+    </p>
+    <p>
+        When chromatograms are imported into a document, Skyline has traditionally chosen a best peak for each targeted peptide based on simple
+        heuristics involving intensity, crude measures of co-elution, and the presence of matching isotopic standards. Over the last several years,
+        however, sophisticated algorithms have been developed for more accurately choosing peaks in SRM data, and for quantifying the confidence that
+        a peak corresponds to the targeted peptide. The mProphet algorithm<sup>1</sup> evaluates peaks based on a trained linear combination of scores
+        related to co-elution, peak shape, ion intensity, spectral library relative product ion abundance correlation, predicted retention time,
+        isotopic standards, and several other factors. More recently, OpenSWATH<sup>2</sup> (<a
+            href="http://proteomics.ethz.ch/openswath.html">http://proteomics.ethz.ch/openswath.html</a>) has added additional scores to aid in the
+        analysis of DIA data, where peak selection is significantly more challenging due to the use of wide isolation windows, and where peptide
+        identification confidence metrics will be required to analyze whole-proteome datasets.
+    </p>
+    <p>
+        Although Skyline continues to score peaks heuristically on initial import, we now allow the user to improve on what Skyline does by default by
+        training and customizing scoring models based on mProphet and OpenSWATH.
+    </p>
+    <p>
+        In this tutorial, you will learn to train and customize a peak scoring model, as well as how to use the models to improve Skyline peak
+        integration boundary selection and assign a confidence level to the association between the peak and its target peptide.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.gs.washington.edu/tutorials/PeakPicking.zip">https://skyline.gs.washington.edu/tutorials/PeakPicking.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\PeakPicking
+    </p>
+    <p>
+        It will contain all the files necessary for this tutorial. Open the file SRMCourse_DosR-hDP__20130501-tutorial-empty.sky in this folder, either
+        by double-clicking on it in Windows Explorer, or by choosing <b>Open</b> from the <b>File</b> menu (Ctrl-O) in a running
+        instance of Skyline.
+    </p>
+    <h1>Creating Decoys</h1>
+    <p>
+        The skyline document you have opened should be blank aside from a list of target proteins and peptides. You will be importing and scoring some
+        SRM data, but before you do, it is necessary to generate decoy peptides. Decoy peptides are peptide sequences that are not actually present in
+        the sample but are measured in order to provide a negative control, which mProphet requires in order to assign confidence levels to the peaks
+        it picks. Several methods for generating decoy peptides exist, including shifting the precursor and product mass-to-charge ratios of actual
+        peptides, reversing the sequence of actual peptides, or randomly shuffling the sequences of actual peptides. For this tutorial, you will use
+        reversed sequence decoys. Generally, mProphet works best if the number of decoys is comparable to the number of targets, or at least not
+        radically smaller. To add the decoys:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Refine</b> and then click <b>Add Decoy Peptides</b>.</li>
+        <li>In the <b>Number of Decoy Precursors</b> field, enter ‘29’.</li>
+        <li>In the <b>Decoy generation method</b> drop down list, select ‘Reverse Sequence<b>’</b>.</li>
+    </ul>
+    <p>
+        The <b>Add Decoy Peptides</b> form should now look like this: 
+    </p>
+    <p>
+         <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        A set of decoy peptides should appear below the real peptides in the <b>Targets</b> view of the main Skyline window:
+    </p>
+    <p>
+        <u><img src="s-2.png" /></u>
+    </p>
+    <h2>Importing SRM Data</h2>
+    <p>
+        The decoy peptides you have just generated include random shifts in product mass (this is done in addition to reversing the peptide sequence to
+        avoid overlap with real transitions) and thus cannot be used in this particular dataset because they do not to match the decoy peptides used
+        in the SRM experiment. In a real SRM workflow, you would generate decoys before acquiring the data, so that the measured decoys matched the
+        ones in Skyline. In this tutorial you will open another file with the decoy peptides that were actually measured for this experiment.
+    </p>
+    <ul>
+        <li>Click the <b>Open</b> button on the Skyline toolbar (Ctrl-O).</li>
+        <li>Click the <b>No</b> button when asked whether to save your changes to the first file.</li>
+        <li>Select the file <b>‘</b>SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky’ from the ‘PeakPicking’ folder you created for
+            this tutorial.</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        To import raw SRM data collected on an AB SCIEX QTRAP instrument into this document, do the following:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click on <b>Results</b>.</li>
+        <li>Make sure <b>Add single injection replicates in files</b> is selected.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Select the files below, using Shift+mouse-click to make a multiple selection:<ul>
+                <li>olgas_S130501_006_StC-DosR_B2.wiff </li>
+                <li>olgas_S130501_006_StC-DosR_C2.wiff </li>
+                <li>olgas_S130501_006_StC-DosR_A4.wiff </li>
+                <li>olgas_S130501_006_StC-DosR_B4.wiff </li>
+                <li>olgas_S130501_006_StC-DosR_C4.wiff</li>
+            </ul>
+        </li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        Skyline will show a form suggesting that it can remove the common prefix on these files:
+    </p>
+    <p>
+         <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>Delete the 0 at the end of the <b>Common prefix</b> field.</li>
+        <li>Click the <b>Remove</b> button.</li>
+    </ul>
+    <p>
+        Once loading is complete, chromatograms will be displayed for both the target (real) and decoy peptides.
+    </p>
+    <ul>
+        <li>Select the peptide LPDGNGIEL<b><u>C</u><span class="blue">R</span></b> under the protein <b>Rv3133c|devR</b>, just
+            above the ‘Decoys’ peptide list.</li>
+        <li>Select  ‘006_StC-DosR_B2’ from the <b>Replicates</b> dropdown list, at the top of the <b>Targets</b>
+            view.</li>
+    </ul>
+    <p>
+        Note that the Skyline default peak picking has selected an intense peak at 16.5 minutes, whereas (as you will see later) the correct peak is
+        actually at 18.0 minutes, close to the predicted retention time, annotated at 18.2 minutes in the graph.
+    </p>
+    <p>
+         <img src="s-4.png" />
+    </p>
+    <h2>Training a Peak Scoring Model</h2>
+    <p>
+        Next you will train a scoring model and use it to improve Skyline peptide peak picking:
+    </p>
+    <ul>
+        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b>.</li>
+    </ul>
+    <p>
+        You should see the following form:
+    </p>
+    <p>
+         <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>From the <b>Peak Scoring Model</b> dropdown list, choose <b>&lt;Add…&gt;</b>.</li>
+    </ul>
+    <p>
+        A large form should appear.
+    </p>
+    <ul>
+        <li>Click the <b>Train Model</b> button near the top left of the form.</li>
+    </ul>
+    <p>
+        You should be presented with a screen that looks like this:
+    </p>
+    <p>
+         <img src="s-6.png" />
+    </p>
+    <p>
+        This form allows you to create and customize new peak scoring models, rather than always relying on the default heuristic Skyline Legacy
+        scoring model. On the right is a graph of the composite score assigned to each decoy peak (orange bars) and each target peak (blue bars) by
+        the model. A higher score indicates greater likelihood that the peak represents the correct peptide. The orange curve is a Gaussian fit of the
+        decoy distribution as described in the mProphet algorithm<sup>1</sup>. Note that most of the target peptides are to the far right of the decoy
+        curve, indicating that the model assigns high confidence to these peak assignments. Whenever training a model, it is important to check that
+        the decoy distribution is roughly Gaussian (the orange bars match the orange curve). If the distribution differs greatly from a Gaussian, the
+        mProphet statistical results will not be valid. If you discover that your decoy distribution is very different from a Gaussian, it may be
+        useful to try a different method of generating decoys, or to use one of the many ways of customizing the model (described later). Additional
+        tabs show further statistical information:
+    </p>
+    <ul>
+        <li>Click the <b>P Values</b> tab.</li>
+    </ul>
+    <p>
+        This will show the distribution of p values according to the Gaussian model to which the decoys were fit:
+    </p>
+    <p>
+         <img src="s-7.png" />
+    </p>
+    <p>
+        This graph is another way to assess whether decoys are Gaussian: if they are, the p values of the decoys should be uniformly distributed over
+        the range from 0 to 1. The targets, on the other hand, should have a uniform background (indicating chromatograms where there is no real peak)
+        but also a spike near zero indicating the real peaks. Also shown is pi-zero, which is an estimate of the background rate of nulls. This
+        pi-zero value is important in assigning a false discovery rate (q value) to each chosen peak. You can also see the q values themselves:
+    </p>
+    <ul>
+        <li>Click the <b>Q Values</b> tab.</li>
+    </ul>
+    <p>
+        This will show a graph of the q values assigned to all the targets:
+    </p>
+    <p>
+         <img src="s-8.png" />
+    </p>
+    <p>
+        For a given FDR cut-off, any q value below the FDR value will be declared a true peak, and any q value above the FDR value will be declared a
+        false peak.
+    </p>
+    <p>
+        In the bottom left is the list of <b>Available feature scores</b> that can contribute to the composite score. The meaning of the
+        scores is as follows (more details can be found in the original mProphet and OpenSWATH papers<sup>1,2</sup>):
+    </p>
+    <table>
+        <tr>
+            <td><b>Score Name</b></td>
+            <td><b>Score Description</b></td>
+        </tr>
+        <tr>
+            <td>Intensity</td>
+            <td>Log10(summed intensity) of all transition peaks in the precursor</td>
+        </tr>
+        <tr>
+            <td>Retention time difference</td>
+            <td>Abs(predicted RT - measured RT)</td>
+        </tr>
+        <tr>
+            <td>Library intensity dot product</td>
+            <td>Dot product between library spectrum and observed spectrum</td>
+        </tr>
+        <tr>
+            <td>Shape (weighted)</td>
+            <td>Weighted shape similarity between transitions (see mProphet paper)</td>
+        </tr>
+        <tr>
+            <td>Co-elution (weighted)</td>
+            <td>Weighted co-elution between transitions (see mProphet paper)</td>
+        </tr>
+        <tr>
+            <td>Co-elution count</td>
+            <td>Number of co-eluting transitions</td>
+        </tr>
+        <tr>
+            <td>Signal to noise</td>
+            <td>Log10(signal/noise ratio), defined as peak apex to background median</td>
+        </tr>
+        <tr>
+            <td>Product mass error</td>
+            <td>Product mass error weighted by intensity</td>
+        </tr>
+        <tr>
+            <td>Reference intensity dot product</td>
+            <td>Dot product between analyte and reference transition intensities</td>
+        </tr>
+        <tr>
+            <td>Reference shape (weighted)</td>
+            <td>Weighted shape correlation between reference and analyte (see mProphet paper)</td>
+        </tr>
+        <tr>
+            <td>Reference co-elution (weighted)</td>
+            <td>Weighted co-elution (autocorrelation shift) between reference and analyte (see mProphet paper)</td>
+        </tr>
+        <tr>
+            <td>Reference co-elution count</td>
+            <td>Number co-eluting reference transitions times</td>
+        </tr>
+        <tr>
+            <td>Precursor-product shape score</td>
+            <td>Correlation between most intense precursor and most intense product ion</td>
+        </tr>
+        <tr>
+            <td>Precursor mass error</td>
+            <td>Mass error over precursor ions weighted by intensity</td>
+        </tr>
+        <tr>
+            <td>Precursor isotope dot product</td>
+            <td>Dot product between expected and observed precursor isotope distribution</td>
+        </tr>
+        <tr>
+            <td>Identified count</td>
+            <td>Number of identified peptides within the peak boundaries</td>
+        </tr>
+    </table>
+    <p>
+        Scores that do not apply are grayed and blanked out, e.g. the <b>Product mass error</b> score is grayed here, because Skyline only
+        calculates mass errors for chromatograms extracted from high resolution mass spectra. Scores that are undefined for at least one peptide are
+        also grayed. The <b>Weight</b> of each score is the coefficient assigned to it in the composite score. However, the weights are not
+        normalized (i.e. they can have very different scales), so Skyline also shows a normalized measure (<b>Percentage Contribution</b>)
+        that gives a rough indication of the relative contribution of each score to the separation of decoys from targets. Using this measure, you can
+        see that, of the available scores, the <b>Shape (weighted)</b> score is the strongest single contributor to the separation of
+        targets from decoys (accounting for 62.2%).
+    </p>
+    <p>
+        You can also visually examine the performance of each score:
+    </p>
+    <ul>
+        <li>Above the graph on the right side, click the <b>Feature Scores</b> tab.</li>
+    </ul>
+    <p>
+        As indicated by the title, the graph now shows the <b>Intensity</b> score for all peptides. Clicking on each row of the
+        <b>Available feature scores</b> grid will change the graph to show the scores for that row. Looking at individual scores helps to
+        visualize which calculators are useful and which are not, and will also help you to track down missing values:
+    </p>
+    <ul>
+        <li>Click on the <b>Library intensity dot-product</b> row in the <b>Available feature scores</b> grid.</li>
+    </ul>
+    <p>
+        The graph should change to the following: 
+    </p>
+    <p>
+        <img src="s-9.png" /> 
+    </p>
+    <p>
+        Note that the library dot-product is “unknown” for several of the target values, and for this reason the score is grayed and not used in the
+        model. This is also the case for several other scores – some are missing values for every peptide, while others are missing values for only a
+        few peptides. 
+    </p>
+    <h1>Handling Missing Values</h1>
+    <p>
+        To find and remove the peptides missing library dot-product values, do the following:
+    </p>
+    <ul>
+        <li>Move the mouse over the bar labeled <b><i>unknown</i></b> in the <b>Feature Scores</b> graph.</li>
+    </ul>
+    <p>
+        A find button (<img src="../../shared/blue-binocular-button.png" />) should appear.
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the find button.</li>
+    </ul>
+    <p>
+        A <b>Find Results</b> view should appear in the background, docked at the bottom of the Skyline window and containing a list of the
+        peptides for which the <b>Library intensity dot-product</b> score is unknown. In this case, there are 6 peptides that are missing
+        this score, 5 target peptides and 1 decoy peptide. Each peptide is measured in 5 files, so there are a total of 30 missing peaks for these
+        scores. To use the <b>Find Results</b> view, save your current model and return to the Skyline main window:
+    </p>
+    <ul>
+        <li>In the <b>Name</b> field, enter ‘test1’.</li>
+        <li>Click <b>OK</b> to close the <b>Edit Peak Scoring Model</b> form.</li>
+        <li>Click <b>Cancel</b> to close the <b>Reintegrate</b> form.</li>
+    </ul>
+    <p>
+        Make sure that you do NOT click <b>OK</b> on the <b>Reintegrate</b> form, as that would apply the model to all the peaks in
+        the document, which we are not yet ready to do. (If you did, click <b>Undo</b> now.)
+    </p>
+    <p>
+        On the <b>Find Results</b> dialog, there should be 6 peptides in the list.
+    </p>
+    <p>
+        <b><img src="s-11.png" /></b> 
+    </p>
+    <ul>
+        <li>Double-click on the first peptide in the list, LGGNEQVTR.</li>
+    </ul>
+    <p>
+        Skyline should navigate to the peptide LGGNEQVTR in the <b>Targets</b> view.
+    </p>
+    <ul>
+        <li>Click on the peptide in the <b>Targets</b> view to make sure it is selected.</li>
+    </ul>
+    <p>
+        Note that this peptide has no library spectrum, explaining why its <b>Library intensity dot-product</b> is unknown. Since scores are
+        disabled when one or more values are missing, you must deal with all 6 peptides shown in the <b>Find Results</b> view to make the
+        <b>Library intensity dot-product</b> score active. This first peptide appears under the ‘iRTpeptides’ list. While it is one of the
+        11 peptides in the iRT mix used in this experiment, it was obviously not included in the iRT calculator for this document. In the
+        <b>Targets</b> view, it lacks the tiny clock icon <img src="../../shared/peptide-with-spectrum-lines-and-clock-icon.png" /> (in the upper-right corner of the peptide icon)
+        indicating an iRT standard peptide. Skyline automatically excludes standard peptides from scoring consideration. Although, in this document,
+        all of the other iRT peptides have matching library spectra. To handle this case now, delete this peptide:
+    </p>
+    <ul>
+        <li>Press the delete key on your keyboard to delete the peptide.</li>
+    </ul>
+    <p>
+        Proceed to the next peptide in the list:
+    </p>
+    <ul>
+        <li>Double-click on the second peptide in the list, IPVDSIYSPVLK.</li>
+    </ul>
+    <p>
+        You will find this peptide in a list named ‘PosCtrl’ with two other peptides which lack matching library spectra. These are also standard
+        peptides, added to the document before Skyline supported document-wide peptide standards. Skyline will ignore any peptide standard (iRT,
+        Normalization or QC) in score training. So, here you can simply mark these peptides as QC standards to avoid having to delete them from the
+        document:
+    </p>
+    <ul>
+        <li>Hold down the Shift key and click on the peptide DFDSLGTLR to select all 3 peptides.</li>
+        <li>Right-click in the selection, choose <b>Set Standard Type</b> and click <b>QC</b>.</li>
+    </ul>
+    <p>
+        Now delete the last two peptides GGYAGMLVGSVGETVAQLA<b><span class="blue">R</span></b> and its corresponding decoy: 
+    </p>
+    <ul>
+        <li>Double-click on each of the last 2 peptides in the <b>Find Results</b> window, and delete each.</li>
+        <li>Close the <b>Find Results</b> window.</li>
+    </ul>
+    <p>
+        Now return to the <b>Edit Peak Scoring Model</b> form:
+    </p>
+    <ul>
+        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b>.</li>
+        <li>From the <b>Peak scoring model</b> drop down list, select “test1”.</li>
+        <li>From the <b>Peak scoring model</b> drop down list again, select <b>&lt;Edit current…&gt;</b>.</li>
+    </ul>
+    <p>
+        Note that the <b>Library intensity dot-product</b> score is no longer grayed. All 4 <b>Reference</b> scores are also no
+        longer grayed. Four of the peptides you found in the list were also missing stable isotope labeled reference standards. You deleted one, the
+        extraneous iRT peptide, and marked the other 3 as QC standards, which caused them to be excluded from this score modeling. Without missing
+        values in the document, these scores are now available for use in a scoring model. To retrain the model to include them, do the following:
+    </p>
+    <ul>
+        <li>Check the <b>Library intensity dot-product</b> row in the <b>Available feature scores</b> list.</li>
+        <li>Check the <b>Reference intensity dot-product</b> row in the <b>Available feature scores</b> list.</li>
+        <li>Check the <b>Reference shape (weighted)</b> row in the <b>Available feature scores</b> list.</li>
+        <li>Check the <b>Reference co-elution (weighted)</b> row in the <b>Available feature scores</b> list.</li>
+        <li>Check the <b>Reference co-elution count</b> row in the <b>Available feature scores</b> list.</li>
+        <li>Click the <b>Train Model</b> button to retrain the model based on the changes you made to the targets list.
+        </li>
+    </ul>
+    <p>
+        The <b>Library intensity dot-product</b> score should now have a weight and a percent contribution, and scoring should be slightly
+        improved. The <b>Edit Peak Scoring Model</b> form should look like this:
+    </p>
+    <p>
+         <img src="s-12.png" /> 
+    </p>
+    <p>
+        The <b>Q Values</b> plot will now be improved as well:
+    </p>
+    <ul>
+        <li>Click the <b>Q Values</b> tab.</li>
+    </ul>
+    <p>
+        You should see a graph like the following:
+    </p>
+    <p>
+         <b><img src="s-13.png" /></b>
+    </p>
+    <p>
+        As you can see, most of the q values are now smaller after adding the new scores, indicating higher confidence in the picked peaks.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button to save the changes to the <b>Edit Peak Scoring Model</b> form.</li>
+    </ul>
+    <h1>Customizing the Model</h1>
+    <p>
+        Next, this tutorial will cover options to customize and refine a peak scoring model.
+    </p>
+    <ul>
+        <li>From the <b>Peak scoring model</b> dropdown list, select <b>&lt;Edit current…&gt;</b>.</li>
+    </ul>
+    <p>
+        Notice the check boxes in the <b>Enabled</b> column of the <b>Available feature scores</b> list. Unchecking a score will
+        remove it from the model upon re-training, which allows you to pick and choose which scores are used. Scores which make a negative
+        contribution (and thus <i>may</i> be advisable to remove) are shown in red.
+    </p>
+    <ul>
+        <li>Uncheck the <b>Signal to noise</b> score (scrolling may be necessary).</li>
+        <li>Uncheck the <b>Co-elution (weighted)</b> score.</li>
+    </ul>
+    <p>
+        Now notice the <b>Use decoys</b> and <b>Use second best peaks</b> check boxes in the <b>Training</b> section of
+        the form. These check boxes designate which peaks are used as controls in training the model. So far you have used the decoy peptides that
+        were generated prior to data acquisition. An alternative method is to examine the second highest scoring peaks in the chromatograms of the
+        real peptides, based on the high probability that these are not the correct peaks but may in some ways be more realistic representations of
+        incorrect peaks than the peaks found in chromatograms for decoy peptides. Or, you can use both types of peak. To try this, do the following:
+    </p>
+    <ul>
+        <li>Check <b>Use second best peaks</b>.</li>
+        <li>Leave <b>Use decoys</b> checked also.</li>
+    </ul>
+    <p>
+        The yellow bars represent the second best peaks. Note that the distribution of second best peaks is similar to the distribution of decoys,
+        suggesting that they do an equally good job representing realistic background. When the model is retrained, both the decoys and the second
+        best peaks will be used in the training. Note that none of these changes have taken effect yet. For this to happen, you must re-train the
+        model:
+    </p>
+    <ul>
+        <li>Click the <b>Train</b> button.</li>
+    </ul>
+    <p>
+        The graphs should now update and the scores that were unchecked should be removed. The model should look like this:
+    </p>
+    <p>
+         <img src="s-14.png" />
+    </p>
+    <p>
+        You will not use this modified model. To return to the original model, simply cancel the form:
+    </p>
+    <ul>
+        <li>Click the <b>Cancel</b> button.</li>
+    </ul>
+    <h1>Applying the Model to Improve Peak Picking</h1>
+    <p>
+        The next step is to apply the trained model to the peaks picked by Skyline. Having just closed the <b>Edit Peak Scoring Model</b> form, you should be back in the <b>Reintegrate</b> form. You are now ready to apply the model you have just trained. You
+        have the option to use the highest scoring peaks, using the composite score you have just trained, in all cases (<b>Overwrite manual
+            integration</b>), or to leave in place any peaks that have been picked manually (which may have been carefully curated). Checking
+        <b>Add q value annotation</b> will cause a statistical q value to be attached to every peak, which can then be exported in a Skyline
+        report. In this tutorial you will use both of these options:
+    </p>
+    <ul>
+        <li>Make sure <b>Integrate all peaks</b> is selected.</li>
+        <li>Check the <b>Add q value annotation</b> check box.</li>
+        <li>Check the <b>Overwrite manual integration</b> check box.</li>
+    </ul>
+    <p>
+        The <b>Reintegrate</b> dialog box should look like this:
+    </p>
+    <p>
+         <img src="s-15.png" /> 
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        A form displaying a progress bar should appear and after a few seconds the reintegration should complete.
+    </p>
+    <ul>
+        <li>Select the peptide LPDGNGIEL<b><u>C</u><span class="blue">R</span></b> under the protein <b>Rv3133c|devR</b>, just
+            above the ‘Decoys’ peptide list.</li>
+        <li>Select  ‘006_StC-DosR_B2’ from the <b>Replicates</b> dropdown list, at the top of the <b>Targets</b>
+            view.</li>
+    </ul>
+    <p>
+        Note that after reintegration, the chosen peak for this peptide/replicate is now at the correct position of 18.0 minutes. 
+    </p>
+    <p>
+         <img src="s-16.png" />
+    </p>
+    <p>
+        Now try reintegrating in a slightly different way by doing the following:
+    </p>
+    <ul>
+        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b>.</li>
+        <li>Select <b>Only integrate significant q values</b>.</li>
+        <li>In the <b>Q value</b> cutoff field, enter ‘0.001’.</li>
+        <li>Check <b>Overwrite manual integration</b></li>
+        <li>Check <b>Attach q value annotation</b></li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This will cause Skyline to pick only peaks with an estimated false discovery rate (q value) of 0.001 or lower (i.e. there is a 99.9% chance
+        that any chosen peak is correct). In peptides for which no detected peak meets this criterion, Skyline will not choose any peak. In the
+        <b>Targets</b> view, a peptide with no chosen peak will have a red dot left of its sequence:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        This is now the case for the peptide LPDGNGIEL<b><u>C</u><span class="blue">R</span></b> in the replicate 006_StC-DosR_B2. You will
+        also see that the chromatogram graph now lacks the right-pointing arrowheads, indicating the chosen peak:
+    </p>
+    <p>
+         <img src="s-18.png" />
+    </p>
+    <p>
+        This can be different for each replicate, however, and if you use the <b>Replicates</b> dropdown list at the top of the
+        <b>Targets</b> view to review each replicate for this peptide, you will see that 4 out of 5 (007, 008, 009 and 010) have chosen the
+        correct peak, while the last replicate (006) has no chosen peak. This is likely due to the apparent interference on the y10 ion in the analyte
+        precursor, which you can see better, if you select it (622.3086++) in the <b>Targets</b> view and zoom in a little:
+    </p>
+    <p>
+         <img src="s-19.png" />
+    </p>
+    <p>
+        Any peak picking algorithm might do better with this peak, if the y10 ion were removed.
+    </p>
+    <h1>Exporting Peak Scoring Results (mProphet)</h1>
+    <p>
+        To directly see the scores and false discovery rates of each peptide, you can export this information to a text file. There are two options for
+        doing this. The first is to export into mProphet format, which shows all the individual feature scores for each peptide, as well as the
+        composite score, the p value, and the q value. The second is to use a skyline report, which can attach a q value to any data columns available
+        in the report form. You will start with the first method: 
+    </p>
+    <ul>
+        <li>From the <b>File</b> menu, choose <b>Export</b> and click on <b>mProphet Features</b>.</li>
+        <li>Check <b>Best Scoring Peaks Only</b>.</li>
+    </ul>
+    <p>
+        The <b>Export mProphet Features</b> form should look like this:
+    </p>
+    <p>
+         <img src="s-20.png" /><u> </u>
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>File name</b> field, enter “mProphet_Exported_scores.csv”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        A form with a progress bar may appear, and after a few seconds the file should be saved.
+    </p>
+    <ul>
+        <li>Open the file in Excel or Notepad.</li>
+    </ul>
+    <p>
+        There should be a series of columns containing information about each peptide, and a list of individual scores for that peptide. There should
+        also be a column called “qValue”, which contains the estimated false discovery rate if all peptides with q value at least as good as this
+        peptide are counted as real.
+    </p>
+    <ul>
+        <li>Close the file and return to Skyline.</li>
+    </ul>
+    <h1>Exporting Peak Scoring Results (Skyline report)</h1>
+    <p>
+        You can also obtain q-value information from a Skyline report, if you have checked the <b>Add q value annotation</b> check box in the
+        <b>Reintegrate</b> form. This method does not show individual feature scores, but has the advantage that you can combine it with any
+        other columns available in a Skyline report. 
+    </p>
+    <ul>
+        <li>From the <b>File</b> menu, choose <b>Export</b> and click on <b>Report</b>.</li>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Select the <b>Peptide RT Results</b> from the <b>Report</b> list.</li>
+    </ul>
+    <p>
+        The form should look like this:
+    </p>
+    <p>
+         <img src="s-21.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Edit</b> button.</li>
+    </ul>
+    <p>
+        The <b>Edit Report</b> form should appear as follows:
+    </p>
+    <p>
+         <img src="s-22.png" />
+    </p>
+    <ul>
+        <li>On the left side of the form, click on the plus icon by <b>Peptides</b> to expand the list.</li>
+        <li>Under <b>Peptides</b> click on the plus icon by <b>Precursors</b> to expand the list.</li>
+        <li>Under <b>Precursors</b> click on the plus icon by <b>PrecursorResults</b> to expand the list.</li>
+        <li>Click on the check box by the <b>annotation_Q Value</b> entry under <b>Precursor Results</b>.</li>
+    </ul>
+    <p>
+        The <b>Edit Report</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Reports</b> form.</li>
+        <li>Select the <b>Peptide RT Results</b> item in the <b>Report</b> list.</li>
+        <li>Click the <b>Export</b> button.</li>
+        <li>In the <b>File name</b> field, enter “qValues_Exported_report.csv”.</li>
+        <li>Click the <b>Save</b> button.</li>
+    </ul>
+    <p>
+        A form with a progress bar may appear, and after a few seconds the file should be saved.
+    </p>
+    <ul>
+        <li>Open the file in Excel or Notepad.</li>
+    </ul>
+    <p>
+        There should be a series of columns containing information about each peptide, including file name, peptide sequence, and so forth. There
+        should also be a column called “qValue”, which contains the estimated false discovery rate just as the mProphet exported file did.
+    </p>
+    <ul>
+        <li>Close the file and return to Skyline.</li>
+    </ul>
+    <p>
+        The Skyline development team is working to make this info about peptide ID confidence available within Skyline (perhaps visible on the
+        chromatogram graph), so that the text export step described above is not necessary. However, for now, exporting to text (via either method) is
+        the only way to directly obtain information on peptide ID confidence. 
+    </p>
+    <h1>Training a Peak Scoring Model for DIA Data</h1>
+    <p>
+        In addition to SRM, Skyline trained peak scoring models can also be used to improve the accuracy and assess the confidence of peak
+        identifications in DIA data. Peak scoring a statistical confidence metric is even more essential with DIA data, since there can be a greater
+        number of interfering peaks and potentially a larger number of peptides to analyze (for whole-proteome DIA experiments), making manual
+        assessment of each peptide less tractable.
+    </p>
+    <p>
+        To open the DIA dataset included with this tutorial, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Open</b> button on the Skyline toolbar (Ctrl-O).</li>
+        <li>Click the <b>No</b> button when asked whether to save your changes to the first file.</li>
+        <li>Select the file <b>‘</b>AQUA4_Human_picked_napedro2-mod2.sky’ from the ‘PeakPicking’ folder you created for this tutorial.</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        This file contains some of the data that was used to test the OpenSWATH algorithm, some of which is now incorporated into the advanced peak
+        scoring model functionality you are exploring. The file contains a dilution series of a known peptide mix. In a real DIA workflow, the
+        settings on the <b>Transition Settings - Full Scan</b> tab would need to be configured for DIA; decoys would need
+        to be generated, and the raw DIA data would need to be imported. However, since raw DIA data files are so large (hundreds of Megabytes to
+        several Gigabytes), for this tutorial the file you have opened only contains target peptide chromatograms extracted from 5 DIA raw files,
+        which allows to reduce the Skyline file size significantly.
+    </p>
+    <p>
+        The DIA files you will be opening contain peaks that were manually picked for the purpose of comparison with the automated OpenSWATH algorithm.
+        In a real workflow all peptides/files would contain full chromatograms, but in this tutorial the chromatograms have been artificially
+        restricted to a 10 minute window around the predicted peak in order to keep the file sizes small. 
+    </p>
+    <p>
+        This DIA data was loaded into Skyline before advanced peak scoring was available, so the first step will be to re-score the document so that
+        the proper feature scores are available. This re-scoring must be performed on any document created before Skyline v2.1.1.xx in order to use
+        advanced peak picking:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Manage Results</b>.</li>
+    </ul>
+    <p>
+        A form like the following should appear:
+    </p>
+    <p>
+         <img src="s-24.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Re-score</b> button</li>
+    </ul>
+    <p>
+        The following form should appear:
+    </p>
+    <p>
+         <img src="s-25.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Re-score in place</b> button.</li>
+    </ul>
+    <p>
+        A chromatogram load window will appear as all five replicates are re-scored. Wait for the loading to complete. Advanced feature scores will now
+        be available.
+    </p>
+    <p>
+        Do the following to return to the <b>Edit Peak Scoring Model</b> form:
+    </p>
+    <ul>
+        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b></li>
+        <li>From the <b>Peak Scoring Model</b> dropdown list, choose the ‘test1’ model you trained from the SRM dataset.</li>
+        <li>Select <b>&lt;Edit current…&gt;</b>.</li>
+    </ul>
+    <p>
+        This will show the model from the previous dataset, applied to the peptides in the present dataset. 
+    </p>
+    <p>
+         <img src="s-26.png" />
+    </p>
+    <p>
+        A model trained on one dataset can be applied to another, or you can train a new model for each dataset, provided your dataset contains enough
+        peptides. Because the previous model was trained on SRM data, which contained isotopic standards, it is not applicable to the current dataset.
+        You can see that the graph title says <b>Trained model is not applicable to current dataset</b>. Also, some of the scores (e.g.
+        <b>Retention time</b> difference) have weights but are grayed, indicating that the model needs these scores to evaluate peptides,
+        but they are not available, meaning that the composite model score is undefined.
+    </p>
+    <p>
+        You will need to train a new model specifically for this dataset to use advanced peak picking. Perform the following steps to do this:
+    </p>
+    <ul>
+        <li>Click the <b>Cancel</b> button to exit the <b>Edit Peak Scoring Model</b> form</li>
+        <li>Select <b>&lt;Add…&gt;</b> from the <b>Peak scoring model</b> dropdown list on the <b>Reintegrate</b> dialog.</li>
+        <li>Uncheck the <b>Use decoys</b> check box in the <b>Training</b> section (this dataset has no decoys).</li>
+        <li>Check the <b>Use second best peaks</b> check box in the <b>Training</b> section.</li>
+        <li>Click the <b>Train</b> button to train a new model.</li>
+    </ul>
+    <p>
+        The model should look like this:
+    </p>
+    <p>
+        <img src="s-27.png" /> 
+    </p>
+    <p>
+        Note that some of the scores that were unavailable in the SRM model are available here, such as <b>Product mass error</b>. This is
+        because the current DIA dataset has chromatograms extracted from high resolution full-scan mass spectra. As for the SRM data set, we can
+        increase the number of active scores by finding and deleting peptides with unknown scores.
+    </p>
+    <ul>
+        <li>Above the graph on the right side, click the <b>Feature Scores</b> tab.</li>
+        <li>Click on the <b>Library intensity dot-product</b> row in the <b>Available feature scores</b> grid</li>
+        <li>Move the mouse over the bar labeled <b><i>unknown</i></b> in the <b>Feature Scores</b> graph.</li>
+        <li>A find button (<img src="../../shared/blue-binocular-button.png" />) should appear – click it.</li>
+    </ul>
+    <p>
+        A <b>Find Results Form</b> should appear behind the <b>Edit Peak Scoring Model</b> window, showing many peptides that lack
+        a library dot product. You won’t remove them in this tutorial, but your own data sets you could. Instead, you can use the model as is to peak
+        peaks as follows:
+    </p>
+    <ul>
+        <li>In the <b>Name</b> field, enter “test DIA”.</li>
+        <li>Click the <b>OK</b> button to save this model.</li>
+    </ul>
+    <p>
+        Now you can apply the model as you did before for the SRM dataset:
+    </p>
+    <ul>
+        <li>On the <b>Reintegrate</b> dialog make sure <b>Integrate all peaks</b> is selected.</li>
+        <li>Check the <b>Overwrite Manual integration</b> checkbox</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        Skyline should adjust peak boundaries as it did before.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        The Skyline team is actively working to improve advanced peak picking beyond the capabilities offered in this tutorial, particularly with
+        regard to handling missing values and more directly displaying q values (peptide identification confidence), and we encourage you to watch for
+        improvements in the future. This tutorial should however provide enough basics to get started on advanced peak picking for DIA and SRM data
+        sets, allowing selection of peaks to be greatly improved over the Skyline default peak picking.
+    </p>
+    <h1>Bibliography</h1>
+    <p class="bibliography">
+        1. Reiter, L. <i>et al</i>. mProphet: automated data processing and statistical validation for large-scale SRM
+        experiments. <i>Nat. Methods</i> <b>8</b>, 430–435 (2011).
+    </p>
+    <p class="bibliography">
+        2. Hannes L. Röst <i>et al</i>. OpenSWATH: A tool for the automated, targeted analysis of data-independent acquisition
+        (DIA) MS-data. <i>Nat. Biotechnol</i>. doi:accepted
+    </p>
+</body>
+
+</html>

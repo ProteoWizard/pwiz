@@ -358,7 +358,13 @@ namespace pwiz.Skyline.Menus
             char separator;
 
             // Check for a FASTA header
-            if (text.StartsWith(@">"))
+            if (text.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX))
+            {
+                // This is multi-peptide-list text. Let the text be what it is and
+                // let the importer try to import it.
+                peptideList = true;
+            }
+            else if (text.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX))
             {
                 // Make sure there is sequence information
                 string[] lines = text.Split('\n');
@@ -366,7 +372,7 @@ namespace pwiz.Skyline.Menus
                 for (int i = 0; i < lines.Length; i++)
                 {
                     string line = lines[i];
-                    if (line.StartsWith(@">"))
+                    if (line.StartsWith(PeptideGroupBuilder.PROTEIN_SPEC_PREFIX))
                     {
                         if (i > 0 && aa == 0)
                         {
@@ -467,12 +473,12 @@ namespace pwiz.Skyline.Menus
                     // First make sure it looks like a sequence.
                     List<double> lineLengths = new List<double>();
                     int lineLen = 0;
-                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                    var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true));
                     foreach (char c in textNoMods)
                     {
                         if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
                         {
-                        MessageDlg.Show(SkylineWindow, string.Format(MenusResources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
+                            MessageDlg.Show(SkylineWindow, string.Format(MenusResources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
                             return;
                         }
                         if (c == '\n')
@@ -527,7 +533,7 @@ namespace pwiz.Skyline.Menus
                     string seqId = Document.GetPeptideGroupId(peptideList);
 
                     // Construct valid FASTA format (with >> to indicate custom name)
-                    text = @">>" + TextUtil.LineSeparate(seqId, text);
+                    text = PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + TextUtil.LineSeparate(seqId, text);
                 }
             }
 
@@ -551,7 +557,7 @@ namespace pwiz.Skyline.Menus
             for (int i = 0; i < pepSequences.Length; i++)
             {
                 var charge = Transition.GetChargeFromIndicator(pepSequences[i].Trim(), TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                string pepSeqMod = CleanPeptideSequence(Transition.StripChargeIndicators(pepSequences[i], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                string pepSeqMod = CleanPeptideSequence(Transition.StripChargeIndicators(pepSequences[i], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true));
                 string pepSeqClean = FastaSequence.StripModifications(pepSeqMod);
                 if (!charge.IsEmpty)
                     pepSeqMod += Transition.GetChargeIndicator(charge);
@@ -1220,7 +1226,7 @@ namespace pwiz.Skyline.Menus
                     try
                     {
                         SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                            MenusResources.SkylineWindow_Paste_Paste_transition_list, false);
                     }
                     catch (Exception exception)
                     {
@@ -1531,6 +1537,11 @@ namespace pwiz.Skyline.Menus
                                     // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.  
                                     var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
+                                    if (doc.Settings.HasResults)
+                                    {
+                                        // If the document has results, remember the original name of the molecule so the chromatograms do not get orphaned
+                                        newNode = newNode.RememberOriginalTarget(nodePep);
+                                    }
                                     // Nothing to do if the node is not changing
                                     if (Equals(nodePep, newNode))
                                         return doc;
@@ -1841,6 +1852,7 @@ namespace pwiz.Skyline.Menus
         public SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
             SpectrumClassFilter spectrumClassFilter, bool copy, out int changeCount)
         {
+            var originalDocument = document;
             changeCount = 0;
             foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
             {
@@ -1853,7 +1865,7 @@ namespace pwiz.Skyline.Menus
                 bool changed = false;
                 var idPathSet = peptidePathGroup.ToHashSet();
                 var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
-                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                    Tuple.Create(tg.LabelType, tg.PrecursorAdduct)).ToList();
                 var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {
@@ -1902,10 +1914,18 @@ namespace pwiz.Skyline.Menus
                 {
                     newTransitionGroups.Sort(Peptide.CompareGroups);
                     peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
+                    if (!document.DeferSettingsChanges)
+                    {
+                        document = document.BeginDeferSettingsChanges();
+                    }
                     document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
                 }
             }
 
+            if (document.DeferSettingsChanges)
+            {
+                document = document.EndDeferSettingsChanges(originalDocument, null);
+            }
             return document;
         }
     }

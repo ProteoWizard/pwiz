@@ -1,0 +1,359 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline PRM With an Orbitrap Mass Spec</h1>
+    <p>
+        In this tutorial you will set up an acquisition method to quantify 31 peptides from 19 proteins of interest in murine fibroblasts using
+        Parallel Reaction Monitoring (PRM). Briefly, the “Cell cycle mouse fibroblast” dataset used in this tutorial consists of murine fibroblasts in
+        three different stages of the cell cycle: i) G1 phase, ii) S phase, and iii) G2 plus Mitosis phases. Each condition has three biological
+        replicates. The entire dataset consists of 9 runs on a Thermo Fusion mass spectrometer employing the Orbitrap mass analyzer.
+    </p>
+    <p>
+        For more general information on how Skyline treats PRM data of any kind, you should consult the <a
+            href="https://skyline.ms/tutorial_prm.url">Parallel Reaction Monitoring</a> tutorial.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/PRM-Orbi.zip">https://skyline.ms/tutorials/PRM-Orbi.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\PRM-Orbi
+    </p>
+    <p>
+        To begin this tutorial: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>If you have previously unchecked <b>Show start page at startup</b>,<br />On the <b>File</b> menu, click
+            <b>Start</b>.</li>
+        <li>On the <b>Start Page</b>, click <b>Import Peptide List</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <ul>
+        <li>If you do not see this option,<br />Click the user interface button in the upper right-hand corner of the <b>Start Page</b> and
+            select <b>Proteomics Interface</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Once you have clicked <b>Import FASTA</b>, Skyline should appear and show a <b>Settings</b> form:
+    </p>
+    <ul>
+        <li>In the <b>Experiment Type</b> box, click <b>Quantifications</b>.</li>
+    </ul>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        For a consistent and reliable set of steps through this tutorial, it is simplest to start from default settings. Otherwise, Skyline will
+        attempt to start from your most recent settings in the hope that they may resemble what you will do next. To achieve a uniform starting point
+        for this tutorial:
+    </p>
+    <ul>
+        <li>Click the <b>Reset Default Settings</b> button.</li>
+        <li>Click the <b>OK</b> button on the message Skyline shows confirming this operation.</li>
+    </ul>
+    <h1>Settings for PRM methods</h1>
+    <p>
+        It is often a good idea to do a complete review of all the <b>Peptide Settings</b> and <b>Transition Settings</b> when
+        starting new blank document like this, before adding any of the proteins and peptides you will target.
+    </p>
+    <ul>
+        <li>Click the <b>Peptide Settings</b> button.</li>
+        <li>Click the <b>Digestion</b> tab if it is not already showing.</li>
+    </ul>
+    <h2>Peptide Settings – Digestion tab</h2>
+    <p>
+        <b>Enzyme</b>: Select the proteolytic specificity of the enzyme that was used with your samples. The most frequent enzyme used in
+        proteomics is trypsin, which cleaves after the C-terminal of lysine and arginine except if they are followed by proline. In this tutorial you
+        may leave “Trypsin [KR|P]” selected.
+    </p>
+    <p>
+        <b>Max missed cleavages</b>: Set the number of missed cleavages that you would like to consider in your analysis. Fully tryptic
+        peptides are preferable, but sometimes peptides with missed cleavages are also usable for quantification.
+    </p>
+    <ul>
+        <li>In the <b>Max missed cleavages</b> field enter “1”.</li>
+    </ul>
+    <p>
+        <b>Background proteome</b>: This setting allows you to build a background proteome from a protein FASTA file using the digestion
+        settings defined above. Alternatively, you can directly add an already in-silico digested proteome file (file.protdb). The background proteome
+        is useful to determine if a particular peptide is unique to your protein or if it is shared with other proteins present in your database. To
+        generate a background proteome according to the digestion settings above do the following:
+    </p>
+    <ul>
+        <li>From the <b>Background proteome</b> drop-list, choose <b>&lt;Add…&gt;</b>.</li>
+        <li>Click the <b>Create</b> button in the <b>Edit Background Proteome</b> form.</li>
+        <li>Navigate to the “PRM-Orbi” folder you created for this tutorial.</li>
+        <li>In the <b>File name</b> field, enter “mouse-proteome”.</li>
+        <li>Click the <b>Save</b> button.</li>
+        <li>Click the <b>Add File</b> button.</li>
+        <li>Double-click the “uniprot-mouse.fasta” file.</li>
+    </ul>
+    <p class="keep-next">
+        When the file is generated a warning message will appear to warn you about 6 repeated sequences in the FASTA file:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The generated proteome file should contain 16,800 proteins.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The background proteome file you just created can now be used in different projects.
+    </p>
+    <p>
+        <b>Enforce peptide uniqueness by</b>: offers the options –
+    </p>
+    <ol>
+        <li>“None” - do not enforce peptide uniqueness.</li>
+        <li>“Protein” - do not use peptides which appear in multiple proteins in the background proteome.</li>
+        <li>“Gene” - do not use peptides which appear in multiple genes in the background proteome.</li>
+        <li>“Species” - do not use peptides associated with multiple species in the background proteome.</li>
+    </ol>
+    <ul>
+        <li>In the <b>Enforce peptide uniqueness by</b> dropdown list, click “Protein”.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings – Digestion</b> tab should now look like this:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Prediction</b> tab.</li>
+    </ul>
+    <h2>Peptide Settings – Prediction tab</h2>
+    <p>
+        <b>Retention time predictor</b>: A retention time predictor can be used to create scheduled methods and to support data analysis.
+        This tutorial does not require retention time prediction. So, leave is as “None”.
+    </p>
+    <p>
+        <b>Use measured retention times when present</b>: Checking this option allows Skyline to use use measured retention times (instead of
+        predicted) for retention time scheduling.
+    </p>
+    <ul>
+        <li>Check <b>Use measured retention times when present</b>.</li>
+    </ul>
+    <p>
+        <b>Time window</b>: Specify the range of time you would like to use for your scheduled measurements.
+    </p>
+    <ul>
+        <li>For this tutorial, in the <b>Time window</b> field, enter “5” <b>min</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings – Prediction</b> tab should now look like this:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Filter</b> tab.</li>
+    </ul>
+    <h2>Peptide Settings – Filter tab</h2>
+    <p>
+        In this tab you can define filters to select peptides with certain properties.
+    </p>
+    <p>
+        <b>Min length/Max length</b>: You can use these fields to restrict the number of amino acid residues you are willing to allow in your
+        target peptides.
+    </p>
+    <ul>
+        <li>In the <b>Min length</b> field enter “7 “, and in the <b>Max length</b> field enter “26”.</li>
+    </ul>
+    <p>
+        <b>Exclude N-terminal amino acids</b>: The N-terminus of a protein might be post-translationally processed (modified and/or cleaved).
+        Therefore, it may not be suited for protein quantification. You can use this field to exclude these peptides from analysis. In this tutorial,
+        you will simply trust the peptide spectrum matching results from a DDA experiment and not rely on this exclusion.
+    </p>
+    <ul>
+        <li>In the <b>Exclude N-terminal amino acids</b> field, enter “0”.</li>
+    </ul>
+    <p>
+        <b>Exclude potential ragged ends</b>: Ragged ends are peptides with KK, RR, RK or KR sequences at one or both ends. Such peptides
+        might not be fully cleaved and hence may not be suited for quantification. However, if no alternative peptides are available one might rather
+        quantify with a ragged end peptide then not at all. In this tutorial, you can leave this option unchecked.
+    </p>
+    <p>
+        <b>Exclude peptides containing</b>: This option allows you to discard a priori peptides that, based on sequence would undergo
+        secondary reactions. The residues “Cys, Met, His” are prone to modifications, such as oxidation. The option “NXT/NXS” is a glycosylation
+        motif. The option “RP/KP” describes Lysine or Arginine followed by Proline which sometimes can be cleaved by trypsin. In this tutorial, you
+        will not use any of these options.
+    </p>
+    <p>
+        <b>Auto-select all matching peptides</b>: When this option is activated peptides for target proteins are automatically selected from
+        a spectral library or from a background proteome file. If unchecked, you would need to make these choices manually. In this tutorial, you
+        should leave this option checked.
+    </p>
+    <p class="keep-next">
+        The <b>Peptide Settings - Filter</b> tab should look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Library</b> tab.</li>
+    </ul>
+    <h2>Peptide Settings – Library tab</h2>
+    <p>
+        In this tab you can insert or build spectral libraries containing MS2 spectra. Spectral libraries can be downloaded from public sources or
+        built within Skyline from your own data. Multiple libraries can be selected at the same time. Be aware that the order in the list matters: the
+        higher up in the list, the higher the priority in case there is an MS2 spectrum for the same peptide in more than one library.
+    </p>
+    <p>
+        In this tutorial, you will build a library from data obtained from a set of synthetic isotopically labelled peptides that were bought to match
+        each endogenous peptide of interest that will be monitored in the samples. These heavy peptides were analyzed in an LTQ Orbitrap Velos using a
+        CID method. To build the library you need the search engine output file and the raw data. In our case the search engine output file is in
+        pep.xml format and the raw data in the standard mzXML format.
+    </p>
+    <ul>
+        <li>Click the button <b>Build</b>.</li>
+        <li>In the <b>Name</b> field enter “heavy”.</li>
+        <li>Click the <b>Browse</b> button to specify the output path where your library should be saved.</li>
+        <li>Place it in the “PRM-Orbi/Heavy Library” folder.</li>
+        <li>Do not check the <b>Keep redundant library</b> option, as you want only the single best spectrum for every peptide.</li>
+        <li>Do not check <b>Include ambiguous matches</b> to avoid using multiple peptide assignments for a single spectrum if the search
+            software supports that type of assignment.</li>
+        <li>Leave the dropdown list <b>iRT standard peptides</b> blank as you are not going to use any iRT peptides in this tutorial.</li>
+        <li>Click the <b>Next</b> button.</li>
+        <li>Click the <b>Add Files</b> button to choose the “heavy-01.pep.xml” and “heavy-02.pep.xml” files, located in the PRM-Orbi/Heavy
+            Library folder and click <b>Open</b>.</li>
+        <li>Click one of the <b>Score Threshold</b> fields and enter “0.1” which in this case should give you below a 1% false discovery
+            rate. The score threshold for both files will change because they have the same score type.</li>
+        <li>Click the <b>Finish</b> button.</li>
+    </ul>
+    <p>
+        You will use a second library with shotgun data from the same samples that you will analyse using PRM. These data were acquired in an Orbitrap
+        Fusion Lumos using an HCD method. As the generation of this library takes longer than the previous one, you will upload an already generated
+        library file. In the <b>Library</b> tab do the following to add the second library:
+    </p>
+    <ul>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>In the <b>Name</b> field enter “shotgun”.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the path “PRM-Orbi/Shotgun Library” and select the “shotgun.blib” file.</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>Uncheck <b>Use explicit peak bounds</b>. (though there are none in this library)</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Click the Up button to promote the “shotgun” library to being first in the <b>Edit Libraries</b> form.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Check the checkboxes beside both libraries in the <b>Library</b> tab.</li>
+    </ul>
+    <p>
+        <b><span class="green">Tip!</span></b> You can visualize and browse all peptides of your library in the Spectral Library Explorer
+        under <br /><b>View</b> → <b>Spectral Libraries</b>.
+    </p>
+    <p>
+        <b><span class="green">Tip!</span></b> Skyline supports building libraries from many peptide spectrum matching pipeline outputs. The
+        list of supported files can be found online: <a href="https://skyline.ms/build-blib.url">https://skyline.ms/build-blib.url</a>
+    </p>
+    <p>
+        <b><span class="green">Tip!</span></b> In case you have more than one library, once you have a list of peptides uploaded, if both
+        libraries contain an MS2 spectrum, at the top of the MS/MS spectrum tab you can select from the drop-down menu, which library spectrum you
+        would like to see plotted.
+    </p>
+    <p>
+        Once the libraries are built, uploaded and activated, you can continue reviewing the other parameters in the <b>Library</b> tab:
+    </p>
+    <p>
+        <b>Pick peptide matching</b>: Select if peptides should be automatically selected according to the filter settings (defined in the
+        <b>Filter</b> tab) before or according to the library settings defined below. In this tutorial you will use all pre-selected
+        targeted peptides that appear in the library. You can leave the default setting (“Library”).
+    </p>
+    <p>
+        <b>Rank peptides by</b>: Here you can define a ranking of all peptides available for a given protein in the library based on peak
+        intensities, number of spectra for a given peptide, or score for spectrum quality. In this tutorial you should leave this option inactive.
+    </p>
+    <p>
+        <b>Limit peptides per protein</b>: Limits the number of automatically selected peptides per protein from the library. In this
+        tutorial you may leave this option blank.
+    </p>
+    <p class="keep-next">
+        The <b>Library</b> tab should look like this:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Modifications</b> tab.</li>
+    </ul>
+    <h2>Peptide Settings – Modifications tab</h2>
+    <p>
+        <b>Structural modifications</b>: Structural modifications concern chemical modifications of peptides. They can either be static
+        (always present) or variable (sometimes present, sometimes not). By default “Carbamidomethyl (C)” is checked, which comes from the reduction
+        and alkylation step during sample preparation to avoid formation of disulphide bonds between cysteine residues. Keep this modification.
+    </p>
+    <p>
+        <b>Max variable mods</b> and <b>Max neutral losses</b>: Select the maximal number of variable modifications and neutral
+        losses according to your project. Leave the default setting (3 variable modifications and 1 neutral loss).
+    </p>
+    <p>
+        <b>Isotope label type</b>: Here you can define the isotope label type you plan to work with. For this tutorial leave the default
+        “heavy” as the label type.
+    </p>
+    <p>
+        <b>Isotope modifications</b>: Here you can define the chemical composition of your isotopic modifications. To select the isotopic
+        modifications:
+    </p>
+    <ul>
+        <li>Click the <b>Edit List</b> button and then the <b>Add</b> button.</li>
+        <li>From the <b>Name</b> dropdown list, select the following isotopic moditications for this case study (one-by-one) and click the
+            <b>OK</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Modifications</b> button.</li>
+        <li>Check the checkboxes for the newly added modifications<br />“Label:13C(6)15N(2) (C-term K)” and “Label:13C(6)15N(4) (C-term R)”</li>
+    </ul>
+    <p>
+        <b>Internal standard type</b>: Define which labelling state should be your internal standard. In this tutorial, you will use
+        spiked-in heavy reference peptides. So, you can keep the default setting “heavy”.
+    </p>
+    <p class="keep-next">
+        The <b>Modifications</b> tab should now look like this:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you have learned.
+    </p>
+    <h1>References</h1>
+    <p class="bibliography">
+        1. Stacy D. Sherrod <i>et al</i>. Label-Free Quantitation of Protein Modifications by Pseudo-Selected Reaction
+        Monitoring with Internal Reference Peptides. <i>J. Proteome Res. (submitted)</i> 
+    </p>
+    <p class="bibliography">
+        2. Schilling, B. <i>et al</i>. Platform Independent and Label-Free Quantitation of Proteomic Data Using MS1 Extracted
+        Ion Chromatograms in Skyline. Application to Protein Acetylation and Phosphorylation. <i>Mol Cell Proteomics</i>
+        (2012).doi:10.1074/mcp.M112.017707
+    </p>
+</body>
+
+</html>

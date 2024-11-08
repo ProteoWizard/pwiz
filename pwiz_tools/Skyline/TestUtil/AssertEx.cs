@@ -36,6 +36,8 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Schemas;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -49,14 +51,14 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public static class AssertEx
     {
-        public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2)
+        public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2, string message = null)
         {
             AreEqual(l1.Count, l2.Count);
             for (int i = 0; i < l1.Count; i++)
             {
                 if (!Equals(l1[i], l2[i]))
                 {
-                    AreEqual(l1[i], l2[i]);  // For setting breakpoint
+                    AreEqual(l1[i], l2[i], message);  // For setting breakpoint
                 }
             }
         }
@@ -833,7 +835,8 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static void NoDiff(string target, string actual, string helpMsg=null, 
-            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            Dictionary<int, double> columnTolerances = null, // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            bool ignorePathDifferences = false)
         {
             if (helpMsg == null)
                 helpMsg = String.Empty;
@@ -860,17 +863,104 @@ namespace pwiz.SkylineTestUtil
                     {
                         Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     }
+
+                    // Save original lines for report
+                    var expectedLine = lineTarget;
+                    var actualLine = lineActual;
+
+                    if (ignorePathDifferences)
+                    {
+                        RemovePathDifferences(ref lineTarget, ref lineActual);
+                    }
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
-                        Fail(helpMsg + string.Format(@"Diff found at line {0}:{3}{1}{3}>{3}{2}", count, lineTarget, lineActual, Environment.NewLine));
+                        int pos;
+                        for (pos = 0; pos < expectedLine?.Length && pos < actualLine?.Length && expectedLine[pos] == actualLine[pos];) {pos++;}
+                        Fail(helpMsg + $@" Diff found at line {count} position {pos}: expected{Environment.NewLine}{expectedLine}{Environment.NewLine}actual{Environment.NewLine}{actualLine}");
                     }
-                    lineEqualLast = lineTarget;
+                    lineEqualLast = expectedLine;
                     count++;
                 }
 
             }
         }
+
+        // Look for one or more filenames, see if they match when ignoring path, or when filenames are tempfiles
+        private static void RemovePathDifferences(ref string lineExpected, ref string lineActual)
+        {
+            if (string.Equals(lineExpected, lineActual))
+            {
+                return; // Identical
+            }
+
+            var splitChars = new[] { '\t', ';', ',' };
+
+            var colsActual = lineActual.Split(splitChars);
+            var colsExpected = lineExpected.Split(splitChars);
+            if (colsExpected.Length != colsActual.Length)
+            {
+                return; // No way we're cleaning this up to make a match
+            }
+
+            if (colsExpected.Length == 1 && lineActual.Contains(@"""")) // Is path embedded in a simple string?
+            {
+                // e.g. 'Import Molecule Search > Extract Chromatograms > Found results files : contains "C:\Users\bspratt\Downloads\Perftests\Label-free\Orbi3_SA_IP_pHis3_01.RAW"'
+                colsActual = lineActual.Split('\"');
+                colsExpected = lineExpected.Split('\"');
+                if (colsExpected.Length != colsActual.Length)
+                {
+                    return; // No way we're cleaning this up to make a match
+                }
+            }
+
+            for (var col = 0; col < colsActual.Length; col++)
+            {
+                var pathE = colsExpected[col];
+                var pathA = colsActual[col];
+                if (string.Equals(pathE, pathA))
+                {
+                    continue;
+                }
+
+                // Did column contain a filename?
+                var partsE = pathE.Trim().Split('"'); // e.g. 'value="c:\foo\bar.baz",' => {'value=', '"c:\foo\bar.baz"', ','}
+                var partsA = pathA.Trim().Split('"'); 
+                if (partsE.Length != partsA.Length)
+                {
+                    return; // No way we're cleaning this up to make a match
+                }
+
+                for (var p = 0; p < partsE.Length; p++)
+                {
+                    var partE = partsE[p];
+                    var partA = partsA[p];
+                    if (string.Equals(partE, partA))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var fileE = Path.GetFileName(partE);
+                        var fileA = Path.GetFileName(partA);
+                        var tmpExt = @".tmp";
+                        if (string.Equals(fileE, fileA) || // Same filename, different path
+                            (Path.GetExtension(fileE) == tmpExt) && Path.GetExtension(fileA) == tmpExt) // Tmp file names will always vary
+                        {
+                            var ignoredPath = @"<ignored_path_difference>";
+                            lineExpected = lineExpected.Replace(partE, ignoredPath);
+                            lineActual = lineActual.Replace(partA, ignoredPath);
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+            }
+        }
+
 
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
             Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
@@ -945,17 +1035,59 @@ namespace pwiz.SkylineTestUtil
                 name, count, lineEqualLast, lineNext, linesRemaining);
         }
 
-        public static void FileEquals(string path1, string path2, Dictionary<int, double> columnTolerances = null )
+        public static void FileEquals(string pathExpectedFile, string pathActualFile, Dictionary<int, double> columnTolerances = null, bool ignorePathDifferences = false )
         {
-            string file1 = File.ReadAllText(path1);
-            string file2 = File.ReadAllText(path2);
-            NoDiff(file1, file2, null, columnTolerances);
+            string file1 = File.ReadAllText(pathExpectedFile);
+            string file2 = File.ReadAllText(pathActualFile);
+            NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
+        }
+
+        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5)
+        {
+            Library expectedLoaded = null, actualLoaded = null;
+            try
+            {
+                FileExists(libraryExpected.FilePath);
+                FileExists(libraryActual.FilePath);
+
+                var monitor = new DefaultFileLoadMonitor(new SilentProgressMonitor());
+                expectedLoaded = libraryExpected.LoadLibrary(monitor);
+                actualLoaded = libraryActual.LoadLibrary(monitor);
+                
+                Assert.AreEqual(expectedLoaded.SpectrumCount, actualLoaded.SpectrumCount, "spectrum counts not equal");
+
+                var expectedList = expectedLoaded.Keys.ToList();
+                var actualList = actualLoaded.Keys.ToList();
+
+                for (int i=0; i < expectedList.Count; ++i)
+                {
+                    var expected = expectedList[i];
+                    var actual = actualList[i];
+                    Assert.AreEqual(expected, actual, "spectrum library keys not equal");
+
+                    var expectedSpectra = expectedLoaded.GetSpectra(expected, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks;
+                    var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
+                    Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
+                    for (int j = 0; j < expectedSpectrum.Length; ++j)
+                    {
+                        Assert.AreEqual(expectedSpectrum[j].Mz, actualSpectrum[j].Mz, mzTolerance, "peak m/z delta exceeded tolerance");
+                        Assert.AreEqual(expectedSpectrum[j].Intensity, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");
+                    }
+                }
+            }
+            finally
+            {
+                expectedLoaded?.ReadStream.CloseStream();
+                actualLoaded?.ReadStream.CloseStream();
+            }
         }
 
         /// <summary>
         /// Compare two DSV files, accounting for possible L10N differences
         /// </summary>
-        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders)
+        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders, int[] ignoredColumns = null)
         {
             var lines1 = File.ReadAllLines(path1);
             var lines2 = File.ReadAllLines(path2);
@@ -965,19 +1097,41 @@ namespace pwiz.SkylineTestUtil
                 return;
             }
 
+            ignoredColumns ??= new int[] { };
+
             var sep1 = DetermineDsvDelimiter(lines1, out var colCount1);
             var sep2 = DetermineDsvDelimiter(lines2, out var colCount2);
+            var errors = new List<string>();
             for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
             {
                 var cols1 = lines1[lineNum].ParseDsvFields(sep1);
                 var cols2 = lines2[lineNum].ParseDsvFields(sep2);
-                AreEqual(cols1.Length, cols2.Length, $"Expected same column count at line {lineNum}");
+
+                colCount1 = cols1.Length;
+                colCount2 = cols2.Length;
+
+                // If a rightmost column is missing don't worry if it's been declared as ignorable
+                while (ignoredColumns.Contains(colCount1 - 1))
+                {
+                    colCount1--;
+                }
+                while (ignoredColumns.Contains(colCount2 - 1))
+                {
+                    colCount2--;
+                }
+
+                AreEqual(colCount1, colCount2, $"Expected same column count at line {lineNum}");
+
                 if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
                 {
                     continue; // Don't expect localized headers to match 
                 }
-                for (var colNum = 0; colNum < cols1.Length; colNum++)
+                for (var colNum = 0; colNum < colCount1; colNum++)
                 {
+                    if (ignoredColumns.Contains(colNum))
+                    {
+                        continue;
+                    }
                     var same = Equals(cols1[colNum], cols2[colNum]);
 
                     if (!same)
@@ -993,10 +1147,11 @@ namespace pwiz.SkylineTestUtil
 
                     if (!same)
                     {
-                        AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
+                        errors.Add($"Difference at row {lineNum} column {colNum}: expected \"{cols1[colNum]}\" got \"{cols2[colNum]}\"");
                     }
                 }
             }
+            AreEqual(0, errors.Count, string.Join("\n", errors));
         }
 
         /// <summary>
@@ -1053,34 +1208,38 @@ namespace pwiz.SkylineTestUtil
             FieldsEqual(target, actual, countFields, null, allowForNumericPrecisionDifferences);
         }
 
-        public static void FieldsEqual(string target, string actual, double tolerance, int? countFields=null)
+        public static void FieldsEqual(string target, string actual, double tolerance, int? expectedFieldCount=null)
         {
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
-                FieldsEqual(readerTarget, readerActual, countFields, null, false, 0, tolerance);
+                FieldsEqual(readerTarget, readerActual, expectedFieldCount, null, false, 0, tolerance);
             }
         }
 
-        public static void FieldsEqual(string target, string actual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false)
+        public static void FieldsEqual(string target, string actual, int? expectedFieldCount, int? exceptIndex, bool allowForTinyNumericDifferences = false, string message = null)
         {
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
-                FieldsEqual(readerTarget, readerActual, countFields, exceptIndex, allowForTinyNumericDifferences);
+                FieldsEqual(readerTarget, readerActual, expectedFieldCount, exceptIndex, allowForTinyNumericDifferences, 0, null, 0, message);
             }
         }
 
-        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int? countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0, double? tolerance=null)
+        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int? expectedFieldCount, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0, double? tolerance=null, int skipLines = 0, string message = null)
         {
-
-            int count = 1;
+            message = message == null ? string.Empty : message + " ";
+            var count = 0;
             while (true)
             {
                 string lineTarget = readerTarget.ReadLine();
                 string lineActual = readerActual.ReadLine();
                 if (lineTarget == null && lineActual == null)
                     return;
+                if (count++ < skipLines)
+                {
+                    continue; // OK to ignore this line
+                }
                 if (lineTarget == null)
                 {
                     while ((lineActual != null) && (allowedExtraLinesInActual > 0))  // As in test mode where we add a special non-proteomic molecule node to every document
@@ -1089,51 +1248,93 @@ namespace pwiz.SkylineTestUtil
                         allowedExtraLinesInActual--;
                     }
                     if (lineActual != null)
-                        Fail("Target stops at line {0}.", count);
+                        Fail($"{message}Target stops at line {count}.");
                 }
                 else if (lineActual == null)
                 {
-                    Fail("Actual stops at line {0}.", count);
+                    Fail($"{message}Actual stops at line {count}.");
                 }
                 else if (lineTarget != lineActual)
                 {
                     var culture = CultureInfo.InvariantCulture;
-                        // for the moment at least, we are hardcoded for commas in CSV
-                    string[] fieldsTarget = lineTarget.Split(new[] {','});
-                    string[] fieldsActual = lineActual.Split(new[] {','});
-                    if (!countFields.HasValue)
-                    {
-                        countFields = Math.Max(fieldsTarget.Length, fieldsActual.Length);
-                    }
+                    char sep;
+                    if (lineTarget.Contains("\t"))
+                        sep = '\t';
+                    else if (lineTarget.Contains(","))
+                        sep = ',';
+                    else
+                        sep = ' ';
+                    string[] fieldsTarget = lineTarget.Split(new[] {sep});
+                    string[] fieldsActual = lineActual.Split(new[] {sep});
+                    var countFields = expectedFieldCount ?? Math.Max(fieldsTarget.Length, fieldsActual.Length);
                     if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
-                        Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                    {
+                        Fail($"{message}Diff found at line {count}:\r\n{lineTarget}\r\n>\r\n{lineActual}");
+                    }
                     for (int i = 0; i < countFields; i++)
                     {
                         if (exceptIndex.HasValue && exceptIndex.Value == i)
-                            continue;
+                            continue; // Just ignore this column
 
-                        if (!Equals(fieldsTarget[i], fieldsActual[i]))
+                        var targetField = fieldsTarget[i].ToUpper(CultureInfo.InvariantCulture);
+                        var actualField = fieldsActual[i].ToUpper(CultureInfo.InvariantCulture);
+                        if (!Equals(targetField, actualField))
                         {
-                            // test numerics with the precision presented in the output text
-                            double dTarget, dActual;
-                            if ((allowForTinyNumericDifferences || tolerance.HasValue) &&
-                                Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
-                                Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
+                            if (targetField.Contains(@"E") && actualField.Contains(@"E"))
                             {
-                                // how much of that was decimal places?
-                                var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int) dTarget).Length;
-                                var precActual = fieldsActual[i].Length - String.Format("{0}.", (int) dActual).Length;
-                                var prec = Math.Max(Math.Min(precTarget, precActual), 0);
-                                double toler = tolerance ?? .5*((prec == 0) ? 0 : Math.Pow(10, -prec));
-                                    // so .001 is seen as close enough to .0009
-                                if (Math.Abs(dTarget - dActual) <= toler)
-                                    continue;
+                                // Same exponent? Then only compare the mantissa
+                                var targetFieldParts = targetField.Split('E');
+                                var actualFieldParts = actualField.Split('E');
+                                if (Equals(targetFieldParts[1], actualFieldParts[1]))
+                                {
+                                    targetField = targetFieldParts[0];
+                                    actualField = actualFieldParts[0];
+                                }
                             }
-                            Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                            // Test numerics with the precision presented in the output text
+                            double dTarget, dActual;
+                            if (Double.TryParse(targetField, NumberStyles.Float, culture, out dTarget) &&
+                                Double.TryParse(actualField, NumberStyles.Float, culture, out dActual))
+                            {
+                                if (tolerance.HasValue)
+                                {
+                                    if (Math.Abs(dTarget - dActual) <= tolerance)
+                                        continue;
+                                }
+                                if (allowForTinyNumericDifferences)
+                                {
+                                    // how much of that was decimal places?
+                                    var precTarget = targetField.Length - String.Format("{0}.", (int)dTarget).Length;
+                                    var precActual = actualField.Length - String.Format("{0}.", (int)dActual).Length;
+                                    if (precTarget == -1 && precActual == -1)
+                                    {
+                                        // Integers - allow for rounding errors on larger values
+                                        var diff = Math.Abs(dTarget - dActual);
+                                        var max = Math.Max(Math.Abs(dTarget), Math.Abs(dActual));
+                                        if (max != 0 && diff <= 1)
+                                        {
+                                            var ratio = diff / max;
+                                            if (ratio <= .001)
+                                            {
+                                                continue; // e.g. 5432 vs 5433 but not 1 vs 2
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var prec = Math.Max(Math.Min(precTarget, precActual), 0);
+                                        var mult = (precActual == precTarget) ? 1.01 : 0.501; // Allow for double precision calculation cruft e.g 34995.22-34995.21 = 0.010000000002037268
+                                        double toler = mult * ((prec == 0) ? 0 : Math.Pow(10, -prec));
+                                        // so .001 is seen as close enough to .0009, or 12.3 same as 12.4 (could be serializations of very similar numbers that rounded differently)
+                                        if (Math.Abs(dTarget - dActual) <= toler)
+                                            continue;
+                                    }
+                                }
+                            }
+                            Fail($"{message}Diff found at line {count}:\r\n{lineTarget}\r\n>\r\n{lineActual}");
                         }
                     }
                 }
-                count++;
             }
         }
 
@@ -1563,6 +1764,41 @@ namespace pwiz.SkylineTestUtil
                         AreEqual(transition.Results, convertedTransition.Results, "results mismatch transition as small molecule");
                 }
                 IsFalse(convertedTransitionIterator.MoveNext());
+            }
+        }
+
+        /// <summary>
+        /// Verifies that a Comparer has the reflexive, symmetric and transitive properties when
+        /// applied to all combinations of the elements provided.
+        /// </summary>
+        public static void ComparerWellBehaved<T>(IComparer<T> comparer, IEnumerable<T> items)
+        {
+            var itemList = items.ToList();
+            for (int i = 0; i < itemList.Count; i++)
+            {
+                var itemI = itemList[i];
+                for (int j = 0; j < itemList.Count; j++)
+                {
+                    var itemJ = itemList[j];
+                    var compareIJ = Math.Sign(comparer.Compare(itemI, itemJ));
+                    var compareJI = Math.Sign(comparer.Compare(itemJ, itemI));
+                    Assert.AreEqual(compareIJ, -compareJI, "Compare of {0} with {1} should be opposite of {1} with {0}",
+                        itemI, itemJ);
+                    if (compareIJ <= 0)
+                    {
+                        for (int k = 0; k < itemList.Count; k++)
+                        {
+                            var itemK = itemList[k];
+                            var compareJK = Math.Sign(comparer.Compare(itemJ, itemK));
+                            if (compareJK <= 0)
+                            {
+                                Assert.AreNotEqual(1, Math.Sign(comparer.Compare(itemI, itemK)),
+                                    "Compare of {0} with {2} should not be positive because {0} < {1} and {1} < {2}",
+                                    itemI, itemJ, itemK);
+                            }
+                        }
+                    }
+                }
             }
         }
     }

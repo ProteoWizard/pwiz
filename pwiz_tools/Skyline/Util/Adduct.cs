@@ -70,12 +70,11 @@ namespace pwiz.Skyline.Util
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
         private string Description { get; set; } // The text description (will be empty for protonation, we just use charge)
-        private ParsedMolecule IsotopeLabels { get; set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
-        private TypedMass AverageMassAdduct { get; set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
-        private TypedMass MonoMassAdduct { get; set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass AverageMassAdduct { get; private set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass MonoMassAdduct { get; private set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
         private int MassMultiplier { get; set; } // Returns, for example, the 2 in "[2M+Na]", which means the ion is two molecules + the adduct mass. 
-        private TypedMass IsotopesIncrementalAverageMass { get; set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
-        private TypedMass IsotopesIncrementalMonoMass { get; set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
+        public TypedMass IsotopesIncrementalAverageMass { get; private set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
+        public TypedMass IsotopesIncrementalMonoMass { get; private set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
 
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
@@ -517,7 +516,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
+            AdductCharge = declaredCharge ?? calculatedCharge ?? 0; // If user supplied a charge (e.g. [M+2CH3+Cl]+) believe them even if our calculation/guess disagrees
             if (!composition.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidDataException(
@@ -548,14 +547,26 @@ namespace pwiz.Skyline.Util
             }
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
-                throw new InvalidDataException(
-                    string.Format(
-                        UtilResources
-                            .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
-                        input, declaredCharge.Value, calculatedCharge));
+                // Only complain if this is an obvious error, like "[M+H]-"
+                foreach (var adducts in new[] { COMMON_PROTONATED_ADDUCTS, COMMON_SMALL_MOL_ADDUCTS})
+                {
+                    foreach (var adduct in adducts)
+                    {
+                        if (Equals(Composition, adduct.Composition))
+                        {
+                            throw new InvalidDataException(
+                                string.Format(
+                                    UtilResources
+                                        .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
+                                    input, declaredCharge.Value, calculatedCharge));
+                        }
+                    }
+                }
             }
         }
         public Adduct Unlabeled { get; private set; } // Version of this adduct without any isotope labels
+
+        public ParsedMolecule IsotopeLabels { get; private set; } // Isotope information - the "3Cl37" in  4M3Cl37+2H or "1.23" in 2M(1.23)+Na
 
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
@@ -1160,7 +1171,8 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.F, -1},
                 {@"CH3COO", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
-                {@"NH4", 1}
+                {@"NH4", 1},
+                {@"CH3", 1} // Methyl
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
@@ -1356,43 +1368,41 @@ namespace pwiz.Skyline.Util
 
             var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
-            if (!molecule.IsMassOnly)
+            // Deal with any mass multiplier (the 2 in "[2M+Na]")
+            if (MassMultiplier != 1)
             {
-                // Deal with any mass multiplier (the 2 in "[2M+Na]")
-                if (MassMultiplier != 1)
+                foreach (var element in resultDict.Keys.ToArray())
                 {
-                    foreach (var element in resultDict.Keys.ToArray())
+                    resultDict[element] *= MassMultiplier;
+                }
+            }
+
+            // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
+            foreach (var pair in Composition)
+            {
+                if (resultDict.TryGetValue(pair.Key, out var count))
+                {
+                    count += pair.Value;
+                    if (count == 0)
                     {
-                        resultDict[element] *= MassMultiplier;
+                        resultDict.Remove(pair.Key);
+                    }
+                    else
+                    {
+                        resultDict[pair.Key] = count;
                     }
                 }
-
-                // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
-                foreach (var pair in Composition)
+                else if (pair.Value != 0)
                 {
-                    if (resultDict.TryGetValue(pair.Key, out var count))
-                    {
-                        count += pair.Value;
-                        if (count == 0)
-                        {
-                            resultDict.Remove(pair.Key);
-                        }
-                        else
-                        {
-                            resultDict[pair.Key] = count;
-                        }
-                    }
-                    else if (pair.Value != 0)
-                    {
-                        resultDict.Add(pair.Key, pair.Value);
-                        count = pair.Value;
-                    }
-                    if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
-                    {
-                        throw new InvalidDataException(
-                            string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
-                                this, pair.Key, molecule.ToString()));
-                    }
+                    resultDict.Add(pair.Key, pair.Value);
+                    count = pair.Value;
+                }
+                if (!molecule.IsMassOnly &&
+                    count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                            this, pair.Key, molecule.ToString()));
                 }
             }
 

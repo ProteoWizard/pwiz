@@ -114,7 +114,35 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private static void AddMod(UniModModificationData data)
         {
-            var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
+            bool isVariable = data.Structural; // Most structural modifications are variable by default
+            if (isVariable)
+            {
+                int[] alkylationIds = 
+                {
+                    4,  // Carbamidomethyl
+                    6,  // Carboxymethyl
+                    24, // Propionamide
+                    893,    // CarbamidomethylDTT
+                    894,    // CarboxymethylDTT
+                    1290,   // Dicarbamidomethyl
+                };
+                // Except Cysteine alkylation modifications
+                if (data.ID.HasValue && alkylationIds.Contains(data.ID.Value) && Equals(data.AAs, @"C"))
+                    isVariable = false;
+                // And loss-only modifications like Ammonia and Water Loss
+                if (data.Losses != null && data.Losses.Length > 0 && data.Formula == null)
+                    isVariable = false;
+                // And isobaric tagging modifications like TMT, iTRAQ, mTRAQ, ICAT (unclear this is the right default)
+                // Jimmy says many people search with the mods on variable to assess labeling efficiency
+                // But Philip thinks they are better treated as fixed modifications by default
+                // NOTE: TMT has variants like "shTMT" (super heavy), while the others have names that start with their monikers
+                if (data.Name.Contains(@"TMT") || data.Name.StartsWith(@"iTRAQ") ||
+                    data.Name.StartsWith(@"mTRAQ") || data.Name.StartsWith(@"ICAT"))
+                    isVariable = false;
+                // Asked Mascot Team. They said they have no default and require users to choose
+            }
+
+            var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, isVariable, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
                                        data.ShortName);
             if (data.ID.HasValue && data.ShortName != null)

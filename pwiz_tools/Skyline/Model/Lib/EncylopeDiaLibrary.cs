@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 5;
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
-        private ImmutableList<string> _sourceFiles;
+        private LibraryFiles _sourceFiles = LibraryFiles.EMPTY;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
         // List of entries which includes items which do not have a spectrum but which do have peak boundaries
         private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
@@ -158,62 +157,36 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                var detailsByFileName = new Dictionary<string, SpectrumSourceFileDetails>();
-
-                try
-                {
-                    lock (_pooledSqliteConnection)
-                    {
-                        using (var select = new SQLiteCommand(_pooledSqliteConnection.Connection))
-                        {
-                            // ReSharper disable LocalizableElement
-
-                            // Query for the source files detail information.
-                            select.CommandText = @"select one.SourceFile, BestSpectra, MatchedSpectra
-from (
-  select SourceFile, count(*) as MatchedSpectra
-  from entries as s
-  group by SourceFile) as one
-inner join (
-  select SourceFile, count(*) as BestSpectra
-  from entries as e
-  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq AND e.PrecursorCharge = PrecursorCharge)
-  group by SourceFile) as two
-on one.SourceFile = two.SourceFile";
-
-                            // ReSharper restore LocalizableElement
-                            using (SQLiteDataReader reader = select.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    string filename = reader.GetString(0);
-                                    var fileDetails = new SpectrumSourceFileDetails(filename);
-                                    fileDetails.ScoreThresholds.Add(ScoreType.GenericQValue, null);
-                                    fileDetails.BestSpectrum = Convert.ToInt32(reader.GetValue(1));
-                                    fileDetails.MatchedSpectrum = Convert.ToInt32(reader.GetValue(2));
-                                    detailsByFileName.Add(filename, fileDetails);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Do nothing more. Simply return any details collected or minimum information.
-                }
-
                 return new LibraryDetails
                 {
-                    DataFiles = _sourceFiles.Select(file =>
-                    {
-                        if (!detailsByFileName.TryGetValue(file, out var fileDetails))
-                        {
-                            fileDetails = new SpectrumSourceFileDetails(file);
-                            fileDetails.ScoreThresholds.Add(ScoreType.GenericQValue, null);
-                        }
-                        return fileDetails;
-                    })
+                    DataFiles = EnumerateSpectrumSourceFileDetails().ToList()
+                    // Consider: UniquePeptideCount, SpectrumCount
                 };
+            }
+        }
+
+        private IEnumerable<SpectrumSourceFileDetails> EnumerateSpectrumSourceFileDetails()
+        {
+            var bestSpectrumCounts = new int[LibraryFiles.Count];
+            var matchedSpectrumCounts = new int[LibraryFiles.Count];
+            foreach (var entry in _libraryEntries)
+            {
+                bestSpectrumCounts[entry.BestFileId]++;
+                foreach (var fileData in entry.FileDatas)
+                {
+                    matchedSpectrumCounts[fileData.Key]++;
+                }
+            }
+
+            for (int iFile = 0; iFile < LibraryFiles.Count; iFile++)
+            {
+                var details = new SpectrumSourceFileDetails(LibraryFiles[iFile])
+                {
+                    BestSpectrum = bestSpectrumCounts[iFile],
+                    MatchedSpectrum = matchedSpectrumCounts[iFile],
+                };
+                details.ScoreThresholds.Add(ScoreType.GenericQValue, null);
+                yield return details;
             }
         }
 
@@ -368,7 +341,7 @@ on one.SourceFile = two.SourceFile";
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
                 SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
-                _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
                 return true;
@@ -454,7 +427,7 @@ on one.SourceFile = two.SourceFile";
                         sourceFiles.Add(Encoding.UTF8.GetString(bytes));
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
-                    _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                    _sourceFiles = new LibraryFiles(sourceFiles);
                     List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
                     while (spectrumInfos.Count < spectrumInfoCount)
                     {
@@ -466,7 +439,7 @@ on one.SourceFile = two.SourceFile";
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(@"Exception loading cache: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }
@@ -664,7 +637,7 @@ on one.SourceFile = two.SourceFile";
         {
             get
             {
-                return new LibraryFiles{FilePaths = _sourceFiles};
+                return _sourceFiles;
             }
         }
 
@@ -699,6 +672,14 @@ on one.SourceFile = two.SourceFile";
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
+        }
+
+        public override bool HasExplicitBounds
+        {
+            get
+            {
+                return true;
+            }
         }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)

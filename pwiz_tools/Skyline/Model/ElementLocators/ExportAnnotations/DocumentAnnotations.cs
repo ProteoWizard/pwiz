@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -33,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
     /// <summary>
-    /// Class for importing and exporting all of the annotations in a Skyline document.
+    /// Class for importing and exporting all the annotations in a Skyline document.
     /// </summary>
     public class DocumentAnnotations
     {
@@ -104,11 +105,21 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             return value.ToString();
         }
 
-        public SrmDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
+        public ModifiedDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
         {
             using (var streamReader = new StreamReader(filename))
             {
-                return ReadAnnotationsFromTextReader(cancellationToken, streamReader);
+                var originalDocument = Document;
+                var modifiedDocument =
+                    new ModifiedDocument(ReadAnnotationsFromTextReader(cancellationToken, streamReader));
+                if (ReferenceEquals(originalDocument, modifiedDocument.Document))
+                {
+                    return null;
+                }
+
+                return modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                    new MessageInfo(MessageType.imported_annotations, modifiedDocument.Document.DocumentType,
+                        filename)));
             }
         }
 

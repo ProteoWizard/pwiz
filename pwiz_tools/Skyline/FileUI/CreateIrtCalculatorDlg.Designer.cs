@@ -214,10 +214,10 @@
             this.Controls.Add(this.textCalculatorName);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label2);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "CreateIrtCalculatorDlg";
+            this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -1,0 +1,1208 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Existing and Quantitative Experiments</h1>
+    <p>
+        This tutorial covers how to work with Selected Reaction Monitoring (SRM also referred to as Multiple Reaction Monitoring - MRM) data acquired
+        with transition lists that were not created with Skyline. It also introduces how Skyline can be used to work with quantitative experiments
+        that employ matching isotope labeled internal standard peptides.
+    </p>
+    <p>
+        In this tutorial, you will work with data as it was published with the introduction of the tool MRMer<sup>1</sup>, and also the data from an
+        inter-laboratory study by Addona and co-investigators<sup>2</sup>, hereafter referred to as Study 7, performed as part of the National Cancer
+        Institute supported Clinical Proteomics Technology Assessment for Cancer (CPTAC). Study 7 immediately preceded the introduction of Skyline as
+        the tool of choice for the large inter-laboratory studies of the CPTAC Verification Working Group. As such, its accumulated data files
+        provided the perfect test suite for ensuring Skyline could support the types of experiments being carried out by the Verification Working
+        Group.
+    </p>
+    <p>
+        Even if you lack transition lists created outside Skyline, however, you can still learn about the features Skyline offers for working with
+        LC-MRM acquisitions that use stable isotope labeled peptides as internal standards for analyte quantification. If you seek extremely high
+        confidence in your peak identifications and quantitative measurements, matching reference peptides and Skyline support for them can play a
+        critical role in helping you achieve your goals.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/ExistingQuant.zip">https://skyline.ms/tutorials/ExistingQuant.zip</a> 
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\ExistingQuant
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so: 
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+    </ul>
+    <ul class="keep-next">
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
+    </ul>
+    <p>
+        The document settings in this instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, you can choose the proteomics interface by doing the following:
+    </p>
+    <ul>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Proteomics interface</b> which looks like this: </li>
+    </ul>
+    <p>
+        <img src="../../shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in proteomics mode which is displayed by the protein icon <img src="../../shared/protein-icon.png" /> in the upper
+        right-hand corner of the Skyline window.
+    </p>
+    <p>
+        Before importing an existing transition list into this new document, you should give Skyline as much information as you have available about
+        the experimental context for which the transition list was designed and in which your data was collected. You will do this by adjusting the
+        settings values for the document before attempting to insert the transition list into it.
+    </p>
+    <h1>Preparing a Document to Accept a Transition List</h1>
+    <p>
+        This tutorial starts with a look at a data set provided with the MRM analysis software tool named MRMer<sup>1</sup>, pronounced murmur. MRMer
+        was an early predecessor to Skyline for viewing and integrating MRM chromatograms, and the data set was originally downloaded from its web
+        page in 2008. In the MRMer data set, all of the peptides are from yeast and have MS/MS spectra available in the spectral libraries provided by
+        the National Institute for Standards and Technology (NIST). This means it is fairly easy to give Skyline some very useful information about
+        the peptides monitored in this experiment by specifying a spectral library and a background proteome. How to create your own spectral
+        libraries and background proteome files is covered in detail in the <a href="http://skyline.ms/tutorial_method_edit.url">Targeted Method
+            Editing</a> tutorial. Here you will use existing files which have been reduced to the minimum information necessary to complete this
+        tutorial, in the interest of keeping the ZIP file download as fast as possible.
+    </p>
+    <p>
+        To set up the spectral library for the MRMer document, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click on the <b>Library</b> tab.</li>
+        <li>Click the <b>Edit List</b> button.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>Enter “Yeast_mini” in the <b>Name</b> field of the <b>Edit Library</b> form.</li>
+        <li>Click the <b>Browse</b> button.</li>
+        <li>Navigate to the MRMer subfolder under the ExistingQuant folder created earlier.</li>
+        <li>Select the file “Yeast_MRMer_mini.blib” which contains only spectra for the yeast peptides used in this study.</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Library</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Libraries</b> form.</li>
+        <li>Check the new “Yeast_mini” library appears in the <b>Libraries</b> list.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should now look something like:
+    </p>
+    <p>
+        <img src="s-1.png" />
+    </p>
+    <p>
+        To set up the background proteome for the MRMer document now, perform the following steps:
+    </p>
+    <ul>
+        <li>In the <b>Peptide Settings</b> form, click the <b>Digestion</b> tab.</li>
+        <li>From the <b>Background proteome</b> dropdown list, choose <b>&lt;Add…&gt;</b>.</li>
+        <li>Enter “Yeast_mini” in the <b>Name</b> field of the <b>Edit Background Proteome</b> form.</li>
+        <li>Click the <b>Open</b> button. </li>
+        <li>Navigate to the MRMer subfolder under the ExistingQuant folder created earlier.</li>
+        <li>Select the file “Yeast_MRMer_mini.protdb”.</li>
+        <li>Click the <b>Open</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Background Proteome</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peptide Settings</b> form should now look something like this:
+    </p>
+    <p>
+        <img src="s-2.png" />
+    </p>
+    <p>
+        Finally, before you can insert the transition list from the MRMer experiment into the current document, you will need to define the isotope
+        modifications for the peptides it contains. The MRMer experiment included light unlabeled peptides and matching heavy peptides with stable
+        isotope labeled amino acid residues (SILAC) labeling for Lysine and Arginine. If you inserted the MRMer transition list without first
+        specifying the correct isotope modifications, Skyline would fail to recognize the <i>m/z</i> values for the heavy peptides in the transition
+        list.
+    </p>
+    <p>
+        To specify the SILAC labeling in the Skyline document settings, perform the following steps:
+    </p>
+    <ul>
+        <li>Click on the <b>Modifications</b> tab.</li>
+        <li>Click the <b>Edit List</b> button beside the <b>Isotope modifications</b> list.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Isotope Modifications</b> form.</li>
+        <li>In the <b>Name</b> field of the <b>Edit Isotope Modification</b> form, enter “Label:13C(6)15N(2) (C-term K)”.</li>
+        <li>From the <b>Amino Acid</b> dropdown list, choose “K”.</li>
+        <li>From the <b>Terminus</b> dropdown list, choose “C”.</li>
+        <li>Check the <b>13C</b> and <b>15N</b> checkboxes to tell Skyline to use <sup>13</sup>C for all carbon atoms and
+            <sup>15</sup>N for all nitrogen atoms present in a Lysine molecule, for a total mass shift of 8 Daltons (6x <sup>13</sup>C + 2x
+            <sup>15</sup>N).</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-3.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button</li>
+    </ul>
+    <p>
+        Add a second isotope modification by doing the following:
+    </p>
+    <ul>
+        <li>Click the <b>Add</b> button on the <b>Edit Isotope Modifications</b> form.</li>
+        <li>From the <b>Name</b> dropdown list of the <b>Edit Isotope Modification</b> form, choose “Label:13C(6)15N(4) (C-term
+            R)”.</li>
+    </ul>
+    <p>
+        The <b>13C</b> and <b>15N</b> checkboxes are checked automatically to tell Skyline to use <sup>13</sup>C for all carbon
+        atoms and <sup>15</sup>N for all nitrogen atoms present in an Arginine molecule, for a total mass shift of 10 Daltons (6x <sup>13</sup>C + 4x
+        <sup>15</sup>N).
+    </p>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-4.png" />
+    </p>
+    <p>
+        Skyline automatically calculates both the monoisotopic and average masses, approximately 8 Daltons for Lysine (K) and 10 Daltons for Arginine
+        (R) that will result from using 13C and 15N in these amino acid residues.
+    </p>
+    <p>
+        To finish preparing to insert the transition list from the MRMer publication into the current document, perform the following steps:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modification</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modifications</b> form.</li>
+        <li>Check the check boxes in the <b>Isotope modifications</b> list for the “Label:13C(6)15N(2) (C-term K)” and
+            <b>“</b>Label:13C(6)15N(4) (C-term R)<b>”</b> modifications you just created.</li>
+        <li>Also make sure the checkbox in the <b>Structural modifications</b> list for “Carbamidomethyl (C)” is checked, as it should be
+            because you chose the default settings.</li>
+        <li>Click the <b>OK</b> button in the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <p>
+        You should see an empty spectrum chart appear on the right side of the Skyline Window. You are now ready to insert the MRMer transition list.
+    </p>
+    <h1>Inserting a Transition List with Associated Proteins</h1>
+    <p>
+        There are two ways you can insert a transition list into Skyline:
+    </p>
+    <ol>
+        <li>Insert into the form displayed by clicking the <b>Edit</b> menu, <b>Insert</b>, and then <b>Transition
+                List</b>.</li>
+        <li>Insert directly into the document by clicking the <b>Edit</b> menu, and then <b>Paste</b> (Ctrl-V).</li>
+    </ol>
+    <p>
+        For the MRMer data set, you will use the first method. For the Study 7 data set, you will use the second method. The first method, using the
+        <b>Insert</b> form, has the benefit of automatically associating peptides with the proteins that contain them, if your document
+        includes a background proteome. Currently this only works for peptides that appear in a single protein in the background proteome, but future
+        versions of Skyline will offer some choice of how to handle peptides appearing in multiple proteins. For this tutorial, the two peptides from
+        the MRMer transition list that appear in multiple proteins have been removed.
+    </p>
+    <p>
+        To add the transition list peptides to your current document, perform the following steps:
+    </p>
+    <ul>
+        <li>Use Microsoft Excel to open the file “silac_1_to_4.xls” in the MRMer subfolder under the ExistingQuant folder created for this tutorial.
+            This Excel file was created from the original “silac_1_to_4.transition.tsv” (tab separated value) file, from the MRMer download, for an
+            experiment involving a 1 to 4, light to heavy, ratio mix.</li>
+        <li>Make sure the page in the spreadsheet labeled “Fixed” on the left side of the horizontal scrollbar is active.</li>
+        <li>Select the cells in the first 3 columns – peptide sequence (column A), precursor ion <i>m/z</i> (column B), product/fragment ion
+            <i>m/z</i> (column C) <i>–</i> for all 296 rows.</li>
+        <li>Copy the cells (Ctrl-C).</li>
+        <li>Switch back to Skyline.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Insert</b>, and click <b>Transition List</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Insert Transition List</b> form appears:
+    </p>
+    <p>
+        <img src="s-5.png" />
+    </p>
+    <ul>
+        <li>Press Ctrl-V to paste the copied cells into the <b>Insert Transition List</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        This will bring up the <b>Import Transition List: Identify Columns</b> form, which should look like this:
+    </p>
+    <p>
+        <img src="s-6.png" />
+    </p>
+    <ul>
+        <li>Make sure the <b>Associate Proteins</b> checkbox is ticked.</li>
+    </ul>
+    <p>
+        This tells Skyline to create the Protein Name column by matching the peptide sequences to proteins found in the background proteome file.
+    </p>
+    <p>
+        Note that even though the data you copied did not have column headers, Skyline was able to infer the identities of the peptide sequence,
+        precursor <i>m/z</i> and product <i>m/z</i> columns. If you wanted to change those column identifications for some reason, each column has
+        a drop-down list provided for that purpose.
+    </p>
+    <p>
+        To insert these peptides into the Skyline document:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Press the Home key to scroll to the top of the new list of targets.</li>
+    </ul>
+    <p>
+        The main Skyline window should show a number of peptides grouped within their proteins. The peptide icons should contain 3 vertical lines and a
+        baseline (<img src="../../shared/peptide-icon.png" />), like a very small MS/MS spectrum, in the lower right corner (<img src="../../shared/peptide-with-spectrum-lines-icon.png" />). The presence of
+        this image indicates the peptide has an associated MS/MS library spectrum. The peptide label should highlight in blue the C-terminal Lysine or
+        Arginine, indicating the stable isotope labeled amino acid in the heavy, labeled form:
+    </p>
+    <p>
+        <img src="s-7.png" />
+    </p>
+    <p>
+        You can also see at the bottom right corner of the window, in the status bar, the indicator “1/296 tran”, confirming that all 296 transitions
+        from the MRMer transition list were added to the document. To the left, also in the status bar, you can see that the document contains 24
+        proteins, 44 peptides and 88 precursors, or 2 precursors per peptide.
+    </p>
+    <p>
+        To have a closer look at the precursors and transitions in the document, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Expand All</b>, and click <b>Precursors</b>.</li>
+    </ul>
+    <p>
+        Note: To see more of the <b>Library Match</b> graph: 
+    </p>
+    <ul>
+        <li>Click and drag the light gray bar between the view and the dark gray rectangle in the center. </li>
+    </ul>
+    <p>
+        Take some time to select individual peptides and transitions in the peptide view. Review the transitions, and how their product ion peaks are
+        ranked by intensity in the MS/MS library spectra. As you change selection in the peptide tree view, the MS/MS spectrum chart will update to
+        show the spectrum that matches the current peptide, and the peak matching the selected transition will be highlighted in red:
+    </p>
+    <p>
+        <img src="s-8.png" />
+    </p>
+    <p>
+        You will notice that not all of the peptides have the most abundant product ions chosen for transitions, like the one shown in the image above,
+        and not all of the spectra look as well matched either.
+    </p>
+    <p>
+        If you do not see the b-ions or the doubly charged fragment ions highlighted, you can have Skyline display them by making the following menu
+        selections:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Ion Types</b> and click <b>B</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Charges</b> and click <b>2</b>.</li>
+    </ul>
+    <p>
+        You may have noticed that Skyline shows the same spectrum for both the light and heavy precursors. This spectral library may contain only
+        spectra for the light precursor, but even if the library contains matches for both light and heavy, Skyline will use only one (by default the
+        standard) to avoid having to worry about different intensity rankings between two MS/MS spectra. If the library contains only the spectrum
+        matching the heavy, labeled form of the peptide, then Skyline will use that spectrum to rank transitions for both light and heavy precursors.
+    </p>
+    <h1>Importing Data</h1>
+    <p>
+        Of course, the most interesting reason to create a Skyline document like this from an existing transition list is to use Skyline to examine
+        data collected on a triple quadrupole MS instrument using the original transition list.
+    </p>
+    <table>
+        <tr>
+            <td>Note: Since this tutorial was first written it has become common to create extended transition lists, sometimes called Assay
+                Libraries, which can also be imported into Skyline in much the same way for use in analyzing data independent acquisition (DIA) runs.
+                This method is covered elsewhere.</td>
+        </tr>
+    </table>
+    <p>
+        To import the data supplied with the MRMer publication into the document you have created, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save As</b>.</li>
+        <li>Navigate to the MRMer subfolder under the ExistingQuant folder created earlier.</li>
+        <li>In the <b>File name</b> field, enter “MRMer”.</li>
+        <li>Click the <b>Save</b> button.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button on the <b>Import Results</b> form.</li>
+        <li>Select the “silac_1_to_4.mzXML” file in the file list. The original raw file (not available), from a Waters Quattro Premier, was converted
+            to mzXML, because MRMer lacked the ability to read instrument native data file formats.</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        Skyline begins importing the file into its high-performance data file, where it will require much less disk space, and from which Skyline can
+        retrieve the information it needs very quickly. Progress is displayed in a graph and in the status bar at the bottom of the Skyline window.
+    </p>
+    <p>
+        Once the import completes, transitions that have measured signal between the integration boundaries, displayed as dashed black lines, will have
+        green dots added to the left of the transition icon. Transitions without a peak that can be included in the chosen peak group show a red dot.
+        Precursors and peptides containing transitions with only green circles also show green dots. This is very nice data. You will see mostly green
+        dots.
+    </p>
+    <p>
+        To see a transition with a red dot, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Find</b> (Ctrl-F).</li>
+        <li>Enter “ETFP” in the <b>Find what</b> field.</li>
+        <li>Click the <b>Find Next</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This should leave Skyline looking something like:
+    </p>
+    <p>
+        <img src="s-9.png" />
+    </p>
+    <p>
+        You can also change the proportions allocated to the various panes by clicking and dragging the light gray splitter bars between them.
+    </p>
+    <p>
+        If the chromatogram view is not as zoomed in as it appears in the image above, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>Best Peak</b> (F11).</li>
+    </ul>
+    <p>
+        To gain a better understanding of why the y3 ion for this peptide is not included in the chosen peak group: 
+    </p>
+    <ul>
+        <li>Click the “y3<b>”</b> ion under the “602.8266++” precursor. </li>
+    </ul>
+    <p class="keep-next">
+        This should change Skyline to look like:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        If you do not see chromatograms for all three transitions, as shown above, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>All</b> (shift-F10).</li>
+    </ul>
+    <p>
+        Now you can see that both y3 and y4 appear to have some interference causing them to display two peaks without complete separation. These are
+        clearly not caused by the same peptide, because they are not present for y7, and relative intensities between the two transitions differ
+        between the two peaks.
+    </p>
+    <p>
+        If you were still in the process of refining this method, you might try measuring y5 and y8 next time, as the MS/MS library spectrum indicates
+        they might be measurable. If, however, you really want at least an initial measurement from this data, you have two options:
+    </p>
+    <ol>
+        <li>Remove the transitions affected by interference from peak area calculations.</li>
+        <li>Adjust the peak boundaries to exclude the interfering region.</li>
+    </ol>
+    <p>
+        At the MacCoss lab we favor the first option, as the second will introduce unknown variance based on human judgment of the boundary of the
+        interference, which is not really known. In this tutorial, however, you will try both options. To give more space to the chromatogram plot, do
+        the following before starting the next section:
+    </p>
+    <ul>
+        <li>Click the pushpin <img src="../../shared/pushpin-icon.png" /> to the left of the X in the upper right corner of the <b>Library Match</b> title
+            bar.</li>
+    </ul>
+    <h2>Removing a Transition Peak with Interference</h2>
+    <p>
+        Fortunately, it is now possible to simply mark transitions as not quantitative without removing them entirely. This removes them from total
+        peak area calculations. To remove the y3 and y4 transitions from the light peak group, do the following:
+    </p>
+    <ul>
+        <li>Click y4 in the <b>Targets</b> view.</li>
+        <li>Ctrl-click y3 in the <b>Targets</b> view so that both are selected.</li>
+        <li>In the heavy precursor, Ctrl-click y3 and y4 so that all 4 transitions are selected.</li>
+        <li>Right-click the selection in the <b>Targets</b> view, and click <b>Quantitative</b> on the menu to uncheck it.</li>
+    </ul>
+    <p>
+        In the <b>Targets</b> view, you should see the y4 text “(ratio 0.37)” and y3 text “(ratio 0.59)” disappear from the end of the light
+        transitions, and the precursor ratio “(total ratio 0.31)” change to “(total ratio 0.24)”. The text for the non-quantitative transitions also
+        turned gray and in the chromatogram view, the lines for y4 and y3 became dashed.
+    </p>
+    <p>
+        The precursor total area ratio is a weighted mean, using the internal standard peak area as the weights, which simplifies algebraically to:
+    </p>
+    <p>
+        <img src="s-precursor-total-area-ratio-formula.png" />
+    </p>
+    <p>
+        Removing either a light or heavy peak removes the peak for its matching transition. Hence, when only one pair of transitions remain, as with y7
+        in this case, the ratio between the light and heavy peaks of that transition (here 0.24) will also be the total area ratio for the precursor.
+    </p>
+    <h2>Adjusting Peak Boundaries to Exclude Interference</h2>
+    <p>
+        To adjust the peak integration boundaries in an attempt to remove interference from the quantitative measurements, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Undo</b> (Ctrl-Z), to undo the quantitative property change you just made.</li>
+        <li>Select the peptide element “K.ETFPILVEE<b><span class="blue">K</span></b>.Q [196, 205]”.</li>
+        <li>Click the mouse below the x-axis just right of where the light (red) chromatogram reaches a minimum between the desired peak and the
+            interference peak (about 29.8 minutes), and drag to where the heavy (blue) encounters a second peak at its right edge (about 30.4
+            minutes).</li>
+    </ul>
+    <p class="keep-next">
+        This should leave Skyline showing something like:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        In this case, y4 and y3 show ratios of 0.31 and 0.35 respectively and y7 shows 0.23, yielding a weighted mean, precursor total ratio of 0.27.
+    </p>
+    <p>
+        The two total ratio values 0.24 and 0.27 produced by the two different techniques of dealing with interference are both very close to the true
+        ratio of 0.25 for this 1 to 4 (light to heavy) SILAC mix. The ratios of the peaks that showed interference (y3 and y4 for the EFP peptide),
+        however, are closer to 1:3 than 1:4, calling into question how well this manual adjustment technique is actually working, and highlighting the
+        reason we prefer removing such transitions entirely from quantitative calculations.
+    </p>
+    <p>
+        Further inspection of the data in this document will show you that most of the ratios for these peptides are extremely close to the expected
+        value of 0.25. Also where a precursor has 3 or more transitions, Skyline displays a dot-product (dotp) value between the peak areas and the
+        matching MS/MS peak intensities. Most of these are quite close to 1.0, for an exact match. You will also see a ratio dot-product (rdotp)
+        calculated between the peak areas of the light and heavy standard peaks, with most values showing either 1 or very close to it, indicating
+        highly similar relative intensities between light and heavy transition peak areas.
+    </p>
+    <p>
+        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (K.YVDPNVLPETESLALVID<b><span
+                class="blue">R</span></b>.L and K.FPEPGYLEGV<b><span class="blue">K</span></b>.T) have transitions with only blank
+        space where the others have green or red circles. This means the mzXML file you imported contained no data for these transitions. You can open
+        the mzXML file in a text editor and search for the precursor <i>m/z</i> values to verify yourself that the precursors lack the transitions
+        indicated by the original transition list. These types of anomalies are fairly typical of working with transition lists created either
+        manually or by tools receiving less use and testing than Skyline.
+    </p>
+    <h1>Preparing a Document for CPTAC Study 7</h1>
+    <p>
+        In this next section, you will be working with the inter-laboratory CPTAC Study 7<sup>2</sup>, completed by the Verification Working Group
+        before even the initial release of Skyline version 0.1 in 2008. Methods were created using spreadsheets and the resulting mass spectrometer
+        data was analyzed using vendor-specific software.
+    </p>
+    <h1>Preparing a Document to Accept the Study 7 Transition List</h1>
+    <p>
+        Again the first task is to create a Skyline document from an existing transition list. The first step in inserting any transition list into
+        Skyline is examining the transition list to understand what settings Skyline will require to recognize the <i>m/z</i> values in the list. To
+        begin this examination:
+    </p>
+    <ul>
+        <li>Use Microsoft Excel to open the file “Study7 transition list.xls” in the Study 7 subfolder of the ExistingQuant folder you created for
+            this tutorial.</li>
+    </ul>
+    <p class="keep-next">
+        You should be presented with a spreadsheet that looks something like this:
+    </p>
+    <p>
+        <img src="s-transition-list-spreadsheet.png" />
+    </p>
+    <p>
+        You can tell that this is a spreadsheet created manually by someone who put significant effort, using borders, merged cells and highlighting,
+        into making this set of transitions intelligible to other people, a job which Skyline now handles automatically.
+    </p>
+    <p>
+        Each peptide in this list has a light and heavy form. In the “Signature Peptide” column for each heavy peptide a single stable isotope labeled
+        amino acid residue is highlighted in red. Scroll down through the entire list, and you will see that there are 4 labeling schemes:
+    </p>
+    <ol>
+        <li>6 peptides have C-terminal Lysine labeled, with an 8 Dalton increase.</li>
+        <li>2 peptides have C-terminal Arginine labeled, with a 6 Dalton increase.</li>
+        <li>2 peptides have an internal Valine labeled, with a 5 Dalton increase.</li>
+        <li>1 peptide has an internal Leucine labeled, with a 6 Dalton increase.</li>
+    </ol>
+    <p>
+        This labeling scheme is impossible to represent with only global modifications, like the ones used for the MRMer document, because some of the
+        Lysine and Arginine labeled peptides also contain internal Valines and Leucines. The simplest strategy for dealing with this is to use global
+        modifications for C-terminal Lysine and Arginine again, as you did for the MRMer document, and then apply the Valine and Leucine modifications
+        manually.
+    </p>
+    <p>
+        To prepare a new document with appropriate modifications for the Study 7 transition list, perform the following steps:
+    </p>
+    <ul>
+        <li>On the Skyline toolbar, click the <b>Save</b> button to save changes to the MRMer document.</li>
+        <li>On the Skyline toolbar, click the <b>New Document</b> button on the far left.</li>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Modifications</b> tab (if necessary).</li>
+        <li>Click the <b>Edit List</b> button beside the <b>Isotope modifications</b> list.</li>
+        <li>Select the “Label:13C(6)15N(4) (C-term R)” modification, so that your new modification will be added below it.</li>
+        <li>Click the <b>Add</b> button on the <b>Edit Isotope Modifications</b> form.</li>
+        <li>Choose “Label:13C(6) (C-term R)” from the <b>Name</b> dropdown list of the <b>Edit Isotope Modification</b> form.</li>
+    </ul>
+    <p>
+        The <b>13C</b> checkbox is automatically checked, to tell Skyline to use <sup>13</sup>C for all carbon atoms present in an Arginine
+        molecule, for a total mass shift of 6 Daltons (6x <sup>13</sup>C).
+    </p>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        To finish preparing the document for the Study 7 transition list, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modification</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Edit Isotope Modifications</b> form.</li>
+        <li>Check the “Label:13C(6) (C-term R)” modification you just created.</li>
+        <li>Uncheck the “Label:13C(6)15N(4) (C-term R)” modification created for the MRMer document, if not unchecked.</li>
+        <li>Make sure the checkbox for the <b>“</b>Label:13C(6)15N(2) (C-term K)” modification created for the MRMer document is still
+            checked.</li>
+        <li>Make sure the checkbox in the <b>Structural modifications</b> list for <b>“</b>Carbamidomethyl (C)<b>”</b>
+            is still checked.</li>
+        <li>Click the <b>Library</b> tab.</li>
+        <li>Uncheck the “Yeast_mini” library used in the MRMer document, if not unchecked.</li>
+        <li>Click the <b>Digestion</b> tab.</li>
+        <li>In the <b>Background proteome</b> dropdown list, change to “None” from “Yeast_mini”.</li>
+        <li>Click the <b>OK</b> button in the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <h2>Pasting a Transition List into the Document </h2>
+    <p>
+        To begin the work of adding targets to Skyline:
+    </p>
+    <ul>
+        <li>Switch back to Excel.</li>
+        <li>Click on the “Raw” spreadsheet tab in line with the horizontal scrollbar at the bottom. </li>
+    </ul>
+    <p>
+        On this page, you will see the raw transition list, with 66 transitions, that was imported into the 4000 QTRAP instruments used in the study.
+        However, you should remember that Skyline still lacks the information in its settings to handle the heavy transitions for the Valine and
+        Leucine labeled peptides. To rectify this: 
+    </p>
+    <ul>
+        <li>Click on the “Simple” spreadsheet tab in line with the horizontal scrollbar at the bottom.</li>
+    </ul>
+    <p>
+        Excel will present a version of the same data found in the “Raw” tab with the 9 transitions removed for the 3 heavy precursors with labeled
+        Valine and Leucine. To add the remaining 57 transitions to your new Skyline document, perform the following steps:
+    </p>
+    <ul>
+        <li>Select all 6 columns and 57 rows on the “Simple” page of the Study 7 spreadsheet.</li>
+        <li>Copy the cells (Ctrl-C).</li>
+        <li>Switch back to Skyline.</li>
+        <li>On the <b>Edit</b> menu, click <b>Paste</b> (Ctrl-V).</li>
+    </ul>
+    <p class="keep-next">
+        This will bring up the <b>Import Transition List: Identify Columns</b> form, which should look like this:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should present the following error message:
+    </p>
+    <p>
+        <img src="s-14.png" /> 
+    </p>
+    <p>
+        Messages like this are not uncommon when working with transition lists created outside Skyline. Others are presented in the Skyline
+        instructional video on this subject (<a
+            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=video_0-5b">Video 3: Existing Experiments</a>). Some
+        of the most common reasons for seeing an error of this type are:
+    </p>
+    <ol>
+        <li>Forgetting to specify a necessary modification</li>
+        <li>Errors in the <i>m/z</i> values created manually or by other tools</li>
+        <li>Including <i>m/z</i> values outside the bounds of the current instrument settings</li>
+    </ol>
+    <p>
+        This last potential cause is the case for the current transition list, and you can see the message directs you to the
+        <b>Instrument</b> tab in the <b>Transition Settings</b> form.
+    </p>
+    <p>
+        To correct this issue, perform the following steps:
+    </p>
+    <ul>
+        <li>Click the <b>Cancel</b> button in the error message.</li>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Instrument</b> tab.</li>
+        <li>In the <b>Max m/z</b> field, enter “1800”.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>On the <b>Edit</b> menu, click <b>Paste</b> (Ctrl-V) again.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Collapse All</b> and click <b>Peptides</b> (Ctrl-shift-D).</li>
+    </ul>
+    <p class="keep-next">
+        This should leave the Skyline peptide view looking like:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <h2>Adjusting Modifications Manually</h2>
+    <p>
+        Eight peptides display bold, blue C-terminal K or R, but the other 3 lack a labeled amino acid. Those are the ones that need V or L explicitly
+        labeled, because these modifications cannot be achieved through the <b>Peptide Settings</b> - <b>Modifications</b> tab.
+    </p>
+    <p>
+        To specify an isotope modification on the V in the first peptide, perform the following steps:
+    </p>
+    <ul>
+        <li>Select the “AGL<b><u>C</u></b>QTFVYGG<b><u>C</u></b>R” peptide.</li>
+        <li>On the <b>Edit</b> menu, click <b>Modify Peptide</b>.</li>
+        <li>Select the blank entry from the <b>Isotope heavy</b> dropdown list for the “Label: 13C(6)N15(4) C-term R” to remove the stable
+            isotope label from this C-terminal Arginine.</li>
+        <li>Select <b>&lt;Add…&gt;</b> from the <b>Isotope heavy</b> dropdown list for the V residue in this
+            peptide.</li>
+        <li>In the <b>Name</b> dropdown list of the <b>Edit Isotope Modification</b> form, choose <b>“</b>Label:13C”.
+        </li>
+    </ul>
+    <p class="keep-next">
+        The <b>Edit Isotope Modification</b> form should look like:
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        This modification will apply a varying mass shift to any amino acid, depending on how many Carbon atoms it contains.
+    </p>
+    <ul class="keep-next">
+        <li>Click the <b>OK</b> button to return to the <b>Edit Modifications</b> form, which should now look like:</li>
+    </ul>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Edit Modifications</b> form to return to the document.</li>
+    </ul>
+    <p>
+        The Valine in the selected peptide will not yet be bold, because the peptide still does not contain a heavy precursor. To add the heavy
+        precursor now, do the following:
+    </p>
+    <ul>
+        <li>Hover the mouse over the peptide, and click the drop arrow that appears to its right.</li>
+        <li>Check the <b>”</b>747.3481++ (heavy)<b>”</b> checkbox in the pick list that appears.</li>
+        <li>Click the green check button in the top left corner (or press Enter).</li>
+    </ul>
+    <p class="keep-next">
+        The peptide view should now look like this:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        Now expand both the “744.8398++” precursor and the <b>“</b>747.3481++ (heavy)” precursor: 
+    </p>
+    <ul>
+        <li>Click on the “+” symbol to the left of the light and heavy precursor ion names. </li>
+    </ul>
+    <p>
+        Verify that the ions contain matching transitions, and they differ by 5 Daltons, as expected.
+    </p>
+    <p>
+        To create labeled precursors for the two remaining peptides, perform the following steps:
+    </p>
+    <ul>
+        <li>Right-click on the peptide “IVGGWE<b><u>C</u></b>EK”, and click <b>Modifiy</b>.</li>
+        <li>Select the blank entry from the <b>Isotope heavy</b> dropdown list for the “Label: 13C96)15N(2)(C-term K)” to remove the stable
+            isotope label from this C-terminal Lysine.</li>
+        <li>Select the “Label:13C” modification from the <b>Isotope heavy</b> dropdown list for the V residue in this peptide.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Hover the mouse over the peptide, and click the drop arrow that appears to its right.</li>
+        <li>Check the “541.7637++ (heavy)” checkbox in the pick list that appears.</li>
+        <li>Click the green check button (or press Enter).</li>
+        <li>Right-click on the peptide “YEVQGEVFTKPQLWP”, and click <b>Modify</b>.</li>
+        <li>Select the “Label:13C” modification from the <b>Isotope heavy</b> dropdown list for the L residue in this peptide.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>Hover the mouse over the peptide, and click the drop arrow that appears to its right.</li>
+        <li>Check the “913.9746++ (heavy)” checkbox in the pick list that appears.</li>
+        <li>Click the green check button (or press Enter).</li>
+    </ul>
+    <p>
+        You now have a Skyline document that accurately reflects the information in the original Study 7 transition list. 
+    </p>
+    <ul>
+        <li>Save this document to “Study 7.sky” in the Study 7 subfolder of the ExistingQuant folder.</li>
+    </ul>
+    <h2>Importing Data from a Multiple Sample WIFF File</h2>
+    <p>
+        Thanks to the support of five major triple quadrupole vendors (Agilent, SCIEX, Shimadzu, Thermo, and Waters), Skyline now installs with full
+        support for importing all of their formats without requiring any conversion. This means you can import data into this document from one of the
+        sites that used a SCIEX 4000 QTRAP to measure these transitions by performing the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button on the <b>Import Results</b> form to import single-injection replicates.</li>
+        <li>Select the file “CPTAC_7_3_080829.wiff” in the Study 7 folder.</li>
+        <li>Click the <b>Open</b> button in the <b>Import Results Files</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline may take a second or two to read the list of sample names in this multiple sample WIFF file, but then it should
+        present you with a form that looks like this:
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        For this tutorial, to reduce the time that will be required to complete the import:
+    </p>
+    <ul>
+        <li>Uncheck the entries containing the text “Blank” (1 sample), “QC” (4 samples) and “gradientwash” (4 samples).</li>
+        <li>Uncheck the “A2” (4 samples) and “A3” (4 samples) entries at the end also.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline should present the following message to allow you to remove the repeated prefix “7_3_” from all of the names it will
+        use to display information about these replicates:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Remove</b> button to accept this operation.</li>
+        <li>Click the <b>OK</b> button. </li>
+    </ul>
+    <p>
+        Skyline will begin importing the data from this WIFF file into its high-performance data file (Study 7.skyd), where it can be accessed much
+        faster, and where all imported data for a document is compressed into a single file for easy sharing.
+    </p>
+    <h2>Inspecting and Adjusting Peak Integration</h2>
+    <p>
+        While Skyline is importing the raw data, which may take several minutes to complete (though it takes only 11 seconds on a modern 4-core i7
+        processor), you can begin rearranging the graph views for optimal viewing. To show and reposition the peak area and retention time replicate
+        comparison views, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
+        <li>Click and drag the window to the bottom edge of the Skyline window to dock it there.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Click and drag the window to the right edge of the Skyline window to dock it there.</li>
+    </ul>
+    <ul class="keep-next">
+        <li>Adjust the view proportions to look something like the image below.</li>
+    </ul>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        The currently selected peptide “YEVQGEVFTKPQ<b><span class="blue">L</span></b>WP”, which was the peptide at the C-terminal end of CRP
+        protein, was actually somewhat problematic for the Verification Working Group in Study 7. As the data is imported, you can see that Skyline
+        still sometimes fails to integrate the peaks across its replicates consistently. Several retention time outliers remain, and even some of the
+        closer peaks over 25 minutes do not appear to be the same peptide, as the majority integrated at about 24.7 minutes. One clear problem is that
+        the heavy, spiked in form is never very intense relative to the light, endogenous form.
+    </p>
+    <p>
+        Note that you can hover over the bars in either of the replicate charts until a hand cursor appears, and then click to navigate to the
+        chromatogram for the corresponding replicate. You could use this to navigate to the chromatogram for each likely misidentified peak, and
+        correct it using the same technique you used in the MRMer document, clicking and dragging below the x-axis, but for this tutorial, you can
+        just delete this peptide, as the Verification Working Group did for their subsequent experiments.
+    </p>
+    <p>
+        You will see that Skyline has done a much better job of integrating the rest of the peptides in this document. With a dataset containing only
+        10 peptides, however, we highly recommend carefully reviewing each peptide and applying manual adjustment where something is obviously
+        incorrect.
+    </p>
+    <p>
+        First, in the image above, you can see that the precursor “541.7637++ (heavy)” for the peptide “I<b><span
+                class="blue">V</span></b>GGWE<b><u>C</u></b>EK” appears to be missing data. This is because the transition list
+        supplied to the mass spectrometer only specified one decimal place for precursor <i>m/z</i>, and it was rounded incorrectly to “541.7”. You
+        can check this on the “Raw” tab in the Excel spreadsheet.
+    </p>
+    <p>
+        To get the correctly calculated precursor in this document to match up with the measured data, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>In the <b>Method match tolerance</b> <b>m/z</b> field of the <b>Instrument</b> tab, enter “0.065”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This should cause a green circle to appear beside the “541.7637++ (heavy)” precursor.
+    </p>
+    <p>
+        Another integration issue is that many elements in the peptide view display orange and red circles, indicating transitions with no integrated
+        peak area. This is quite useful during certain phases of method refinement, as discussed in the <a
+            href="https://skyline.ms/tutorial_method_refine.url">Targeted Method Refinement</a> tutorial, but for a highly refined method like this,
+        it is usually not providing relevant information. For this reason, there is an option to integrate peak areas for all transitions between the
+        boundaries of the most intense peak and change the red dot indicator to show only when the area for a transition is zero.
+    </p>
+    <p>
+        To turn this on now, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Integrate All</b>.</li>
+    </ul>
+    <table>
+        <tr>
+            <td>Note: This setting no longer impacts quantitative calculations as it did until Skyline 4.2. It now only impacts the colored dots in
+                the Targets view and the “Peak Found Ratio” field in Skyline reports.</td>
+        </tr>
+    </table>
+    <p class="keep-next">
+        Skyline should now look something like:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <h2>Data Inspection with Peak Areas View</h2>
+    <p>
+        The <b>Peak Areas</b> view in the image above gives you a pretty clear idea of what the Study 7 experiment was. It was a calibration
+        curve with each concentration measured in technical quadruplicate. You can see that the heavy isotope labeled internal standard was injected
+        at a constant concentration, but that over 50+ injections its peak area is degrading slightly. Although in the <b>Retention
+            Times</b> view, you can see the peptide retention time was extremely stable, perfect for use in scheduled runs.
+    </p>
+    <p>
+        In this section, you will focus on the <b>Peak Areas</b> view and the many options it provides for inspecting multiple replicate data
+        sets. To give the <b>Peak Areas</b> view more room on your screen:
+    </p>
+    <ul>
+        <li>Double-click in the title bar labeled <b>Peak Areas</b>.</li>
+    </ul>
+    <p>
+        The <b>Peak Areas</b> view should pop out of the main Skyline window and float above it. Reposition it out of the way of the
+        <b>Targets</b> view.
+    </p>
+    <p>
+        To get started:
+    </p>
+    <ul>
+        <li>Select each of the 10 remaining peptides in this document. </li>
+    </ul>
+    <p>
+        You will see that the first peptide and the last 5 peptides present peak area charts similar to the one in the image above, while the 4
+        peptides between these appear much less precise.
+    </p>
+    <p>
+        One important reason for co-injecting the stable isotope labeled reference peptides is that they can be used to normalize the peak areas of the
+        endogenous unlabeled peptides, which should remove some of the run-to-run variability in those measurements. To see this visually in the
+        <b>Peak Areas</b> view, do the following:
+    </p>
+    <ul>
+        <li>Right-click in the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+        <li>Review again the 6 peptides that appeared well behaved.</li>
+    </ul>
+    <p class="keep-next">
+        You should now see a normalized chart like the one below with the peptide SSDLVALSGGHTFG<b><span
+                class="blue">K</span></b> selected:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <p>
+        You will see that, indeed, precision among the replicates for each concentration appears to have improved.
+    </p>
+    <p>
+        Review the other 4 peptides, and you will see that they still do not display the expected pattern.
+    </p>
+    <p>
+        Another interesting way of looking at this normalization is by each transition separately. In a well behaved peptide, the ratio of each light
+        transition to its heavy counterpart should be relatively similar. To review the ratios of the transitions separately, do the following:
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, choose <b>Expand All</b> and click <b>Peptides</b> (Ctrl-D).</li>
+        <li>Select the light precursor for each peptide.</li>
+    </ul>
+    <p class="keep-next">
+        For the 6 well behaved peptides, you should see a chart like the one below, with the ESDTSYVSL<b><span
+                class="blue">K</span></b> peptide light precursor 564.7746++ selected:
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <p>
+        As expected, the ratios are quite similar. The second and third peptides (INDISHTQSVSA<b><span class="blue">K</span></b> and
+        LFTGHPETLE<b><span class="blue">K</span></b>) are not quite as clean, but no real problems in transition ratios stick out. 
+    </p>
+    <ul>
+        <li>Select the fourth peptide (HGFLP<b><span class="blue">R</span></b>) light precursor 363.7059++.</li>
+    </ul>
+    <p class="keep-next">
+        This should cause the peak area graph to look like:
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        This seems to indicate some interference in the transition for y3, since its ratio, at low concentrations, is so different from the others for
+        this peptide.
+    </p>
+    <p>
+        The <b>Peak Areas</b> view provides another way of inspecting the relative intensities of the transitions within a precursor. You can
+        use it now to take another look at the HGFLP<b><span class="blue">R</span></b> peptide, by doing the following:
+    </p>
+    <ul>
+        <li>Right-click the <b>Peak Areas</b> chart, choose <b>Normalize To</b> and click <b>Total</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The chart should change to something like:
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <p>
+        Again, this chart clearly indicates interference on the transition for y3 (brown) that becomes less of a factor as the concentration of the
+        endogenous peptide increases, beyond the E replicates. If you move the peak area view to a location where you can also see the chromatogram
+        charts, you can click on the individual bars to see the interfering peak, which, in this case, is pretty clear, as in replicate E_03 below:
+    </p>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <p>
+        As with the case in the MRMer document, you might attempt to adjust the integration boundaries to exclude the interfering peak, but it is
+        probably a better idea to just delete the y3 transition altogether or make it non-quantitative, especially since it never provides a very
+        large contribution to the total peak area for the peptide. To gain some insight into the precision of these measurements, do the following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Peptide Comparison</b> (Ctrl-F7).</li>
+        <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Total</b> (Ctrl-F10).</li>
+        <li>Right-click on the <b>Peak Areas</b> chart and click <b>CV Values</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peak Areas</b> chart should have changed to look something like:
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        If the peptides do not appear in this order, do the following:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Order</b> and click <b>Document</b>.</li>
+    </ul>
+    <p>
+        Of course, for analyte precursors, shown in red, the coefficients of variance (CV) are very high and of no real interest, because the data set
+        contains 10 different concentrations points for the analyte peptides. The CV values for the heavy precursors, however, shown in blue, are
+        informative, since they were supposed to be injected into all samples at a constant concentration. Given what you have seen so far, it should
+        not be surprising that the 6 peptides identified as clearly displaying the expected concentration changes also have CV values around 10% or
+        lower, while the other 4 peptides have CV values closer to 40% or even %50.
+    </p>
+    <p>
+        With just a few simple operations in Skyline, you have learned things about this data set that required weeks and the involvement of
+        statisticians and programmers for the Verification Working Group to learn in the original study. If you have done the <a
+            href="https://skyline.ms/tutorial_method_refine.url">Targeted Method
+            Refinement</a> tutorial, you may now be imagining why you would want to run a refinement cycle involving a scheduled multi-replicate data
+        set to better understand how your targeted peptides respond in this setting before measuring them on high value samples.
+    </p>
+    <h2>Settings Concentration Values</h2>
+    <p>
+        It would be easier to interpret the data in the replicate graphs if the x-axis showed the concentration of the sample instead of the name of
+        the replicate.
+    </p>
+    <p>
+        Skyline has extensive built-in support for calibration curves which you can learn more about in the <a
+            href="https://skyline.ms/tutorial_absolute_quant.url">Absolute Quantification</a> tutorial. For now, you will simply use the built-in
+        <b>Analyte Concentration</b> annotation to give Skyline more information about the spiked in concentrations in these replicate runs.
+    </p>
+    <p>
+        The <b>Document Grid</b> can be used for this purpose. To show the <b>Analyte Concentration</b> report field do the
+        following:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Document Grid</b> (Alt-3).</li>
+        <li>On the <b>Reports</b> menu in the upper left corner of the <b>Document Grid</b>, click <b>Replicates</b>.
+        </li>
+    </ul>
+    <p>
+        The <b>Document Grid</b> should now be showing you the <b>Replicate</b>, <b>Sample Type</b>, and <b>Analyte
+            Concentration</b> fields in 40 rows, one for each sample. The concentrations at which the samples were prepared were:
+    </p>
+    <table>
+        <tr>
+            <td>Sample</td>
+            <td>A</td>
+            <td>B</td>
+            <td>C</td>
+            <td>D</td>
+            <td>E</td>
+            <td>F</td>
+            <td>G</td>
+            <td>H</td>
+            <td>I </td>
+            <td>J</td>
+        </tr>
+        <tr>
+            <td>Concentration (fmol/µL)</td>
+            <td>0</td>
+            <td>60</td>
+            <td>175</td>
+            <td>513</td>
+            <td>1500</td>
+            <td>2760</td>
+            <td>4980</td>
+            <td>9060</td>
+            <td>16500</td>
+            <td>30000</td>
+        </tr>
+    </table>
+    <ul>
+        <li>Use the above table to fill in the <b>Analyte Concentration</b> field for each replicate.</li>
+        <li>Set the <b>Sample Type</b> field to “Standard” for all replicates except the A replicates which can be set to “Blank”.</li>
+        <li>Tip: Once you have entered the first value which needs to be repeated, you can:<ul>
+                <li>Select it and the other cells you want to have the same value.</li>
+                <li>Right-click the selection, and click <b>Fill Down</b>.</li>
+            </ul>
+        </li>
+        <li>Tip: You can also use Excel to create the set of values you want and then copy-paste them to the Skyline <b>Document Grid</b>.
+        </li>
+    </ul>
+    <p class="keep-next">
+        When you are done entering these values, the <b>Document Grid</b> should look like this:
+    </p>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <p>
+        You can now use the newly entered concentrations in the <b>Peak Areas: Replicate Comparison</b> graph by doing the following:
+    </p>
+    <ul>
+        <li>Close the <b>Document Grid</b> by clicking the X in its upper-right corner.</li>
+        <li>Select the peptide “SSDLVALSGGHTFGK<b>”</b> in the <b>Targets</b> view.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Group By</b> and click <b>Concentration</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Peak Areas</b> graph should now look like:
+    </p>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <p>
+        This graph shows that the CVs are quite low until the very lowest concentrations. You can easily switch to a graph showing the mean ratios with
+        whiskers showing the standard deviations by doing the following:
+    </p>
+    <ul>
+        <li>Right-click the <b>Peak Areas</b> graph, click <b>CV Values</b> to uncheck the menu item.</li>
+    </ul>
+    <p class="keep-next">
+        This should change the graph to look like:
+    </p>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b>, to end this section. </li>
+    </ul>
+    <h2>Further Exploration</h2>
+    <p>
+        Eight different labs participated in Study 7, and each generated several data sets similar to the one you have been reviewing in this tutorial.
+        Not all of them, however, experienced the same issues in the same ways. The data from a different site and a different sub-section of this
+        study is also included with this tutorial. In this case, the document has already been created and the data set imported.
+    </p>
+    <p>
+        To open the document with Study 7-II data from site 52, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Open</b> (Ctrl-O).</li>
+        <li>Navigate to the Study II subfolder under the Study 7 subfolder of the ExistingQuant folder created at the beginning of this tutorial.</li>
+        <li>Select the “Study 7ii (site 52).sky” file.</li>
+        <li>Click the <b>Open</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The file will open quickly, and you will see that the CV values for the injected isotope labeled standards are different,
+        appearing as in the chart below:
+    </p>
+    <p>
+        <img src="s-32.png" />
+    </p>
+    <p>
+        The peptide INDISHTQSVSA<b><span class="blue">K</span></b> is the only one of the 4 from the first data set that still has a CV
+        around 40%, while the peptide LSEPAELTDAV<b><span class="blue">K</span></b> now has a CV around 25%. 
+    </p>
+    <ul>
+        <li>Select the peptide LSEPAELTDAV<b><span class="blue">K</span></b> in the <b>Targets</b> view.</li>
+    </ul>
+    <p>
+        If you look at the <b>Retention Times: Replicate Comparison</b> graph, however, you will see that Skyline has chosen the wrong peaks
+        for 3 of the “Blank” replicates (though this issue was fixed a long time ago – but after the document data was imported and saved):
+    </p>
+    <p>
+        <img src="s-33.png" />
+    </p>
+    <p>
+        If you correct these by clicking and dragging beneath the x-axis, the CV for the heavy precursor of LSEPAELTDAV<b><span
+                class="blue">K</span></b> drops to around 10% with most of the other peptides.
+    </p>
+    <p>
+        To review light:heavy ratios in this data set, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+    </ul>
+    <p>
+        You will find that the charts for all peptides, even INDISHTQSVSA<b><span class="blue">K</span></b> look quite nice in this data set.
+    </p>
+    <ul>
+        <li>Click the “INDISHTQSVSA<b><span class="blue">K</span></b>” peptide.</li>
+    </ul>
+    <p>
+        <img src="s-34.png" />
+    </p>
+    <p>
+        This seems to indicate that the internal standard is doing its job of compensating for variance in measurements of this peptide. To review the
+        un-normalized data:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Normalize To</b> and click <b>None</b>.</li>
+    </ul>
+    <p class="keep-next">
+        It would be hard to guess from this chart that the normalization would be so effective:
+    </p>
+    <p>
+        <img src="s-35.png" />
+    </p>
+    <p>
+        Finally, returning to the peptide in which we detected interference in the first data set:
+    </p>
+    <ul>
+        <li>Select the light precursor “363.7059++” of the peptide HGFLP<b><span class="blue">R</span></b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Transitions</b> and click <b>All</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+    </ul>
+    <p class="keep-next">
+        Here also, you will see clear evidence of interference on the y3 transition:
+    </p>
+    <p>
+        <img src="s-36.png" />
+    </p>
+    <p>
+        Unlike the first data set, however, it is much harder to see the interference by inspecting the individual chromatograms. In this case, due to
+        slightly different chromatography conditions, it is rarely possible to see evidence of two peaks in the integrated range for y3, as in
+        replicate E_03 shown below:
+    </p>
+    <p>
+        <img src="s-37.png" />
+    </p>
+    <p>
+        The NCI CPTAC Study 7 provided quite a lot more data, all of which is now public. Skyline can help you learn a lot about this data quickly,
+        even though the study was performed without its participants even knowing that Skyline would ever exist.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you have learned how easy Skyline makes it to approach data from experiments designed and executed without any consideration
+        for Skyline, whether those be your own experiments, before you started using Skyline, or experiments of others you wish to review or possibly
+        repeat. For both the published data sets of MRMer and NCI CPTAC Study 7, you quickly created a Skyline document from transition lists, even
+        when they contained relatively complicated modification schemes, including isotope labeled internal standards.
+    </p>
+    <p>
+        You have also learned a bit about the features Skyline provides for working quantitative targeted proteomics experiments involving isotope
+        labeled peptide precursors. From the ease with which isotope labeling modifications can be defined to the ease with which they can be
+        assigned, Skyline simplifies the work of creating instrument methods for these experiments. From accurate light:heavy peak area ratios to
+        powerful chart display options, Skyline gives you rich insight into data collected for these experiments.
+    </p>
+    <h1>Reference List</h1>
+    <p>
+         1. Martin,D.B. <i>et al</i>. MRMer, an interactive open source and cross-platform system for data extraction and visualization of multiple
+        reaction monitoring experiments. <i>Mol. Cell Proteomics</i>. <b>7</b>, 2270-2278 (2008).
+    </p>
+    <p>
+         2. Addona,T.A. <i>et al</i>. Multi-site assessment of the precision and reproducibility of multiple reaction monitoring-based measurements
+        of proteins in plasma. <i>Nat. Biotechnol</i>. <b>27</b>, 633-641 (2009).
+    </p>
+</body>
+
+</html>

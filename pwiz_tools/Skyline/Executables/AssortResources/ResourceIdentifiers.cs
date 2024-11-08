@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+#nullable enable
 
 namespace AssortResources
 {

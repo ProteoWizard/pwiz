@@ -289,7 +289,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             textPeptide.Focus();
             if (_selectedLibrary is MidasLibrary || MatchModifications())
-                UpdateListPeptide(0);
+                UpdateListPeptide(listPeptide.SelectedIndex);
         }
 
         private void ViewLibraryDlg_Activated(object sender, EventArgs e)
@@ -426,7 +426,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var message = TextUtil.LineSeparate(string.Format(Resources.ViewLibraryDlg_LoadLibrary_An_error_occurred_attempting_to_import_the__0__library, selectedLibrarySpec.Name),
                                         x.Message);
-                        MessageDlg.Show(this, message);
+                        MessageDlg.ShowWithException(this, message, x);
                     }
                 }
             }
@@ -2410,7 +2410,7 @@ namespace pwiz.Skyline.SettingsUI
         public int SelectedLibIndex
         {
             get { return comboLibrary.SelectedIndex; }
-            set { listPeptide.SelectedIndex = value; }
+            set { comboLibrary.SelectedIndex = value; }
         }
 
         public bool HasSelectedLibrary => _selectedLibrary != null;

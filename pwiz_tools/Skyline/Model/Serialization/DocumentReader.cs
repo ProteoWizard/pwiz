@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.Serialization
             public bool Quantitative { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
 
-        public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
             {
                 ReadXmlAttributes(reader, formatVersion, pre422ExplicitTransitionValues);
                 ReadXmlElements(reader, out declaredMz);
@@ -1023,7 +1023,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             Assume.IsTrue(DocumentMayContainMoleculesWithEmbeddedIons || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
             var peptide = isCustomMolecule ?
-                new Peptide(customMolecule, chromatogramTarget) :
+                new Peptide(customMolecule) :
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
             if (reader.IsEmptyElement)
                 reader.Read();
@@ -1084,7 +1084,8 @@ namespace pwiz.Skyline.Model.Serialization
                 .ChangeInternalStandardConcentration(internalStandardConcentration)
                 .ChangeNormalizationMethod(NormalizationMethod.FromName(normalizationMethod))
                 .ChangeAttributeGroupId(attributeGroupId)
-                .ChangeSurrogateCalibrationCurve(surrogateCalibrationCurve);
+                .ChangeSurrogateCalibrationCurve(surrogateCalibrationCurve)
+                .ChangeOriginalMoleculeTarget(chromatogramTarget);
 
             return peptideDocNode;
         }

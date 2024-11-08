@@ -85,6 +85,7 @@ static vector<string> supportedTypes = {
     "final_fragment.csv",
     ".proxl.xml",
     ".ssl",
+    ".hk.bs.kro", // Hardklor result file postprocessed by BullseyeSharp
     ".mlb",
     ".speclib",
     ".tsv",
@@ -118,7 +119,8 @@ void BlibBuilder::usage()
         "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n"
         "   -A                Output messages noting ambiguously matched spectra (spectra matched to multiple peptides)\n"
         "   -K                Keep ambiguously matched spectra\n"
-        "   -t                Only output score types (no library build).\n";
+        "   -t                Only output score types (no library build).\n"
+        "   -z <charges>      Only output PSMs with these charges, e.g. \"2,3\".\n";
 
     cerr << usage << endl;
     exit(1);
@@ -718,6 +720,17 @@ bool has_extension(string name, string ext)
 {
     return bal::iends_with(name, ext);
 }
+
+bool BlibBuilder::keepCharge(int z) const
+{
+    if (precursorCharges_.size() > 0)
+    {
+        // Ignore items with unwanted charges
+        return precursorCharges_.find(z) != precursorCharges_.end();
+    }
+    return true;
+}
+
 
 /**
  * Call super classe's insertPeaks with our level of compression

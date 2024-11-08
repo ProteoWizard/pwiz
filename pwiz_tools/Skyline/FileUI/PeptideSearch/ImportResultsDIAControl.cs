@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -97,17 +96,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
                 dlgOpen.Text = BrowseResultsDialogText;
-                // The dialog expects null to mean no directory was supplied, so don't assign an empty string.
-                string initialDir = path ?? Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
-                dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
-
-                // Use saved source type, if there is one.
-                string sourceType = Settings.Default.SrmResultsSourceType;
-                if (!string.IsNullOrEmpty(sourceType))
-                    dlgOpen.SourceTypeName = sourceType;
-
+                dlgOpen.RestoreState(DocumentContainer.DocumentFilePath, Settings.Default.OpenDataSourceState);
+                // Passed in path overrides stored or document path
+                if (path != null)
+                    dlgOpen.InitialDirectory = new MsDataFilePath(path);
                 if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                     return;
+
+                Settings.Default.OpenDataSourceState = dlgOpen.GetState(DocumentContainer.DocumentFilePath);
 
                 var dataSources = dlgOpen.DataSources;
 

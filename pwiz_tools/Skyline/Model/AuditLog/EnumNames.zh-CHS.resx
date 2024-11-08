@@ -372,6 +372,10 @@
   <data name="Workflow_prm" xml:space="preserve">
     <value>PRM（并行反应离子监测）</value>
   </data>
+  <data name="Workflow_feature_detection" xml:space="preserve">
+    <value>特征检测</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="TransitionLibraryPick_none" xml:space="preserve">
     <value>无</value>
   </data>
@@ -633,6 +637,9 @@
   <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
   </data>
+  <data name="SearchEngine_Hardklor" xml:space="preserve">
+    <value>Hardklör</value>
+  </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>已分配给肽段最多的蛋白质</value>
   </data>
@@ -713,5 +720,21 @@
   </data>
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>相对于轻的比率</value>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
+    <value>已分配给肽段最多的基因 </value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToFirstProtein" xml:space="preserve">
+    <value>已分配给第一个基因</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SharedPeptidesGene_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>基因之间重复</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SharedPeptidesGene_Removed" xml:space="preserve">
+    <value>已删除（肽段必须对单个基因唯一）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
 </root>
