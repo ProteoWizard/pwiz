@@ -19,6 +19,9 @@ namespace pwiz.SkylineTestUtil
     {
         private static readonly int SCREENSHOT_MAX_WIDTH = 800; //doubled as side by side
         private static readonly int SCREENSHOT_MAX_HEIGHT = 800;
+        private static readonly string LAST_SCREENSHOT_NEXT_TEXT = "last";
+        private static readonly Regex screenshotCountRegex = new Regex(@"(?<=s-)(\d+)");
+
         private readonly ScreenshotManager _screenshotManager;
         private readonly object _pauseLock;
         private readonly PauseAndContinueForm _pauseAndContinueForm;
@@ -30,7 +33,6 @@ namespace pwiz.SkylineTestUtil
         private bool _fullScreen;
         private Func<Bitmap, Bitmap> _processShot;
         private Bitmap _newScreenshot;
-
         public ScreenshotPreviewForm(PauseAndContinueForm pauseAndContinueForm, ScreenshotManager screenshotManager, object pauseLock)
         {
             InitializeComponent();
@@ -59,13 +61,27 @@ namespace pwiz.SkylineTestUtil
 
         private async void RefreshAndShow(bool delayForScreenshot)
         {
+            if (ShouldSkipScreenshot())
+            {
+                ResumeTestThread();
+                return;
+            }
+
             RefreshOldScreenshot();
             await RefreshNewScreenshot(delayForScreenshot);
-            UpdateDescriptionLabel();
             EnableControls();
+            UpdateDescriptionLabel();
+            IncrementNextScreenshotCounter();
 
             if (!Visible) Show();
             this.SetForegroundWindow();
+        }
+
+
+        private bool ShouldSkipScreenshot()
+        {
+            var nextScreenshotCounter = NextScreenshotCounter();
+            return nextScreenshotCounter > 0 && CurrentScreenshotCounter() != nextScreenshotCounter;
         }
 
         private void RefreshOldScreenshot()
@@ -78,7 +94,7 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-                var existingImageBytes = File.ReadAllBytes(_fileToSave);
+                var existingImageBytes = File.ReadAllBytes(file);
                 var existingImageMemoryStream = new MemoryStream(existingImageBytes);
                 return new Bitmap(existingImageMemoryStream);
             }
@@ -129,24 +145,50 @@ namespace pwiz.SkylineTestUtil
             return new Size((int)(startingSize.Width * scale), (int)(startingSize.Height * scale));
         }
 
+        private int NextScreenshotCounter()
+        {
+            return int.TryParse(nextScreenshotTextBox.Text, out int nextScreenshotCounter) ? nextScreenshotCounter : 0;
+        }
+
+        private int CurrentScreenshotCounter()
+        {
+            var match = screenshotCountRegex.Match(_fileToSave);
+            int screenshotCount = int.Parse(match.Value);
+            return screenshotCount;
+        }
+
         private void LoadUpcomingOldScreenshot()
         {
-            string pattern = @"(?<=s-)(\d+)";
-            var regex = new Regex(pattern);
-
-            var match = regex.Match(_fileToSave);
-            if (match.Success)
+            var nextScreenshotCounter = NextScreenshotCounter();
+            if (nextScreenshotCounter > 0)
             {
-                int screenshotCount = int.Parse(match.Value);
-                int incrementedCount = screenshotCount + 1;
-                string nextOldScreenshotFile = regex.Replace(_fileToSave, incrementedCount.ToString());
-
+                string nextOldScreenshotFile = FindScreenshotFileByCounter(nextScreenshotCounter);
                 if (File.Exists(nextOldScreenshotFile))
                 {
                     Bitmap nextOldScreenshot = LoadScreenshot(nextOldScreenshotFile);
                     SetPreviewImage(nextOldScreenshot, oldScreenshotPictureBox);
                 }
             }
+        }
+
+        private string FindScreenshotFileByCounter(int screenshotCounter)
+        {
+            return screenshotCountRegex.Replace(_fileToSave, screenshotCounter.ToString());
+        }
+
+        private void IncrementNextScreenshotCounter()
+        {
+            var nextScreenshotCounter = CurrentScreenshotCounter() + 1;
+            if (File.Exists(FindScreenshotFileByCounter(nextScreenshotCounter)))
+            {
+                nextScreenshotTextBox.Text = nextScreenshotCounter.ToString();
+            }
+            else
+            {
+                nextScreenshotTextBox.Text = LAST_SCREENSHOT_NEXT_TEXT;
+                nextScreenshotTextBox.Enabled = false;
+            }
+            
         }
 
         private bool IsSharingSkylineScreen()
@@ -179,6 +221,7 @@ namespace pwiz.SkylineTestUtil
             saveScreenshotAndContinueBtn.Enabled = false;
             refreshBtn.Enabled = false;
             autoSizeWindowCheckbox.Enabled = false;
+            nextScreenshotTextBox.Enabled = false;
         }
 
         private void EnableControls()
@@ -188,6 +231,7 @@ namespace pwiz.SkylineTestUtil
             saveScreenshotAndContinueBtn.Enabled = true;
             refreshBtn.Enabled = true;
             autoSizeWindowCheckbox.Enabled = true;
+            nextScreenshotTextBox.Enabled = true;
         }
         private void UpdateDescriptionLabel()
         {
@@ -205,6 +249,11 @@ namespace pwiz.SkylineTestUtil
 
         private void Continue()
         {
+            if (!ValidateSkipToScreenshotCounter())
+            {
+                return;
+            }
+
             if (Visible && IsSharingSkylineScreen())
             {
                 Hide();
@@ -218,11 +267,47 @@ namespace pwiz.SkylineTestUtil
                 LoadUpcomingOldScreenshot();
             }
 
+            ResumeTestThread();
+        }
+
+        private void ResumeTestThread()
+        {
             // Start the tests again
             lock (_pauseLock)
             {
                 Monitor.PulseAll(_pauseLock);
             }
+        }
+
+        private bool ValidateSkipToScreenshotCounter()
+        {
+            if (nextScreenshotTextBox.Text.Equals(LAST_SCREENSHOT_NEXT_TEXT))
+            {
+                return true;
+            }
+
+            int nextScreenshotCounter;
+            if (!int.TryParse(nextScreenshotTextBox.Text, out nextScreenshotCounter))
+            {
+                MessageDlg.Show(this, string.Format("Next value {0} is not a valid integer.", nextScreenshotTextBox.Text));
+                return false;
+            }
+
+            int currentScreenshotCounter = CurrentScreenshotCounter();
+            if (nextScreenshotCounter <= currentScreenshotCounter)
+            {
+                MessageDlg.Show(this, string.Format("Next value {0} must be larger than current screenshot counter {1}.", nextScreenshotTextBox.Text, currentScreenshotCounter));
+                return false;
+            }
+
+            string nextScreenshotFile = FindScreenshotFileByCounter(nextScreenshotCounter);
+            if (!File.Exists(nextScreenshotFile))
+            {
+                MessageDlg.Show(this, string.Format("Invalid Next value {0}. Screenshot file {1} does not exist.", nextScreenshotTextBox.Text, nextScreenshotFile));
+                return false;
+            }
+
+            return true;
         }
 
         private bool SaveScreenshot()

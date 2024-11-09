@@ -43,6 +43,8 @@
             this.saveScreenshotAndContinueBtn = new System.Windows.Forms.Button();
             this.refreshBtn = new System.Windows.Forms.Button();
             this.autoSizeWindowCheckbox = new System.Windows.Forms.CheckBox();
+            this.nextScreenshotLabel = new System.Windows.Forms.Label();
+            this.nextScreenshotTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).BeginInit();
@@ -165,22 +167,25 @@
             this.previewFlowLayoutControlPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.previewFlowLayoutControlPanel.Controls.Add(this.descriptionLinkLabel);
             this.previewFlowLayoutControlPanel.Controls.Add(this.continueBtn);
+            this.previewFlowLayoutControlPanel.Controls.Add(this.nextScreenshotLabel);
+            this.previewFlowLayoutControlPanel.Controls.Add(this.nextScreenshotTextBox);
             this.previewFlowLayoutControlPanel.Controls.Add(this.saveScreenshotBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.saveScreenshotAndContinueBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.refreshBtn);
             this.previewFlowLayoutControlPanel.Controls.Add(this.autoSizeWindowCheckbox);
-            this.previewFlowLayoutControlPanel.Location = new System.Drawing.Point(325, 3);
+            this.previewFlowLayoutControlPanel.Location = new System.Drawing.Point(279, 3);
             this.previewFlowLayoutControlPanel.Name = "previewFlowLayoutControlPanel";
-            this.previewFlowLayoutControlPanel.Size = new System.Drawing.Size(814, 53);
+            this.previewFlowLayoutControlPanel.Size = new System.Drawing.Size(905, 53);
             this.previewFlowLayoutControlPanel.TabIndex = 4;
             // 
             // descriptionLinkLabel
             // 
             this.descriptionLinkLabel.AutoSize = true;
-            this.descriptionLinkLabel.Location = new System.Drawing.Point(3, 9);
-            this.descriptionLinkLabel.Margin = new System.Windows.Forms.Padding(3, 9, 3, 0);
+            this.descriptionLinkLabel.Location = new System.Drawing.Point(3, 3);
+            this.descriptionLinkLabel.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
             this.descriptionLinkLabel.Name = "descriptionLinkLabel";
-            this.descriptionLinkLabel.Size = new System.Drawing.Size(116, 20);
+            this.descriptionLinkLabel.Padding = new System.Windows.Forms.Padding(0, 7, 0, 0);
+            this.descriptionLinkLabel.Size = new System.Drawing.Size(116, 27);
             this.descriptionLinkLabel.TabIndex = 6;
             this.descriptionLinkLabel.TabStop = true;
             this.descriptionLinkLabel.Text = "Description link";
@@ -198,7 +203,7 @@
             // 
             // saveScreenshotBtn
             // 
-            this.saveScreenshotBtn.Location = new System.Drawing.Point(231, 3);
+            this.saveScreenshotBtn.Location = new System.Drawing.Point(322, 3);
             this.saveScreenshotBtn.Name = "saveScreenshotBtn";
             this.saveScreenshotBtn.Size = new System.Drawing.Size(149, 36);
             this.saveScreenshotBtn.TabIndex = 1;
@@ -208,7 +213,7 @@
             // 
             // saveScreenshotAndContinueBtn
             // 
-            this.saveScreenshotAndContinueBtn.Location = new System.Drawing.Point(386, 3);
+            this.saveScreenshotAndContinueBtn.Location = new System.Drawing.Point(477, 3);
             this.saveScreenshotAndContinueBtn.Name = "saveScreenshotAndContinueBtn";
             this.saveScreenshotAndContinueBtn.Size = new System.Drawing.Size(181, 36);
             this.saveScreenshotAndContinueBtn.TabIndex = 2;
@@ -219,7 +224,7 @@
             // refreshBtn
             // 
             this.refreshBtn.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.refreshBtn.Location = new System.Drawing.Point(573, 3);
+            this.refreshBtn.Location = new System.Drawing.Point(664, 3);
             this.refreshBtn.Name = "refreshBtn";
             this.refreshBtn.Size = new System.Drawing.Size(82, 36);
             this.refreshBtn.TabIndex = 3;
@@ -232,13 +237,32 @@
             this.autoSizeWindowCheckbox.AutoSize = true;
             this.autoSizeWindowCheckbox.Checked = true;
             this.autoSizeWindowCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoSizeWindowCheckbox.Location = new System.Drawing.Point(661, 3);
+            this.autoSizeWindowCheckbox.Location = new System.Drawing.Point(752, 3);
             this.autoSizeWindowCheckbox.Name = "autoSizeWindowCheckbox";
-            this.autoSizeWindowCheckbox.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.autoSizeWindowCheckbox.Size = new System.Drawing.Size(150, 30);
+            this.autoSizeWindowCheckbox.Padding = new System.Windows.Forms.Padding(0, 7, 0, 0);
+            this.autoSizeWindowCheckbox.Size = new System.Drawing.Size(150, 31);
             this.autoSizeWindowCheckbox.TabIndex = 5;
             this.autoSizeWindowCheckbox.Text = "Auto size window";
             this.autoSizeWindowCheckbox.UseVisualStyleBackColor = true;
+            // 
+            // nextScreenshotLabel
+            // 
+            this.nextScreenshotLabel.AutoSize = true;
+            this.nextScreenshotLabel.Location = new System.Drawing.Point(231, 3);
+            this.nextScreenshotLabel.Margin = new System.Windows.Forms.Padding(3, 3, 0, 3);
+            this.nextScreenshotLabel.Name = "nextScreenshotLabel";
+            this.nextScreenshotLabel.Padding = new System.Windows.Forms.Padding(0, 7, 0, 0);
+            this.nextScreenshotLabel.Size = new System.Drawing.Size(45, 27);
+            this.nextScreenshotLabel.TabIndex = 7;
+            this.nextScreenshotLabel.Text = "Next:";
+            // 
+            // nextScreenshotTextBox
+            // 
+            this.nextScreenshotTextBox.Location = new System.Drawing.Point(276, 6);
+            this.nextScreenshotTextBox.Margin = new System.Windows.Forms.Padding(0, 6, 3, 3);
+            this.nextScreenshotTextBox.Name = "nextScreenshotTextBox";
+            this.nextScreenshotTextBox.Size = new System.Drawing.Size(40, 26);
+            this.nextScreenshotTextBox.TabIndex = 8;
             // 
             // ScreenshotPreviewForm
             // 
@@ -282,5 +306,7 @@
         private System.Windows.Forms.TableLayoutPanel previewTableLayoutControlPanel;
         private System.Windows.Forms.CheckBox autoSizeWindowCheckbox;
         private System.Windows.Forms.LinkLabel descriptionLinkLabel;
+        private System.Windows.Forms.Label nextScreenshotLabel;
+        private System.Windows.Forms.TextBox nextScreenshotTextBox;
     }
 }
