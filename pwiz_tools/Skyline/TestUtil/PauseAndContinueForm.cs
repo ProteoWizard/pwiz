@@ -102,9 +102,9 @@ namespace pwiz.SkylineTestUtil
 
             // TODO: Put this back to allow keyboard to work as expected in paused Skyline
             //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = false); //determine if this is needed
-            RunUI(_ownerForm, RefreshAndShow);
             lock (_pauseLock)
             {
+                RunUI(_ownerForm, RefreshAndShow);
                 Monitor.Wait(_pauseLock, timeout ?? -1);
             }
             //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);
