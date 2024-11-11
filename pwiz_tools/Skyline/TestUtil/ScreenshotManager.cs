@@ -19,7 +19,8 @@ namespace pwiz.SkylineTestUtil
 {
     public class ScreenshotManager
     {
-        private SkylineWindow _skylineWindow;
+        private readonly SkylineWindow _skylineWindow;
+        private readonly string _tutorialPath;
 
         public class PointFactor
         {
@@ -49,24 +50,30 @@ namespace pwiz.SkylineTestUtil
 
             var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
             var dockableForm = ctrl as DockableForm;
-            if (dockableForm != null && dockedStates.Any((state) => dockableForm.DockState == state))
+            if (dockableForm != null && dockedStates.Any(state => dockableForm.DockState == state))
             {
-                Point origin = Point.Empty;
-                dockableForm.Invoke(new Action(() => { origin = dockableForm.Pane.PointToScreen(new Point(0, 0)); }));
-                snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
+                var origin = Point.Empty;
+                dockableForm.Invoke((Action) (() =>
+                {
+                    origin = dockableForm.Pane.PointToScreen(new Point(0, 0));
+                    snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
+                }));
             }
             else if (fullScreen)
             {
-                snapshotBounds = Screen.FromControl(ctrl).Bounds;
+                ctrl.Invoke((Action) (() => snapshotBounds = Screen.FromControl(ctrl).Bounds));
             }
             else
             {
                 ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
-                int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
-                int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
-                Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
-                Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
-                snapshotBounds = new Rectangle(sourcePoint, imageSize);
+                ctrl.Invoke((Action)(() =>
+                {
+                    int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
+                    int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
+                    Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
+                    Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
+                    snapshotBounds = new Rectangle(sourcePoint, imageSize);
+                }));
             }
             return snapshotBounds * GetScalingFactor();
         }
@@ -178,9 +185,31 @@ namespace pwiz.SkylineTestUtil
             }
 
         }
-        public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow)
+
+        public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow, string tutorialPath)
         {
             _skylineWindow = pSkylineWindow;
+            _tutorialPath = tutorialPath;
+        }
+
+        public string ScreenshotUrl(int screenshotNum)
+        {
+            if (string.IsNullOrEmpty(_tutorialPath))
+                return null;
+            var fileUri = new Uri(Path.Combine(_tutorialPath, "index.html")).AbsoluteUri + "#s-" + screenshotNum;
+            const string tutorialSearch = "/Tutorials/";
+            int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
+            return "https://skyline.ms/tutorials/24-1/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
+        }
+
+        public string ScreenshotFile(int screenshotNum)
+        {
+            return !string.IsNullOrEmpty(_tutorialPath) ? $"{Path.Combine(_tutorialPath, "s-" + screenshotNum)}.png" : null;
+        }
+
+        public string ScreenshotDescription(int i, string description)
+        {
+            return string.Format("s-{0}: {1}", i, description);
         }
 
         public static void ActivateScreenshotForm(Control screenshotControl)

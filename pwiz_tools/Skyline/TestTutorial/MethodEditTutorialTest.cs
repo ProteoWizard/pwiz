@@ -95,6 +95,14 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsUI1.PickedLibraries = new[] { YEAST_ATLAS };
                 });
             WaitForOpenForm<PeptideSettingsUI>();   // To show Library tab for Forms testing
+            // Make sure the build complete notification is removed first since it has problems when the preview form is around
+            if (IsPauseForScreenShots)
+            {
+                WaitForConditionUI(() => FindOpenForm<BuildLibraryNotification>() != null);
+                Thread.Sleep(200);  // Can hang if the remove happens too quickly
+                RunUI(SkylineWindow.RemoveLibraryBuildNotification);
+                WaitForConditionUI(() => FindOpenForm<BuildLibraryNotification>() == null);
+            }
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 4); // Not L10N
 
             RunUI(() => peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Digest);

@@ -50,19 +50,16 @@ namespace pwiz.SkylineTestTutorial
         /// to regenerate checkpoint files for non-full-import mode,
         /// when something changes in the test.
         /// </summary>
-        private bool IsFullImportMode { get { return IsRecordImported || IsCoverShotMode || IsPauseForScreenShots || IsAutoScreenShotMode; } }
+        private bool IsFullImportMode { get { return IsRecordMode || IsCoverShotMode || IsPauseForScreenShots || IsAutoScreenShotMode; } }
 
-        private bool IsRecordImported
-        {
-            get { return false; }
-        }
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
-            IsPauseForScreenShots = true;
-//            IsCoverShotMode = true;
+            // IsPauseForScreenShots = true;
+            // IsCoverShotMode = true;
             CoverShotName = "DIA";
             // PauseStartPage = 36;
 
@@ -291,7 +288,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_IMPORTED_CHECKPOINT)));
             }
 
-            if (IsRecordImported)
+            if (IsRecordMode)
                 PauseForManualTutorialStep("COPY IMPORTED DOCUMENT");
 
             // Generate decoys

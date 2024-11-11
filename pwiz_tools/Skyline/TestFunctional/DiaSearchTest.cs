@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private TestDetails _testDetails;
-        public bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {

@@ -67,8 +67,6 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        protected override int[] NonScreenShotFigures => new[] { 1 };
-
         private string GetTestPath(string relativePath)
         {
             var dataFolder = UseRawFiles ? "AbsoluteQuant" : "AbsoluteQuantMzml"; // Not L10N

@@ -29,24 +29,28 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
-    public partial class PauseAndContinueForm : Form
+    public partial class PauseAndContinueForm : Form, IPauseTestController
     {
-        private readonly Thread _screenshotPreviewThread;
-        private readonly ScreenshotPreviewForm _screenshotPreviewForm;
-        private readonly ScreenshotManager _screenshotManager;
         private readonly Form _ownerForm;
         private readonly object _pauseLock = new object();
-        private readonly ManualResetEvent _screenshotPreviewHandleReadyEvent = new ManualResetEvent(false);
 
-        private string _linkUrl;
-        private bool _showMatchingPage;
-        private string _fileToSave;
+        private readonly ScreenshotManager _screenshotManager;
+
+        // User display and screenshot file information
+        private int _screenshotNum;
         private string _description;
+        private string _linkUrl;
+        private string _fileToSave;
+        private bool _showMatchingPage;
+        // Information for taking a screenshot
         private Control _screenshotForm;
         private bool _fullScreen;
         private Func<Bitmap, Bitmap> _processShot;
+
         private PauseAndContinueMode _currentMode = PauseAndContinueMode.PAUSE_AND_CONTINUE;
-         
+
+        private ScreenshotPreviewForm _screenshotPreviewForm;
+
         private enum PauseAndContinueMode
         {
             PAUSE_AND_CONTINUE,
@@ -62,22 +66,41 @@ namespace pwiz.SkylineTestUtil
 
             _screenshotManager = screenshotManager;
             _ownerForm = FindOwnerForm();
-            _screenshotPreviewForm = new ScreenshotPreviewForm(this, _screenshotManager, _pauseLock);
-            _screenshotPreviewThread = new Thread(StartApplicationThread);
         }
 
-        //To be called from the test thread, will block until Continue is pressed
-        public void Show(string description, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
+        /// <summary>
+        /// Allows for static creation of the form for one time use without screenshot support.
+        /// </summary>
+        public static void Show(string description)
+        {
+            var instance = new PauseAndContinueForm(null);
+            instance.ShowInternal(description);
+            RunUI(instance, () => instance.Close());
+        }
+
+        /// <summary>
+        /// Shows this form. Called from the "Functional test" thread. Blocks until Continue is clicked.
+        /// </summary>
+        public void Show(string description, int screenshotNum, bool showMatchingPages, int? timeout,
+            Control screenshotForm, bool fullScreen, Func<Bitmap, Bitmap> processShot)
+        {
+            ShowInternal(_screenshotManager.ScreenshotDescription(screenshotNum, description),
+                screenshotNum, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+        }
+
+        private void ShowInternal(string description, int screenshotNum = 0, bool showMatchingPages = false, int? timeout = null,
             Control screenshotForm = null, bool fullScreen = false, Func<Bitmap, Bitmap> processShot = null)
         {
+            _screenshotNum = screenshotNum;
+            _description = description;
+            _fileToSave = _screenshotManager.ScreenshotFile(screenshotNum);
+            _linkUrl = _screenshotManager.ScreenshotUrl(screenshotNum);
+            _showMatchingPage = showMatchingPages;
             _screenshotForm = screenshotForm;
             _fullScreen = fullScreen;
-            _fileToSave = fileToSave;
             _processShot = processShot;
-            _linkUrl = link;
-            _showMatchingPage = showMatchingPages;
-            _description = description;
 
+            // TODO: Put this back to allow keyboard to work as expected in paused Skyline
             //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = false); //determine if this is needed
             RunUI(_ownerForm, RefreshAndShow);
             lock (_pauseLock)
@@ -87,25 +110,10 @@ namespace pwiz.SkylineTestUtil
             //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);
         }
 
-        //Allows for static creation of the form for one time use
-        public static void Show(string description, string fileToSave = null, string link = null, bool showMatchingPages = false, int? timeout = null,
-            Control screenshotForm = null, bool fullScreen = false, ScreenshotManager screenshotManager = null, Func<Bitmap, Bitmap> processShot = null)
-        {
-            var pauseAndContinueForm = new PauseAndContinueForm(screenshotManager);
-            pauseAndContinueForm.Show(description, fileToSave, link, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
-            RunUI(pauseAndContinueForm, () => pauseAndContinueForm.Close());
-        }
-
         private static Form FindOwnerForm()
         {
             Form skylineWindow = Program.MainWindow;
             return skylineWindow != null ? skylineWindow : AbstractFunctionalTest.FindOpenForm<StartPage>();
-        }
-
-        private void StartApplicationThread()
-        {
-            _screenshotPreviewForm.HandleCreated += (sender, args) => _screenshotPreviewHandleReadyEvent.Set();
-            Application.Run(_screenshotPreviewForm);
         }
 
         private static void RunUI(Form form, Action act)
@@ -113,26 +121,14 @@ namespace pwiz.SkylineTestUtil
             form.Invoke(act);
         }
 
-        public void SwitchToPauseAndContinue()
-        {
-            _currentMode = PauseAndContinueMode.PAUSE_AND_CONTINUE;
-            _screenshotPreviewForm.Invoke((Action) (() => _screenshotPreviewForm.Hide()));
-            Show(_ownerForm);
-            FocusForm();
-        }
-
         private void SwitchToPreview()
         {
             _currentMode = PauseAndContinueMode.PREVIEW_SCREENSHOT;
-            if (!_screenshotPreviewThread.IsAlive)
-            {
-                _screenshotPreviewThread.SetApartmentState(ApartmentState.STA);
-                _screenshotPreviewThread.Start();
-                _screenshotPreviewHandleReadyEvent.WaitOne(); //blocks momentarily for the screenshot preview handle to be ready
-            }
+            _screenshotPreviewForm ??= new ScreenshotPreviewForm(this, _screenshotManager);
 
             Hide();
-            _screenshotPreviewForm.Show(_description, _linkUrl, _screenshotForm, _fileToSave, _fullScreen, _processShot, false);
+
+            _screenshotPreviewForm.Show(false);
         }
 
         private void Continue()
@@ -174,15 +170,18 @@ namespace pwiz.SkylineTestUtil
 
             if (_currentMode == PauseAndContinueMode.PAUSE_AND_CONTINUE)
             {
-                if(!Visible) Show(_ownerForm);
+                if (!Visible)
+                    Show(_ownerForm);
                 FocusForm();
 
-            } else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
+            } 
+            else if (_currentMode == PauseAndContinueMode.PREVIEW_SCREENSHOT)
             { 
-                _screenshotPreviewForm.Show(_description, _linkUrl, _screenshotForm, _fileToSave, _fullScreen, _processShot, true);
+                _screenshotPreviewForm.Show(true);
             }
 
-            if (_showMatchingPage) GotoLink();
+            if (_showMatchingPage)
+                GotoLink();
         }
 
         private void UpdateButtonVisibility()
@@ -265,14 +264,10 @@ namespace pwiz.SkylineTestUtil
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
-            if (_screenshotPreviewForm != null && !_screenshotPreviewForm.IsDisposed)
+            if (_screenshotPreviewForm is { IsDisposed: false })
             {
                 _screenshotPreviewForm.Invoke((Action) (() => _screenshotPreviewForm.Dispose()));
-            }
-
-            if (_screenshotPreviewThread.IsAlive)
-            {
-                _screenshotPreviewThread.Join();
+                _screenshotPreviewForm.WaitForCompletion();
             }
 
             base.OnFormClosed(e);
@@ -299,5 +294,28 @@ namespace pwiz.SkylineTestUtil
         {
             SwitchToPreview();
         }
+
+        void IPauseTestController.Continue()
+        {
+            Invoke((Action)Continue);
+        }
+
+        void IPauseTestController.ShowPauseForm()
+        {
+            _currentMode = PauseAndContinueMode.PAUSE_AND_CONTINUE;
+            Invoke((Action)(() =>
+            {
+                Show(_ownerForm);
+                FocusForm();
+            }));
+        }
+
+        public int ScreenshotNum => _screenshotNum;
+        public string Description => _description;
+        public string LinkUrl => _linkUrl;
+        public string FileToSave => _fileToSave;
+        public Control ScreenshotControl => _screenshotForm;
+        public bool FullScreen => _fullScreen;
+        public Func<Bitmap, Bitmap> ProcessShot => _processShot;
     }
 }

@@ -717,47 +717,7 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
-            int waitCycles = GetWaitCycles(millis);
-            for (int i = 0; i < waitCycles; i++)
-            {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
-
-                TDlg tForm = FindOpenForm<TDlg>();
-                if (tForm != null)
-                {
-                    string formType = typeof(TDlg).Name;
-                    var multipleViewProvider = tForm as IMultipleViewProvider;
-                    if (multipleViewProvider != null)
-                    {
-                        formType += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
-                        var formName = "(" + typeof (TDlg).Name + ")";
-                        RunUI(() =>
-                        {
-                            if (tForm.Text.EndsWith(formName))
-                                tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
-                        });
-                    }
-
-                    _formLookup ??= new FormLookup();
-                    Assert.IsNotNull(_formLookup.GetTest(formType),
-                        formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
-
-                    if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
-                    {
-                        var formSeen = new FormSeen();
-                        formSeen.Saw(formType);
-                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
-                    }
-
-                    return tForm;
-                }
-
-                if (stopCondition != null && stopCondition())
-                    break;
-
-                Thread.Sleep(SLEEP_INTERVAL);
-            }
-            return null;
+            return (TDlg) TryWaitForOpenForm(typeof(TDlg), millis, stopCondition);
         }
 
         public static Form TryWaitForOpenForm(Type formType, int millis = WAIT_TIME, Func<bool> stopCondition = null) 
@@ -826,7 +786,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(viewTypeName);
-                pauseAndContinueForm.Show(string.Format("Pausing for {0}", viewTypeName));
+                PauseTest(string.Format("Pausing for {0}", viewTypeName));
             }
         }
 
@@ -1189,7 +1149,14 @@ namespace pwiz.SkylineTestUtil
         public void PauseTest(string description = null)
         {
             if (!Program.SkylineOffscreen)
-                pauseAndContinueForm.Show(description);
+                PauseAndContinueForm.Show(description);
+        }
+
+        public void PauseForRecordModeInstruction(string message, Exception e)
+        {
+            if (!IsRecordMode)
+                throw new Exception(TextUtil.LineSeparate("Run in record mode to fix this test.", message), e);
+            PauseTest(message);
         }
 
         // We don't normally leave PauseTest() in checked in code, but there are times
@@ -1210,7 +1177,7 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
-        public static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
+        private static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
 
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
@@ -1295,15 +1262,15 @@ namespace pwiz.SkylineTestUtil
 
         private string TutorialPath
         {
-            get { return IsTutorial ?
-                TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{CultureInfo.CurrentCulture.TwoLetterISOLanguageName}")
-                : null;
+            get
+            {
+                return IsTutorial
+                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{CultureInfo.CurrentCulture.TwoLetterISOLanguageName}")
+                    : null;
             }
         }
 
-        private int ScreenShotCounter = 1;
-
-        protected virtual int[] NonScreenShotFigures => Array.Empty<int>();
+        private int ScreenshotCounter = 1;
 
         public virtual bool AuditLogCompareLogs
         {
@@ -1330,32 +1297,15 @@ namespace pwiz.SkylineTestUtil
 
         public string LinkPdf { get; set; }
 
-        private int FigueNum => ScreenShotCounter + NonScreenShotFigures.Count(n => n <= ScreenShotCounter);
-
 
         private PauseAndContinueForm _pauseAndContinueForm;
 
-        protected PauseAndContinueForm pauseAndContinueForm
+        private PauseAndContinueForm PauseAndContinueFormInstance
         {
             get
             {
-                if (_pauseAndContinueForm == null)
-                {
-                    _pauseAndContinueForm = new PauseAndContinueForm(ScreenshotManager);
-                }
-
-                return _pauseAndContinueForm;
+                return _pauseAndContinueForm ??= new PauseAndContinueForm(ScreenshotManager);
             }
-        }
-
-        private string LinkScreenShotFigure()
-        {
-            if (string.IsNullOrEmpty(TutorialPath))
-                return null;
-            var fileUri = new Uri(Path.Combine(TutorialPath, "index.html")).AbsoluteUri + "#figure" + FigueNum;
-            const string tutorialSearch = "/Tutorials/";
-            int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
-            return "https://skyline.ms/tutorials/24-1/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
         }
 
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
@@ -1662,7 +1612,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= FigueNum)
+            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
             {
                 if (screenshotForm == null)
                 {
@@ -1677,18 +1627,18 @@ namespace pwiz.SkylineTestUtil
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                var fileToSave = !string.IsNullOrEmpty(TutorialPath) ? $"{Path.Combine(TutorialPath, "s-" + ScreenShotCounter)}.png" : null;
 
                 if (IsAutoScreenShotMode)
                 {
                     Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
                     ScreenshotManager.ActivateScreenshotForm(screenshotForm);
+                    var fileToSave = _shotManager.ScreenshotFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    pauseAndContinueForm.Show(string.Format("fig. {0}: {1}", ScreenShotCounter, description), fileToSave, LinkScreenShotFigure(), showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else
@@ -1696,7 +1646,7 @@ namespace pwiz.SkylineTestUtil
                 PauseForForm(formType);
             }
 
-            ScreenShotCounter++;
+            ScreenshotCounter++;
         }
 
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
@@ -1871,7 +1821,7 @@ namespace pwiz.SkylineTestUtil
 
             UnzipTestFiles();
 
-            _shotManager = new ScreenshotManager(SkylineWindow);
+            _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
 
             // Run test in new thread (Skyline on main thread).
             Program.Init();
@@ -2270,6 +2220,9 @@ namespace pwiz.SkylineTestUtil
             }
 
             DoTest();
+
+            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+
             if (null != SkylineWindow)
             {
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
@@ -2283,9 +2236,9 @@ namespace pwiz.SkylineTestUtil
 
         private void EndTest()
         {
-            if (_pauseAndContinueForm != null && !_pauseAndContinueForm.IsDisposed)
+            if (_pauseAndContinueForm is { IsDisposed: false })
             {
-                _pauseAndContinueForm.Invoke((Action)(() => _pauseAndContinueForm.Close()));
+                RunUI(() => _pauseAndContinueForm.Close());
             }
 
             var skylineWindow = Program.MainWindow;

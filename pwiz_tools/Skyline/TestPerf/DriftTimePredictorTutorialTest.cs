@@ -370,8 +370,6 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForDocumentChangeLoaded(docFiltered, 1000 * 60 * 60 * 5); // 5 minutes
 
             // TODO: Check peak ranks before and after
-
-            AssertEx.IsFalse(IsRecordMode); // Make sure we turn this off before commit!
         }
 
         private void VerifyCombinedIonMobility(SrmDocument doc)
@@ -397,7 +395,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 String.Format("Full-scan graph title '{0}' does not contain '{1}'", fullScanGraph.TitleText, clickTimeText)));
         }
 
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         private void TestReports(string msg = null)
         {

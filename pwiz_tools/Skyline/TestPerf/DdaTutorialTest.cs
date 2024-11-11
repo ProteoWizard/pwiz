@@ -84,14 +84,12 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestMsFraggerSearch();
-
-            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
 
         /// <summary>
         /// Change to true to write new Assert statements instead of testing them.
         /// </summary>
-        private bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
 
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials && IsPass0;
         private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
