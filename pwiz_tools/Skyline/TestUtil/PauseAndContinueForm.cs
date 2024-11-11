@@ -93,8 +93,8 @@ namespace pwiz.SkylineTestUtil
         {
             _screenshotNum = screenshotNum;
             _description = description;
-            _fileToSave = _screenshotManager.ScreenshotFile(screenshotNum);
-            _linkUrl = _screenshotManager.ScreenshotUrl(screenshotNum);
+            _fileToSave = _screenshotManager?.ScreenshotFile(screenshotNum);
+            _linkUrl = _screenshotManager?.ScreenshotUrl(screenshotNum);
             _showMatchingPage = showMatchingPages;
             _screenshotForm = screenshotForm;
             _fullScreen = fullScreen;
@@ -164,8 +164,8 @@ namespace pwiz.SkylineTestUtil
 
         private void RefreshAndShow()
         {
-            UpdateDescriptionLabels();
             UpdateButtonVisibility();
+            UpdateDescriptionLabels();
             PlaceForm();
 
             if (_currentMode == PauseAndContinueMode.PAUSE_AND_CONTINUE)
@@ -190,7 +190,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Hide the preview button
                 btnPreview.Visible =  false;
-                Height -=  btnContinue.Bottom;
+                Height -=  btnPreview.Bottom - btnContinue.Bottom;
             }
         }
 
