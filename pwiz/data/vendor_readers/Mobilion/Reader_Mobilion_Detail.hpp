@@ -25,18 +25,34 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "boost/thread/thread.hpp"
 #include <vector>
 
 #ifdef PWIZ_READER_MOBILION
 #include "pwiz_aux/msrc/utility/vendor_api/Mobilion/MBIFile.h"
-using namespace MBI;
+using namespace MBISDK;
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 namespace Mobilion {
+PWIZ_API_DECL class MBIFileWrapper
+{
+    public:
+    MBIFileWrapper(const std::string& filepath)
+    : file(filepath.c_str())
+    {
+        file.Init();
+    }
 
-typedef boost::shared_ptr<MBIFile> MBIFilePtr;
+    ~MBIFileWrapper()
+    {
+        file.Close();
+    }
+
+    MBIFile file;
+};
+typedef boost::shared_ptr<MBIFileWrapper> MBIFilePtr;
 
 PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(const MBIFilePtr& rawdata);
@@ -49,6 +65,7 @@ PWIZ_API_DECL CVID translatePolarity(const std::string& polarity);
 PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(ActivationType activationType);*/
 
+extern boost::mutex processWideHdf5Mutex; // HDF5 library isn't thread-safe
 } // Mobilion
 
 using namespace Mobilion;

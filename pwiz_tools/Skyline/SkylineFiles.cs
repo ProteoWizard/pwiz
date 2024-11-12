@@ -1307,7 +1307,7 @@ namespace pwiz.Skyline
             {
                 if (saverUser.CanSave())
                 {
-                    dockPanel.SaveAsXml(saverUser.SafeName);
+                    dockPanel.SaveAsXml(saverUser.SafeName, Encoding.UTF8);
                     saverUser.Commit();
                 }
             }
