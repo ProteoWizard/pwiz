@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.Graphs;
@@ -1505,6 +1506,35 @@ namespace pwiz.Skyline.Controls
                     return false;
                 return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPrecursors;
             }
+        }
+
+        private Type[] _selectionTypes = new Type[] {typeof(PeptideGroupTreeNode), typeof(PeptideTreeNode), typeof(TransitionGroupTreeNode)};
+        public void ExpandSelection<T>() where T : TreeNodeMS
+        {
+            var nodes = SelectedNodes.ToList();
+            for (var i = 0; typeof(T) != _selectionTypes[i]; i++)
+            {
+                var nodesToExpand = nodes.ToList().FindAll(node => node.GetType() == _selectionTypes[i]);
+                nodesToExpand.ForEach(node => node.Expand());
+                nodes = nodes.SelectMany(node => node.Nodes.OfType<TreeNodeMS>()).ToList();
+            }
+        }
+
+        public void CollapseSelection<T>() where T : TreeNodeMS
+        {
+            var nodes = SelectedNodes.ToList();
+            var level = Array.IndexOf(_selectionTypes, typeof(T));
+            for (var i = 0; i < 3; i++)
+            {
+                var nodesToCollapse = nodes.ToList().FindAll(node => node.GetType() == _selectionTypes[i]);
+                nodesToCollapse.ForEach(node =>
+                {
+                    if (Array.IndexOf(_selectionTypes, node.GetType()) >= level)
+                        node.Collapse();
+                });
+                nodes = nodes.SelectMany(node => node.Nodes.OfType<TreeNodeMS>()).ToList();
+            }
+
         }
 
         public bool LockDefaultExpansion { get; set; }

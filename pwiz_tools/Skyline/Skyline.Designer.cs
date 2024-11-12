@@ -54,6 +54,16 @@ namespace pwiz.Skyline
             this.irtStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editSpectrumFilterContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
+            this.expandSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionProteinsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionPeptidesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionPrecursorsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.collapseSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.collapseSelectionProteinsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.collapseSelectionPeptidesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.collapseSelectionPrecursorsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
             this.toggleQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.markTransitionsQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
@@ -376,6 +386,8 @@ namespace pwiz.Skyline
             this.pasteContextMenuItem,
             this.deleteContextMenuItem,
             this.toolStripSeparator1,
+            this.expandSelectionContextMenuItem,
+            this.collapseSelectionContextMenuItem,
             this.pickChildrenContextMenuItem,
             this.addMoleculeContextMenuItem,
             this.addSmallMoleculePrecursorContextMenuItem,
@@ -511,6 +523,68 @@ namespace pwiz.Skyline
             this.editSpectrumFilterContextMenuItem.Name = "editSpectrumFilterContextMenuItem";
             resources.ApplyResources(this.editSpectrumFilterContextMenuItem, "editSpectrumFilterContextMenuItem");
             this.editSpectrumFilterContextMenuItem.Click += new System.EventHandler(this.editSpectrumFilterContextMenuItem_Click);
+
+            // 
+            // expandSelectionContextMenuItem
+            // 
+            this.expandSelectionContextMenuItem.Name = "expandSelectionContextMenuItem";
+            resources.ApplyResources(this.expandSelectionContextMenuItem, "expandSelectionContextMenuItem");
+            this.expandSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.expandSelectionProteinsContextMenuItem,
+                this.expandSelectionPeptidesContextMenuItem,
+                this.expandSelectionPrecursorsContextMenuItem
+            });
+            // 
+            // expandSelectionProteinsContextMenuItem
+            // 
+            this.expandSelectionProteinsContextMenuItem.Name = "expandSelectionProteinsContextMenuItem";
+            resources.ApplyResources(this.expandSelectionProteinsContextMenuItem, "expandSelectionProteinsContextMenuItem");
+            this.expandSelectionProteinsContextMenuItem.Click += new System.EventHandler(this.expandSelectionProteinsContextMenuItem_Click);
+            // 
+            // expandSelectionPeptidesContextMenuItem
+            // 
+            this.expandSelectionPeptidesContextMenuItem.Name = "expandSelectionPeptidesContextMenuItem";
+            resources.ApplyResources(this.expandSelectionPeptidesContextMenuItem, "expandSelectionPeptidesContextMenuItem");
+            this.expandSelectionPeptidesContextMenuItem.Click += new System.EventHandler(this.expandSelectionPeptidesContextMenuItem_Click);
+            // 
+            // expandSelectionPrecursorsContextMenuItem
+            // 
+            this.expandSelectionPrecursorsContextMenuItem.Name = "expandSelectionPrecursorsContextMenuItem";
+            resources.ApplyResources(this.expandSelectionPrecursorsContextMenuItem, "expandSelectionPrecursorsContextMenuItem");
+            this.expandSelectionPrecursorsContextMenuItem.Click += new System.EventHandler(this.expandSelectionPrecursorsContextMenuItem_Click);
+
+            // 
+            // collapseSelectionContextMenuItem
+            // 
+            this.collapseSelectionContextMenuItem.Name = "collapseSelectionContextMenuItem";
+            resources.ApplyResources(this.collapseSelectionContextMenuItem, "collapseSelectionContextMenuItem");
+            this.collapseSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.collapseSelectionProteinsContextMenuItem,
+                this.collapseSelectionPeptidesContextMenuItem,
+                this.collapseSelectionPrecursorsContextMenuItem
+            });
+            // 
+            // collapseSelectionProteinsContextMenuItem
+            // 
+            this.collapseSelectionProteinsContextMenuItem.Name = "collapseSelectionProteinsContextMenuItem";
+            resources.ApplyResources(this.collapseSelectionProteinsContextMenuItem, "collapseSelectionProteinsContextMenuItem");
+            this.collapseSelectionProteinsContextMenuItem.Click += new System.EventHandler(this.collapseSelectionProteinsContextMenuItem_Click);
+            // 
+            // collapseSelectionPeptidesContextMenuItem
+            // 
+            this.collapseSelectionPeptidesContextMenuItem.Name = "collapseSelectionPeptidesContextMenuItem";
+            resources.ApplyResources(this.collapseSelectionPeptidesContextMenuItem, "collapseSelectionPeptidesContextMenuItem");
+            this.collapseSelectionPeptidesContextMenuItem.Click += new System.EventHandler(this.collapseSelectionPeptidesContextMenuItem_Click);
+            // 
+            // collapseSelectionPrecursorsContextMenuItem
+            // 
+            this.collapseSelectionPrecursorsContextMenuItem.Name = "collapseSelectionPrecursorsContextMenuItem";
+            resources.ApplyResources(this.collapseSelectionPrecursorsContextMenuItem, "collapseSelectionPrecursorsContextMenuItem");
+            this.collapseSelectionPrecursorsContextMenuItem.Click += new System.EventHandler(this.collapseSelectionPrecursorsContextMenuItem_Click);
+
+
             // 
             // toggleQuantitativeContextMenuItem
             // 
@@ -2980,6 +3054,16 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editSpectrumFilterContextMenuItem;
+
+        private System.Windows.Forms.ToolStripMenuItem expandSelectionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem expandSelectionProteinsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem expandSelectionPeptidesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem expandSelectionPrecursorsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem collapseSelectionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem collapseSelectionProteinsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem collapseSelectionPeptidesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem collapseSelectionPrecursorsContextMenuItem;
+
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;

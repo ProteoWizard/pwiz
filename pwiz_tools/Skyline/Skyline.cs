@@ -1766,6 +1766,20 @@ namespace pwiz.Skyline
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
+            if (SequenceTree.SelectedNodes.Count > 0)
+            {
+                expandSelectionContextMenuItem.Enabled = true;
+                expandSelectionContextMenuItem.Visible = true;
+                collapseSelectionContextMenuItem.Enabled = true;
+                collapseSelectionContextMenuItem.Visible = true;
+            }
+            else
+            {
+                expandSelectionContextMenuItem.Enabled = false;
+                expandSelectionContextMenuItem.Visible = false;
+                collapseSelectionContextMenuItem.Enabled = false;
+                collapseSelectionContextMenuItem.Visible = false;
+            }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
             removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
@@ -1820,6 +1834,31 @@ namespace pwiz.Skyline
         public void ShowPickChildrenInternal(bool okOnDeactivate)
         {
             SequenceTree.ShowPickList(okOnDeactivate);
+        }
+
+        private void expandSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelection<PeptideGroupTreeNode>();
+        }
+        private void expandSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelection<PeptideTreeNode>();
+        }
+        private void expandSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelection<TransitionGroupTreeNode>();
+        }
+        private void collapseSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.CollapseSelection<PeptideGroupTreeNode>();
+        }
+        private void collapseSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.CollapseSelection<PeptideTreeNode>();
+        }
+        private void collapseSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.CollapseSelection<TransitionGroupTreeNode>();
         }
 
         /// <summary>
