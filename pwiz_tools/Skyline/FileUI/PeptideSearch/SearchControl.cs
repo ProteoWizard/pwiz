@@ -28,6 +28,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -142,8 +143,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             // look at the last 10 lines for the same message and if found do not relog the same message
-            if (_progressTextItems.Skip(Math.Max(0, _progressTextItems.Count - 10)).Any(entry => entry.Message == message))
+            if (Enumerable.Range(Math.Max(0, _progressTextItems.Count - 10), Math.Min(10, _progressTextItems.Count))
+                .Any(i => _progressTextItems[i].Message == message))
+            {
                 return;
+            }
 
             if (message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length - 1), out _))
             {
@@ -229,8 +233,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void RefreshProgressTextbox()
         {
             txtSearchProgress.Clear();
-            foreach (var entry in _progressTextItems)
-                txtSearchProgress.AppendText($@"{entry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+            txtSearchProgress.AppendText(TextUtil.LineSeparate(_progressTextItems.Select(entry
+                => entry.ToString(showTimestampsCheckbox.Checked))) + Environment.NewLine);
+
         }
 
         public string LogText => txtSearchProgress.Text;
@@ -247,7 +252,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (InvokeRequired)
                 Invoke(new MethodInvoker(() => UpdateProgress(status)));
             else
-                UpdateSearchEngineProgress(status.ChangeMessage(status.Message));
+                UpdateSearchEngineProgress(status);
 
             return UpdateProgressResponse.normal;
         }
