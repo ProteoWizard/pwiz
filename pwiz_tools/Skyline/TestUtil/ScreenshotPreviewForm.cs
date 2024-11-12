@@ -616,7 +616,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Hide();
             }
-            else
+            else if(File.Exists(_screenshotManager.ScreenshotFile(_screenshotNum)))
             {
                 FormStateChanged();
             }
