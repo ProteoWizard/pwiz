@@ -1335,8 +1335,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                 dotp = KoinaHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo,
                                     mirrorGraphItem.SpectrumInfo,
                                     settings.TransitionSettings.Libraries.IonMatchMzTolerance);
-                                fullDotp = KoinaHelpers.CalculateSpectrumDotpMzFull(GraphItem.SpectrumInfo,
-                                    mirrorGraphItem.SpectrumInfo,
+                                fullDotp = KoinaHelpers.CalculateSpectrumDotpMzFull(GraphItem.SpectrumInfo.Peaks,
+                                    mirrorGraphItem.SpectrumInfo.Peaks,
                                     settings.TransitionSettings.Libraries.IonMatchMzTolerance, true, false);
                             }
                         }

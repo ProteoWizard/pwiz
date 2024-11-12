@@ -669,40 +669,8 @@ namespace pwiz.Skyline.Model.Koina.Models
         /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
         public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, MzTolerance mzTolerance)
         {
-            var matched1 = spectrum1.PeaksMatched.ToArray();
-            var matched2 = spectrum2.PeaksMatched.ToArray();
-            var intensities1All = new List<double>(matched1.Length + matched2.Length);
-            var intensities2All = new List<double>(matched1.Length + matched2.Length);
-            var matchIndex1 = 0;
-            var matchIndex2 = 0;
-            while (matchIndex1 < matched1.Length && matchIndex2 < matched2.Length)
-            {
-                var mz1 = matched1[matchIndex1].ObservedMz;
-                var mz2 = matched2[matchIndex2].ObservedMz;
-                if (mzTolerance.IsWithinTolerance(mz1, mz2))
-                {
-                    intensities1All.Add(matched1[matchIndex1].Intensity);
-                    intensities2All.Add(matched2[matchIndex2].Intensity);
-
-                    ++matchIndex1;
-                    ++matchIndex2;
-                }
-                else if (mz1 < mz2)
-                {
-                    intensities1All.Add(matched1[matchIndex1].Intensity);
-                    intensities2All.Add(0.0);
-                    ++matchIndex1;
-                }
-                else
-                {
-                    intensities1All.Add(0.0);
-                    intensities2All.Add(matched2[matchIndex2].Intensity);
-                    ++matchIndex2;
-                }
-            }
-
-            return new Statistics(intensities1All).NormalizedContrastAngleSqrt(
-                new Statistics(intensities2All));
+            return CalculateSpectrumDotpMzFull(spectrum1.PeaksMatched, spectrum2.PeaksMatched, mzTolerance, true,
+                true);
         }
 
         /// <summary>
@@ -715,68 +683,55 @@ namespace pwiz.Skyline.Model.Koina.Models
         /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
         /// <param name="ignoreMismatches1">if true, unmatched peaks from the first spectrum are ignored</param>
         /// <param name="ignoreMismatches2">if true, unmatched peaks from the second spectrum are ignored</param>
-        public static double CalculateSpectrumDotpMzFull(LibraryRankedSpectrumInfo spectrum1,
-            LibraryRankedSpectrumInfo spectrum2, MzTolerance mzTolerance, bool ignoreMismatches1, bool ignoreMismatches2)
+        public static double CalculateSpectrumDotpMzFull(IEnumerable<LibraryRankedSpectrumInfo.RankedMI> spectrum1,
+            IEnumerable<LibraryRankedSpectrumInfo.RankedMI> spectrum2, MzTolerance mzTolerance, bool ignoreMismatches1, bool ignoreMismatches2)
         {
-            var vectorLength = spectrum1.Intensities.Count() + spectrum2.Intensities.Count();
-            var s1 = Enumerable.Zip(spectrum1.MZs, spectrum1.Intensities,
-                (mz, i) => new SpectrumPeaksInfo.MI() { Mz = mz, Intensity = (float)i }).ToList();
-            var s2 = Enumerable.Zip(spectrum2.MZs, spectrum2.Intensities,
-                (mz, i) => new SpectrumPeaksInfo.MI() { Mz = mz, Intensity = (float)i }).ToList();
+
+            var s1 = spectrum1.ToArray();
+            var s2 = spectrum2.ToArray();
+            var vectorLength = s1.Length + s2.Length;
 
             var intensities1All = new List<double>(vectorLength);
             var intensities2All = new List<double>(vectorLength);
             var matchIndex1 = 0;
             var matchIndex2 = 0;
-            while (matchIndex1 < spectrum1.Intensities.Count() && matchIndex2 < spectrum2.Intensities.Count())
+            while (matchIndex1 < s1.Length && matchIndex2 < s2.Length)
             {
-                switch (mzTolerance.CompareWithTolerance(s1[matchIndex1].Mz, s2[matchIndex2].Mz))
+                var mz1 = s1[matchIndex1].ObservedMz;
+                var mz2 = s2[matchIndex2].ObservedMz;
+                if (mzTolerance.IsWithinTolerance(mz1, mz2))
                 {
-                    case -1:
-                        if(!ignoreMismatches1)
-                        {
-                            intensities1All.Add(s1[matchIndex1].Intensity);
-                            intensities2All.Add(0.0);
-                        }
-                        matchIndex1++;
-                        break;
-                    case 0:
-                        intensities1All.Add(s1[matchIndex1++].Intensity);
-                        intensities2All.Add(s2[matchIndex2++].Intensity);
-                        break;
-                    case 1:
-                        if (!ignoreMismatches2)
-                        {
-                            intensities1All.Add(0.0);
-                            intensities2All.Add(s2[matchIndex2].Intensity);
-                        }
-                        matchIndex2++;
-                        break;
+                    intensities1All.Add(s1[matchIndex1++].Intensity);
+                    intensities2All.Add(s2[matchIndex2++].Intensity);
+                }
+
+                if (mz1 < mz2)
+                {
+                    if (!ignoreMismatches1)
+                    {
+                        intensities1All.Add(s1[matchIndex1].Intensity);
+                        intensities2All.Add(0.0);
+                    }
+                    matchIndex1++;
+                }
+                else{
+                    if (!ignoreMismatches2)
+                    {
+                        intensities1All.Add(0.0);
+                        intensities2All.Add(s2[matchIndex2].Intensity);
+                    }
+                    matchIndex2++;
                 }
             }
             return new Statistics(intensities1All).NormalizedContrastAngleSqrt(
                 new Statistics(intensities2All));
         }
-
-            /*public static double CalculateSpectrumDotpIonMatch(LibraryRankedSpectrumInfo spectrum1,
-                LibraryRankedSpectrumInfo spectrum2)
-            {
-                var matched1 = spectrum1.PeaksMatched.ToArray();
-                var matched2 = spectrum2.PeaksMatched.ToArray();
-                var intensities1All = new List<double>(matched1.Length + matched2.Length);
-                var intensities2All = new List<double>(matched1.Length + matched2.Length);
-
-                foreach (var match1 in matched1)
-                {
-                    var other = matched2.Where(m => m.MatchedIons.Intersect())
-                }
-            }*/
-
-            /// <summary>
-            /// ReLU activation for spectra
-            /// </summary>
-            /// <param name="f">float to apply ReLU to</param>
-            /// <returns>If f is positive, returns f, otherwise 0</returns>
+ 
+        /// <summary>
+        /// ReLU activation for spectra
+        /// </summary>
+        /// <param name="f">float to apply ReLU to</param>
+        /// <returns>If f is positive, returns f, otherwise 0</returns>
             public static float ReLU(float f)
         {
             return Math.Max(f, 0.0f);
