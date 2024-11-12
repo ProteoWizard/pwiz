@@ -366,21 +366,19 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 
         start += strlen(startTag);
         const string endTags[] = { " ", ",",";","\t" };
-        string ccsStr;
-        
-        for(int i=0; i< sizeof(endTags)/sizeof(endTags[0]); i++)
-        {
-	        const size_t end = title.find(endTags[i], start);
 
-            if(end != string::npos)
+        size_t end = title.length();
+        for (int i = 0; i < sizeof(endTags) / sizeof(endTags[0]); i++)
+        {
+            const size_t tmpEnd = title.find(endTags[i], start);
+            if (tmpEnd != string::npos)
             {
-                ccsStr = title.substr(start, end - start);
+                end = tmpEnd;
                 break;
             }
         }
 
-        if(ccsStr.empty())
-            ccsStr = title.substr(start,  title.length() - start);
+        const string ccsStr = title.substr(start, end - start);
 
         try
         {
