@@ -1322,8 +1322,8 @@ namespace pwiz.SkylineTestUtil
 
         private Rectangle ComputeDockableFormScreenRectangle(DockableForm dockableForm)
         {
-            var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm);
-            var skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y) * ScreenshotManager.GetScalingFactor();
+            var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm, false, false);
+            var skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y);
             var skylineRelativeOrigin = new Point(formRectangle.X - skylineWindowPoint.X, formRectangle.Y - skylineWindowPoint.Y);
             return new Rectangle(skylineRelativeOrigin, formRectangle.Size);
         }

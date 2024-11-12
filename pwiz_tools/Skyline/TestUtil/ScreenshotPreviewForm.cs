@@ -462,8 +462,13 @@ namespace pwiz.SkylineTestUtil
 
         private Rectangle GetSkylineScreenBounds()
         {
+            return GetSkylineScreen().Bounds;
+        }
+
+        private Screen GetSkylineScreen()
+        {
             var skylineWindow = Program.MainWindow;
-            return (Rectangle)skylineWindow.Invoke((Func<Rectangle>)(() => Screen.FromControl(skylineWindow).Bounds));
+            return (Screen)skylineWindow.Invoke((Func<Screen>)(() => Screen.FromControl(skylineWindow)));
         }
 
         private void ResizeComponents()
@@ -481,7 +486,10 @@ namespace pwiz.SkylineTestUtil
             ClientSize = autoSize;
             _autoResizeComplete = true;
 
-            Location = GetBestLocation();
+            if (GetSkylineScreen().Equals(Screen.FromControl(this)))
+            {
+                Location = GetBestLocation();
+            }
             FormEx.ForceOnScreen(this);
 
             bool screenshotTaken, stopAtNexScreenshot;

@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestUtil
             public static implicit operator Point(PointAdditive add) => add._add;
         }
 
-        public static Rectangle GetWindowRectangle(Control ctrl, bool fullScreen = false)
+        public static Rectangle GetWindowRectangle(Control ctrl, bool fullScreen = false, bool scale = true)
         {
             var snapshotBounds = Rectangle.Empty;
 
@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestUtil
                     snapshotBounds = new Rectangle(sourcePoint, imageSize);
                 }));
             }
-            return snapshotBounds * GetScalingFactor();
+            return scale ? snapshotBounds * GetScalingFactor() : snapshotBounds;
         }
 
         public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
