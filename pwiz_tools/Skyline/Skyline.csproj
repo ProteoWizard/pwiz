@@ -485,6 +485,12 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\OpenFileDialogNE.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\OpenDataSourceDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>

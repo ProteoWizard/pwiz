@@ -35,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class OpenDataSourceDialog : FormEx
+    public partial class BaseFileDialogNE : FormEx
     {
         private readonly ListViewColumnSorter _listViewColumnSorter = new ListViewColumnSorter();
         private readonly Stack<MsDataFileUri> _previousDirectories = new Stack<MsDataFileUri>();
@@ -46,13 +46,14 @@ namespace pwiz.Skyline.FileUI
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
         private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
-        
+
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
         /// </summary>
+        /// <param name="sourceTypes"></param>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
+        public BaseFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;
@@ -60,24 +61,7 @@ namespace pwiz.Skyline.FileUI
             listView.ListViewItemSorter = _listViewColumnSorter;
 
             DialogResult = DialogResult.Cancel;
-
-            string[] sourceTypes =
-            {
-                FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
-                DataSourceUtil.TYPE_WIFF,
-                DataSourceUtil.TYPE_WIFF2,
-                DataSourceUtil.TYPE_AGILENT,
-                DataSourceUtil.TYPE_BRUKER,
-                DataSourceUtil.TYPE_MBI,
-                DataSourceUtil.TYPE_SHIMADZU,
-                DataSourceUtil.TYPE_THERMO_RAW,
-                DataSourceUtil.TYPE_WATERS_RAW,
-                DataSourceUtil.TYPE_MZML,
-                DataSourceUtil.TYPE_MZXML,
-                DataSourceUtil.TYPE_MZ5,
-                DataSourceUtil.TYPE_UIMF
-            };
-
+            
             sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
             sourceTypeComboBox.SelectedIndex = 0;
             // Create a new image list for the list view that is the default size (16x16)
@@ -240,12 +224,12 @@ namespace pwiz.Skyline.FileUI
 
         public MsDataFileUri InitialDirectory { get; set; }
 
-        public MsDataFileUri DataSource
+        public MsDataFileUri FileName
         {
-            get { return DataSources[0]; }
+            get { return FileNames[0]; }
         }
 
-        public MsDataFileUri[] DataSources { get; private set; }
+        public MsDataFileUri[] FileNames { get; protected set; }
 
         public void SelectAllFileType(string extension, Func<string, bool> accept = null)
         {
@@ -369,7 +353,7 @@ namespace pwiz.Skyline.FileUI
             return null;
         }
 
-        private bool _abortPopulateList;
+        protected bool _abortPopulateList;
         private void populateListViewFromDirectory(MsDataFileUri directory)
         {
             _abortPopulateList = false;
@@ -757,18 +741,18 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                DataSources = new[] { ((SourceInfo) item.Tag).MsDataFileUri,  };
+                FileNames = new[] { ((SourceInfo) item.Tag).MsDataFileUri,  };
                 DialogResult = DialogResult.OK;
                 Close();
             }
         }
 
-        private void OpenFolderItem(ListViewItem listViewItem)
+        protected void OpenFolderItem(ListViewItem listViewItem)
         {
             OpenFolder(((SourceInfo) listViewItem.Tag).MsDataFileUri);
         }
 
-        private void OpenFolder(MsDataFileUri uri)
+        protected void OpenFolder(MsDataFileUri uri)
         {
             if (_currentDirectory != null)
                 _previousDirectories.Push(_currentDirectory);
@@ -800,77 +784,12 @@ namespace pwiz.Skyline.FileUI
 
         private void openButton_Click( object sender, EventArgs e )
         {
-            Open();
+            DoMainAction();
         }
 
-        public void Open()
+        protected virtual void DoMainAction()
         {
-            List<MsDataFileUri> dataSourceList = new List<MsDataFileUri>();
-            foreach (ListViewItem item in listView.SelectedItems)
-            {
-                if (!DataSourceUtil.IsFolderType(item.SubItems[1].Text))
-                {
-                    dataSourceList.Add(((SourceInfo)item.Tag).MsDataFileUri);
-                }
-            }
-            if (dataSourceList.Count > 0)
-            {
-                DataSources = dataSourceList.ToArray();
-                _abortPopulateList = true;
-                DialogResult = DialogResult.OK;
-                return;
-            }
-
-            // No files selected: see if there is a folder selected that we
-            // should navigate to
-            foreach (ListViewItem item in listView.SelectedItems)
-            {
-                if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
-                {
-                    OpenFolderItem(item);
-                    return;
-                }
-            }
-
-            try
-            {
-                // perhaps the user has typed an entire filename into the text box - or just garbage
-                var fileOrDirName = sourcePathTextBox.Text;
-                bool exists;
-                bool triedAddingDirectory = false;
-                while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
-                {
-                    if (triedAddingDirectory)
-                        break;
-                    MsDataFilePath currentDirectoryPath = CurrentDirectory as MsDataFilePath;
-                    if (null == currentDirectoryPath)
-                    {
-                        break;
-                    }
-                    fileOrDirName = Path.Combine(currentDirectoryPath.FilePath, fileOrDirName);
-                    triedAddingDirectory = true;
-                }
-
-                if (exists)
-                {
-                    if (DataSourceUtil.IsDataSource(fileOrDirName))
-                    {
-                        DataSources = new[] {MsDataFileUri.Parse(fileOrDirName)};
-                        DialogResult = DialogResult.OK;
-                        return;
-                    }
-                    else if (Directory.Exists(fileOrDirName))
-                    {
-                        OpenFolder(new MsDataFilePath(fileOrDirName));
-                        return;
-                    }
-                }
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch {} // guard against user typed-in-garbage
-
-            // No files or folders selected: Show an error message.
-            MessageDlg.Show(this, FileUIResources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources);
+            throw new Exception(@"method DoMainAction() MUST be overridden");
         }
 
         private void cancelButton_Click( object sender, EventArgs e )
@@ -1147,7 +1066,7 @@ namespace pwiz.Skyline.FileUI
             if(!Equals(prevDirectory, CurrentDirectory))
                 _previousDirectories.Push(prevDirectory);
         }
-        class SourceInfo
+        protected class SourceInfo
         {
             public SourceInfo(MsDataFileUri msDataFileUri)
             {
@@ -1205,7 +1124,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private enum ImageIndex
+        protected enum ImageIndex
         {
             RecentDocuments,
             Desktop,
