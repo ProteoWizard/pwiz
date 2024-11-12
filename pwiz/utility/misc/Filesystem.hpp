@@ -131,7 +131,8 @@ PWIZ_API_DECL void check_path_length(const string & path);
 PWIZ_API_DECL class TemporaryFile
 {
     public:
-    TemporaryFile(const string& extension/* = ".tmp"*/);
+    TemporaryFile(const string& filenamePrefix, const string& extension);
+    TemporaryFile(const string& extension/* = ".tmp"*/) : TemporaryFile("", extension) {};
     ~TemporaryFile();
 
     const bfs::path& path() const { return filepath; }
