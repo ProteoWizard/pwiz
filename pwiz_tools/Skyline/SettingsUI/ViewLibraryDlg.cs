@@ -481,7 +481,7 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
 
             var matcher = new LibKeyModificationMatcher();
-            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList, _selectedLibrary.Name);
             if (string.IsNullOrEmpty(matcher.FoundMatches) && !matcher.UnmatchedSequences.Any())
             {
                 _matcher = matcher;
@@ -570,6 +570,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void UpdateListPeptide(int selectPeptideIndex)
         {
+            _matcher.LibraryName = _selectedLibName;
             var pepMatcher = new ViewLibraryPepMatching(Document,
                 _selectedLibrary, _selectedSpec, _matcher, _peptides);
             listPeptide.BeginUpdate();

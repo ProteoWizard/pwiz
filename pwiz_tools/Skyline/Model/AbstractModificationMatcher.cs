@@ -39,6 +39,8 @@ namespace pwiz.Skyline.Model
 
         protected SrmSettings Settings { get; set; }
         protected bool Initialized { get; set; }
+        protected internal string LibraryName { get; set; }
+
         protected MappedList<string, StaticMod> DefSetStatic { get; private set; }
         protected MappedList<string, StaticMod> DefSetHeavy { get; private set; }
         protected IsotopeLabelType DocDefHeavyLabelType { get; private set; }
@@ -54,12 +56,14 @@ namespace pwiz.Skyline.Model
         }
         
         internal void InitMatcherSettings(SrmSettings settings,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
+            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, string libraryName)
         {
             DefSetStatic = defSetStatic;
             DefSetHeavy = defSetHeavy;
 
             Settings = settings;
+
+            LibraryName = libraryName;
 
             var modifications = settings.PeptideSettings.Modifications;
 
@@ -498,7 +502,10 @@ namespace pwiz.Skyline.Model
                         }
                         catch (InvalidChemicalModificationException e)
                         {
-                            Messages.WriteAsyncUserMessage(e.Message); // Adduct makes no sense for target formula
+                            var message = string.IsNullOrEmpty(LibraryName) ?
+                                string.Format("In \"{0}\": {1}", key.Target.DisplayName, e.Message) :
+                                string.Format("In entry \"{0}\" of \"{1}\": {2}", key.Target.DisplayName, LibraryName, e.Message);
+                            Messages.WriteAsyncUserMessage(message); // Adduct makes no sense for target formula
                         }
                     }
                 }

@@ -379,7 +379,7 @@ namespace pwiz.SkylineTest
                     )));
             var libKeyModificationMatcher = new LibKeyModificationMatcher();
             libKeyModificationMatcher.CreateMatches(srmSettings, new[] {new LibKey(crosslinkLibraryKey)},
-                new MappedList<string, StaticMod>(), new MappedList<string, StaticMod>());
+                new MappedList<string, StaticMod>(), new MappedList<string, StaticMod>(), null);
 
             var peptideDocNode = libKeyModificationMatcher.CreateDocNodeFromSettings(new LibKey(crosslinkLibraryKey),
                 new Peptide("AKIQDKEGIPPDQQR"), SrmSettingsDiff.ALL, out _);
