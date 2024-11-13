@@ -821,4 +821,10 @@
   <data name="PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_" xml:space="preserve">
       <value>Failed to interpret modified sequence {0}</value>
   </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
+      <value>In "{0}": {1}</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
+      <value>In entry "{0}" of "{1}": {2}</value>
+  </data>
 </root>

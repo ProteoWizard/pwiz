@@ -503,8 +503,8 @@ namespace pwiz.Skyline.Model
                         catch (InvalidChemicalModificationException e)
                         {
                             var message = string.IsNullOrEmpty(LibraryName) ?
-                                string.Format("In \"{0}\": {1}", key.Target.DisplayName, e.Message) :
-                                string.Format("In entry \"{0}\" of \"{1}\": {2}", key.Target.DisplayName, LibraryName, e.Message);
+                                string.Format(ModelResources.AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_, key.Target.DisplayName, e.Message) :
+                                string.Format(ModelResources.AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_, key.Target.DisplayName, LibraryName, e.Message);
                             Messages.WriteAsyncUserMessage(message); // Adduct makes no sense for target formula
                         }
                     }
