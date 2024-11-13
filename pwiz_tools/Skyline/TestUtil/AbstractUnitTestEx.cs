@@ -113,6 +113,13 @@ namespace pwiz.SkylineTestUtil
             return document.ReadAuditLog(path, skylineDocumentHash, () => throw new AssertFailedException("Document hash did not match"));
         }
 
+        // Sometimes a text representation is useful for running down differences in behavior between branches
+        public static void SerializeDocumentToFile(SrmDocument doc, string path)
+        {
+            var serializer = new XmlSerializer(typeof(SrmDocument));
+            using var writer = new StreamWriter(path);
+            serializer.Serialize(writer, doc);
+        }
 
         public static void AssertLastEntry(AuditLogList auditLogList, MessageType messageType)
         {
