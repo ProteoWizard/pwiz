@@ -856,7 +856,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, Path.GetFileName(FilePath));
 
                 if (schemaVer > 0)
                 {
