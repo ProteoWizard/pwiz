@@ -47,7 +47,8 @@ class PWIZ_API_DECL ChromatogramList_Mobilion : public ChromatogramListBase
 
     private:
 
-    MBIFilePtr rawdata_;
+    MBIFilePtr mbiFile_;
+    MBIFile* rawdata_;
     mutable size_t size_;
     Reader::Config config_;
 
