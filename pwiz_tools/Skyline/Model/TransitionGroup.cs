@@ -526,11 +526,12 @@ namespace pwiz.Skyline.Model
                 }
 
                 double ionMz = IsProteomic ? 
-                    SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorAdduct) :
-                    PrecursorAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
+                    SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), productAdduct) :
+                    productAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
 
                 if (losses == null)
                 {
+                    Assume.AreEqual(productAdduct, PrecursorAdduct);
                     if (precursorMS1 && isotopeDist != null && ensureMassesAreMeasurable)
                     {
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
@@ -560,7 +561,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 if (!useFilter || !precursorIsProduct ||
                         !libraryFilter || IsMatched(transitionRanks, ionMz, IonType.precursor,
-                                                    PrecursorAdduct, losses))
+                                                    productAdduct, losses))
                 {
                     yield return CreateTransitionNode(0, precursorMassPredict, null, losses,
                                                       precursorIsProduct ? transitionRanks : null, productAdduct);
