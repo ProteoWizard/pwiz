@@ -171,6 +171,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new KeyValuePair<string, string>("check_spectral_files", "0"),
                     new KeyValuePair<string, string>("calibrate_mass", "0"),
+                    //new KeyValuePair<string, string>("output_report_topN", "5"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
                 ExpectedResultsFinal = new ExpectedResults(143, 340, 428, 1284, 166)

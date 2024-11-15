@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("allow_multiple_variable_mods_on_residue", 0, 0, 1));
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("max_variable_mods_combinations", 5000, 0, 65534)); //  Maximum number of modified forms allowed for each peptide (up to 65534).
-            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("output_report_topN", 1, 1)); //  Reports top N PSMs per input spectrum.
+            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("output_report_topN", 1, 1, DataIsDIA ? 1 : 100)); //  Reports top N PSMs per input spectrum.
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("output_max_expect", 50.0, 0)); //  Suppresses reporting of PSM if top hit has expectation value greater than this threshold.
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("report_alternative_proteins", 1, 0, 1)); //  Report alternative proteins for peptides that are found in multiple proteins (0 for no, 1 for yes).
 
@@ -475,7 +475,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             while (percolatorTargetPsmsReader.ReadLine() != null)
             {
                 var psmId = percolatorTargetPsmsReader.GetFieldByIndex(psmIdColumn);
-                psmId = psmId.Substring(0, psmId.Length - 2);
                 var qvalue = Convert.ToDouble(percolatorTargetPsmsReader.GetFieldByIndex(qvalueColumn), CultureInfo.InvariantCulture);
                 qvalueByPsmId[psmId] = qvalue;
             }
@@ -486,6 +485,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
             var lastPsmIdRegex = new Regex(@".* assumed_charge=""(\d+)"" spectrum=""([^""]+?)\.\d+"" .*", RegexOptions.Compiled);
+            var hitRankRegex = new Regex(@".* hit_rank=""(\d+)"".*", RegexOptions.Compiled);
 
             // This looks for an ampersand that is NOT followed by:
             // - "amp;", "lt;", "gt;", "quot;", "apos;" (predefined XML entities)
@@ -498,6 +498,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 string line;
                 string lastPsmId = "";
+                string lastPsmIdAndRank = "";
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
                     if (line.Contains(@"&"))
@@ -506,11 +507,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                         line = unescapedAmpersandRegex.Replace(line, @"&amp;");
                     }
                     if (line.Contains(@"<spectrum_query"))
+                    {
                         lastPsmId = lastPsmIdRegex.Replace(line, "$2.$1");
+                    }
+                    else if (line.Contains(@"<search_hit"))
+                    {
+                        lastPsmIdAndRank = lastPsmId + hitRankRegex.Replace(line, @"_$1");
+                    }
                     else if (line.Contains(@"<search_score name=""hyperscore"""))
                     {
-                        if (qvalueByPsmId.ContainsKey(lastPsmId))
-                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""{0}"" />", qvalueByPsmId[lastPsmId].ToString(CultureInfo.InvariantCulture));
+                        if (qvalueByPsmId.TryGetValue(lastPsmIdAndRank, out var qvalue))
+                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""{0}"" />", qvalue.ToString(CultureInfo.InvariantCulture));
                         // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
                         else
                         {
@@ -538,24 +545,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             var nativeIdRegex = new Regex(".* spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=(\\d+)\"", RegexOptions.Compiled);
             var startScanRegex = new Regex(".* start_scan=\"(\\d+)\" .*", RegexOptions.Compiled);
-            var scanNumbers = new List<int>();
-            using (var pepXmlFile = new StreamReader(msfraggerPepxmlFilepath))
-            {
-                string line;
-                while ((line = pepXmlFile.ReadLine()) != null)
-                {
-                    if (line.Contains(@"<spectrum_query"))
-                    {
-                        if (!int.TryParse(nativeIdRegex.Replace(line, "$1"), out int scanNumber))
-                            scanNumber = int.Parse(startScanRegex.Replace(line, "$1"));
-
-                        scanNumbers.Add(scanNumber);
-                    }
-
-                    if (monitor.IsCanceled)
-                        return;
-                }
-            }
 
             int scanIndex = 0;
             bool headerFixed = false;
@@ -589,12 +578,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                     }
                     else
                     {
-                        if (scanIndex >= scanNumbers.Count)
-                            throw new InvalidDataException(@"while fixing scan numbers in PIN file, ran out of correct scan numbers from pepXML");
-
-                        int fixedScanNumber = scanNumbers[scanIndex++];
-                        line = Regex.Replace(line, "^([^.]*)\\.\\d+\\.\\d+\\.(\\d+_\\d+\t\\d)\t\\d+", $"$1.{fixedScanNumber}.{fixedScanNumber}.$2\t{fixedScanNumber}");
-
                         // move N-terminal mod to after first AA
                         line = Regex.Replace(line, "n(\\[[^]]+\\])([A-Z])", "$2$1");
 
@@ -1055,7 +1038,7 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
                 ReplaceAdditionalSettingIfDefault(@"deisotope", 0);
                 ReplaceAdditionalSettingIfDefault(@"deneutralloss", 0);
                 ReplaceAdditionalSettingIfDefault(@"intensity_transform", 0);
-                //ReplaceAdditionalSettingIfDefault(@"output_report_topN", 1);
+                ReplaceAdditionalSettingIfDefault(@"output_report_topN", 1);
                 ReplaceAdditionalSettingIfDefault(@"precursor_charge", @"1 4");
                 ReplaceAdditionalSettingIfDefault(@"max_fragment_charge", 1);
                 ReplaceAdditionalSettingIfDefault(@"use_topN_peaks", 100);
@@ -1068,7 +1051,7 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
                 RestoreAdditionalSettingIfDefault(@"deisotope");
                 RestoreAdditionalSettingIfDefault(@"deneutralloss");
                 RestoreAdditionalSettingIfDefault(@"intensity_transform");
-                //RestoreAdditionalSettingIfDefault(@"output_report_topN");
+                RestoreAdditionalSettingIfDefault(@"output_report_topN");
                 RestoreAdditionalSettingIfDefault(@"precursor_charge");
                 RestoreAdditionalSettingIfDefault(@"max_fragment_charge");
                 RestoreAdditionalSettingIfDefault(@"use_topN_peaks");
