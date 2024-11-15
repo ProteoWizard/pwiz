@@ -188,8 +188,6 @@ namespace pwiz.Skyline.Model.Results
             HasIsotopeDotProduct = 8192,
             HasQValue = 16384,
             HasZScore = 32768,
-            HasTotalIonCurrentAreaMS1 = 65536,
-            HasTotalIonCurrentAreaFragment = 131072,
         }
 
         private Flags _flags;
@@ -373,30 +371,6 @@ namespace pwiz.Skyline.Model.Results
             private set { _zScore = SetOptional(value, Flags.HasZScore); }
         }
 
-        private float _totalIonCurrentAreaMs1;
-
-        public float? TotalIonCurrentAreaMs1
-        {
-            get { return GetOptional(_totalIonCurrentAreaMs1, Flags.HasTotalIonCurrentAreaMS1); }
-            private set { _totalIonCurrentAreaMs1 = SetOptional(value, Flags.HasTotalIonCurrentAreaMS1); }
-        }
-
-        private float _totalIonCurrentFragment;
-        public float? TotalIonCurrentAreaFragment
-        {
-            get { return GetOptional(_totalIonCurrentFragment, Flags.HasTotalIonCurrentAreaFragment); }
-            private set { _totalIonCurrentFragment = SetOptional(value, Flags.HasTotalIonCurrentAreaFragment); }
-        }
-
-        public TransitionGroupChromInfo ChangeTotalIonCurrent(float? ms1, float? fragment)
-        {
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.TotalIonCurrentAreaMs1 = ms1;
-                im.TotalIonCurrentAreaFragment = fragment;
-            });
-        }
-
         public Annotations Annotations { get; private set; }
 
         /// <summary>
@@ -489,9 +463,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Annotations.Equals(Annotations) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
-                   other.UserSet.Equals(UserSet) &&
-                   other.TotalIonCurrentAreaMs1.Equals(TotalIonCurrentAreaMs1) &&
-                   other.TotalIonCurrentAreaFragment.Equals(TotalIonCurrentAreaFragment);
+                   other.UserSet.Equals(UserSet);
             return result;
         }
 
@@ -529,8 +501,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ OptimizationStep;
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
-                result = (result*397) ^ TotalIonCurrentAreaMs1.GetHashCode();
-                result = (result*397) ^ TotalIonCurrentAreaFragment.GetHashCode();
                 return result;
             }
         }

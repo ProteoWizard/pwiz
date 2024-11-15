@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Filtering;
-using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -1988,7 +1987,7 @@ namespace pwiz.Skyline.Model
                         listChromInfo = _nodeGroup.Results[iResultOld];
                     }
                 }
-                _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep, _nodeGroup,
+                _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep,
                     iResult, transitionCount, listChromInfo));
             }
 
@@ -2345,12 +2344,10 @@ namespace pwiz.Skyline.Model
         private sealed class TransitionGroupChromInfoListCalculator
         {
             private readonly PeptideDocNode _nodePep;
-            private readonly TransitionGroupDocNode _transitionGroupDocNode;
             private readonly ChromInfoList<TransitionGroupChromInfo> _listChromInfo;
 
             public TransitionGroupChromInfoListCalculator(SrmSettings settings,
                                                           PeptideDocNode nodePep,
-                                                          TransitionGroupDocNode transitionGroupDocNode,
                                                           int resultsIndex,
                                                           int transitionCount,
                                                           ChromInfoList<TransitionGroupChromInfo> listChromInfo)
@@ -2359,7 +2356,6 @@ namespace pwiz.Skyline.Model
                 ResultsIndex = resultsIndex;
                 TransitionCount = transitionCount;
                 _nodePep = nodePep;
-                _transitionGroupDocNode = transitionGroupDocNode;
 
                 _listChromInfo = listChromInfo;
 
@@ -2421,8 +2417,6 @@ namespace pwiz.Skyline.Model
                             Settings.MeasuredResults.Chromatograms[ResultsIndex].MSDataFileInfos[fileOrder].FilePath);
                         var chromInfoGroup = FindChromInfo(fileId, step);
                         var calc = new TransitionGroupChromInfoCalculator(Settings,
-                            _nodePep,
-                            _transitionGroupDocNode,
                                                                           ResultsIndex,
                                                                           fileId,
                                                                           step,
@@ -2505,8 +2499,6 @@ namespace pwiz.Skyline.Model
         private sealed class TransitionGroupChromInfoCalculator
         {
             public TransitionGroupChromInfoCalculator(SrmSettings settings,
-                PeptideDocNode nodePep,
-                TransitionGroupDocNode nodeGroup,
                                                         int resultsIndex,
                                                         ChromFileInfoId fileId,
                                                         int optimizationStep,
@@ -2516,8 +2508,6 @@ namespace pwiz.Skyline.Model
                                                         ExplicitPeakBounds explicitPeakBounds)
             {
                 Settings = settings;
-                NodePep = nodePep;
-                NodeGroup = nodeGroup;
                 ResultsIndex = resultsIndex;
                 FileId = fileId;
                 OptimizationStep = optimizationStep;
@@ -2551,8 +2541,6 @@ namespace pwiz.Skyline.Model
 
             private ExplicitPeakBounds ExplicitPeakBounds { get; set; }
             private SrmSettings Settings { get; set; }
-            public PeptideDocNode NodePep { get; }
-            public TransitionGroupDocNode NodeGroup { get; }
             private int ResultsIndex { get; set; }
             public ChromFileInfoId FileId { get; private set; }
             public int FileOrder { get; private set; }
@@ -2706,7 +2694,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 var retentionTimeValues = BestRetentionTimes ?? NonQuantitativeRetentionTimes;
-                var transitionGroupChromInfo = new TransitionGroupChromInfo(FileId,
+                return new TransitionGroupChromInfo(FileId,
                                                     OptimizationStep,
                                                     PeakCountRatio,
                                                     (float?) retentionTimeValues?.RetentionTime,
@@ -2726,67 +2714,8 @@ namespace pwiz.Skyline.Model
                                                     ZScore,
                                                     Annotations,
                                                     UserSet);
-                transitionGroupChromInfo = CalculateTotalIonCurrent(transitionGroupChromInfo);
-                return transitionGroupChromInfo;
             }
-
-            public TransitionGroupChromInfo CalculateTotalIonCurrent(TransitionGroupChromInfo transitionGroupChromInfo)
-            {
-                if (!Settings.MeasuredResults.TryLoadChromatogram(ResultsIndex, NodePep, NodeGroup,
-                        (float) Settings.TransitionSettings.Instrument.MzMatchTolerance, out var infoSet))
-                {
-                    return transitionGroupChromInfo;
-                }
-
-                if (infoSet.Length == 0)
-                {
-                    return transitionGroupChromInfo;
-                }
-
-                if (!transitionGroupChromInfo.StartRetentionTime.HasValue ||
-                    !transitionGroupChromInfo.EndRetentionTime.HasValue)
-                {
-                    return transitionGroupChromInfo;
-                }
-
-                var startTime = transitionGroupChromInfo.StartRetentionTime.Value;
-                var endTime = transitionGroupChromInfo.EndRetentionTime.Value;
-                var chromatogramGroup = infoSet[0];
-                var chromatograms = Enumerable.Range(0, chromatogramGroup.NumTransitions)
-                    .Select(chromatogramGroup.GetRawTransitionInfo).ToList();
-                var ms1Chromatogram = chromatograms.Where(chrom => chrom.Source == ChromSource.sim)
-                    .Concat(chromatograms.Where(chrom => chrom.Source == ChromSource.ms1)).FirstOrDefault();
-                var fragmentChromatogram = chromatograms.FirstOrDefault(chrom => chrom.Source == ChromSource.fragment);
-                return transitionGroupChromInfo.ChangeTotalIonCurrent(
-                    GetTotalIonCurrentArea(ms1Chromatogram, startTime, endTime),
-                    GetTotalIonCurrentArea(fragmentChromatogram, startTime, endTime));
-            }
-
-            private float? GetTotalIonCurrentArea(ChromatogramInfo chromatogramInfo, float startTime, float endTime)
-            {
-                if (chromatogramInfo?.TimeIntensities.ScanIds == null)
-                {
-                    return null;
-                }
-                var resultFileMetadata = Settings.MeasuredResults.GetResultFileMetaData(chromatogramInfo.FilePath);
-                if (resultFileMetadata == null)
-                {
-                    return null;
-                }
-
-                var spectrumMetadatas = chromatogramInfo.TimeIntensities.ScanIds
-                    .Select(i => resultFileMetadata.SpectrumMetadatas[i])
-                    .OrderBy(spectrumMetadata => spectrumMetadata.RetentionTime).ToList();
-                var timeIntensities =
-                    new TimeIntensities(spectrumMetadatas.Select(metadata => (float)metadata.RetentionTime),
-                        spectrumMetadatas.Select(metadata => (float)metadata.TotalIonCurrent));
-                var chromPeak = ChromPeak.IntegrateWithoutBackground(timeIntensities, startTime, endTime, 0, null);
-                Assume.AreEqual(0f, chromPeak.BackgroundArea);
-                return chromPeak.Area;
-            }
-
         }
-
 
         /// <summary>
         /// True if children of a given node are equivalent to the children
