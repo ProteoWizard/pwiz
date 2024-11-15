@@ -483,7 +483,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         // Add Percolator score to MSFragger pepXML
         private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<string, double> qvalueByPsmId, IProgressMonitor monitor)
         {
-            bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
+            //bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
             var lastPsmIdRegex = new Regex(@".* assumed_charge=""(\d+)"" spectrum=""([^""]+?)\.\d+"" .*", RegexOptions.Compiled);
             var hitRankRegex = new Regex(@".* hit_rank=""(\d+)"".*", RegexOptions.Compiled);
 
@@ -546,7 +546,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             var nativeIdRegex = new Regex(".* spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=(\\d+)\"", RegexOptions.Compiled);
             var startScanRegex = new Regex(".* start_scan=\"(\\d+)\" .*", RegexOptions.Compiled);
 
-            int scanIndex = 0;
             bool headerFixed = false;
             bool addChargeFeatures = false;
             using (var pinFile = new StreamReader(cruxInputFilepath))
