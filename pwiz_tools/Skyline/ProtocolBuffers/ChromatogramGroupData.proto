@@ -41,7 +41,8 @@ message ResultFileMetaDataProto {
 		int32 presetScanConfiguration = 6;
 		int32 analyzerIndex = 7;
 		int32 scanWindowIndex = 8;
-		float totalIonCurrent = 9; 
+		float totalIonCurrent = 9;
+		float injectionTime = 10;
 	}
 
 	message Precursor {

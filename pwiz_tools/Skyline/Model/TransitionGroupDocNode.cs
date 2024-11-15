@@ -2781,7 +2781,7 @@ namespace pwiz.Skyline.Model
                     new TimeIntensities(spectrumMetadatas.Select(metadata => (float)metadata.RetentionTime),
                         spectrumMetadatas.Select(metadata => (float)metadata.TotalIonCurrent));
                 var chromPeak = ChromPeak.IntegrateWithoutBackground(timeIntensities, startTime, endTime, 0, null);
-                Assume.AreEqual(0, chromPeak.BackgroundArea);
+                Assume.AreEqual(0f, chromPeak.BackgroundArea);
                 return chromPeak.Area;
             }
 

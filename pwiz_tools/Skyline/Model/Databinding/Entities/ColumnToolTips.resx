@@ -126,6 +126,24 @@ replicate data. Or #N/A if the file was imported with a version older than 1.1.<
     <value>The type of analyzer that was used to collect the spectrum.
 If more than one analyzer was used, the names of the analyzers will be separated by slashes.</value>
   </data>
+  <data name="ApexIonCount">
+    <value>Product of the total transition intensity and the injection time of the spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexIonCountFragment">
+    <value>Product of the total transition intensity and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexIonCountMS1">
+    <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
+  <data name="ApexSpectrumIonCount">
+    <value>Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexSpectrumIonCountFragment">
+    <value>Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexSpectrumIonCountMS1">
+    <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
@@ -961,6 +979,12 @@ being performed in the replicate.</value>
   <data name="PeakGroupStartTime">
     <value>The minimum start time of the individual peaks in the peak group.</value>
   </data>
+  <data name="PeakIonMetricsFragment">
+    <value>Values related to the number of ions in the mass spectrometer while collecting MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="PeakIonMetricsMS1">
+    <value>Values related to the number of ions in the mass spectrometer while collecting MS1 spectra between the peak integration boundaries</value>
+  </data>
   <data name="PeakQValue">
     <value>The estimate q-value (false discovery rate) that a peak with this score would get if it were the peak chosen by Skyline.</value>
   </data>
@@ -1546,6 +1570,33 @@ particular precursor</value>
   </data>
   <data name="TotalBackgroundMs1">
     <value>Total Background MS1</value>
+  </data>
+  <data name="TotalIonCount">
+    <value>Sum of the products of the total ion current and the injection time of the spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalIonCountFragment">
+    <value>Sum of the products of the transition intensities and the injection time of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalIonCountMS1">
+    <value>Sum of the products of the precursor intensities and the injection time of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalIonCurrentArea">
+    <value>Integral of the total ion current between the peak integration boundaries</value>
+  </data>
+  <data name="TotalIonCurrentAreaFragment">
+    <value>Integral of the total ion current of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalIonCurrentAreaMS1">
+    <value>Integral of the total ion current of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalSpectrumIonCount">
+    <value>Sum of the products of the total ion current and the injection time of the spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalSpectrumIonCountFragment">
+    <value>Sum of the products of the total ion current and the injection time of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="TotalSpectrumIonCountMS1">
+    <value>Sum of th products of the total ion current and the injection time of the MS1 spectra between the peak integration boundaries</value>
   </data>
   <data name="Transition">
     <value>Transition</value>

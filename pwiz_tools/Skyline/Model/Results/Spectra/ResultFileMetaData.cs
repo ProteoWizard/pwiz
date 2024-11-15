@@ -67,7 +67,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
                 var spectrumMetadata = new SpectrumMetadata(id, protoSpectrum.RetentionTime)
                     .ChangePresetScanConfiguration(protoSpectrum.PresetScanConfiguration)
-                    .ChangeTotalIonCurrent(protoSpectrum.TotalIonCurrent);
+                    .ChangeTotalIonCurrent(protoSpectrum.TotalIonCurrent)
+                    .ChangeInjectionTime(protoSpectrum.InjectionTime);
                 if (protoSpectrum.ScanDescriptionIndex > 0)
                 {
                     spectrumMetadata =
@@ -130,7 +131,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 var spectrum = new ResultFileMetaDataProto.Types.SpectrumMetadata
                 {
                     RetentionTime = spectrumMetadata.RetentionTime,
-                    TotalIonCurrent = (float) spectrumMetadata.TotalIonCurrent
+                    TotalIonCurrent = (float) spectrumMetadata.TotalIonCurrent,
+                    InjectionTime = (float) spectrumMetadata.InjectionTime
                 };
                 spectrum.PresetScanConfiguration = spectrumMetadata.PresetScanConfiguration;
                 var intParts = GetScanIdParts(spectrumMetadata.Id);

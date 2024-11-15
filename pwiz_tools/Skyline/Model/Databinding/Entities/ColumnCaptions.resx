@@ -144,6 +144,24 @@
   <data name="Analyzer">
     <value>Analyzer</value>
   </data>
+  <data name="ApexIonCount">
+    <value>Apex Ion Count</value>
+  </data>
+  <data name="ApexIonCountFragment">
+    <value>Apex Ion Count Fragment</value>
+  </data>
+  <data name="ApexIonCountMS1">
+    <value>Apex Ion Count MS1</value>
+  </data>
+  <data name="ApexSpectrumIonCount">
+    <value>Apex Spectrum Ion Count</value>
+  </data>
+  <data name="ApexSpectrumIonCountFragment">
+    <value>Apex Spectrum Ion Count Fragment</value>
+  </data>
+  <data name="ApexSpectrumIonCountMS1">
+    <value>Apex Spectrum Ion Count MS1</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -897,6 +915,12 @@
   <data name="PeakGroupStartTime">
     <value>Peak Group Start Time</value>
   </data>
+  <data name="PeakIonMetricsFragment">
+    <value>Peak Ion Metrics Fragment</value>
+  </data>
+  <data name="PeakIonMetricsMS1">
+    <value>Peak Ion Metrics MS1</value>
+  </data>
   <data name="PeakQValue">
     <value>Peak Q Value</value>
   </data>
@@ -1421,6 +1445,33 @@
   </data>
   <data name="TotalBackgroundMs1">
     <value>Total Background MS1</value>
+  </data>
+  <data name="TotalIonCount">
+    <value>Total Ion Count</value>
+  </data>
+  <data name="TotalIonCountFragment">
+    <value>Total Ion Count Fragment</value>
+  </data>
+  <data name="TotalIonCountMS1">
+    <value>Total Ion Count MS1</value>
+  </data>
+  <data name="TotalIonCurrentArea">
+    <value>Total Ion Current Area</value>
+  </data>
+  <data name="TotalIonCurrentAreaFragment">
+    <value>Total Ion Current Area Fragment</value>
+  </data>
+  <data name="TotalIonCurrentAreaMS1">
+    <value>Total Ion Current Area MS1</value>
+  </data>
+  <data name="TotalSpectrumIonCount">
+    <value>Total Spectrum Ion Count</value>
+  </data>
+  <data name="TotalSpectrumIonCountFragment">
+    <value>Total Spectrum Ion Count Fragment</value>
+  </data>
+  <data name="TotalSpectrumIonCountMS1">
+    <value>Total Spectrum Ion Count MS1</value>
   </data>
   <data name="Transition">
     <value>Transition</value>

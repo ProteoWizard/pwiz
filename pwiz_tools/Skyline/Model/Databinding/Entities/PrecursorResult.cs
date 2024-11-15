@@ -18,18 +18,23 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -186,20 +191,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
 
-        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? TotalIonCurrentAreaMs1
-        {
-            get
-            {
-                return ChromInfo.TotalIonCurrentAreaMs1;
-            }
-        }
-
-        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? TotalIonCurrentAreaFragment
-        {
-            get { return ChromInfo.TotalIonCurrentAreaFragment; }
-        }
 
         public LinkValue<PrecursorQuantificationResult> PrecursorQuantification
         {
@@ -217,6 +208,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                             Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(true);
                     }
                 });
+            }
+        }
+
+        [ChildDisplayName("{0}MS1")]
+        [Format(Formats.PEAK_AREA)]
+        public PeakIonMetrics PeakIonMetricsMS1
+        {
+            get
+            {
+                return _cachedValues.GetValue2(this)?.Item1;
+            }
+        }
+
+        [ChildDisplayName("{0}Fragment")]
+        [Format(Formats.PEAK_AREA)]
+        public PeakIonMetrics PeakIonMetricsFragment
+        {
+            get
+            {
+                return _cachedValues.GetValue2(this)?.Item2;
             }
         }
 
@@ -300,7 +311,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private class CachedValues 
-            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult>
+            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<PeakIonMetrics, PeakIonMetrics>>
         {
             protected override SrmDocument GetDocument(PrecursorResult owner)
             {
@@ -318,6 +329,140 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return calibrationCurveFitter.GetPrecursorQuantificationResult(owner.GetResultFile().Replicate.ReplicateIndex,
                     owner.Precursor.DocNode);
             }
+
+            protected override Tuple<PeakIonMetrics,PeakIonMetrics> CalculateValue2(PrecursorResult owner)
+            {
+                return owner.CalculatePeakIonMetrics();
+            }
+        }
+
+        private Tuple<PeakIonMetrics, PeakIonMetrics> CalculatePeakIonMetrics()
+        {
+            if (IsEmpty())
+            {
+                return null;
+            }
+
+            var resultFileMetadata =
+                SrmDocument.MeasuredResults?.GetResultFileMetaData(GetResultFile().ChromFileInfo.FilePath);
+            if (resultFileMetadata == null)
+            {
+                return null;
+            }
+            var chromatogramGroup = new ChromatogramGroup(this);
+            var timeIntensitiesGroup = chromatogramGroup.ReadTimeIntensitiesGroup();
+            if (timeIntensitiesGroup == null)
+            {
+                return null;
+            }
+            float tolerance = (float) SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var ms1Chromatograms = new List<TimeIntensities>();
+            var fragmentChromatograms = new List<TimeIntensities>();
+            foreach (var transitionDocNode in Precursor.DocNode.Transitions)
+            {
+                var transitionChromInfo = GetResultFile().FindChromInfo(transitionDocNode.Results);
+                if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
+                {
+                    continue;
+                }
+
+                var chromatogramInfo =
+                    chromatogramGroup.ChromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance,
+                        TransformChrom.raw);
+                if (chromatogramInfo == null)
+                {
+                    continue;
+                }
+
+                var timeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[chromatogramInfo.TransitionIndex];
+
+                if (chromatogramInfo.Source == ChromSource.ms1)
+                {
+                    ms1Chromatograms.Add(timeIntensities);
+                }
+                else if (chromatogramInfo.Source == ChromSource.fragment)
+                {
+                    fragmentChromatograms.Add(timeIntensities);
+                }
+            }
+
+            return Tuple.Create(GetIonMetrics(resultFileMetadata, ms1Chromatograms),
+                GetIonMetrics(resultFileMetadata, fragmentChromatograms));
+        }
+
+        private PeakIonMetrics GetIonMetrics(ResultFileMetaData resultFileMetadata, IList<TimeIntensities> chromatograms)
+        {
+            var scanIndexes = chromatograms.FirstOrDefault()?.ScanIds;
+            if (scanIndexes == null)
+            {
+                return null;
+            }
+            var times = chromatograms[0].Times;
+            if (!chromatograms.Skip(1).All(chromatogramInfo =>
+                    Equals(chromatogramInfo.Times, times) && Equals(chromatogramInfo.ScanIds, scanIndexes)))
+            {
+                return null;
+            }
+
+            int iStart = CollectionUtil.BinarySearch(times, ChromInfo.StartRetentionTime.Value);
+            if (iStart < 0)
+            {
+                iStart = Math.Max(0, ~iStart - 1);
+            }
+
+            List<float> ticTimes = new List<float>();
+            List<float> ticIntensities = new List<float>();
+            double apexSpectrumIonCount = 0;
+            double totalSpectrumIonCount = 0;
+            double apexIonCount = 0;
+            double totalIonCount = 0;
+            double? apexIntensity = null;
+            for (int i = iStart; i < times.Count; i++)
+            {
+                var scanIndex = scanIndexes[i];
+                var time = times[i];
+                ticTimes.Add(time);
+                var spectrumMetadata = resultFileMetadata.SpectrumMetadatas[scanIndex];
+                var totalIonCurrent = spectrumMetadata.TotalIonCurrent;
+                ticIntensities.Add((float) totalIonCurrent);
+                if (time > MaxEndTime)
+                {
+                    break;
+                }
+
+                if (time < MinStartTime)
+                {
+                    continue;
+                }
+                
+                double intensity = 0;
+                foreach (var chromatogramInfo in chromatograms)
+                {
+                    intensity += chromatogramInfo.Intensities[i];
+                }
+
+                double ionCount = intensity * spectrumMetadata.InjectionTime;
+                double spectrumIonCount = totalIonCount * spectrumMetadata.InjectionTime;
+                
+                if (apexIntensity == null || intensity > apexIntensity.Value)
+                {
+                    apexIonCount = ionCount;
+                    apexSpectrumIonCount = spectrumIonCount;
+                    apexIntensity = intensity;
+                }
+                totalIonCount += ionCount;
+                totalSpectrumIonCount += spectrumIonCount;
+            }
+
+            if (ticTimes.Count == 0)
+            {
+                return null;
+            }
+
+            var ticTimeIntensities = new TimeIntensities(ticTimes, ticIntensities);
+            var chromPeak = ChromPeak.IntegrateWithoutBackground(ticTimeIntensities, (float) MinStartTime, (float) MaxEndTime, 0, null);
+            Assume.AreEqual(0f, chromPeak.BackgroundArea);
+            return new PeakIonMetrics(chromPeak.Area, apexSpectrumIonCount, totalSpectrumIonCount, apexIonCount, totalIonCount);
         }
     }
 }

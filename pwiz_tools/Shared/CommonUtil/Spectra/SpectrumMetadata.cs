@@ -118,6 +118,13 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.TotalIonCurrent = value);
         }
 
+        public double InjectionTime { get; private set; }
+
+        public SpectrumMetadata ChangeInjectionTime(double value)
+        {
+            return ChangeProp(ImClone(this), im => im.InjectionTime = value);
+        }
+
         protected bool Equals(SpectrumMetadata other)
         {
             return _precursorsByMsLevel.Equals(other._precursorsByMsLevel) && Id == other.Id &&

@@ -1264,7 +1264,7 @@ namespace pwiz.ProteowizardWrapper
             }
 
             metadata = metadata.ChangeTotalIonCurrent(GetTotalIonCurrent(spectrum));
-
+            metadata = metadata.ChangeInjectionTime(GetInjectionTime(spectrum));
             return metadata;
         }
 
@@ -1500,13 +1500,18 @@ namespace pwiz.ProteowizardWrapper
 
         private double GetTotalIonCurrent(Spectrum spectrum)
         {
-            double totalIonCurrent = 0;
+            return spectrum.cvParam(CVID.MS_total_ion_current)?.value ?? 0.0;
+        }
+
+        private double GetInjectionTime(Spectrum spectrum)
+        {
+            double injectionTime = 0;
             foreach (var scan in spectrum.scanList.scans)
             {
-                totalIonCurrent += scan.cvParam(CVID.MS_total_ion_current)?.value ?? 0.0;
+                injectionTime += scan.cvParam(CVID.MS_ion_injection_time)?.value ?? 0.0;
             }
 
-            return totalIonCurrent;
+            return injectionTime;
         }
 
         private static int GetPresetScanConfiguration(Spectrum spectrum)
