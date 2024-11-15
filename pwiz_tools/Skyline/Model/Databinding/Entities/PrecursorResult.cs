@@ -211,6 +211,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Expensive]
         [ChildDisplayName("{0}MS1")]
         [Format(Formats.PEAK_AREA)]
         public PeakIonMetrics PeakIonMetricsMS1
@@ -221,6 +222,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Expensive]
         [ChildDisplayName("{0}Fragment")]
         [Format(Formats.PEAK_AREA)]
         public PeakIonMetrics PeakIonMetricsFragment
