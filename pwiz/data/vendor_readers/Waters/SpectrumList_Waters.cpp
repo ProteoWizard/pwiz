@@ -220,7 +220,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
     if (doCentroid && ie.block >= 0)
     {
-        warn_once("[SpectrumList_Waters]: vendor centroiding is not supported for Waters ion mobility data");
         doCentroid = false;
     }
 
@@ -340,14 +339,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
             if (hasSonarFunctions())
             {
-                mobilityOrQuadLowArray->set(MS_scanning_quadrupole_position_lower_bound_m_z_array);
+                mobilityOrQuadLowArray->set(MS_scanning_quadrupole_position_lower_bound_m_z_array, "", MS_m_z);
                 result->binaryDataArrayPtrs.push_back(mobilityOrQuadLowArray);
-                quadHighArray->set(MS_scanning_quadrupole_position_upper_bound_m_z_array);
+                quadHighArray->set(MS_scanning_quadrupole_position_upper_bound_m_z_array, "", MS_m_z);
                 result->binaryDataArrayPtrs.push_back(quadHighArray);
             }
             else
             {
-                 mobilityOrQuadLowArray->set(MS_raw_ion_mobility_array);
+                 mobilityOrQuadLowArray->set(MS_raw_ion_mobility_array, "", UO_millisecond);
                  result->binaryDataArrayPtrs.push_back(mobilityOrQuadLowArray);
             }
         }
