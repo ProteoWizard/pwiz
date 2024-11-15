@@ -843,6 +843,25 @@ namespace pwiz.Skyline.Util
             return !IsDirectory(path);
         }
 
+        public static bool IsWriteLocked(string path)
+        {
+            try
+            {
+                using var fs = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.None);
+                return false;
+            }
+            catch (IOException)
+            {
+                // An IOException means the file is locked
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Or we lack permissions, treat it as locked
+                return true;
+            }
+        }
+
         public static bool AreIdenticalFiles(string pathA, string pathB)
         {
             var infoA = new FileInfo(pathA);
