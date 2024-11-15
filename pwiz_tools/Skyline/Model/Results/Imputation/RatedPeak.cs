@@ -33,27 +33,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
         }
 
         public bool ManuallyIntegrated { get; }
-        public double? Percentile { get; private set; }
-
-        public RatedPeak ChangePercentile(double? value)
-        {
-            return ChangeProp(ImClone(this), im => im.Percentile = value);
-        }
-
-        public double? PValue { get; private set; }
-
-        public RatedPeak ChangePValue(double? value)
-        {
-            return ChangeProp(ImClone(this), im => im.PValue = value);
-        }
-
-        public double? QValue { get; private set; }
-
-        public RatedPeak ChangeQValue(double? value)
-        {
-            return ChangeProp(ImClone(this), im => im.QValue = value);
-        }
-
         public Verdict PeakVerdict { get; private set; }
 
         public string Opinion { get; private set; }

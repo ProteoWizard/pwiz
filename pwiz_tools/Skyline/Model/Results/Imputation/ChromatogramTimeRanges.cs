@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 
 namespace pwiz.Skyline.Model.Results.Imputation
@@ -19,10 +18,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
         }
 
         public static ChromatogramTimeRanges ReadChromatogramTimeRanges(CancellationToken cancellationToken,
-            IEnumerable<ChromatogramCache> caches, bool inferFromPoints)
+            IEnumerable<ChromatogramCache> caches)
         {
             var timeRangeDicts = new Dictionary<Key, Dictionary<MsDataFileUri, TimeIntervals>>();
-            var triggeredAcquisition = new TriggeredAcquisition();
             foreach (var cache in caches)
             {
                 for (int iHeader = 0; iHeader < cache.ChromGroupHeaderInfos.Count; iHeader++)
@@ -30,19 +28,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     cancellationToken.ThrowIfCancellationRequested();
                     var header = cache.ChromGroupHeaderInfos[iHeader];
                     TimeIntervals timeIntervals = null;
-                    if (inferFromPoints)
+                    if (header.StartTime.HasValue && header.EndTime.HasValue)
                     {
-                        var chromatogramInfo = cache.LoadChromatogramInfo(iHeader);
-                        timeIntervals = triggeredAcquisition.InferTimeIntervals(Enumerable
-                            .Range(0, chromatogramInfo.NumTransitions)
-                            .Select(i => chromatogramInfo.GetTransitionInfo(i, TransformChrom.raw).Times));
-                    }
-                    else
-                    {
-                        if (header.StartTime.HasValue && header.EndTime.HasValue)
-                        {
-                            timeIntervals = TimeIntervals.FromIntervals(new []{new KeyValuePair<float, float>(header.StartTime.Value, header.EndTime.Value)});
-                        }
+                        timeIntervals = TimeIntervals.FromIntervals(new []{new KeyValuePair<float, float>(header.StartTime.Value, header.EndTime.Value)});
                     }
 
                     if (timeIntervals != null)
@@ -200,7 +188,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override ChromatogramTimeRanges ProduceResult(ProductionMonitor productionMonitor, Parameter parameter, IDictionary<WorkOrder, object> inputs)
             {
-                return parameter.MeasuredResults?.GetChromatogramTimeRanges(productionMonitor.CancellationToken, parameter.InferFromPoints);
+                return parameter.MeasuredResults?.GetChromatogramTimeRanges(productionMonitor.CancellationToken);
+            }
+
+            public override string GetDescription(object workParameter)
+            {
+                return "Reading chromatogram time ranges";
             }
         }
     }

@@ -56,18 +56,13 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public double GetDeepProgressValue(WorkOrder key)
+        public DeepProgress GetDeepProgress(WorkOrder key)
         {
             lock (this)
             {
-                var selfProgress = (double) GetProgressValue(key);
-                var inputProgressValues = key.GetInputs().Select(GetDeepProgressValue).ToList();
-                if (inputProgressValues.Count == 0)
-                {
-                    return selfProgress;
-                }
-
-                return selfProgress / 2 + inputProgressValues.Average() / 2;
+                var selfProgress = GetProgressValue(key);
+                string description = key.Producer.GetDescription(key);
+                return new DeepProgress(description, selfProgress, key.GetInputs().Select(GetDeepProgress));
             }
         }
 

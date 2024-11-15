@@ -1952,9 +1952,9 @@ namespace pwiz.Skyline.Model.Results
             return _medianTicArea;
         }
 
-        public ChromatogramTimeRanges GetChromatogramTimeRanges(CancellationToken cancellationToken, bool inferFromPoints)
+        public ChromatogramTimeRanges GetChromatogramTimeRanges(CancellationToken cancellationToken)
         {
-            return ChromatogramTimeRanges.ReadChromatogramTimeRanges(cancellationToken, Caches, inferFromPoints);
+            return ChromatogramTimeRanges.ReadChromatogramTimeRanges(cancellationToken, Caches);
         }
     }
 

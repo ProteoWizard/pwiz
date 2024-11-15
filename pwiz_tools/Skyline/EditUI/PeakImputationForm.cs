@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -38,7 +37,6 @@ namespace pwiz.Skyline.EditUI
         private Receiver<PeakImputationData.Parameters, PeakImputationData> _receiver;
         private SkylineDataSchema _dataSchema;
         private PeakImputationData _data;
-        private ScoreConversionData _scoreConversionData = ScoreConversionData.EMPTY;
         private SequenceTree _sequenceTree;
 
         public PeakImputationForm(SkylineWindow skylineWindow)
@@ -77,7 +75,6 @@ namespace pwiz.Skyline.EditUI
                 if (!Equals(_data, newData))
                 {
                     _data = newData;
-                    _scoreConversionData = _data.ScoreConversionData;
                     _rows.Clear();
                     _rows.AddRange(_data.MoleculePeaks.Select(peak => new Row(_dataSchema, peak)));
                     _rowsBindingList.ResetBindings();
@@ -122,7 +119,20 @@ namespace pwiz.Skyline.EditUI
             else
             {
                 progressBar1.Visible = true;
-                progressBar1.Value = (int) (_receiver.GetDeepProgressValue() * 100);
+                DeepProgress deepProgress = _receiver.GetDeepProgressValue();
+                string tooltip = null;
+                int progressValue = 0;
+                if (deepProgress != null)
+                {
+                    tooltip = TextUtil.LineSeparate(GetProgressLines(deepProgress, string.Empty)); ;
+                    progressValue = (int)Math.Max(0, Math.Min(10000, deepProgress.DeepProgressValue * 100));
+                }
+
+                progressBar1.Value = progressValue;
+                if (tooltip != toolTip1.GetToolTip(progressBar1))
+                {
+                    toolTip1.SetToolTip(progressBar1, tooltip);
+                }
             }
 
             var error = _receiver.GetError();
@@ -202,9 +212,6 @@ namespace pwiz.Skyline.EditUI
             var scoringModel = GetScoringModelToUse(document);
             tbxScoringModel.Text = scoringModel.Name;
 
-            radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
-            radioQValue.Enabled = HasQValues(document);
-            radioPercentile.Enabled = DocumentWide;
             var alignmentOption = comboRetentionTimeAlignment.SelectedItem as AlignmentOption;
             var parameters = new PeakImputationData.Parameters(document)
                 .ChangeRtValueType(alignmentOption?.RtValueType)
@@ -213,23 +220,6 @@ namespace pwiz.Skyline.EditUI
                 .ChangeScoringModel(scoringModel)
                 .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null))
                 .ChangeMaxPeakWidthVariation(GetDoubleValue(tbxMaxPeakWidthVariation, 0, null) / 100);
-            double? scoreCutoff;
-            if (CutoffType == CutoffScoreType.RAW)
-            {
-                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, null, null);
-            }
-            else
-            {
-                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, 0, 100);
-                if (CutoffType == CutoffScoreType.PERCENTILE)
-                {
-                    scoreCutoff /= 100;
-                }
-            }
-
-            lblCutoffPercent.Visible = CutoffType == CutoffScoreType.PERCENTILE;
-
-            parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
             if (!DocumentWide)
             {
                 var peptideIdentityPaths =
@@ -376,27 +366,6 @@ namespace pwiz.Skyline.EditUI
                 get { return _ratedPeak.Score; }
             }
 
-            [Format(Formats.Percent)]
-            public double? Percentile
-            {
-                get
-                {
-                    return _ratedPeak.Percentile;
-                }
-            }
-
-            [Format(Formats.PValue)]
-            public double? PValue
-            {
-                get { return _ratedPeak.PValue; }
-            }
-
-            [Format(Formats.PValue)]
-            public double? LibraryQValue
-            {
-                get { return _ratedPeak.QValue; }
-            }
-
             public double? ShiftFromBestPeak
             {
                 get
@@ -461,98 +430,6 @@ namespace pwiz.Skyline.EditUI
         private void SettingsControlChanged(object sender, EventArgs e)
         {
             OnDocumentChanged();
-        }
-        private CutoffScoreType _oldCutoffType = CutoffScoreType.RAW;
-
-        public CutoffScoreType CutoffType
-        {
-            get
-            {
-                if (radioQValue.Checked)
-                {
-                    return CutoffScoreType.QVALUE;
-                }
-
-                if (radioPValue.Checked)
-                {
-                    return CutoffScoreType.PVALUE;
-                }
-
-                if (radioPercentile.Checked)
-                {
-                    return CutoffScoreType.PERCENTILE;
-                }
-                return CutoffScoreType.RAW;
-            }
-
-            set
-            {
-                if (value == CutoffScoreType.QVALUE)
-                {
-                    radioQValue.Checked = true;
-                }
-
-                if (value == CutoffScoreType.PVALUE)
-                {
-                    radioPValue.Checked = true;
-                }
-
-                if (value == CutoffScoreType.PERCENTILE)
-                {
-                    radioPercentile.Checked = true;
-                }
-
-                if (value == CutoffScoreType.RAW)
-                {
-                    radioScore.Checked = true;
-                }
-            }
-        }
-
-        private void CutoffTypeChanged(object sender, EventArgs e)
-        {
-            UpdateCutoffValue();
-        }
-
-        private void UpdateCutoffValue()
-        {
-            var newCutoffType = CutoffType;
-            if (newCutoffType == _oldCutoffType)
-            {
-                return;
-            }
-            if (_inChange)
-            {
-                return;
-            }
-            try
-            {
-                _inChange = true;
-                var cutoffValue = GetDoubleValue(tbxCoreScoreCutoff, null, null);
-                if (cutoffValue.HasValue)
-                {
-                    var score = _oldCutoffType.ToRawScore(_scoreConversionData, cutoffValue.Value);
-                    if (score.HasValue && !double.IsNaN(score.Value))
-                    {
-                        var newCutoff = newCutoffType.FromRawScore(_scoreConversionData, score.Value);
-                        if (newCutoff.HasValue && !double.IsNaN(newCutoff.Value))
-                        {
-                            if (newCutoffType == CutoffScoreType.PERCENTILE)
-                            {
-                                newCutoff *= 100;
-                            }
-                            tbxCoreScoreCutoff.Text = newCutoff.ToString();
-                        }
-                    }
-                }
-                _oldCutoffType = newCutoffType;
-                UpdateUi();
-            }
-            finally
-            {
-                _inChange = false;
-            }
-
         }
 
         private double? GetDoubleValue(TextBox textBox, double? min, double? max)
@@ -764,10 +641,6 @@ namespace pwiz.Skyline.EditUI
                 ppPeaks,
                 ppPeaks.Property(nameof(Peak.Score))
             };
-            if (HasQValues(SkylineWindow.Document))
-            {
-                propertyPaths.Add(ppPeaks.Property(nameof(Peak.LibraryQValue)));
-            }
 
             propertyPaths.Add(ppPeaks.Property(nameof(Peak.Verdict)));
             propertyPaths.Add(ppPeaks.Property(nameof(Peak.Opinion)));
@@ -917,6 +790,24 @@ namespace pwiz.Skyline.EditUI
             {
                 CellTemplate = new ImputeButtonCell();
             }
+        }
+
+        private IEnumerable<string> GetProgressLines(DeepProgress deepProgress, string indent)
+        {
+            string childIndent = indent + @"  ";
+            IEnumerable<string> lines =
+                deepProgress.InputProgress.SelectMany(child => GetProgressLines(child, childIndent));
+            if (string.IsNullOrEmpty(deepProgress.Description))
+            {
+                return lines;
+            }
+            
+            if (deepProgress.ProgressValue == 0)
+            {
+                return lines.Prepend(TextUtil.AppendColon(deepProgress.Description));
+            }
+            return lines.Prepend(TextUtil.ColonSeparate(deepProgress.Description,
+                (deepProgress.ProgressValue / 100.0).ToString(Formats.Percent)));
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using EnvDTE;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -10,7 +9,6 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -21,11 +19,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             Params = parameters;
             Alignments = alignmentResults;
-            var sortedScores = ImmutableList.ValueOf(moleculePeaksList
-                .SelectMany(molecule => molecule.Peaks.Select(peak => peak.Score)).OfType<double>()
-                .Select(score => (float)score));
-
-            ScoreConversionData = new ScoreConversionData(sortedScores);
             ChromatogramTimeRanges = chromatogramTimeRanges;
 
             var ratedMoleculePeaks = new List<MoleculePeaks>();
@@ -41,24 +34,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public AlignmentResults Alignments { get; }
         public ChromatogramTimeRanges ChromatogramTimeRanges { get; }
 
-        public ScoreConversionData ScoreConversionData { get; }
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
         public double? MeanRtStdDev { get; }
-
-        public RatedPeak FillInScores(RatedPeak peak)
-        {
-            if (peak.Score.HasValue)
-            {
-                peak = peak.ChangePercentile(ScoreConversionData.GetPercentileOfScore(peak.Score.Value));
-                // peak = peak.ChangeQValue(ScoringResults.ScoreQValueMap?.GetQValue(peak.Score));
-                if (!Equals(Params.ScoringModel, LegacyScoringModel.DEFAULT_MODEL))
-                {
-                    peak = peak.ChangePValue(CutoffScoreType.PVALUE.FromRawScore(ScoreConversionData, peak.Score.Value));
-                }
-            }
-
-            return peak;
-        }
 
         public class Parameters : Immutable
         {
@@ -74,19 +51,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public Parameters ChangeOverwriteManualPeaks(bool value)
             {
                 return ChangeProp(ImClone(this), im => im.OverwriteManualPeaks = value);
-            }
-
-            public double? CutoffScore { get; private set; }
-
-            public CutoffScoreType CutoffScoreType { get; private set; }
-
-            public Parameters ChangeCutoffScore(CutoffScoreType type, double? value)
-            {
-                return ChangeProp(ImClone(this), im =>
-                {
-                    im.CutoffScoreType = type;
-                    im.CutoffScore = value;
-                });
             }
 
             public PeakScoringModelSpec ScoringModel { get; private set; }
@@ -144,8 +108,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             protected bool Equals(Parameters other)
             {
                 return ReferenceEquals(Document, other.Document) && OverwriteManualPeaks == other.OverwriteManualPeaks &&
-                       Nullable.Equals(CutoffScore, other.CutoffScore) &&
-                       Equals(CutoffScoreType, other.CutoffScoreType) && Equals(ScoringModel, other.ScoringModel) &&
+                       Equals(ScoringModel, other.ScoringModel) &&
                        Equals(RtValueType, other.RtValueType) && 
                        Equals(AlignmentType, other.AlignmentType) &&
                        Nullable.Equals(AllowableRtShift, other.AllowableRtShift) && 
@@ -167,8 +130,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 {
                     var hashCode = Document != null ? RuntimeHelpers.GetHashCode(Document) : 0;
                     hashCode = (hashCode * 397) ^ OverwriteManualPeaks.GetHashCode();
-                    hashCode = (hashCode * 397) ^ CutoffScore.GetHashCode();
-                    hashCode = (hashCode * 397) ^ (CutoffScoreType != null ? CutoffScoreType.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (ScoringModel != null ? ScoringModel.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (AlignmentType != null ? AlignmentType.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ AllowableRtShift.GetHashCode();
@@ -327,13 +288,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 var timeIntervals = timeRanges?.GetTimeIntervals(peakResultFile.MsDataFileUri);
                                 var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), timeIntervals, rawPeakBounds, score,
                                     manuallyIntegrated);
-                                var explicitPeakBounds =
-                                    document.Settings.GetExplicitPeakBounds(molecule, chromFileInfo.FilePath);
-                                if (rawPeakBounds != null && explicitPeakBounds?.Score != null && explicitPeakBounds.StartTime < rawPeakBounds.EndTime && explicitPeakBounds.EndTime > rawPeakBounds.StartTime)
-                                {
-                                    peak = peak.ChangeQValue(explicitPeakBounds.Score);
-                                }
-
                                 peaks.Add(peak);
                             }
                         }
@@ -345,6 +299,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         yield return moleculePeaks;
                     }
                 }
+            }
+
+            public override string GetDescription(object workParameter)
+            {
+                return "Peak Imputation Data";
             }
         }
 
@@ -402,9 +361,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         private MoleculePeaks RatePeaks(Parameters parameters, MoleculePeaks moleculePeaks)
         {
-            var peaks = new List<RatedPeak>();
-            var timeRanges = GetTimeIntervals(moleculePeaks);
-            peaks.AddRange(MarkExemplaryPeaks(parameters, moleculePeaks.Peaks.Select(FillInScores).ToList()));
+            var peaks = new List<RatedPeak>(MarkExemplaryPeaks(parameters, moleculePeaks.Peaks));
             var exemplaryPeaks = peaks.Where(peak => peak.PeakVerdict == RatedPeak.Verdict.Exemplary).ToList();
             if (exemplaryPeaks.Count == 0)
             {
@@ -425,14 +382,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             bool firstExemplary = true;
             IEnumerable<RatedPeak> orderedPeaks;
-            if (parameters.CutoffScoreType == CutoffScoreType.QVALUE)
-            {
-                orderedPeaks = peaks.OrderBy(peak => Tuple.Create(peak.QValue ?? double.PositiveInfinity, -peak.Score));
-            }
-            else
-            {
-                orderedPeaks = peaks.OrderByDescending(peak => peak.Score);
-            }
+            orderedPeaks = peaks.OrderByDescending(peak => peak.Score);
             foreach (var peak in orderedPeaks)
             {
                 if (peak.AlignedPeakBounds == null || !peak.Score.HasValue)
@@ -444,30 +394,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 if (firstExemplary)
                 {
                     firstExemplary = false;
-                    string opinion;
-                    if (parameters.CutoffScoreType == CutoffScoreType.QVALUE)
-                    {
-                        if (peaks.Select(p => p.QValue).Distinct().Count() == 1 && peaks.Select(p=>p.Score).Distinct().Count() > 1)
-                        {
-                            opinion =
-                                string.Format("All of the q-values were the same but this one had a better {0} score.", parameters.ScoringModel.Name);
-                        }
-                        else
-                        {
-                            opinion = string.Format("Peak q-value {0} is lower than all other replicates", peak.QValue);
-                        }
-                    }
-                    else
-                    {
-                        opinion = string.Format("Peak score {0} is higher than all other replicates",
-                            peak.Score?.ToString(Formats.PEAK_SCORE));
-                    }
-
+                    string opinion = string.Format("Peak score {0} is higher than all other replicates",
+                        peak.Score?.ToString(Formats.PEAK_SCORE));
                     yield return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary, opinion);
                     continue;
                 }
 
-                yield return MarkExemplary(parameters, peak);
+                yield return peak;
             }
         }
 
@@ -539,36 +472,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             return new RatedPeak.PeakBounds(alignedPeakBounds.Average(peak => peak.StartTime),
                 alignedPeakBounds.Average(peak => peak.EndTime));
-        }
-
-        private RatedPeak MarkExemplary(Parameters parameters, RatedPeak peak)
-        {
-            if (parameters.CutoffScoreType == CutoffScoreType.RAW && peak.Score >= parameters.CutoffScore)
-            {
-                return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary,
-                    string.Format("Score {0} is above cutoff {1}", peak.Score.Value.ToString(Formats.PEAK_SCORE), parameters.CutoffScore));
-            }
-
-            if (parameters.CutoffScoreType == CutoffScoreType.PERCENTILE &&
-                peak.Percentile >= parameters.CutoffScore)
-            {
-                return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary,
-                    string.Format("Percentile {0} is above cutoff {1}", peak.Percentile.Value.ToString(@"P"), parameters.CutoffScore.Value.ToString(@"P")));
-            }
-
-            if (parameters.CutoffScoreType == CutoffScoreType.PVALUE && peak.PValue <= parameters.CutoffScore)
-            {
-                return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary,
-                    string.Format("P-value {0} is below cutoff {1}", peak.PValue.Value.ToString(Formats.PValue), parameters.CutoffScore));
-            }
-
-            if (parameters.CutoffScoreType == CutoffScoreType.QVALUE && peak.QValue <= parameters.CutoffScore)
-            {
-                return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary,
-                    string.Format("Q-value {0} is below cutoff {1}", peak.QValue.Value.ToString(Formats.PValue), parameters.CutoffScore));
-            }
-
-            return peak;
         }
 
         public static double? GetMeanRtStandardDeviation(SrmDocument document, AlignmentResults alignmentResults)

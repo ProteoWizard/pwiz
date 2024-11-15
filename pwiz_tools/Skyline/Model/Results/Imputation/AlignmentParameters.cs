@@ -66,6 +66,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     replicateFileId => parameter.RtValueType.GetRetentionTimes(document, replicateFileId));
                 return new AlignmentResults(parameter.AlignmentType.PerformAlignment(productionMonitor, times));
             }
+
+            public override string GetDescription(object workParameter)
+            {
+                return "Retention time alignment";
+            }
         }
     }
 }

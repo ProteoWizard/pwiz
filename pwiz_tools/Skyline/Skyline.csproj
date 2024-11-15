@@ -571,14 +571,12 @@
     <Compile Include="Model\Results\Imputation\PeakImputer.cs" />
     <Compile Include="Model\Results\Imputation\RatedPeak.cs" />
     <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
-    <Compile Include="Model\Results\Imputation\CutoffScoreType.cs" />
     <Compile Include="Model\Results\Imputation\LongestCommonSequenceFinder.cs" />
     <Compile Include="Model\Results\Imputation\MoleculePeaks.cs" />
     <Compile Include="Model\Results\Imputation\PeakBounds.cs" />
     <Compile Include="Model\Results\Imputation\PeakImputationData.cs" />
     <Compile Include="Model\Results\Imputation\RtValueType.cs" />
     <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
-    <Compile Include="Model\Results\Imputation\ScoreConversionData.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
