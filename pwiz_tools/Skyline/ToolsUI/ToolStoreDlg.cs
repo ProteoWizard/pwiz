@@ -207,6 +207,8 @@ namespace pwiz.Skyline.ToolsUI
             listBoxTools.SelectedIndex = toolIndex;
         }
 
+        public bool IsIconDownloading => _tools[listBoxTools.SelectedIndex].IconDownloading;
+
         #endregion
     }
 

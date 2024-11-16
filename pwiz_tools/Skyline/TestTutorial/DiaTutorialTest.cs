@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -48,19 +50,16 @@ namespace pwiz.SkylineTestTutorial
         /// to regenerate checkpoint files for non-full-import mode,
         /// when something changes in the test.
         /// </summary>
-        private bool IsFullImportMode { get { return IsRecordImported || IsCoverShotMode || IsPauseForScreenShots; } }
+        private bool IsFullImportMode { get { return IsRecordMode || IsCoverShotMode || IsPauseForScreenShots || IsAutoScreenShotMode; } }
 
-        private bool IsRecordImported
-        {
-            get { return false; }
-        }
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
-//            IsPauseForScreenShots = true;
-//            IsCoverShotMode = true;
+            // IsPauseForScreenShots = true;
+            // IsCoverShotMode = true;
             CoverShotName = "DIA";
             // PauseStartPage = 36;
 
@@ -252,7 +251,7 @@ namespace pwiz.SkylineTestTutorial
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
 
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            PauseForScreenShot("Peptides per protein form", 25);
+            PauseForScreenShot<AssociateProteinsDlg>("Peptides per protein form", 25);
             RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
@@ -289,7 +288,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_IMPORTED_CHECKPOINT)));
             }
 
-            if (IsRecordImported)
+            if (IsRecordMode)
                 PauseForManualTutorialStep("COPY IMPORTED DOCUMENT");
 
             // Generate decoys
@@ -317,7 +316,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(27);
-            PauseForScreenShot<GraphChromatogram>("Skyline window", 27);
+            PauseForScreenShot("Skyline window", 27);
 
             RunUI(() =>
             {
@@ -325,7 +324,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ChangeMassErrorTransition(TransitionMassError.all);
             });
             WaitForGraphs();
-            PauseForScreenShot("Mass Errors: Histogram metafile", 28);
+            PauseForGraphScreenShot("Mass Errors: Histogram metafile", FindGraphSummaryByGraphType<MassErrorHistogramGraphPane>(), 28);
             RunUI(() =>
             {
                 ValidateMassErrorStatistics(2.7, 3.3);
@@ -346,7 +345,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);
             WaitForGraphs();
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
-            PauseForScreenShot<GraphChromatogram>("Skyline window - with manual integration and ID times", 29);
+            PauseForScreenShot("Skyline window - with manual integration and ID times", 29);
 
             RunUI(() =>
             {
@@ -355,7 +354,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RestoreViewOnScreen(31);
             SelectNode(SrmDocument.Level.Molecules, 1);  // 2nd peptide
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 31);
+            PauseForGraphScreenShot("Chromatogram graph metafile", SkylineWindow.GetGraphChrom("Pit01"), 31);
 
             RestoreViewOnScreen(27);
             RunUI(() =>
@@ -364,7 +363,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Height = 700;
             });
             SelectNode(SrmDocument.Level.TransitionGroups, 1);  // 2nd peptide - first precursor
-            PauseForScreenShot<GraphChromatogram>("Skyline window", 32);
+            PauseForScreenShot("Skyline window", 32);
 
             SelectNode(SrmDocument.Level.Transitions, 22);
 
@@ -374,7 +373,8 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Height = 463;
             });
 
-            PauseForScreenShot<GraphChromatogram>("Product ion chromatogram graph metafiles", 33);
+            PauseForGraphScreenShot("Product ion chromatogram graph metafile 1", SkylineWindow.GetGraphChrom("Pit01"), 33);
+            PauseForGraphScreenShot("Product ion chromatogram graph metafile 2", SkylineWindow.GetGraphChrom("Pit02"), 33);
 
             RunUI(() =>
             {
@@ -386,11 +386,19 @@ namespace pwiz.SkylineTestTutorial
             ChangePeakBounds("Pit01", 65.36, 66.7);
             ChangePeakBounds("Pit02", 64.89, 66.2);
 
-            PauseForScreenShot<GraphChromatogram>("Chromatograms and peak areas", 34);
+            Func<Bitmap, Bitmap> clipChromAndPeakAreas = bmp => 
+                ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
+                {
+                    SkylineWindow.GetGraphChrom("Pit01"),
+                    SkylineWindow.GetGraphChrom("Pit02"),
+                    FindGraphSummaryByGraphType<AreaReplicateGraphPane>()
+                });
+
+            PauseForScreenShot("Chromatograms and peak areas", 34, null, clipChromAndPeakAreas);
 
             SelectNode(SrmDocument.Level.TransitionGroups, 13);
 
-            PauseForScreenShot<GraphChromatogram>("Chromatograms and peak areas", 35);
+            PauseForScreenShot("Chromatograms and peak areas", 35, null, clipChromAndPeakAreas);
 
             if (IsCoverShotMode)
             {
@@ -442,15 +450,14 @@ namespace pwiz.SkylineTestTutorial
                 RestoreViewOnScreen(36);
                 ClickChromatogram("Pit01", 70.19, 169.5E+06, PaneKey.PRECURSORS);
 
-                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile", 36);
-
+                PauseForGraphScreenShot("Full-Scan MS1 spectrum metafile", SkylineWindow.GraphFullScan, 36);
                 ClickChromatogram("Pit01", 70.79, 4.9E+05, PaneKey.PRODUCTS);
 
-                PauseForScreenShot<GraphFullScan>("Full-Scan MS/MS spectrum y10 metafile", 37);
+                PauseForGraphScreenShot("Full-Scan MS/MS spectrum y10 metafile", SkylineWindow.GraphFullScan, 37);
 
                 ClickChromatogram("Pit01", 70.79, 3.25E+05, PaneKey.PRODUCTS);
 
-                PauseForScreenShot<GraphFullScan>("Full-Scan MS/MS spectrum y10++ metafile", 38);
+                PauseForGraphScreenShot("Full-Scan MS/MS spectrum y10++ metafile", SkylineWindow.GraphFullScan, 38);
 
                 FindNode("K.ELVYETVR.V [73, 80]");
                 WaitForGraphs();
@@ -462,13 +469,13 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.GraphFullScan.SetMzScale(new MzRange(504, 506));
                     SkylineWindow.GraphFullScan.Parent.Parent.Height -= 15;    // Not quite as tall to fit 3 into one page
                 });
-                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (1/3)", 39);
+                PauseForGraphScreenShot("Full-Scan MS1 spectrum metafile (1/3)", SkylineWindow.GraphFullScan, 39);
 
                 MoveNextScan(41.68);
-                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (2/3)", 39);
+                PauseForGraphScreenShot("Full-Scan MS1 spectrum metafile (2/3)", SkylineWindow.GraphFullScan, 39);
 
                 MoveNextScan(41.7);
-                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (3/3)", 39);
+                PauseForGraphScreenShot("Full-Scan MS1 spectrum metafile (3/3)", SkylineWindow.GraphFullScan, 39);
             }
 
             // Clear all the settings lists that were defined in this tutorial

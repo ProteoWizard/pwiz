@@ -32,10 +32,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode, "Successfully recorded data");
         }
 
-        public bool IsRecordMode
-        {
-            get { return false; }
-        }
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {

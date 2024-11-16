@@ -154,6 +154,21 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        public void SelectCell(int row, int column)
+        {
+            ActiveGridView.CurrentCell = ActiveGridView.Rows[row].Cells[column];
+        }
+
+        public void SetColumnWidths(params int[] columnWidths)
+        {
+            for (int i = 0; i < columnWidths.Length; i++)
+            {
+                int width = columnWidths[i];
+                if (width != -1)
+                    ActiveGridView.Columns[i].Width = width;
+            }
+        }
+
         public void ShowError(PasteError pasteError)
         {
             _noErrors = false;
