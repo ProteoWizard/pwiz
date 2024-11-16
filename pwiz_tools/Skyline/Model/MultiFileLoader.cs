@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NHibernate.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -204,6 +205,8 @@ namespace pwiz.Skyline.Model
                 _worker.RunAsync(threadCount, @"Load file");
 
                 var accumulator = new FileLoadCompletionAccumulator(complete, threadCount, uniqueLoadList.Count);
+                var injectionGroups = new Dictionary<string, InjectionGroup>();
+                var loadingFiles = new HashSet<MsDataFileUri>();
 
                 // Add new paths to queue.
                 foreach (var loadItem in uniqueLoadList)
@@ -211,19 +214,51 @@ namespace pwiz.Skyline.Model
                     var loadingStatus = new ChromatogramLoadingStatus(loadItem.DataFile, loadItem.ReplicateList);
 
                     ChangeStatus(s => s.Add(loadingStatus));
+                    InjectionGroup injectionGroup;
+                    ChromatogramSet chromatogramSet = null;
+                    if (loadItem.ReplicateList.Count == 1)
+                    {
+                        document.MeasuredResults.TryGetChromatogramSet(loadItem.ReplicateList[0], out chromatogramSet, out _);
+                    }
 
+                    if (chromatogramSet != null)
+                    {
+                        if (!injectionGroups.TryGetValue(chromatogramSet.Name, out injectionGroup))
+                        {
+                            injectionGroup = new InjectionGroup(document, documentFilePath, chromatogramSet,
+                                chromatogramSet.MSDataFilePaths);
+                            injectionGroups.Add(chromatogramSet.Name, injectionGroup);
+                        }
+                    }
+                    else
+                    {
+                        injectionGroup =
+                            new InjectionGroup(document, documentFilePath, null, new[] { loadItem.DataFile });
+                    }
                     // Queue work item to load the file.
                     _worker.Add(new LoadInfo
                     {
                         Path = loadItem.DataFile,
                         PartPath = loadItem.PartPath,
-                        Document = document,
+                        InjectionGroup = injectionGroup,
                         DocumentFilePath = documentFilePath,
                         CacheRecalc = cacheRecalc,
                         Status = loadingStatus,
                         LoadMonitor = new SingleFileLoadMonitor(loadMonitor, loadItem.DataFile),
                         Complete = accumulator.Complete
                     });
+                    loadingFiles.Add(loadItem.DataFile);
+                }
+
+                foreach (var injectionGroup in injectionGroups.Values)
+                {
+                    foreach (var path in injectionGroup.ChromatogramSet.MSDataFilePaths)
+                    {
+                        if (!loadingFiles.Contains(path))
+                        {
+                            injectionGroup.UseExistingResults(path);
+                        }
+                    }
                 }
             }
         }
@@ -295,7 +330,7 @@ namespace pwiz.Skyline.Model
         {
             public MsDataFileUri Path;
             public string PartPath;
-            public SrmDocument Document;
+            public InjectionGroup InjectionGroup;
             public string DocumentFilePath;
             public ChromatogramCache CacheRecalc;
             public IProgressStatus Status;
@@ -305,15 +340,22 @@ namespace pwiz.Skyline.Model
 
         private void LoadFile(LoadInfo loadInfo, int threadIndex)
         {
-            ChromatogramCache.Build(
-                loadInfo.Document,
-                loadInfo.DocumentFilePath,
-                loadInfo.CacheRecalc,
-                loadInfo.PartPath,
-                loadInfo.Path,
-                loadInfo.Status,
-                loadInfo.LoadMonitor,
-                loadInfo.Complete);
+            try
+            {
+                ChromatogramCache.Build(
+                    loadInfo.InjectionGroup,
+                    loadInfo.DocumentFilePath,
+                    loadInfo.CacheRecalc,
+                    loadInfo.PartPath,
+                    loadInfo.Path,
+                    loadInfo.Status,
+                    loadInfo.LoadMonitor,
+                    loadInfo.Complete);
+            }
+            finally
+            {
+                loadInfo.InjectionGroup.CompletedFirstPass(loadInfo.Path);
+            }
 
             var loadingStatus = loadInfo.Status as ChromatogramLoadingStatus;
             if (loadingStatus != null)

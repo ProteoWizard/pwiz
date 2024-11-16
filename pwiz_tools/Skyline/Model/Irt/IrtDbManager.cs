@@ -112,11 +112,15 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             // Watch out for stale db read
-            if (calc.IsUsable && 
-                (standards.Any(s => !calc.GetStandardPeptides().Contains(s.ModifiedTarget)) || 
-                 library.Any(l => !calc.GetLibraryPeptides().Contains(l.ModifiedTarget))))
+            if (calc.IsUsable)
             {
-                calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null));
+                var calcStandardPeptides = calc.GetStandardPeptides().ToHashSet();
+                var calcLibraryPeptides = calc.GetLibraryPeptides().ToHashSet();
+                if (standards.Any(s => !calcStandardPeptides.Contains(s.ModifiedTarget))
+                    || library.Any(l => !calcLibraryPeptides.Contains(l.ModifiedTarget)))
+                {
+                    calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null));
+                }
             }
 
             var duplicates = IrtDb.CheckForDuplicates(standards, library);

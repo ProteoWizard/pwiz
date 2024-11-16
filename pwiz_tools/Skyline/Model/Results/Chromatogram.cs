@@ -506,6 +506,8 @@ namespace pwiz.Skyline.Model.Results
 
         public string BatchName { get; private set; }
 
+        public bool ComparableRetentionTimes { get; private set; }
+
         #region Property change methods
 
         public ChromatogramSet ChangeMSDataFileInfos(IList<ChromFileInfo> prop)
@@ -637,6 +639,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.BatchName = string.IsNullOrEmpty(batchName) ? null : batchName);
         }
 
+        public ChromatogramSet ChangeComparableRetentionTimes(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.ComparableRetentionTimes = value);
+        }
+
         #endregion
 
         public static MsDataFileUri GetExistingDataFilePath(string cachePath, MsDataFileUri msDataFileUri)
@@ -745,6 +752,7 @@ namespace pwiz.Skyline.Model.Results
             batch_name,
             sample_id,
             instrument_serial_number,
+            comparable_retention_times,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -765,6 +773,7 @@ namespace pwiz.Skyline.Model.Results
             SampleType = SampleType.FromName(reader.GetAttribute(ATTR.sample_type));
             SampleDilutionFactor = reader.GetDoubleAttribute(ATTR.sample_dilution_factor, DEFAULT_DILUTION_FACTOR);
             BatchName = reader.GetAttribute(ATTR.batch_name);
+            ComparableRetentionTimes = reader.GetBoolAttribute(ATTR.comparable_retention_times, false);
             // Consume tag
             reader.Read();
 
@@ -840,7 +849,7 @@ namespace pwiz.Skyline.Model.Results
             }
             writer.WriteAttribute(ATTR.sample_dilution_factor, SampleDilutionFactor, DEFAULT_DILUTION_FACTOR);
             writer.WriteAttributeIfString(ATTR.batch_name, BatchName);
-
+            writer.WriteAttribute(ATTR.comparable_retention_times, ComparableRetentionTimes, false);
             // Write optimization element, if present
             if (OptimizationFunction != null)
             {
@@ -956,6 +965,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!Equals(obj.SampleDilutionFactor, SampleDilutionFactor))
                 return false;
+            if (!Equals(obj.ComparableRetentionTimes, ComparableRetentionTimes))
+                return false;
             return true;
         }
 
@@ -979,6 +990,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ AnalyteConcentration.GetHashCode();
                 result = (result*397) ^ SampleType.GetHashCode();
                 result = (result*397) ^ SampleDilutionFactor.GetHashCode();
+                result = (result*397) ^ ComparableRetentionTimes.GetHashCode();
                 return result;
             }
         }
