@@ -1,32 +1,44 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.ModificationMatcher;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class InjectionGroup
     {
-        private Dictionary<MsDataFileUri, FileBuilderStatus> _fileBuilderStatuses;
+        private Dictionary<MsDataFileUri, FileBuilderStatus> _fileBuilderStatuses =
+            new Dictionary<MsDataFileUri, FileBuilderStatus>();
 
         private ChromCacheBuilder.RetentionTimePredictor _retentionTimePredictor;
-        private object _createConversionLock = new object();
         private bool? _createConversionResult;
         
 
-        public InjectionGroup(SrmDocument document, string documentFilePath, ChromatogramSet chromatogramSet, IEnumerable<MsDataFileUri> paths)
+        public InjectionGroup(SrmDocument document, string documentFilePath, ChromatogramCache cacheRecalc, FileLoadCompletionAccumulator fileLoadCompletionAccumulator,
+            ChromatogramSet chromatogramSet, MultiFileLoadMonitor multiFileLoadMonitor)
         {
             Document = document;
             DocumentFilePath = documentFilePath;
+            CacheRecalc = cacheRecalc;
+            FileLoadCompletionAccumulator = fileLoadCompletionAccumulator;
             ChromatogramSet = chromatogramSet;
+            MultiFileLoadMonitor = multiFileLoadMonitor;
             _retentionTimePredictor = new ChromCacheBuilder.RetentionTimePredictor(document.Settings.PeptideSettings.Prediction.RetentionTime);
-            _fileBuilderStatuses = paths.ToDictionary(path => path, path => new FileBuilderStatus());
         }
 
         public SrmDocument Document { get; }
         public string DocumentFilePath { get; }
+        public ChromatogramCache CacheRecalc { get; }
         public ChromatogramSet ChromatogramSet { get; }
+        public FileLoadCompletionAccumulator FileLoadCompletionAccumulator { get; }
+        public MultiFileLoadMonitor MultiFileLoadMonitor { get; }
 
         public bool IsFirstPassPeptide(PeptideDocNode peptideDocNode)
         {
@@ -92,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
 
         private void TryCreateConversion()
         {
-            lock (_createConversionLock)
+            lock (this)
             {
                 if (_fileBuilderStatuses.Values.Any(status => !status.CompletedFirstPass))
                 {
@@ -114,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     _createConversionResult = false;
                 }
-                Monitor.PulseAll(_createConversionLock);
+                Monitor.PulseAll(this);
             }
         }
 
@@ -122,13 +134,13 @@ namespace pwiz.Skyline.Model.Results
         {
             while (true)
             {
-                lock (_createConversionLock)
+                lock (this)
                 {
                     if (_createConversionResult.HasValue)
                     {
                         return _createConversionResult.Value;
                     }
-                    Monitor.Wait(_createConversionLock);
+                    Monitor.Wait(this);
                 }
             }
         }
@@ -162,7 +174,15 @@ namespace pwiz.Skyline.Model.Results
 
         private class FileBuilderStatus
         {
+            public FileBuilderStatus(string partPath, ChromatogramLoadingStatus loadingStatus)
+            {
+                PartPath = partPath;
+                LoadingStatus = loadingStatus;
+            }
+            public string PartPath { get; }
+            public ChromatogramLoadingStatus LoadingStatus { get; }
             public bool CompletedFirstPass { get; set; }
+            public bool Completed { get; set; }
             public ConcurrentBag<PeptideRetentionTime> PeptideRetentionTimes { get;  } = new ConcurrentBag<PeptideRetentionTime>();
         }
 
@@ -178,6 +198,58 @@ namespace pwiz.Skyline.Model.Results
             public PeptideDocNode PeptideDocNode { get; }
             public int TransitionCount { get; }
             public double RetentionTime { get; }
+        }
+
+        public void AddFileToLoad(MsDataFileUri path, string partPath, ChromatogramLoadingStatus loadingStatus)
+        {
+            _fileBuilderStatuses.Add(path, new FileBuilderStatus(partPath, loadingStatus));
+        }
+
+        public void Load()
+        {
+            foreach (var path in _fileBuilderStatuses.Keys)
+            {
+                ActionUtil.RunAsync(() => BuildFile(path), @"InjectionGroup Load " + path.GetFileName());
+            }
+
+            lock (this)
+            {
+                while (true)
+                {
+                    if (_fileBuilderStatuses.Values.All(status => status.Completed))
+                    {
+                        return;
+                    }
+
+                    Monitor.Wait(this);
+                }
+            }
+        }
+
+        private void BuildFile(MsDataFileUri path)
+        {
+            var fileBuilderStatus = _fileBuilderStatuses[path];
+            try
+            {
+                ChromatogramCache.Build(this, DocumentFilePath, CacheRecalc, fileBuilderStatus.PartPath, path,
+                    fileBuilderStatus.LoadingStatus, new SingleFileLoadMonitor(MultiFileLoadMonitor, path),
+                    CompleteAction);
+                fileBuilderStatus.LoadingStatus.Transitions.Flush();
+            }
+            finally
+            {
+                lock (this)
+                {
+                    fileBuilderStatus.CompletedFirstPass = true;
+                    fileBuilderStatus.Completed = true;
+                    Monitor.PulseAll(this);
+                }
+            }
+        }
+
+        private void CompleteAction(ChromatogramCache cache, IProgressStatus status)
+        {
+            FileLoadCompletionAccumulator.Complete(cache, status);
         }
     }
 }

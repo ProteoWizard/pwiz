@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using NHibernate.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -34,7 +33,7 @@ namespace pwiz.Skyline.Model
         public const int MAX_PARALLEL_LOAD_FILES = 12;
         public const int MAX_PARALLEL_LOAD_FILES_USER_GC = 3; // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs
 
-        private readonly QueueWorker<LoadInfo> _worker;
+        private readonly QueueWorker<InjectionGroup> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
         private int? _threadCountPreferred;
@@ -45,7 +44,7 @@ namespace pwiz.Skyline.Model
 
         public MultiFileLoader(bool synchronousMode)
         {
-            _worker = new QueueWorker<LoadInfo>(null, LoadFile);
+            _worker = new QueueWorker<InjectionGroup>(null, LoadFile);
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
             _statusLock = new object();
@@ -225,28 +224,18 @@ namespace pwiz.Skyline.Model
                     {
                         if (!injectionGroups.TryGetValue(chromatogramSet.Name, out injectionGroup))
                         {
-                            injectionGroup = new InjectionGroup(document, documentFilePath, chromatogramSet,
-                                chromatogramSet.MSDataFilePaths);
+                            injectionGroup = new InjectionGroup(document, documentFilePath, cacheRecalc, accumulator, chromatogramSet,
+                                loadMonitor);
                             injectionGroups.Add(chromatogramSet.Name, injectionGroup);
                         }
                     }
                     else
                     {
-                        injectionGroup =
-                            new InjectionGroup(document, documentFilePath, null, new[] { loadItem.DataFile });
+                        injectionGroup = new InjectionGroup(document, documentFilePath, cacheRecalc, accumulator, null, loadMonitor);
                     }
+                    injectionGroup.AddFileToLoad(loadItem.DataFile, loadItem.PartPath, loadingStatus);
                     // Queue work item to load the file.
-                    _worker.Add(new LoadInfo
-                    {
-                        Path = loadItem.DataFile,
-                        PartPath = loadItem.PartPath,
-                        InjectionGroup = injectionGroup,
-                        DocumentFilePath = documentFilePath,
-                        CacheRecalc = cacheRecalc,
-                        Status = loadingStatus,
-                        LoadMonitor = new SingleFileLoadMonitor(loadMonitor, loadItem.DataFile),
-                        Complete = accumulator.Complete
-                    });
+                    _worker.Add(injectionGroup);
                     loadingFiles.Add(loadItem.DataFile);
                 }
 
@@ -326,40 +315,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private class LoadInfo
+        private void LoadFile(InjectionGroup injectionGroup, int threadIndex)
         {
-            public MsDataFileUri Path;
-            public string PartPath;
-            public InjectionGroup InjectionGroup;
-            public string DocumentFilePath;
-            public ChromatogramCache CacheRecalc;
-            public IProgressStatus Status;
-            public ILoadMonitor LoadMonitor;
-            public Action<ChromatogramCache, IProgressStatus> Complete;
-        }
-
-        private void LoadFile(LoadInfo loadInfo, int threadIndex)
-        {
-            try
-            {
-                ChromatogramCache.Build(
-                    loadInfo.InjectionGroup,
-                    loadInfo.DocumentFilePath,
-                    loadInfo.CacheRecalc,
-                    loadInfo.PartPath,
-                    loadInfo.Path,
-                    loadInfo.Status,
-                    loadInfo.LoadMonitor,
-                    loadInfo.Complete);
-            }
-            finally
-            {
-                loadInfo.InjectionGroup.CompletedFirstPass(loadInfo.Path);
-            }
-
-            var loadingStatus = loadInfo.Status as ChromatogramLoadingStatus;
-            if (loadingStatus != null)
-                loadingStatus.Transitions.Flush();
+            injectionGroup.Load();
         }
     }
 
