@@ -124,12 +124,6 @@
   <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
     <value>最小または最大標準ペプチドを取得できませんでした。</value>
   </data>
-  <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
-    <value>カルキュレータ{0}では、回帰を判断するため、標準ペプチドのすべての{1}がターゲットリスト内に入っている必要があります。以下の{2}ペプチドが不足しています。
-
-
-{3}</value>
-  </data>
   <data name="IrtDb_FILTER_IRTDB_iRT_Database_Files" xml:space="preserve">
     <value>iRTデータベースファイル</value>
   </data>

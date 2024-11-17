@@ -35,6 +35,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using NHibernate.Tool.hbm2ddl;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
@@ -601,37 +602,33 @@ namespace pwiz.Skyline.Model.Irt
             // Minimize document to only the peptides we need
             var minimalPeptides = standards.ToHashSet();
 
-            var oldPeptides = new Dictionary<Target, PeptideDocNode>();
+            IEnumerable<PeptideDocNode> oldPeptides = Enumerable.Empty<PeptideDocNode>();
             if (!string.IsNullOrEmpty(oldXml))
             {
                 try
                 {
-                    using (var reader = new StringReader(oldXml))
-                    {
-                        var oldDoc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
-                        oldPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)).ToDictionary(pep => pep.Target, pep => pep);
-                    }
+                    using var reader = new StringReader(oldXml);
+                    var oldDoc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
+                    oldPeptides = oldDoc.Molecules;
                 }
                 catch
                 {
-                    // ignored
+                    // ignore
                 }
             }
 
+            var peptidesByTarget = doc.Molecules.Concat(oldPeptides).Where(pep => minimalPeptides.Contains(pep.ModifiedTarget)).GroupBy(pep => pep.ModifiedTarget);
             var addPeptides = new List<PeptideDocNode>();
-            foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)))
+            foreach (var group in peptidesByTarget)
             {
-                if (oldPeptides.TryGetValue(nodePep.Target, out var nodePepOld))
+                // The code here used to use "PeptideDocNode.Merge", but that resulted in very strange results.
+                // Instead, we just pick the first peptide which has at least one transition.
+                var bestPeptide = group.FirstOrDefault(pepDocNode => pepDocNode.TransitionCount != 0);
+                if (bestPeptide != null)
                 {
-                    addPeptides.Add(nodePep.Merge(nodePepOld));
-                    oldPeptides.Remove(nodePep.Target);
-                }
-                else
-                {
-                    addPeptides.Add(nodePep);
+                    addPeptides.Add(bestPeptide);
                 }
             }
-            addPeptides.AddRange(oldPeptides.Values);
 
             var peptides = new List<PeptideDocNode>();
             foreach (var nodePep in addPeptides)
