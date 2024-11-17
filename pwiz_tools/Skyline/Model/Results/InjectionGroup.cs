@@ -231,9 +231,7 @@ namespace pwiz.Skyline.Model.Results
             var fileBuilderStatus = _fileBuilderStatuses[path];
             try
             {
-                ChromatogramCache.Build(this, DocumentFilePath, CacheRecalc, fileBuilderStatus.PartPath, path,
-                    fileBuilderStatus.LoadingStatus, new SingleFileLoadMonitor(MultiFileLoadMonitor, path),
-                    CompleteAction);
+                ChromatogramCache.Build(this, fileBuilderStatus.PartPath, path, fileBuilderStatus.LoadingStatus);
                 fileBuilderStatus.LoadingStatus.Transitions.Flush();
             }
             finally
@@ -247,7 +245,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void CompleteAction(ChromatogramCache cache, IProgressStatus status)
+        public void CompleteAction(ChromatogramCache cache, IProgressStatus status)
         {
             FileLoadCompletionAccumulator.Complete(cache, status);
         }

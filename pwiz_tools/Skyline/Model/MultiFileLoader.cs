@@ -204,7 +204,8 @@ namespace pwiz.Skyline.Model
                 _worker.RunAsync(threadCount, @"Load file");
 
                 var accumulator = new FileLoadCompletionAccumulator(complete, threadCount, uniqueLoadList.Count);
-                var injectionGroups = new Dictionary<string, InjectionGroup>();
+                var sharedInjectionGroups = new Dictionary<string, InjectionGroup>();
+                var injectionGroups = new List<InjectionGroup>();
                 var loadingFiles = new HashSet<MsDataFileUri>();
 
                 // Add new paths to queue.
@@ -222,24 +223,25 @@ namespace pwiz.Skyline.Model
 
                     if (chromatogramSet != null)
                     {
-                        if (!injectionGroups.TryGetValue(chromatogramSet.Name, out injectionGroup))
+                        if (!sharedInjectionGroups.TryGetValue(chromatogramSet.Name, out injectionGroup))
                         {
                             injectionGroup = new InjectionGroup(document, documentFilePath, cacheRecalc, accumulator, chromatogramSet,
                                 loadMonitor);
-                            injectionGroups.Add(chromatogramSet.Name, injectionGroup);
+                            injectionGroups.Add(injectionGroup);
+                            sharedInjectionGroups.Add(chromatogramSet.Name, injectionGroup);
                         }
                     }
                     else
                     {
                         injectionGroup = new InjectionGroup(document, documentFilePath, cacheRecalc, accumulator, null, loadMonitor);
+                        injectionGroups.Add(injectionGroup);
                     }
                     injectionGroup.AddFileToLoad(loadItem.DataFile, loadItem.PartPath, loadingStatus);
                     // Queue work item to load the file.
-                    _worker.Add(injectionGroup);
                     loadingFiles.Add(loadItem.DataFile);
                 }
 
-                foreach (var injectionGroup in injectionGroups.Values)
+                foreach (var injectionGroup in sharedInjectionGroups.Values)
                 {
                     foreach (var path in injectionGroup.ChromatogramSet.MSDataFilePaths)
                     {
@@ -248,6 +250,11 @@ namespace pwiz.Skyline.Model
                             injectionGroup.UseExistingResults(path);
                         }
                     }
+                }
+
+                foreach (var injectionGroup in injectionGroups)
+                {
+                    _worker.Add(injectionGroup);
                 }
             }
         }

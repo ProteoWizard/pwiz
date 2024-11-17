@@ -719,31 +719,31 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static void Build(InjectionGroup injectionGroup, string documentFilePath, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFileUri, IProgressStatus status, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete)
+        public static void Build(InjectionGroup injectionGroup, 
+            string cachePath, MsDataFileUri msDataFileUri, IProgressStatus status)
         {
+            var loader = new SingleFileLoadMonitor(injectionGroup.MultiFileLoadMonitor, msDataFileUri);
             try
             {
-                if (Program.MultiProcImport && Program.ImportProgressPipe == null)
+                if (Program.MultiProcImport && Program.ImportProgressPipe == null && injectionGroup.ChromatogramSet == null)
                 {
                     // Import using a child process.
-                    Run(msDataFileUri, documentFilePath, cachePath, status, loader);
+                    Run(msDataFileUri, injectionGroup.DocumentFilePath, cachePath, status, loader);
 
                     var cacheNew = Load(cachePath, status, loader, injectionGroup.Document);
-                    complete(cacheNew, status);
+                    injectionGroup.CompleteAction(cacheNew, status);
                 }
                 else
                 {
                     // Import using threads in this process.
                     status = ((ChromatogramLoadingStatus) status).ChangeFilePath(msDataFileUri);
-                    var builder = new ChromCacheBuilder(injectionGroup, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
+                    var builder = new ChromCacheBuilder(injectionGroup, cachePath, msDataFileUri, loader, status);
                     builder.BuildCache();
                 }
             }
             catch (Exception x)
             {
-                complete(null, status.ChangeErrorException(x));
+                injectionGroup.CompleteAction(null, status.ChangeErrorException(x));
             }
         }
 

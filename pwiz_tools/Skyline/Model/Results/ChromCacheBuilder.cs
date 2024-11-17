@@ -59,14 +59,13 @@ namespace pwiz.Skyline.Model.Results
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
-        public ChromCacheBuilder(InjectionGroup injectionGroup, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, IProgressStatus status,
-            Action<ChromatogramCache, IProgressStatus> complete)
-            : base(cachePath, loader, status, complete)
+        public ChromCacheBuilder(InjectionGroup injectionGroup, 
+            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, IProgressStatus status)
+            : base(cachePath, loader, status, injectionGroup.CompleteAction)
         {
             var document = _document = injectionGroup.Document;
             InjectionGroup = injectionGroup;
-            _cacheRecalc = cacheRecalc;
+            _cacheRecalc = injectionGroup.CacheRecalc;
             MSDataFilePath = msDataFilePath;
 
             // Get peak scoring calculators
