@@ -71,7 +71,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        private void BtnRemoveOnClick(object sender, EventArgs e)
+        public void FocusOnChooseViewsControl()
+        {
+            chooseViewsControl1.Focus();
+        }
+
+    private void BtnRemoveOnClick(object sender, EventArgs e)
         {
             Remove(true);
         }
