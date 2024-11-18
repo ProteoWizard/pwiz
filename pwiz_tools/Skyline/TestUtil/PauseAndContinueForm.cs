@@ -284,6 +284,9 @@ namespace pwiz.SkylineTestUtil
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
+            // CONSIDER: Do this in OnClosing() instead?
+            TestUtilSettings.Default.Save();
+
             if (_screenshotPreviewForm is { IsDisposed: false })
             {
                 _screenshotPreviewForm.Invoke((Action) (() => _screenshotPreviewForm.Dispose()));

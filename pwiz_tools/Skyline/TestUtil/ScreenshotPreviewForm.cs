@@ -826,7 +826,7 @@ namespace pwiz.SkylineTestUtil
             _pauseTestController.Continue();
         }
 
-        private void PauseTest()
+        private void PauseAtNextScreenshot()
         {
             bool stateChanged = false;
             lock (_lock)
@@ -984,7 +984,7 @@ namespace pwiz.SkylineTestUtil
         private void continueBtn_Click(object sender, EventArgs e)
         {
             if (IsWaiting)
-                PauseTest();
+                PauseAtNextScreenshot();
             else
                 Continue();
         }
@@ -1033,7 +1033,7 @@ namespace pwiz.SkylineTestUtil
         private void toolStripContinue_Click(object sender, EventArgs e)
         {
             if (IsWaiting)
-                PauseTest();
+                PauseAtNextScreenshot();
             else
                 Continue();
         }
@@ -1119,7 +1119,7 @@ namespace pwiz.SkylineTestUtil
                     if (e.Shift)
                     {
                         if (IsWaiting)
-                            PauseTest();
+                            PauseAtNextScreenshot();
                     }
                     else
                     {
