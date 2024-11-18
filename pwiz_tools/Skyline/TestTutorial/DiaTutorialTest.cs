@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -273,6 +274,7 @@ namespace pwiz.SkylineTestTutorial
                     allChrom.Left = SkylineWindow.Right + 20;
                 });
 
+                FormUtil.SetScrollPos(SkylineWindow.SequenceTree,ScrollDirection.horz, 0);
                 PauseForScreenShot<SequenceTreeForm>("Targets view clipped - scrolled left and before fully imported", 26);
             }
             WaitForDocumentLoaded(10 * 60 * 1000);    // 10 minutes
