@@ -94,5 +94,17 @@ namespace pwiz.SkylineTestUtil.Properties {
                 this["ShowWebImage"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ManualSizePreview {
+            get {
+                return ((bool)(this["ManualSizePreview"]));
+            }
+            set {
+                this["ManualSizePreview"] = value;
+            }
+        }
     }
 }

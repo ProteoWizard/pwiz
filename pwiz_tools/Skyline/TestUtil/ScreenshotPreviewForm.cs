@@ -121,8 +121,11 @@ namespace pwiz.SkylineTestUtil
             // the the starting location right here, but this is better than using the Windows default
             StartPosition = FormStartPosition.Manual;
             var savedLocation = TestUtilSettings.Default.PreviewFormLocation;
-            if (savedLocation.IsEmpty)
+            if (!TestUtilSettings.Default.ManualSizePreview)
+            {
+                // CONSIDER: Only do this if the stored location is on the same screen as Skyline
                 Location = GetBestLocation();
+            }
             else
             {
                 Location = savedLocation;
@@ -477,21 +480,15 @@ namespace pwiz.SkylineTestUtil
         {
             Assume.IsTrue(InvokeRequired);  // Expecting this to run on a background thread. Use ActionUtil.RunAsync()
 
-            Bitmap oldScreenshot, newScreenshot;
+            Bitmap oldScreenshot;
             string fileToSave, imageUrl, fileLoaded;
-            bool shotTaken, waitingForScreenshot;
-            ScreenshotValues screenshotValues;
 
             lock (_lock)
             {
-                screenshotValues = _screenshotValues;
                 fileToSave = _fileToSave;
                 fileLoaded = _fileLoaded;
                 imageUrl = showWebImage ? _imageUrl : null;
-                shotTaken = _screenshotTaken;
                 oldScreenshot = _oldScreenshot;
-                newScreenshot = _newScreenshot;
-                waitingForScreenshot = IsWaiting;
             }
 
             string fileToLoad = imageUrl ?? fileToSave;
@@ -500,23 +497,43 @@ namespace pwiz.SkylineTestUtil
                 oldScreenshot = LoadScreenshot(fileToSave, imageUrl);
                 fileLoaded = fileToLoad;
             }
-            // Only take a new screenshot when the test is ready
-            if (waitingForScreenshot)
-            {
-                newScreenshot = Resources.progress;
-            }
-            else if (!shotTaken)
-            {
-                newScreenshot = TakeScreenshot(screenshotValues);
-                shotTaken = true;
-            }
 
             lock (_lock)
             {
                 _oldScreenshot = oldScreenshot;
                 _fileLoaded = fileLoaded;
-                _newScreenshot = newScreenshot;
-                _screenshotTaken = shotTaken;
+            }
+
+            lock (_screenshotManager)
+            {
+                Bitmap newScreenshot;
+                bool shotTaken, waitingForScreenshot;
+                ScreenshotValues screenshotValues;
+
+                lock (_lock)
+                {
+                    screenshotValues = _screenshotValues;
+                    shotTaken = _screenshotTaken;
+                    newScreenshot = _newScreenshot;
+                    waitingForScreenshot = IsWaiting;
+                }
+
+                // Only take a new screenshot when the test is ready
+                if (waitingForScreenshot)
+                {
+                    newScreenshot = Resources.progress;
+                }
+                else if (!shotTaken)
+                {
+                    newScreenshot = TakeScreenshot(screenshotValues);
+                    shotTaken = true;
+                }
+
+                lock (_lock)
+                {
+                    _newScreenshot = newScreenshot;
+                    _screenshotTaken = shotTaken;
+                }
             }
 
             FormStateChangedBackground();
@@ -544,15 +561,23 @@ namespace pwiz.SkylineTestUtil
         {
             if (Equals(values, ScreenshotValues.Empty))
             {
-                // CONSIDER: Show a placeholder bitmap?
-                return null;
+                return Resources.noscreenshot;
             }
             if (values.Delay)
                 Thread.Sleep(1000);
 
             var control = values.Control;
             ScreenshotManager.ActivateScreenshotForm(control);
-            return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
+            try
+            {
+                return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
+            }
+            catch (Exception e)
+            {
+                this.BeginInvoke((Action)(() => PreviewMessageDlg.ShowWithException(this,
+                    "Failed attempting to take a screenshot.", e)));
+                return Resources.noscreenshot;
+            }
         }
 
         private Bitmap LoadScreenshot(string file, string uri)
@@ -921,21 +946,13 @@ namespace pwiz.SkylineTestUtil
             if (!_autoResizeComplete)
                 return;
 
-            if (autoSizeWindowCheckbox.Checked)
-            {
-                TestUtilSettings.Default.PreviewFormLocation = Point.Empty;
-                TestUtilSettings.Default.PreviewFormSize = Size.Empty;
-                TestUtilSettings.Default.PreviewFormMaximized = false;
-            }
-            else
-            {
-                if (WindowState == FormWindowState.Normal)
-                    TestUtilSettings.Default.PreviewFormLocation = Location;
-                if (WindowState == FormWindowState.Normal)
-                    TestUtilSettings.Default.PreviewFormSize = Size;
-                TestUtilSettings.Default.PreviewFormMaximized =
-                    (WindowState == FormWindowState.Maximized);
-            }
+            TestUtilSettings.Default.ManualSizePreview = !autoSizeWindowCheckbox.Checked;
+            if (WindowState == FormWindowState.Normal)
+                TestUtilSettings.Default.PreviewFormLocation = Location;
+            if (WindowState == FormWindowState.Normal)
+                TestUtilSettings.Default.PreviewFormSize = Size;
+            TestUtilSettings.Default.PreviewFormMaximized =
+                (WindowState == FormWindowState.Maximized);
         }
 
         private void ToggleToolStrip()
