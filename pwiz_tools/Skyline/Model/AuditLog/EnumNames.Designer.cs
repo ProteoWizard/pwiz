@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DIA raw (deconvolute, search, and build library).
+        ///   Looks up a localized string similar to DIA raw (search and build library).
         /// </summary>
         public static string InputFile_dia_raw {
             get {

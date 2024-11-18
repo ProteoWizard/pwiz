@@ -214,11 +214,34 @@ namespace TestPerf
             bool? searchSucceeded = null;
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page));
 
-            // switch SearchEngine and handle download dialogs if necessary
             bool useMsFragger = !IsPauseForScreenShots; // Tutorial still uses MSAmanda
+
+            // Switch search engine
+            if (useMsFragger)
+                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
+                // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
+                // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                if (useMsFragger)
+                {
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
+                    //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
+                }
+
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page", tutorialPage++);
+
+            // Run the search
+            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+
+            // Handle download dialogs if necessary
             if (useMsFragger)
             {
-                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
                 if (RedownloadTools || HasMissingDependencies)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
@@ -240,27 +263,8 @@ namespace TestPerf
                 }
             }
 
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
-                // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
-                // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
-                if (useMsFragger)
-                {
-                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
-                    //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
-                }
-
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-            });
-            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page", tutorialPage++);
-
-
-            // Run the search
             try
             {
-                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
                 PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", tutorialPage++);
