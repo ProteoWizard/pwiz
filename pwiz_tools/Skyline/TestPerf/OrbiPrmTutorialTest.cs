@@ -75,7 +75,6 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
-//            IsRecordMode = true;
             CoverShotName = "PRM-Orbitrap";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRMOrbitrap-22_2.pdf";
@@ -797,7 +796,7 @@ namespace TestPerf
             SaveBackup("PRM_Annotated");
         }
 
-        private bool IsRecordMode { get; set; }
+        protected override bool IsRecordMode => false;
 
         private double[] _g2mVsG1ExpectedValues =
         {

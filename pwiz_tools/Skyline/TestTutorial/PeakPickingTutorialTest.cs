@@ -79,8 +79,6 @@ namespace pwiz.SkylineTestTutorial
                     @"TestTutorial\PeakPickingViews.zip"
                 };
             RunFunctionalTest();
-
-            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
 
         private string GetTestPath(string relativePath)
@@ -92,7 +90,7 @@ namespace pwiz.SkylineTestTutorial
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {

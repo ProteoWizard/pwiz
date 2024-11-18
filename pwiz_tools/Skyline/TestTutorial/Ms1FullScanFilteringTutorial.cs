@@ -81,7 +81,7 @@ Program.ReportTutorialTestProgress = true; // Write screenshot info to console, 
         /// <summary>
         /// Change to true to write annotation value arrays to console
         /// </summary>
-        private bool IsRecordMode { get { return false; }}
+        protected override bool IsRecordMode => false;
 
         private readonly string[] EXPECTED_ANNOTATIONS =
             {

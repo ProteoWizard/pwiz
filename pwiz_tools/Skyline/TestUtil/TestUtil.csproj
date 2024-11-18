@@ -150,6 +150,17 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ScreenshotPreviewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ScreenshotPreviewForm.Designer.cs">
+      <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
     <Compile Include="LongWaitDialogCanceler.cs" />
@@ -231,6 +242,14 @@
     <EmbeddedResource Include="minimal.sky.view" />
     <EmbeddedResource Include="PauseAndContinueForm.resx">
       <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScreenshotPreviewForm.resx">
+      <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -246,6 +265,14 @@
     <EmbeddedResource Include="Schemas\AuditLog\Skyl_4.21.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\DiskFailure.png" />
+    <EmbeddedResource Include="Resources\larrow-cur.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\camera.ico" />
+    <Content Include="Resources\progress.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

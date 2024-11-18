@@ -196,7 +196,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="cbEstimateBg.ToolTip" xml:space="preserve">
-    <value>推定バックグラウンド信号は、精度を多少犠牲にしてDIA-Umpireプロセスを大幅に高速にします。（EstimageBG）</value>
+	  <value>推定バックグラウンド信号は、精度を多少犠牲にしてDIA-Umpireプロセスを大幅に高速にします。（EstimateBG）</value>
   </data>
   <data name="&gt;&gt;cbEstimateBg.Name" xml:space="preserve">
     <value>cbEstimateBg</value>

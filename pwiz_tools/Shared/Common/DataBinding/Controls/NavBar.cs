@@ -617,6 +617,8 @@ namespace pwiz.Common.DataBinding.Controls
             get { return navBarButtonViews; }
         }
 
+        public int Separator2Position => bindingNavigatorSeparator2.Bounds.Left;
+
         private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
         {
             if (null != BindingListSource.ClusteringSpec && !BindingListSource.IsComplete &&

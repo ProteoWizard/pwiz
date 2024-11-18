@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < OriginalSpectrumSources.Length; ++i)
             {
                 string outputDirectory = Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? string.Empty;
-                if (Program.FunctionalTest || !DirectoryEx.IsWritable(outputDirectory))
+                if (!DirectoryEx.IsWritable(outputDirectory))
                     outputDirectory = Path.GetDirectoryName(Program.MainWindow.DocumentFilePath) ?? string.Empty;
 
                 var outputFilepath = Path.Combine(outputDirectory, OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);

@@ -516,11 +516,9 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
-            CoverShotName = IsTtof ? "DIA-SWATH" : RootName;
+            CoverShotName = IsTtof ? "DIA-TTOF" : RootName;
 
             RunFunctionalTest();
-
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Make sure this doesn't get committed as true
         }
 
         private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
@@ -536,7 +534,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {
@@ -625,12 +623,12 @@ namespace TestPerf
 
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
             });
-            PauseForScreenShot("Add iRT peptides form", screenshotPage);
+            PauseForScreenShot<AddIrtPeptidesDlg>("Add iRT peptides form", screenshotPage);
             if (addIrtStandardsDlg != null)
                 screenshotPage++;
 
             var irtGraph = ShowDialog<GraphRegression>(() => addIrtPeptidesDlg.ShowRegression(0));
-            PauseForScreenShot("iRT regression graph", screenshotPage++);
+            PauseForScreenShot<GraphRegression>("iRT regression graph", screenshotPage++);
 
             OkDialog(irtGraph, irtGraph.CloseDialog);
             var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
@@ -672,7 +670,7 @@ namespace TestPerf
                 foreach (var selectedFile in openDataFiles.SelectedFiles)
                     Assert.IsTrue(DiaFiles.Contains(selectedFile));
             });
-            PauseForScreenShot("Results files form", screenshotPage++);
+            PauseForScreenShot<OpenDataSourceDialog>("Results files form", screenshotPage++);
             OkDialog(openDataFiles, openDataFiles.Open);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -701,7 +699,8 @@ namespace TestPerf
                 AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
                 Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Modifications page - currently no screenshot", screenshotPage);
+            // TODO: Include this screenshot in the tutorial
+            // PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Modifications page - currently no screenshot", screenshotPage);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
@@ -789,10 +788,10 @@ namespace TestPerf
                 }
             });
             screenshotPage++;   // One page without a screenshot
-            PauseForScreenShot("Isolation scheme", screenshotPage++);
+            PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme", screenshotPage++);
 
             var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
-            PauseForScreenShot("Isolation scheme graph", screenshotPage++);
+            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph", screenshotPage++);
 
             OkDialog(isolationGraph, isolationGraph.CloseButton);
             OkDialog(isolationScheme, isolationScheme.OkDialog);
@@ -844,15 +843,17 @@ namespace TestPerf
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 _testInfo.ValidateTargets(IsRecordMode, _analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
             });
-            PauseForScreenShot("Import FASTA summary form", screenshotPage);
+            PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form", screenshotPage);
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
-            //PauseTest();
+
+            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
+            WaitForConditionUI(() => allChrom.ProgressTotalPercent >= 20);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, 30*1000); // 30 second timeout to avoid getting stuck
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            PauseForScreenShot("mProphet model form", screenshotPage++);
+            PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form", screenshotPage++);
             ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
@@ -927,7 +928,7 @@ namespace TestPerf
 
             const string proteinNameToSelect = "sp|P63284|CLPB_ECOLI";
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
-            SelectNode(SrmDocument.Level.MoleculeGroups, 1);
+                SelectNode(SrmDocument.Level.MoleculeGroups, 1);
             else
                 FindNode(proteinNameToSelect);
 
@@ -961,12 +962,11 @@ namespace TestPerf
                     _analysisValues.ChromatogramClickPoint.X,
                     _analysisValues.ChromatogramClickPoint.Y);
             }
-            catch (AssertFailedException)
+            catch (AssertFailedException e)
             {
-                if (!IsRecordMode)
-                    throw;
-                PauseAndContinueForm.Show($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
-                                          "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
+                PauseForRecordModeInstruction(
+                    $"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
+                    "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.", e);
             }
 
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);

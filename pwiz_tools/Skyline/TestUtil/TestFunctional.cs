@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -30,6 +31,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using Excel;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
@@ -52,7 +54,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
@@ -63,6 +64,8 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
+using ZedGraph;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -197,8 +200,16 @@ namespace pwiz.SkylineTestUtil
         protected bool ForceMzml
         {
             get { return _forceMzml; }
-            set { _forceMzml = value && !IsPauseForScreenShots && !IsCoverShotMode;  }    // Don't force mzML during screenshots
+            set
+            {
+                // Don't force mzML during screenshots
+                _forceMzml = value && !IsRecordingScreenShots;
+                // Unless specifically requested to force mzML even during screenshots
+                _forceMzml = _forceMzml || ForceMzmlInScreenShots;
+            }
         }
+
+        protected bool ForceMzmlInScreenShots { get; set; }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
@@ -271,10 +282,15 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            if (IsPauseForScreenShots && dlg.ShowIcon)
+            if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
-                    RunUI(() => dlg.Icon = Resources.Skyline_Release1);
+                var ico = dlg.Icon.Handle;
+                if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
+                    ico == Resources.Skyline_Daily.Handle)
+                {
+                    if (ico != SkylineWindow.Icon.Handle)
+                        RunUI(() => dlg.Icon = SkylineWindow.Icon);
+                }
             }
             return dlg;
         }
@@ -617,6 +633,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public FloatingWindow FindFloatingWindow(Control control)
+        {
+            return ScreenshotManager.FindParent<FloatingWindow>(control);
+        }
+
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
             foreach (var form in OpenForms)
@@ -692,50 +713,11 @@ namespace pwiz.SkylineTestUtil
             return result;
         }
 
+        private static FormLookup _formLookup;
+
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
         {
-            int waitCycles = GetWaitCycles(millis);
-            for (int i = 0; i < waitCycles; i++)
-            {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
-
-                TDlg tForm = FindOpenForm<TDlg>();
-                if (tForm != null)
-                {
-                    string formType = typeof(TDlg).Name;
-                    var multipleViewProvider = tForm as IMultipleViewProvider;
-                    if (multipleViewProvider != null)
-                    {
-                        formType += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
-                        var formName = "(" + typeof (TDlg).Name + ")";
-                        RunUI(() =>
-                        {
-                            if (tForm.Text.EndsWith(formName))
-                                tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
-                        });
-                    }
-
-                    if (_formLookup == null)
-                        _formLookup = new FormLookup();
-                    Assert.IsNotNull(_formLookup.GetTest(formType),
-                        formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
-
-                    if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
-                    {
-                        var formSeen = new FormSeen();
-                        formSeen.Saw(formType);
-                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
-                    }
-
-                    return tForm;
-                }
-
-                if (stopCondition != null && stopCondition())
-                    break;
-
-                Thread.Sleep(SLEEP_INTERVAL);
-            }
-            return null;
+            return (TDlg) TryWaitForOpenForm(typeof(TDlg), millis, stopCondition);
         }
 
         public static Form TryWaitForOpenForm(Type formType, int millis = WAIT_TIME, Func<bool> stopCondition = null) 
@@ -761,8 +743,7 @@ namespace pwiz.SkylineTestUtil
                         });
                     }
 
-                    if (_formLookup == null)
-                        _formLookup = new FormLookup();
+                    _formLookup ??= new FormLookup();
                     Assert.IsNotNull(_formLookup.GetTest(formTypeName),
                         formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
 
@@ -805,7 +786,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(viewTypeName);
-                PauseAndContinueForm.Show(string.Format("Pausing for {0}", viewTypeName));
+                PauseTest(string.Format("Pausing for {0}", viewTypeName));
             }
         }
 
@@ -1165,15 +1146,22 @@ namespace pwiz.SkylineTestUtil
         }
 
         // Pause a test so we can play with the UI manually.
-        public static void PauseTest(string description = null)
+        public void PauseTest(string description = null)
         {
             if (!Program.SkylineOffscreen)
                 PauseAndContinueForm.Show(description);
         }
 
+        public void PauseForRecordModeInstruction(string message, Exception e)
+        {
+            if (!IsRecordMode)
+                throw new Exception(TextUtil.LineSeparate("Run in record mode to fix this test.", message), e);
+            PauseTest(message);
+        }
+
         // We don't normally leave PauseTest() in checked in code, but there are times
         // when that's actually what's needed. For those, use this instead.
-        public static void PauseForManualTutorialStep(string description = null)
+        public void PauseForManualTutorialStep(string description = null)
         {
             PauseTest(description);
         }
@@ -1189,6 +1177,8 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
+        private static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
+
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
@@ -1198,7 +1188,8 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots || Program.PauseSeconds == -1; }
+            // Code written to depend on IsPauseForScreenShots also applies to IsAutoScreenShotMode.
+            get { return _isPauseForScreenShots || Program.PauseSeconds == -1 || IsAutoScreenShotMode; }
             set
             {
                 _isPauseForScreenShots = value;
@@ -1209,9 +1200,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private static bool _isAutoScreenShotMode;
+
+        public static bool IsAutoScreenShotMode
+        {
+            get { return _isAutoScreenShotMode || Program.PauseSeconds == -3; } // -3 is the magic number SkylineTester uses to indicate cover shot mode
+            set
+            {
+                _isAutoScreenShotMode = value;
+                if (_isAutoScreenShotMode)
+                {
+                    Program.PauseSeconds = -3; // -3 is the magic number SkylineTester uses to indicate cover shot mode
+                }
+            }
+        }
+
         private static bool _isCoverShotMode;
 
-        public bool IsCoverShotMode
+        public static bool IsCoverShotMode
         {
             get { return _isCoverShotMode || Program.PauseSeconds == -2; } // -2 is the magic number SkylineTester uses to indicate cover shot mode
             set
@@ -1254,6 +1260,18 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
+        private string TutorialPath
+        {
+            get
+            {
+                return IsTutorial
+                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{CultureInfo.CurrentCulture.TwoLetterISOLanguageName}")
+                    : null;
+            }
+        }
+
+        private int ScreenshotCounter = 1;
+
         public virtual bool AuditLogCompareLogs
         {
             get { return IsTutorial && !IsFullData; }   // Logs were recorded with partial data and not in Pass0
@@ -1275,37 +1293,316 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
 
-        public bool IsFullData { get { return IsPauseForScreenShots || IsCoverShotMode || IsDemoMode || IsPass0; } }
+        public bool IsFullData { get { return IsRecordingScreenShots || IsDemoMode || IsPass0; } }
 
         public string LinkPdf { get; set; }
 
-        private string LinkPage(int? pageNum)
+
+        private PauseAndContinueForm _pauseAndContinueForm;
+
+        private PauseAndContinueForm PauseAndContinueFormInstance
         {
-            return pageNum.HasValue ? LinkPdf + "#page=" + pageNum : null;
+            get
+            {
+                return _pauseAndContinueForm ??= new PauseAndContinueForm(ScreenshotManager);
+            }
         }
 
-        private static FormLookup _formLookup;
-
-        public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null)
+        protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            PauseForScreenShot(description, pageNum, null, null, timeout);
-        }
-        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null, int? timeout = null)
-        {
-            PauseForScreenShot(description, pageNum, null, screenshotForm, timeout);
+            return ClipBitmap(skylineWindowBmp, ComputeDockableFormInclusiveRectangle(dockableForms));
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int? timeout = null)
+        private Rectangle ComputeDockableFormInclusiveRectangle(IList<DockableForm> dockableForms)
+        {
+            return dockableForms
+                .Select(ComputeDockableFormScreenRectangle)
+                .Aggregate(Rectangle.Union);
+        }
+
+        private Rectangle ComputeDockableFormScreenRectangle(DockableForm dockableForm)
+        {
+            var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm, false, false);
+            var skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y);
+            var skylineRelativeOrigin = new Point(formRectangle.X - skylineWindowPoint.X, formRectangle.Y - skylineWindowPoint.Y);
+            return new Rectangle(skylineRelativeOrigin, formRectangle.Size);
+        }
+
+        protected Bitmap ClipSelectionStatus(Bitmap skylineWindowBmp)
+        {
+            int clipWidth = SkylineWindow.StatusSelectionWidth;
+            int clipHeight = SkylineWindow.StatusBarHeight + 1;
+            var cropRect = new Rectangle(skylineWindowBmp.Width - clipWidth, skylineWindowBmp.Height - clipHeight, clipWidth, clipHeight);
+            return ClipBitmap(skylineWindowBmp, cropRect);
+        }
+
+        protected Bitmap ClipGridToolbarSelection(Bitmap documentGridBmp)
+        {
+            var gridForm = FindOpenForm<DocumentGridForm>();
+            var gridFormRect = ScreenshotManager.GetWindowRectangle(gridForm);
+
+            var gridToolbar = gridForm.NavBar;
+            int toolsRight = gridToolbar.Separator2Position + 1;
+            var toolbarLocation = gridToolbar.PointToScreen(new Point(0, -1)) * ScreenshotManager.GetScalingFactor();
+            var sizeCrop = new Size(toolsRight, gridToolbar.Height + 2) * ScreenshotManager.GetScalingFactor();
+            var cropRect = new Rectangle(0, toolbarLocation.Y - gridFormRect.Y, sizeCrop.Width, sizeCrop.Height);
+            return ClipBitmap(documentGridBmp, cropRect);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
+        {
+            var sequenceTree = SkylineWindow.SequenceTree;
+            var sequenceTreeRect = sequenceTree.Bounds;
+
+            sequenceTreeRect.Inflate(-1, -1);   // Borders outside parent rect
+
+            const int GWL_STYLE = -16;
+            const int WS_VSCROLL = 0x00200000;
+            const int WS_HSCROLL = 0x00100000;
+            int style = GetWindowLong(sequenceTree.Handle, GWL_STYLE);
+            if ((style & WS_VSCROLL) != 0)
+                sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
+            if ((style & WS_HSCROLL) != 0)
+                sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
+
+            if (countTargets != null)
+            {
+                var topNode = (TreeNodeMS)sequenceTree.TopNode;
+
+                int targetsRange = sequenceTree.ItemHeight * countTargets.Value;
+                if (!fromBottom)
+                    sequenceTreeRect.Height = targetsRange;
+                else
+                {
+                    // Find the bottom node
+                    int aboveRange = sequenceTree.ItemHeight;
+                    while (topNode.NextVisibleNode != null && aboveRange < sequenceTreeRect.Height)
+                    {
+                        topNode = (TreeNodeMS)topNode.NextVisibleNode;
+                        aboveRange += sequenceTree.ItemHeight;
+                    }
+
+                    // Skip last node if requested
+                    int bottomPadding = 0;
+                    if (!includeNewItem && topNode.NextVisibleNode == null)
+                        topNode = (TreeNodeMS)topNode.PrevVisibleNode;
+                    else
+                        bottomPadding = 5;  // A little extra space below the new node
+
+                    var lastNode = topNode;
+
+                    // Find the top of the range
+                    for (int i = 0; i < countTargets.Value - 1; i++)
+                    {
+                        if (ReferenceEquals(topNode, sequenceTree.TopNode))
+                            break;
+                        topNode = (TreeNodeMS)topNode.PrevVisibleNode;
+                    }
+
+                    sequenceTreeRect.Y = topNode.Bounds.Top;
+                    int bottom = Math.Min(lastNode.Bounds.Bottom + bottomPadding, sequenceTreeRect.Bottom);
+                    sequenceTreeRect.Height = bottom - sequenceTreeRect.Y;
+                }
+
+                int maxNodeRight = 0;
+                for (var i = 0; topNode != null && i < countTargets; i++)
+                {
+                    maxNodeRight = Math.Max(maxNodeRight, topNode.BoundsMS.Right + 5);
+                    topNode = (TreeNodeMS)topNode.NextVisibleNode;
+                }
+
+                sequenceTreeRect.Width = Math.Min(sequenceTreeRect.Width, maxNodeRight);
+            }
+
+            var targetsForm = FindOpenForm<SequenceTreeForm>().Pane;    // Bitmap is taken of the Pane
+            sequenceTreeRect = sequenceTree.RectToScreen(sequenceTreeRect);
+            sequenceTreeRect = targetsForm.RectangleToClient(sequenceTreeRect);
+
+            return ClipBitmap(targetsBmp, sequenceTreeRect);
+        }
+
+        protected static Bitmap ClipBitmap(Image bmp, Rectangle rect)
+        {
+            var scaledRect = rect * ScreenshotManager.GetScalingFactor();
+            var croppedShot = new Bitmap(scaledRect.Width, scaledRect.Height);
+            using var g = Graphics.FromImage(croppedShot);
+
+            g.DrawImage(bmp, new Rectangle(0, 0, scaledRect.Width, scaledRect.Height),
+                scaledRect, GraphicsUnit.Pixel);
+
+            return croppedShot;
+        }
+
+        public static Bitmap DrawLArrowCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
+        {
+            using Graphics graphics = Graphics.FromImage(bmp);
+            int x = (int)(bmp.Width * xRelative);
+            int y = (int)(bmp.Height * yRelative);
+
+            var arrowCurBmp = Properties.Resources.larrow_cur;
+            arrowCurBmp.MakeTransparent(Color.Red);
+
+            // TODO: Deal with scaling the cursor bitmap
+
+            graphics.DrawImage(arrowCurBmp, x, y);
+
+            return bmp;
+        }
+
+        public static void DrawArrowOnBitmap(Bitmap bmp, Point startPoint, Point endPoint, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
+        {
+            using Graphics graphics = Graphics.FromImage(bmp);
+
+            // Set high quality for smoother drawing
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // Define direction vector for the arrow head
+            double angle = Math.Atan2(endPoint.Y - startPoint.Y, endPoint.X - startPoint.X);
+            double sinAngle = Math.Sin(angle);
+            double cosAngle = Math.Cos(angle);
+
+            // Create a pen for the arrow tail with specified tail width
+            using Pen pen = new Pen(Color.FromArgb(192, 0, 0), tailWidth);
+
+            pen.StartCap = LineCap.Flat;
+            pen.EndCap = LineCap.Flat;
+
+            // Calculate the point where the tail should end (start of the arrowhead)
+            Point tailEndPoint = new Point(
+                (int)(endPoint.X - arrowHeadWidth * cosAngle),
+                (int)(endPoint.Y - arrowHeadWidth * sinAngle)
+            );
+
+            // Draw the tail of the arrow
+            graphics.DrawLine(pen, startPoint, tailEndPoint);
+
+            // Calculate arrowhead points
+            using SolidBrush brush = new SolidBrush(Color.FromArgb(192, 0, 0));
+
+            Point[] arrowHead = new Point[]
+            {
+                endPoint, // Tip of the arrow
+                new Point(
+                    (int)(endPoint.X - arrowHeadWidth * cosAngle + arrowHeadHeight * sinAngle / 2),
+                    (int)(endPoint.Y - arrowHeadWidth * sinAngle - arrowHeadHeight * cosAngle / 2)
+                ),
+                new Point(
+                    (int)(endPoint.X - arrowHeadWidth * cosAngle - arrowHeadHeight * sinAngle / 2),
+                    (int)(endPoint.Y - arrowHeadWidth * sinAngle + arrowHeadHeight * cosAngle / 2)
+                )
+            };
+
+            // Draw the arrow head
+            graphics.FillPolygon(brush, arrowHead);
+        }
+
+        // Display a placeholder message on a tutorial screenshot. Use when screenshots aren't correct yet and need to be updated.
+        public static Bitmap MarkBitmapAsPlaceholder(Bitmap bmp)
+        {
+            // TODO: support wrapping text on narrow images
+            var g = Graphics.FromImage(bmp);
+            var font = new Font("Tahoma", 12);
+            var text = "Placeholder screenshot, see test for more info";
+            var size = TextRenderer.MeasureText(g, text, font);
+
+            TextRenderer.DrawText(g,
+                text,
+                font,
+                new Rectangle(25, 25, size.Width, size.Height),
+                Color.Black,
+                Color.Yellow,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+                TextFormatFlags.GlyphOverhangPadding);
+            g.Flush();
+
+            return bmp;
+
+        }
+
+        protected GraphSummary FindGraphSummaryByGraphType<TGraphPane>() where TGraphPane : SummaryGraphPane
+        {
+            return FormUtil.OpenForms.OfType<GraphSummary>()
+                .FirstOrDefault(graphSummary => graphSummary.TryGetGraphPane(out TGraphPane _));
+        }
+
+        public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForScreenShotInternal(description, null, null, timeout, processShot);
+        }
+        public void PauseForScreenShot(Control screenshotForm, string description = null, int? pageNum = null, int ? timeout = null)
+        {
+            PauseForScreenShotInternal(description, null, screenshotForm, timeout);
+        }
+
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TView : IFormView
         {
-            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout);
+            PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
         }
 
-        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, int? timeout = null)
+        public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
+            if (!IsPauseForScreenShots)
+                return;
+
+            WaitForGraphs();
+            var zedGraph = FindZedGraph(graphContainer);
+            Assert.IsNotNull(zedGraph, "Control was not or did not contain a graph.");
+            PauseForScreenShotInternal(description, null, zedGraph, timeout, processShot);
+        }
+
+        public void PauseForPeakAreaGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphPeakArea, pageNum, timeout, processShot);
+        }
+
+        public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphRetentionTime, pageNum, timeout, processShot);
+        }
+
+        public void PauseForMassErrorGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout, processShot);
+        }
+
+        public void PauseForChromGraphScreenShot(string description, string replicateName, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout, processShot);
+        }
+
+        private ZedGraphControl FindZedGraph(Control graphContainer)
+        {
+            var zedGraphControl = graphContainer as ZedGraphControl;
+            if (zedGraphControl != null)
+                return zedGraphControl;
+            foreach (Control childControl in graphContainer.Controls)
+            {
+                zedGraphControl = FindZedGraph(childControl);
+                if (zedGraphControl != null)
+                    return zedGraphControl;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Type that indicates a full-screen screenshot should be taken
+        /// </summary>
+        public class ScreenForm : IFormView
+        {
+        }
+
+        private void PauseForScreenShotInternal(string description, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            bool fullScreen = formType == typeof(ScreenForm);
+
             if (formType != null)
             {
-                var form = TryWaitForOpenForm(formType);
+                var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
 
@@ -1321,37 +1618,47 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
+            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
             {
                 if (screenshotForm == null)
                 {
-                    if (formType != null)
+                    if (!fullScreen && formType != null)
                     {
-                        screenshotForm = TryWaitForOpenForm(formType) ?? SkylineWindow;
+                        screenshotForm = TryWaitForOpenForm(formType);
                     }
-                    else
-                        screenshotForm = SkylineWindow;
-                    RunUI(() => screenshotForm?.Update());
-                }
+                    screenshotForm ??= SkylineWindow;
 
-//                Thread.Sleep(300);
-//                _shotManager.TakeNextShot(screenshotForm);
+                    RunUI(() => screenshotForm.Update());
+                }
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
+                if (IsAutoScreenShotMode)
+                {
+                    Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
+                    ScreenshotManager.ActivateScreenshotForm(screenshotForm);
+                    var fileToSave = _shotManager.ScreenshotFile(ScreenshotCounter);
+                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+                }
+                else
+                {
+                    bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
+                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                }
             }
             else
             {
                 PauseForForm(formType);
             }
+
+            ScreenshotCounter++;
         }
 
-        protected virtual void ProcessCoverShot(Bitmap bmp)
+        protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
         {
             // Override to modify the cover shot before it is saved or put on the clipboard
+            return bmp;
         }
 
         public void TakeCoverShot()
@@ -1364,13 +1671,13 @@ namespace pwiz.SkylineTestUtil
                     "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
             });
             var coverSavePath = GetCoverShotPath();
-            ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot);
+            ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)
             {
                 // Screenshot for the StartPage
                 coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath2, ProcessCoverShot, 0.20);
+                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
             {
@@ -1520,7 +1827,7 @@ namespace pwiz.SkylineTestUtil
 
             UnzipTestFiles();
 
-            _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
+            _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
 
             // Run test in new thread (Skyline on main thread).
             Program.Init();
@@ -1539,6 +1846,7 @@ namespace pwiz.SkylineTestUtil
             // Were all windows disposed?
             CommonFormEx.CheckAllFormsDisposed();
         }
+
 
         /// <summary>
         /// Reset the settings for the Skyline application before starting a test.
@@ -1885,7 +2193,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     SkylineWindow.UseKeysOverride = true;
                     SkylineWindow.AssumeNonNullModificationAuditLogging = true;
-                    if (IsPauseForScreenShots || IsCoverShotMode)
+                    if (IsRecordingScreenShots)
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title
                         SkylineWindow.Icon = Resources.Skyline_Release1;
@@ -1918,6 +2226,9 @@ namespace pwiz.SkylineTestUtil
             }
 
             DoTest();
+
+            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+
             if (null != SkylineWindow)
             {
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
@@ -1931,6 +2242,11 @@ namespace pwiz.SkylineTestUtil
 
         private void EndTest()
         {
+            if (_pauseAndContinueForm is { IsDisposed: false })
+            {
+                RunUI(() => _pauseAndContinueForm.Close());
+            }
+
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {
@@ -2435,7 +2751,7 @@ namespace pwiz.SkylineTestUtil
             RunUI(() => addStaticModDlg.Modification = mod);
 
             if (pauseText != null || pausePage.HasValue)
-                PauseForScreenShot(pauseText, pausePage, viewType);
+                PauseForScreenShotInternal(pauseText, viewType);
 
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
             OkDialog(editModsDlg, editModsDlg.OkDialog);
