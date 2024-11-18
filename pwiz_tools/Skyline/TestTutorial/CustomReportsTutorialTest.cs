@@ -28,9 +28,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Databinding;
@@ -40,7 +38,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using static alglib;
 
 namespace pwiz.SkylineTestTutorial
 {
