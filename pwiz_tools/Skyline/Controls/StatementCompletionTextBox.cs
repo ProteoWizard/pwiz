@@ -46,16 +46,18 @@ namespace pwiz.Skyline.Controls
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly ImageList _imageList = new ImageList() {TransparentColor = Color.Magenta};
         private ProteomeDb _proteomeDb;
+        private bool _hideOnLoseFocus;
 
         // Don't let the name take more than half the space for item display
         private const int MAX_NAME_LENGTH = 40;
 
-        public StatementCompletionTextBox(IDocumentUIContainer documentUiContainer)
+        public StatementCompletionTextBox(IDocumentUIContainer documentUiContainer, bool hideOnLoseFocus = true)
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
             _imageList.Images.Add(Resources.Protein);
             _imageList.Images.Add(Resources.Peptide);
+            _hideOnLoseFocus = hideOnLoseFocus;
         }
 
         public void Attach(TextBox textBox)
@@ -69,7 +71,8 @@ namespace pwiz.Skyline.Controls
             TextBox.KeyDown += TextBox_KeyDown;
             TextBox.TextChanged += TextBox_TextChanged;
             TextBox.GotFocus += TextBox_GotFocus;
-            TextBox.LostFocus += TextBox_LostFocus;
+            if (_hideOnLoseFocus)
+                TextBox.LostFocus += TextBox_LostFocus;
             TextBox.LocationChanged += TextBox_LocationChanged;
         }
 
@@ -94,7 +97,8 @@ namespace pwiz.Skyline.Controls
             TextBox.KeyDown -= TextBox_KeyDown;
             TextBox.TextChanged -= TextBox_TextChanged;
             TextBox.GotFocus -= TextBox_GotFocus;
-            TextBox.LostFocus -= TextBox_LostFocus;
+            if (_hideOnLoseFocus)
+                TextBox.LostFocus -= TextBox_LostFocus;
             TextBox.LocationChanged -= TextBox_LocationChanged;
             TextBox = null;
         }
@@ -685,6 +689,12 @@ namespace pwiz.Skyline.Controls
             {
                 SelectionMade.Invoke(statementCompletionItem);
             }
+        }
+
+        public void SelectWithoutChoosing(int index)
+        {
+            StatementCompletionForm.ListView.FocusedItem =
+                StatementCompletionForm.ListView.Items[index];
         }
 
         public event Action<StatementCompletionItem> SelectionMade;

@@ -1974,6 +1974,26 @@ namespace SkylineTester
             }
         }
 
+        private void runMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Adjust settings to match the mode
+            var runModeTest = RunTestMode.SelectedItem.ToString();
+            if (!Equals(runModeTest, "Test"))
+            {
+                runSerial.Checked = true;
+                bool isRunQuality = Equals(runModeTest, "Quality");
+                if (!isRunQuality)
+                    testSet.SelectedItem = "Tutorial tests";
+                if (isRunQuality || Equals(runModeTest, "Demo"))
+                    runIndefinitely.Checked = true;
+                else // Screenshots, Auto-Screenshots, Covershot
+                {
+                    runLoops.Checked = true;
+                    runLoopsCount.Text = 1.ToString();
+                }
+            }
+        }
+
         #endregion Control events
     }
 }
