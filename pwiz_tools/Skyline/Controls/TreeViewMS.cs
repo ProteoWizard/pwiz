@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Controls
 
         public void ScrollLeft()
         {
-            this.SetScrollPos(ScrollDirection.horz, 0);
+            this.SetScrollPos(Orientation.Horizontal, 0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
