@@ -1608,7 +1608,7 @@ namespace pwiz.SkylineTestUtil
 
             if (Program.ReportTutorialTestProgress)
             {
-                Console.WriteLine($@"# tutorial test progress: {description}  - p. {pageNum}");
+                Console.WriteLine($@"# tutorial test progress: {description}");
             }
 
             if (Program.SkylineOffscreen)
