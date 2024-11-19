@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
-             IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
             // IsCoverShotMode = true;
             CoverShotName = "DIA";
             // PauseStartPage = 36;
