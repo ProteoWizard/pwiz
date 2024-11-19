@@ -147,6 +147,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
+            TestSimilarMzIsotopes();
             TestIsotopeLabelsInInChi();
             TestNotes();
             TestAutoManage();
@@ -2776,6 +2777,29 @@ namespace pwiz.SkylineTestFunctional
                 var pastedDoc = WaitForDocumentChange(docOrig);
                 AssertEx.IsDocumentState(pastedDoc, null, 2, 4, 8, 12);
             }
+        }
+
+        void TestSimilarMzIsotopes()
+        {
+            // Check that we are noticing different labels even when m/z is similar
+            var input =
+                "Molecule Name,Molecular Formula,Precursor Adduct,Precursor Charge\r\n"+
+                "Glutamine,C5H10N2O3,M2C13-H,-1\r\n" +
+                "Glutamine,C5H10N2O3,M1C131N15-H,-1\r\n"+ 
+                "Glutamine,C5H10N2O3,M1C131H2-H,-1";
+
+            var docOrig = NewDocument();
+
+            SetClipboardText(input);
+            // Paste directly into targets area, which should send us to ColumnSelectDlg
+            var testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            // Import the list
+            OkDialog(testImportDlg, testImportDlg.OkDialog);
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 3, 3);
+
         }
     }
 }

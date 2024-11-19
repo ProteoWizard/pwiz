@@ -13,8 +13,8 @@ Build Spectral Library > Search files : contains { File = "P2_202405_neo_150uID_
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
-Build Spectral Library > Workflow is "PRM"
-Build Spectral Library > Input File Type is "DDA raw (search and build library)"
+Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Extra Info: Search files = 
 [
     {
@@ -31,8 +31,8 @@ Extra Info: Search files =
 iRT standard peptides = None,
 Include ambiguous matches = False,
 Filter for document peptides = False,
-Workflow = "PRM",
-Input File Type = "DDA raw (search and build library)"
+Workflow = "DIA",
+Input File Type = "DIA raw (search and build library)"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search
@@ -40,6 +40,7 @@ All Info  :
 Imported a peptide search
 Import Peptide Search > Extract Chromatograms > Found results files : contains "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML"
+Import Peptide Search > Extract Chromatograms > Gas phase fractionation is True
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
@@ -51,14 +52,14 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Assigned to first protein"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "3988"
-Import Peptide Search > Associate Proteins > Peptides mapped is "4720"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "16383"
-Import Peptide Search > Associate Proteins > Protein targets is "3801"
-Import Peptide Search > Associate Proteins > Peptide targets is "4730"
+Import Peptide Search > Associate Proteins > Proteins mapped is "136"
+Import Peptide Search > Associate Proteins > Peptides mapped is "143"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "20235"
+Import Peptide Search > Associate Proteins > Protein targets is "107"
+Import Peptide Search > Associate Proteins > Peptide targets is "145"
 Import Peptide Search > DDA search settings > Search Engine is "MSFragger"
-Import Peptide Search > DDA search settings > Precursor tolerance is "10" ppm
-Import Peptide Search > DDA search settings > Fragment tolerance is "10" ppm
+Import Peptide Search > DDA search settings > Precursor tolerance is "3" m/z
+Import Peptide Search > DDA search settings > Fragment tolerance is "0,2" m/z
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
 Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
 Import Peptide Search > DDA search settings > Score type is "Max q-value"
@@ -70,6 +71,7 @@ Extra Info: Extract Chromatograms =
         "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML",
         "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML"
     ],
+    Gas phase fractionation = True,
     Files to import simultaneously = "Many",
     Removed prefix = "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 },
@@ -93,17 +95,17 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Assigned to first protein",
     Min peptides per protein = "1",
-    Proteins mapped = "3988",
-    Peptides mapped = "4720",
-    Proteins unmapped = "16383",
-    Protein targets = "3801",
-    Peptide targets = "4730"
+    Proteins mapped = "136",
+    Peptides mapped = "143",
+    Proteins unmapped = "20235",
+    Protein targets = "107",
+    Peptide targets = "145"
 },
 DDA search settings = 
 {
     Search Engine = "MSFragger",
-    Precursor tolerance = "10" ppm,
-    Fragment tolerance = "10" ppm,
+    Precursor tolerance = "3" m/z,
+    Fragment tolerance = "0,2" m/z,
     Max variable mods per peptide = "3",
     Fragment ion types = "b,y",
     Score type = "Max q-value",

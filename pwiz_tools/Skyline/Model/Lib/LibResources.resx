@@ -341,6 +341,9 @@
   <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
     <value>Processed intensity</value>
   </data>
+  <data name="NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_" xml:space="preserve">
+      <value>Unknown modification {0} at line {1}</value>
+  </data>
   <data name="NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___ignored" xml:space="preserve">
       <value>Missing details for {0} at line {1}, ignored</value>
   </data>

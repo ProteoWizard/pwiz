@@ -400,7 +400,7 @@ class GDistanceMetric;
     ///radius, can tell a distance d (possibly infinity) from the
     ///center for which all weights for distances greater than or
     ///equal to d will be 0.
-    class NeighborhoodWindowFunction:public std::binary_function<double,double,double>{
+    class NeighborhoodWindowFunction{
     public:
       ///Returns the weight of this window function at the given width
       ///and distance.

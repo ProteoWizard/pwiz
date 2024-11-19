@@ -132,7 +132,7 @@ namespace TestPerf
 
 
         /// <summary>Change to true to write coefficient arrays.</summary>
-        private bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
 
         /// <summary>Disable audit log comparison for FullFileset tests</summary>
         public override bool AuditLogCompareLogs => !TestContext.TestName.EndsWith("FullFileset");
@@ -148,8 +148,6 @@ namespace TestPerf
             TestFilesPersistent = new[] { "z3_nce33-koina" };
 
             RunFunctionalTest();
-
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Make sure this doesn't get committed as true
         }
 
         private class AnalysisValues
@@ -383,12 +381,10 @@ namespace TestPerf
                 WaitForGraphs();
                 PauseForScreenShot("Manual review window layout with peptide selected", screenshotPage++);
             }
-            catch (AssertFailedException)
+            catch (AssertFailedException e)
             {
-                if (!IsRecordMode)
-                    throw;
-                PauseAndContinueForm.Show($"Clicking the peptide ({peptideToSelect}) failed.\r\n" +
-                                          "Pick a new peptide to select.");
+                PauseForRecordModeInstruction($"Clicking the peptide ({peptideToSelect}) failed.\r\n" +
+                                              "Pick a new peptide to select.", e);
             }
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
@@ -401,12 +397,11 @@ namespace TestPerf
                     _analysisValues.ChromatogramClickPoint.X,
                     _analysisValues.ChromatogramClickPoint.Y);
             }
-            catch (AssertFailedException)
+            catch (AssertFailedException e)
             {
-                if (!IsRecordMode)
-                    throw;
-                PauseAndContinueForm.Show($"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
-                                          "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.");
+                PauseForRecordModeInstruction(
+                    $"Clicking the left-side chromatogram at ({_analysisValues.ChromatogramClickPoint.X}, {_analysisValues.ChromatogramClickPoint.Y}) failed.\r\n" +
+                    "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.", e);
             }
 
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);

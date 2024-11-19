@@ -788,7 +788,8 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
-        private static readonly char[] MAJOR_SEP = {'/'};
+        private static readonly char[] MODS_MAJOR_SEP = { '/' }; 
+        private static readonly char[] MODS_ALTERNATE_MAJOR_SEP = { ')','(' };
         private static readonly char[] MINOR_SEP = {','};
         // Small molecule items
         private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name:\s*(.*)", NOCASE); // small molecule names can be anything
@@ -816,6 +817,9 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_CCS = new Regex(@"^CCS(?:_Sqa)?:\s*(.*)", NOCASE); // Accept CCS or CCS_SqA
 
         // ReSharper restore LocalizableElement
+
+        private long lineCount;
+
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out string warning)
         {
             var sm = loader.StreamManager;
@@ -832,7 +836,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var libraryEntries = new List<NistSpectrumInfo>(10000);
 
-                long lineCount = 0;
+                lineCount = 0;
                 string line;
                 long nMasslessEntries = 0;
                 while ((line = reader.ReadLine()) != null)
@@ -925,7 +929,7 @@ namespace pwiz.Skyline.Model.Lib
                             continue;  // Line is fully consumed
                         }
 
-                        if (ParseIonMobility(line, lineCount, ref ionMobility))
+                        if (ParseIonMobility(line, ref ionMobility))
                         {
                             continue;  // Line is fully consumed
                         }
@@ -1095,7 +1099,7 @@ namespace pwiz.Skyline.Model.Lib
                                 }
                                 else
                                 {
-                                    ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
+                                    ThrowIoExceptionInvalidPeakFormat(i, sequence);
                                 }
                             }
                             string mzField = linePeak.Substring(0, iSeperator1++);
@@ -1103,11 +1107,11 @@ namespace pwiz.Skyline.Model.Lib
 
                             if (!TextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
                             {
-                                ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
+                                ThrowIoExceptionInvalidPeakFormat(i, sequence);
                             }
                             if (!TextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
-                                ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
+                                ThrowIoExceptionInvalidPeakFormat(i, sequence);
                             }
                             if (intensity != 0)
                             {
@@ -1307,7 +1311,7 @@ namespace pwiz.Skyline.Model.Lib
             return isMzVault; // Line was consumed
         }
 
-        private bool ParseIonMobility(string line, long lineCount, ref IonMobilityAndCCS im)
+        private bool ParseIonMobility(string line, ref IonMobilityAndCCS im)
         {
             if (!im.HasCollisionalCrossSection)
             {
@@ -1332,7 +1336,7 @@ namespace pwiz.Skyline.Model.Lib
         /// For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
         /// </summary>
         /// <returns>true if line was shown to be comment info, and parser can advance to next line</returns>
-        private static bool ParseComment(string line, bool isPeptide, ref string sequence, ref int? copies, ref float? tfRatio,
+        private bool ParseComment(string line, bool isPeptide, ref string sequence, ref int? copies, ref float? tfRatio,
             ref double? rt, ref double? irt, IDictionary<string,string> otherKeys)
         {
             if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase) || // Case insensitive
@@ -1573,7 +1577,7 @@ namespace pwiz.Skyline.Model.Lib
             return line;
         }
 
-        private void ThrowIoExceptionInvalidPeakFormat(long lineCount, int i, string sequence)
+        private void ThrowIoExceptionInvalidPeakFormat(int i, string sequence)
         {
             ThrowIOException(lineCount,
                 string.Format(LibResources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
@@ -1634,7 +1638,7 @@ namespace pwiz.Skyline.Model.Lib
                                                 lineNum, message));
         }
 
-        private static string Modify(string sequence, string mod)
+        private string Modify(string sequence, string mod)
         {
             // If no modifications, just return the input sequence
             bool clean = (sequence.IndexOfAny(new[] { '(', '[' }) == -1); 
@@ -1642,16 +1646,19 @@ namespace pwiz.Skyline.Model.Lib
                 return sequence;
 
             // Parse the modification spec, and insert [+/-00.0] modifiers
-            string[] mods = mod.Split(MAJOR_SEP);
+            string[] mods = mod.Split(MODS_MAJOR_SEP);
+            if (mods.Length == 1)
+                mods = mod.Split(MODS_ALTERNATE_MAJOR_SEP, StringSplitOptions.RemoveEmptyEntries); // e.g. " Mods=2(10,S,Phospho)(14,C,CAM) " instead of " Mods=2/10,S,Phospho/14,C,CAM "
 
-            StringBuilder sb = new StringBuilder(sequence.Length);
+            var seqLen = sequence.Length;
+            StringBuilder sb = new StringBuilder(seqLen);
             bool inMod = false;
             int i = 0, iMod = 1, iNextMod = -1;
             string massDiffDesc = null;
             foreach (char c in sequence)
             {
                 while (iNextMod < i && iMod < mods.Length)
-                    iNextMod = GetMod(mods[iMod++], out massDiffDesc);
+                    iNextMod = GetMod(mods[iMod++], seqLen, out massDiffDesc);
 
                 // At least for Oxidation the sequence already contains
                 // inserted identifiers that look like M(O) for Methyonine
@@ -1674,7 +1681,7 @@ namespace pwiz.Skyline.Model.Lib
             return sb.ToString();
         }
 
-        private static int GetMod(string mod, out string massDiff)
+        private int GetMod(string mod, int seqLen, out string massDiff)
         {
             string[] parts = mod.Split(MINOR_SEP);
             if (parts.Length < 3)
@@ -1683,13 +1690,45 @@ namespace pwiz.Skyline.Model.Lib
                 return -1;
             }
             int index = int.Parse(parts[0], CultureInfo.InvariantCulture);
-            // If it is an unknown modification, insert a sequence modifier
-            // that will cause this sequence never to match anything.  These
-            // are rare, and can be viewed by placing a breakpoint on the
-            // line where if is true.
+            // If it is an unknown modification (not in our list, or in UniMod), 
+            // insert a sequence modifier that will cause this sequence never to
+            // match anything.
             if (!MODIFICATION_MASSES.TryGetValue(parts[2], out massDiff))
-                massDiff = @"[?]"; 
+            {
+                if (TryGetUnimodMass(parts[2], index, seqLen, parts[1], out var md))
+                {
+                    massDiff = SequenceMassCalc.GetModDiffDescription(md);
+                }
+                else
+                {
+                    massDiff = @"[?]"; 
+                    // Formerly silent, now we at least put up a non-blocking message
+                    Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_, mod, lineCount);
+                }
+            }
             return index;
+        }
+
+        private static bool TryGetUnimodMass(string mod, int index, int seqLen, string modifiedAA, out double massDiff)
+        {
+            // Per Nick email:
+            // Skyline tries not to distinguish between modifications that are on the first amino acid versus modifications that are on the N-terminus of the peptide.
+            // So, if that position number is 0 or 1, I think you should pass in ModTerminus.N for the "modTerminus".
+            // And, if the position number is greater than or equal to the length of the peptide you should pass in ModTerminus.C.
+            // 
+            // For "modAas" you should pass in a one character length string which is the amino acid that the modification is on.
+            try
+            {
+                var term = index <= 1 ? ModTerminus.N : index >= seqLen ? ModTerminus.C : (ModTerminus ?)null;
+                var unimod = ModificationMatcher.GetStaticMod(mod, term, modifiedAA);
+                massDiff = unimod.MonoisotopicMass ?? 0;
+                return unimod.MonoisotopicMass.HasValue;
+            }
+            catch (ArgumentException)
+            {
+                massDiff = 0;
+                return false;
+            }
         }
 
         private static double? GetRetentionTime(string rtString, bool isMinutes)

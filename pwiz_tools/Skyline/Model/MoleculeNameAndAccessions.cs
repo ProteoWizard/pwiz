@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model
 
         // Look for labels buried in descriptions, e.g. InChi's /i section
         public Dictionary<string, int> FindLabels() => AccessionNumbers?.FindLabels();
-        
+
         public bool IsEmpty => string.IsNullOrEmpty(Name) && MoleculeAccessionNumbers.IsNullOrEmpty(AccessionNumbers);
 
         public override string ToString() => (Name??@"<no name>") + @" " + AccessionNumbers; // For debugging convenience

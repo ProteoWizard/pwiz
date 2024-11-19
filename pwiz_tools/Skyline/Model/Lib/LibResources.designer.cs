@@ -530,6 +530,15 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown modification {0} at line {1}.
+        /// </summary>
+        public static string NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_ {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Building binary cache for {0} library.
         /// </summary>
         public static string NistLibraryBase_Load_Building_binary_cache_for__0__library {
